@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AIDL_AST_JAVA_H_
+#define AIDL_AST_JAVA_H_
 
 #include <memory>
 #include <stdarg.h>
@@ -53,20 +54,16 @@ class Type;
 // Write the modifiers that are set in both mod and mask
 void WriteModifiers(CodeWriter* to, int mod, int mask);
 
-struct AstNode {
-  AstNode() = default;
-  virtual ~AstNode() = default;
-  virtual void Write(CodeWriter* to) const = 0;
-  std::string ToString();
-};
-
-struct ClassElement : public AstNode {
+struct ClassElement {
   ClassElement() = default;
   virtual ~ClassElement() = default;
+
+  virtual void Write(CodeWriter* to) const = 0;
 };
 
-struct Expression : public AstNode {
+struct Expression {
   virtual ~Expression() = default;
+  virtual void Write(CodeWriter* to) const = 0;
 };
 
 struct LiteralExpression : public Expression {
@@ -114,7 +111,6 @@ struct FieldVariable : public Expression {
 
 struct Field : public ClassElement {
   std::string comment;
-  std::vector<std::string> annotations;
   int modifiers = 0;
   Variable* variable = nullptr;
   std::string value;
@@ -126,18 +122,9 @@ struct Field : public ClassElement {
   void Write(CodeWriter* to) const override;
 };
 
-struct Statement : public AstNode {
+struct Statement {
   virtual ~Statement() = default;
-};
-
-struct LiteralStatement : public Statement {
- public:
-  LiteralStatement(const std::string& value);
-  virtual ~LiteralStatement() = default;
-  void Write(CodeWriter* to) const override;
-
- private:
-  const std::string value_;
+  virtual void Write(CodeWriter* to) const = 0;
 };
 
 struct StatementBlock : public Statement {
@@ -250,7 +237,7 @@ struct VariableDeclaration : public Statement {
 
   explicit VariableDeclaration(Variable* lvalue);
   VariableDeclaration(Variable* lvalue, Expression* rvalue,
-                      const Type* cast = nullptr);
+                      const Type* cast = NULL);
   virtual ~VariableDeclaration() = default;
   void Write(CodeWriter* to) const override;
 };
@@ -298,14 +285,14 @@ struct FinallyStatement : public Statement {
   void Write(CodeWriter* to) const override;
 };
 
-struct Case : public AstNode {
+struct Case {
   std::vector<std::string> cases;
   StatementBlock* statements = new StatementBlock;
 
   Case() = default;
   explicit Case(const std::string& c);
   virtual ~Case() = default;
-  void Write(CodeWriter* to) const override;
+  virtual void Write(CodeWriter* to) const;
 };
 
 struct SwitchStatement : public Statement {
@@ -325,7 +312,6 @@ struct Break : public Statement {
 
 struct Method : public ClassElement {
   std::string comment;
-  std::vector<std::string> annotations;
   int modifiers = 0;
   const Type* returnType = nullptr;  // nullptr means constructor
   size_t returnTypeDimension = 0;
@@ -340,20 +326,12 @@ struct Method : public ClassElement {
   void Write(CodeWriter* to) const override;
 };
 
-struct LiteralClassElement : public ClassElement {
-  std::string element;
-
-  LiteralClassElement(std::string e) : element(e) {}
-  virtual ~LiteralClassElement() = default;
-
-  void Write(CodeWriter* to) const override;
-};
-
 struct IntConstant : public ClassElement {
   const std::string name;
-  const std::string value;
+  const int value;
 
-  IntConstant(const std::string& name, const std::string& value) : name(name), value(value) {}
+  IntConstant(std::string name, int value)
+      : name(name), value(value) {}
   virtual ~IntConstant() = default;
 
   void Write(CodeWriter* to) const override;
@@ -374,7 +352,6 @@ struct Class : public ClassElement {
   enum { CLASS, INTERFACE };
 
   std::string comment;
-  std::vector<std::string> annotations;
   int modifiers = 0;
   int what = CLASS;  // CLASS or INTERFACE
   const Type* type = nullptr;
@@ -388,14 +365,14 @@ struct Class : public ClassElement {
   void Write(CodeWriter* to) const override;
 };
 
-class Document : public AstNode {
+class Document {
  public:
   Document(const std::string& comment,
            const std::string& package,
            const std::string& original_src,
            std::unique_ptr<Class> clazz);
   virtual ~Document() = default;
-  void Write(CodeWriter* to) const override;
+  virtual void Write(CodeWriter* to) const;
 
  private:
   std::string comment_;
@@ -407,3 +384,5 @@ class Document : public AstNode {
 }  // namespace java
 }  // namespace aidl
 }  // namespace android
+
+#endif  // AIDL_AST_JAVA_H_

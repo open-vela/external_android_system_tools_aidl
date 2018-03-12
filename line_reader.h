@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AIDL_LINE_READER_H_
+#define AIDL_LINE_READER_H_
 
 #include <memory>
 #include <string>
@@ -41,3 +42,5 @@ class LineReader {
 
 }  // namespace android
 }  // namespace aidl
+
+#endif // AIDL_LINE_READER_H_

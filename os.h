@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AIDL_OS_H_
+#define AIDL_OS_H_
 
 #if defined(_WIN32)
 #define OS_PATH_SEPARATOR '\\'
 #else
 #define OS_PATH_SEPARATOR '/'
 #endif
+
+#endif  // AIDL_OS_H_

@@ -24,6 +24,8 @@
 #include "logging.h"
 
 using android::base::StringPrintf;
+using android::base::Split;
+using android::base::Trim;
 using std::string;
 using std::vector;
 
@@ -33,13 +35,16 @@ namespace aidl {
 // Since packages cannot contain '-' normally, we cannot be asked
 // to create a type that conflicts with these strings.
 const char kAidlReservedTypePackage[] = "aidl-internal";
+const char kUtf8StringClass[] = "Utf8String";
 const char kUtf8InCppStringClass[] = "Utf8InCppString";
 
 // These *must* match the package and class names above.
+const char kUtf8StringCanonicalName[] = "aidl-internal.Utf8String";
 const char kUtf8InCppStringCanonicalName[] = "aidl-internal.Utf8InCppString";
 
 const char kStringCanonicalName[] = "java.lang.String";
 
+const char kUtf8Annotation[] = "@utf8";
 const char kUtf8InCppAnnotation[] = "@utfInCpp";
 
 namespace {
@@ -88,72 +93,68 @@ string ValidatableType::HumanReadableKind() const {
   return "unknown";
 }
 
-const ValidatableType* TypeNamespace::GetReturnType(const AidlTypeSpecifier& raw_type,
-                                                    const AidlDefinedType& context) const {
+bool TypeNamespace::IsValidPackage(const string& /* package */) const {
+  return true;
+}
+
+const ValidatableType* TypeNamespace::GetReturnType(
+    const AidlType& raw_type, const string& filename,
+    const AidlInterface& interface) const {
   string error_msg;
-  const ValidatableType* return_type = GetValidatableType(raw_type, &error_msg, context);
+  const ValidatableType* return_type = GetValidatableType(raw_type, &error_msg,
+                                                          interface);
   if (return_type == nullptr) {
-    AIDL_ERROR(raw_type) << "Return type " << raw_type.ToString() << ": " << error_msg;
+    LOG(ERROR) << StringPrintf("In file %s line %d return type %s:\n    ",
+                               filename.c_str(), raw_type.GetLine(),
+                               raw_type.ToString().c_str())
+               << error_msg;
     return nullptr;
   }
 
   return return_type;
 }
 
-bool TypeNamespace::AddDefinedTypes(vector<AidlDefinedType*>& types, const string& filename) {
-  bool success = true;
-  for (const auto type : types) {
-    const AidlInterface* interface = type->AsInterface();
-    if (interface != nullptr) {
-      success &= AddBinderType(*interface, filename);
-      continue;
-    }
-
-    const AidlParcelable* parcelable = type->AsParcelable();
-    if (parcelable != nullptr) {
-      success &= AddParcelableType(*parcelable, filename);
-      continue;
-    }
-
-    CHECK(false) << "aidl internal error: unrecognized type";
-  }
-  return success;
-}
-
-const ValidatableType* TypeNamespace::GetArgType(const AidlArgument& a, int arg_index,
-                                                 const AidlDefinedType& context) const {
-  string error_prefix =
-      StringPrintf("parameter %s (argument %d): ", a.GetName().c_str(), arg_index);
+const ValidatableType* TypeNamespace::GetArgType(
+    const AidlArgument& a, int arg_index, const string& filename,
+    const AidlInterface& interface) const {
+  string error_prefix = StringPrintf(
+      "In file %s line %d parameter %s (argument %d):\n    ",
+      filename.c_str(), a.GetLine(), a.GetName().c_str(), arg_index);
 
   // check the arg type
   string error_msg;
-  const ValidatableType* t = GetValidatableType(a.GetType(), &error_msg, context);
+  const ValidatableType* t = GetValidatableType(a.GetType(), &error_msg,
+                                                interface);
   if (t == nullptr) {
-    AIDL_ERROR(a) << error_prefix << error_msg;
+    LOG(ERROR) << error_prefix << error_msg;
     return nullptr;
   }
 
-  const bool can_be_out = typenames_.CanBeOutParameter(a.GetType());
-  if (!a.DirectionWasSpecified() && can_be_out) {
-    AIDL_ERROR(a) << error_prefix << "'" << a.GetType().ToString()
-                  << "' can be an out type, so you must declare it as in, out, or inout.";
+  if (!a.DirectionWasSpecified() && t->CanBeOutParameter()) {
+    LOG(ERROR) << error_prefix << StringPrintf(
+        "'%s' can be an out type, so you must declare it as in,"
+        " out or inout.",
+        a.GetType().ToString().c_str());
     return nullptr;
   }
 
-  if (a.GetDirection() != AidlArgument::IN_DIR && !can_be_out) {
-    AIDL_ERROR(a) << error_prefix << "'" << a.ToString() << "' can only be an in parameter.";
+  if (a.GetDirection() != AidlArgument::IN_DIR &&
+      !t->CanBeOutParameter()) {
+    LOG(ERROR) << error_prefix << StringPrintf(
+        "'%s' can only be an in parameter.",
+        a.ToString().c_str());
     return nullptr;
   }
 
   // check that the name doesn't match a keyword
   if (is_java_keyword(a.GetName().c_str())) {
-    AIDL_ERROR(a) << error_prefix << "Argument name is a Java or aidl keyword";
+    LOG(ERROR) << error_prefix << "Argument name is a Java or aidl keyword";
     return nullptr;
   }
 
   // Reserve a namespace for internal use
   if (a.GetName().substr(0, 5)  == "_aidl") {
-    AIDL_ERROR(a) << error_prefix << "Argument name cannot begin with '_aidl'";
+    LOG(ERROR) << error_prefix << "Argument name cannot begin with '_aidl'";
     return nullptr;
   }
 

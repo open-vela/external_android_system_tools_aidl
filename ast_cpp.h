@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AIDL_AST_CPP_H_
+#define AIDL_AST_CPP_H_
 
 #include <memory>
 #include <string>
@@ -37,7 +38,6 @@ class AstNode {
   AstNode() = default;
   virtual ~AstNode() = default;
   virtual void Write(CodeWriter* to) const = 0;
-  std::string ToString();
 };  // class AstNode
 
 class Declaration : public AstNode {
@@ -48,18 +48,6 @@ class Declaration : public AstNode {
  private:
   DISALLOW_COPY_AND_ASSIGN(Declaration);
 };  // class Declaration
-
-class LiteralDecl : public Declaration {
- public:
-  explicit LiteralDecl(const std::string& expression);
-  ~LiteralDecl() = default;
-  void Write(CodeWriter* to) const override;
-
- private:
-  const std::string expression_;
-
-  DISALLOW_COPY_AND_ASSIGN(LiteralDecl);
-};  // class LiteralDecl
 
 class ClassDecl : public Declaration {
  public:
@@ -116,7 +104,7 @@ class ArgList : public AstNode {
   explicit ArgList(const std::string& single_argument);
   explicit ArgList(const std::vector<std::string>& arg_list);
   explicit ArgList(std::vector<std::unique_ptr<AstNode>> arg_list);
-  ArgList(ArgList&& arg_list) noexcept;
+  ArgList(ArgList&& arg_list);
   virtual ~ArgList() = default;
 
   void Write(CodeWriter* to) const override;
@@ -175,7 +163,6 @@ class MethodDecl : public Declaration {
     IS_OVERRIDE = 1 << 2,
     IS_PURE_VIRTUAL = 1 << 3,
     IS_STATIC = 1 << 4,
-    IS_FINAL = 1 << 5,
   };
 
   MethodDecl(const std::string& return_type,
@@ -198,7 +185,6 @@ class MethodDecl : public Declaration {
   bool is_override_ = false;
   bool is_pure_virtual_ = false;
   bool is_static_ = true;
-  bool is_final_ = false;
 
   DISALLOW_COPY_AND_ASSIGN(MethodDecl);
 };  // class MethodDecl
@@ -394,21 +380,22 @@ class CppNamespace : public Declaration {
 class Document : public AstNode {
  public:
   Document(const std::vector<std::string>& include_list,
-           std::vector<std::unique_ptr<Declaration>> declarations);
+           std::unique_ptr<CppNamespace> a_namespace);
 
   void Write(CodeWriter* to) const override;
 
  private:
   std::vector<std::string> include_list_;
-  std::vector<std::unique_ptr<Declaration>> declarations_;
+  std::unique_ptr<CppNamespace> namespace_;
 
   DISALLOW_COPY_AND_ASSIGN(Document);
 };  // class Document
 
 class CppHeader final : public Document {
  public:
-  CppHeader(const std::string& include_guard, const std::vector<std::string>& include_list,
-            std::vector<std::unique_ptr<Declaration>> declarations);
+  CppHeader(const std::string& include_guard,
+            const std::vector<std::string>& include_list,
+            std::unique_ptr<CppNamespace> a_namespace);
   void Write(CodeWriter* to) const override;
 
  private:
@@ -420,7 +407,7 @@ class CppHeader final : public Document {
 class CppSource final : public Document {
  public:
   CppSource(const std::vector<std::string>& include_list,
-            std::vector<std::unique_ptr<Declaration>> declarations);
+            std::unique_ptr<CppNamespace> a_namespace);
 
  private:
   DISALLOW_COPY_AND_ASSIGN(CppSource);
@@ -429,3 +416,5 @@ class CppSource final : public Document {
 }  // namespace cpp
 }  // namespace aidl
 }  // namespace android
+
+#endif // AIDL_AST_CPP_H_
