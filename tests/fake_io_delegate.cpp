@@ -17,7 +17,6 @@
 #include "fake_io_delegate.h"
 
 #include <android-base/stringprintf.h>
-#include <android-base/strings.h>
 
 #include "logging.h"
 #include "os.h"
@@ -70,6 +69,13 @@ bool FakeIoDelegate::FileIsReadable(const string& path) const {
   return file_contents_.find(CleanPath(path)) != file_contents_.end();
 }
 
+bool FakeIoDelegate::CreatedNestedDirs(
+    const std::string& /* base_dir */,
+    const std::vector<std::string>& /* nested_subdirs */) const {
+  // We don't test directory creation explicitly.
+  return true;
+}
+
 std::unique_ptr<CodeWriter> FakeIoDelegate::GetCodeWriter(
     const std::string& file_path) const {
   if (broken_files_.count(file_path) > 0) {
@@ -77,7 +83,7 @@ std::unique_ptr<CodeWriter> FakeIoDelegate::GetCodeWriter(
   }
   removed_files_.erase(file_path);
   written_file_contents_[file_path] = "";
-  return CodeWriter::ForString(&written_file_contents_[file_path]);
+  return GetStringWriter(&written_file_contents_[file_path]);
 }
 
 void FakeIoDelegate::RemovePath(const std::string& file_path) const {
@@ -87,17 +93,6 @@ void FakeIoDelegate::RemovePath(const std::string& file_path) const {
 void FakeIoDelegate::SetFileContents(const string& filename,
                                      const string& contents) {
   file_contents_[filename] = contents;
-}
-
-vector<string> FakeIoDelegate::ListFiles(const string& dir) const {
-  const string dir_name = dir.back() == OS_PATH_SEPARATOR ? dir : dir + OS_PATH_SEPARATOR;
-  vector<string> files;
-  for (auto it = file_contents_.begin(); it != file_contents_.end(); it++) {
-    if (android::base::StartsWith(it->first, dir_name) && !it->second.empty()) {
-      files.emplace_back(it->first);
-    }
-  }
-  return files;
 }
 
 void FakeIoDelegate::AddStubParcelable(const string& canonical_name,

@@ -41,8 +41,10 @@ final class TestClass extends SuperClass
 TEST(AstJavaTests, GeneratesClass) {
   JavaTypeNamespace types;
   types.Init();
-  Type class_type(&types, "TestClass", ValidatableType::KIND_GENERATED, false);
-  Type extend_type(&types, "SuperClass", ValidatableType::KIND_BUILT_IN, false);
+  Type class_type(&types, "TestClass", ValidatableType::KIND_GENERATED,
+                  false, false);
+  Type extend_type(&types, "SuperClass", ValidatableType::KIND_BUILT_IN,
+                   false, false);
   Class a_class;
   a_class.comment = "// class comment";
   a_class.modifiers = FINAL;
@@ -51,19 +53,9 @@ TEST(AstJavaTests, GeneratesClass) {
   a_class.extends = &extend_type;
 
   string actual_output;
-  a_class.Write(CodeWriter::ForString(&actual_output).get());
+  CodeWriterPtr writer = GetStringWriter(&actual_output);
+  a_class.Write(writer.get());
   EXPECT_EQ(string(kExpectedClassOutput), actual_output);
-}
-
-TEST(AstJavaTests, ToString) {
-  std::string literal = "public void foo() {}";
-  LiteralClassElement ce(literal);
-  std::string actual = ce.ToString();
-  EXPECT_EQ(literal, actual);
-
-  std::string written;
-  ce.Write(CodeWriter::ForString(&written).get());
-  EXPECT_EQ(literal, written);
 }
 
 }  // namespace java

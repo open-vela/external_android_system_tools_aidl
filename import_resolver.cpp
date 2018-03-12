@@ -15,10 +15,7 @@
  */
 
 #include "import_resolver.h"
-#include "aidl_language.h"
 
-#include <android-base/file.h>
-#include <android-base/strings.h>
 #include <unistd.h>
 
 #ifdef _WIN32
@@ -33,9 +30,9 @@ using std::vector;
 namespace android {
 namespace aidl {
 
-ImportResolver::ImportResolver(const IoDelegate& io_delegate, const string& input_file_name,
-                               const set<string>& import_paths, const vector<string>& input_files)
-    : io_delegate_(io_delegate), input_file_name_(input_file_name), input_files_(input_files) {
+ImportResolver::ImportResolver(const IoDelegate& io_delegate,
+                               const vector<string>& import_paths)
+    : io_delegate_(io_delegate) {
   for (string path : import_paths) {
     if (path.empty()) {
       path = ".";
@@ -46,6 +43,7 @@ ImportResolver::ImportResolver(const IoDelegate& io_delegate, const string& inpu
     import_paths_.push_back(std::move(path));
   }
 }
+
 
 string ImportResolver::FindImportFile(const string& canonical_name) const {
   // Convert the canonical name to a relative file path.
@@ -58,32 +56,14 @@ string ImportResolver::FindImportFile(const string& canonical_name) const {
   relative_path += ".aidl";
 
   // Look for that relative path at each of our import roots.
-  vector<string> found_paths;
   for (string path : import_paths_) {
     path = path + relative_path;
     if (io_delegate_.FileIsReadable(path)) {
-      found_paths.emplace_back(path);
+      return path;
     }
   }
 
-  int num_found = found_paths.size();
-  if (num_found == 0) {
-    // If not found from the import paths, try to find from the input files
-    relative_path.insert(0, 1, OS_PATH_SEPARATOR);
-    for (string input_file : input_files_) {
-      if (android::base::EndsWith(input_file, relative_path)) {
-        return input_file;
-      }
-    }
-    return "";
-  } else if (num_found == 1) {
-    return found_paths.front();
-  } else {
-    AIDL_ERROR(input_file_name_) << "Duplicate files found for " << canonical_name
-                                 << " from:" << std::endl
-                                 << android::base::Join(found_paths, "\n");
-    return "";
-  }
+  return "";
 }
 
 }  // namespace android

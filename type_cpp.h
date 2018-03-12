@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AIDL_TYPE_CPP_H_
+#define AIDL_TYPE_CPP_H_
 
 #include <memory>
 #include <string>
@@ -45,6 +46,7 @@ class Type : public ValidatableType {
   virtual ~Type() = default;
 
   // overrides of ValidatableType
+  bool CanBeOutParameter() const override { return false; }
   bool CanWriteToParcel() const override;
 
   const Type* ArrayType() const override { return array_type_.get(); }
@@ -99,8 +101,11 @@ class TypeNamespace : public ::android::aidl::LanguageTypeNamespace<Type> {
   bool AddMapType(const std::string& key_type_name,
                   const std::string& value_type_name) override;
 
-  const ValidatableType* GetArgType(const AidlArgument& a, int arg_index,
-                                    const AidlDefinedType& context) const override;
+  bool IsValidPackage(const std::string& package) const override;
+  const ValidatableType* GetArgType(const AidlArgument& a,
+                             int arg_index,
+                             const std::string& filename,
+                             const AidlInterface& interface) const override;
 
   const Type* VoidType() const { return void_type_; }
   const Type* IBinderType() const { return ibinder_type_; }
@@ -116,3 +121,5 @@ class TypeNamespace : public ::android::aidl::LanguageTypeNamespace<Type> {
 }  // namespace cpp
 }  // namespace aidl
 }  // namespace android
+
+#endif  // AIDL_TYPE_NAMESPACE_CPP_H_

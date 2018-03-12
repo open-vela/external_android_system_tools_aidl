@@ -14,44 +14,38 @@
  * limitations under the License.
  */
 
+#include <iostream>
+#include <memory>
+
 #include "aidl.h"
-#include "aidl_apicheck.h"
 #include "io_delegate.h"
 #include "logging.h"
 #include "options.h"
 
-#include <iostream>
-#include <memory>
-
-using android::aidl::Options;
+using android::aidl::JavaOptions;
 
 // aidl is leaky. Turn off LeakSanitizer by default. b/37749857
-extern "C" const char* __asan_default_options() {
-  return "detect_leaks=0";
+extern "C" const char *__asan_default_options() {
+    return "detect_leaks=0";
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char** argv) {
   android::base::InitLogging(argv);
   LOG(DEBUG) << "aidl starting";
-  Options options(argc, argv, Options::Language::JAVA);
-  if (!options.Ok()) {
-    std::cerr << options.GetErrorMessage();
-    std::cerr << options.GetUsage();
+  std::unique_ptr<JavaOptions> options = JavaOptions::Parse(argc, argv);
+  if (!options) {
     return 1;
   }
 
   android::aidl::IoDelegate io_delegate;
-  switch (options.GetTask()) {
-    case Options::Task::COMPILE:
-      return android::aidl::compile_aidl(options, io_delegate);
-    case Options::Task::PREPROCESS:
-      return android::aidl::preprocess_aidl(options, io_delegate) ? 0 : 1;
-    case Options::Task::DUMP_API:
-      return android::aidl::dump_api(options, io_delegate) ? 0 : 1;
-    case Options::Task::CHECK_API:
-      return android::aidl::check_api(options, io_delegate) ? 0 : 1;
-    default:
-      LOG(FATAL) << "aidl: internal error" << std::endl;
+  switch (options->task) {
+    case JavaOptions::COMPILE_AIDL_TO_JAVA:
+      return android::aidl::compile_aidl_to_java(*options, io_delegate);
+    case JavaOptions::PREPROCESS_AIDL:
+      if (android::aidl::preprocess_aidl(*options, io_delegate))
+        return 0;
       return 1;
   }
+  std::cerr << "aidl: internal error" << std::endl;
+  return 1;
 }
