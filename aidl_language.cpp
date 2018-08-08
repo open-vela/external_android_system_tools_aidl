@@ -100,11 +100,6 @@ static bool HasAnnotation(const set<unique_ptr<AidlAnnotation>>& annotations, co
   return false;
 }
 
-bool operator==(const unique_ptr<AidlAnnotation>& lhs,
-                const unique_ptr<AidlAnnotation>& rhs) {
-  return lhs->GetName() == rhs->GetName();
-}
-
 AidlAnnotatable::AidlAnnotatable(const AidlLocation& location) : AidlNode(location) {}
 
 bool AidlAnnotatable::IsNullable() const {
@@ -355,6 +350,11 @@ AidlMethod::AidlMethod(const AidlLocation& location, bool oneway, AidlTypeSpecif
     : AidlMethod(location, oneway, type, name, args, comments, 0, true) {
   has_id_ = false;
 }
+
+AidlMethod::AidlMethod(const AidlLocation& location, bool oneway, AidlTypeSpecifier* type,
+                       const std::string& name, std::vector<std::unique_ptr<AidlArgument>>* args,
+                       const std::string& comments, int id)
+    : AidlMethod(location, oneway, type, name, args, comments, id, true) {}
 
 AidlMethod::AidlMethod(const AidlLocation& location, bool oneway, AidlTypeSpecifier* type,
                        const std::string& name, std::vector<std::unique_ptr<AidlArgument>>* args,
