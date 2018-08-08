@@ -131,9 +131,6 @@ class AidlAnnotation : public AidlNode {
   const string name_;
 };
 
-bool operator==(const unique_ptr<AidlAnnotation>& lhs,
-                const unique_ptr<AidlAnnotation>& rhs);
-
 class AidlAnnotatable : public AidlNode {
  public:
   AidlAnnotatable(const AidlLocation& location);
@@ -146,10 +143,6 @@ class AidlAnnotatable : public AidlNode {
   bool IsUtf8() const;
   bool IsUtf8InCpp() const;
   std::string ToString() const;
-
-  const set<unique_ptr<AidlAnnotation>>& GetAnnotations() const {
-    return annotations_;
-  }
 
  private:
   set<unique_ptr<AidlAnnotation>> annotations_;
@@ -263,12 +256,12 @@ class AidlArgument : public AidlVariableDeclaration {
   bool IsOut() const { return direction_ & OUT_DIR; }
   bool IsIn() const { return direction_ & IN_DIR; }
   bool DirectionWasSpecified() const { return direction_specified_; }
-  string GetDirectionSpecifier() const;
 
   std::string ToString() const;
   std::string Signature() const;
 
  private:
+  string GetDirectionSpecifier() const;
   Direction direction_;
   bool direction_specified_;
 
@@ -342,7 +335,10 @@ class AidlMethod : public AidlMember {
              const std::string& comments);
   AidlMethod(const AidlLocation& location, bool oneway, AidlTypeSpecifier* type,
              const std::string& name, std::vector<std::unique_ptr<AidlArgument>>* args,
-             const std::string& comments, int id, bool is_user_defined = true);
+             const std::string& comments, int id);
+  AidlMethod(const AidlLocation& location, bool oneway, AidlTypeSpecifier* type,
+             const std::string& name, std::vector<std::unique_ptr<AidlArgument>>* args,
+             const std::string& comments, int id, bool is_user_defined);
   virtual ~AidlMethod() = default;
 
   AidlMethod* AsMethod() override { return this; }
@@ -596,9 +592,6 @@ class Parser {
   void SetPackage(unique_ptr<AidlQualifiedName> name) { package_ = std::move(name); }
   std::vector<std::string> Package() const;
 
-  void SetAsApiDump() { is_apidump_ = true; }
-  bool IsApiDump() const { return is_apidump_; }
-
   void DeferResolution(AidlTypeSpecifier* typespec) {
     unresolved_typespecs_.emplace_back(typespec);
   }
@@ -630,7 +623,6 @@ class Parser {
   AidlTypenames& typenames_;
   vector<AidlDefinedType*> defined_types_;
   vector<AidlTypeSpecifier*> unresolved_typespecs_;
-  bool is_apidump_ = false;
 
   DISALLOW_COPY_AND_ASSIGN(Parser);
 };

@@ -315,14 +315,7 @@ string generate_outputFileName(const Options& options, const AidlDefinedType& de
   const string& name = defined_type.GetName();
   result += OS_PATH_SEPARATOR;
   result.append(name, 0, name.find('.'));
-  if (options.TargetLanguage() == Options::Language::JAVA) {
-    result += ".java";
-  } else if (options.TargetLanguage() == Options::Language::CPP) {
-    result += ".cpp";
-  } else {
-    LOG(FATAL) << "Should not reach here" << endl;
-    return "";
-  }
+  result += ".java";
 
   return result;
 }
@@ -570,17 +563,6 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   // Validation phase
   //////////////////////////////////////////////////////////////////////////
 
-  if (options.GetTask() == Options::Task::CHECK_API && !main_parser.IsApiDump()) {
-    AIDL_ERROR(input_file_name) << "Input is not an API dump";
-    return AidlError::BAD_INPUT;
-  }
-
-  if (options.GetTask() != Options::Task::CHECK_API && main_parser.IsApiDump()) {
-    AIDL_ERROR(input_file_name) << "Input is not AIDL source code, but "
-                                << "an AIDL dump file";
-    return AidlError::BAD_INPUT;
-  }
-
   // Resolve the unresolved type references found from the input file
   if (!main_parser.Resolve()) {
     return AidlError::BAD_TYPE;
@@ -616,8 +598,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     // Ensure that foo.bar.IFoo is defined in <some_path>/foo/bar/IFoo.aidl
     // Do this only when there is only one type defined in the input file.
     // When there are multiple types in a file, we can't satisfy the convention.
-    if (options.GetTask() != Options::Task::CHECK_API && num_defined_types == 1 &&
-        !check_filename(input_file_name, *defined_type)) {
+    if (num_defined_types == 1 && !check_filename(input_file_name, *defined_type)) {
       return AidlError::BAD_PACKAGE;
     }
 
@@ -736,8 +717,15 @@ int compile_aidl(const Options& options, const IoDelegate& io_delegate) {
       string output_file_name = options.OutputFile();
       // if needed, generate the output file name from the base folder
       if (output_file_name.empty() && !options.OutputDir().empty()) {
-        output_file_name = generate_outputFileName(options, *defined_type);
-        if (output_file_name.empty()) {
+        if (lang == Options::Language::CPP) {
+          // For C++, output file is <out_dir>/IFoo.cpp
+          output_file_name =
+              options.OutputDir() + OS_PATH_SEPARATOR + defined_type->GetName() + ".cpp";
+          // For Java, output file is <out_dir>/path/to/package/IFoo.java
+        } else if (lang == Options::Language::JAVA) {
+          output_file_name = generate_outputFileName(options, *defined_type);
+        } else {
+          LOG(FATAL) << "Should not reach here" << endl;
           return 1;
         }
       }
