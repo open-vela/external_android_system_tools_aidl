@@ -242,8 +242,6 @@ class AidlVariableDeclaration : public AidlNode {
   std::string ToString() const;
   std::string Signature() const;
 
-  std::string ValueString() const;
-
  private:
   std::unique_ptr<AidlTypeSpecifier> type_;
   std::string name_;
@@ -293,27 +291,22 @@ class AidlMember : public AidlNode {
 
 class AidlConstantValue : public AidlNode {
  public:
-  enum class Type { ERROR, BOOLEAN, CHARACTER, HEXIDECIMAL, INTEGRAL, STRING };
+  enum class Type { ERROR, INTEGER, STRING };
+  static string ToString(Type type);
 
   virtual ~AidlConstantValue() = default;
 
-  static AidlConstantValue* Boolean(const AidlLocation& location, bool value);
-  static AidlConstantValue* Character(const AidlLocation& location, char value);
+  static AidlConstantValue* LiteralInt(const AidlLocation& location, const int32_t value);
   // example: "0x4f"
-  static AidlConstantValue* Hex(const AidlLocation& location, const std::string& value);
-  // example: 123, -5498, maybe any size
-  static AidlConstantValue* Integral(const AidlLocation& location, const std::string& value);
+  static AidlConstantValue* ParseHex(const AidlLocation& location, const std::string& value);
   // example: "\"asdf\""
-  static AidlConstantValue* String(const AidlLocation& location, const std::string& value);
+  static AidlConstantValue* ParseString(const AidlLocation& location, const std::string& value);
 
   Type GetType() const { return type_; }
-
-  bool CheckValid() const;
-  string As(const AidlTypeSpecifier& type) const;
+  string ToString() const;
 
  private:
   AidlConstantValue(const AidlLocation& location, Type type, const std::string& checked_value);
-  static string ToString(Type type);
 
   const Type type_ = Type::ERROR;
   const std::string value_;
@@ -331,8 +324,6 @@ class AidlConstantDeclaration : public AidlMember {
   const std::string& GetName() const { return name_; }
   const AidlConstantValue& GetValue() const { return *value_; }
   bool CheckValid() const;
-
-  string ValueString() const { return GetValue().As(GetType()); }
 
   AidlConstantDeclaration* AsConstantDeclaration() override { return this; }
 
@@ -582,15 +573,13 @@ class AidlImport : public AidlNode {
 
 class Parser {
  public:
+  explicit Parser(const android::aidl::IoDelegate& io_delegate, AidlTypenames& typenames);
   ~Parser();
 
-  // Parse contents of file |filename|. Should only be called once.
-  static std::unique_ptr<Parser> Parse(const std::string& filename,
-                                       const android::aidl::IoDelegate& io_delegate,
-                                       AidlTypenames& typenames);
+  // Parse contents of file |filename|.
+  bool ParseFile(const std::string& filename);
 
   void AddError() { error_++; }
-  bool HasError() { return error_ != 0; }
 
   const std::string& FileName() const { return filename_; }
   void* Scanner() const { return scanner_; }
@@ -630,21 +619,18 @@ class Parser {
   vector<AidlDefinedType*>& GetDefinedTypes() { return defined_types_; }
 
  private:
-  explicit Parser(const std::string& filename, std::string& raw_buffer,
-                  android::aidl::AidlTypenames& typenames);
-
+  const android::aidl::IoDelegate& io_delegate_;
+  int error_ = 0;
   std::string filename_;
   std::unique_ptr<AidlQualifiedName> package_;
-  AidlTypenames& typenames_;
-  bool is_apidump_ = false;
-
   void* scanner_ = nullptr;
-  YY_BUFFER_STATE buffer_;
-  int error_ = 0;
-
   std::vector<std::unique_ptr<AidlImport>> imports_;
+  std::unique_ptr<std::string> raw_buffer_;
+  YY_BUFFER_STATE buffer_;
+  AidlTypenames& typenames_;
   vector<AidlDefinedType*> defined_types_;
   vector<AidlTypeSpecifier*> unresolved_typespecs_;
+  bool is_apidump_ = false;
 
   DISALLOW_COPY_AND_ASSIGN(Parser);
 };
