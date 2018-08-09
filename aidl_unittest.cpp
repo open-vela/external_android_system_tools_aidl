@@ -361,7 +361,8 @@ TEST_F(AidlTest, ParsePositiveConstHexValue) {
   const auto& cpp_constants = interface->GetConstantDeclarations();
   EXPECT_EQ((size_t)1, cpp_constants.size());
   EXPECT_EQ("POSITIVE_HEX_VALUE", cpp_constants[0]->GetName());
-  EXPECT_EQ("245", cpp_constants[0]->ValueString());
+  ASSERT_EQ(AidlConstantValue::Type::INTEGER, cpp_constants[0]->GetValue().GetType());
+  EXPECT_EQ("245", cpp_constants[0]->GetValue().ToString());
 }
 
 TEST_F(AidlTest, ParseNegativeConstHexValue) {
@@ -381,7 +382,8 @@ TEST_F(AidlTest, ParseNegativeConstHexValue) {
   const auto& cpp_constants = interface->GetConstantDeclarations();
   EXPECT_EQ((size_t)1, cpp_constants.size());
   EXPECT_EQ("NEGATIVE_HEX_VALUE", cpp_constants[0]->GetName());
-  EXPECT_EQ("-1", cpp_constants[0]->ValueString());
+  ASSERT_EQ(AidlConstantValue::Type::INTEGER, cpp_constants[0]->GetValue().GetType());
+  EXPECT_EQ("-1", cpp_constants[0]->GetValue().ToString());
 }
 
 TEST_F(AidlTest, UnderstandsNestedParcelables) {

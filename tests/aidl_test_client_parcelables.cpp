@@ -152,28 +152,11 @@ bool ConfirmStructuredParcelables(const sp<ITestService>& s) {
   parcelable.f = kDesiredValue;
 
   if (parcelable.stringDefaultsToFoo != String16("foo")) {
-    cout << "stringDefaultsToFoo should be 'foo' but is " << parcelable.stringDefaultsToFoo << endl;
-    return false;
-  }
-  if (parcelable.byteDefaultsToFour != 4) {
-    cout << "byteDefaultsToFour should be 4 but is " << parcelable.byteDefaultsToFour << endl;
+    cout << "stringDefaultsToFoo should be 'foo' but is " << parcelable.stringDefaultsToFoo;
     return false;
   }
   if (parcelable.intDefaultsToFive != 5) {
-    cout << "intDefaultsToFive should be 5 but is " << parcelable.intDefaultsToFive << endl;
-    return false;
-  }
-  if (parcelable.longDefaultsToNegativeSeven != -7) {
-    cout << "longDefaultsToNegativeSeven should be -7 but is "
-         << parcelable.longDefaultsToNegativeSeven << endl;
-    return false;
-  }
-  if (!parcelable.booleanDefaultsToTrue) {
-    cout << "booleanDefaultsToTrue isn't true" << endl;
-    return false;
-  }
-  if (parcelable.charDefaultsToC != 'C') {
-    cout << "charDefaultsToC is " << parcelable.charDefaultsToC << endl;
+    cout << "intDefaultsToFive should be 5 but is " << parcelable.intDefaultsToFive;
     return false;
   }
 
