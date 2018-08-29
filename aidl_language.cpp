@@ -508,15 +508,6 @@ bool AidlConstantDeclaration::CheckValid() const {
   return !ValueString(AidlConstantValueDecorator).empty();
 }
 
-string AidlConstantDeclaration::ToString() const {
-  return "const " + type_->ToString() + " " + name_ + " = " +
-         ValueString(AidlConstantValueDecorator);
-}
-
-string AidlConstantDeclaration::Signature() const {
-  return type_->Signature() + " " + name_;
-}
-
 AidlMethod::AidlMethod(const AidlLocation& location, bool oneway, AidlTypeSpecifier* type,
                        const std::string& name, std::vector<std::unique_ptr<AidlArgument>>* args,
                        const std::string& comments)
@@ -637,9 +628,6 @@ void AidlInterface::Write(CodeWriter* writer) const {
   writer->Indent();
   for (const auto& method : GetMethods()) {
     writer->Write("%s;\n", method->ToString().c_str());
-  }
-  for (const auto& constdecl : GetConstantDeclarations()) {
-    writer->Write("%s;\n", constdecl->ToString().c_str());
   }
   writer->Dedent();
   writer->Write("}\n");
