@@ -98,6 +98,14 @@ string UpperCase(const std::string& s) {
   return result;
 }
 
+string BuildVarName(const AidlArgument& a) {
+  string prefix = "out_";
+  if (a.GetDirection() & AidlArgument::IN_DIR) {
+    prefix = "in_";
+  }
+  return prefix + a.GetName();
+}
+
 ArgList BuildArgList(const TypeNamespace& types, const AidlMethod& method, bool for_declaration,
                      bool type_name_only = false) {
   // Build up the argument list for the server method call.
@@ -216,6 +224,31 @@ bool DeclareLocalVariable(const AidlArgument& a, StatementBlock* b) {
 
   b->AddLiteral(type + " " + BuildVarName(a));
   return true;
+}
+
+string ClassName(const AidlDefinedType& defined_type, ClassNames type) {
+  string c_name = defined_type.GetName();
+
+  if (c_name.length() >= 2 && c_name[0] == 'I' && isupper(c_name[1]))
+    c_name = c_name.substr(1);
+
+  switch (type) {
+    case ClassNames::CLIENT:
+      c_name = "Bp" + c_name;
+      break;
+    case ClassNames::SERVER:
+      c_name = "Bn" + c_name;
+      break;
+    case ClassNames::INTERFACE:
+      c_name = "I" + c_name;
+      break;
+    case ClassNames::DEFAULT_IMPL:
+      c_name = "I" + c_name + "Default";
+      break;
+    case ClassNames::BASE:
+      break;
+  }
+  return c_name;
 }
 
 string BuildHeaderGuard(const AidlDefinedType& defined_type, ClassNames header_type) {
@@ -1057,6 +1090,22 @@ bool WriteHeader(const Options& options, const TypeNamespace& types, const AidlI
 }  // namespace internals
 
 using namespace internals;
+
+string HeaderFile(const AidlDefinedType& defined_type, ClassNames class_type, bool use_os_sep) {
+  string file_path = defined_type.GetPackage();
+  for (char& c: file_path) {
+    if (c == '.') {
+      c = (use_os_sep) ? OS_PATH_SEPARATOR : '/';
+    }
+  }
+  if (!file_path.empty()) {
+    file_path += (use_os_sep) ? OS_PATH_SEPARATOR : '/';
+  }
+  file_path += ClassName(defined_type, class_type);
+  file_path += ".h";
+
+  return file_path;
+}
 
 bool GenerateCppInterface(const string& output_file, const Options& options,
                           const TypeNamespace& types, const AidlInterface& interface,
