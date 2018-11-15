@@ -30,7 +30,6 @@ type ccProperties struct {
 	Export_generated_headers  []string
 	Sdk_version               *string
 	Stl                       *string
-	Cpp_std                   *string
 }
 
 type javaProperties struct {
