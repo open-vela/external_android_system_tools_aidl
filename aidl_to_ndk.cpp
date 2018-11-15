@@ -96,12 +96,7 @@ TypeInfo PrimitiveType(const std::string& cpp_name, const std::string& pretty_na
           .write_func = StandardWrite("::ndk::AParcel_writeVector"),
       }),
       .nullable = nullptr,
-      .nullable_array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
-          .cpp_name = "std::optional<std::vector<" + cpp_name + ">>",
-          .value_is_cheap = false,
-          .read_func = StandardRead("::ndk::AParcel_readVector"),
-          .write_func = StandardWrite("::ndk::AParcel_writeVector"),
-      }),
+      .nullable_array = nullptr,
   };
 }
 
@@ -176,18 +171,8 @@ static map<std::string, TypeInfo> kNdkTypeInfoMap = {
              .read_func = StandardRead("::ndk::AParcel_readVector"),
              .write_func = StandardWrite("::ndk::AParcel_writeVector"),
          }),
-         .nullable = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
-             .cpp_name = "std::optional<std::string>",
-             .value_is_cheap = false,
-             .read_func = StandardRead("::ndk::AParcel_readString"),
-             .write_func = StandardWrite("::ndk::AParcel_writeString"),
-         }),
-         .nullable_array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
-             .cpp_name = "std::optional<std::vector<std::optional<std::string>>>",
-             .value_is_cheap = false,
-             .read_func = StandardRead("::ndk::AParcel_readVector"),
-             .write_func = StandardWrite("::ndk::AParcel_writeVector"),
-         }),
+         .nullable = nullptr,
+         .nullable_array = nullptr,
      }},
     // TODO(b/111445392) {"List", ""},
     // TODO(b/111445392) {"Map", ""},
