@@ -248,15 +248,17 @@ class UserDataType : public Type {
 class InterfaceType : public Type {
  public:
   InterfaceType(const JavaTypeNamespace* types, const std::string& package, const std::string& name,
-                bool builtIn, const std::string& declFile, int declLine, const Type* stub,
-                const Type* proxy, const Type* defaultImpl);
+                bool builtIn, bool oneway, const std::string& declFile, int declLine,
+                const Type* stub, const Type* proxy, const Type* defaultImpl);
 
+  bool OneWay() const;
   const ValidatableType* NullableType() const override { return this; }
   const Type* GetStub() const { return stub_; }
   const Type* GetProxy() const { return proxy_; }
   const Type* GetDefaultImpl() const { return defaultImpl_; }
 
  private:
+  bool m_oneway;
   const Type* stub_;
   const Type* proxy_;
   const Type* defaultImpl_;
