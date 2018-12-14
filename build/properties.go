@@ -31,7 +31,6 @@ type ccProperties struct {
 	Sdk_version               *string
 	Stl                       *string
 	Cpp_std                   *string
-	Cflags                    []string
 }
 
 type javaProperties struct {
