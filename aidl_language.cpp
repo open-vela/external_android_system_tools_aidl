@@ -654,7 +654,7 @@ AidlInterface::AidlInterface(const AidlLocation& location, const std::string& na
                              const std::string& comments, bool oneway,
                              std::vector<std::unique_ptr<AidlMember>>* members,
                              const std::vector<std::string>& package)
-    : AidlDefinedType(location, name, comments, package) {
+    : AidlDefinedType(location, name, comments, package), oneway_(oneway) {
   for (auto& member : *members) {
     AidlMember* local = member.release();
     AidlMethod* method = local->AsMethod();
@@ -663,7 +663,6 @@ AidlInterface::AidlInterface(const AidlLocation& location, const std::string& na
     CHECK(method == nullptr || constant == nullptr);
 
     if (method) {
-      method->SetInterfaceOneway(oneway);
       methods_.emplace_back(method);
     } else if (constant) {
       constants_.emplace_back(constant);
@@ -692,11 +691,13 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
   // Has to be a pointer due to deleting copy constructor. No idea why.
   map<string, const AidlMethod*> method_names;
   for (const auto& m : GetMethods()) {
+    bool oneway = m->IsOneway() || IsOneway();
+
     if (!m->GetType().CheckValid(typenames)) {
       return false;
     }
 
-    if (m->IsOneway() && m->GetType().GetName() != "void") {
+    if (oneway && m->GetType().GetName() != "void") {
       AIDL_ERROR(m) << "oneway method '" << m->GetName() << "' cannot return a value";
       return false;
     }
@@ -715,7 +716,7 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
         return false;
       }
 
-      if (m->IsOneway() && arg->IsOut()) {
+      if (oneway && arg->IsOut()) {
         AIDL_ERROR(m) << "oneway method '" << m->GetName() << "' cannot have out parameters";
         return false;
       }
