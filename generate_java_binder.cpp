@@ -51,7 +51,7 @@ class VariableFactory {
 
   explicit VariableFactory(const std::string& base) : base_(base), index_(0) {}
   Variable* Get(const Type* type) {
-    Variable* v = new Variable(type->JavaType(), StringPrintf("%s%d", base_.c_str(), index_));
+    Variable* v = new Variable(type, StringPrintf("%s%d", base_.c_str(), index_));
     vars_.push_back(v);
     index_++;
     return v;
@@ -120,8 +120,9 @@ StubClass::StubClass(const Type* type, const InterfaceType* interfaceType, JavaT
   this->interfaces.push_back(interfaceType);
 
   // descriptor
-  Field* descriptor = new Field(STATIC | FINAL | PRIVATE,
-                                new Variable(types->StringType()->JavaType(), "DESCRIPTOR"));
+  Field* descriptor =
+      new Field(STATIC | FINAL | PRIVATE,
+                new Variable(types->StringType(), "DESCRIPTOR"));
   descriptor->value = "\"" + interfaceType->JavaType() + "\"";
   this->elements.push_back(descriptor);
 
@@ -157,7 +158,7 @@ StubClass::StubClass(const Type* type, const InterfaceType* interfaceType, JavaT
     getDefaultTransactionName->modifiers = PUBLIC | STATIC;
     getDefaultTransactionName->returnType = types->StringType();
     getDefaultTransactionName->name = "getDefaultTransactionName";
-    Variable* code = new Variable(types->IntType()->JavaType(), "transactionCode");
+    Variable* code = new Variable(types->IntType(), "transactionCode");
     getDefaultTransactionName->parameters.push_back(code);
     getDefaultTransactionName->statements = new StatementBlock;
     this->code_to_method_name_switch = new SwitchStatement(code);
@@ -169,7 +170,7 @@ StubClass::StubClass(const Type* type, const InterfaceType* interfaceType, JavaT
     getTransactionName->modifiers = PUBLIC;
     getTransactionName->returnType = types->StringType();
     getTransactionName->name = "getTransactionName";
-    Variable* code2 = new Variable(types->IntType()->JavaType(), "transactionCode");
+    Variable* code2 = new Variable(types->IntType(), "transactionCode");
     getTransactionName->parameters.push_back(code2);
     getTransactionName->statements = new StatementBlock;
     getTransactionName->statements->Add(
@@ -178,10 +179,10 @@ StubClass::StubClass(const Type* type, const InterfaceType* interfaceType, JavaT
   }
 
   // onTransact
-  this->transact_code = new Variable(types->IntType()->JavaType(), "code");
-  this->transact_data = new Variable(types->ParcelType()->JavaType(), "data");
-  this->transact_reply = new Variable(types->ParcelType()->JavaType(), "reply");
-  this->transact_flags = new Variable(types->IntType()->JavaType(), "flags");
+  this->transact_code = new Variable(types->IntType(), "code");
+  this->transact_data = new Variable(types->ParcelType(), "data");
+  this->transact_reply = new Variable(types->ParcelType(), "reply");
+  this->transact_flags = new Variable(types->IntType(), "flags");
   Method* onTransact = new Method;
   onTransact->modifiers = PUBLIC | OVERRIDE;
   onTransact->returnType = types->BoolType();
@@ -242,7 +243,7 @@ Expression* StubClass::get_transact_descriptor(const JavaTypeNamespace* types,
   // When not outlining, store the descriptor literal into a local variable, in
   // an effort to save const-string instructions in each switch case.
   if (transact_descriptor == nullptr) {
-    transact_descriptor = new Variable(types->StringType()->JavaType(), "descriptor");
+    transact_descriptor = new Variable(types->StringType(), "descriptor");
     transact_statements->Add(
         new VariableDeclaration(transact_descriptor,
                                 new LiteralExpression("DESCRIPTOR")));
@@ -252,7 +253,7 @@ Expression* StubClass::get_transact_descriptor(const JavaTypeNamespace* types,
 
 void StubClass::make_as_interface(const InterfaceType* interfaceType,
                                   JavaTypeNamespace* types) {
-  Variable* obj = new Variable(types->IBinderType()->JavaType(), "obj");
+  Variable* obj = new Variable(types->IBinderType(), "obj");
 
   Method* m = new Method;
   m->comment = "/**\n * Cast an IBinder object into an ";
@@ -275,7 +276,7 @@ void StubClass::make_as_interface(const InterfaceType* interfaceType,
   MethodCall* queryLocalInterface = new MethodCall(obj, "queryLocalInterface");
   queryLocalInterface->arguments.push_back(new LiteralExpression("DESCRIPTOR"));
   IInterfaceType* iinType = new IInterfaceType(types);
-  Variable* iin = new Variable(iinType->JavaType(), "iin");
+  Variable* iin = new Variable(iinType, "iin");
   VariableDeclaration* iinVd =
       new VariableDeclaration(iin, queryLocalInterface, nullptr);
   m->statements->Add(iinVd);
@@ -323,11 +324,11 @@ ProxyClass::ProxyClass(const JavaTypeNamespace* types, const Type* type,
   this->interfaces.push_back(interfaceType);
 
   // IBinder mRemote
-  mRemote = new Variable(types->IBinderType()->JavaType(), "mRemote");
+  mRemote = new Variable(types->IBinderType(), "mRemote");
   this->elements.push_back(new Field(PRIVATE, mRemote));
 
   // Proxy()
-  Variable* remote = new Variable(types->IBinderType()->JavaType(), "remote");
+  Variable* remote = new Variable(types->IBinderType(), "remote");
   Method* ctor = new Method;
   ctor->name = "Proxy";
   ctor->statements = new StatementBlock;
@@ -357,7 +358,7 @@ ProxyClass::~ProxyClass() {}
 static void generate_new_array(const Type* t, StatementBlock* addTo,
                                Variable* v, Variable* parcel,
                                JavaTypeNamespace* types) {
-  Variable* len = new Variable(types->IntType()->JavaType(), v->name + "_length");
+  Variable* len = new Variable(types->IntType(), v->name + "_length");
   addTo->Add(new VariableDeclaration(len, new MethodCall(parcel, "readInt")));
   IfStatement* lencheck = new IfStatement();
   lencheck->expression = new Comparison(len, "<", new LiteralExpression("0"));
@@ -409,8 +410,9 @@ static std::unique_ptr<Method> generate_interface_method(
   decl->annotations = generate_java_annotations(method.GetType());
 
   for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
-    decl->parameters.push_back(new Variable(arg->GetType().GetLanguageType<Type>()->JavaType(),
-                                            arg->GetName(), arg->GetType().IsArray() ? 1 : 0));
+    decl->parameters.push_back(
+        new Variable(arg->GetType().GetLanguageType<Type>(), arg->GetName(),
+                     arg->GetType().IsArray() ? 1 : 0));
   }
 
   decl->exceptions.push_back(types->RemoteExceptionType());
@@ -459,9 +461,13 @@ static void generate_stub_code(const AidlInterface& iface, const AidlMethod& met
         statements->Add(new LiteralStatement(code));
       } else {
         if (!arg->GetType().IsArray()) {
-          statements->Add(new Assignment(v, new NewExpression(t)));
+          statements->Add(new Assignment(v, new NewExpression(v->type)));
         } else {
-          generate_new_array(t, statements, v, transact_data, types);
+          generate_new_array(v->type,
+                             statements,
+                             v,
+                             transact_data,
+                             types);
         }
       }
 
@@ -502,8 +508,10 @@ static void generate_stub_code(const AidlInterface& iface, const AidlMethod& met
       statements->Add(ex);
     }
   } else {
-    Variable* _result = new Variable(method.GetType().GetLanguageType<Type>()->JavaType(),
-                                     "_result", method.GetType().IsArray() ? 1 : 0);
+    Variable* _result =
+        new Variable(method.GetType().GetLanguageType<Type>(),
+                     "_result",
+                     method.GetType().IsArray() ? 1 : 0);
     if (options.GenTraces()) {
       statements->Add(new VariableDeclaration(_result));
       statements->Add(tryStatement);
@@ -559,8 +567,8 @@ static void generate_stub_case_outline(const AidlInterface& iface, const AidlMet
   std::string outline_name = "onTransact$" + method.GetName() + "$";
   // Generate an "outlined" method with the actual code.
   {
-    Variable* transact_data = new Variable(types->ParcelType()->JavaType(), "data");
-    Variable* transact_reply = new Variable(types->ParcelType()->JavaType(), "reply");
+    Variable* transact_data = new Variable(types->ParcelType(), "data");
+    Variable* transact_reply = new Variable(types->ParcelType(), "reply");
     Method* onTransact_case = new Method;
     onTransact_case->modifiers = PRIVATE;
     onTransact_case->returnType = types->BoolType();
@@ -601,18 +609,19 @@ static std::unique_ptr<Method> generate_proxy_method(
   proxy->name = method.GetName();
   proxy->statements = new StatementBlock;
   for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
-    proxy->parameters.push_back(new Variable(arg->GetType().GetLanguageType<Type>()->JavaType(),
-                                             arg->GetName(), arg->GetType().IsArray() ? 1 : 0));
+    proxy->parameters.push_back(
+        new Variable(arg->GetType().GetLanguageType<Type>(), arg->GetName(),
+                     arg->GetType().IsArray() ? 1 : 0));
   }
   proxy->exceptions.push_back(types->RemoteExceptionType());
 
   // the parcels
-  Variable* _data = new Variable(types->ParcelType()->JavaType(), "_data");
+  Variable* _data = new Variable(types->ParcelType(), "_data");
   proxy->statements->Add(new VariableDeclaration(
       _data, new MethodCall(types->ParcelType(), "obtain")));
   Variable* _reply = nullptr;
   if (!oneway) {
-    _reply = new Variable(types->ParcelType()->JavaType(), "_reply");
+    _reply = new Variable(types->ParcelType(), "_reply");
     proxy->statements->Add(new VariableDeclaration(
         _reply, new MethodCall(types->ParcelType(), "obtain")));
   }
@@ -620,8 +629,8 @@ static std::unique_ptr<Method> generate_proxy_method(
   // the return value
   Variable* _result = nullptr;
   if (method.GetType().GetName() != "void") {
-    _result =
-        new Variable(proxy->returnType->JavaType(), "_result", method.GetType().IsArray() ? 1 : 0);
+    _result = new Variable(proxy->returnType, "_result",
+                           method.GetType().IsArray() ? 1 : 0);
     proxy->statements->Add(new VariableDeclaration(_result));
   }
 
@@ -647,7 +656,8 @@ static std::unique_ptr<Method> generate_proxy_method(
   // the parameters
   for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
     const Type* t = arg->GetType().GetLanguageType<Type>();
-    Variable* v = new Variable(t->JavaType(), arg->GetName(), arg->GetType().IsArray() ? 1 : 0);
+    Variable* v =
+        new Variable(t, arg->GetName(), arg->GetType().IsArray() ? 1 : 0);
     AidlArgument::Direction dir = arg->GetDirection();
     if (dir == AidlArgument::OUT_DIR && arg->GetType().IsArray()) {
       IfStatement* checklen = new IfStatement();
@@ -671,7 +681,7 @@ static std::unique_ptr<Method> generate_proxy_method(
       proxyClass->mRemote, "transact", 4, new LiteralExpression("Stub." + transactCodeName), _data,
       _reply ? _reply : NULL_VALUE,
       new LiteralExpression(oneway ? "android.os.IBinder.FLAG_ONEWAY" : "0")));
-  unique_ptr<Variable> _status(new Variable(types->BoolType()->JavaType(), "_status"));
+  unique_ptr<Variable> _status(new Variable(types->BoolType(), "_status"));
   tryStatement->statements->Add(new VariableDeclaration(_status.release(), call.release()));
 
   // If the transaction returns false, which means UNKNOWN_TRANSACTION, fall
@@ -759,8 +769,8 @@ static void generate_methods(const AidlInterface& iface, const AidlMethod& metho
   string transactCodeName = "TRANSACTION_";
   transactCodeName += method.GetName();
 
-  Field* transactCode =
-      new Field(STATIC | FINAL, new Variable(types->IntType()->JavaType(), transactCodeName));
+  Field* transactCode = new Field(
+      STATIC | FINAL, new Variable(types->IntType(), transactCodeName));
   transactCode->value =
       StringPrintf("(android.os.IBinder.FIRST_CALL_TRANSACTION + %d)", index);
   stubClass->elements.push_back(transactCode);
@@ -915,9 +925,8 @@ static unique_ptr<ClassElement> generate_default_impl_method(const AidlMethod& m
   default_method->name = method.GetName();
   default_method->statements = new StatementBlock;
   for (const auto& arg : method.GetArguments()) {
-    default_method->parameters.push_back(
-        new Variable(arg->GetType().GetLanguageType<Type>()->JavaType(), arg->GetName(),
-                     arg->GetType().IsArray() ? 1 : 0));
+    default_method->parameters.push_back(new Variable(
+        arg->GetType().GetLanguageType<Type>(), arg->GetName(), arg->GetType().IsArray() ? 1 : 0));
   }
   default_method->exceptions.push_back(
       method.GetType().GetLanguageType<Type>()->GetTypeNamespace()->RemoteExceptionType());

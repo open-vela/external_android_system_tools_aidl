@@ -87,13 +87,13 @@ struct StringLiteralExpression : public Expression {
 };
 
 struct Variable : public Expression {
-  const std::string type;
+  const Type* type = nullptr;
   std::string name;
   int dimension = 0;
 
   Variable() = default;
-  Variable(const std::string& type, const std::string& name);
-  Variable(const std::string& type, const std::string& name, int dimension);
+  Variable(const Type* type, const std::string& name);
+  Variable(const Type* type, const std::string& name, int dimension);
   virtual ~Variable() = default;
 
   void WriteDeclaration(CodeWriter* to) const;
