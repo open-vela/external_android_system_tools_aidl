@@ -276,7 +276,8 @@ void StubClass::make_as_interface(const InterfaceType* interfaceType,
   queryLocalInterface->arguments.push_back(new LiteralExpression("DESCRIPTOR"));
   IInterfaceType* iinType = new IInterfaceType(types);
   Variable* iin = new Variable(iinType->JavaType(), "iin");
-  VariableDeclaration* iinVd = new VariableDeclaration(iin, queryLocalInterface);
+  VariableDeclaration* iinVd =
+      new VariableDeclaration(iin, queryLocalInterface, nullptr);
   m->statements->Add(iinVd);
 
   // Ensure the instance type of the local object is as expected.
@@ -292,10 +293,11 @@ void StubClass::make_as_interface(const InterfaceType* interfaceType,
   IfStatement* instOfStatement = new IfStatement();
   instOfStatement->expression = new Comparison(iinNotNull, "&&", instOfCheck);
   instOfStatement->statements = new StatementBlock;
-  instOfStatement->statements->Add(new ReturnStatement(new Cast(interfaceType->JavaType(), iin)));
+  instOfStatement->statements->Add(
+      new ReturnStatement(new Cast(interfaceType, iin)));
   m->statements->Add(instOfStatement);
 
-  NewExpression* ne = new NewExpression(interfaceType->GetProxy()->InstantiableName());
+  NewExpression* ne = new NewExpression(interfaceType->GetProxy());
   ne->arguments.push_back(obj);
   m->statements->Add(new ReturnStatement(ne));
 
@@ -361,7 +363,8 @@ static void generate_new_array(const Type* t, StatementBlock* addTo,
   lencheck->expression = new Comparison(len, "<", new LiteralExpression("0"));
   lencheck->statements->Add(new Assignment(v, NULL_VALUE));
   lencheck->elseif = new IfStatement();
-  lencheck->elseif->statements->Add(new Assignment(v, new NewArrayExpression(t->JavaType(), len)));
+  lencheck->elseif->statements->Add(
+      new Assignment(v, new NewArrayExpression(t, len)));
   addTo->Add(lencheck);
 }
 
@@ -456,7 +459,7 @@ static void generate_stub_code(const AidlInterface& iface, const AidlMethod& met
         statements->Add(new LiteralStatement(code));
       } else {
         if (!arg->GetType().IsArray()) {
-          statements->Add(new Assignment(v, new NewExpression(t->InstantiableName())));
+          statements->Add(new Assignment(v, new NewExpression(t)));
         } else {
           generate_new_array(t, statements, v, transact_data, types);
         }
@@ -605,13 +608,13 @@ static std::unique_ptr<Method> generate_proxy_method(
 
   // the parcels
   Variable* _data = new Variable(types->ParcelType()->JavaType(), "_data");
-  proxy->statements->Add(new VariableDeclaration(
-      _data, new MethodCall(types->ParcelType(), "obtain")));
+  proxy->statements->Add(
+      new VariableDeclaration(_data, new MethodCall(types->ParcelType()->JavaType(), "obtain")));
   Variable* _reply = nullptr;
   if (!oneway) {
     _reply = new Variable(types->ParcelType()->JavaType(), "_reply");
-    proxy->statements->Add(new VariableDeclaration(
-        _reply, new MethodCall(types->ParcelType(), "obtain")));
+    proxy->statements->Add(
+        new VariableDeclaration(_reply, new MethodCall(types->ParcelType()->JavaType(), "obtain")));
   }
 
   // the return value
