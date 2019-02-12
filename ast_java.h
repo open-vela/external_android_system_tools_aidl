@@ -21,7 +21,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <variant>
 #include <vector>
 
 enum {
@@ -103,11 +102,12 @@ struct Variable : public Expression {
 };
 
 struct FieldVariable : public Expression {
-  std::variant<Expression*, std::string> receiver;
+  Expression* object;
+  const Type* clazz;
   std::string name;
 
   FieldVariable(Expression* object, const std::string& name);
-  FieldVariable(const std::string& clazz, const std::string& name);
+  FieldVariable(const Type* clazz, const std::string& name);
   virtual ~FieldVariable() = default;
 
   void Write(CodeWriter* to) const;
@@ -163,16 +163,17 @@ struct ExpressionStatement : public Statement {
 struct Assignment : public Expression {
   Variable* lvalue;
   Expression* rvalue;
-  std::optional<std::string> cast = std::nullopt;
+  const Type* cast;
 
   Assignment(Variable* lvalue, Expression* rvalue);
-  Assignment(Variable* lvalue, Expression* rvalue, std::string cast);
+  Assignment(Variable* lvalue, Expression* rvalue, const Type* cast);
   virtual ~Assignment() = default;
   void Write(CodeWriter* to) const override;
 };
 
 struct MethodCall : public Expression {
-  std::variant<std::monostate, Expression*, std::string> receiver;
+  Expression* obj = nullptr;
+  const Type* clazz = nullptr;
   std::string name;
   std::vector<Expression*> arguments;
   std::vector<std::string> exceptions;
@@ -180,9 +181,9 @@ struct MethodCall : public Expression {
   explicit MethodCall(const std::string& name);
   MethodCall(const std::string& name, int argc, ...);
   MethodCall(Expression* obj, const std::string& name);
-  MethodCall(const std::string& clazz, const std::string& name);
+  MethodCall(const Type* clazz, const std::string& name);
   MethodCall(Expression* obj, const std::string& name, int argc, ...);
-  MethodCall(const std::string&, const std::string& name, int argc, ...);
+  MethodCall(const Type* clazz, const std::string& name, int argc, ...);
   virtual ~MethodCall() = default;
   void Write(CodeWriter* to) const override;
 
