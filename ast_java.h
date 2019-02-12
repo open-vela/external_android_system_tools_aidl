@@ -21,6 +21,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 enum {
@@ -48,6 +49,8 @@ class CodeWriter;
 namespace android {
 namespace aidl {
 namespace java {
+
+class Type;
 
 // Write the modifiers that are set in both mod and mask
 void WriteModifiers(CodeWriter* to, int mod, int mask);
@@ -100,12 +103,11 @@ struct Variable : public Expression {
 };
 
 struct FieldVariable : public Expression {
-  Expression* object;
-  const Type* clazz;
+  std::variant<Expression*, std::string> receiver;
   std::string name;
 
   FieldVariable(Expression* object, const std::string& name);
-  FieldVariable(const Type* clazz, const std::string& name);
+  FieldVariable(const std::string& clazz, const std::string& name);
   virtual ~FieldVariable() = default;
 
   void Write(CodeWriter* to) const;
@@ -161,17 +163,16 @@ struct ExpressionStatement : public Statement {
 struct Assignment : public Expression {
   Variable* lvalue;
   Expression* rvalue;
-  const Type* cast;
+  std::optional<std::string> cast = std::nullopt;
 
   Assignment(Variable* lvalue, Expression* rvalue);
-  Assignment(Variable* lvalue, Expression* rvalue, const Type* cast);
+  Assignment(Variable* lvalue, Expression* rvalue, std::string cast);
   virtual ~Assignment() = default;
   void Write(CodeWriter* to) const override;
 };
 
 struct MethodCall : public Expression {
-  Expression* obj = nullptr;
-  const Type* clazz = nullptr;
+  std::variant<std::monostate, Expression*, std::string> receiver;
   std::string name;
   std::vector<Expression*> arguments;
   std::vector<std::string> exceptions;
@@ -179,9 +180,9 @@ struct MethodCall : public Expression {
   explicit MethodCall(const std::string& name);
   MethodCall(const std::string& name, int argc, ...);
   MethodCall(Expression* obj, const std::string& name);
-  MethodCall(const Type* clazz, const std::string& name);
+  MethodCall(const std::string& clazz, const std::string& name);
   MethodCall(Expression* obj, const std::string& name, int argc, ...);
-  MethodCall(const Type* clazz, const std::string& name, int argc, ...);
+  MethodCall(const std::string&, const std::string& name, int argc, ...);
   virtual ~MethodCall() = default;
   void Write(CodeWriter* to) const override;
 
@@ -200,11 +201,11 @@ struct Comparison : public Expression {
 };
 
 struct NewExpression : public Expression {
-  const std::string instantiableName;
+  const Type* type;
   std::vector<Expression*> arguments;
 
-  explicit NewExpression(const std::string& name);
-  NewExpression(const std::string& name, int argc, ...);
+  explicit NewExpression(const Type* type);
+  NewExpression(const Type* type, int argc, ...);
   virtual ~NewExpression() = default;
   void Write(CodeWriter* to) const override;
 
@@ -213,30 +214,32 @@ struct NewExpression : public Expression {
 };
 
 struct NewArrayExpression : public Expression {
-  const std::string type;
+  const Type* type;
   Expression* size;
 
-  NewArrayExpression(const std::string& type, Expression* size);
+  NewArrayExpression(const Type* type, Expression* size);
   virtual ~NewArrayExpression() = default;
   void Write(CodeWriter* to) const override;
 };
 
 struct Cast : public Expression {
-  const std::string type;
+  const Type* type = nullptr;
   Expression* expression = nullptr;
 
   Cast() = default;
-  Cast(const std::string& type, Expression* expression);
+  Cast(const Type* type, Expression* expression);
   virtual ~Cast() = default;
   void Write(CodeWriter* to) const override;
 };
 
 struct VariableDeclaration : public Statement {
   Variable* lvalue = nullptr;
+  const Type* cast = nullptr;
   Expression* rvalue = nullptr;
 
   explicit VariableDeclaration(Variable* lvalue);
-  VariableDeclaration(Variable* lvalue, Expression* rvalue);
+  VariableDeclaration(Variable* lvalue, Expression* rvalue,
+                      const Type* cast = nullptr);
   virtual ~VariableDeclaration() = default;
   void Write(CodeWriter* to) const override;
 };
