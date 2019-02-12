@@ -22,13 +22,6 @@
 using std::vector;
 using std::string;
 
-template <class... Ts>
-struct overloaded : Ts... {
-  using Ts::operator()...;
-};
-template <class... Ts>
-overloaded(Ts...)->overloaded<Ts...>;
-
 namespace android {
 namespace aidl {
 namespace java {
@@ -121,15 +114,18 @@ void Variable::WriteDeclaration(CodeWriter* to) const {
 
 void Variable::Write(CodeWriter* to) const { to->Write("%s", name.c_str()); }
 
-FieldVariable::FieldVariable(Expression* o, const string& n) : receiver(o), name(n) {}
+FieldVariable::FieldVariable(Expression* o, const string& n)
+    : object(o), clazz(nullptr), name(n) {}
 
-FieldVariable::FieldVariable(const string& c, const string& n) : receiver(c), name(n) {}
+FieldVariable::FieldVariable(const Type* c, const string& n)
+    : object(nullptr), clazz(c), name(n) {}
 
 void FieldVariable::Write(CodeWriter* to) const {
-  visit(
-      overloaded{[&](Expression* e) { e->Write(to); },
-                 [&](const std::string& s) { to->Write("%s", s.c_str()); }, [](std::monostate) {}},
-      this->receiver);
+  if (this->object != nullptr) {
+    this->object->Write(to);
+  } else if (this->clazz != nullptr) {
+    to->Write("%s", this->clazz->JavaType().c_str());
+  }
   to->Write(".%s", name.c_str());
 }
 
@@ -165,15 +161,17 @@ void ExpressionStatement::Write(CodeWriter* to) const {
   to->Write(";\n");
 }
 
-Assignment::Assignment(Variable* l, Expression* r) : lvalue(l), rvalue(r) {}
+Assignment::Assignment(Variable* l, Expression* r)
+    : lvalue(l), rvalue(r), cast(nullptr) {}
 
-Assignment::Assignment(Variable* l, Expression* r, string c) : lvalue(l), rvalue(r), cast(c) {}
+Assignment::Assignment(Variable* l, Expression* r, const Type* c)
+    : lvalue(l), rvalue(r), cast(c) {}
 
 void Assignment::Write(CodeWriter* to) const {
   this->lvalue->Write(to);
   to->Write(" = ");
-  if (this->cast) {
-    to->Write("(%s)", this->cast->c_str());
+  if (this->cast != nullptr) {
+    to->Write("(%s)", this->cast->JavaType().c_str());
   }
   this->rvalue->Write(to);
 }
@@ -187,19 +185,20 @@ MethodCall::MethodCall(const string& n, int argc = 0, ...) : name(n) {
   va_end(args);
 }
 
-MethodCall::MethodCall(Expression* o, const string& n) : receiver(o), name(n) {}
+MethodCall::MethodCall(Expression* o, const string& n) : obj(o), name(n) {}
 
-MethodCall::MethodCall(const std::string& t, const string& n) : receiver(t), name(n) {}
+MethodCall::MethodCall(const Type* t, const string& n) : clazz(t), name(n) {}
 
-MethodCall::MethodCall(Expression* o, const string& n, int argc = 0, ...) : receiver(o), name(n) {
+MethodCall::MethodCall(Expression* o, const string& n, int argc = 0, ...)
+    : obj(o), name(n) {
   va_list args;
   va_start(args, argc);
   init(argc, args);
   va_end(args);
 }
 
-MethodCall::MethodCall(const std::string& t, const string& n, int argc = 0, ...)
-    : receiver(t), name(n) {
+MethodCall::MethodCall(const Type* t, const string& n, int argc = 0, ...)
+    : clazz(t), name(n) {
   va_list args;
   va_start(args, argc);
   init(argc, args);
@@ -214,13 +213,12 @@ void MethodCall::init(int n, va_list args) {
 }
 
 void MethodCall::Write(CodeWriter* to) const {
-  visit(
-      overloaded{[&](Expression* e) {
-                   e->Write(to);
-                   to->Write(".");
-                 },
-                 [&](const std::string& s) { to->Write("%s.", s.c_str()); }, [](std::monostate) {}},
-      this->receiver);
+  if (this->obj != nullptr) {
+    this->obj->Write(to);
+    to->Write(".");
+  } else if (this->clazz != nullptr) {
+    to->Write("%s.", this->clazz->JavaType().c_str());
+  }
   to->Write("%s(", this->name.c_str());
   WriteArgumentList(to, this->arguments);
   to->Write(")");
