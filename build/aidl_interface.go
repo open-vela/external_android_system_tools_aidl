@@ -697,7 +697,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 	}
 
 	importExportDependencies := wrap("", i.properties.Imports, "-"+lang)
-	var libJSONCppDependency []string
 	var sdkVersion *string
 	var stl *string
 	var cpp_std *string
@@ -705,8 +704,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 	if lang == langCpp {
 		importExportDependencies = append(importExportDependencies, "libbinder", "libutils")
 		if genLog {
-			libJSONCppDependency = []string{"libjsoncpp"}
-			importExportDependencies = append(importExportDependencies, "libbase")
+			importExportDependencies = append(importExportDependencies, "libjsoncpp", "libbase")
 		}
 		sdkVersion = nil
 		stl = nil
@@ -729,8 +727,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		Generated_sources:         cppGeneratedSources,
 		Generated_headers:         cppGeneratedSources,
 		Export_generated_headers:  cppGeneratedSources,
-		Static:                    staticLib{Whole_static_libs: libJSONCppDependency},
-		Shared:                    sharedLib{Shared_libs: libJSONCppDependency, Export_shared_lib_headers: libJSONCppDependency},
 		Shared_libs:               importExportDependencies,
 		Export_shared_lib_headers: importExportDependencies,
 		Sdk_version:               sdkVersion,
