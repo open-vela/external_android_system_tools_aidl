@@ -49,7 +49,6 @@ enum class AidlError {
 int compile_aidl(const Options& options, const IoDelegate& io_delegate);
 bool preprocess_aidl(const Options& options, const IoDelegate& io_delegate);
 bool dump_api(const Options& options, const IoDelegate& io_delegate);
-bool dump_mappings(const Options& options, const IoDelegate& io_delegate);
 
 const string kGetInterfaceVersion("getInterfaceVersion");
 
