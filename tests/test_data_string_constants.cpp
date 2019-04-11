@@ -468,10 +468,6 @@ namespace os {
   return _aidl_ret_status;
 }
 
-int32_t BnStringConstants::getInterfaceVersion() {
-  return IStringConstants::VERSION;
-}
-
 }  // namespace os
 
 }  // namespace android
