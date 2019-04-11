@@ -833,10 +833,6 @@ namespace os {
   return _aidl_ret_status;
 }
 
-int32_t BnPingResponder::getInterfaceVersion() {
-  return IPingResponder::VERSION;
-}
-
 }  // namespace os
 
 }  // namespace android
@@ -934,7 +930,6 @@ namespace os {
 class BnPingResponder : public ::android::BnInterface<IPingResponder> {
 public:
   ::android::status_t onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) override;
-  int32_t getInterfaceVersion() final override;
 };  // class BnPingResponder
 
 }  // namespace os
