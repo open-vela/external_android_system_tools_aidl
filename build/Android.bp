@@ -48,15 +48,6 @@ java_defaults {
 
 // Tests
 
-filegroup {
-    name: "aidl-test-filegroup",
-    srcs: [
-        "tests_1/some_package/IFoo.aidl",
-        "tests_1/some_package/Thing.aidl",
-        "tests_1/some_package/sub_package/*.aidl",
-    ],
-}
-
 // Copy of test-piece-1 as test only. Creating a separate library because 'vendor_available' is
 // contagious.
 aidl_interface {
@@ -64,7 +55,9 @@ aidl_interface {
     local_include_dir: "tests_1",
     vendor_available: true,
     srcs: [
-        ":aidl-test-filegroup",
+        "tests_1/some_package/IFoo.aidl",
+        "tests_1/some_package/Thing.aidl",
+        "tests_1/some_package/sub_package/*.aidl",
     ],
 }
 
@@ -74,7 +67,7 @@ aidl_interface {
     srcs: [
         "tests_1/some_package/IFoo.aidl",
         "tests_1/some_package/Thing.aidl",
-        "tests_1/some_package/sub_package/*.aidl", // testing glob w/o filegroup
+        "tests_1/some_package/sub_package/*.aidl",
     ],
     api_dir: "api/test-piece-1",
     versions: ["1"],
