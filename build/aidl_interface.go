@@ -69,10 +69,10 @@ var (
 	}, "imports", "outDir", "optionalFlags")
 
 	aidlDumpApiRule = pctx.StaticRule("aidlDumpApiRule", blueprint.RuleParams{
-		Command: `rm -rf "${outDir}" && mkdir -p "${outDir}" && ` +
-			`${aidlCmd} --dumpapi --structured ${imports} --out ${outDir} ${in}`,
+		Command: `rm -rf "${out}" && mkdir -p "${out}" && ` +
+			`${aidlCmd} --dumpapi --structured ${imports} --out ${out} ${in}`,
 		CommandDeps: []string{"${aidlCmd}"},
-	}, "imports", "outDir")
+	}, "imports")
 
 	aidlDumpMappingsRule = pctx.StaticRule("aidlDumpMappingsRule", blueprint.RuleParams{
 		Command: `rm -rf "${outDir}" && mkdir -p "${outDir}" && ` +
@@ -85,12 +85,12 @@ var (
 		blueprint.RuleParams{
 			Command: `mkdir -p ${to} && rm -rf ${to}/* && ` +
 				`${bpmodifyCmd} -w -m ${name} -parameter versions -a ${version} ${bp} && ` +
-				`cp -rf ${apiDir}/* ${to} && ` +
+				`cp -rf ${in}/* ${to} && ` +
 				`find ${to} -type f -exec bash -c ` +
 				`"cat ${apiPreamble} {} > {}.temp; mv {}.temp {}" \; && ` +
 				`touch ${out}`,
 			CommandDeps: []string{"${bpmodifyCmd}"},
-		}, "to", "name", "version", "bp", "apiDir", "apiPreamble")
+		}, "to", "name", "version", "bp", "apiPreamble")
 
 	aidlCheckApiRule = pctx.StaticRule("aidlCheckApiRule", blueprint.RuleParams{
 		Command: `(${aidlCmd} --checkapi ${old} ${new} && touch ${out}) || ` +
@@ -112,7 +112,6 @@ func init() {
 	pctx.SourcePathVariable("aidlToJniCmd", "system/tools/aidl/build/aidl_to_jni.py")
 	android.RegisterModuleType("aidl_interface", aidlInterfaceFactory)
 	android.RegisterModuleType("aidl_mapping", aidlMappingFactory)
-	android.RegisterMakeVarsProvider(pctx, allAidlInterfacesMakeVars)
 }
 
 // wrap(p, a, s) = [p + v + s for v in a]
@@ -133,24 +132,6 @@ func concat(sstrs ...[]string) []string {
 	return ret
 }
 
-func checkAndUpdateSources(ctx android.ModuleContext, rawSrcs []string, inDir string) android.Paths {
-	srcs := android.PathsForModuleSrc(ctx, rawSrcs)
-	srcs = android.PathsWithModuleSrcSubDir(ctx, srcs, inDir)
-
-	if len(srcs) == 0 {
-		ctx.PropertyErrorf("srcs", "No sources provided.")
-	}
-
-	for _, source := range srcs {
-		if source.Ext() != ".aidl" {
-			ctx.PropertyErrorf("srcs", "Source must be a .aidl file: "+source.String())
-			continue
-		}
-	}
-
-	return srcs
-}
-
 func isRelativePath(path string) bool {
 	if path == "" {
 		return true
@@ -160,8 +141,8 @@ func isRelativePath(path string) bool {
 }
 
 type aidlGenProperties struct {
-	Srcs     []string `android:"path"`
-	AidlRoot string   // base directory for the input aidl file
+	Srcs     []string
+	AidlRoot string // base directory for the input aidl file
 	Imports  []string
 	Lang     string // target language [java|cpp|ndk]
 	BaseName string
@@ -177,22 +158,15 @@ type aidlGenRule struct {
 	implicitInputs android.Paths
 	importFlags    string
 
-	genOutDir     android.ModuleGenPath
-	genHeaderDir  android.ModuleGenPath
-	genHeaderDeps android.Paths
-	genOutputs    android.WritablePaths
+	genOutDir    android.ModuleGenPath
+	genHeaderDir android.ModuleGenPath
+	genOutputs   android.WritablePaths
 }
 
 var _ android.SourceFileProducer = (*aidlGenRule)(nil)
 var _ genrule.SourceFileGenerator = (*aidlGenRule)(nil)
 
 func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
-	srcs := checkAndUpdateSources(ctx, g.properties.Srcs, g.properties.AidlRoot)
-
-	if ctx.Failed() {
-		return
-	}
-
 	genDirTimestamp := android.PathForModuleGen(ctx, "timestamp")
 	g.implicitInputs = append(g.implicitInputs, genDirTimestamp)
 
@@ -210,12 +184,12 @@ func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	})
 	g.importFlags = strings.Join(wrap("-I", importPaths, ""), " ")
 
+	srcs := android.PathsWithModuleSrcSubDir(ctx, android.PathsForModuleSrc(ctx, g.properties.Srcs), g.properties.AidlRoot)
+
 	g.genOutDir = android.PathForModuleGen(ctx)
 	g.genHeaderDir = android.PathForModuleGen(ctx, "include")
 	for _, src := range srcs {
-		outFile, headers := g.generateBuildActionsForSingleAidl(ctx, src)
-		g.genOutputs = append(g.genOutputs, outFile)
-		g.genHeaderDeps = append(g.genHeaderDeps, headers...)
+		g.genOutputs = append(g.genOutputs, g.generateBuildActionsForSingleAidl(ctx, src))
 	}
 
 	// This is to clean genOutDir before generating any file
@@ -229,7 +203,7 @@ func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	})
 }
 
-func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContext, src android.Path) (android.WritablePath, android.Paths) {
+func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContext, src android.Path) android.WritablePath {
 	var outFile android.WritablePath
 	if g.properties.Lang == langJava {
 		outFile = android.PathForModuleGen(ctx, pathtools.ReplaceExtension(src.Rel(), "java"))
@@ -242,7 +216,6 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 		optionalFlags = append(optionalFlags, "--version "+g.properties.Version)
 	}
 
-	var headers android.WritablePaths
 	if g.properties.Lang == langJava {
 		ctx.ModuleBuild(pctx, android.ModuleBuildParams{
 			Rule:      aidlJavaRule,
@@ -272,6 +245,7 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 			prefix = "aidl"
 		}
 
+		var headers android.WritablePaths
 		headers = append(headers, g.genHeaderDir.Join(ctx, prefix, packagePath,
 			typeName+".h"))
 		headers = append(headers, g.genHeaderDir.Join(ctx, prefix, packagePath,
@@ -304,7 +278,7 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 		})
 	}
 
-	return outFile, headers.Paths()
+	return outFile
 }
 
 func (g *aidlGenRule) GeneratedSourceFiles() android.Paths {
@@ -316,7 +290,7 @@ func (g *aidlGenRule) Srcs() android.Paths {
 }
 
 func (g *aidlGenRule) GeneratedDeps() android.Paths {
-	return g.genHeaderDeps
+	return g.genOutputs.Paths()
 }
 
 func (g *aidlGenRule) GeneratedHeaderDirs() android.Paths {
@@ -337,7 +311,7 @@ func aidlGenFactory() android.Module {
 
 type aidlApiProperties struct {
 	BaseName string
-	Srcs     []string `android:"path"`
+	Inputs   []string
 	Imports  []string
 	Api_dir  *string
 	Versions []string
@@ -382,12 +356,6 @@ func (m *aidlApi) validateCurrentVersion(ctx android.ModuleContext) string {
 }
 
 func (m *aidlApi) createApiDumpFromSource(ctx android.ModuleContext) (apiDir android.WritablePath, apiFiles android.WritablePaths) {
-	srcs := checkAndUpdateSources(ctx, m.properties.Srcs, m.properties.AidlRoot)
-
-	if ctx.Failed() {
-		return
-	}
-
 	var importPaths []string
 	ctx.VisitDirectDeps(func(dep android.Module) {
 		if importedAidl, ok := dep.(*aidlInterface); ok {
@@ -395,18 +363,25 @@ func (m *aidlApi) createApiDumpFromSource(ctx android.ModuleContext) (apiDir and
 		}
 	})
 
+	var srcs android.Paths
+	for _, input := range m.properties.Inputs {
+		path := android.PathForModuleSrc(ctx, input)
+		path = android.PathWithModuleSrcSubDir(ctx, path, m.properties.AidlRoot)
+		srcs = append(srcs, path)
+	}
+
 	apiDir = android.PathForModuleOut(ctx, "dump")
 	for _, src := range srcs {
 		apiFiles = append(apiFiles, android.PathForModuleOut(ctx, "dump", src.Rel()))
 	}
 	imports := strings.Join(wrap("-I", importPaths, ""), " ")
 	ctx.ModuleBuild(pctx, android.ModuleBuildParams{
-		Rule:    aidlDumpApiRule,
-		Outputs: apiFiles,
-		Inputs:  srcs,
+		Rule:            aidlDumpApiRule,
+		Inputs:          srcs,
+		Output:          apiDir,
+		ImplicitOutputs: apiFiles,
 		Args: map[string]string{
 			"imports": imports,
-			"outDir":  apiDir.String(),
 		},
 	})
 	return apiDir, apiFiles
@@ -430,7 +405,6 @@ func (m *aidlApi) freezeApiDumpAsVersion(ctx android.ModuleContext, apiDumpDir a
 		Output:      timestampFile,
 		Args: map[string]string{
 			"to":          filepath.Join(modulePath, m.apiDir(), version),
-			"apiDir":      apiDumpDir.String(),
 			"name":        m.properties.BaseName,
 			"version":     version,
 			"bp":          android.PathForModuleSrc(ctx, "Android.bp").String(),
@@ -484,12 +458,12 @@ func (m *aidlApi) checkEquality(ctx android.ModuleContext, oldApiDir android.Pat
 
 func (m *aidlApi) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	currentVersion := m.validateCurrentVersion(ctx)
-	currentDumpDir, currentApiFiles := m.createApiDumpFromSource(ctx)
 
 	if ctx.Failed() {
 		return
 	}
 
+	currentDumpDir, currentApiFiles := m.createApiDumpFromSource(ctx)
 	m.freezeApiTimestamp = m.freezeApiDumpAsVersion(ctx, currentDumpDir, currentApiFiles.Paths(), currentVersion)
 
 	apiDirs := make(map[string]android.Path)
@@ -565,8 +539,8 @@ type aidlInterfaceProperties struct {
 	// The owner of the module
 	Owner *string
 
-	// List of .aidl files which compose this interface.
-	Srcs []string `android:"path"`
+	// List of .aidl files which compose this interface. These may be globbed.
+	Srcs []string
 
 	Imports []string
 
@@ -614,6 +588,9 @@ type aidlInterface struct {
 	android.ModuleBase
 
 	properties aidlInterfaceProperties
+
+	// Unglobbed sources
+	rawSrcs []string
 }
 
 func (i *aidlInterface) shouldGenerateJavaBackend() bool {
@@ -629,6 +606,44 @@ func (i *aidlInterface) shouldGenerateCppBackend() bool {
 func (i *aidlInterface) shouldGenerateNdkBackend() bool {
 	// explicitly true if not specified to give early warning to devs
 	return i.properties.Backend.Ndk.Enabled == nil || *i.properties.Backend.Ndk.Enabled
+}
+
+func (i *aidlInterface) checkAndUpdateSources(mctx android.LoadHookContext) {
+	prefix := mctx.ModuleDir()
+	for _, source := range i.properties.Srcs {
+		if pathtools.IsGlob(source) {
+			globbedSrcFiles, err := mctx.GlobWithDeps(filepath.Join(prefix, source), nil)
+			if err != nil {
+				mctx.ModuleErrorf("glob: %s", err.Error())
+			}
+			for _, globbedSrc := range globbedSrcFiles {
+				relativeGlobbedSrc, err := filepath.Rel(prefix, globbedSrc)
+				if err != nil {
+					panic(err)
+				}
+
+				i.rawSrcs = append(i.rawSrcs, relativeGlobbedSrc)
+			}
+		} else {
+			i.rawSrcs = append(i.rawSrcs, source)
+		}
+	}
+
+	if len(i.rawSrcs) == 0 {
+		mctx.PropertyErrorf("srcs", "No sources provided.")
+	}
+
+	for _, source := range i.rawSrcs {
+		if !strings.HasSuffix(source, ".aidl") {
+			mctx.PropertyErrorf("srcs", "Source must be a .aidl file: "+source)
+			continue
+		}
+
+		relativePath, err := filepath.Rel(i.properties.Local_include_dir, source)
+		if err != nil || !isRelativePath(relativePath) {
+			mctx.PropertyErrorf("srcs", "Source is not in local_include_dir: "+source)
+		}
+	}
 }
 
 func (i *aidlInterface) checkImports(mctx android.LoadHookContext) {
@@ -661,7 +676,7 @@ func (i *aidlInterface) versionedName(version string) string {
 
 func (i *aidlInterface) srcsForVersion(mctx android.LoadHookContext, version string) (srcs []string, base string) {
 	if version == futureVersion || version == "" {
-		return i.properties.Srcs, i.properties.Local_include_dir
+		return i.rawSrcs, i.properties.Local_include_dir
 	} else {
 		var apiDir string
 		if i.properties.Api_dir != nil {
@@ -692,6 +707,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 
 	i.properties.Full_import_paths = importPaths
 
+	i.checkAndUpdateSources(mctx)
 	i.checkImports(mctx)
 
 	if mctx.Failed() {
@@ -869,7 +885,7 @@ func addApiModule(mctx android.LoadHookContext, i *aidlInterface) string {
 		Name: proptools.StringPtr(apiModule),
 	}, &aidlApiProperties{
 		BaseName: i.ModuleBase.Name(),
-		Srcs:     i.properties.Srcs,
+		Inputs:   i.rawSrcs,
 		Imports:  concat(i.properties.Imports, []string{i.ModuleBase.Name()}),
 		Api_dir:  i.properties.Api_dir,
 		AidlRoot: i.properties.Local_include_dir,
@@ -927,19 +943,15 @@ func (s *aidlMapping) DepsMutator(ctx android.BottomUpMutatorContext) {
 	android.ExtractSourcesDeps(ctx, s.properties.Srcs)
 }
 
+func addItemsToMap(dest map[string]bool, src []string) {
+	for _, item := range src {
+		dest[item] = true
+	}
+}
+
 func (s *aidlMapping) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	var srcs android.Paths
-	var allImportDirs []string
-	seenImportDirs := make(map[string]bool)
-
-	addImportDirs := func(dirs ...string) {
-		for _, dir := range dirs {
-			if !seenImportDirs[dir] {
-				allImportDirs = append(allImportDirs, dir)
-				seenImportDirs[dir] = true
-			}
-		}
-	}
+	var all_import_dirs map[string]bool = make(map[string]bool)
 
 	ctx.VisitDirectDeps(func(module android.Module) {
 		for _, property := range module.GetProperties() {
@@ -948,32 +960,36 @@ func (s *aidlMapping) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 					if strings.HasSuffix(src, ".aidl") {
 						full_path := android.PathForModuleSrc(ctx, src)
 						srcs = append(srcs, full_path)
-						addImportDirs(filepath.Dir(full_path.String()))
+						all_import_dirs[filepath.Dir(full_path.String())] = true
 					} else if pathtools.IsGlob(src) {
 						globbedSrcFiles, err := ctx.GlobWithDeps(src, nil)
 						if err == nil {
 							for _, globbedSrc := range globbedSrcFiles {
 								full_path := android.PathForModuleSrc(ctx, globbedSrc)
-								addImportDirs(full_path.String())
+								all_import_dirs[full_path.String()] = true
 							}
 						}
 					}
 				}
 			} else if jproperty, ok := property.(*java.CompilerDeviceProperties); ok {
-				addImportDirs(jproperty.Aidl.Include_dirs...)
+				addItemsToMap(all_import_dirs, jproperty.Aidl.Include_dirs)
 				for _, include_dir := range jproperty.Aidl.Export_include_dirs {
 					var full_path = filepath.Join(ctx.ModuleDir(), include_dir)
-					addImportDirs(full_path)
+					all_import_dirs[full_path] = true
 				}
 				for _, include_dir := range jproperty.Aidl.Local_include_dirs {
 					var full_path = filepath.Join(ctx.ModuleSubDir(), include_dir)
-					addImportDirs(full_path)
+					all_import_dirs[full_path] = true
 				}
 			}
 		}
 	})
 
-	imports := strings.Join(wrap("-I", allImportDirs, ""), " ")
+	var import_dirs []string
+	for dir := range all_import_dirs {
+		import_dirs = append(import_dirs, dir)
+	}
+	imports := strings.Join(wrap("-I", import_dirs, ""), " ")
 	s.outputFilePath = android.PathForModuleOut(ctx, s.properties.Output)
 	outDir := android.PathForModuleGen(ctx)
 	ctx.Build(pctx, android.BuildParams{
@@ -1007,14 +1023,4 @@ func (m *aidlMapping) AndroidMk() android.AndroidMkData {
 			fmt.Fprintln(w, targetName+":", m.outputFilePath.String())
 		},
 	}
-}
-
-func allAidlInterfacesMakeVars(ctx android.MakeVarsContext) {
-	names := []string{}
-	ctx.VisitAllModules(func(module android.Module) {
-		if ai, ok := module.(*aidlInterface); ok {
-			names = append(names, ai.Name())
-		}
-	})
-	ctx.Strict("ALL_AIDL_INTERFACES", strings.Join(names, " "))
 }
