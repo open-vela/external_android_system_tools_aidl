@@ -66,10 +66,6 @@ cc_library_static {
         "type_java.cpp",
         "type_namespace.cpp",
     ],
-    yacc: {
-        gen_location_hh: true,
-        gen_position_hh: true,
-    },
 }
 
 // aidl executable
@@ -174,12 +170,6 @@ cc_defaults {
     ],
 }
 
-filegroup {
-    name: "libaidl-integration-test-files",
-    srcs: ["tests/android/aidl/tests/*.aidl"],
-    path: "tests",
-}
-
 cc_library_shared {
     name: "libaidl-integration-test",
     defaults: ["aidl_test_defaults"],
@@ -189,7 +179,7 @@ cc_library_shared {
         include_dirs: ["frameworks/native/aidl/binder"],
     },
     srcs: [
-        ":libaidl-integration-test-files",
+        "tests/android/aidl/tests/*.aidl",
         "tests/simple_parcelable.cpp",
     ],
 }
