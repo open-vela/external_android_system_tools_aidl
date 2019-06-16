@@ -74,7 +74,7 @@ public class Rect implements android.os.Parcelable
   @android.annotation.SystemApi
   public int x = 5;
 
-  @android.annotation.UnsupportedAppUsage
+  @dalvik.annotation.compat.UnsupportedAppUsage
   @android.annotation.SystemApi
   public int y;
   public static final android.os.Parcelable.Creator<Rect> CREATOR = new android.os.Parcelable.Creator<Rect>() {
@@ -253,6 +253,17 @@ TEST_F(AidlTest, ParsesUtf8Annotations) {
     EXPECT_EQ(interface->GetMethods()[0]->GetType().IsUtf8InCpp(), is_utf8);
     cpp_types_.typenames_.Reset();
   }
+}
+
+TEST_F(AidlTest, ParsesJavaOnlyStableParcelable) {
+  Options java_options = Options::From("aidl -o out --structured a/Foo.aidl");
+  Options cpp_options =
+      Options::From("aidl --lang=cpp --structured -o out -h out/include a/Foo.aidl");
+  io_delegate_.SetFileContents(
+      "a/Foo.aidl", StringPrintf("package a; @JavaOnlyStableParcelable parcelable Foo;"));
+
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
+  EXPECT_NE(0, ::android::aidl::compile_aidl(cpp_options, io_delegate_));
 }
 
 TEST_F(AidlTest, AcceptsOneway) {
