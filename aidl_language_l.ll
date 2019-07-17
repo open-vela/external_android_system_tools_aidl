@@ -65,7 +65,6 @@ floatvalue  [-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?f?
 \]                    { return ']'; }
 \<                    { return '<'; }
 \>                    { return '>'; }
-\+                    { return '+'; }
 
     /* annotations */
 @{identifier}         { yylval->token = new AidlToken(yytext + 1, extra_text);
