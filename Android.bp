@@ -149,9 +149,8 @@ cc_test {
 //
 // Everything below here is used for integration testing of generated AIDL code.
 //
-cc_test {
+cc_binary {
     name: "aidl_test_sentinel_searcher",
-    gtest: false,
     srcs: ["tests/aidl_test_sentinel_searcher.cpp"],
     cflags: [
         "-Wall",
@@ -181,7 +180,7 @@ filegroup {
     path: "tests",
 }
 
-cc_library_static {
+cc_library_shared {
     name: "libaidl-integration-test",
     defaults: ["aidl_test_defaults"],
     aidl: {
@@ -195,19 +194,17 @@ cc_library_static {
     ],
 }
 
-cc_test {
+cc_binary {
     name: "aidl_test_service",
-    gtest: false,
     defaults: ["aidl_test_defaults"],
-    static_libs: ["libaidl-integration-test"],
+    shared_libs: ["libaidl-integration-test"],
     srcs: ["tests/aidl_test_service.cpp"],
 }
 
-cc_test {
+cc_binary {
     name: "aidl_test_client",
-    gtest: false,
     defaults: ["aidl_test_defaults"],
-    static_libs: ["libaidl-integration-test"],
+    shared_libs: ["libaidl-integration-test"],
     srcs: [
         "tests/aidl_test_client.cpp",
         "tests/aidl_test_client_file_descriptors.cpp",
