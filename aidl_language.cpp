@@ -79,6 +79,9 @@ static const string kUnsupportedAppUsage("UnsupportedAppUsage");
 static const string kSystemApi("SystemApi");
 static const string kStableParcelable("JavaOnlyStableParcelable");
 
+static const set<string> kAnnotationNames{kNullable, kUtf8InCpp, kUnsupportedAppUsage, kSystemApi,
+                                          kStableParcelable};
+
 static const std::map<string, std::map<std::string, std::string>> kAnnotationParameters{
     {kNullable, {}},
     {kUtf8InCpp, {}},
@@ -94,12 +97,12 @@ static const std::map<string, std::map<std::string, std::string>> kAnnotationPar
 AidlAnnotation* AidlAnnotation::Parse(
     const AidlLocation& location, const string& name,
     std::map<std::string, std::shared_ptr<AidlConstantValue>>* parameter_list) {
-  if (kAnnotationParameters.find(name) == kAnnotationParameters.end()) {
+  if (kAnnotationNames.find(name) == kAnnotationNames.end()) {
     std::ostringstream stream;
     stream << "'" << name << "' is not a recognized annotation. ";
     stream << "It must be one of:";
-    for (const auto& kv : kAnnotationParameters) {
-      stream << " " << kv.first;
+    for (const string& kv : kAnnotationNames) {
+      stream << " " << kv;
     }
     stream << ".";
     AIDL_ERROR(location) << stream.str();
