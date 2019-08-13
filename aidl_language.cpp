@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <set>
 #include <sstream>
@@ -276,7 +277,7 @@ string AidlTypeSpecifier::Signature() const {
 }
 
 bool AidlTypeSpecifier::Resolve(android::aidl::AidlTypenames& typenames) {
-  CHECK(!IsResolved());
+  assert(!IsResolved());
   pair<string, bool> result = typenames.ResolveTypename(unresolved_name_);
   if (result.second) {
     fully_qualified_name_ = result.first;
