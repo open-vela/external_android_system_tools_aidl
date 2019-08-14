@@ -675,11 +675,6 @@ func (i *aidlInterface) checkImports(mctx android.LoadHookContext) {
 			mctx.PropertyErrorf("imports", "Import does not exist: "+anImport)
 		}
 
-		if i.shouldGenerateJavaBackend() && !other.shouldGenerateJavaBackend() {
-			mctx.PropertyErrorf("backend.java.enabled",
-				"Java backend not enabled in the imported AIDL interface %q", anImport)
-		}
-
 		if i.shouldGenerateCppBackend() && !other.shouldGenerateCppBackend() {
 			mctx.PropertyErrorf("backend.cpp.enabled",
 				"C++ backend not enabled in the imported AIDL interface %q", anImport)
@@ -788,11 +783,9 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 		}
 	}
 
-	if i.shouldGenerateJavaBackend() {
-		libs = append(libs, addJavaLibrary(mctx, i, currentVersion))
-		for _, version := range i.properties.Versions {
-			addJavaLibrary(mctx, i, version)
-		}
+	libs = append(libs, addJavaLibrary(mctx, i, currentVersion))
+	for _, version := range i.properties.Versions {
+		addJavaLibrary(mctx, i, version)
 	}
 
 	addApiModule(mctx, i)
