@@ -675,6 +675,11 @@ func (i *aidlInterface) checkImports(mctx android.LoadHookContext) {
 			mctx.PropertyErrorf("imports", "Import does not exist: "+anImport)
 		}
 
+		if i.shouldGenerateJavaBackend() && !other.shouldGenerateJavaBackend() {
+			mctx.PropertyErrorf("backend.java.enabled",
+				"Java backend not enabled in the imported AIDL interface %q", anImport)
+		}
+
 		if i.shouldGenerateCppBackend() && !other.shouldGenerateCppBackend() {
 			mctx.PropertyErrorf("backend.cpp.enabled",
 				"C++ backend not enabled in the imported AIDL interface %q", anImport)
@@ -783,9 +788,11 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 		}
 	}
 
-	libs = append(libs, addJavaLibrary(mctx, i, currentVersion))
-	for _, version := range i.properties.Versions {
-		addJavaLibrary(mctx, i, version)
+	if i.shouldGenerateJavaBackend() {
+		libs = append(libs, addJavaLibrary(mctx, i, currentVersion))
+		for _, version := range i.properties.Versions {
+			addJavaLibrary(mctx, i, version)
+		}
 	}
 
 	addApiModule(mctx, i)
@@ -968,10 +975,8 @@ func lookupInterface(name string) *aidlInterface {
 
 type aidlMappingProperties struct {
 	// Source file of this prebuilt.
-	Srcs               []string `android:"path"`
-	Local_include_dirs []string
-	Include_dirs       []string
-	Output             string
+	Srcs   []string `android:"arch_variant"`
+	Output string
 }
 
 type aidlMapping struct {
@@ -981,23 +986,56 @@ type aidlMapping struct {
 }
 
 func (s *aidlMapping) DepsMutator(ctx android.BottomUpMutatorContext) {
+	android.ExtractSourcesDeps(ctx, s.properties.Srcs)
 }
 
 func (s *aidlMapping) GenerateAndroidBuildActions(ctx android.ModuleContext) {
-	var aidlSrcs android.Paths
-	var importDirs android.Paths
+	var srcs android.Paths
+	var allImportDirs []string
+	seenImportDirs := make(map[string]bool)
 
-	srcs := android.PathsForModuleSrc(ctx, s.properties.Srcs)
-	for _, file := range srcs {
-		if file.Ext() == "aidl" {
-			aidlSrcs = append(aidlSrcs, file)
+	addImportDirs := func(dirs ...string) {
+		for _, dir := range dirs {
+			if !seenImportDirs[dir] {
+				allImportDirs = append(allImportDirs, dir)
+				seenImportDirs[dir] = true
+			}
 		}
 	}
 
-	importDirs = append(importDirs, android.PathsForModuleSrc(ctx, s.properties.Local_include_dirs)...)
-	importDirs = append(importDirs, android.PathsForSource(ctx, s.properties.Include_dirs)...)
+	ctx.VisitDirectDeps(func(module android.Module) {
+		for _, property := range module.GetProperties() {
+			if jproperty, ok := property.(*java.CompilerProperties); ok {
+				for _, src := range jproperty.Srcs {
+					if strings.HasSuffix(src, ".aidl") {
+						full_path := android.PathForModuleSrc(ctx, src)
+						srcs = append(srcs, full_path)
+						addImportDirs(filepath.Dir(full_path.String()))
+					} else if pathtools.IsGlob(src) {
+						globbedSrcFiles, err := ctx.GlobWithDeps(src, nil)
+						if err == nil {
+							for _, globbedSrc := range globbedSrcFiles {
+								full_path := android.PathForModuleSrc(ctx, globbedSrc)
+								addImportDirs(full_path.String())
+							}
+						}
+					}
+				}
+			} else if jproperty, ok := property.(*java.CompilerDeviceProperties); ok {
+				addImportDirs(jproperty.Aidl.Include_dirs...)
+				for _, include_dir := range jproperty.Aidl.Export_include_dirs {
+					var full_path = filepath.Join(ctx.ModuleDir(), include_dir)
+					addImportDirs(full_path)
+				}
+				for _, include_dir := range jproperty.Aidl.Local_include_dirs {
+					var full_path = filepath.Join(ctx.ModuleSubDir(), include_dir)
+					addImportDirs(full_path)
+				}
+			}
+		}
+	})
 
-	imports := strings.Join(wrap("-I", importDirs.Strings(), ""), " ")
+	imports := strings.Join(wrap("-I", allImportDirs, ""), " ")
 	s.outputFilePath = android.PathForModuleOut(ctx, s.properties.Output)
 	outDir := android.PathForModuleGen(ctx)
 	ctx.Build(pctx, android.BuildParams{
