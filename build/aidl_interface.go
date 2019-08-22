@@ -956,6 +956,8 @@ func lookupInterface(name string) *aidlInterface {
 type aidlMappingProperties struct {
 	// Source file of this prebuilt.
 	Srcs               []string `android:"path"`
+	Local_include_dirs []string
+	Include_dirs       []string
 	Output             string
 }
 
@@ -970,20 +972,19 @@ func (s *aidlMapping) DepsMutator(ctx android.BottomUpMutatorContext) {
 
 func (s *aidlMapping) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	var aidlSrcs android.Paths
-	var importDirs []string
+	var importDirs android.Paths
 
 	srcs := android.PathsForModuleSrc(ctx, s.properties.Srcs)
 	for _, file := range srcs {
-		if file.Ext() == ".aidl" {
+		if file.Ext() == "aidl" {
 			aidlSrcs = append(aidlSrcs, file)
-			baseDir := strings.TrimSuffix(file.String(), file.Rel())
-			if baseDir != "" && !android.InList(baseDir, importDirs) {
-				importDirs = append(importDirs, baseDir)
-			}
 		}
 	}
 
-	imports := android.JoinWithPrefix(importDirs, " -I")
+	importDirs = append(importDirs, android.PathsForModuleSrc(ctx, s.properties.Local_include_dirs)...)
+	importDirs = append(importDirs, android.PathsForSource(ctx, s.properties.Include_dirs)...)
+
+	imports := strings.Join(wrap("-I", importDirs.Strings(), ""), " ")
 	s.outputFilePath = android.PathForModuleOut(ctx, s.properties.Output)
 	outDir := android.PathForModuleGen(ctx)
 	ctx.Build(pctx, android.BuildParams{
