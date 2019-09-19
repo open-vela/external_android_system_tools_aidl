@@ -72,17 +72,12 @@ AidlLocation loc(const yy::parser::location_type& l) {
     std::vector<std::unique_ptr<AidlTypeSpecifier>>* type_args;
 }
 
-%destructor { } <character>
-%destructor { } <direction>
-%destructor { delete ($$); } <*>
-
 %token<token> ANNOTATION "annotation"
 %token<token> C_STR "string literal"
 %token<token> IDENTIFIER "identifier"
 %token<token> INTERFACE "interface"
 %token<token> PARCELABLE "parcelable"
 %token<token> ONEWAY "oneway"
-%token<token> ENUM "enum"
 
 %token<character> CHARVALUE "char literal"
 %token<token> FLOATVALUE "float literal"
@@ -100,6 +95,7 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %token PACKAGE "package"
 %token TRUE_LITERAL "true"
 %token FALSE_LITERAL "false"
+%token ENUM "enum"
 
 %type<declaration> decl
 %type<variable_list> variable_decls
@@ -208,24 +204,17 @@ unannotated_decl
 parcelable_decl
  : PARCELABLE qualified_name ';' {
     $$ = new AidlParcelable(loc(@2), $2, ps->Package(), $1->GetComments());
-    delete $1;
   }
  | PARCELABLE qualified_name CPP_HEADER C_STR ';' {
     $$ = new AidlParcelable(loc(@2), $2, ps->Package(), $1->GetComments(), $4->GetText());
-    delete $1;
-    delete $4;
   }
  | PARCELABLE identifier '{' variable_decls '}' {
     AidlQualifiedName* name = new AidlQualifiedName(loc(@2), $2->GetText(), $2->GetComments());
     $$ = new AidlStructuredParcelable(loc(@2), name, ps->Package(), $1->GetComments(), $4);
-    delete $1;
-    delete $2;
-    delete $4;
  }
  | PARCELABLE error ';' {
     ps->AddError();
-    $$ = nullptr;
-    delete $1;
+    $$ = NULL;
   };
 
 variable_decls
@@ -242,12 +231,10 @@ variable_decls
 variable_decl
  : type identifier ';' {
    $$ = new AidlVariableDeclaration(loc(@2), $1, $2->GetText());
-   delete $2;
  }
  | type identifier '=' constant_value ';' {
    // TODO(b/123321528): Support enum type default assignments (TestEnum foo = TestEnum.FOO).
    $$ = new AidlVariableDeclaration(loc(@2), $1, $2->GetText(),  $4);
-   delete $2;
  }
  | error ';' {
    ps->AddError();
@@ -278,9 +265,9 @@ interface_members
  :
   { $$ = new std::vector<std::unique_ptr<AidlMember>>(); }
  | interface_members method_decl
-  { $1->push_back(std::unique_ptr<AidlMember>($2)); $$ = $1; }
+  { $1->push_back(std::unique_ptr<AidlMember>($2)); }
  | interface_members constant_decl
-  { $1->push_back(std::unique_ptr<AidlMember>($2)); $$ = $1; }
+  { $1->push_back(std::unique_ptr<AidlMember>($2)); }
  | interface_members error ';' {
     ps->AddError();
     $$ = $1;
@@ -336,7 +323,6 @@ constant_value_non_empty_list
  possibly_multiline_string
  : C_STR {
     $$ = new string($1->GetText());
-    delete $1;
  }
  | possibly_multiline_string '+' C_STR {
    $$ = $1;
@@ -376,7 +362,6 @@ enumerators
    }
  | enumerators ',' enumerator {
     $1->push_back(std::unique_ptr<AidlEnumerator>($3));
-    $$ = $1;
    }
  ;
 
@@ -389,7 +374,6 @@ enum_decl_body
 enum_decl
  : ENUM identifier enum_decl_body {
     $$ = new AidlEnumDeclaration(loc(@2), $2->GetText(), $3, ps->Package());
-    delete $1;
     delete $2;
     delete $3;
    }
@@ -411,7 +395,6 @@ method_decl
  | type identifier '(' arg_list ')' '=' INTVALUE ';' {
     $$ = new AidlMethod(loc(@2), false, $1, $2->GetText(), $4, $1->GetComments(), std::stoi($7->GetText()));
     delete $2;
-    delete $7;
   }
  | annotation_list ONEWAY type identifier '(' arg_list ')' '=' INTVALUE ';' {
     const std::string& comments = ($1->size() > 0) ? $1->begin()->GetComments() : $2->GetComments();
@@ -420,7 +403,6 @@ method_decl
     delete $1;
     delete $2;
     delete $4;
-    delete $9;
   };
 
 arg_list
@@ -444,7 +426,9 @@ arg
     $$ = new AidlArgument(loc(@2), $1, $2->GetText());
     delete $2;
   }
- ;
+ | error {
+    ps->AddError();
+  };
 
 unannotated_type
  : qualified_name {
@@ -481,7 +465,6 @@ type_args
   }
  | type_args ',' unannotated_type {
     $1->emplace_back($3);
-    $$ = $1;
   };
 
 annotation_list
@@ -493,7 +476,6 @@ annotation_list
       $1->emplace_back(std::move(*$2));
       delete $2;
     }
-    $$ = $1;
   };
 
 parameter
@@ -534,7 +516,6 @@ annotation
       ps->AddError();
     }
     $$->SetComments($1->GetComments());
-    delete $1;
   };
  | ANNOTATION '(' parameter_list ')' {
     $$ = AidlAnnotation::Parse(loc(@1), $1->GetText(), $3);
@@ -542,7 +523,6 @@ annotation
       ps->AddError();
     }
     $$->SetComments($1->GetComments());
-    delete $1;
     delete $3;
  }
 
