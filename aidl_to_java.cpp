@@ -21,6 +21,7 @@
 
 #include <android-base/strings.h>
 
+#include <cassert>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -39,34 +40,14 @@ using std::map;
 using std::string;
 using std::vector;
 
-std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value) {
-  if (type.GetName() == "long" && !type.IsArray()) {
-    return raw_value + "L";
-  }
-
+std::string ConstantValueDecorator(const AidlTypeSpecifier& /*type*/,
+                                   const std::string& raw_value) {
+  // no difference
   return raw_value;
 };
 
-const string& JavaNameOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typenames,
-                         bool instantiable = false) {
+const string& JavaNameOf(const AidlTypeSpecifier& aidl) {
   CHECK(aidl.IsResolved()) << aidl.ToString();
-
-  if (instantiable) {
-    // An instantiable type is used in only out type(not even inout type),
-    // And instantiable type has to be either the type in List, Map, ParcelFileDescriptor or
-    // user-defined type.
-
-    static map<string, string> instantiable_m = {
-        {"List", "java.util.ArrayList"},
-        {"Map", "java.util.HashMap"},
-        {"ParcelFileDescriptor", "android.os.ParcelFileDescriptor"},
-    };
-    const string& aidl_name = aidl.GetName();
-
-    if (instantiable_m.find(aidl_name) != instantiable_m.end()) {
-      return instantiable_m[aidl_name];
-    }
-  }
 
   // map from AIDL built-in type name to the corresponding Java type name
   static map<string, string> m = {
@@ -86,17 +67,6 @@ const string& JavaNameOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typ
       {"CharSequence", "java.lang.CharSequence"},
       {"ParcelFileDescriptor", "android.os.ParcelFileDescriptor"},
   };
-
-  // Enums in Java are represented by their backing type when
-  // referenced in parcelables, methods, etc.
-  if (const AidlEnumDeclaration* enum_decl = typenames.GetEnumDeclaration(aidl);
-      enum_decl != nullptr) {
-    const string& backing_type_name = enum_decl->GetBackingType().GetName();
-    CHECK(m.find(backing_type_name) != m.end());
-    CHECK(AidlTypenames::IsBuiltinTypename(backing_type_name));
-    return m[backing_type_name];
-  }
-
   const string& aidl_name = aidl.GetName();
   if (m.find(aidl_name) != m.end()) {
     CHECK(AidlTypenames::IsBuiltinTypename(aidl_name));
@@ -107,59 +77,28 @@ const string& JavaNameOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typ
   }
 }
 
-namespace {
-string JavaSignatureOfInternal(const AidlTypeSpecifier& aidl, const AidlTypenames& typenames,
-                               bool instantiable, bool omit_array) {
-  string ret = JavaNameOf(aidl, typenames, instantiable);
+string JavaSignatureOf(const AidlTypeSpecifier& aidl) {
+  string ret = JavaNameOf(aidl);
   if (aidl.IsGeneric()) {
     vector<string> arg_names;
     for (const auto& ta : aidl.GetTypeParameters()) {
-      arg_names.emplace_back(JavaSignatureOfInternal(*ta, typenames, false, false));
+      arg_names.emplace_back(JavaSignatureOf(*ta));
     }
     ret += "<" + Join(arg_names, ",") + ">";
   }
-  if (aidl.IsArray() && !omit_array) {
+  if (aidl.IsArray()) {
     ret += "[]";
   }
   return ret;
 }
 
-// Returns the name of the backing type for the specified type. Note: this
-// returns type names as used in AIDL, not a Java signature.
-// For enums, this is the enum's backing type.
-// For all other types, this is the type itself.
-string AidlBackingTypeName(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
-  string type_name;
-  if (const AidlEnumDeclaration* enum_decl = typenames.GetEnumDeclaration(type);
-      enum_decl != nullptr) {
-    type_name = enum_decl->GetBackingType().GetName();
-  } else {
-    type_name = type.GetName();
-  }
-  if (type.IsArray()) {
-    type_name += "[]";
-  }
-  return type_name;
-}
-
-}  // namespace
-
-string JavaSignatureOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typenames) {
-  return JavaSignatureOfInternal(aidl, typenames, false, false);
-}
-
-string InstantiableJavaSignatureOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typenames) {
-  return JavaSignatureOfInternal(aidl, typenames, true, true);
-}
-
-string DefaultJavaValueOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typenames) {
+string DefaultJavaValueOf(const AidlTypeSpecifier& aidl) {
   static map<string, string> m = {
       {"boolean", "false"}, {"byte", "0"},     {"char", R"('\u0000')"}, {"int", "0"},
       {"long", "0L"},       {"float", "0.0f"}, {"double", "0.0d"},
   };
-
-  const string name = AidlBackingTypeName(aidl, typenames);
-  CHECK(name != "void");
+  const string& name = aidl.GetName();
+  assert(name != "void");
 
   if (!aidl.IsArray() && m.find(name) != m.end()) {
     CHECK(AidlTypenames::IsBuiltinTypename(name));
@@ -370,7 +309,7 @@ bool WriteToParcelFor(const CodeGeneratorContext& c) {
          c.writer << "}\n";
        }},
   };
-  const string type_name = AidlBackingTypeName(c.type, c.typenames);
+  const string type_name = c.type.GetName() + (c.type.IsArray() ? "[]" : "");
   const auto found = method_map.find(type_name);
   if (found != method_map.end()) {
     found->second(c);
@@ -503,8 +442,7 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
              CHECK(t != nullptr) << "Unknown type: " << contained_type << endl;
              if (t->AsParcelable() != nullptr) {
                c.writer << c.var << " = " << c.parcel << ".createTypedArrayList("
-                        << JavaNameOf(*(c.type.GetTypeParameters().at(0)), c.typenames)
-                        << ".CREATOR);\n";
+                        << JavaNameOf(*(c.type.GetTypeParameters().at(0))) << ".CREATOR);\n";
              }
            }
          } else {
@@ -570,7 +508,8 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
          c.writer << "}\n";
        }},
   };
-  const auto found = method_map.find(AidlBackingTypeName(c.type, c.typenames));
+  const string type_name = c.type.GetName() + (c.type.IsArray() ? "[]" : "");
+  const auto found = method_map.find(type_name);
   if (found != method_map.end()) {
     found->second(c);
   } else {
@@ -583,8 +522,8 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
       }
     } else if (t->AsParcelable() != nullptr || t->AsStructuredParcelable() != nullptr) {
       if (c.type.IsArray()) {
-        c.writer << c.var << " = " << c.parcel << ".createTypedArray("
-                 << JavaNameOf(c.type, c.typenames) << ".CREATOR);\n";
+        c.writer << c.var << " = " << c.parcel << ".createTypedArray(" << JavaNameOf(c.type)
+                 << ".CREATOR);\n";
       } else {
         // This is same as readTypedObject.
         // Keeping below code just not to break unit tests.
@@ -657,8 +596,7 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
              CHECK(t != nullptr) << "Unknown type: " << contained_type << endl;
              if (t->AsParcelable() != nullptr) {
                c.writer << c.parcel << ".readTypedList(" << c.var << ", "
-                        << JavaNameOf(*(c.type.GetTypeParameters().at(0)), c.typenames)
-                        << ".CREATOR);\n";
+                        << JavaNameOf(*(c.type.GetTypeParameters().at(0))) << ".CREATOR);\n";
              }
            }
          } else {
@@ -693,7 +631,8 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
                   << ", android.os.ParcelFileDescriptor.CREATOR);\n";
        }},
   };
-  const auto& found = method_map.find(AidlBackingTypeName(c.type, c.typenames));
+  const string type_name = c.type.GetName() + (c.type.IsArray() ? "[]" : "");
+  const auto& found = method_map.find(type_name);
   if (found != method_map.end()) {
     found->second(c);
   } else {

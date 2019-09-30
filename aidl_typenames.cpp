@@ -81,13 +81,6 @@ static bool IsValidName(const string& name) {
   return true;
 }
 
-bool AidlTypenames::IsIgnorableImport(const string& import) const {
-  static set<string> ignore_import = {"android.os.IInterface",   "android.os.IBinder",
-                                      "android.os.Parcelable",   "android.os.Parcel",
-                                      "android.content.Context", "java.lang.String"};
-  return ResolveTypename(import).second || ignore_import.find(import) != ignore_import.end();
-}
-
 bool AidlTypenames::AddDefinedType(unique_ptr<AidlDefinedType> type) {
   const string name = type->GetCanonicalName();
   if (defined_types_.find(name) != defined_types_.end()) {
@@ -169,31 +162,13 @@ pair<string, bool> AidlTypenames::ResolveTypename(const string& type_name) const
 // Only T[], List, Map, ParcelFileDescriptor and Parcelable can be an out parameter.
 bool AidlTypenames::CanBeOutParameter(const AidlTypeSpecifier& type) const {
   const string& name = type.GetName();
-  if (IsBuiltinTypename(name) || GetEnumDeclaration(type)) {
+  if (IsBuiltinTypename(name)) {
     return type.IsArray() || type.GetName() == "List" || type.GetName() == "Map" ||
            type.GetName() == "ParcelFileDescriptor";
   }
   const AidlDefinedType* t = TryGetDefinedType(type.GetName());
   CHECK(t != nullptr) << "Unrecognized type: '" << type.GetName() << "'";
   return t->AsParcelable() != nullptr;
-}
-
-const AidlEnumDeclaration* AidlTypenames::GetEnumDeclaration(const AidlTypeSpecifier& type) const {
-  if (auto defined_type = TryGetDefinedType(type.GetName()); defined_type != nullptr) {
-    if (auto enum_decl = defined_type->AsEnumDeclaration(); enum_decl != nullptr) {
-      return enum_decl;
-    }
-  }
-  return nullptr;
-}
-
-const AidlInterface* AidlTypenames::GetInterface(const AidlTypeSpecifier& type) const {
-  if (auto defined_type = TryGetDefinedType(type.GetName()); defined_type != nullptr) {
-    if (auto intf = defined_type->AsInterface(); intf != nullptr) {
-      return intf;
-    }
-  }
-  return nullptr;
 }
 
 void AidlTypenames::IterateTypes(const std::function<void(const AidlDefinedType&)>& body) const {
