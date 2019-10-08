@@ -171,8 +171,8 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
         .writer = *(writer.get()),
         .typenames = typenames,
         .type = field->GetType(),
-        .parcel = parcel_variable->name,
         .var = field->GetName(),
+        .parcel = parcel_variable->name,
         .is_return_value = false,
     };
     WriteToParcelFor(context);
@@ -219,8 +219,8 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
         .writer = *(writer.get()),
         .typenames = typenames,
         .type = field->GetType(),
-        .parcel = parcel_variable->name,
         .var = field->GetName(),
+        .parcel = parcel_variable->name,
         .is_classloader_created = &is_classloader_created,
     };
     context.writer.Indent();
