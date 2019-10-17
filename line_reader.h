@@ -39,5 +39,5 @@ class LineReader {
   DISALLOW_COPY_AND_ASSIGN(LineReader);
 };  // class LineReader
 
-}  // namespace aidl
 }  // namespace android
+}  // namespace aidl
