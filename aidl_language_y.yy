@@ -433,9 +433,10 @@ const_expr
   }
  | '(' error ')'
    {
-     std::cerr << "ERROR: invalid const expression within parenthesis at " << @1 << ".\n";
-     ps->AddError();
+     std::cerr << "ERROR: invalid const expression within parenthesis: "
+               << $2->GetText() << " at " << @1 << ".\n";
      // to avoid segfaults
+     ps->AddError();
      $$ = AidlConstantValue::Integral(loc(@1), "0");
    }
  ;
