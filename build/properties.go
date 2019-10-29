@@ -43,7 +43,6 @@ type ccProperties struct {
 	Stl                       *string
 	Cpp_std                   *string
 	Cflags                    []string
-	Stem                      *string
 }
 
 type javaProperties struct {
