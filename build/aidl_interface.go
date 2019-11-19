@@ -261,9 +261,6 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 	if g.properties.Version != "" {
 		optionalFlags = append(optionalFlags, "--version "+g.properties.Version)
 	}
-	if g.properties.Stability != nil {
-		optionalFlags = append(optionalFlags, "--stability", *g.properties.Stability)
-	}
 
 	var headers android.WritablePaths
 	if g.properties.Lang == langJava {
@@ -304,6 +301,10 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 
 		if g.properties.GenLog {
 			optionalFlags = append(optionalFlags, "--log")
+		}
+
+		if g.properties.Stability != nil {
+			optionalFlags = append(optionalFlags, "--stability", *g.properties.Stability)
 		}
 
 		aidlLang := g.properties.Lang
@@ -587,24 +588,8 @@ func aidlApiFactory() android.Module {
 	return m
 }
 
-type CommonBackendProperties struct {
-	// Whether to generate code in the corresponding backend.
-	// Default: true
-	Enabled *bool
-}
-
-type CommonNativeBackendProperties struct {
-	// Whether to generate additional code for gathering information
-	// about the transactions.
-	// Default: false
-	Gen_log *bool
-
-	// VNDK properties for correspdoning backend.
-	cc.VndkProperties
-}
-
 type aidlInterfaceProperties struct {
-	// Vndk properties for C++/NDK libraries only (preferred to use backend-specific settings)
+	// Vndk properties for interface library only.
 	cc.VndkProperties
 
 	// Whether the library can be installed on the vendor image.
@@ -646,24 +631,31 @@ type aidlInterfaceProperties struct {
 	Versions []string
 
 	Backend struct {
-		// Backend of the compiler generating code for Java clients.
 		Java struct {
-			CommonBackendProperties
+			// Whether to generate Java code using Java binder APIs
+			// Default: true
+			Enabled *bool
 			// Set to the version of the sdk to compile against
 			// Default: system_current
 			Sdk_version *string
 		}
-		// Backend of the compiler generating code for C++ clients using
-		// libbinder (unstable C++ interface)
 		Cpp struct {
-			CommonBackendProperties
-			CommonNativeBackendProperties
+			// Whether to generate C++ code using C++ binder APIs
+			// Default: true
+			Enabled *bool
+			// Whether to generate additional code for gathering information
+			// about the transactions
+			// Default: false
+			Gen_log *bool
 		}
-		// Backend of the compiler generating code for C++ clients using
-		// libbinder_ndk (stable C interface to system's libbinder)
 		Ndk struct {
-			CommonBackendProperties
-			CommonNativeBackendProperties
+			// Whether to generate C++ code using NDK binder APIs
+			// Default: true
+			Enabled *bool
+			// Whether to generate additional code for gathering information
+			// about the transactions
+			// Default: false
+			Gen_log *bool
 		}
 	}
 }
@@ -717,6 +709,10 @@ func (i *aidlInterface) checkImports(mctx android.LoadHookContext) {
 func (i *aidlInterface) checkStability(mctx android.LoadHookContext) {
 	if i.properties.Stability == nil {
 		return
+	}
+
+	if i.shouldGenerateJavaBackend() {
+		mctx.PropertyErrorf("stability", "Java backend does not yet support stability.")
 	}
 
 	// TODO(b/136027762): should we allow more types of stability (e.g. for APEX) or
@@ -915,14 +911,12 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		return ""
 	}
 
-	var commonProperties *CommonNativeBackendProperties
+	genLog := false
 	if lang == langCpp {
-		commonProperties = &i.properties.Backend.Cpp.CommonNativeBackendProperties
+		genLog = proptools.Bool(i.properties.Backend.Cpp.Gen_log)
 	} else if lang == langNdk || lang == langNdkPlatform {
-		commonProperties = &i.properties.Backend.Ndk.CommonNativeBackendProperties
+		genLog = proptools.Bool(i.properties.Backend.Ndk.Gen_log)
 	}
-
-	genLog := proptools.Bool(commonProperties.Gen_log)
 
 	mctx.CreateModule(aidlGenFactory, &nameProperties{
 		Name: proptools.StringPtr(cppSourceGen),
@@ -988,7 +982,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		Cpp_std:                   cpp_std,
 		Cflags:                    append(addCflags, "-Wextra", "-Wall", "-Werror"),
 		Stem:                      proptools.StringPtr(cppOutputGen),
-	}, &i.properties.VndkProperties, &commonProperties.VndkProperties)
+	}, &i.properties.VndkProperties)
 
 	return cppModuleGen
 }
