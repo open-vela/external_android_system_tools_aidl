@@ -30,6 +30,12 @@ cc_defaults {
         windows: {
             enabled: true,
         },
+        host: {
+            cflags: [
+                "-O0",
+                "-g",
+            ],
+        },
     },
 }
 
@@ -42,6 +48,7 @@ cc_library_static {
     srcs: [
         "aidl.cpp",
         "aidl_apicheck.cpp",
+        "aidl_const_expressions.cpp",
         "aidl_language.cpp",
         "aidl_language_l.ll",
         "aidl_language_y.yy",
@@ -62,10 +69,11 @@ cc_library_static {
         "line_reader.cpp",
         "io_delegate.cpp",
         "options.cpp",
-        "type_cpp.cpp",
-        "type_java.cpp",
-        "type_namespace.cpp",
     ],
+    yacc: {
+        gen_location_hh: true,
+        gen_position_hh: true,
+    },
 }
 
 // aidl executable
@@ -102,7 +110,6 @@ cc_test {
         "-Wextra",
         "-Werror",
         "-g",
-        "-DUNIT_TEST",
     ],
 
     srcs: [
@@ -120,33 +127,63 @@ cc_test {
         "tests/test_data_ping_responder.cpp",
         "tests/test_data_string_constants.cpp",
         "tests/test_util.cpp",
-        "type_cpp_unittest.cpp",
-        "type_java_unittest.cpp",
     ],
 
     static_libs: [
         "libaidl-common",
         "libbase",
         "libcutils",
+        "libgmock",
     ],
     target: {
-        host: {
-            static_libs: ["libgmock_host"],
-        },
         android: {
             static_libs: [
-                "libgmock",
                 "liblog",
             ],
         },
     },
 }
 
+cc_fuzz {
+    name: "aidl_parser_fuzzer",
+    host_supported: true,
+    dictionary: "tests/aidl_parser_fuzzer.dict",
+
+    fuzz_config: {
+        cc: [
+            "smoreland@google.com",
+            "jiyong@google.com",
+            "jeongik@google.com",
+        ],
+    },
+
+    srcs: [
+        "tests/aidl_parser_fuzzer.cpp",
+        "tests/fake_io_delegate.cpp",
+        "tests/test_util.cpp",
+    ],
+    static_libs: [
+        "libaidl-common",
+        "libbase",
+        "libcutils",
+    ],
+    target: {
+        android: {
+            static_libs: [
+                "liblog",
+            ],
+        },
+    },
+    // Enable this to show additional information about what is being parsed during fuzzing.
+    // cflags: ["-DFUZZ_LOG"],
+}
+
 //
 // Everything below here is used for integration testing of generated AIDL code.
 //
-cc_binary {
+cc_test {
     name: "aidl_test_sentinel_searcher",
+    gtest: false,
     srcs: ["tests/aidl_test_sentinel_searcher.cpp"],
     cflags: [
         "-Wall",
@@ -170,7 +207,13 @@ cc_defaults {
     ],
 }
 
-cc_library_shared {
+filegroup {
+    name: "libaidl-integration-test-files",
+    srcs: ["tests/android/aidl/tests/*.aidl"],
+    path: "tests",
+}
+
+cc_library_static {
     name: "libaidl-integration-test",
     defaults: ["aidl_test_defaults"],
     aidl: {
@@ -179,22 +222,24 @@ cc_library_shared {
         include_dirs: ["frameworks/native/aidl/binder"],
     },
     srcs: [
-        "tests/android/aidl/tests/*.aidl",
+        ":libaidl-integration-test-files",
         "tests/simple_parcelable.cpp",
     ],
 }
 
-cc_binary {
+cc_test {
     name: "aidl_test_service",
+    gtest: false,
     defaults: ["aidl_test_defaults"],
-    shared_libs: ["libaidl-integration-test"],
+    static_libs: ["libaidl-integration-test"],
     srcs: ["tests/aidl_test_service.cpp"],
 }
 
-cc_binary {
+cc_test {
     name: "aidl_test_client",
+    gtest: false,
     defaults: ["aidl_test_defaults"],
-    shared_libs: ["libaidl-integration-test"],
+    static_libs: ["libaidl-integration-test"],
     srcs: [
         "tests/aidl_test_client.cpp",
         "tests/aidl_test_client_file_descriptors.cpp",
@@ -246,19 +291,6 @@ aidl_interface {
         cpp: {
             gen_log: true,
         },
-        ndk: {
-            enabled: false,
-        },
-    },
-}
-
-aidl_interface {
-    name: "aidl_test_loggable_interface_ndk",
-    local_include_dir: "tests",
-    srcs: [
-        "tests/android/aidl/loggable/ILoggableInterfaceNdk.aidl",
-    ],
-    backend: {
         ndk: {
             gen_log: true,
         },

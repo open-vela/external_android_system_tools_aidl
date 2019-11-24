@@ -268,10 +268,16 @@ BpPingResponder::BpPingResponder(const ::android::sp<::android::IBinder>& _aidl_
 }  // namespace android
 #include <android/os/BnPingResponder.h>
 #include <binder/Parcel.h>
+#include <binder/Stability.h>
 
 namespace android {
 
 namespace os {
+
+BnPingResponder::BnPingResponder()
+{
+  ::android::internal::Stability::markCompilationUnit(this);
+}
 
 ::android::status_t BnPingResponder::onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) {
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -470,7 +476,7 @@ public:
 )";
 
 const char kExpectedBnHeaderOutput[] =
-R"(#ifndef AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
+    R"(#ifndef AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
 #define AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
 
 #include <binder/IInterface.h>
@@ -482,6 +488,7 @@ namespace os {
 
 class BnPingResponder : public ::android::BnInterface<IPingResponder> {
 public:
+  explicit BnPingResponder();
   ::android::status_t onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) override;
 };  // class BnPingResponder
 
@@ -707,10 +714,16 @@ int32_t BpPingResponder::getInterfaceVersion() {
 }  // namespace android
 #include <android/os/BnPingResponder.h>
 #include <binder/Parcel.h>
+#include <binder/Stability.h>
 
 namespace android {
 
 namespace os {
+
+BnPingResponder::BnPingResponder()
+{
+  ::android::internal::Stability::markCompilationUnit(this);
+}
 
 ::android::status_t BnPingResponder::onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) {
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -854,6 +867,7 @@ R"(#ifndef AIDL_GENERATED_ANDROID_OS_I_PING_RESPONDER_H_
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
 #include <binder/Status.h>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utils/String16.h>
@@ -926,7 +940,7 @@ private:
 )";
 
 const char kExpectedBnHeaderOutputWithVersion[] =
-R"(#ifndef AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
+    R"(#ifndef AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
 #define AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
 
 #include <binder/IInterface.h>
@@ -938,6 +952,7 @@ namespace os {
 
 class BnPingResponder : public ::android::BnInterface<IPingResponder> {
 public:
+  explicit BnPingResponder();
   ::android::status_t onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) override;
   int32_t getInterfaceVersion() final override;
 };  // class BnPingResponder
