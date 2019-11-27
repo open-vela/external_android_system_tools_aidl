@@ -782,7 +782,7 @@ void AidlEnumDeclaration::SetBackingType(std::unique_ptr<const AidlTypeSpecifier
   backing_type_ = std::move(type);
 }
 
-bool AidlEnumDeclaration::Autofill() {
+void AidlEnumDeclaration::Autofill() {
   const AidlEnumerator* previous = nullptr;
   for (const auto& enumerator : enumerators_) {
     if (enumerator->GetValue() == nullptr) {
@@ -790,20 +790,17 @@ bool AidlEnumDeclaration::Autofill() {
         enumerator->SetValue(std::unique_ptr<AidlConstantValue>(
             AidlConstantValue::Integral(AIDL_LOCATION_HERE, "0")));
       } else {
-        auto prev_value = std::unique_ptr<AidlConstantValue>(
-            AidlConstantValue::ShallowIntegralCopy(*previous->GetValue()));
-        if (prev_value == nullptr) {
-          return false;
-        }
         enumerator->SetValue(std::make_unique<AidlBinaryConstExpression>(
-            AIDL_LOCATION_HERE, std::move(prev_value), "+",
+            AIDL_LOCATION_HERE,
+            std::unique_ptr<AidlConstantValue>(
+                AidlConstantValue::ShallowIntegralCopy(*previous->GetValue())),
+            "+",
             std::unique_ptr<AidlConstantValue>(
                 AidlConstantValue::Integral(AIDL_LOCATION_HERE, "1"))));
       }
     }
     previous = enumerator.get();
   }
-  return true;
 }
 
 bool AidlEnumDeclaration::CheckValid(const AidlTypenames&) const {
