@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2018, The Android Open Source Project
- *
+ * Copyright (C) 2018, The Android Open Source Project *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,14 +16,12 @@
 #include "aidl.h"
 #include "aidl_language.h"
 #include "import_resolver.h"
-#include "logging.h"
 #include "options.h"
+#include "type_java.h"
 
 #include <map>
 #include <string>
 #include <vector>
-
-#include <android-base/strings.h>
 
 namespace android {
 namespace aidl {
@@ -178,47 +175,13 @@ static bool are_compatible_parcelables(const AidlStructuredParcelable& older,
   return compatible;
 }
 
-static bool are_compatible_enums(const AidlEnumDeclaration& older,
-                                 const AidlEnumDeclaration& newer) {
-  if (!are_compatible_types(older.GetBackingType(), newer.GetBackingType())) {
-    AIDL_ERROR(newer) << "Changed backing types.";
-    return false;
-  }
-
-  std::map<std::string, const AidlConstantValue*> old_enum_map;
-  for (const auto& enumerator : older.GetEnumerators()) {
-    old_enum_map[enumerator->GetName()] = enumerator->GetValue();
-  }
-  std::map<std::string, const AidlConstantValue*> new_enum_map;
-  for (const auto& enumerator : newer.GetEnumerators()) {
-    new_enum_map[enumerator->GetName()] = enumerator->GetValue();
-  }
-
-  bool compatible = true;
-  for (const auto& [name, value] : old_enum_map) {
-    if (new_enum_map.find(name) == new_enum_map.end()) {
-      AIDL_ERROR(newer) << "Removed enumerator from " << older.GetCanonicalName() << ": " << name;
-      compatible = false;
-      continue;
-    }
-    const string old_value =
-        old_enum_map[name]->ValueString(older.GetBackingType(), AidlConstantValueDecorator);
-    const string new_value =
-        new_enum_map[name]->ValueString(newer.GetBackingType(), AidlConstantValueDecorator);
-    if (old_value != new_value) {
-      AIDL_ERROR(newer) << "Changed enumerator value: " << older.GetCanonicalName() << "::" << name
-                        << " from " << old_value << " to " << new_value << ".";
-      compatible = false;
-    }
-  }
-  return compatible;
-}
-
 bool check_api(const Options& options, const IoDelegate& io_delegate) {
   CHECK(options.IsStructured());
   CHECK(options.InputFiles().size() == 2) << "--checkapi requires two inputs "
                                           << "but got " << options.InputFiles().size();
-  AidlTypenames old_tns;
+
+  java::JavaTypeNamespace old_ns;
+  old_ns.Init();
   const string old_dir = options.InputFiles().at(0);
   vector<AidlDefinedType*> old_types;
   vector<string> old_files = io_delegate.ListFiles(old_dir);
@@ -227,10 +190,8 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
     return false;
   }
   for (const auto& file : old_files) {
-    if (!android::base::EndsWith(file, ".aidl")) continue;
-
     vector<AidlDefinedType*> types;
-    if (internals::load_and_validate_aidl(file, options, io_delegate, &old_tns, &types,
+    if (internals::load_and_validate_aidl(file, options, io_delegate, &old_ns, &types,
                                           nullptr /* imported_files */) != AidlError::OK) {
       AIDL_ERROR(file) << "Failed to read.";
       return false;
@@ -238,7 +199,8 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
     old_types.insert(old_types.end(), types.begin(), types.end());
   }
 
-  AidlTypenames new_tns;
+  java::JavaTypeNamespace new_ns;
+  new_ns.Init();
   const string new_dir = options.InputFiles().at(1);
   vector<AidlDefinedType*> new_types;
   vector<string> new_files = io_delegate.ListFiles(new_dir);
@@ -247,10 +209,8 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
     return false;
   }
   for (const auto& file : new_files) {
-    if (!android::base::EndsWith(file, ".aidl")) continue;
-
     vector<AidlDefinedType*> types;
-    if (internals::load_and_validate_aidl(file, options, io_delegate, &new_tns, &types,
+    if (internals::load_and_validate_aidl(file, options, io_delegate, &new_ns, &types,
                                           nullptr /* imported_files */) != AidlError::OK) {
       AIDL_ERROR(file) << "Failed to read.";
       return false;
@@ -273,39 +233,26 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
     }
     const auto new_type = found->second;
 
-    if (old_type->AsInterface() != nullptr) {
-      if (new_type->AsInterface() == nullptr) {
-        AIDL_ERROR(new_type) << "Type mismatch: " << old_type->GetCanonicalName()
-                             << " is changed from " << old_type->GetPreprocessDeclarationName()
-                             << " to " << new_type->GetPreprocessDeclarationName();
-        compatible = false;
-        continue;
-      }
+    const bool old_is_iface = old_type->AsInterface() != nullptr;
+    const bool new_is_iface = new_type->AsInterface() != nullptr;
+    if (old_is_iface != new_is_iface) {
+      AIDL_ERROR(new_type) << "Type mismatch: " << old_type->GetCanonicalName()
+                           << " is changed from " << old_type->GetPreprocessDeclarationName()
+                           << " to " << new_type->GetPreprocessDeclarationName();
+      compatible = false;
+      continue;
+    }
+
+    if (old_is_iface) {
       compatible &=
           are_compatible_interfaces(*(old_type->AsInterface()), *(new_type->AsInterface()));
-    } else if (old_type->AsStructuredParcelable() != nullptr) {
-      if (new_type->AsStructuredParcelable() == nullptr) {
-        AIDL_ERROR(new_type) << "Parcelable" << new_type->GetCanonicalName()
-                             << " is not structured. ";
-        compatible = false;
-        continue;
-      }
+    } else {
+      CHECK(old_type->AsStructuredParcelable() != nullptr)
+          << "Parcelable" << old_type->GetCanonicalName() << " is not structured. ";
+      CHECK(new_type->AsStructuredParcelable() != nullptr)
+          << "Parcelable" << new_type->GetCanonicalName() << " is not structured. ";
       compatible &= are_compatible_parcelables(*(old_type->AsStructuredParcelable()),
                                                *(new_type->AsStructuredParcelable()));
-    } else if (old_type->AsEnumDeclaration() != nullptr) {
-      if (new_type->AsEnumDeclaration() == nullptr) {
-        AIDL_ERROR(new_type) << "Type mismatch: " << old_type->GetCanonicalName()
-                             << " is changed from " << old_type->GetPreprocessDeclarationName()
-                             << " to " << new_type->GetPreprocessDeclarationName();
-        compatible = false;
-        continue;
-      }
-      compatible &=
-          are_compatible_enums(*(old_type->AsEnumDeclaration()), *(new_type->AsEnumDeclaration()));
-    } else {
-      AIDL_ERROR(old_type) << "Unsupported type " << old_type->GetPreprocessDeclarationName()
-                           << " for " << old_type->GetCanonicalName();
-      compatible = false;
     }
   }
 
