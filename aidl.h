@@ -25,6 +25,7 @@
 #include "import_resolver.h"
 #include "io_delegate.h"
 #include "options.h"
+#include "type_namespace.h"
 
 namespace android {
 namespace aidl {
@@ -55,14 +56,14 @@ const string kGetInterfaceVersion("getInterfaceVersion");
 namespace internals {
 
 AidlError load_and_validate_aidl(const std::string& input_file_name, const Options& options,
-                                 const IoDelegate& io_delegate, AidlTypenames* typenames,
+                                 const IoDelegate& io_delegate, TypeNamespace* types,
                                  vector<AidlDefinedType*>* defined_types,
                                  vector<string>* imported_files);
 
 bool parse_preprocessed_file(const IoDelegate& io_delegate, const std::string& filename,
-                             AidlTypenames* typenames);
+                             TypeNamespace* types, AidlTypenames& typenames);
 
 } // namespace internals
 
-}  // namespace aidl
 }  // namespace android
+}  // namespace aidl
