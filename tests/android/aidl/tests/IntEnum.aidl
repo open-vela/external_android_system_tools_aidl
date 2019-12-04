@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-package test_package;
+package android.aidl.tests;
 
-import some_package.IBar;
-
-interface IBaz {
-    oneway void CanYouDealWithThisBar(in IBar bar);
-    void MethodAddedInVersion2();
-
-    ParcelFileDescriptor readPFD();
-    void writePFD(in ParcelFileDescriptor fd);
-    void readWritePFD(inout ParcelFileDescriptor fd);
-
-    ParcelFileDescriptor[] readPFDArray();
-    void writePFDArray(in ParcelFileDescriptor[] fds);
-    void readWritePFDArray(inout ParcelFileDescriptor[] fds);
+@Backing(type="int")
+enum IntEnum {
+  FOO = 1000,
+  BAR = 2000,
+  BAZ,
 }
+
