@@ -1335,7 +1335,7 @@ namespace android {
 
 namespace os {
 
-DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(ComplexTypeInterface, "android.os.IComplexTypeInterface")
+IMPLEMENT_META_INTERFACE(ComplexTypeInterface, "android.os.IComplexTypeInterface")
 
 ::android::IBinder* IComplexTypeInterfaceDefault::onAsBinder() {
   return nullptr;
