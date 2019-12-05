@@ -731,8 +731,9 @@ unique_ptr<Document> BuildInterfaceSource(const AidlTypenames& typenames,
   vector<unique_ptr<Declaration>> decls;
 
   unique_ptr<MacroDecl> meta_if{new MacroDecl{
-      "DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE",
-      ArgList{vector<string>{ClassName(interface, ClassNames::BASE), '"' + fq_name + '"'}}}};
+      "IMPLEMENT_META_INTERFACE",
+      ArgList{vector<string>{ClassName(interface, ClassNames::BASE),
+                             '"' + fq_name + '"'}}}};
   decls.push_back(std::move(meta_if));
 
   for (const auto& constant : interface.GetConstantDeclarations()) {
