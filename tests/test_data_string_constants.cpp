@@ -166,7 +166,7 @@ namespace android {
 
 namespace os {
 
-IMPLEMENT_META_INTERFACE(StringConstants, "android.os.IStringConstants")
+DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(StringConstants, "android.os.IStringConstants")
 
 const ::android::String16& IStringConstants::EXAMPLE_CONSTANT() {
   static const ::android::String16 value(::android::String16("foo"));
@@ -197,10 +197,16 @@ BpStringConstants::BpStringConstants(const ::android::sp<::android::IBinder>& _a
 }  // namespace android
 #include <android/os/BnStringConstants.h>
 #include <binder/Parcel.h>
+#include <binder/Stability.h>
 
 namespace android {
 
 namespace os {
+
+BnStringConstants::BnStringConstants()
+{
+  ::android::internal::Stability::markCompilationUnit(this);
+}
 
 ::android::status_t BnStringConstants::onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) {
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -322,7 +328,12 @@ public interface IStringConstants extends android.os.IInterface
           android.os.Parcel reply = android.os.Parcel.obtain();
           try {
             data.writeInterfaceToken(DESCRIPTOR);
-            mRemote.transact(Stub.TRANSACTION_getInterfaceVersion, data, reply, 0);
+            boolean _status = mRemote.transact(Stub.TRANSACTION_getInterfaceVersion, data, reply, 0);
+            if (!_status) {
+              if (getDefaultImpl() != null) {
+                return getDefaultImpl().getInterfaceVersion();
+              }
+            }
             reply.readException();
             mCachedVersion = reply.readInt();
           } finally {
@@ -358,6 +369,7 @@ R"(#ifndef AIDL_GENERATED_ANDROID_OS_I_STRING_CONSTANTS_H_
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
 #include <binder/Status.h>
+#include <cstdint>
 #include <utils/String16.h>
 #include <utils/StrongPointer.h>
 
@@ -395,7 +407,7 @@ namespace android {
 
 namespace os {
 
-IMPLEMENT_META_INTERFACE(StringConstants, "android.os.IStringConstants")
+DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(StringConstants, "android.os.IStringConstants")
 
 const ::android::String16& IStringConstants::EXAMPLE_CONSTANT() {
   static const ::android::String16 value(::android::String16("foo"));
@@ -447,10 +459,16 @@ int32_t BpStringConstants::getInterfaceVersion() {
 }  // namespace android
 #include <android/os/BnStringConstants.h>
 #include <binder/Parcel.h>
+#include <binder/Stability.h>
 
 namespace android {
 
 namespace os {
+
+BnStringConstants::BnStringConstants()
+{
+  ::android::internal::Stability::markCompilationUnit(this);
+}
 
 ::android::status_t BnStringConstants::onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) {
   ::android::status_t _aidl_ret_status = ::android::OK;
