@@ -99,11 +99,6 @@ ArgList BuildArgList(const AidlTypenames& typenames, const AidlMethod& method, b
   vector<string> method_arguments;
   for (const unique_ptr<AidlArgument>& a : method.GetArguments()) {
     string literal;
-    // b/144943748: CppNameOf FileDescriptor is unique_fd. Don't pass it by
-    // const reference but by value to make it easier for the user to keep
-    // it beyond the scope of the call. unique_fd is a thin wrapper for an
-    // int (fd) so passing by value is not expensive.
-    const bool nonCopyable = IsNonCopyableType(a->GetType(), typenames);
     if (for_declaration) {
       // Method declarations need typenames, pointers to out params, and variable
       // names that match the .aidl specification.
@@ -119,7 +114,7 @@ ArgList BuildArgList(const AidlTypenames& typenames, const AidlMethod& method, b
 
         // We pass in parameters that are not primitives by const reference.
         // Arrays of primitives are not primitives.
-        if (!(isPrimitive || isEnum || nonCopyable) || a->GetType().IsArray()) {
+        if (!(isPrimitive || isEnum) || a->GetType().IsArray()) {
           literal = "const " + literal + "&";
         }
       }
@@ -127,14 +122,8 @@ ArgList BuildArgList(const AidlTypenames& typenames, const AidlMethod& method, b
         literal += " " + a->GetName();
       }
     } else {
-      std::string varName = BuildVarName(*a);
-      if (a->IsOut()) {
-        literal = "&" + varName;
-      } else if (nonCopyable) {
-        literal = "std::move(" + varName + ")";
-      } else {
-        literal = varName;
-      }
+      if (a->IsOut()) { literal = "&"; }
+      literal += BuildVarName(*a);
     }
     method_arguments.push_back(literal);
   }
@@ -317,11 +306,7 @@ unique_ptr<Declaration> DefineClientTransaction(const AidlTypenames& typenames,
   // default implementation, if provided.
   vector<string> arg_names;
   for (const auto& a : method.GetArguments()) {
-    if (IsNonCopyableType(a->GetType(), typenames)) {
-      arg_names.emplace_back(StringPrintf("std::move(%s)", a->GetName().c_str()));
-    } else {
-      arg_names.emplace_back(a->GetName());
-    }
+    arg_names.emplace_back(a->GetName());
   }
   if (method.GetType().GetName() != "void") {
     arg_names.emplace_back(kReturnVarName);
