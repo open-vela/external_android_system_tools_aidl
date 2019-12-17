@@ -1453,8 +1453,6 @@ namespace android {
 
 namespace internal {
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc++17-extensions"
 template <>
 constexpr inline std::array<::android::os::TestEnum, 10> enum_values<::android::os::TestEnum> = {
   ::android::os::TestEnum::ZERO,
@@ -1468,7 +1466,6 @@ constexpr inline std::array<::android::os::TestEnum, 10> enum_values<::android::
   ::android::os::TestEnum::NINE,
   ::android::os::TestEnum::TEN,
 };
-#pragma clang diagnostic pop
 
 }  // namespace internal
 
@@ -1522,14 +1519,11 @@ namespace android {
 
 namespace internal {
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc++17-extensions"
 template <>
 constexpr inline std::array<::android::os::TestEnum, 2> enum_values<::android::os::TestEnum> = {
   ::android::os::TestEnum::FOO,
   ::android::os::TestEnum::BAR,
 };
-#pragma clang diagnostic pop
 
 }  // namespace internal
 
