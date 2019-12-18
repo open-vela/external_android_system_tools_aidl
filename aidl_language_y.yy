@@ -259,12 +259,10 @@ type_params
  : identifier {
     $$ = new std::vector<std::string>();
     $$->emplace_back($1->GetText());
-    delete $1;
   }
  | type_params ',' identifier {
     $1->emplace_back($3->GetText());
     $$ = $1;
-    delete $3;
   };
 
 
