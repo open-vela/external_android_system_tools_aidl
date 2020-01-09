@@ -134,14 +134,10 @@ class AidlError {
 
   std::ostream& os_;
 
-  static bool hadError() { return sHadError; }
-
  private:
   AidlError(bool fatal);
 
   bool fatal_;
-
-  static bool sHadError;
 
   DISALLOW_COPY_AND_ASSIGN(AidlError);
 };
