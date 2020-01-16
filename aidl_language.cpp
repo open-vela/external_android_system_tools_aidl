@@ -121,7 +121,7 @@ static const string kUtf8InCpp("utf8InCpp");
 static const string kVintfStability("VintfStability");
 static const string kUnsupportedAppUsage("UnsupportedAppUsage");
 static const string kSystemApi("SystemApi");
-static const string kJavaStableParcelable("JavaOnlyStableParcelable");
+static const string kStableParcelable("JavaOnlyStableParcelable");
 static const string kBacking("Backing");
 
 static const std::map<string, std::map<std::string, std::string>> kAnnotationParameters{
@@ -135,7 +135,7 @@ static const std::map<string, std::map<std::string, std::string>> kAnnotationPar
       {"publicAlternatives", "String"},
       {"trackingBug", "long"}}},
     {kSystemApi, {}},
-    {kJavaStableParcelable, {}},
+    {kStableParcelable, {}},
     {kBacking, {{"type", "String"}}}};
 
 AidlAnnotation* AidlAnnotation::Parse(
@@ -296,8 +296,8 @@ bool AidlAnnotatable::IsSystemApi() const {
   return HasAnnotation(annotations_, kSystemApi);
 }
 
-bool AidlAnnotatable::IsStableApiParcelable(Options::Language lang) const {
-  return HasAnnotation(annotations_, kJavaStableParcelable) && lang == Options::Language::JAVA;
+bool AidlAnnotatable::IsStableParcelable() const {
+  return HasAnnotation(annotations_, kStableParcelable);
 }
 
 bool AidlAnnotatable::CheckValidAnnotations() const {
@@ -379,18 +379,15 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
     return false;
   }
   if (IsGeneric()) {
-    const string& type_name = GetName();
-
     auto& types = GetTypeParameters();
-    // TODO(b/136048684) Disallow to use primitive types only if it is List or Map.
-    if (type_name == "List" || type_name == "Map") {
-      if (std::any_of(types.begin(), types.end(), [](auto& type_ptr) {
-            return AidlTypenames::IsPrimitiveTypename(type_ptr->GetName());
-          })) {
-        AIDL_ERROR(this) << "A generic type cannot has any primitive type parameters.";
-        return false;
-      }
+    // TODO(b/136048684) Allow them when it supports primitive type somewhere.
+    if (std::any_of(types.begin(), types.end(), [](auto& type_ptr) {
+          return AidlTypenames::IsPrimitiveTypename(type_ptr->GetName());
+        })) {
+      AIDL_ERROR(this) << "A generic type cannot has any primitive type parameters.";
+      return false;
     }
+    const string& type_name = GetName();
     const auto definedType = typenames.TryGetDefinedType(type_name);
     const auto parameterizable =
         definedType != nullptr ? definedType->AsParameterizable() : nullptr;
@@ -689,7 +686,7 @@ bool AidlParameterizable<std::string>::CheckValid() const {
 }
 
 bool AidlParcelable::CheckValid(const AidlTypenames&) const {
-  static const std::set<string> allowed{kJavaStableParcelable};
+  static const std::set<string> allowed{kStableParcelable};
   if (!CheckValidAnnotations()) {
     return false;
   }
@@ -795,6 +792,10 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(Options::Language lang) const
 // TODO: we should treat every backend all the same in future.
 bool AidlParcelable::LanguageSpecificCheckValid(Options::Language lang) const {
   if (lang != Options::Language::JAVA) {
+    if (this->IsStableParcelable()) {
+      AIDL_ERROR(this) << "@JavaOnlyStableParcelable supports only Java target.";
+      return false;
+    }
     const AidlParcelable* unstructuredParcelable = this->AsUnstructuredParcelable();
     if (unstructuredParcelable != nullptr) {
       if (unstructuredParcelable->GetCppHeader().empty()) {

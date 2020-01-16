@@ -362,19 +362,15 @@ TEST_F(AidlTest, ParsesStabilityAnnotations) {
 
 TEST_F(AidlTest, ParsesJavaOnlyStableParcelable) {
   Options java_options = Options::From("aidl -o out --structured a/Foo.aidl");
-  Options cpp_options = Options::From("aidl --lang=cpp -o out -h out/include a/Foo.aidl");
-  Options cpp_structured_options =
+  Options cpp_options =
       Options::From("aidl --lang=cpp --structured -o out -h out/include a/Foo.aidl");
   io_delegate_.SetFileContents(
-      "a/Foo.aidl",
-      StringPrintf("package a; @JavaOnlyStableParcelable parcelable Foo cpp_header \"Foo.h\" ;"));
+      "a/Foo.aidl", StringPrintf("package a; @JavaOnlyStableParcelable parcelable Foo;"));
 
   EXPECT_EQ(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
-  EXPECT_EQ(0, ::android::aidl::compile_aidl(cpp_options, io_delegate_));
   AddExpectedStderr(
-      "ERROR: a/Foo.aidl:1.48-52: Cannot declared parcelable in a --structured interface. "
-      "Parcelable must be defined in AIDL directly.\n");
-  EXPECT_NE(0, ::android::aidl::compile_aidl(cpp_structured_options, io_delegate_));
+      "ERROR: a/Foo.aidl:1.48-52: @JavaOnlyStableParcelable supports only Java target.\n");
+  EXPECT_NE(0, ::android::aidl::compile_aidl(cpp_options, io_delegate_));
 }
 
 TEST_F(AidlTest, AcceptsOneway) {
@@ -978,16 +974,6 @@ TEST_F(AidlTest, UserDefinedUnstructuredGenericParcelableType) {
   io_delegate_.SetFileContents("p/IFoo.aidl",
                                "package p; interface IFoo {"
                                "Bar<String, ParcelFileDescriptor> foo();}");
-  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
-
-  io_delegate_.SetFileContents("p/IFoo.aidl",
-                               "package p; interface IFoo {"
-                               "Bar<int, long> foo();}");
-
-  io_delegate_.SetFileContents("p/IFoo.aidl",
-                               "package p; interface IFoo {"
-                               "Bar<int[], long[]> foo();}");
-
   EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
 }
 
