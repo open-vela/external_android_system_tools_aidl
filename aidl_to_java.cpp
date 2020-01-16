@@ -48,7 +48,7 @@ std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::str
 };
 
 const string& JavaNameOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typenames,
-                         bool instantiable = false, bool boxing = false) {
+                         bool instantiable = false) {
   CHECK(aidl.IsResolved()) << aidl.ToString();
 
   if (instantiable) {
@@ -87,12 +87,6 @@ const string& JavaNameOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typ
       {"ParcelFileDescriptor", "android.os.ParcelFileDescriptor"},
   };
 
-  // map from primitive types to the corresponding boxing types
-  static map<string, string> boxing_types = {
-      {"void", "Void"},   {"boolean", "Boolean"}, {"byte", "Byte"},   {"char", "Character"},
-      {"int", "Integer"}, {"long", "Long"},       {"float", "Float"}, {"double", "Double"},
-  };
-
   // Enums in Java are represented by their backing type when
   // referenced in parcelables, methods, etc.
   if (const AidlEnumDeclaration* enum_decl = typenames.GetEnumDeclaration(aidl);
@@ -104,11 +98,6 @@ const string& JavaNameOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typ
   }
 
   const string& aidl_name = aidl.GetName();
-  if (boxing && AidlTypenames::IsPrimitiveTypename(aidl_name)) {
-    // Every primitive type must have the corresponding boxing type
-    CHECK(boxing_types.find(aidl_name) != m.end());
-    return boxing_types[aidl_name];
-  }
   if (m.find(aidl_name) != m.end()) {
     CHECK(AidlTypenames::IsBuiltinTypename(aidl_name));
     return m[aidl_name];
@@ -119,15 +108,13 @@ const string& JavaNameOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typ
 }
 
 namespace {
-string JavaSignatureOfInternal(
-    const AidlTypeSpecifier& aidl, const AidlTypenames& typenames, bool instantiable,
-    bool omit_array, bool boxing = false /* boxing can be true only if it is a type parameter */) {
-  string ret = JavaNameOf(aidl, typenames, instantiable, boxing && !aidl.IsArray());
+string JavaSignatureOfInternal(const AidlTypeSpecifier& aidl, const AidlTypenames& typenames,
+                               bool instantiable, bool omit_array) {
+  string ret = JavaNameOf(aidl, typenames, instantiable);
   if (aidl.IsGeneric()) {
     vector<string> arg_names;
     for (const auto& ta : aidl.GetTypeParameters()) {
-      arg_names.emplace_back(
-          JavaSignatureOfInternal(*ta, typenames, false, false, true /* boxing */));
+      arg_names.emplace_back(JavaSignatureOfInternal(*ta, typenames, false, false));
     }
     ret += "<" + Join(arg_names, ",") + ">";
   }

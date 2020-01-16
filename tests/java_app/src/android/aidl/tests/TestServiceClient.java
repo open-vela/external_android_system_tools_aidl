@@ -973,7 +973,6 @@ public class TestServiceClient extends Activity {
           checkStructuredParcelable(service);
           new NullableTests(service, mLog).runTests();
           new MapTests(mLog).runTests();
-          new GenericTests(mLog).runTests();
           checkDefaultImpl(service);
 
           mLog.log(mSuccessSentinel);
