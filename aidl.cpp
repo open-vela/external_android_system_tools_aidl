@@ -449,10 +449,10 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   ImportResolver import_resolver{io_delegate, input_file_name, options.ImportDirs(),
                                  options.InputFiles()};
 
-  vector<string> type_from_import_statements;
+  set<string> type_from_import_statements;
   for (const auto& import : main_parser->GetImports()) {
     if (!AidlTypenames::IsBuiltinTypename(import->GetNeededClass())) {
-      type_from_import_statements.emplace_back(import->GetNeededClass());
+      type_from_import_statements.emplace(import->GetNeededClass());
     }
   }
 
@@ -467,9 +467,8 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
       unresolved_types.emplace(type->GetName());
     }
   }
-  vector<string> import_candidates(type_from_import_statements);
-  import_candidates.insert(import_candidates.end(), unresolved_types.begin(),
-                           unresolved_types.end());
+  set<string> import_candidates(type_from_import_statements);
+  import_candidates.insert(unresolved_types.begin(), unresolved_types.end());
   for (const auto& import : import_candidates) {
     if (typenames->IsIgnorableImport(import)) {
       // There are places in the Android tree where an import doesn't resolve,
@@ -479,16 +478,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     }
     string import_path = import_resolver.FindImportFile(import);
     if (import_path.empty()) {
-      if (typenames->ResolveTypename(import).second) {
-        // Couldn't find the *.aidl file for the type from the include paths, but we
-        // have the type already resolved. This could happen when the type is
-        // from the preprocessed aidl file. In that case, use the type from the
-        // preprocessed aidl file as a last resort.
-        continue;
-      }
-
-      if (std::find(type_from_import_statements.begin(), type_from_import_statements.end(),
-                    import) != type_from_import_statements.end()) {
+      if (type_from_import_statements.find(import) != type_from_import_statements.end()) {
         // Complain only when the import from the import statement has failed.
         AIDL_ERROR(import) << "couldn't find import for class " << import;
         err = AidlError::BAD_IMPORT;
