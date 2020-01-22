@@ -85,13 +85,7 @@ bool AidlTypenames::IsIgnorableImport(const string& import) const {
   static set<string> ignore_import = {"android.os.IInterface",   "android.os.IBinder",
                                       "android.os.Parcelable",   "android.os.Parcel",
                                       "android.content.Context", "java.lang.String"};
-  // these known built-in types don't need to be imported
-  const bool in_ignore_import = ignore_import.find(import) != ignore_import.end();
-  // an already defined type doesn't need to be imported again unless it is from
-  // the preprocessed file
-  auto ret = TryGetDefinedTypeImpl(import);
-  const bool defined_type_not_from_preprocessed = ret.type != nullptr && !ret.from_preprocessed;
-  return in_ignore_import || defined_type_not_from_preprocessed;
+  return ResolveTypename(import).second || ignore_import.find(import) != ignore_import.end();
 }
 
 bool AidlTypenames::AddDefinedType(unique_ptr<AidlDefinedType> type) {
@@ -128,37 +122,32 @@ bool AidlTypenames::IsPrimitiveTypename(const string& type_name) {
 }
 
 const AidlDefinedType* AidlTypenames::TryGetDefinedType(const string& type_name) const {
-  return TryGetDefinedTypeImpl(type_name).type;
-}
-
-AidlTypenames::DefinedImplResult AidlTypenames::TryGetDefinedTypeImpl(
-    const string& type_name) const {
   // Do the exact match first.
   auto found_def = defined_types_.find(type_name);
   if (found_def != defined_types_.end()) {
-    return DefinedImplResult(found_def->second.get(), false);
+    return found_def->second.get();
   }
 
   auto found_prep = preprocessed_types_.find(type_name);
   if (found_prep != preprocessed_types_.end()) {
-    return DefinedImplResult(found_prep->second.get(), true);
+    return found_prep->second.get();
   }
 
   // Then match with the class name. Defined types has higher priority than
   // types from the preprocessed file.
   for (auto it = defined_types_.begin(); it != defined_types_.end(); it++) {
     if (it->second->GetName() == type_name) {
-      return DefinedImplResult(it->second.get(), false);
+      return it->second.get();
     }
   }
 
   for (auto it = preprocessed_types_.begin(); it != preprocessed_types_.end(); it++) {
     if (it->second->GetName() == type_name) {
-      return DefinedImplResult(it->second.get(), true);
+      return it->second.get();
     }
   }
 
-  return DefinedImplResult(nullptr, false);
+  return nullptr;
 }
 
 pair<string, bool> AidlTypenames::ResolveTypename(const string& type_name) const {
