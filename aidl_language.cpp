@@ -1099,11 +1099,6 @@ std::vector<std::string> Parser::Package() const {
 }
 
 void Parser::AddImport(AidlImport* import) {
-  for (const auto& i : imports_) {
-    if (i->GetNeededClass() == import->GetNeededClass()) {
-      return;
-    }
-  }
   imports_.emplace_back(import);
 }
 
