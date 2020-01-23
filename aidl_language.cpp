@@ -430,14 +430,6 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
     }
   }
 
-  const bool is_generic_string_list = GetName() == "List" && IsGeneric() &&
-                                      GetTypeParameters().size() == 1 &&
-                                      GetTypeParameters()[0]->GetName() == "String";
-  if (IsUtf8InCpp() && (GetName() != "String" && !is_generic_string_list)) {
-    AIDL_ERROR(this) << "@utf8InCpp can only be used on String, String[], and List<String>.";
-    return false;
-  }
-
   if (GetName() == "void") {
     if (IsArray() || IsNullable() || IsUtf8InCpp()) {
       AIDL_ERROR(this) << "void type cannot be an array or nullable or utf8 string";
@@ -1106,13 +1098,13 @@ std::vector<std::string> Parser::Package() const {
   return package_->GetTerms();
 }
 
-void Parser::AddImport(std::unique_ptr<AidlImport>&& import) {
+void Parser::AddImport(AidlImport* import) {
   for (const auto& i : imports_) {
     if (i->GetNeededClass() == import->GetNeededClass()) {
       return;
     }
   }
-  imports_.emplace_back(std::move(import));
+  imports_.emplace_back(import);
 }
 
 bool Parser::Resolve() {
