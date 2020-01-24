@@ -752,8 +752,6 @@ bool AidlBinaryConstExpression::evaluate(const AidlTypeSpecifier& type) const {
     return true;
   }
 
-  // TODO(b/139877950) Add support for handling overflows
-
   // CASE: + - *  / % | ^ & < > <= >= == !=
   if (isArithmeticOrBitflip || OP_IS_BIN_COMP) {
     if ((op_ == "/" || op_ == "%") && right_val_->final_value_ == 0) {

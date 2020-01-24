@@ -66,12 +66,11 @@ parcelable StructuredParcelable {
     // Constant expressions that evaluate to 1
     int[] int32_1 = {
       (~(-1)) == 0,
-      -(1 << 31) == (1 << 31),
+      ~~(1 << 31) == (1 << 31),
       -0x7fffffff < 0,
-      -0x80000000 < 0,
+      0x80000000 < 0,
 
-      // both treated int32_t, sum = (int32_t)0x80000000 = -2147483648
-      (1 + 0x7fffffff) == -2147483648,
+      0x7fffffff == 2147483647,
 
       // Shifting for more than 31 bits are undefined. Not tested.
       (1 << 31) == 0x80000000,
@@ -136,23 +135,14 @@ parcelable StructuredParcelable {
       (~(-1)) == 0,
       (~4294967295) != 0,
       (~4294967295) != 0,
-      -(1 << 63) == (1 << 63),
+      ~~(1L << 63) == (1L << 63),
       -0x7FFFFFFFFFFFFFFF < 0,
 
-      // both treated int32_t, sum = (int64_t)(int32_t)0x80000000 = (int64_t)(-2147483648)
-      (1 + 0x7fffffff) == -2147483648,
-
-      // 0x80000000 is uint32_t, sum = (int64_t)(uint32_t)0x7fffffff = (int64_t)(2147483647)
-      (0x80000000 - 1) == 2147483647,
-      (0x80000000 + 1) == -2147483647,
-      (1L << 63)+1 == -9223372036854775807,
+      0x7fffffff == 2147483647,
       0xfffffffff == 68719476735,
-
       0xffffffffffffffff == -1,
       (0xfL << 32L) == 0xf00000000,
       (0xfL << 32) == 0xf00000000,
-      (0xf << 32L) == 0xf,
-      (0xf << 32) == 0xf
     };
     int hexInt32_pos_1 = -0xffffffff;
     int hexInt64_pos_1 = -0xfffffffffff < 0;

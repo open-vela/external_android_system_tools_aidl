@@ -146,10 +146,10 @@ interface ITestService {
 
   // All these constant expressions should be equal to 1
   const int A1 = (~(-1)) == 0;
-  const int A2 = -(1 << 31) == (1 << 31);
+  const int A2 = ~~(1 << 31) == (1 << 31);
   const int A3 = -0x7fffffff < 0;
-  const int A4 = -0x80000000 < 0;
-  const int A5 = (1 + 0x7fffffff) == -2147483648;
+  const int A4 = 0x80000000 < 0;
+  const int A5 = 0x7fffffff == 2147483647;
   const int A6 = (1 << 31) == 0x80000000;
   const int A7 = (1 + 2) == 3;
   const int A8 = (8 - 9) == -1;

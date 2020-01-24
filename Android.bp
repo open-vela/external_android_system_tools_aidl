@@ -26,6 +26,10 @@ cc_defaults {
         "libbase",
         "libcutils",
     ],
+    sanitize: {
+        integer_overflow: true,
+        misc_undefined: ["integer"],
+    },
     target: {
         windows: {
             enabled: true,
