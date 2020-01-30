@@ -142,10 +142,8 @@ ArgList BuildArgList(const AidlTypenames& typenames, const AidlMethod& method, b
   if (method.GetType().GetName() != "void") {
     string literal;
     if (for_declaration) {
-      literal = CppNameOf(method.GetType(), typenames) + "*";
-      if (!type_name_only) {
-        literal += " " + string(kReturnVarName);
-      }
+      literal = StringPrintf("%s* %s", CppNameOf(method.GetType(), typenames).c_str(),
+                             type_name_only ? "" : kReturnVarName);
     } else {
       literal = string{"&"} + kReturnVarName;
     }
@@ -787,8 +785,7 @@ unique_ptr<Document> BuildServerSource(const AidlTypenames& typenames,
 }
 
 unique_ptr<Document> BuildInterfaceSource(const AidlTypenames& typenames,
-                                          const AidlInterface& interface,
-                                          [[maybe_unused]] const Options& options) {
+                                          const AidlInterface& interface, const Options& options) {
   vector<string> include_list{
       HeaderFile(interface, ClassNames::RAW, false),
       HeaderFile(interface, ClassNames::CLIENT, false),
@@ -819,6 +816,46 @@ unique_ptr<Document> BuildInterfaceSource(const AidlTypenames& typenames,
                      constant->ValueString(ConstantValueDecorator).c_str()));
     getter->GetStatementBlock()->AddLiteral("return value");
     decls.push_back(std::move(getter));
+  }
+
+  // Implement the default impl class.
+  // onAsBinder returns nullptr as this interface is not associated with a
+  // real binder.
+  const string default_impl(ClassName(interface, ClassNames::DEFAULT_IMPL));
+  decls.emplace_back(
+      new LiteralDecl(StringPrintf("::android::IBinder* %s::onAsBinder() {\n"
+                                   "  return nullptr;\n"
+                                   "}\n",
+                                   default_impl.c_str())));
+  // Each interface method by default returns UNKNOWN_TRANSACTION with is
+  // the same status that is returned by transact() when the method is
+  // not implemented in the server side. In other words, these default
+  // methods do nothing; they only exist to aid making a real default
+  // impl class without having to override all methods in an interface.
+  for (const auto& method : interface.GetMethods()) {
+    if (method->IsUserDefined()) {
+      std::ostringstream code;
+      code << "::android::binder::Status " << default_impl << "::" << method->GetName()
+           << BuildArgList(typenames, *method, true, true).ToString() << " {\n"
+           << "  return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);\n"
+           << "}\n";
+      decls.emplace_back(new LiteralDecl(code.str()));
+    } else {
+      if (method->GetName() == kGetInterfaceVersion && options.Version() > 0) {
+        std::ostringstream code;
+        code << "int32_t " << default_impl << "::" << kGetInterfaceVersion << "() {\n"
+             << "  return 0;\n"
+             << "}\n";
+        decls.emplace_back(new LiteralDecl(code.str()));
+      }
+      if (method->GetName() == kGetInterfaceHash && !options.Hash().empty()) {
+        std::ostringstream code;
+        code << "std::string " << default_impl << "::" << kGetInterfaceHash << "() {\n"
+             << "  return \"\";\n"
+             << "}\n";
+        decls.emplace_back(new LiteralDecl(code.str()));
+      }
+    }
   }
 
   return unique_ptr<Document>{new CppSource{
@@ -1022,49 +1059,28 @@ unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
     }
   }
 
-  // Implement the default impl class.
-  vector<unique_ptr<Declaration>> method_decls;
-  // onAsBinder returns nullptr as this interface is not associated with a
-  // real binder.
-  method_decls.emplace_back(
-      new LiteralDecl("::android::IBinder* onAsBinder() override {\n"
-                      "  return nullptr;\n"
-                      "}\n"));
-  // Each interface method by default returns UNKNOWN_TRANSACTION with is
-  // the same status that is returned by transact() when the method is
-  // not implemented in the server side. In other words, these default
-  // methods do nothing; they only exist to aid making a real default
-  // impl class without having to override all methods in an interface.
+  vector<unique_ptr<Declaration>> decls;
+  decls.emplace_back(std::move(if_class));
+
+  // Base class for the default implementation.
+  vector<string> method_decls;
   for (const auto& method : interface.GetMethods()) {
     if (method->IsUserDefined()) {
-      std::ostringstream code;
-      code << "::android::binder::Status " << method->GetName()
-           << BuildArgList(typenames, *method, true, true).ToString() << " override {\n"
-           << "  return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);\n"
-           << "}\n";
-      method_decls.emplace_back(new LiteralDecl(code.str()));
+      method_decls.emplace_back(BuildMethodDecl(*method, typenames, false)->ToString());
     } else {
-      if (method->GetName() == kGetInterfaceVersion && options.Version() > 0) {
-        std::ostringstream code;
-        code << "int32_t " << kGetInterfaceVersion << "() override {\n"
-             << "  return 0;\n"
-             << "}\n";
-        method_decls.emplace_back(new LiteralDecl(code.str()));
-      }
-      if (method->GetName() == kGetInterfaceHash && !options.Hash().empty()) {
-        std::ostringstream code;
-        code << "std::string " << kGetInterfaceHash << "() override {\n"
-             << "  return \"\";\n"
-             << "}\n";
-        method_decls.emplace_back(new LiteralDecl(code.str()));
-      }
+      method_decls.emplace_back(
+          BuildMetaMethodDecl(*method, typenames, options, false)->ToString());
     }
   }
 
-  vector<unique_ptr<Declaration>> decls;
-  decls.emplace_back(std::move(if_class));
-  decls.emplace_back(new ClassDecl{
-      ClassName(interface, ClassNames::DEFAULT_IMPL), i_name, std::move(method_decls), {}});
+  decls.emplace_back(new LiteralDecl(
+      android::base::StringPrintf("class %s : public %s {\n"
+                                  "public:\n"
+                                  "  ::android::IBinder* onAsBinder() override;\n"
+                                  "  %s\n"
+                                  "};\n",
+                                  ClassName(interface, ClassNames::DEFAULT_IMPL).c_str(),
+                                  i_name.c_str(), Join(method_decls, "  ").c_str())));
 
   return unique_ptr<Document>{
       new CppHeader{BuildHeaderGuard(interface, ClassNames::INTERFACE),
