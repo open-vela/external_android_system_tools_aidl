@@ -37,6 +37,11 @@ cc_defaults {
             ],
         },
     },
+    product_variables: {
+        platform_sdk_version: {
+            cflags: ["-DPLATFORM_SDK_VERSION=%d"],
+        },
+    },
 }
 
 // Logic shared between aidl and its unittests
