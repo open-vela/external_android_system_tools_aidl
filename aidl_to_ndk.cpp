@@ -87,7 +87,9 @@ static std::function<void(const CodeGeneratorContext& c)> StandardWrite(const st
   };
 }
 
-TypeInfo PrimitiveType(const std::string& cpp_name, const std::string& pretty_name) {
+TypeInfo PrimitiveType(const std::string& cpp_name, const std::string& pretty_name,
+                       const std::optional<std::string>& cpp_name_for_array_opt = std::nullopt) {
+  std::string cpp_name_for_array = cpp_name_for_array_opt.value_or(cpp_name);
   return TypeInfo{
       .raw =
           TypeInfo::Aspect{
@@ -97,14 +99,14 @@ TypeInfo PrimitiveType(const std::string& cpp_name, const std::string& pretty_na
               .write_func = StandardWrite("AParcel_write" + pretty_name),
           },
       .array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
-          .cpp_name = "std::vector<" + cpp_name + ">",
+          .cpp_name = "std::vector<" + cpp_name_for_array + ">",
           .value_is_cheap = false,
           .read_func = StandardRead("::ndk::AParcel_readVector"),
           .write_func = StandardWrite("::ndk::AParcel_writeVector"),
       }),
       .nullable = nullptr,
       .nullable_array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
-          .cpp_name = "std::optional<std::vector<" + cpp_name + ">>",
+          .cpp_name = "std::optional<std::vector<" + cpp_name_for_array + ">>",
           .value_is_cheap = false,
           .read_func = StandardRead("::ndk::AParcel_readVector"),
           .write_func = StandardWrite("::ndk::AParcel_writeVector"),
@@ -235,7 +237,7 @@ TypeInfo EnumDeclarationTypeInfo(const AidlEnumDeclaration& enum_decl) {
 static map<std::string, TypeInfo> kNdkTypeInfoMap = {
     {"void", TypeInfo{{"void", true, nullptr, nullptr}, nullptr, nullptr, nullptr}},
     {"boolean", PrimitiveType("bool", "Bool")},
-    {"byte", PrimitiveType("int8_t", "Byte")},
+    {"byte", PrimitiveType("int8_t", "Byte", "uint8_t")},
     {"char", PrimitiveType("char16_t", "Char")},
     {"int", PrimitiveType("int32_t", "Int32")},
     {"long", PrimitiveType("int64_t", "Int64")},
