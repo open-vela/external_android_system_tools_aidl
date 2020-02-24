@@ -20,7 +20,7 @@
 #include <binder/Status.h>
 #include <utils/StrongPointer.h>
 
-#include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -36,7 +36,7 @@ using android::binder::Status;
 // generated
 using android::aidl::tests::ITestService;
 
-using std::unique_ptr;
+using std::optional;
 using std::string;
 using std::vector;
 
@@ -68,7 +68,7 @@ bool ConfirmUtf8InCppStringRepeat(const sp<ITestService>& s) {
     }
   }
 
-  unique_ptr<string> ret;
+  optional<string> ret;
   Status repeat_null_status = s->RepeatNullableUtf8CppString(nullptr, &ret);
   if (!repeat_null_status.isOk() || ret) {
     LOG(ERROR) << "RepeatNullableUtf8CppString(null) did not return null";
@@ -76,9 +76,8 @@ bool ConfirmUtf8InCppStringRepeat(const sp<ITestService>& s) {
   }
 
   for (const auto& input : utf8_inputs) {
-    unique_ptr<string> reply;
-    Status status = s->RepeatNullableUtf8CppString(
-        unique_ptr<string>(new string(input)), &reply);
+    optional<string> reply;
+    Status status = s->RepeatNullableUtf8CppString(input, &reply);
     if (!status.isOk()) {
       LOG(ERROR) << "Got status=" << status.toString8() << " while repeating "
                     "nullable utf8 string " << input;
@@ -113,23 +112,23 @@ bool ConfirmUtf8InCppStringArrayReverse(const sp<ITestService>& s) {
 
 namespace {
 
-bool ConfirmUtf8InCppStringCollectionReverse(const sp<ITestService>& s,
-     Status (ITestService::*m)(const unique_ptr<vector<unique_ptr<string>>>&,
-                               unique_ptr<vector<unique_ptr<string>>>*,
-                               unique_ptr<vector<unique_ptr<string>>>*)) {
+bool ConfirmUtf8InCppStringCollectionReverse(
+    const sp<ITestService>& s, Status (ITestService::*m)(const optional<vector<optional<string>>>&,
+                                                         optional<vector<optional<string>>>*,
+                                                         optional<vector<optional<string>>>*)) {
   (void)m;
   LOG(INFO) << "Confirming reversing a list of utf8 strings works";
-  unique_ptr<vector<unique_ptr<string>>> input, reversed, repeated;
+  optional<vector<optional<string>>> input, reversed, repeated;
   Status status = (s.get()->*m)(input, &reversed, &repeated);
   if (!status.isOk() || reversed || repeated) {
     LOG(ERROR) << "Reversing null list of utf8 strings failed.";
     return false;
   }
 
-  input.reset(new vector<unique_ptr<string>>);
-  input->emplace_back(new string("Deliver us from evil."));
-  input->emplace_back(nullptr);
-  input->emplace_back(new string("\xF0\x90\x90\xB7\xE2\x82\xAC"));
+  input = vector<optional<string>>();
+  input->push_back("Deliver us from evil.");
+  input->push_back(std::nullopt);
+  input->push_back("\xF0\x90\x90\xB7\xE2\x82\xAC");
 
   status = s->ReverseUtf8CppStringList(input, &repeated, &reversed);
   if (!status.isOk() || !reversed || !repeated) {
@@ -142,9 +141,9 @@ bool ConfirmUtf8InCppStringCollectionReverse(const sp<ITestService>& s,
   }
 
   for (size_t i = 0; i < input->size(); ++i) {
-    const string* input_str = (*input)[i].get();
-    const string* repeated_str = (*repeated)[i].get();
-    const string* reversed_str = (*reversed)[(reversed->size() - 1) - i].get();
+    auto input_str = (*input)[i];
+    auto repeated_str = (*repeated)[i];
+    auto reversed_str = (*reversed)[(reversed->size() - 1) - i];
     if (!input_str) {
       if(repeated_str || reversed_str) {
         LOG(ERROR) << "Expected null values, but got non-null.";
