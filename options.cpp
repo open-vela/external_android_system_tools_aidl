@@ -33,11 +33,16 @@ using android::base::Trim;
 using std::endl;
 using std::string;
 
+#ifndef PLATFORM_SDK_VERSION
+#define PLATFORM_SDK_VERSION "<UNKNOWN>"
+#endif
+
 namespace android {
 namespace aidl {
 
 string Options::GetUsage() const {
   std::ostringstream sstr;
+  sstr << "AIDL Compiler: built for platform SDK version " << PLATFORM_SDK_VERSION << endl;
   sstr << "usage:" << endl
        << myname_ << " --lang={java|cpp|ndk} [OPTION]... INPUT..." << endl
        << "   Generate Java or C++ files for AIDL file(s)." << endl
