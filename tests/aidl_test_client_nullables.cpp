@@ -19,7 +19,7 @@
 #include <utils/String16.h>
 
 #include <iostream>
-#include <optional>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -37,13 +37,12 @@ using android::aidl::tests::ITestService;
 using android::aidl::tests::LongEnum;
 using android::aidl::tests::SimpleParcelable;
 
-using std::cerr;
-using std::cout;
-using std::endl;
-using std::make_optional;
-using std::optional;
 using std::string;
+using std::unique_ptr;
 using std::vector;
+using std::cout;
+using std::cerr;
+using std::endl;
 
 namespace android {
 namespace aidl {
@@ -51,14 +50,15 @@ namespace tests {
 namespace client {
 
 namespace {
-template <typename T>
-bool ValuesEqual(const optional<T>& in, const optional<T>& out) {
+template<typename T>
+bool ValuesEqual(const unique_ptr<T>& in, const unique_ptr<T>& out) {
   return *in == *out;
 }
 
-template <>
-bool ValuesEqual<vector<optional<String16>>>(const optional<vector<optional<String16>>>& in,
-                                             const optional<vector<optional<String16>>>& out) {
+template<>
+bool ValuesEqual<vector<unique_ptr<String16>>>(
+    const unique_ptr<vector<unique_ptr<String16>>>& in,
+    const unique_ptr<vector<unique_ptr<String16>>>& out) {
   if (!in) {
     return !out;
   }
@@ -72,8 +72,8 @@ bool ValuesEqual<vector<optional<String16>>>(const optional<vector<optional<Stri
   }
 
   for (size_t i = 0; i < in->size(); i++) {
-    const auto& a = (*in)[i];
-    const auto& b = (*out)[i];
+    const unique_ptr<String16>& a = (*in)[i];
+    const unique_ptr<String16>& b = (*out)[i];
 
     if (!(a || b)) {
       continue;
@@ -91,12 +91,14 @@ bool ValuesEqual<vector<optional<String16>>>(const optional<vector<optional<Stri
   return true;
 }
 
-template <typename T>
-bool ConfirmNullableType(const sp<ITestService>& s, const string& type_name, optional<T> in,
-                         Status (ITestService::*func)(const optional<T>&, optional<T>*)) {
+template<typename T>
+bool ConfirmNullableType(const sp<ITestService>& s, const string& type_name,
+                         unique_ptr<T> in,
+                         Status(ITestService::*func)(const unique_ptr<T>&,
+                                                     unique_ptr<T>*)) {
   cout << "... Confirming nullables for " << type_name << " ..." << endl;
   Status status;
-  optional<T> out;
+  unique_ptr<T> out;
 
   status = (*s.*func)(in, &out);
 
@@ -138,8 +140,10 @@ bool CheckAppropriateIBinderHandling(const sp<ITestService>& s) {
   Status status;
   sp<IBinder> binder = new BBinder();
   sp<IBinder> null_binder = nullptr;
-  vector<sp<IBinder>> list_with_nulls{binder, null_binder};
-  vector<sp<IBinder>> list_without_nulls{binder, binder};
+  unique_ptr<vector<sp<IBinder>>> list_with_nulls(
+      new vector<sp<IBinder>>{binder, null_binder});
+  unique_ptr<vector<sp<IBinder>>> list_without_nulls(
+      new vector<sp<IBinder>>{binder, binder});
 
   // Methods without @nullable throw up when given null binders
   if (s->TakesAnIBinder(null_binder).exceptionCode() !=
@@ -148,7 +152,8 @@ bool CheckAppropriateIBinderHandling(const sp<ITestService>& s) {
          << __LINE__ << endl;
     return false;
   }
-  if (s->TakesAnIBinderList(list_with_nulls).exceptionCode() != binder::Status::EX_NULL_POINTER) {
+  if (s->TakesAnIBinderList(*list_with_nulls).exceptionCode() !=
+      binder::Status::EX_NULL_POINTER) {
     cerr << "Did not receive expected null exception on line: "
          << __LINE__ << endl;
     return false;
@@ -160,7 +165,7 @@ bool CheckAppropriateIBinderHandling(const sp<ITestService>& s) {
          << __LINE__ << endl;
     return false;
   }
-  if (!s->TakesAnIBinderList(list_without_nulls).isOk()) {
+  if (!s->TakesAnIBinderList(*list_without_nulls).isOk()) {
     cerr << "Received unexpected exception on line "
          << __LINE__ << endl;
     return false;
@@ -223,48 +228,59 @@ bool ConfirmNullables(const sp<ITestService>& s) {
   Status status;
   cout << "Confirming passing and returning nullable values works." << endl;
 
-  if (!ConfirmNullableType(s, "integer array", make_optional(vector<int32_t>{1, 2, 3}),
+  if (!ConfirmNullableType(s, "integer array",
+                           unique_ptr<vector<int32_t>>(
+                               new vector<int32_t>({1,2,3})),
                            &ITestService::RepeatNullableIntArray)) {
     return false;
   }
 
-  if (!ConfirmNullableType(s, "byte enum array",
-                           make_optional(vector<ByteEnum>{ByteEnum::FOO, ByteEnum::BAR}),
-                           &ITestService::RepeatNullableByteEnumArray)) {
+  if (!ConfirmNullableType(
+          s, "byte enum array",
+          unique_ptr<vector<ByteEnum>>(new vector<ByteEnum>({ByteEnum::FOO, ByteEnum::BAR})),
+          &ITestService::RepeatNullableByteEnumArray)) {
     return false;
   }
 
-  if (!ConfirmNullableType(s, "int enum array",
-                           make_optional(vector<IntEnum>{IntEnum::FOO, IntEnum::BAR}),
-                           &ITestService::RepeatNullableIntEnumArray)) {
+  if (!ConfirmNullableType(
+          s, "int enum array",
+          unique_ptr<vector<IntEnum>>(new vector<IntEnum>({IntEnum::FOO, IntEnum::BAR})),
+          &ITestService::RepeatNullableIntEnumArray)) {
     return false;
   }
 
-  if (!ConfirmNullableType(s, "long enum array",
-                           make_optional(vector<LongEnum>{LongEnum::FOO, LongEnum::BAR}),
-                           &ITestService::RepeatNullableLongEnumArray)) {
+  if (!ConfirmNullableType(
+          s, "long enum array",
+          unique_ptr<vector<LongEnum>>(new vector<LongEnum>({LongEnum::FOO, LongEnum::BAR})),
+          &ITestService::RepeatNullableLongEnumArray)) {
     return false;
   }
 
-  if (!ConfirmNullableType(s, "string", make_optional(String16("Blooob")),
+  if (!ConfirmNullableType(s, "string",
+                           unique_ptr<String16>(new String16("Blooob")),
                            &ITestService::RepeatNullableString)) {
     return false;
   }
 
-  vector<optional<String16>> test_string_array;
-  test_string_array.push_back(String16("Wat"));
-  test_string_array.push_back(String16("Blooob"));
-  test_string_array.push_back(String16("Wat"));
-  test_string_array.push_back(std::nullopt);
-  test_string_array.push_back(String16("YEAH"));
-  test_string_array.push_back(String16("OKAAAAY"));
+  unique_ptr<vector<unique_ptr<String16>>> test_string_array(
+      new vector<unique_ptr<String16>>());
+  test_string_array->push_back(unique_ptr<String16>(new String16("Wat")));
+  test_string_array->push_back(unique_ptr<String16>(
+      new String16("Blooob")));
+  test_string_array->push_back(unique_ptr<String16>(new String16("Wat")));
+  test_string_array->push_back(unique_ptr<String16>(nullptr));
+  test_string_array->push_back(unique_ptr<String16>(new String16("YEAH")));
+  test_string_array->push_back(unique_ptr<String16>(
+      new String16("OKAAAAY")));
 
-  if (!ConfirmNullableType(s, "string array", make_optional(test_string_array),
+  if (!ConfirmNullableType(s, "string array", std::move(test_string_array),
                            &ITestService::RepeatNullableStringList)) {
     return false;
   }
 
-  if (!ConfirmNullableType(s, "parcelable", make_optional<SimpleParcelable>("Booya", 42),
+  if (!ConfirmNullableType(s, "parcelable",
+                           unique_ptr<SimpleParcelable>(
+                               new SimpleParcelable("Booya", 42)),
                            &ITestService::RepeatNullableParcelable)) {
     return false;
   }
