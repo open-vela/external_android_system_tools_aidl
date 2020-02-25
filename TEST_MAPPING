@@ -8,6 +8,10 @@
     },
     {
       "name": "aidl_lazy_test"
+    },
+    {
+      "name": "libaidlmetadata_test",
+      "host": true
     }
   ]
 }
