@@ -242,7 +242,6 @@ class AidlAnnotatable : public AidlNode {
   bool IsNullable() const;
   bool IsUtf8InCpp() const;
   bool IsVintfStability() const;
-  bool IsSystemApi() const;
   bool IsStableApiParcelable(Options::Language lang) const;
 
   void DumpAnnotations(CodeWriter* writer) const;
@@ -691,7 +690,6 @@ class AidlDefinedType : public AidlAnnotatable {
   }
 
   virtual void Dump(CodeWriter* writer) const = 0;
-  void DumpHeader(CodeWriter* writer) const;
 
  private:
   std::string name_;
