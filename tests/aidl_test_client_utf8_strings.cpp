@@ -69,7 +69,7 @@ bool ConfirmUtf8InCppStringRepeat(const sp<ITestService>& s) {
   }
 
   optional<string> ret;
-  Status repeat_null_status = s->RepeatNullableUtf8CppString(nullptr, &ret);
+  Status repeat_null_status = s->RepeatNullableUtf8CppString(std::nullopt, &ret);
   if (!repeat_null_status.isOk() || ret) {
     LOG(ERROR) << "RepeatNullableUtf8CppString(null) did not return null";
     return false;
