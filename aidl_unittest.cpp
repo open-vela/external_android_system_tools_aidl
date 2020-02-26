@@ -293,6 +293,74 @@ TEST_F(AidlTest, RejectsDuplicatedAnnotationParams) {
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, Options::Language::JAVA));
 }
 
+TEST_F(AidlTest, RejectUnsupportedInterfaceAnnotations) {
+  AidlError error = AidlError::OK;
+  string method = "package a; @nullable interface IFoo { int f(); }";
+  string expected_stderr =
+      "ERROR: a/IFoo.aidl:1.21-31: 'nullable' is not a supported annotation for this node. "
+      "It must be one of: Hide, UnsupportedAppUsage, VintfStability\n";
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, Options::Language::CPP, &error));
+  EXPECT_EQ(AidlError::BAD_TYPE, error);
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  CaptureStderr();
+  typenames_.Reset();
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, Options::Language::JAVA, &error));
+  EXPECT_EQ(AidlError::BAD_TYPE, error);
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  CaptureStderr();
+}
+
+TEST_F(AidlTest, RejectUnsupportedTypeAnnotations) {
+  AidlError error = AidlError::OK;
+  string method = "package a; interface IFoo { @JavaOnlyStableParcelable int f(); }";
+  string expected_stderr =
+      "ERROR: a/IFoo.aidl:1.54-58: 'JavaOnlyStableParcelable' is not a supported annotation "
+      "for this node. It must be one of: Hide, UnsupportedAppUsage, nullable, utf8InCpp\n";
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, Options::Language::CPP, &error));
+  EXPECT_EQ(AidlError::BAD_TYPE, error);
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  CaptureStderr();
+  typenames_.Reset();
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, Options::Language::JAVA, &error));
+  EXPECT_EQ(AidlError::BAD_TYPE, error);
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  CaptureStderr();
+}
+
+TEST_F(AidlTest, RejectUnsupportedParcelableAnnotations) {
+  AidlError error = AidlError::OK;
+  string method = "package a; @nullable parcelable IFoo cpp_header \"IFoo.h\";";
+  string expected_stderr =
+      "ERROR: a/Foo.aidl:1.32-37: 'nullable' is not a supported annotation for this node. "
+      "It must be one of: Hide, JavaOnlyStableParcelable, UnsupportedAppUsage, VintfStability\n";
+  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, Options::Language::CPP, &error));
+  EXPECT_EQ(AidlError::BAD_TYPE, error);
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  CaptureStderr();
+  typenames_.Reset();
+  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, Options::Language::JAVA, &error));
+  EXPECT_EQ(AidlError::BAD_TYPE, error);
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  CaptureStderr();
+}
+
+TEST_F(AidlTest, RejectUnsupportedParcelableDefineAnnotations) {
+  AidlError error = AidlError::OK;
+  string method = "package a; @nullable parcelable Foo { String a; String b; }";
+  string expected_stderr =
+      "ERROR: a/Foo.aidl:1.32-36: 'nullable' is not a supported annotation for this node. "
+      "It must be one of: Hide, UnsupportedAppUsage, VintfStability\n";
+  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, Options::Language::CPP, &error));
+  ASSERT_EQ(AidlError::BAD_TYPE, error);
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  CaptureStderr();
+  typenames_.Reset();
+  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, Options::Language::JAVA, &error));
+  EXPECT_EQ(AidlError::BAD_TYPE, error);
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  CaptureStderr();
+}
+
 TEST_F(AidlTest, ParsesNullableAnnotation) {
   for (auto is_nullable: {true, false}) {
     auto parse_result = Parse("a/IFoo.aidl",
