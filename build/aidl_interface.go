@@ -833,6 +833,10 @@ func (i *aidlInterface) hasVersion() bool {
 	return len(i.properties.Versions) > 0
 }
 
+func (i *aidlInterface) isCurrentVersion(ctx android.LoadHookContext, version string) bool {
+	return version == i.currentVersion(ctx)
+}
+
 // This function returns module name with version. Assume that there is foo of which latest version is 2
 // Version -> Module name
 // "1"->foo-V1
@@ -844,7 +848,7 @@ func (i *aidlInterface) versionedName(ctx android.LoadHookContext, version strin
 	if version == "" {
 		return name
 	}
-	if version == i.currentVersion(ctx) {
+	if i.isCurrentVersion(ctx, version) {
 		return name + "-unstable"
 	}
 	return name + "-V" + version
@@ -875,7 +879,7 @@ func (i *aidlInterface) cppOutputName(version string) string {
 }
 
 func (i *aidlInterface) srcsForVersion(mctx android.LoadHookContext, version string) (srcs []string, aidlRoot string) {
-	if version == i.currentVersion(mctx) {
+	if i.isCurrentVersion(mctx, version) {
 		return i.properties.Srcs, i.properties.Local_include_dir
 	} else {
 		aidlRoot = filepath.Join(aidlApiDir, i.ModuleBase.Name(), version)
