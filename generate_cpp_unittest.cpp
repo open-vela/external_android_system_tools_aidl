@@ -38,6 +38,7 @@ namespace aidl {
 namespace cpp {
 namespace {
 
+// clang-format off
 const string kComplexTypeInterfaceAIDL =
 R"(package android.os;
 import foo.IFooType;
@@ -54,7 +55,7 @@ interface IComplexTypeInterface {
 })";
 
 const char kExpectedComplexTypeClientHeaderOutput[] =
-R"(#ifndef AIDL_GENERATED_ANDROID_OS_BP_COMPLEX_TYPE_INTERFACE_H_
+    R"(#ifndef AIDL_GENERATED_ANDROID_OS_BP_COMPLEX_TYPE_INTERFACE_H_
 #define AIDL_GENERATED_ANDROID_OS_BP_COMPLEX_TYPE_INTERFACE_H_
 
 #include <binder/IBinder.h>
@@ -70,7 +71,7 @@ class BpComplexTypeInterface : public ::android::BpInterface<IComplexTypeInterfa
 public:
   explicit BpComplexTypeInterface(const ::android::sp<::android::IBinder>& _aidl_impl);
   virtual ~BpComplexTypeInterface() = default;
-  ::android::binder::Status Send(const ::std::unique_ptr<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) override;
+  ::android::binder::Status Send(const ::std::optional<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) override;
   ::android::binder::Status Piff(int32_t times) override;
   ::android::binder::Status TakesABinder(const ::android::sp<::foo::IFooType>& f, ::android::sp<::foo::IFooType>* _aidl_return) override;
   ::android::binder::Status NullableBinder(::android::sp<::foo::IFooType>* _aidl_return) override;
@@ -100,7 +101,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
     : BpInterface<IComplexTypeInterface>(_aidl_impl){
 }
 
-::android::binder::Status BpComplexTypeInterface::Send(const ::std::unique_ptr<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) {
+::android::binder::Status BpComplexTypeInterface::Send(const ::std::optional<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) {
   ::android::Parcel _aidl_data;
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -415,7 +416,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
     : BpInterface<IComplexTypeInterface>(_aidl_impl){
 }
 
-::android::binder::Status BpComplexTypeInterface::Send(const ::std::unique_ptr<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) {
+::android::binder::Status BpComplexTypeInterface::Send(const ::std::optional<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) {
   ::android::Parcel _aidl_data;
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -768,7 +769,7 @@ BnComplexTypeInterface::BnComplexTypeInterface()
   switch (_aidl_code) {
   case ::android::IBinder::FIRST_CALL_TRANSACTION + 0 /* Send */:
   {
-    ::std::unique_ptr<::std::vector<int32_t>> in_goes_in;
+    ::std::optional<::std::vector<int32_t>> in_goes_in;
     ::std::vector<double> in_goes_in_and_out;
     ::std::vector<bool> out_goes_out;
     ::std::vector<int32_t> _aidl_return;
@@ -1021,7 +1022,7 @@ BnComplexTypeInterface::BnComplexTypeInterface()
   switch (_aidl_code) {
   case ::android::IBinder::FIRST_CALL_TRANSACTION + 0 /* Send */:
   {
-    ::std::unique_ptr<::std::vector<int32_t>> in_goes_in;
+    ::std::optional<::std::vector<int32_t>> in_goes_in;
     ::std::vector<double> in_goes_in_and_out;
     ::std::vector<bool> out_goes_out;
     ::std::vector<int32_t> _aidl_return;
@@ -1281,7 +1282,7 @@ const char kExpectedComplexTypeInterfaceHeaderOutput[] =
 #include <binder/Status.h>
 #include <cstdint>
 #include <foo/IFooType.h>
-#include <memory>
+#include <optional>
 #include <utils/String16.h>
 #include <utils/StrongPointer.h>
 #include <vector>
@@ -1296,7 +1297,7 @@ public:
   enum  : int32_t {
     MY_CONSTANT = 3,
   };
-  virtual ::android::binder::Status Send(const ::std::unique_ptr<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) = 0;
+  virtual ::android::binder::Status Send(const ::std::optional<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) = 0;
   virtual ::android::binder::Status Piff(int32_t times) = 0;
   virtual ::android::binder::Status TakesABinder(const ::android::sp<::foo::IFooType>& f, ::android::sp<::foo::IFooType>* _aidl_return) = 0;
   virtual ::android::binder::Status NullableBinder(::android::sp<::foo::IFooType>* _aidl_return) = 0;
@@ -1311,7 +1312,7 @@ public:
   ::android::IBinder* onAsBinder() override {
     return nullptr;
   }
-  ::android::binder::Status Send(const ::std::unique_ptr<::std::vector<int32_t>>&, ::std::vector<double>*, ::std::vector<bool>*, ::std::vector<int32_t>*) override {
+  ::android::binder::Status Send(const ::std::optional<::std::vector<int32_t>>&, ::std::vector<double>*, ::std::vector<bool>*, ::std::vector<int32_t>*) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status Piff(int32_t) override {
@@ -1373,7 +1374,6 @@ enum TestEnum {
   TEN,
 })";
 
-// clang-format off
 const char kExpectedEnumHeaderOutput[] =
     R"(#ifndef AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
 #define AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
@@ -1457,7 +1457,6 @@ constexpr inline std::array<::android::os::TestEnum, 10> enum_values<::android::
 
 #endif  // AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
 )";
-// clang-format on
 
 const string kEnumWithBackingTypeAIDL = R"(package android.os;
 @Backing(type="long")
@@ -1466,7 +1465,6 @@ enum TestEnum {
   BAR = 2,
 })";
 
-// clang-format off
 const char kExpectedEnumWithBackingTypeHeaderOutput[] =
     R"(#ifndef AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
 #define AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
