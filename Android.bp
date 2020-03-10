@@ -178,17 +178,21 @@ cc_fuzz {
 }
 
 //
-// Everything below here is used for integration testing of generated AIDL code.
+// Integration testing of generated AIDL code.
 //
-cc_test {
-    name: "aidl_test_sentinel_searcher",
-    gtest: false,
-    srcs: ["tests/aidl_test_sentinel_searcher.cpp"],
-    cflags: [
-        "-Wall",
-        "-Wextra",
-        "-Werror",
+
+python_test_host {
+    name: "aidl_integration_test",
+    main: "tests/aidl_integration_test.py",
+    srcs: ["tests/aidl_integration_test.py"],
+    test_config: "tests/aidl_integration_test.xml",
+    target_required: [
+        "aidl_test_client",
+        "aidl_test_sentinel_searcher",
+        "aidl_test_service",
+        "aidl_test_services",
     ],
+    test_suites: ["device-tests"],
 }
 
 cc_defaults {
@@ -203,6 +207,29 @@ cc_defaults {
         "libbinder",
         "liblog",
         "libutils",
+    ],
+    compile_multilib: "both",
+    multilib: {
+        lib32: {
+            suffix: "32",
+        },
+        lib64: {
+            suffix: "64",
+        },
+    },
+    test_suites: ["device-tests"],
+}
+
+// Could consider simplifying this test by removing this.
+cc_test {
+    name: "aidl_test_sentinel_searcher",
+    defaults: ["aidl_test_defaults"],
+    gtest: false,
+    srcs: ["tests/aidl_test_sentinel_searcher.cpp"],
+    cflags: [
+        "-Wall",
+        "-Wextra",
+        "-Werror",
     ],
 }
 
@@ -251,7 +278,7 @@ cc_test {
     ],
 }
 
-android_app {
+android_test_helper_app {
     name: "aidl_test_services",
     platform_apis: true,
     // Turn off Java optimization tools to speed up our test iterations.
@@ -283,7 +310,12 @@ android_app {
             "frameworks/native/aidl/binder",
         ],
     },
+    test_suites: ["device-tests"],
 }
+
+//
+// Testing generation of logs
+//
 
 aidl_interface {
     name: "aidl_test_loggable_interface",
