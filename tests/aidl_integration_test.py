@@ -20,6 +20,10 @@ class TestFail(Exception):
     """Raised on test failures."""
     pass
 
+def pretty_bitness(bitness):
+    """Returns a human readable version of bitness, corresponding to BITNESS_* variable"""
+    return bitness[-1]
+
 class ShellResult(object):
     """Represents the result of running a shell command."""
 
@@ -91,68 +95,103 @@ class AdbHost(object):
             raise subprocess.CalledProcessError(p.returncode, command)
         return ShellResult(p.returncode, stdout, stderr)
 
-def run_test(host):
-    """Body of the test.
+class NativeServer:
+    def __init__(self, host, bitness):
+        self.name = "%s_bit_native_server" % pretty_bitness(bitness)
+        self.host = host
+        self.binary = NATIVE_TEST_SERVICE_FOR_BITNESS % bitness
+    def cleanup(self):
+        self.host.run('killall %s' % self.binary, ignore_status=True)
+    def run(self):
+        return self.host.run(self.binary, background=True)
 
-    Args:
-        host: AdbHost object to run tests on
-    """
-
-    if host.run('ls /data/nativetest64', ignore_status=True).exit_status:
-        bitness = BITNESS_32
-    else:
-        bitness = BITNESS_64
-
-    JAVA_OUTPUT_READER = JAVA_OUTPUT_READER_FOR_BITNESS % bitness
-    NATIVE_TEST_CLIENT = NATIVE_TEST_CLIENT_FOR_BITNESS % bitness
-    NATIVE_TEST_SERVICE = NATIVE_TEST_SERVICE_FOR_BITNESS % bitness
-
-    # Kill any previous test context
-    host.run('rm -f %s' % JAVA_LOG_FILE, ignore_status=True)
-    host.run('killall %s' % NATIVE_TEST_SERVICE, ignore_status=True)
-
-    # Start up a native server
-    host.run(NATIVE_TEST_SERVICE, background=True)
-
-    # Start up clients
-    if True:
-        host.run('killall %s' % NATIVE_TEST_CLIENT, ignore_status=True)
-        result = host.run(NATIVE_TEST_CLIENT, ignore_status=True)
+class NativeClient:
+    def __init__(self, host, bitness):
+        self.name = "%s_bit_native_client" % pretty_bitness(bitness)
+        self.host = host
+        self.binary = NATIVE_TEST_CLIENT_FOR_BITNESS % bitness
+    def cleanup(self):
+        self.host.run('killall %s' % self.binary, ignore_status=True)
+    def run(self):
+        result = self.host.run(self.binary, ignore_status=True)
         if result.exit_status:
             print(result.printable_string())
             raise TestFail('%s returned status code %d' %
-                           (NATIVE_TEST_CLIENT, result.exit_status))
+                           (self.binary, result.exit_status))
 
-    if True:
-        host.run('am start -S -a android.intent.action.MAIN '
-                 '-n android.aidl.tests/.TestServiceClient '
-                 '--es sentinel.success "%s" '
-                 '--es sentinel.failure "%s"' %
-                 (JAVA_SUCCESS_SENTINEL, JAVA_FAILURE_SENTINEL))
-        result = host.run('%s %d %s "%s" "%s"' %
-                          (JAVA_OUTPUT_READER, JAVA_CLIENT_TIMEOUT_SECONDS,
-                           JAVA_LOG_FILE, JAVA_SUCCESS_SENTINEL,
-                           JAVA_FAILURE_SENTINEL),
-                          ignore_status=True)
+class JavaClient:
+    def __init__(self, host, native_bitness):
+        self.name = "java_client"
+        self.host = host
+        self.native_bitness = native_bitness
+    def cleanup(self):
+        host.run('setenforce 1')
+        self.host.run('rm -f %s' % JAVA_LOG_FILE, ignore_status=True)
+        self.host.run('killall android.aidl.tests', ignore_status=True)
+    def run(self):
+        host.run('setenforce 0') # Java app needs selinux off
+        JAVA_OUTPUT_READER = JAVA_OUTPUT_READER_FOR_BITNESS % self.native_bitness
+        self.host.run('am start -S -a android.intent.action.MAIN '
+                      '-n android.aidl.tests/.TestServiceClient '
+                      '--es sentinel.success "%s" '
+                      '--es sentinel.failure "%s"' %
+                      (JAVA_SUCCESS_SENTINEL, JAVA_FAILURE_SENTINEL))
+        result = self.host.run('%s %d %s "%s" "%s"' %
+                               (JAVA_OUTPUT_READER, JAVA_CLIENT_TIMEOUT_SECONDS,
+                                JAVA_LOG_FILE, JAVA_SUCCESS_SENTINEL,
+                                JAVA_FAILURE_SENTINEL),
+                               ignore_status=True)
         if result.exit_status:
             print(result.printable_string())
             raise TestFail('Java client did not complete successfully.')
 
-    host.run('killall %s' % NATIVE_TEST_SERVICE, ignore_status=True)
-    host.run('killall android.aidl.tests', ignore_status=True)
+def supported_bitnesses(host):
+    bitnesses = []
+    if host.run('ls /data/nativetest/', ignore_status=True).exit_status == 0:
+        bitnesses = [BITNESS_32]
+    if host.run('ls /data/nativetest64/', ignore_status=True).exit_status == 0:
+        bitnesses += [BITNESS_64]
+    return bitnesses
 
-# Simple wrapper to call old test entry point. Could be improved by making
-# separate cases for testing native/java etc.
+# tests added dynamically below
 class TestAidl(unittest.TestCase):
-    def test_native_and_java_integration_tests(self):
-        host = AdbHost()
+    pass
+
+def make_test(client, server):
+    def test(self):
         try:
-            # Tragically, SELinux interferes with our testing
-            host.run('setenforce 0')
-            run_test(host)
+            client.cleanup()
+            server.cleanup()
+            server.run()
+            client.run()
         finally:
-            host.run('setenforce 1')
+            client.cleanup()
+            server.cleanup()
+    return test
 
 if __name__ == '__main__':
+    host = AdbHost()
+    bitnesses = supported_bitnesses(host)
+    if len(bitnesses) == 0:
+        print("No clients installed")
+        exit(1)
+
+    clients = []
+    servers = []
+
+    for bitness in bitnesses:
+        clients += [NativeClient(host, bitness)]
+        servers += [NativeServer(host, bitness)]
+
+    # Java only supports one bitness, but needs to run a native binary
+    # to process its results
+    clients += [JavaClient(host, bitnesses[-1])]
+
+    for client in clients:
+        for server in servers:
+            test_name = 'test_%s_to_%s' % (client.name, server.name)
+            test = make_test(client, server)
+            setattr(TestAidl, test_name, test)
+
     suite = unittest.TestLoader().loadTestsFromTestCase(TestAidl)
     unittest.TextTestRunner(verbosity=2).run(suite)
