@@ -1,13 +1,7 @@
 #!/usr/bin/env python
 
-"""
-Test that aidl generates functional code by running it on an Android device.
-"""
-
-import argparse
 import pipes
 import subprocess
-import shlex
 import unittest
 
 BITNESS_32 = ("", "32")
@@ -17,10 +11,6 @@ JAVA_OUTPUT_READER_FOR_BITNESS = '/data/nativetest%s/aidl_test_sentinel_searcher
 NATIVE_TEST_CLIENT_FOR_BITNESS = ' /data/nativetest%s/aidl_test_client/aidl_test_client%s'
 NATIVE_TEST_SERVICE_FOR_BITNESS = ' /data/nativetest%s/aidl_test_service/aidl_test_service%s'
 
-TEST_FILTER_ALL = 'all'
-TEST_FILTER_JAVA = 'java'
-TEST_FILTER_NATIVE = 'native'
-
 JAVA_CLIENT_TIMEOUT_SECONDS = 30
 JAVA_LOG_FILE = '/data/data/android.aidl.tests/files/test-client.log'
 JAVA_SUCCESS_SENTINEL = '>>> Java Client Success <<<'
@@ -29,7 +19,6 @@ JAVA_FAILURE_SENTINEL = '>>> Java Client Failure <<<'
 class TestFail(Exception):
     """Raised on test failures."""
     pass
-
 
 class ShellResult(object):
     """Represents the result of running a shell command."""
@@ -61,16 +50,6 @@ class ShellResult(object):
 class AdbHost(object):
     """Represents a device connected via ADB."""
 
-    def __init__(self, device_serial=None, verbose=None):
-        """Construct an instance.
-
-        Args:
-            device_serial: options string serial number of attached device.
-            verbose: True iff we should print out ADB commands we run.
-        """
-        self._device_serial = device_serial
-        self._verbose = verbose
-
     def run(self, command, background=False, ignore_status=False):
         """Run a command on the device via adb shell.
 
@@ -90,19 +69,6 @@ class AdbHost(object):
         return self.adb('shell %s' % pipes.quote(command),
                         ignore_status=ignore_status)
 
-    def mktemp(self):
-        """Make a temp file on the device.
-
-        Returns:
-            path to created file as a string
-
-        Raises:
-            subprocess.CalledProcessError on failure.
-        """
-        # Work around b/19635681
-        result = self.run('source /system/etc/mkshrc && mktemp')
-        return result.stdout.strip()
-
     def adb(self, command, ignore_status=False):
         """Run an ADB command (e.g. `adb sync`).
 
@@ -117,8 +83,6 @@ class AdbHost(object):
             subprocess.CalledProcessError on command exit != 0.
         """
         command = 'adb %s' % command
-        if self._verbose:
-            print(command)
         p = subprocess.Popen(command, shell=True, close_fds=True,
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                              universal_newlines=True)
@@ -127,13 +91,11 @@ class AdbHost(object):
             raise subprocess.CalledProcessError(p.returncode, command)
         return ShellResult(p.returncode, stdout, stderr)
 
-def run_test(host, test_native, test_java):
+def run_test(host):
     """Body of the test.
 
     Args:
         host: AdbHost object to run tests on
-        test_native: True iff we should test native Binder clients.
-        test_java: True iff we should test Java Binder clients.
     """
 
     if host.run('ls /data/nativetest64', ignore_status=True).exit_status:
@@ -153,7 +115,7 @@ def run_test(host, test_native, test_java):
     host.run(NATIVE_TEST_SERVICE, background=True)
 
     # Start up clients
-    if test_native:
+    if True:
         host.run('killall %s' % NATIVE_TEST_CLIENT, ignore_status=True)
         result = host.run(NATIVE_TEST_CLIENT, ignore_status=True)
         if result.exit_status:
@@ -161,7 +123,7 @@ def run_test(host, test_native, test_java):
             raise TestFail('%s returned status code %d' %
                            (NATIVE_TEST_CLIENT, result.exit_status))
 
-    if test_java:
+    if True:
         host.run('am start -S -a android.intent.action.MAIN '
                  '-n android.aidl.tests/.TestServiceClient '
                  '--es sentinel.success "%s" '
@@ -179,30 +141,17 @@ def run_test(host, test_native, test_java):
     host.run('killall %s' % NATIVE_TEST_SERVICE, ignore_status=True)
     host.run('killall android.aidl.tests', ignore_status=True)
 
-
-def main():
-    """Main entry point."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-            '--test-filter', default=TEST_FILTER_ALL,
-            choices=[TEST_FILTER_ALL, TEST_FILTER_JAVA, TEST_FILTER_NATIVE])
-    parser.add_argument('--verbose', '-v', action='store_true', default=False)
-    args = parser.parse_args()
-    host = AdbHost(verbose=args.verbose)
-    try:
-        # Tragically, SELinux interferes with our testing
-        host.run('setenforce 0')
-        run_test(host,
-                 args.test_filter in (TEST_FILTER_ALL, TEST_FILTER_NATIVE),
-                 args.test_filter in (TEST_FILTER_ALL, TEST_FILTER_JAVA))
-    finally:
-        host.run('setenforce 1')
-
 # Simple wrapper to call old test entry point. Could be improved by making
 # separate cases for testing native/java etc.
 class TestAidl(unittest.TestCase):
     def test_native_and_java_integration_tests(self):
-        main()
+        host = AdbHost()
+        try:
+            # Tragically, SELinux interferes with our testing
+            host.run('setenforce 0')
+            run_test(host)
+        finally:
+            host.run('setenforce 1')
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestAidl)
