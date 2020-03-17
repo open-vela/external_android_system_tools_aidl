@@ -149,6 +149,21 @@ public class Rect implements android.os.Parcelable
 
 class AidlTest : public ::testing::Test {
  protected:
+  void SetUp() override {
+    CaptureStderr();
+  }
+
+  void TearDown() override {
+    auto actual_stderr = GetCapturedStderr();
+    std::cerr << actual_stderr << std::endl;
+
+    if (expected_stderr_.size() > 0) {
+      EXPECT_EQ(android::base::Join(expected_stderr_, ""), actual_stderr);
+    }
+  }
+
+  void AddExpectedStderr(string expected) { expected_stderr_.push_back(expected); }
+
   AidlDefinedType* Parse(const string& path, const string& contents, AidlTypenames& typenames_,
                          Options::Language lang, AidlError* error = nullptr,
                          const vector<string> additional_arguments = {}) {
@@ -192,6 +207,7 @@ class AidlTest : public ::testing::Test {
   FakeIoDelegate io_delegate_;
   vector<string> preprocessed_files_;
   set<string> import_paths_;
+  vector<string> expected_stderr_;
   AidlTypenames typenames_;
 };
 
@@ -277,78 +293,6 @@ TEST_F(AidlTest, RejectsDuplicatedAnnotationParams) {
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, Options::Language::JAVA));
 }
 
-TEST_F(AidlTest, RejectUnsupportedInterfaceAnnotations) {
-  AidlError error = AidlError::OK;
-  string method = "package a; @nullable interface IFoo { int f(); }";
-  string expected_stderr =
-      "ERROR: a/IFoo.aidl:1.21-31: 'nullable' is not a supported annotation for this node. "
-      "It must be one of: Hide, UnsupportedAppUsage, VintfStability\n";
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, Options::Language::CPP, &error));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
-  EXPECT_EQ(AidlError::BAD_TYPE, error);
-  typenames_.Reset();
-
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, Options::Language::JAVA, &error));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
-  EXPECT_EQ(AidlError::BAD_TYPE, error);
-}
-
-TEST_F(AidlTest, RejectUnsupportedTypeAnnotations) {
-  AidlError error = AidlError::OK;
-  string method = "package a; interface IFoo { @JavaOnlyStableParcelable int f(); }";
-  string expected_stderr =
-      "ERROR: a/IFoo.aidl:1.54-58: 'JavaOnlyStableParcelable' is not a supported annotation "
-      "for this node. It must be one of: Hide, UnsupportedAppUsage, nullable, utf8InCpp\n";
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, Options::Language::CPP, &error));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
-  EXPECT_EQ(AidlError::BAD_TYPE, error);
-  typenames_.Reset();
-
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, Options::Language::JAVA, &error));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
-  EXPECT_EQ(AidlError::BAD_TYPE, error);
-}
-
-TEST_F(AidlTest, RejectUnsupportedParcelableAnnotations) {
-  AidlError error = AidlError::OK;
-  string method = "package a; @nullable parcelable IFoo cpp_header \"IFoo.h\";";
-  string expected_stderr =
-      "ERROR: a/Foo.aidl:1.32-37: 'nullable' is not a supported annotation for this node. "
-      "It must be one of: Hide, JavaOnlyStableParcelable, UnsupportedAppUsage, VintfStability\n";
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, Options::Language::CPP, &error));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
-  EXPECT_EQ(AidlError::BAD_TYPE, error);
-  typenames_.Reset();
-
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, Options::Language::JAVA, &error));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
-  EXPECT_EQ(AidlError::BAD_TYPE, error);
-}
-
-TEST_F(AidlTest, RejectUnsupportedParcelableDefineAnnotations) {
-  AidlError error = AidlError::OK;
-  string method = "package a; @nullable parcelable Foo { String a; String b; }";
-  string expected_stderr =
-      "ERROR: a/Foo.aidl:1.32-36: 'nullable' is not a supported annotation for this node. "
-      "It must be one of: Hide, UnsupportedAppUsage, VintfStability\n";
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, Options::Language::CPP, &error));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
-  EXPECT_EQ(AidlError::BAD_TYPE, error);
-  typenames_.Reset();
-
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, Options::Language::JAVA, &error));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
-  EXPECT_EQ(AidlError::BAD_TYPE, error);
-}
-
 TEST_F(AidlTest, ParsesNullableAnnotation) {
   for (auto is_nullable: {true, false}) {
     auto parse_result = Parse("a/IFoo.aidl",
@@ -427,12 +371,10 @@ TEST_F(AidlTest, ParsesJavaOnlyStableParcelable) {
 
   EXPECT_EQ(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
   EXPECT_EQ(0, ::android::aidl::compile_aidl(cpp_options, io_delegate_));
-  string expected_stderr =
+  AddExpectedStderr(
       "ERROR: a/Foo.aidl:1.48-52: Cannot declared parcelable in a --structured interface. "
-      "Parcelable must be defined in AIDL directly.\n";
-  CaptureStderr();
+      "Parcelable must be defined in AIDL directly.\n");
   EXPECT_NE(0, ::android::aidl::compile_aidl(cpp_structured_options, io_delegate_));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
 TEST_F(AidlTest, AcceptsOneway) {
@@ -646,8 +588,7 @@ TEST_F(AidlTest, FailOnDuplicateConstantNames) {
 
 TEST_F(AidlTest, FailOnManyDefinedTypes) {
   AidlError reported_error;
-  string expected_stderr = "ERROR: p/IFoo.aidl: You must declare only one type per a file.\n";
-  CaptureStderr();
+  AddExpectedStderr("ERROR: p/IFoo.aidl: You must declare only one type per a file.\n");
   EXPECT_EQ(nullptr, Parse("p/IFoo.aidl",
                            R"(package p;
                       interface IFoo {}
@@ -656,7 +597,6 @@ TEST_F(AidlTest, FailOnManyDefinedTypes) {
                       interface IBaz {}
                   )",
                            typenames_, Options::Language::CPP, &reported_error));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
   // Parse success is important for clear error handling even if the cases aren't
   // actually supported in code generation.
   EXPECT_EQ(AidlError::BAD_TYPE, reported_error);

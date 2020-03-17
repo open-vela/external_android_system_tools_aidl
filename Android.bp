@@ -37,11 +37,6 @@ cc_defaults {
             ],
         },
     },
-    product_variables: {
-        platform_sdk_version: {
-            cflags: ["-DPLATFORM_SDK_VERSION=%d"],
-        },
-    },
 }
 
 // Logic shared between aidl and its unittests
@@ -49,6 +44,9 @@ cc_library_static {
     name: "libaidl-common",
     defaults: ["aidl_defaults"],
     host_supported: true,
+    cflags: [
+        "-Wno-bool-operation", // found in aidl_const_expressions.cpp:69
+    ],
 
     srcs: [
         "aidl.cpp",
@@ -111,7 +109,7 @@ cc_test {
     name: "aidl_unittests",
     host_supported: true,
 
-    test_suites: ["general-tests"],
+    test_suites: ["device-tests"],
 
     cflags: [
         "-Wall",
