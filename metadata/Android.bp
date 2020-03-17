@@ -29,3 +29,13 @@ cc_genrule {
     visibility: [":__subpackages__"],
     out: ["metadata.cpp"],
 }
+
+cc_test_host {
+    name: "libaidlmetadata_test",
+    static_libs: [
+        "libaidlmetadata",
+        "libgmock",
+    ],
+    srcs: ["test.cpp"],
+    test_suites: ["general-tests"],
+}
