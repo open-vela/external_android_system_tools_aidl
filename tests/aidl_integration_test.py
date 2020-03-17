@@ -8,10 +8,14 @@ import argparse
 import pipes
 import subprocess
 import shlex
+import unittest
 
-JAVA_OUTPUT_READER_FOR_BITNESS = '/data/nativetest%s/aidl_test_sentinel_searcher/aidl_test_sentinel_searcher'
-NATIVE_TEST_CLIENT_FOR_BITNESS = ' /data/nativetest%s/aidl_test_client/aidl_test_client'
-NATIVE_TEST_SERVICE_FOR_BITNESS = ' /data/nativetest%s/aidl_test_service/aidl_test_service'
+BITNESS_32 = ("", "32")
+BITNESS_64 = ("64", "64")
+
+JAVA_OUTPUT_READER_FOR_BITNESS = '/data/nativetest%s/aidl_test_sentinel_searcher/aidl_test_sentinel_searcher%s'
+NATIVE_TEST_CLIENT_FOR_BITNESS = ' /data/nativetest%s/aidl_test_client/aidl_test_client%s'
+NATIVE_TEST_SERVICE_FOR_BITNESS = ' /data/nativetest%s/aidl_test_service/aidl_test_service%s'
 
 TEST_FILTER_ALL = 'all'
 TEST_FILTER_JAVA = 'java'
@@ -132,12 +136,10 @@ def run_test(host, test_native, test_java):
         test_java: True iff we should test Java Binder clients.
     """
 
-    print('Starting aidl integration testing...')
-
     if host.run('ls /data/nativetest64', ignore_status=True).exit_status:
-        bitness = ""
+        bitness = BITNESS_32
     else:
-        bitness = "64"
+        bitness = BITNESS_64
 
     JAVA_OUTPUT_READER = JAVA_OUTPUT_READER_FOR_BITNESS % bitness
     NATIVE_TEST_CLIENT = NATIVE_TEST_CLIENT_FOR_BITNESS % bitness
@@ -177,8 +179,6 @@ def run_test(host, test_native, test_java):
     host.run('killall %s' % NATIVE_TEST_SERVICE, ignore_status=True)
     host.run('killall android.aidl.tests', ignore_status=True)
 
-    print('Success!')
-
 
 def main():
     """Main entry point."""
@@ -198,6 +198,12 @@ def main():
     finally:
         host.run('setenforce 1')
 
+# Simple wrapper to call old test entry point. Could be improved by making
+# separate cases for testing native/java etc.
+class TestAidl(unittest.TestCase):
+    def test_native_and_java_integration_tests(self):
+        main()
 
 if __name__ == '__main__':
-    main()
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestAidl)
+    unittest.TextTestRunner(verbosity=2).run(suite)
