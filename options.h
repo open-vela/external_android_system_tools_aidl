@@ -135,6 +135,8 @@ class Options final {
 
   bool GenApiMapping() const { return task_ == Task::DUMP_MAPPINGS; }
 
+  static const string LanguageToString(Language language);
+
   // The following are for testability, but cannot be influenced on the command line.
   // Threshold of interface methods to enable outlining of onTransact cases.
   size_t onTransact_outline_threshold_{275u};
