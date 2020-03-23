@@ -10,18 +10,11 @@ cc_test {
         "libutils",
         "libbinder",
     ],
-
-    static_libs: [
-        "lazy_test_service_aidl-cpp",
-    ],
 }
 
 cc_binary {
     name: "aidl_lazy_test_server",
-    srcs: [
-        "server.cpp",
-        "LazyTestService.cpp",
-    ],
+    srcs: ["server.cpp"],
     init_rc: ["aidl_lazy_test_server.rc"],
     system_ext_specific: true,
 
@@ -29,16 +22,5 @@ cc_binary {
         "libbinder",
         "liblog",
         "libutils",
-    ],
-
-    static_libs: [
-        "lazy_test_service_aidl-cpp",
-    ],
-}
-
-aidl_interface {
-    name: "lazy_test_service_aidl",
-    srcs: [
-        "ILazyTestService.aidl",
     ],
 }
