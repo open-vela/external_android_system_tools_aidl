@@ -24,13 +24,13 @@
       <option name="abort-on-push-failure" value="false"/>
 
       <option name="push" value="aidl_test_sentinel_searcher32->/data/nativetest/aidl_test_sentinel_searcher/aidl_test_sentinel_searcher32" />
-      <option name="push" value="aidl_test_sentinel_searcher64->/data/nativetest/aidl_test_sentinel_searcher/aidl_test_sentinel_searcher64" />
+      <option name="push" value="aidl_test_sentinel_searcher64->/data/nativetest64/aidl_test_sentinel_searcher/aidl_test_sentinel_searcher64" />
 
       <option name="push" value="aidl_test_client32->/data/nativetest/aidl_test_client/aidl_test_client32" />
-      <option name="push" value="aidl_test_client64->/data/nativetest/aidl_test_client/aidl_test_client64" />
+      <option name="push" value="aidl_test_client64->/data/nativetest64/aidl_test_client/aidl_test_client64" />
 
       <option name="push" value="aidl_test_service32->/data/nativetest/aidl_test_service/aidl_test_service32" />
-      <option name="push" value="aidl_test_service64->/data/nativetest/aidl_test_service/aidl_test_service64" />
+      <option name="push" value="aidl_test_service64->/data/nativetest64/aidl_test_service/aidl_test_service64" />
 
       <option name="cleanup" value="true" />
     </target_preparer>
