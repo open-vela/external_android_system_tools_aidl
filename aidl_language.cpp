@@ -567,13 +567,13 @@ string AidlArgument::GetDirectionSpecifier() const {
   if (direction_specified_) {
     switch(direction_) {
     case AidlArgument::IN_DIR:
-      ret += "in ";
+      ret += "in";
       break;
     case AidlArgument::OUT_DIR:
-      ret += "out ";
+      ret += "out";
       break;
     case AidlArgument::INOUT_DIR:
-      ret += "inout ";
+      ret += "inout";
       break;
     }
   }
@@ -581,7 +581,11 @@ string AidlArgument::GetDirectionSpecifier() const {
 }
 
 string AidlArgument::ToString() const {
-  return GetDirectionSpecifier() + AidlVariableDeclaration::ToString();
+  if (direction_specified_) {
+    return GetDirectionSpecifier() + " " + AidlVariableDeclaration::ToString();
+  } else {
+    return AidlVariableDeclaration::ToString();
+  }
 }
 
 std::string AidlArgument::Signature() const {
@@ -591,7 +595,11 @@ std::string AidlArgument::Signature() const {
   class AidlStructuredParcelable;
   class AidlParcelable;
   class AidlStructuredParcelable;
-  return GetDirectionSpecifier() + AidlVariableDeclaration::Signature();
+  if (direction_specified_) {
+    return GetDirectionSpecifier() + " " + AidlVariableDeclaration::Signature();
+  } else {
+    return AidlVariableDeclaration::Signature();
+  }
 }
 
 AidlMember::AidlMember(const AidlLocation& location) : AidlNode(location) {}
