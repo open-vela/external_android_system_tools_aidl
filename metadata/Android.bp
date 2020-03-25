@@ -1,5 +1,5 @@
 // build time C++ available list of all AIDL interfaces in the tree
-cc_library {
+cc_test_library {
     name: "libaidlmetadata",
     host_supported: true,
     srcs: [":aidl_metadata_in_cpp"],
