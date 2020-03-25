@@ -374,7 +374,7 @@ bool parse_preprocessed_file(const IoDelegate& io_delegate, const string& filena
     }
 
     AidlLocation::Point point = {.line = lineno, .column = 0 /*column*/};
-    AidlLocation location = AidlLocation(filename, point, point);
+    AidlLocation location = AidlLocation(filename, point, point, AidlLocation::Source::EXTERNAL);
 
     if (decl == "parcelable") {
       // ParcelFileDescriptor is treated as a built-in type, but it's also in the framework.aidl.

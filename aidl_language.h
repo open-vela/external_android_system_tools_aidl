@@ -74,7 +74,16 @@ class AidlLocation {
     int column;
   };
 
-  AidlLocation(const std::string& file, Point begin, Point end);
+  enum class Source {
+    // From internal aidl source code
+    INTERNAL = 0,
+    // From a parsed file
+    EXTERNAL = 1
+  };
+
+  AidlLocation(const std::string& file, Point begin, Point end, Source source);
+
+  bool IsInternal() const { return source_ == Source::INTERNAL; }
 
   friend std::ostream& operator<<(std::ostream& os, const AidlLocation& l);
   friend class AidlNode;
@@ -83,12 +92,11 @@ class AidlLocation {
   const std::string file_;
   Point begin_;
   Point end_;
+  Source source_;
 };
 
-#define AIDL_LOCATION_HERE                   \
-  AidlLocation {                             \
-    __FILE__, {__LINE__, 0}, { __LINE__, 0 } \
-  }
+#define AIDL_LOCATION_HERE \
+  AidlLocation { __FILE__, {__LINE__, 0}, {__LINE__, 0}, AidlLocation::Source::INTERNAL }
 
 std::ostream& operator<<(std::ostream& os, const AidlLocation& l);
 
@@ -101,14 +109,14 @@ class AidlNode {
   AidlNode(AidlNode&&) = default;
   virtual ~AidlNode() = default;
 
-  // DO NOT ADD. This is intentionally omitted. Nothing should refer to the location
-  // for a functional purpose. It is only for error messages.
-  // NO const AidlLocation& GetLocation() const { return location_; } NO
-
-  // To be able to print AidlLocation (nothing else should use this information)
+  // To be able to print AidlLocation
   friend class AidlError;
   friend std::string android::aidl::mappings::dump_location(const AidlNode&);
   friend std::string android::aidl::java::dump_location(const AidlNode&);
+
+ protected:
+  // This should only be used to construct implicit nodes related to existing nodes
+  const AidlLocation& GetLocation() const { return location_; }
 
  private:
   std::string PrintLine() const;
@@ -120,9 +128,7 @@ class AidlNode {
 class AidlError {
  public:
   AidlError(bool fatal, const std::string& filename) : AidlError(fatal) { os_ << filename << ": "; }
-  AidlError(bool fatal, const AidlLocation& location) : AidlError(fatal) {
-    os_ << location << ": ";
-  }
+  AidlError(bool fatal, const AidlLocation& location);
   AidlError(bool fatal, const AidlNode& node) : AidlError(fatal, node.location_) {}
   AidlError(bool fatal, const AidlNode* node) : AidlError(fatal, *node) {}
 
