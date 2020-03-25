@@ -824,9 +824,10 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(Options::Language lang) const
         return false;
       }
       if (lang == Options::Language::CPP) {
-        auto& name = this->GetTypeParameters()[0]->GetName();
-        if (!(name == "String" || name == "IBinder")) {
-          AIDL_ERROR(this) << "List in cpp supports only string and IBinder for now.";
+        const string& contained_type = this->GetTypeParameters()[0]->GetName();
+        if (!(contained_type == "String" || contained_type == "IBinder")) {
+          AIDL_ERROR(this) << "List<" << contained_type
+                           << "> is not supported. List in cpp supports only String and IBinder.";
           return false;
         }
       } else if (lang == Options::Language::JAVA) {
@@ -834,7 +835,9 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(Options::Language lang) const
         if (AidlTypenames::IsBuiltinTypename(contained_type)) {
           if (contained_type != "String" && contained_type != "IBinder" &&
               contained_type != "ParcelFileDescriptor") {
-            AIDL_ERROR(this) << "List<" << contained_type << "> isn't supported in Java";
+            AIDL_ERROR(this) << "List<" << contained_type
+                             << "> is not supported. List in Java supports only String, IBinder, "
+                                "and ParcelFileDescriptor.";
             return false;
           }
         }
