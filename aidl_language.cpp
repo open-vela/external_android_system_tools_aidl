@@ -314,16 +314,9 @@ void AidlAnnotatable::DumpAnnotations(CodeWriter* writer) const {
   writer->Write("%s\n", AidlAnnotatable::ToString().c_str());
 }
 
-bool AidlAnnotatable::CheckValid(const AidlTypenames&) const {
-  std::set<string> supported_annotations = GetSupportedAnnotations();
+bool AidlAnnotatable::CheckValidAnnotations() const {
   for (const auto& annotation : GetAnnotations()) {
     if (!annotation.CheckValid()) {
-      return false;
-    }
-    if (supported_annotations.find(annotation.GetName()) == supported_annotations.end()) {
-      AIDL_ERROR(this) << "'" << annotation.GetName()
-                       << "' is not a supported annotation for this node. "
-                       << "It must be one of: " << android::base::Join(supported_annotations, ", ");
       return false;
     }
   }
@@ -399,14 +392,8 @@ bool AidlTypeSpecifier::Resolve(const AidlTypenames& typenames) {
   return result.second;
 }
 
-std::set<string> AidlTypeSpecifier::GetSupportedAnnotations() const {
-  // kHide and kUnsupportedAppUsage are both method return annotations
-  // which we don't distinguish from other type specifiers.
-  return {kNullable, kUtf8InCpp, kUnsupportedAppUsage, kHide};
-}
-
 bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
-  if (!AidlAnnotatable::CheckValid(typenames)) {
+  if (!CheckValidAnnotations()) {
     return false;
   }
   if (IsGeneric()) {
@@ -567,13 +554,13 @@ string AidlArgument::GetDirectionSpecifier() const {
   if (direction_specified_) {
     switch(direction_) {
     case AidlArgument::IN_DIR:
-      ret += "in";
+      ret += "in ";
       break;
     case AidlArgument::OUT_DIR:
-      ret += "out";
+      ret += "out ";
       break;
     case AidlArgument::INOUT_DIR:
-      ret += "inout";
+      ret += "inout ";
       break;
     }
   }
@@ -581,11 +568,7 @@ string AidlArgument::GetDirectionSpecifier() const {
 }
 
 string AidlArgument::ToString() const {
-  if (direction_specified_) {
-    return GetDirectionSpecifier() + " " + AidlVariableDeclaration::ToString();
-  } else {
-    return AidlVariableDeclaration::ToString();
-  }
+  return GetDirectionSpecifier() + AidlVariableDeclaration::ToString();
 }
 
 std::string AidlArgument::Signature() const {
@@ -595,11 +578,7 @@ std::string AidlArgument::Signature() const {
   class AidlStructuredParcelable;
   class AidlParcelable;
   class AidlStructuredParcelable;
-  if (direction_specified_) {
-    return GetDirectionSpecifier() + " " + AidlVariableDeclaration::Signature();
-  } else {
-    return AidlVariableDeclaration::Signature();
-  }
+  return GetDirectionSpecifier() + AidlVariableDeclaration::Signature();
 }
 
 AidlMember::AidlMember(const AidlLocation& location) : AidlNode(location) {}
@@ -693,14 +672,6 @@ std::string AidlDefinedType::GetPackage() const {
   return Join(package_, '.');
 }
 
-bool AidlDefinedType::CheckValid(const AidlTypenames& typenames) const {
-  if (!AidlAnnotatable::CheckValid(typenames)) {
-    return false;
-  }
-
-  return true;
-}
-
 bool AidlDefinedType::IsHidden() const {
   return HasHideComment(GetComments());
 }
@@ -710,13 +681,6 @@ std::string AidlDefinedType::GetCanonicalName() const {
     return GetName();
   }
   return GetPackage() + "." + GetName();
-}
-
-void AidlDefinedType::DumpHeader(CodeWriter* writer) const {
-  if (this->IsHidden()) {
-    AddHideComment(writer);
-  }
-  DumpAnnotations(writer);
 }
 
 AidlParcelable::AidlParcelable(const AidlLocation& location, AidlQualifiedName* name,
@@ -757,23 +721,32 @@ bool AidlParameterizable<std::string>::CheckValid() const {
   return true;
 }
 
-std::set<string> AidlParcelable::GetSupportedAnnotations() const {
-  return {kVintfStability, kUnsupportedAppUsage, kJavaStableParcelable, kHide};
-}
-
-bool AidlParcelable::CheckValid(const AidlTypenames& typenames) const {
-  if (!AidlDefinedType::CheckValid(typenames)) {
+bool AidlParcelable::CheckValid(const AidlTypenames&) const {
+  static const std::set<string> allowed{kJavaStableParcelable};
+  if (!CheckValidAnnotations()) {
     return false;
   }
   if (!AidlParameterizable<std::string>::CheckValid()) {
     return false;
+  }
+  for (const auto& v : GetAnnotations()) {
+    if (allowed.find(v.GetName()) == allowed.end()) {
+      std::ostringstream stream;
+      stream << "Unstructured parcelable can contain only";
+      for (const string& kv : allowed) {
+        stream << " " << kv;
+      }
+      stream << ".";
+      AIDL_ERROR(this) << stream.str();
+      return false;
+    }
   }
 
   return true;
 }
 
 void AidlParcelable::Dump(CodeWriter* writer) const {
-  DumpHeader(writer);
+  DumpAnnotations(writer);
   writer->Write("parcelable %s ;\n", GetName().c_str());
 }
 
@@ -784,7 +757,10 @@ AidlStructuredParcelable::AidlStructuredParcelable(
       variables_(std::move(*variables)) {}
 
 void AidlStructuredParcelable::Dump(CodeWriter* writer) const {
-  DumpHeader(writer);
+  if (this->IsHidden()) {
+    AddHideComment(writer);
+  }
+  DumpAnnotations(writer);
   writer->Write("parcelable %s {\n", GetName().c_str());
   writer->Indent();
   for (const auto& field : GetFields()) {
@@ -797,16 +773,8 @@ void AidlStructuredParcelable::Dump(CodeWriter* writer) const {
   writer->Write("}\n");
 }
 
-std::set<string> AidlStructuredParcelable::GetSupportedAnnotations() const {
-  return {kVintfStability, kUnsupportedAppUsage, kHide};
-}
-
 bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const {
   bool success = true;
-  if (!AidlParcelable::CheckValid(typenames)) {
-    return false;
-  }
-
   for (const auto& v : GetFields()) {
     success = success && v->CheckValid(typenames);
   }
@@ -832,10 +800,9 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(Options::Language lang) const
         return false;
       }
       if (lang == Options::Language::CPP) {
-        const string& contained_type = this->GetTypeParameters()[0]->GetName();
-        if (!(contained_type == "String" || contained_type == "IBinder")) {
-          AIDL_ERROR(this) << "List<" << contained_type
-                           << "> is not supported. List in cpp supports only String and IBinder.";
+        auto& name = this->GetTypeParameters()[0]->GetName();
+        if (!(name == "String" || name == "IBinder")) {
+          AIDL_ERROR(this) << "List in cpp supports only string and IBinder for now.";
           return false;
         }
       } else if (lang == Options::Language::JAVA) {
@@ -843,9 +810,7 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(Options::Language lang) const
         if (AidlTypenames::IsBuiltinTypename(contained_type)) {
           if (contained_type != "String" && contained_type != "IBinder" &&
               contained_type != "ParcelFileDescriptor") {
-            AIDL_ERROR(this) << "List<" << contained_type
-                             << "> is not supported. List in Java supports only String, IBinder, "
-                                "and ParcelFileDescriptor.";
+            AIDL_ERROR(this) << "List<" << contained_type << "> isn't supported in Java";
             return false;
           }
         }
@@ -957,14 +922,7 @@ bool AidlEnumDeclaration::Autofill() {
   return true;
 }
 
-std::set<string> AidlEnumDeclaration::GetSupportedAnnotations() const {
-  return {kVintfStability, kBacking, kHide};
-}
-
-bool AidlEnumDeclaration::CheckValid(const AidlTypenames& typenames) const {
-  if (!AidlDefinedType::CheckValid(typenames)) {
-    return false;
-  }
+bool AidlEnumDeclaration::CheckValid(const AidlTypenames&) const {
   if (backing_type_ == nullptr) {
     AIDL_ERROR(this) << "Enum declaration missing backing type.";
     return false;
@@ -977,7 +935,7 @@ bool AidlEnumDeclaration::CheckValid(const AidlTypenames& typenames) const {
 }
 
 void AidlEnumDeclaration::Dump(CodeWriter* writer) const {
-  DumpHeader(writer);
+  DumpAnnotations(writer);
   writer->Write("enum %s {\n", GetName().c_str());
   writer->Indent();
   for (const auto& enumerator : GetEnumerators()) {
@@ -1029,7 +987,10 @@ AidlInterface::AidlInterface(const AidlLocation& location, const std::string& na
 }
 
 void AidlInterface::Dump(CodeWriter* writer) const {
-  DumpHeader(writer);
+  if (this->IsHidden()) {
+    AddHideComment(writer);
+  }
+  DumpAnnotations(writer);
   writer->Write("interface %s {\n", GetName().c_str());
   writer->Indent();
   for (const auto& method : GetMethods()) {
@@ -1048,12 +1009,8 @@ void AidlInterface::Dump(CodeWriter* writer) const {
   writer->Write("}\n");
 }
 
-std::set<string> AidlInterface::GetSupportedAnnotations() const {
-  return {kVintfStability, kUnsupportedAppUsage, kHide};
-}
-
 bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
-  if (!AidlDefinedType::CheckValid(typenames)) {
+  if (!CheckValidAnnotations()) {
     return false;
   }
   // Has to be a pointer due to deleting copy constructor. No idea why.
