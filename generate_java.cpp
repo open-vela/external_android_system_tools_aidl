@@ -109,10 +109,18 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
     for (const auto& a : generate_java_annotations(variable->GetType())) {
       out << a << "\n";
     }
-    out << "public " << JavaSignatureOf(variable->GetType(), typenames) << " "
-        << variable->GetName();
+    out << "public ";
+    if (variable->GetType().GetName() == "ParcelableHolder") {
+      out << "final ";
+    }
+    out << JavaSignatureOf(variable->GetType(), typenames) << " " << variable->GetName();
     if (variable->GetDefaultValue()) {
       out << " = " << variable->ValueString(ConstantValueDecorator);
+    } else if (variable->GetType().GetName() == "ParcelableHolder") {
+      out << std::boolalpha;
+      out << " = new " << JavaSignatureOf(variable->GetType(), typenames) << "("
+          << parcel->IsVintfStability() << ")";
+      out << std::noboolalpha;
     }
     out << ";\n";
     parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(out.str()));
