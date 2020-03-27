@@ -41,10 +41,22 @@ namespace android {
 namespace aidl {
 
 // The built-in AIDL types..
-static const set<string> kBuiltinTypes = {
-    "void", "boolean", "byte",           "char",         "int",
-    "long", "float",   "double",         "String",       "List",
-    "Map",  "IBinder", "FileDescriptor", "CharSequence", "ParcelFileDescriptor"};
+static const set<string> kBuiltinTypes = {"void",
+                                          "boolean",
+                                          "byte",
+                                          "char",
+                                          "int",
+                                          "long",
+                                          "float",
+                                          "double",
+                                          "String",
+                                          "List",
+                                          "Map",
+                                          "IBinder",
+                                          "FileDescriptor",
+                                          "CharSequence",
+                                          "ParcelFileDescriptor",
+                                          "ParcelableHolder"};
 
 static const set<string> kPrimitiveTypes = {"void", "boolean", "byte",  "char",
                                             "int",  "long",    "float", "double"};

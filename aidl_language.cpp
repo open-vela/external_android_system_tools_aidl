@@ -1106,6 +1106,11 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
       return false;
     }
 
+    // TODO(b/156872582): Support it when ParcelableHolder supports every backend.
+    if (m->GetType().GetName() == "ParcelableHolder") {
+      AIDL_ERROR(m) << "ParcelableHolder cannot be a return type";
+      return false;
+    }
     if (m->IsOneway() && m->GetType().GetName() != "void") {
       AIDL_ERROR(m) << "oneway method '" << m->GetName() << "' cannot return a value";
       return false;
@@ -1125,6 +1130,11 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
         return false;
       }
 
+      // TODO(b/156872582): Support it when ParcelableHolder supports every backend.
+      if (arg->GetType().GetName() == "ParcelableHolder") {
+        AIDL_ERROR(arg) << "ParcelableHolder cannot be an argument type";
+        return false;
+      }
       if (m->IsOneway() && arg->IsOut()) {
         AIDL_ERROR(m) << "oneway method '" << m->GetName() << "' cannot have out parameters";
         return false;
