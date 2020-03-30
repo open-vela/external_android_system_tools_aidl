@@ -89,8 +89,8 @@ AidlToken::AidlToken(const std::string& text, const std::string& comments)
     : text_(text),
       comments_(comments) {}
 
-AidlLocation::AidlLocation(const std::string& file, Point begin, Point end)
-    : file_(file), begin_(begin), end_(end) {}
+AidlLocation::AidlLocation(const std::string& file, Point begin, Point end, Source source)
+    : file_(file), begin_(begin), end_(end), source_(source) {}
 
 std::ostream& operator<<(std::ostream& os, const AidlLocation& l) {
   os << l.file_ << ":" << l.begin_.line << "." << l.begin_.column << "-";
@@ -120,6 +120,12 @@ AidlError::AidlError(bool fatal) : os_(std::cerr), fatal_(fatal) {
   sHadError = true;
 
   os_ << "ERROR: ";
+}
+
+AidlError::AidlError(bool fatal, const AidlLocation& location) : AidlError(fatal) {
+  CHECK(!location.IsInternal())
+      << "Logging an internal location should not happen. Offending location: " << location;
+  os_ << location << ": ";
 }
 
 bool AidlError::sHadError = false;
@@ -938,8 +944,8 @@ bool AidlEnumDeclaration::Autofill() {
   for (const auto& enumerator : enumerators_) {
     if (enumerator->GetValue() == nullptr) {
       if (previous == nullptr) {
-        enumerator->SetValue(std::unique_ptr<AidlConstantValue>(
-            AidlConstantValue::Integral(AIDL_LOCATION_HERE, "0")));
+        enumerator->SetValue(
+            std::unique_ptr<AidlConstantValue>(AidlConstantValue::Integral(GetLocation(), "0")));
       } else {
         auto prev_value = std::unique_ptr<AidlConstantValue>(
             AidlConstantValue::ShallowIntegralCopy(*previous->GetValue()));
@@ -947,9 +953,8 @@ bool AidlEnumDeclaration::Autofill() {
           return false;
         }
         enumerator->SetValue(std::make_unique<AidlBinaryConstExpression>(
-            AIDL_LOCATION_HERE, std::move(prev_value), "+",
-            std::unique_ptr<AidlConstantValue>(
-                AidlConstantValue::Integral(AIDL_LOCATION_HERE, "1"))));
+            GetLocation(), std::move(prev_value), "+",
+            std::unique_ptr<AidlConstantValue>(AidlConstantValue::Integral(GetLocation(), "1"))));
       }
     }
     previous = enumerator.get();
