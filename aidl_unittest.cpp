@@ -1801,6 +1801,11 @@ TEST_F(AidlTest, FailOnOutOfBoundsInt64MinConstInt) {
 
 TEST_F(AidlTest, FailOnOutOfBoundsAutofilledEnum) {
   AidlError reported_error;
+  const string expected_stderr =
+      "ERROR: p/TestEnum.aidl:3.35-44: Invalid type specifier for an int32 "
+      "literal: byte\n"
+      "ERROR: p/TestEnum.aidl:5.1-36: Enumerator type differs from enum backing type.\n";
+  CaptureStderr();
   EXPECT_EQ(nullptr, Parse("p/TestEnum.aidl",
                            R"(package p;
                               @Backing(type="byte")
@@ -1811,6 +1816,7 @@ TEST_F(AidlTest, FailOnOutOfBoundsAutofilledEnum) {
                              )",
                            typenames_, Options::Language::CPP, &reported_error));
   EXPECT_EQ(AidlError::BAD_TYPE, reported_error);
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
 }  // namespace aidl
