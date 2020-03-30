@@ -672,9 +672,7 @@ func (m *aidlApi) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 			alwaysChecked := android.PathForModuleOut(ctx, "checkapi_current.timestamp")
 			rb.Command().Text("false").ImplicitOutput(alwaysChecked)
 			rb.Build(pctx, ctx, "check_current_aidl_api", "")
-			// TODO(b/147433177) uncomment the below line when all aidl_interface modules
-			// are with 'current' API dump.
-			//m.checkApiTimestamps = append(m.checkApiTimestamps, alwaysChecked)
+			m.checkApiTimestamps = append(m.checkApiTimestamps, alwaysChecked)
 		}
 	}
 
@@ -797,6 +795,7 @@ type aidlInterfaceProperties struct {
 
 	Backend struct {
 		// Backend of the compiler generating code for Java clients.
+		// When enabled, this creates a target called "<name>-java".
 		Java struct {
 			CommonBackendProperties
 			// Set to the version of the sdk to compile against
@@ -808,11 +807,14 @@ type aidlInterfaceProperties struct {
 		}
 		// Backend of the compiler generating code for C++ clients using
 		// libbinder (unstable C++ interface)
+		// When enabled, this creates a target called "<name>-cpp".
 		Cpp struct {
 			CommonNativeBackendProperties
 		}
 		// Backend of the compiler generating code for C++ clients using
 		// libbinder_ndk (stable C interface to system's libbinder)
+		// When enabled, this creates a target called "<name>-ndk"
+		// (for apps) and "<name>-ndk_platform" (for platform usage).
 		Ndk struct {
 			CommonNativeBackendProperties
 		}
@@ -917,10 +919,6 @@ func (i *aidlInterface) hasVersion() bool {
 	return len(i.properties.Versions) > 0
 }
 
-func (i *aidlInterface) isCurrentVersion(ctx android.LoadHookContext, version string) bool {
-	return version == i.currentVersion(ctx)
-}
-
 // This function returns module name with version. Assume that there is foo of which latest version is 2
 // Version -> Module name
 // "1"->foo-V1
@@ -932,7 +930,7 @@ func (i *aidlInterface) versionedName(ctx android.LoadHookContext, version strin
 	if version == "" {
 		return name
 	}
-	if i.isCurrentVersion(ctx, version) {
+	if version == i.currentVersion(ctx) {
 		return name + "-unstable"
 	}
 	return name + "-V" + version
@@ -963,7 +961,7 @@ func (i *aidlInterface) cppOutputName(version string) string {
 }
 
 func (i *aidlInterface) srcsForVersion(mctx android.LoadHookContext, version string) (srcs []string, aidlRoot string) {
-	if i.isCurrentVersion(mctx, version) {
+	if version == i.currentVersion(mctx) {
 		return i.properties.Srcs, i.properties.Local_include_dir
 	} else {
 		aidlRoot = filepath.Join(aidlApiDir, i.ModuleBase.Name(), version)
@@ -1433,7 +1431,7 @@ func allAidlInterfacesMakeVars(ctx android.MakeVarsContext) {
 	names := []string{}
 	ctx.VisitAllModules(func(module android.Module) {
 		if ai, ok := module.(*aidlInterface); ok {
-			names = append(names, ai.BaseModuleName())
+			names = append(names, ai.Name())
 		}
 	})
 	ctx.Strict("ALL_AIDL_INTERFACES", strings.Join(names, " "))
