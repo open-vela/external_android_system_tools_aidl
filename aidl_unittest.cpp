@@ -1386,6 +1386,7 @@ class AidlTestIncompatibleChanges : public AidlTest {
 };
 
 TEST_F(AidlTestIncompatibleChanges, RemovedType) {
+  const string expected_stderr = "ERROR: new: API files have been removed: old/p/IFoo.aidl\n";
   io_delegate_.SetFileContents("old/p/IFoo.aidl",
                                "package p;"
                                "interface IFoo {"
@@ -1393,7 +1394,9 @@ TEST_F(AidlTestIncompatibleChanges, RemovedType) {
                                "  void bar(@utf8InCpp String str);"
                                "}");
   io_delegate_.SetFileContents("new/p/IFoo.aidl", "");
+  CaptureStderr();
   EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
 TEST_F(AidlTestIncompatibleChanges, RemovedMethod) {
