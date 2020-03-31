@@ -110,7 +110,7 @@ class AidlNode {
   virtual ~AidlNode() = default;
 
   // To be able to print AidlLocation
-  friend class AidlError;
+  friend class AidlErrorLog;
   friend std::string android::aidl::mappings::dump_location(const AidlNode&);
   friend std::string android::aidl::java::dump_location(const AidlNode&);
 
@@ -125,16 +125,18 @@ class AidlNode {
 };
 
 // Generic point for printing any error in the AIDL compiler.
-class AidlError {
+class AidlErrorLog {
  public:
-  AidlError(bool fatal, const std::string& filename) : AidlError(fatal) { os_ << filename << ": "; }
-  AidlError(bool fatal, const AidlLocation& location);
-  AidlError(bool fatal, const AidlNode& node) : AidlError(fatal, node.location_) {}
-  AidlError(bool fatal, const AidlNode* node) : AidlError(fatal, *node) {}
+  AidlErrorLog(bool fatal, const std::string& filename) : AidlErrorLog(fatal) {
+    os_ << filename << ": ";
+  }
+  AidlErrorLog(bool fatal, const AidlLocation& location);
+  AidlErrorLog(bool fatal, const AidlNode& node) : AidlErrorLog(fatal, node.location_) {}
+  AidlErrorLog(bool fatal, const AidlNode* node) : AidlErrorLog(fatal, *node) {}
 
   template <typename T>
-  AidlError(bool fatal, const std::unique_ptr<T>& node) : AidlError(fatal, *node) {}
-  ~AidlError() {
+  AidlErrorLog(bool fatal, const std::unique_ptr<T>& node) : AidlErrorLog(fatal, *node) {}
+  ~AidlErrorLog() {
     os_ << std::endl;
     if (fatal_) abort();
   }
@@ -144,17 +146,17 @@ class AidlError {
   static bool hadError() { return sHadError; }
 
  private:
-  AidlError(bool fatal);
+  AidlErrorLog(bool fatal);
 
   bool fatal_;
 
   static bool sHadError;
 
-  DISALLOW_COPY_AND_ASSIGN(AidlError);
+  DISALLOW_COPY_AND_ASSIGN(AidlErrorLog);
 };
 
-#define AIDL_ERROR(CONTEXT) ::AidlError(false /*fatal*/, (CONTEXT)).os_
-#define AIDL_FATAL(CONTEXT) ::AidlError(true /*fatal*/, (CONTEXT)).os_
+#define AIDL_ERROR(CONTEXT) ::AidlErrorLog(false /*fatal*/, (CONTEXT)).os_
+#define AIDL_FATAL(CONTEXT) ::AidlErrorLog(true /*fatal*/, (CONTEXT)).os_
 #define AIDL_FATAL_IF(CONDITION, CONTEXT) \
   if (CONDITION) AIDL_FATAL(CONTEXT) << "Bad internal state: " << #CONDITION << ": "
 

@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
   // once AIDL_ERROR/AIDL_FATAL are used everywhere instead of std::cerr/LOG, we
   // can make this assertion in both directions.
   if (ret == 0) {
-    AIDL_FATAL_IF(AidlError::hadError(), "Compiler success, but error emitted");
+    AIDL_FATAL_IF(AidlErrorLog::hadError(), "Compiler success, but error emitted");
   }
 
   return ret;
