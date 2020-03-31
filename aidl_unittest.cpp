@@ -380,16 +380,28 @@ TEST_F(AidlTest, ParsesUtf8Annotations) {
 
 TEST_F(AidlTest, VintfRequiresStructuredAndStability) {
   AidlError error;
+  const string expected_stderr =
+      "ERROR: IFoo.aidl:1.16-26: Must compile @VintfStability type w/ aidl_interface 'stability: "
+      "\"vintf\"'\n"
+      "ERROR: IFoo.aidl:1.16-26: Must compile @VintfStability type w/ aidl_interface "
+      "--structured\n";
+  CaptureStderr();
   auto parse_result = Parse("IFoo.aidl", "@VintfStability interface IFoo {}", typenames_,
                             Options::Language::CPP, &error);
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
   ASSERT_EQ(AidlError::NOT_STRUCTURED, error);
   ASSERT_EQ(nullptr, parse_result);
 }
 
 TEST_F(AidlTest, VintfRequiresStructured) {
   AidlError error;
+  const string expected_stderr =
+      "ERROR: IFoo.aidl:1.16-26: Must compile @VintfStability type w/ aidl_interface "
+      "--structured\n";
+  CaptureStderr();
   auto parse_result = Parse("IFoo.aidl", "@VintfStability interface IFoo {}", typenames_,
                             Options::Language::CPP, &error, {"--stability", "vintf"});
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
   ASSERT_EQ(AidlError::NOT_STRUCTURED, error);
   ASSERT_EQ(nullptr, parse_result);
 }
