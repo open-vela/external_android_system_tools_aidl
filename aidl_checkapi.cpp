@@ -243,7 +243,7 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
   vector<AidlDefinedType*> new_types;
   vector<string> new_files = io_delegate.ListFiles(new_dir);
   if (new_files.size() == 0) {
-    AIDL_ERROR(new_dir) << "No API file exist";
+    AIDL_ERROR(new_dir) << "API files have been removed: " << android::base::Join(old_files, ", ");
     return false;
   }
   for (const auto& file : new_files) {
