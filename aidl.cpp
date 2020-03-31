@@ -36,6 +36,7 @@
 
 #include <android-base/strings.h>
 
+#include "aidl_checkapi.h"
 #include "aidl_language.h"
 #include "aidl_typenames.h"
 #include "generate_aidl_mappings.h"
@@ -857,6 +858,40 @@ bool dump_api(const Options& options, const IoDelegate& io_delegate) {
     }
   }
   return true;
+}
+
+int aidl_entry(const Options& options, const IoDelegate& io_delegate) {
+  int ret = 1;
+  switch (options.GetTask()) {
+    case Options::Task::COMPILE:
+      ret = android::aidl::compile_aidl(options, io_delegate);
+      break;
+    case Options::Task::PREPROCESS:
+      ret = android::aidl::preprocess_aidl(options, io_delegate) ? 0 : 1;
+      break;
+    case Options::Task::DUMP_API:
+      ret = android::aidl::dump_api(options, io_delegate) ? 0 : 1;
+      break;
+    case Options::Task::CHECK_API:
+      ret = android::aidl::check_api(options, io_delegate) ? 0 : 1;
+      break;
+    case Options::Task::DUMP_MAPPINGS:
+      ret = android::aidl::dump_mappings(options, io_delegate) ? 0 : 1;
+      break;
+    default:
+      AIDL_FATAL(AIDL_LOCATION_HERE)
+          << "Unrecognized task: " << static_cast<size_t>(options.GetTask());
+  }
+
+  // compiler invariants
+
+  // once AIDL_ERROR/AIDL_FATAL are used everywhere instead of std::cerr/LOG, we
+  // can make this assertion in both directions.
+  if (ret == 0) {
+    AIDL_FATAL_IF(AidlErrorLog::hadError(), "Compiler success, but error emitted");
+  }
+
+  return ret;
 }
 
 }  // namespace aidl
