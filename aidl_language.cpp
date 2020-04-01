@@ -47,6 +47,7 @@ using android::aidl::IoDelegate;
 using android::base::Join;
 using android::base::Split;
 using std::cerr;
+using std::endl;
 using std::pair;
 using std::set;
 using std::string;
@@ -1129,7 +1130,7 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
                                         "getTransactionName(int)"};
 
     if (reserved_methods.find(m->Signature()) != reserved_methods.end()) {
-      AIDL_ERROR(m) << " method " << m->Signature() << " is reserved for internal use.";
+      AIDL_ERROR(m) << " method " << m->Signature() << " is reserved for internal use." << endl;
       return false;
     }
   }
@@ -1138,7 +1139,7 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
   set<string> constant_names;
   for (const std::unique_ptr<AidlConstantDeclaration>& constant : GetConstantDeclarations()) {
     if (constant_names.count(constant->GetName()) > 0) {
-      AIDL_ERROR(constant) << "Found duplicate constant name '" << constant->GetName() << "'";
+      LOG(ERROR) << "Found duplicate constant name '" << constant->GetName() << "'";
       success = false;
     }
     constant_names.insert(constant->GetName());

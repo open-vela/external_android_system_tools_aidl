@@ -36,7 +36,6 @@
 
 #include <android-base/strings.h>
 
-#include "aidl_checkapi.h"
 #include "aidl_language.h"
 #include "aidl_typenames.h"
 #include "generate_aidl_mappings.h"
@@ -695,13 +694,13 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     if (options.IsStructured() && type.AsUnstructuredParcelable() != nullptr &&
         !type.AsUnstructuredParcelable()->IsStableApiParcelable(options.TargetLanguage())) {
       err = AidlError::NOT_STRUCTURED;
-      AIDL_ERROR(type) << type.GetCanonicalName()
-                       << " is not structured, but this is a structured interface.";
+      LOG(ERROR) << type.GetCanonicalName()
+                 << " is not structured, but this is a structured interface.";
     }
     if (options.GetStability() == Options::Stability::VINTF && !type.IsVintfStability()) {
       err = AidlError::NOT_STRUCTURED;
-      AIDL_ERROR(type) << type.GetCanonicalName()
-                       << " does not have VINTF level stability, but this interface requires it.";
+      LOG(ERROR) << type.GetCanonicalName()
+                 << " does not have VINTF level stability, but this interface requires it.";
     }
   });
 
@@ -858,40 +857,6 @@ bool dump_api(const Options& options, const IoDelegate& io_delegate) {
     }
   }
   return true;
-}
-
-int aidl_entry(const Options& options, const IoDelegate& io_delegate) {
-  int ret = 1;
-  switch (options.GetTask()) {
-    case Options::Task::COMPILE:
-      ret = android::aidl::compile_aidl(options, io_delegate);
-      break;
-    case Options::Task::PREPROCESS:
-      ret = android::aidl::preprocess_aidl(options, io_delegate) ? 0 : 1;
-      break;
-    case Options::Task::DUMP_API:
-      ret = android::aidl::dump_api(options, io_delegate) ? 0 : 1;
-      break;
-    case Options::Task::CHECK_API:
-      ret = android::aidl::check_api(options, io_delegate) ? 0 : 1;
-      break;
-    case Options::Task::DUMP_MAPPINGS:
-      ret = android::aidl::dump_mappings(options, io_delegate) ? 0 : 1;
-      break;
-    default:
-      AIDL_FATAL(AIDL_LOCATION_HERE)
-          << "Unrecognized task: " << static_cast<size_t>(options.GetTask());
-  }
-
-  // compiler invariants
-
-  // once AIDL_ERROR/AIDL_FATAL are used everywhere instead of std::cerr/LOG, we
-  // can make this assertion in both directions.
-  if (ret == 0) {
-    AIDL_FATAL_IF(AidlErrorLog::hadError(), "Compiler success, but error emitted");
-  }
-
-  return ret;
 }
 
 }  // namespace aidl
