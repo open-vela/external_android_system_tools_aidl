@@ -50,6 +50,9 @@ bool preprocess_aidl(const Options& options, const IoDelegate& io_delegate);
 bool dump_api(const Options& options, const IoDelegate& io_delegate);
 bool dump_mappings(const Options& options, const IoDelegate& io_delegate);
 
+// main entry point to AIDL
+int aidl_entry(const Options& options, const IoDelegate& io_delegate);
+
 const char kPreamble[] =
     R"(///////////////////////////////////////////////////////////////////////////////
 // THIS FILE IS IMMUTABLE. DO NOT EDIT IN ANY CASE.                          //
