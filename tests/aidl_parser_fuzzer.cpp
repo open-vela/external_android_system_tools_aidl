@@ -47,7 +47,7 @@ void fuzz(const std::string& langOpt, const std::string& content) {
     std::cout << "lang: " << langOpt << " content: " << content << std::endl;
   }
 
-  int ret = android::aidl::compile_aidl(Options::From(args), io);
+  int ret = android::aidl::aidl_entry(Options::From(args), io);
   if (ret != 0) return;
 
   if (kFuzzLog) {
