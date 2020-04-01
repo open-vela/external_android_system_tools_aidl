@@ -116,19 +116,19 @@ std::string AidlNode::PrintLocation() const {
   return ss.str();
 }
 
-AidlError::AidlError(bool fatal) : os_(std::cerr), fatal_(fatal) {
+AidlErrorLog::AidlErrorLog(bool fatal) : os_(std::cerr), fatal_(fatal) {
   sHadError = true;
 
   os_ << "ERROR: ";
 }
 
-AidlError::AidlError(bool fatal, const AidlLocation& location) : AidlError(fatal) {
+AidlErrorLog::AidlErrorLog(bool fatal, const AidlLocation& location) : AidlErrorLog(fatal) {
   CHECK(!location.IsInternal())
       << "Logging an internal location should not happen. Offending location: " << location;
   os_ << location << ": ";
 }
 
-bool AidlError::sHadError = false;
+bool AidlErrorLog::sHadError = false;
 
 static const string kNullable("nullable");
 static const string kUtf8InCpp("utf8InCpp");
