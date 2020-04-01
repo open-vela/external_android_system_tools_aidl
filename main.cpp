@@ -15,39 +15,19 @@
  */
 
 #include "aidl.h"
-#include "aidl_checkapi.h"
 #include "io_delegate.h"
 #include "logging.h"
 #include "options.h"
 
 #include <iostream>
 
+using android::aidl::Options;
+
 #ifdef AIDL_CPP_BUILD
 constexpr Options::Language kDefaultLang = Options::Language::CPP;
 #else
 constexpr Options::Language kDefaultLang = Options::Language::JAVA;
 #endif
-
-using android::aidl::Options;
-
-int process_options(const Options& options) {
-  android::aidl::IoDelegate io_delegate;
-  switch (options.GetTask()) {
-    case Options::Task::COMPILE:
-      return android::aidl::compile_aidl(options, io_delegate);
-    case Options::Task::PREPROCESS:
-      return android::aidl::preprocess_aidl(options, io_delegate) ? 0 : 1;
-    case Options::Task::DUMP_API:
-      return android::aidl::dump_api(options, io_delegate) ? 0 : 1;
-    case Options::Task::CHECK_API:
-      return android::aidl::check_api(options, io_delegate) ? 0 : 1;
-    case Options::Task::DUMP_MAPPINGS:
-      return android::aidl::dump_mappings(options, io_delegate) ? 0 : 1;
-    default:
-      LOG(FATAL) << "aidl: internal error" << std::endl;
-      return 1;
-  }
-}
 
 int main(int argc, char* argv[]) {
   android::base::InitLogging(argv);
@@ -60,15 +40,11 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  int ret = process_options(options);
+  // Only minimal functionality should go here, so that as much of possible of
+  // the aidl compiler is mocked with the single function `aidl_entry`
 
-  // compiler invariants
-
-  // once AIDL_ERROR/AIDL_FATAL are used everywhere instead of std::cerr/LOG, we
-  // can make this assertion in both directions.
-  if (ret == 0) {
-    AIDL_FATAL_IF(AidlErrorLog::hadError(), "Compiler success, but error emitted");
-  }
+  android::aidl::IoDelegate io_delegate;
+  int ret = aidl_entry(options, io_delegate);
 
   return ret;
 }
