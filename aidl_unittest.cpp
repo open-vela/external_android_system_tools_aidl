@@ -669,7 +669,8 @@ TEST_P(AidlTest, FailOnDuplicateConstantNames) {
 
 TEST_P(AidlTest, FailOnManyDefinedTypes) {
   AidlError error;
-  const string expected_stderr = "ERROR: p/IFoo.aidl: You must declare only one type per a file.\n";
+  const string expected_stderr =
+      "ERROR: p/IFoo.aidl:3.33-38: You must declare only one type per file.\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("p/IFoo.aidl",
                            R"(package p;
@@ -1129,9 +1130,9 @@ TEST_F(AidlTest, UserDefinedUnstructuredGenericParcelableType) {
 TEST_F(AidlTest, FailOnMultipleTypesInSingleFile) {
   std::vector<std::string> rawOptions{"aidl --lang=java -o out foo/bar/Foo.aidl",
                                       "aidl --lang=cpp -o out -h out/include foo/bar/Foo.aidl"};
-  const string expected_stderr =
-      "ERROR: foo/bar/Foo.aidl: You must declare only one type per a file.\n";
-  for (auto& rawOption : rawOptions) {
+  for (const auto& rawOption : rawOptions) {
+    string expected_stderr =
+        "ERROR: foo/bar/Foo.aidl:3.1-10: You must declare only one type per file.\n";
     Options options = Options::From(rawOption);
     io_delegate_.SetFileContents(options.InputFiles().front(),
                                  "package foo.bar;\n"
@@ -1151,6 +1152,7 @@ TEST_F(AidlTest, FailOnMultipleTypesInSingleFile) {
     EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
     EXPECT_EQ(expected_stderr, GetCapturedStderr());
 
+    expected_stderr = "ERROR: foo/bar/Foo.aidl:3.11-17: You must declare only one type per file.\n";
     io_delegate_.SetFileContents(options.InputFiles().front(),
                                  "package foo.bar;\n"
                                  "parcelable Data1 { int a; int b;}\n"
@@ -1741,7 +1743,7 @@ TEST_F(AidlTest, RejectAmbiguousImports) {
       "ERROR: p/IFoo.aidl: Duplicate files found for q.IBar from:\n"
       "dir1/q/IBar.aidl\n"
       "dir2/q/IBar.aidl\n"
-      "ERROR: q.IBar: couldn't find import for class q.IBar\n";
+      "ERROR: p/IFoo.aidl: Couldn't find import for class q.IBar\n";
   Options options = Options::From("aidl --lang=java -o out -I dir1 -I dir2 p/IFoo.aidl");
   io_delegate_.SetFileContents("p/IFoo.aidl", "package p; import q.IBar; interface IFoo{}");
   io_delegate_.SetFileContents("dir1/q/IBar.aidl", "package q; interface IBar{}");
@@ -1872,7 +1874,7 @@ TEST_F(AidlTest, FailOnAmbiguousImports) {
       "ERROR: IFoo.aidl: Duplicate files found for IBar from:\n"
       "dir/IBar.aidl\n"
       "dir2/IBar.aidl\n"
-      "ERROR: IBar: couldn't find import for class IBar\n";
+      "ERROR: IFoo.aidl: Couldn't find import for class IBar\n";
 
   Options options = Options::From("aidl --lang=java -I dir -I dir2 IFoo.aidl");
   io_delegate_.SetFileContents("dir/IBar.aidl", "interface IBar{}");

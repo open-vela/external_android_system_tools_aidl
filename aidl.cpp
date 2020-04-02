@@ -429,11 +429,11 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   for (AidlDefinedType* type : main_parser->GetDefinedTypes()) {
     if (type->AsInterface() != nullptr || type->AsStructuredParcelable() != nullptr) {
       num_interfaces_or_structured_parcelables++;
+      if (num_interfaces_or_structured_parcelables > 1) {
+        AIDL_ERROR(*type) << "You must declare only one type per file.";
+        return AidlError::BAD_TYPE;
+      }
     }
-  }
-  if (num_interfaces_or_structured_parcelables > 1) {
-    AIDL_ERROR(input_file_name) << "You must declare only one type per a file.";
-    return AidlError::BAD_TYPE;
   }
 
   // Import the preprocessed file
@@ -492,7 +492,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
       if (std::find(type_from_import_statements.begin(), type_from_import_statements.end(),
                     import) != type_from_import_statements.end()) {
         // Complain only when the import from the import statement has failed.
-        AIDL_ERROR(import) << "couldn't find import for class " << import;
+        AIDL_ERROR(input_file_name) << "Couldn't find import for class " << import;
         err = AidlError::BAD_IMPORT;
       }
       continue;
