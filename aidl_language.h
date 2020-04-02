@@ -82,8 +82,13 @@ class AidlLocation {
   };
 
   AidlLocation(const std::string& file, Point begin, Point end, Source source);
+  AidlLocation(const std::string& file, Source source)
+      : AidlLocation(file, {0, 0}, {0, 0}, source) {}
 
   bool IsInternal() const { return source_ == Source::INTERNAL; }
+
+  // The first line of a file is line 1.
+  bool LocationKnown() const { return begin_.line != 0; }
 
   friend std::ostream& operator<<(std::ostream& os, const AidlLocation& l);
   friend class AidlNode;
@@ -127,9 +132,8 @@ class AidlNode {
 // Generic point for printing any error in the AIDL compiler.
 class AidlErrorLog {
  public:
-  AidlErrorLog(bool fatal, const std::string& filename) : AidlErrorLog(fatal) {
-    os_ << filename << ": ";
-  }
+  AidlErrorLog(bool fatal, const std::string& filename)
+      : AidlErrorLog(fatal, AidlLocation(filename, AidlLocation::Source::EXTERNAL)) {}
   AidlErrorLog(bool fatal, const AidlLocation& location);
   AidlErrorLog(bool fatal, const AidlNode& node) : AidlErrorLog(fatal, node.location_) {}
   AidlErrorLog(bool fatal, const AidlNode* node) : AidlErrorLog(fatal, *node) {}
@@ -139,6 +143,11 @@ class AidlErrorLog {
   ~AidlErrorLog() {
     os_ << std::endl;
     if (fatal_) abort();
+    if (location_.IsInternal()) {
+      os_ << "Logging an internal location should not happen. Offending location: " << location_
+          << std::endl;
+      abort();
+    }
   }
 
   std::ostream& os_;
@@ -146,9 +155,10 @@ class AidlErrorLog {
   static bool hadError() { return sHadError; }
 
  private:
-  AidlErrorLog(bool fatal);
 
   bool fatal_;
+
+  const AidlLocation location_;
 
   static bool sHadError;
 

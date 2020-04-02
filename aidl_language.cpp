@@ -92,11 +92,14 @@ AidlLocation::AidlLocation(const std::string& file, Point begin, Point end, Sour
     : file_(file), begin_(begin), end_(end), source_(source) {}
 
 std::ostream& operator<<(std::ostream& os, const AidlLocation& l) {
-  os << l.file_ << ":" << l.begin_.line << "." << l.begin_.column << "-";
-  if (l.begin_.line != l.end_.line) {
-    os << l.end_.line << ".";
+  os << l.file_;
+  if (l.LocationKnown()) {
+    os << ":" << l.begin_.line << "." << l.begin_.column << "-";
+    if (l.begin_.line != l.end_.line) {
+      os << l.end_.line << ".";
+    }
+    os << l.end_.column;
   }
-  os << l.end_.column;
   return os;
 }
 
@@ -115,15 +118,11 @@ std::string AidlNode::PrintLocation() const {
   return ss.str();
 }
 
-AidlErrorLog::AidlErrorLog(bool fatal) : os_(std::cerr), fatal_(fatal) {
+AidlErrorLog::AidlErrorLog(bool fatal, const AidlLocation& location)
+    : os_(std::cerr), fatal_(fatal), location_(location) {
   sHadError = true;
 
   os_ << "ERROR: ";
-}
-
-AidlErrorLog::AidlErrorLog(bool fatal, const AidlLocation& location) : AidlErrorLog(fatal) {
-  CHECK(!location.IsInternal())
-      << "Logging an internal location should not happen. Offending location: " << location;
   os_ << location << ": ";
 }
 
