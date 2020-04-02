@@ -695,13 +695,13 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     if (options.IsStructured() && type.AsUnstructuredParcelable() != nullptr &&
         !type.AsUnstructuredParcelable()->IsStableApiParcelable(options.TargetLanguage())) {
       err = AidlError::NOT_STRUCTURED;
-      LOG(ERROR) << type.GetCanonicalName()
-                 << " is not structured, but this is a structured interface.";
+      AIDL_ERROR(type) << type.GetCanonicalName()
+                       << " is not structured, but this is a structured interface.";
     }
     if (options.GetStability() == Options::Stability::VINTF && !type.IsVintfStability()) {
       err = AidlError::NOT_STRUCTURED;
-      LOG(ERROR) << type.GetCanonicalName()
-                 << " does not have VINTF level stability, but this interface requires it.";
+      AIDL_ERROR(type) << type.GetCanonicalName()
+                       << " does not have VINTF level stability, but this interface requires it.";
     }
   });
 
