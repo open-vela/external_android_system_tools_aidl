@@ -1161,6 +1161,14 @@ TEST_F(AidlTest, FailOnMultipleTypesInSingleFile) {
   }
 }
 
+TEST_P(AidlTest, FailParseOnEmptyFile) {
+  const string contents = "";
+  const string expected_stderr = "ERROR: a/IFoo.aidl:1.1-1: syntax error, unexpected $end\n";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", contents, typenames_, GetLanguage()));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
 TEST_F(AidlTest, MultipleInputFiles) {
   Options options = Options::From(
       "aidl --lang=java -o out -I . foo/bar/IFoo.aidl foo/bar/Data.aidl");
@@ -1444,7 +1452,6 @@ TEST_F(AidlTestIncompatibleChanges, RemovedType) {
                                "  void foo(in String[] str);"
                                "  void bar(@utf8InCpp String str);"
                                "}");
-  io_delegate_.SetFileContents("new/p/IFoo.aidl", "");
   CaptureStderr();
   EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
