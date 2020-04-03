@@ -423,7 +423,7 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
       if (std::any_of(types.begin(), types.end(), [](auto& type_ptr) {
             return AidlTypenames::IsPrimitiveTypename(type_ptr->GetName());
           })) {
-        AIDL_ERROR(this) << "A generic type cannot has any primitive type parameters.";
+        AIDL_ERROR(this) << "A generic type cannot have any primitive type parameters.";
         return false;
       }
     }
