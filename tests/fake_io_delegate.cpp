@@ -93,7 +93,7 @@ vector<string> FakeIoDelegate::ListFiles(const string& dir) const {
   const string dir_name = dir.back() == OS_PATH_SEPARATOR ? dir : dir + OS_PATH_SEPARATOR;
   vector<string> files;
   for (auto it = file_contents_.begin(); it != file_contents_.end(); it++) {
-    if (android::base::StartsWith(it->first, dir_name) && !it->second.empty()) {
+    if (android::base::StartsWith(it->first, dir_name)) {
       files.emplace_back(it->first);
     }
   }
