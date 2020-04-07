@@ -617,8 +617,15 @@ bool AidlUnaryConstExpression::evaluate(const AidlTypeSpecifier& type) const {
       return false;
     }
   }
-  if (!unary_->is_valid_ || !IsCompatibleType(unary_->final_type_, op_)) {
-    AIDL_ERROR(type) << "Invalid constant unary expression: " + value_;
+  if (!IsCompatibleType(unary_->final_type_, op_)) {
+    AIDL_ERROR(unary_) << "'" << op_ << "'"
+                       << " is not compatible with " << ToString(unary_->final_type_)
+                       << ": " + value_;
+    is_valid_ = false;
+    return false;
+  }
+  if (!unary_->is_valid_) {
+    AIDL_ERROR(unary_) << "Invalid constant unary expression: " + value_;
     is_valid_ = false;
     return false;
   }
