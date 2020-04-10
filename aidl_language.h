@@ -152,6 +152,7 @@ class AidlErrorLog {
 
   std::ostream& os_;
 
+  static void clearError() { sHadError = false; }
   static bool hadError() { return sHadError; }
 
  private:
