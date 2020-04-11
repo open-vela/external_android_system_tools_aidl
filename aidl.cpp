@@ -796,8 +796,7 @@ bool dump_mappings(const Options& options, const IoDelegate& io_delegate) {
     AidlError aidl_err = internals::load_and_validate_aidl(
         input_file, options, io_delegate, &typenames, &defined_types, &imported_files);
     if (aidl_err != AidlError::OK) {
-      LOG(WARNING) << "AIDL file is invalid.\n";
-      continue;
+      return false;
     }
     for (const auto defined_type : defined_types) {
       auto mappings = mappings::generate_mappings(defined_type, typenames);
