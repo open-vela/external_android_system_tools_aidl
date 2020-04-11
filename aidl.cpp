@@ -861,6 +861,8 @@ bool dump_api(const Options& options, const IoDelegate& io_delegate) {
 }
 
 int aidl_entry(const Options& options, const IoDelegate& io_delegate) {
+  AidlErrorLog::clearError();
+
   int ret = 1;
   switch (options.GetTask()) {
     case Options::Task::COMPILE:
