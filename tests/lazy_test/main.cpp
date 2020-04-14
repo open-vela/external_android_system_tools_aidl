@@ -37,7 +37,6 @@ using ::android::sp;
 using ::android::String16;
 
 std::vector<String16> gServiceNames;
-bool gUsingTestService = true;
 static constexpr size_t SHUTDOWN_WAIT_TIME = 10;
 
 sp<IBinder> waitForService(const String16& name) {
@@ -159,7 +158,12 @@ TEST_F(AidlLazyTest, GetConcurrentWithWaitAfter) {
 
 class AidlLazyRegistrarTest : public ::testing::Test {
  protected:
-  String16 serviceName = String16("aidl_lazy_test_1");
+  const String16 serviceName = String16("aidl_lazy_test_1");
+  void SetUp() override {
+    if (std::find(gServiceNames.begin(), gServiceNames.end(), serviceName) == gServiceNames.end()) {
+      GTEST_SKIP() << "Persistence test requires special instance: " << serviceName;
+    }
+  }
 };
 
 sp<ILazyTestService> waitForLazyTestService(String16 name) {
@@ -169,10 +173,6 @@ sp<ILazyTestService> waitForLazyTestService(String16 name) {
 }
 
 TEST_F(AidlLazyRegistrarTest, ForcedPersistenceTest) {
-  if (!gUsingTestService) {
-    GTEST_SKIP();
-  }
-
   sp<ILazyTestService> service;
   for (int i = 0; i < 2; i++) {
     service = waitForLazyTestService(serviceName);
@@ -205,7 +205,6 @@ int main(int argc, char** argv) {
     for (int i = 1; i < argc; i++) {
       gServiceNames.push_back(String16(argv[i]));
     }
-    gUsingTestService = false;
   }
 
   android::ProcessState::self()->startThreadPool();
