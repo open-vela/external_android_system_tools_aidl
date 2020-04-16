@@ -39,7 +39,7 @@ AidlLocation loc(const yy::parser::location_type& begin, const yy::parser::locat
     .line = end.end.line,
     .column = end.end.column,
   };
-  return AidlLocation(*begin.begin.filename, begin_point, end_point, AidlLocation::Source::EXTERNAL);
+  return AidlLocation(*begin.begin.filename, begin_point, end_point);
 }
 
 AidlLocation loc(const yy::parser::location_type& l) {
