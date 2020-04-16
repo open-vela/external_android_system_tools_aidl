@@ -66,13 +66,7 @@ T handleUnary(const string& op, T val) {
   COMPUTE_UNARY(+)
   COMPUTE_UNARY(-)
   COMPUTE_UNARY(!)
-
-// bitwise negation of a boolean expression always evaluates to 'true'
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wbool-operation"
   COMPUTE_UNARY(~)
-#pragma clang diagnostic pop
-
   // Should not reach here.
   SHOULD_NOT_REACH() << "Could not handleUnary for " << op << " " << val;
   return static_cast<T>(0xdeadbeef);
@@ -617,15 +611,8 @@ bool AidlUnaryConstExpression::evaluate(const AidlTypeSpecifier& type) const {
       return false;
     }
   }
-  if (!IsCompatibleType(unary_->final_type_, op_)) {
-    AIDL_ERROR(unary_) << "'" << op_ << "'"
-                       << " is not compatible with " << ToString(unary_->final_type_)
-                       << ": " + value_;
-    is_valid_ = false;
-    return false;
-  }
-  if (!unary_->is_valid_) {
-    AIDL_ERROR(unary_) << "Invalid constant unary expression: " + value_;
+  if (!unary_->is_valid_ || !IsCompatibleType(unary_->final_type_, op_)) {
+    AIDL_ERROR(type) << "Invalid constant unary expression: " + value_;
     is_valid_ = false;
     return false;
   }
