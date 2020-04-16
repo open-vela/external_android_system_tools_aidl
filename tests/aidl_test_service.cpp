@@ -15,6 +15,7 @@
  */
 
 #include <map>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -75,8 +76,8 @@ using android::os::PersistableBundle;
 
 // Standard library
 using std::map;
+using std::optional;
 using std::string;
-using std::unique_ptr;
 using std::vector;
 
 namespace {
@@ -204,16 +205,10 @@ class NativeService : public BnTestService {
     return Status::ok();
   }
 
-  template<typename T>
-  Status RepeatNullable(const unique_ptr<T>& input,
-                        unique_ptr<T>* _aidl_return) {
+  template <typename T>
+  Status RepeatNullable(const optional<T>& input, optional<T>* _aidl_return) {
     ALOGI("Repeating nullable value");
-
-    _aidl_return->reset();
-    if (input) {
-      _aidl_return->reset(new T(*input));
-    }
-
+    *_aidl_return = input;
     return Status::ok();
   }
 
@@ -361,55 +356,38 @@ class NativeService : public BnTestService {
     return Status::fromServiceSpecificError(code);
   }
 
-  Status RepeatNullableIntArray(const unique_ptr<vector<int32_t>>& input,
-                                unique_ptr<vector<int32_t>>* _aidl_return) {
+  Status RepeatNullableIntArray(const optional<vector<int32_t>>& input,
+                                optional<vector<int32_t>>* _aidl_return) {
     return RepeatNullable(input, _aidl_return);
   }
 
-  Status RepeatNullableByteEnumArray(const unique_ptr<vector<ByteEnum>>& input,
-                                     unique_ptr<vector<ByteEnum>>* _aidl_return) {
+  Status RepeatNullableByteEnumArray(const optional<vector<ByteEnum>>& input,
+                                     optional<vector<ByteEnum>>* _aidl_return) {
     return RepeatNullable(input, _aidl_return);
   }
 
-  Status RepeatNullableIntEnumArray(const unique_ptr<vector<IntEnum>>& input,
-                                    unique_ptr<vector<IntEnum>>* _aidl_return) {
+  Status RepeatNullableIntEnumArray(const optional<vector<IntEnum>>& input,
+                                    optional<vector<IntEnum>>* _aidl_return) {
     return RepeatNullable(input, _aidl_return);
   }
 
-  Status RepeatNullableLongEnumArray(const unique_ptr<vector<LongEnum>>& input,
-                                     unique_ptr<vector<LongEnum>>* _aidl_return) {
+  Status RepeatNullableLongEnumArray(const optional<vector<LongEnum>>& input,
+                                     optional<vector<LongEnum>>* _aidl_return) {
     return RepeatNullable(input, _aidl_return);
   }
 
-  Status RepeatNullableStringList(
-             const unique_ptr<vector<unique_ptr<String16>>>& input,
-             unique_ptr<vector<unique_ptr<String16>>>* _aidl_return) {
+  Status RepeatNullableStringList(const optional<vector<optional<String16>>>& input,
+                                  optional<vector<optional<String16>>>* _aidl_return) {
     ALOGI("Repeating nullable string list");
-    if (!input) {
-      _aidl_return->reset();
-      return Status::ok();
-    }
-
-    _aidl_return->reset(new vector<unique_ptr<String16>>);
-
-    for (const auto& item : *input) {
-      if (!item) {
-        (*_aidl_return)->emplace_back(nullptr);
-      } else {
-        (*_aidl_return)->emplace_back(new String16(*item));
-      }
-    }
-
-    return Status::ok();
-  }
-
-  Status RepeatNullableString(const unique_ptr<String16>& input,
-                              unique_ptr<String16>* _aidl_return) {
     return RepeatNullable(input, _aidl_return);
   }
 
-  Status RepeatNullableParcelable(const unique_ptr<SimpleParcelable>& input,
-                              unique_ptr<SimpleParcelable>* _aidl_return) {
+  Status RepeatNullableString(const optional<String16>& input, optional<String16>* _aidl_return) {
+    return RepeatNullable(input, _aidl_return);
+  }
+
+  Status RepeatNullableParcelable(const optional<SimpleParcelable>& input,
+                                  optional<SimpleParcelable>* _aidl_return) {
     return RepeatNullable(input, _aidl_return);
   }
 
@@ -425,7 +403,7 @@ class NativeService : public BnTestService {
     (void)input;
     return Status::ok();
   }
-  Status TakesANullableIBinderList(const unique_ptr<vector<sp<IBinder>>>& input) {
+  Status TakesANullableIBinderList(const optional<vector<sp<IBinder>>>& input) {
     (void)input;
     return Status::ok();
   }
@@ -437,16 +415,15 @@ class NativeService : public BnTestService {
     return Status::ok();
   }
 
-  Status RepeatNullableUtf8CppString(
-      const unique_ptr<string>& token,
-      unique_ptr<string>* _aidl_return) override {
+  Status RepeatNullableUtf8CppString(const optional<string>& token,
+                                     optional<string>* _aidl_return) override {
     if (!token) {
       ALOGI("Received null @utf8InCpp string");
       return Status::ok();
     }
     ALOGI("Repeating utf8 string '%s' of length=%zu",
           token->c_str(), token->size());
-    _aidl_return->reset(new string(*token));
+    *_aidl_return = token;
     return Status::ok();
   }
 
@@ -456,35 +433,22 @@ class NativeService : public BnTestService {
     return ReverseArray(input, repeated, _aidl_return);
   }
 
-  Status ReverseNullableUtf8CppString(
-      const unique_ptr<vector<unique_ptr<string>>>& input,
-      unique_ptr<vector<unique_ptr<string>>>* repeated,
-      unique_ptr<vector<unique_ptr<string>>>* _aidl_return) {
-
+  Status ReverseNullableUtf8CppString(const optional<vector<optional<string>>>& input,
+                                      optional<vector<optional<string>>>* repeated,
+                                      optional<vector<optional<string>>>* _aidl_return) {
     return ReverseUtf8CppStringList(input, repeated, _aidl_return);
   }
 
-  Status ReverseUtf8CppStringList(
-      const unique_ptr<vector<unique_ptr<::string>>>& input,
-      unique_ptr<vector<unique_ptr<string>>>* repeated,
-      unique_ptr<vector<unique_ptr<string>>>* _aidl_return) {
+  Status ReverseUtf8CppStringList(const optional<vector<optional<string>>>& input,
+                                  optional<vector<optional<string>>>* repeated,
+                                  optional<vector<optional<string>>>* _aidl_return) {
     if (!input) {
       ALOGI("Received null list of utf8 strings");
       return Status::ok();
     }
-    _aidl_return->reset(new vector<unique_ptr<string>>);
-    repeated->reset(new vector<unique_ptr<string>>);
-
-    for (const auto& item : *input) {
-      (*repeated)->emplace_back(nullptr);
-      (*_aidl_return)->emplace_back(nullptr);
-      if (item) {
-        (*repeated)->back().reset(new string(*item));
-        (*_aidl_return)->back().reset(new string(*item));
-      }
-    }
+    *_aidl_return = input;
+    *repeated = input;
     std::reverse((*_aidl_return)->begin(), (*_aidl_return)->end());
-
     return Status::ok();
   }
 
