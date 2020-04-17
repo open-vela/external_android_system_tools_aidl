@@ -324,6 +324,7 @@ aidl_interface {
     srcs: [
         "tests/android/aidl/loggable/ILoggableInterface.aidl",
     ],
+    gen_trace: true,
     backend: {
         cpp: {
             gen_log: true,
