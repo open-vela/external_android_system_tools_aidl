@@ -271,8 +271,10 @@ class AidlAnnotatable : public AidlNode {
   std::string ToString() const;
 
   const vector<AidlAnnotation>& GetAnnotations() const { return annotations_; }
-  virtual std::set<string> GetSupportedAnnotations() const = 0;
   virtual bool CheckValid(const AidlTypenames&) const;
+
+ protected:
+  virtual std::set<string> GetSupportedAnnotations() const = 0;
 
  private:
   vector<AidlAnnotation> annotations_;
