@@ -285,7 +285,6 @@ android_app {
 
 aidl_interface {
     name: "aidl_test_loggable_interface",
-    unstable: true,
     local_include_dir: "tests",
     srcs: [
         "tests/android/aidl/loggable/ILoggableInterface.aidl",
