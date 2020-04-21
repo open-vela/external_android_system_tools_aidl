@@ -451,6 +451,24 @@ TEST_P(AidlTest, AcceptsAnnotatedOnewayMethod) {
   EXPECT_NE(nullptr, Parse("a/IFoo.aidl", oneway_method, typenames_, GetLanguage()));
 }
 
+TEST_P(AidlTest, AnnotationsInMultiplePlaces) {
+  const string oneway_method =
+      "package a; interface IFoo { @UnsupportedAppUsage oneway @Hide void f(int a); }";
+  const AidlDefinedType* defined = Parse("a/IFoo.aidl", oneway_method, typenames_, GetLanguage());
+  ASSERT_NE(nullptr, defined);
+  const AidlInterface* iface = defined->AsInterface();
+  ASSERT_NE(nullptr, iface);
+
+  const auto& methods = iface->GetMethods();
+  ASSERT_EQ(1u, methods.size());
+  const auto& method = methods[0];
+  const AidlTypeSpecifier& ret_type = method->GetType();
+
+  // TODO(b/151102494): these annotations should be on the method
+  ASSERT_NE(nullptr, ret_type.UnsupportedAppUsage());
+  ASSERT_TRUE(ret_type.IsHide());
+}
+
 TEST_P(AidlTest, WritesComments) {
   string foo_interface =
       "package a; /* foo */ interface IFoo {"
