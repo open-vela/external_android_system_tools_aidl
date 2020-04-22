@@ -213,6 +213,17 @@ using ConstantValueDecorator =
 
 class AidlAnnotation : public AidlNode {
  public:
+  enum class Type {
+    BACKING = 1,
+    HIDE,
+    JAVA_STABLE_PARCELABLE,
+    UNSUPPORTED_APP_USAGE,
+    VINTF_STABILITY,
+    NULLABLE,
+    UTF8_IN_CPP,
+  };
+  static std::string TypeToString(Type type);
+
   static AidlAnnotation* Parse(
       const AidlLocation& location, const string& name,
       std::map<std::string, std::shared_ptr<AidlConstantValue>>* parameter_list);
@@ -222,7 +233,8 @@ class AidlAnnotation : public AidlNode {
   virtual ~AidlAnnotation() = default;
   bool CheckValid() const;
 
-  const string& GetName() const { return name_; }
+  const string& GetName() const { return schema_.name; };
+  const Type& GetType() const { return schema_.type; }
   string ToString(const ConstantValueDecorator& decorator) const;
   std::map<std::string, std::string> AnnotationParams(
       const ConstantValueDecorator& decorator) const;
@@ -230,10 +242,21 @@ class AidlAnnotation : public AidlNode {
   void SetComments(const string& comments) { comments_ = comments; }
 
  private:
-  AidlAnnotation(const AidlLocation& location, const string& name);
-  AidlAnnotation(const AidlLocation& location, const string& name,
+  struct Schema {
+    AidlAnnotation::Type type;
+
+    // text name in .aidl file, e.g. "nullable"
+    std::string name;
+
+    // map from param name -> value type
+    std::map<std::string, std::string> supported_parameters;
+  };
+  static const std::vector<Schema>& AllSchemas();
+
+  AidlAnnotation(const AidlLocation& location, const Schema& schema,
                  std::map<std::string, std::shared_ptr<AidlConstantValue>>&& parameters);
-  const string name_;
+
+  const Schema& schema_;
   string comments_;
   std::map<std::string, std::shared_ptr<AidlConstantValue>> parameters_;
 };
@@ -274,7 +297,7 @@ class AidlAnnotatable : public AidlNode {
   virtual bool CheckValid(const AidlTypenames&) const;
 
  protected:
-  virtual std::set<string> GetSupportedAnnotations() const = 0;
+  virtual std::set<AidlAnnotation::Type> GetSupportedAnnotations() const = 0;
 
  private:
   vector<AidlAnnotation> annotations_;
@@ -331,7 +354,7 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   // resolution fails.
   bool Resolve(const AidlTypenames& typenames);
 
-  std::set<string> GetSupportedAnnotations() const override;
+  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(Options::Language lang) const;
   const AidlNode& AsAidlNode() const override { return *this; }
@@ -736,7 +759,7 @@ class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::s
   std::string GetCppName() const { return name_->GetColonName(); }
   std::string GetCppHeader() const { return cpp_header_; }
 
-  std::set<string> GetSupportedAnnotations() const override;
+  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(Options::Language lang) const override;
   const AidlParcelable* AsParcelable() const override { return this; }
@@ -768,7 +791,7 @@ class AidlStructuredParcelable : public AidlParcelable {
 
   void Dump(CodeWriter* writer) const override;
 
-  std::set<string> GetSupportedAnnotations() const override;
+  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(Options::Language lang) const override;
 
@@ -815,7 +838,7 @@ class AidlEnumDeclaration : public AidlDefinedType {
     return enumerators_;
   }
   bool Autofill();
-  std::set<string> GetSupportedAnnotations() const override;
+  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(Options::Language) const override { return true; }
   std::string GetPreprocessDeclarationName() const override { return "enum"; }
@@ -850,7 +873,7 @@ class AidlInterface final : public AidlDefinedType {
 
   void Dump(CodeWriter* writer) const override;
 
-  std::set<string> GetSupportedAnnotations() const override;
+  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(Options::Language lang) const override;
 
