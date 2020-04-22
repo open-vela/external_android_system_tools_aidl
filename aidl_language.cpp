@@ -250,6 +250,15 @@ std::string AidlAnnotation::ToString(const ConstantValueDecorator& decorator) co
   }
 }
 
+static bool HasAnnotation(const vector<AidlAnnotation>& annotations, const string& name) {
+  for (const auto& a : annotations) {
+    if (a.GetName() == name) {
+      return true;
+    }
+  }
+  return false;
+}
+
 static const AidlAnnotation* GetAnnotation(const vector<AidlAnnotation>& annotations,
                                            const string& name) {
   for (const auto& a : annotations) {
@@ -263,15 +272,15 @@ static const AidlAnnotation* GetAnnotation(const vector<AidlAnnotation>& annotat
 AidlAnnotatable::AidlAnnotatable(const AidlLocation& location) : AidlNode(location) {}
 
 bool AidlAnnotatable::IsNullable() const {
-  return GetAnnotation(annotations_, kNullable);
+  return HasAnnotation(annotations_, kNullable);
 }
 
 bool AidlAnnotatable::IsUtf8InCpp() const {
-  return GetAnnotation(annotations_, kUtf8InCpp);
+  return HasAnnotation(annotations_, kUtf8InCpp);
 }
 
 bool AidlAnnotatable::IsVintfStability() const {
-  return GetAnnotation(annotations_, kVintfStability);
+  return HasAnnotation(annotations_, kVintfStability);
 }
 
 const AidlAnnotation* AidlAnnotatable::UnsupportedAppUsage() const {
@@ -296,11 +305,11 @@ const AidlTypeSpecifier* AidlAnnotatable::BackingType(const AidlTypenames& typen
 }
 
 bool AidlAnnotatable::IsStableApiParcelable(Options::Language lang) const {
-  return GetAnnotation(annotations_, kJavaStableParcelable) && lang == Options::Language::JAVA;
+  return HasAnnotation(annotations_, kJavaStableParcelable) && lang == Options::Language::JAVA;
 }
 
 bool AidlAnnotatable::IsHide() const {
-  return GetAnnotation(annotations_, kHide);
+  return HasAnnotation(annotations_, kHide);
 }
 
 void AidlAnnotatable::DumpAnnotations(CodeWriter* writer) const {
