@@ -115,20 +115,6 @@ StubClass::StubClass(const AidlInterface* interfaceType, const Options& options)
   this->extends = "android.os.Binder";
   this->interfaces.push_back(interfaceType->GetCanonicalName());
 
-  // descriptor
-  auto descriptor = std::make_shared<Field>(
-      STATIC | FINAL | PRIVATE, std::make_shared<Variable>("java.lang.String", "DESCRIPTOR"));
-  if (options.IsStructured()) {
-    // mangle the interface name at build time and demangle it at runtime, to avoid
-    // being renamed by jarjar. See b/153843174
-    std::string name = interfaceType->GetCanonicalName();
-    std::replace(name.begin(), name.end(), '.', '$');
-    descriptor->value = "\"" + name + "\".replace('$', '.')";
-  } else {
-    descriptor->value = "\"" + interfaceType->GetCanonicalName() + "\"";
-  }
-  this->elements.push_back(descriptor);
-
   // ctor
   auto ctor = std::make_shared<Method>();
   ctor->modifiers = PUBLIC;
@@ -911,7 +897,8 @@ static void generate_methods(const AidlInterface& iface, const AidlMethod& metho
   }
 }
 
-static void generate_interface_descriptors(std::shared_ptr<StubClass> stub,
+static void generate_interface_descriptors(const Options& options, const AidlInterface* iface,
+                                           Class* interface, std::shared_ptr<StubClass> stub,
                                            std::shared_ptr<ProxyClass> proxy) {
   // the interface descriptor transaction handler
   auto c = std::make_shared<Case>("INTERFACE_TRANSACTION");
@@ -930,6 +917,29 @@ static void generate_interface_descriptors(std::shared_ptr<StubClass> stub,
   getDesc->statements->Add(
       std::make_shared<ReturnStatement>(std::make_shared<LiteralExpression>("DESCRIPTOR")));
   proxy->elements.push_back(getDesc);
+
+  // add the DESCRIPTOR field to the interface class
+  Class* classToAddDescriptor = interface;
+  static std::set<std::string> greylist = {
+#include "hiddenapi-greylist"
+  };
+  if (greylist.find(iface->GetCanonicalName()) != greylist.end()) {
+    // For app compatibility, we keep DESCRIPTOR to the stub class for
+    // the interfaces that are in the greylist.
+    classToAddDescriptor = stub.get();
+  }
+  auto descriptor = std::make_shared<Field>(
+      STATIC | FINAL | PUBLIC, std::make_shared<Variable>("java.lang.String", "DESCRIPTOR"));
+  if (options.IsStructured()) {
+    // mangle the interface name at build time and demangle it at runtime, to avoid
+    // being renamed by jarjar. See b/153843174
+    std::string name = iface->GetCanonicalName();
+    std::replace(name.begin(), name.end(), '.', '$');
+    descriptor->value = "\"" + name + "\".replace('$', '.')";
+  } else {
+    descriptor->value = "\"" + iface->GetCanonicalName() + "\"";
+  }
+  classToAddDescriptor->elements.push_back(descriptor);
 }
 
 // Check whether (some) methods in this interface should be "outlined," that
@@ -1086,7 +1096,7 @@ std::unique_ptr<Class> generate_binder_interface_class(const AidlInterface* ifac
   stub->elements.push_back(proxy);
 
   // stub and proxy support for getInterfaceDescriptor()
-  generate_interface_descriptors(stub, proxy);
+  generate_interface_descriptors(options, iface, interface.get(), stub, proxy);
 
   // all the declared constants of the interface
   for (const auto& constant : iface->GetConstantDeclarations()) {
