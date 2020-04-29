@@ -177,7 +177,6 @@ public interface IExampleInterface extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.test.IExampleInterface
   {
-    private static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -559,6 +558,7 @@ public interface IExampleInterface extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
+  public static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
   public static final int EXAMPLE_CONSTANT = 3;
   public boolean isEnabled() throws android.os.RemoteException;
   public int getState() throws android.os.RemoteException;
@@ -639,7 +639,6 @@ public interface IExampleInterface extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.test.IExampleInterface
   {
-    private static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -1073,6 +1072,7 @@ public interface IExampleInterface extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
+  public static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
   public static final int EXAMPLE_CONSTANT = 3;
   public boolean isEnabled() throws android.os.RemoteException;
   public int getState() throws android.os.RemoteException;
@@ -1153,7 +1153,6 @@ public interface IExampleInterface extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.test.IExampleInterface
   {
-    private static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -1615,6 +1614,7 @@ public interface IExampleInterface extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
+  public static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
   public static final int EXAMPLE_CONSTANT = 3;
   public boolean isEnabled() throws android.os.RemoteException;
   public int getState() throws android.os.RemoteException;
@@ -1693,7 +1693,6 @@ public interface IExampleInterface extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.test.IExampleInterface
   {
-    private static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -2105,6 +2104,7 @@ public interface IExampleInterface extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
+  public static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
   public static final int EXAMPLE_CONSTANT = 3;
   public boolean isEnabled() throws android.os.RemoteException;
   public int getState(int a, int b) throws android.os.RemoteException;
@@ -2197,7 +2197,6 @@ public interface IExampleInterface extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.test.IExampleInterface
   {
-    private static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -2671,6 +2670,7 @@ public interface IExampleInterface extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
+  public static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
   public static final int EXAMPLE_CONSTANT = 3;
   public boolean isEnabled() throws android.os.RemoteException;
   public int getState(int a, int b) throws android.os.RemoteException;
