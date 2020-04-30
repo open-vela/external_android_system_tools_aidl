@@ -471,20 +471,20 @@ TEST_P(AidlTest, WritesComments) {
 TEST_F(AidlTest, ParsesPreprocessedFile) {
   string simple_content = "parcelable a.Foo;\ninterface b.IBar;";
   io_delegate_.SetFileContents("path", simple_content);
-  EXPECT_FALSE(typenames_.ResolveTypename("a.Foo").second);
+  EXPECT_FALSE(typenames_.ResolveTypename("a.Foo").is_resolved);
   EXPECT_TRUE(parse_preprocessed_file(io_delegate_, "path", &typenames_));
-  EXPECT_TRUE(typenames_.ResolveTypename("a.Foo").second);
-  EXPECT_TRUE(typenames_.ResolveTypename("b.IBar").second);
+  EXPECT_TRUE(typenames_.ResolveTypename("a.Foo").is_resolved);
+  EXPECT_TRUE(typenames_.ResolveTypename("b.IBar").is_resolved);
 }
 
 TEST_F(AidlTest, ParsesPreprocessedFileWithWhitespace) {
   string simple_content = "parcelable    a.Foo;\n  interface b.IBar  ;\t";
   io_delegate_.SetFileContents("path", simple_content);
 
-  EXPECT_FALSE(typenames_.ResolveTypename("a.Foo").second);
+  EXPECT_FALSE(typenames_.ResolveTypename("a.Foo").is_resolved);
   EXPECT_TRUE(parse_preprocessed_file(io_delegate_, "path", &typenames_));
-  EXPECT_TRUE(typenames_.ResolveTypename("a.Foo").second);
-  EXPECT_TRUE(typenames_.ResolveTypename("b.IBar").second);
+  EXPECT_TRUE(typenames_.ResolveTypename("a.Foo").is_resolved);
+  EXPECT_TRUE(typenames_.ResolveTypename("b.IBar").is_resolved);
 }
 
 TEST_P(AidlTest, PreferImportToPreprocessed) {
@@ -498,8 +498,8 @@ TEST_P(AidlTest, PreferImportToPreprocessed) {
   EXPECT_NE(nullptr, parse_result);
 
   // We expect to know about both kinds of IBar
-  EXPECT_TRUE(typenames_.ResolveTypename("one.IBar").second);
-  EXPECT_TRUE(typenames_.ResolveTypename("another.IBar").second);
+  EXPECT_TRUE(typenames_.ResolveTypename("one.IBar").is_resolved);
+  EXPECT_TRUE(typenames_.ResolveTypename("another.IBar").is_resolved);
   // But if we request just "IBar" we should get our imported one.
   AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", false, nullptr, "");
   ambiguous_type.Resolve(typenames_);
@@ -520,8 +520,8 @@ TEST_P(AidlTest, B147918827) {
   EXPECT_NE(nullptr, parse_result);
 
   // We expect to know about both kinds of IBar
-  EXPECT_TRUE(typenames_.ResolveTypename("one.IBar").second);
-  EXPECT_TRUE(typenames_.ResolveTypename("another.IBar").second);
+  EXPECT_TRUE(typenames_.ResolveTypename("one.IBar").is_resolved);
+  EXPECT_TRUE(typenames_.ResolveTypename("another.IBar").is_resolved);
   // But if we request just "IBar" we should get our imported one.
   AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", false, nullptr, "");
   ambiguous_type.Resolve(typenames_);
@@ -761,8 +761,7 @@ TEST_P(AidlTest, UnderstandsNestedParcelables) {
   auto parse_result = Parse(input_path, input, typenames_, GetLanguage());
   EXPECT_NE(nullptr, parse_result);
 
-  auto pair = typenames_.ResolveTypename("p.Outer.Inner");
-  EXPECT_TRUE(pair.second);
+  EXPECT_TRUE(typenames_.ResolveTypename("p.Outer.Inner").is_resolved);
   // C++ uses "::" instead of "." to refer to a inner class.
   AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.Outer.Inner", false, nullptr, "");
   EXPECT_EQ("::p::Outer::Inner", cpp::CppNameOf(nested_type, typenames_));
@@ -777,8 +776,7 @@ TEST_P(AidlTest, UnderstandsNativeParcelables) {
   const string input = "package p; import p.Bar; interface IFoo { }";
   auto parse_result = Parse(input_path, input, typenames_, GetLanguage());
   EXPECT_NE(nullptr, parse_result);
-  auto pair = typenames_.ResolveTypename("p.Bar");
-  EXPECT_TRUE(pair.second);
+  EXPECT_TRUE(typenames_.ResolveTypename("p.Bar").is_resolved);
   AidlTypeSpecifier native_type(AIDL_LOCATION_HERE, "p.Bar", false, nullptr, "");
   native_type.Resolve(typenames_);
 
