@@ -481,7 +481,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     }
     string import_path = import_resolver.FindImportFile(import);
     if (import_path.empty()) {
-      if (typenames->ResolveTypename(import).second) {
+      if (typenames->ResolveTypename(import).is_resolved) {
         // Couldn't find the *.aidl file for the type from the include paths, but we
         // have the type already resolved. This could happen when the type is
         // from the preprocessed aidl file. In that case, use the type from the
