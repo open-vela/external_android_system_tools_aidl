@@ -46,12 +46,12 @@ static set<AidlAnnotation> get_strict_annotations(const AidlAnnotatable& node) {
   // - a new implementation might change so that it no longer returns null
   // values (remove @nullable)
   // - a new implementation might start accepting null values (add @nullable)
-  static const set<AidlAnnotation::Type> kIgnoreAnnotations{
-      AidlAnnotation::Type::NULLABLE,
+  static const set<std::string> kIgnoreAnnotations{
+      "nullable",
   };
   set<AidlAnnotation> annotations;
   for (const AidlAnnotation& annotation : node.GetAnnotations()) {
-    if (kIgnoreAnnotations.find(annotation.GetType()) == kIgnoreAnnotations.end()) {
+    if (kIgnoreAnnotations.find(annotation.GetName()) == kIgnoreAnnotations.end()) {
       annotations.insert(annotation);
     }
   }
@@ -266,7 +266,7 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
   vector<AidlDefinedType*> new_types;
   vector<string> new_files = io_delegate.ListFiles(new_dir);
   if (new_files.size() == 0) {
-    AIDL_ERROR(new_dir) << "API files have been removed: " << android::base::Join(old_files, ", ");
+    AIDL_ERROR(new_dir) << "No API file exist";
     return false;
   }
   for (const auto& file : new_files) {
