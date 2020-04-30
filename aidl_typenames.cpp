@@ -64,30 +64,21 @@ static const map<string, string> kJavaLikeTypeToAidlType = {
 // in Java and C++. Using these names will eventually cause compilation error,
 // so checking this here is not a must have, but early detection of errors
 // is always better.
-static const set<string> kCppOrJavaReservedWord = {
+static const set<string> kInvalidNames = {
     "break",  "case",   "catch", "char",     "class",  "continue", "default",
     "do",     "double", "else",  "enum",     "false",  "float",    "for",
     "goto",   "if",     "int",   "long",     "new",    "private",  "protected",
     "public", "return", "short", "static",   "switch", "this",     "throw",
     "true",   "try",    "void",  "volatile", "while"};
 
-static bool HasValidNameComponents(const AidlDefinedType& defined) {
-  bool success = true;
-  vector<string> pieces = Split(defined.GetCanonicalName(), ".");
-  for (const string& piece : pieces) {
-    if (kCppOrJavaReservedWord.find(piece) != kCppOrJavaReservedWord.end()) {
-      AIDL_ERROR(defined) << defined.GetCanonicalName() << " is an invalid name because '" << piece
-                          << "' is a Java or C++ identifier.";
-      success = false;
-    }
-    // not checking kJavaLikeTypeToAidl, since that wouldn't make sense here
-    if (kBuiltinTypes.find(piece) != kBuiltinTypes.end()) {
-      AIDL_ERROR(defined) << defined.GetCanonicalName() << " is an invalid name because '" << piece
-                          << "' is a built-in AIDL type.";
-      success = false;
+static bool IsValidName(const string& name) {
+  vector<string> pieces = Split(name, ".");
+  for (const auto& piece : pieces) {
+    if (kInvalidNames.find(piece) != kInvalidNames.end()) {
+      return false;
     }
   }
-  return success;
+  return true;
 }
 
 bool AidlTypenames::IsIgnorableImport(const string& import) const {
@@ -108,7 +99,7 @@ bool AidlTypenames::AddDefinedType(unique_ptr<AidlDefinedType> type) {
   if (defined_types_.find(name) != defined_types_.end()) {
     return false;
   }
-  if (!HasValidNameComponents(*type)) {
+  if (!IsValidName(type->GetPackage()) || !IsValidName(type->GetName())) {
     return false;
   }
   defined_types_.emplace(name, std::move(type));
@@ -120,7 +111,7 @@ bool AidlTypenames::AddPreprocessedType(unique_ptr<AidlDefinedType> type) {
   if (preprocessed_types_.find(name) != preprocessed_types_.end()) {
     return false;
   }
-  if (!HasValidNameComponents(*type)) {
+  if (!IsValidName(type->GetPackage()) || !IsValidName(type->GetName())) {
     return false;
   }
   preprocessed_types_.insert(make_pair(name, std::move(type)));
