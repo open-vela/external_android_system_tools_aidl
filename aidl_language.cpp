@@ -396,12 +396,12 @@ string AidlTypeSpecifier::Signature() const {
 
 bool AidlTypeSpecifier::Resolve(const AidlTypenames& typenames) {
   CHECK(!IsResolved());
-  AidlTypenames::ResolvedTypename result = typenames.ResolveTypename(unresolved_name_);
-  if (result.is_resolved) {
-    fully_qualified_name_ = result.canonical_name;
+  pair<string, bool> result = typenames.ResolveTypename(unresolved_name_);
+  if (result.second) {
+    fully_qualified_name_ = result.first;
     split_name_ = Split(fully_qualified_name_, ".");
   }
-  return result.is_resolved;
+  return result.second;
 }
 
 std::set<AidlAnnotation::Type> AidlTypeSpecifier::GetSupportedAnnotations() const {
