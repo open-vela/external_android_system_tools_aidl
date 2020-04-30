@@ -170,19 +170,19 @@ AidlTypenames::DefinedImplResult AidlTypenames::TryGetDefinedTypeImpl(
   return DefinedImplResult(nullptr, false);
 }
 
-AidlTypenames::ResolvedTypename AidlTypenames::ResolveTypename(const string& type_name) const {
+pair<string, bool> AidlTypenames::ResolveTypename(const string& type_name) const {
   if (IsBuiltinTypename(type_name)) {
     auto found = kJavaLikeTypeToAidlType.find(type_name);
     if (found != kJavaLikeTypeToAidlType.end()) {
-      return {found->second, true};
+      return make_pair(found->second, true);
     }
-    return {type_name, true};
+    return make_pair(type_name, true);
   }
   const AidlDefinedType* defined_type = TryGetDefinedType(type_name);
   if (defined_type != nullptr) {
-    return {defined_type->GetCanonicalName(), true};
+    return make_pair(defined_type->GetCanonicalName(), true);
   } else {
-    return {type_name, false};
+    return make_pair(type_name, false);
   }
 }
 
