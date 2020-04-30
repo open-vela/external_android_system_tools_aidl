@@ -2079,5 +2079,26 @@ TEST_P(AidlTest, FailOnOutOfBoundsAutofilledEnum) {
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
+TEST_P(AidlTest, UnsupportedBackingAnnotationParam) {
+  AidlError error;
+  const string expected_stderr =
+      "ERROR: p/TestEnum.aidl:2.1-51: Parameter foo not supported for annotation Backing. It must "
+      "be one of: type\n"
+      "ERROR: p/TestEnum.aidl:2.1-51: Parameter foo not supported for annotation Backing. It must "
+      "be one of: type\n";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("p/TestEnum.aidl",
+                           R"(package p;
+                              @Backing(foo="byte")
+                              enum TestEnum {
+                                FOO = 1,
+                                BAR,
+                              }
+                             )",
+                           typenames_, GetLanguage(), &error));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  EXPECT_EQ(AidlError::BAD_TYPE, error);
+}
+
 }  // namespace aidl
 }  // namespace android
