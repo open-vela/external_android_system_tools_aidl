@@ -1353,7 +1353,7 @@ TEST_F(AidlTestCompatibleChanges, NewField) {
                                "package p;"
                                "parcelable Data {"
                                "  int foo;"
-                               "  int bar;"
+                               "  int bar = 0;"
                                "}");
   EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
 }
@@ -1724,7 +1724,7 @@ TEST_F(AidlTestIncompatibleChanges, RemovedPackage) {
 }
 
 TEST_F(AidlTestIncompatibleChanges, ChangedDefaultValue) {
-  const string expected_stderr = "ERROR: new/p/D.aidl:1.22-24: Changed default value: 1 to 2.\n";
+  const string expected_stderr = "ERROR: new/p/D.aidl:1.30-32: Changed default value: 1 to 2.\n";
   io_delegate_.SetFileContents("old/p/D.aidl", "package p; parcelable D { int a = 1; }");
   io_delegate_.SetFileContents("new/p/D.aidl", "package p; parcelable D { int a = 2; }");
   CaptureStderr();
