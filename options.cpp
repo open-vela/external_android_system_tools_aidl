@@ -27,17 +27,23 @@
 #include <string>
 
 #include <android-base/strings.h>
+#include "aidl_language.h"
 
 using android::base::Split;
 using android::base::Trim;
 using std::endl;
 using std::string;
 
+#ifndef PLATFORM_SDK_VERSION
+#define PLATFORM_SDK_VERSION "<UNKNOWN>"
+#endif
+
 namespace android {
 namespace aidl {
 
 string Options::GetUsage() const {
   std::ostringstream sstr;
+  sstr << "AIDL Compiler: built for platform SDK version " << PLATFORM_SDK_VERSION << endl;
   sstr << "usage:" << endl
        << myname_ << " --lang={java|cpp|ndk} [OPTION]... INPUT..." << endl
        << "   Generate Java or C++ files for AIDL file(s)." << endl
@@ -133,6 +139,22 @@ string Options::GetUsage() const {
        << "HEADER_DIR:" << endl
        << "  Path to where C++ headers are generated." << endl;
   return sstr.str();
+}
+
+const string Options::LanguageToString(Language language) {
+  switch (language) {
+    case Options::Language::CPP:
+      return "cpp";
+    case Options::Language::JAVA:
+      return "java";
+    case Options::Language::NDK:
+      return "ndk";
+    case Options::Language::UNSPECIFIED:
+      return "unspecified";
+    default:
+      AIDL_FATAL(AIDL_LOCATION_HERE)
+          << "Unexpected Options::Language enumerator: " << static_cast<size_t>(language);
+  }
 }
 
 bool Options::StabilityFromString(const std::string& stability, Stability* out_stability) {
