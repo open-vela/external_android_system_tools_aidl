@@ -74,7 +74,21 @@ class AidlLocation {
     int column;
   };
 
-  AidlLocation(const std::string& file, Point begin, Point end);
+  enum class Source {
+    // From internal aidl source code
+    INTERNAL = 0,
+    // From a parsed file
+    EXTERNAL = 1
+  };
+
+  AidlLocation(const std::string& file, Point begin, Point end, Source source);
+  AidlLocation(const std::string& file, Source source)
+      : AidlLocation(file, {0, 0}, {0, 0}, source) {}
+
+  bool IsInternal() const { return source_ == Source::INTERNAL; }
+
+  // The first line of a file is line 1.
+  bool LocationKnown() const { return begin_.line != 0; }
 
   friend std::ostream& operator<<(std::ostream& os, const AidlLocation& l);
   friend class AidlNode;
@@ -83,12 +97,11 @@ class AidlLocation {
   const std::string file_;
   Point begin_;
   Point end_;
+  Source source_;
 };
 
-#define AIDL_LOCATION_HERE                   \
-  AidlLocation {                             \
-    __FILE__, {__LINE__, 0}, { __LINE__, 0 } \
-  }
+#define AIDL_LOCATION_HERE \
+  AidlLocation { __FILE__, {__LINE__, 0}, {__LINE__, 0}, AidlLocation::Source::INTERNAL }
 
 std::ostream& operator<<(std::ostream& os, const AidlLocation& l);
 
@@ -101,14 +114,14 @@ class AidlNode {
   AidlNode(AidlNode&&) = default;
   virtual ~AidlNode() = default;
 
-  // DO NOT ADD. This is intentionally omitted. Nothing should refer to the location
-  // for a functional purpose. It is only for error messages.
-  // NO const AidlLocation& GetLocation() const { return location_; } NO
-
-  // To be able to print AidlLocation (nothing else should use this information)
-  friend class AidlError;
+  // To be able to print AidlLocation
+  friend class AidlErrorLog;
   friend std::string android::aidl::mappings::dump_location(const AidlNode&);
   friend std::string android::aidl::java::dump_location(const AidlNode&);
+
+ protected:
+  // This should only be used to construct implicit nodes related to existing nodes
+  const AidlLocation& GetLocation() const { return location_; }
 
  private:
   std::string PrintLine() const;
@@ -117,38 +130,44 @@ class AidlNode {
 };
 
 // Generic point for printing any error in the AIDL compiler.
-class AidlError {
+class AidlErrorLog {
  public:
-  AidlError(bool fatal, const std::string& filename) : AidlError(fatal) { os_ << filename << ": "; }
-  AidlError(bool fatal, const AidlLocation& location) : AidlError(fatal) {
-    os_ << location << ": ";
-  }
-  AidlError(bool fatal, const AidlNode& node) : AidlError(fatal, node.location_) {}
-  AidlError(bool fatal, const AidlNode* node) : AidlError(fatal, *node) {}
+  AidlErrorLog(bool fatal, const std::string& filename)
+      : AidlErrorLog(fatal, AidlLocation(filename, AidlLocation::Source::EXTERNAL)) {}
+  AidlErrorLog(bool fatal, const AidlLocation& location);
+  AidlErrorLog(bool fatal, const AidlNode& node) : AidlErrorLog(fatal, node.location_) {}
+  AidlErrorLog(bool fatal, const AidlNode* node) : AidlErrorLog(fatal, *node) {}
 
   template <typename T>
-  AidlError(bool fatal, const std::unique_ptr<T>& node) : AidlError(fatal, *node) {}
-  ~AidlError() {
+  AidlErrorLog(bool fatal, const std::unique_ptr<T>& node) : AidlErrorLog(fatal, *node) {}
+  ~AidlErrorLog() {
     os_ << std::endl;
     if (fatal_) abort();
+    if (location_.IsInternal()) {
+      os_ << "Logging an internal location should not happen. Offending location: " << location_
+          << std::endl;
+      abort();
+    }
   }
 
   std::ostream& os_;
 
+  static void clearError() { sHadError = false; }
   static bool hadError() { return sHadError; }
 
  private:
-  AidlError(bool fatal);
 
   bool fatal_;
 
+  const AidlLocation location_;
+
   static bool sHadError;
 
-  DISALLOW_COPY_AND_ASSIGN(AidlError);
+  DISALLOW_COPY_AND_ASSIGN(AidlErrorLog);
 };
 
-#define AIDL_ERROR(CONTEXT) ::AidlError(false /*fatal*/, (CONTEXT)).os_
-#define AIDL_FATAL(CONTEXT) ::AidlError(true /*fatal*/, (CONTEXT)).os_
+#define AIDL_ERROR(CONTEXT) ::AidlErrorLog(false /*fatal*/, (CONTEXT)).os_
+#define AIDL_FATAL(CONTEXT) ::AidlErrorLog(true /*fatal*/, (CONTEXT)).os_
 #define AIDL_FATAL_IF(CONDITION, CONTEXT) \
   if (CONDITION) AIDL_FATAL(CONTEXT) << "Bad internal state: " << #CONDITION << ": "
 
@@ -194,6 +213,17 @@ using ConstantValueDecorator =
 
 class AidlAnnotation : public AidlNode {
  public:
+  enum class Type {
+    BACKING = 1,
+    HIDE,
+    JAVA_STABLE_PARCELABLE,
+    UNSUPPORTED_APP_USAGE,
+    VINTF_STABILITY,
+    NULLABLE,
+    UTF8_IN_CPP,
+  };
+  static std::string TypeToString(Type type);
+
   static AidlAnnotation* Parse(
       const AidlLocation& location, const string& name,
       std::map<std::string, std::shared_ptr<AidlConstantValue>>* parameter_list);
@@ -203,7 +233,8 @@ class AidlAnnotation : public AidlNode {
   virtual ~AidlAnnotation() = default;
   bool CheckValid() const;
 
-  const string& GetName() const { return name_; }
+  const string& GetName() const { return schema_.name; };
+  const Type& GetType() const { return schema_.type; }
   string ToString(const ConstantValueDecorator& decorator) const;
   std::map<std::string, std::string> AnnotationParams(
       const ConstantValueDecorator& decorator) const;
@@ -211,10 +242,21 @@ class AidlAnnotation : public AidlNode {
   void SetComments(const string& comments) { comments_ = comments; }
 
  private:
-  AidlAnnotation(const AidlLocation& location, const string& name);
-  AidlAnnotation(const AidlLocation& location, const string& name,
+  struct Schema {
+    AidlAnnotation::Type type;
+
+    // text name in .aidl file, e.g. "nullable"
+    std::string name;
+
+    // map from param name -> value type
+    std::map<std::string, std::string> supported_parameters;
+  };
+  static const std::vector<Schema>& AllSchemas();
+
+  AidlAnnotation(const AidlLocation& location, const Schema& schema,
                  std::map<std::string, std::shared_ptr<AidlConstantValue>>&& parameters);
-  const string name_;
+
+  const Schema& schema_;
   string comments_;
   std::map<std::string, std::shared_ptr<AidlConstantValue>> parameters_;
 };
@@ -252,7 +294,10 @@ class AidlAnnotatable : public AidlNode {
   std::string ToString() const;
 
   const vector<AidlAnnotation>& GetAnnotations() const { return annotations_; }
-  bool CheckValidAnnotations() const;
+  virtual bool CheckValid(const AidlTypenames&) const;
+
+ protected:
+  virtual std::set<AidlAnnotation::Type> GetSupportedAnnotations() const = 0;
 
  private:
   vector<AidlAnnotation> annotations_;
@@ -309,7 +354,8 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   // resolution fails.
   bool Resolve(const AidlTypenames& typenames);
 
-  bool CheckValid(const AidlTypenames& typenames) const;
+  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
+  bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(Options::Language lang) const;
   const AidlNode& AsAidlNode() const override { return *this; }
 
@@ -659,7 +705,7 @@ class AidlDefinedType : public AidlAnnotatable {
   virtual const AidlEnumDeclaration* AsEnumDeclaration() const { return nullptr; }
   virtual const AidlInterface* AsInterface() const { return nullptr; }
   virtual const AidlParameterizable<std::string>* AsParameterizable() const { return nullptr; }
-  virtual bool CheckValid(const AidlTypenames&) const { return CheckValidAnnotations(); }
+  bool CheckValid(const AidlTypenames& typenames) const override;
   virtual bool LanguageSpecificCheckValid(Options::Language lang) const = 0;
   AidlStructuredParcelable* AsStructuredParcelable() {
     return const_cast<AidlStructuredParcelable*>(
@@ -713,6 +759,7 @@ class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::s
   std::string GetCppName() const { return name_->GetColonName(); }
   std::string GetCppHeader() const { return cpp_header_; }
 
+  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(Options::Language lang) const override;
   const AidlParcelable* AsParcelable() const override { return this; }
@@ -744,6 +791,7 @@ class AidlStructuredParcelable : public AidlParcelable {
 
   void Dump(CodeWriter* writer) const override;
 
+  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(Options::Language lang) const override;
 
@@ -790,6 +838,7 @@ class AidlEnumDeclaration : public AidlDefinedType {
     return enumerators_;
   }
   bool Autofill();
+  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(Options::Language) const override { return true; }
   std::string GetPreprocessDeclarationName() const override { return "enum"; }
@@ -824,6 +873,7 @@ class AidlInterface final : public AidlDefinedType {
 
   void Dump(CodeWriter* writer) const override;
 
+  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(Options::Language lang) const override;
 

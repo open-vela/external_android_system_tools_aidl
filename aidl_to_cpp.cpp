@@ -140,7 +140,7 @@ std::string WrapIfNullable(const std::string type_str, const AidlTypeSpecifier& 
 
   if (raw_type.IsNullable() && !AidlTypenames::IsPrimitiveTypename(type.GetName()) &&
       type.GetName() != "IBinder" && typenames.GetEnumDeclaration(type) == nullptr) {
-    return "::std::unique_ptr<" + type_str + ">";
+    return "::std::optional<" + type_str + ">";
   }
   return type_str;
 }
@@ -212,7 +212,7 @@ std::string CppNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typena
   if (type.IsArray() || type.IsGeneric()) {
     std::string cpp_name = GetCppName(type, typenames);
     if (type.IsNullable()) {
-      return "::std::unique_ptr<::std::vector<" + cpp_name + ">>";
+      return "::std::optional<::std::vector<" + cpp_name + ">>";
     }
     return "::std::vector<" + cpp_name + ">";
   }
@@ -283,7 +283,7 @@ void AddHeaders(const AidlTypeSpecifier& raw_type, const AidlTypenames& typename
   }
   if (isNullable) {
     if (type.GetName() != "IBinder") {
-      headers.insert("memory");
+      headers.insert("optional");
     }
   }
   if (type.GetName() == "String") {
