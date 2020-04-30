@@ -58,7 +58,12 @@ class AidlTypenames final {
   static bool IsBuiltinTypename(const string& type_name);
   static bool IsPrimitiveTypename(const string& type_name);
   const AidlDefinedType* TryGetDefinedType(const string& type_name) const;
-  pair<string, bool> ResolveTypename(const string& type_name) const;
+
+  struct ResolvedTypename {
+    std::string canonical_name;
+    bool is_resolved;
+  };
+  ResolvedTypename ResolveTypename(const string& type_name) const;
   bool CanBeOutParameter(const AidlTypeSpecifier& type) const;
   bool IsIgnorableImport(const string& import) const;
   // Returns the AidlEnumDeclaration of the given type, or nullptr if the type
