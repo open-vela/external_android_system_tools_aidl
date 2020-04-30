@@ -480,8 +480,7 @@ func (m *aidlApi) nextVersion(ctx android.ModuleContext) string {
 
 		i, err := strconv.Atoi(latestVersion)
 		if err != nil {
-			ctx.PropertyErrorf("versions", "%q is not an integer", latestVersion)
-			return ""
+			panic(err)
 		}
 
 		return strconv.Itoa(i + 1)
@@ -938,6 +937,15 @@ func (i *aidlInterface) checkStability(mctx android.LoadHookContext) {
 		mctx.PropertyErrorf("versions", "must be set(need to be frozen) when stability is \"vintf\" and PLATFORM_VERSION_CODENAME is REL.")
 	}
 }
+func (i *aidlInterface) checkVersions(mctx android.LoadHookContext) {
+	for _, ver := range i.properties.Versions {
+		_, err := strconv.Atoi(ver)
+		if err != nil {
+			mctx.PropertyErrorf("versions", "%q is not an integer", ver)
+			continue
+		}
+	}
+}
 
 func (i *aidlInterface) currentVersion(ctx android.LoadHookContext) string {
 	if !i.hasVersion() {
@@ -946,8 +954,7 @@ func (i *aidlInterface) currentVersion(ctx android.LoadHookContext) string {
 		ver := i.latestVersion()
 		i, err := strconv.Atoi(ver)
 		if err != nil {
-			ctx.PropertyErrorf("versions", "%q is not an integer", ver)
-			return ""
+			panic(err)
 		}
 
 		return strconv.Itoa(i + 1)
@@ -1040,6 +1047,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 
 	i.gatherInterface(mctx)
 	i.checkStability(mctx)
+	i.checkVersions(mctx)
 
 	if mctx.Failed() {
 		return
