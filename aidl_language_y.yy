@@ -116,7 +116,7 @@ AidlLocation loc(const yy::parser::location_type& l) {
 
 %token '(' ')' ',' '=' '[' ']' '.' '{' '}' ';'
 %token UNKNOWN "unrecognized character"
-%token CPP_HEADER "cpp_header"
+%token CPP_HEADER "cpp_header (which can also be used as an identifier)"
 %token IMPORT "import"
 %token IN "in"
 %token INOUT "inout"
