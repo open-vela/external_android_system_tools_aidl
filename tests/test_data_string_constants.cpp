@@ -49,7 +49,6 @@ public interface IStringConstants extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.os.IStringConstants
   {
-    private static final java.lang.String DESCRIPTOR = "android.os.IStringConstants";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -118,6 +117,7 @@ public interface IStringConstants extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
+  public static final java.lang.String DESCRIPTOR = "android.os.IStringConstants";
   public static final String EXAMPLE_CONSTANT = "foo";
 }
 )";
@@ -259,7 +259,6 @@ public interface IStringConstants extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.os.IStringConstants
   {
-    private static final java.lang.String DESCRIPTOR = "android.os.IStringConstants";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -390,6 +389,7 @@ public interface IStringConstants extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
+  public static final java.lang.String DESCRIPTOR = "android.os.IStringConstants";
   public static final String EXAMPLE_CONSTANT = "foo";
   public int getInterfaceVersion() throws android.os.RemoteException;
   public String getInterfaceHash() throws android.os.RemoteException;
@@ -499,7 +499,7 @@ std::string BpStringConstants::getInterfaceHash() {
       ::android::binder::Status _aidl_status;
       err = _aidl_status.readFromParcel(reply);
       if (err == ::android::OK && _aidl_status.isOk()) {
-        cached_hash_ = reply.readString8().c_str();
+        reply.readUtf8FromUtf16(&cached_hash_);
       }
     }
   }
@@ -536,7 +536,7 @@ BnStringConstants::BnStringConstants()
   {
     _aidl_data.checkInterface(this);
     _aidl_reply->writeNoException();
-    _aidl_reply->writeString8(android::String8(IStringConstants::HASH.c_str()));
+    _aidl_reply->writeUtf8AsUtf16(IStringConstants::HASH);
   }
   break;
   default:
