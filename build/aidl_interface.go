@@ -827,7 +827,6 @@ type aidlInterfaceProperties struct {
 
 	Backend struct {
 		// Backend of the compiler generating code for Java clients.
-		// When enabled, this creates a target called "<name>-java".
 		Java struct {
 			CommonBackendProperties
 			// Set to the version of the sdk to compile against
@@ -839,14 +838,11 @@ type aidlInterfaceProperties struct {
 		}
 		// Backend of the compiler generating code for C++ clients using
 		// libbinder (unstable C++ interface)
-		// When enabled, this creates a target called "<name>-cpp".
 		Cpp struct {
 			CommonNativeBackendProperties
 		}
 		// Backend of the compiler generating code for C++ clients using
 		// libbinder_ndk (stable C interface to system's libbinder)
-		// When enabled, this creates a target called "<name>-ndk"
-		// (for apps) and "<name>-ndk_platform" (for platform usage).
 		Ndk struct {
 			CommonNativeBackendProperties
 		}
@@ -924,15 +920,17 @@ func (i *aidlInterface) checkStability(mctx android.LoadHookContext) {
 		return
 	}
 
-	if proptools.Bool(i.properties.Unstable) {
-		mctx.PropertyErrorf("stability", "must be empty when \"unstable\" is true")
-	}
-
 	// TODO(b/136027762): should we allow more types of stability (e.g. for APEX) or
 	// should we switch this flag to be something like "vintf { enabled: true }"
 	isVintf := "vintf" == proptools.String(i.properties.Stability)
 	if !isVintf {
 		mctx.PropertyErrorf("stability", "must be empty or \"vintf\"")
+	}
+
+	// TODO(b/152655544): might need to change the condition
+	sdkIsFinal := mctx.Config().DefaultAppTargetSdkInt() != android.FutureApiLevel
+	if sdkIsFinal && !i.hasVersion() && isVintf && i.Owner() == "" {
+		mctx.PropertyErrorf("versions", "must be set(need to be frozen) when stability is \"vintf\" and PLATFORM_VERSION_CODENAME is REL.")
 	}
 }
 func (i *aidlInterface) checkVersions(mctx android.LoadHookContext) {
@@ -975,6 +973,10 @@ func (i *aidlInterface) hasVersion() bool {
 	return len(i.properties.Versions) > 0
 }
 
+func (i *aidlInterface) isCurrentVersion(ctx android.LoadHookContext, version string) bool {
+	return version == i.currentVersion(ctx)
+}
+
 // This function returns module name with version. Assume that there is foo of which latest version is 2
 // Version -> Module name
 // "1"->foo-V1
@@ -986,7 +988,7 @@ func (i *aidlInterface) versionedName(ctx android.LoadHookContext, version strin
 	if version == "" {
 		return name
 	}
-	if version == i.currentVersion(ctx) {
+	if i.isCurrentVersion(ctx, version) {
 		return name + "-unstable"
 	}
 	return name + "-V" + version
@@ -1017,7 +1019,7 @@ func (i *aidlInterface) cppOutputName(version string) string {
 }
 
 func (i *aidlInterface) srcsForVersion(mctx android.LoadHookContext, version string) (srcs []string, aidlRoot string) {
-	if version == i.currentVersion(mctx) {
+	if i.isCurrentVersion(mctx, version) {
 		return i.properties.Srcs, i.properties.Local_include_dir
 	} else {
 		aidlRoot = filepath.Join(aidlApiDir, i.ModuleBase.Name(), version)
@@ -1127,10 +1129,6 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 			mctx.ModuleErrorf("unstable:true and stability:%q cannot happen at the same time", i.properties.Stability)
 		}
 	} else {
-		sdkIsFinal := mctx.Config().DefaultAppTargetSdkInt() != android.FutureApiLevel
-		if sdkIsFinal && !i.hasVersion() && i.Owner() == "" {
-			mctx.PropertyErrorf("versions", "must be set (need to be frozen) when \"unstable\" is false and PLATFORM_VERSION_CODENAME is REL.")
-		}
 		addApiModule(mctx, i)
 	}
 
