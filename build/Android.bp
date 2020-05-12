@@ -24,6 +24,7 @@ bootstrap_go_package {
         "soong-genrule",
         "soong-phony",
         "soong-java",
+        "soong-rust",
     ],
     srcs: [
         "aidl_interface.go",
@@ -55,6 +56,10 @@ cc_defaults {
 
 java_defaults {
     name: "aidl-java-module-defaults",
+}
+
+rust_defaults {
+    name: "aidl-rust-module-defaults",
 }
 
 // Tests
