@@ -45,8 +45,8 @@ string Options::GetUsage() const {
   std::ostringstream sstr;
   sstr << "AIDL Compiler: built for platform SDK version " << PLATFORM_SDK_VERSION << endl;
   sstr << "usage:" << endl
-       << myname_ << " --lang={java|cpp|ndk} [OPTION]... INPUT..." << endl
-       << "   Generate Java or C++ files for AIDL file(s)." << endl
+       << myname_ << " --lang={java|cpp|ndk|rust} [OPTION]... INPUT..." << endl
+       << "   Generate Java, C++ or Rust files for AIDL file(s)." << endl
        << endl
        << myname_ << " --preprocess OUTPUT INPUT..." << endl
        << "   Create an AIDL file having declarations of AIDL file(s)." << endl
@@ -69,6 +69,10 @@ string Options::GetUsage() const {
   } else if (language_ == Options::Language::CPP) {
     sstr << myname_ << " [OPTION]... INPUT HEADER_DIR OUTPUT" << endl
          << "   Generate C++ headers and source for an AIDL file." << endl
+         << endl;
+  } else if (language_ == Options::Language::RUST) {
+    sstr << myname_ << " [OPTION]... INPUT [OUTPUT]" << endl
+         << "   Generate Rust file for an AIDL file." << endl
          << endl;
   }
 
@@ -149,6 +153,8 @@ const string Options::LanguageToString(Language language) {
       return "java";
     case Options::Language::NDK:
       return "ndk";
+    case Options::Language::RUST:
+      return "rust";
     case Options::Language::UNSPECIFIED:
       return "unspecified";
     default:
@@ -240,6 +246,9 @@ Options::Options(int argc, const char* const argv[], Options::Language default_l
             task_ = Options::Task::COMPILE;
           } else if (lang == "ndk") {
             language_ = Options::Language::NDK;
+            task_ = Options::Task::COMPILE;
+          } else if (lang == "rust") {
+            language_ = Options::Language::RUST;
             task_ = Options::Task::COMPILE;
           } else {
             error_message_ << "Unsupported language: '" << lang << "'" << endl;
@@ -360,7 +369,7 @@ Options::Options(int argc, const char* const argv[], Options::Language default_l
       error_message_ << "No input file" << endl;
       return;
     }
-    if (language_ == Options::Language::JAVA) {
+    if (language_ == Options::Language::JAVA || language_ == Options::Language::RUST) {
       input_files_.emplace_back(argv[optind++]);
       if (argc - optind >= 1) {
         output_file_ = argv[optind++];
@@ -374,7 +383,7 @@ Options::Options(int argc, const char* const argv[], Options::Language default_l
         if (android::base::EndsWith(output_file_, ".aidl")) {
           output_file_ = output_file_.substr(0, output_file_.length() - strlen(".aidl"));
         }
-        output_file_ += ".java";
+        output_file_ += (language_ == Options::Language::JAVA) ? ".java" : ".rs";
       }
     } else if (IsCppOutput()) {
       input_files_.emplace_back(argv[optind++]);
@@ -438,6 +447,17 @@ Options::Options(int argc, const char* const argv[], Options::Language default_l
       if (!output_header_dir_.empty()) {
         error_message_ << "Header output directory is set, which does not make "
                        << "sense for Java." << endl;
+        return;
+      }
+    }
+    if (language_ == Options::Language::RUST && task_ == Options::Task::COMPILE) {
+      if (output_dir_.empty()) {
+        error_message_ << "Output directory is not set. Set with --out." << endl;
+        return;
+      }
+      if (!output_header_dir_.empty()) {
+        error_message_ << "Header output directory is set, which does not make "
+                       << "sense for Rust." << endl;
         return;
       }
     }
