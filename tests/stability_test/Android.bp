@@ -29,6 +29,9 @@ aidl_interface {
         ndk: {
             enabled: false,
         },
+        rust: {
+            enabled: false,
+        },
     },
     versions: ["1"],
 }
@@ -49,6 +52,9 @@ aidl_interface {
         ndk: {
             enabled: false,
         },
+        rust: {
+            enabled: false,
+        },
     },
 }
 
@@ -66,6 +72,9 @@ aidl_interface {
             enabled: false,
         },
         ndk: {
+            enabled: false,
+        },
+        rust: {
             enabled: false,
         },
     },

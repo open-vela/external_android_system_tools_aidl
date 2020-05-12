@@ -20,6 +20,7 @@ import (
 	"android/soong/genrule"
 	"android/soong/java"
 	"android/soong/phony"
+	"android/soong/rust"
 
 	"fmt"
 	"io"
@@ -42,6 +43,7 @@ const (
 	langJava                  = "java"
 	langNdk                   = "ndk"
 	langNdkPlatform           = "ndk_platform"
+	langRust                  = "rust"
 
 	currentVersion  = "current"
 	unstableVersion = "unstable"
@@ -73,6 +75,15 @@ var (
 		Deps:        blueprint.DepsGCC,
 		CommandDeps: []string{"${aidlCmd}"},
 		Description: "AIDL Java ${in}",
+	}, "imports", "outDir", "optionalFlags")
+
+	aidlRustRule = pctx.StaticRule("aidlRustRule", blueprint.RuleParams{
+		Command: `${aidlCmd} --lang=rust ${optionalFlags} --structured --ninja -d ${out}.d ` +
+			`-o ${outDir} ${imports} ${in}`,
+		Depfile:     "${out}.d",
+		Deps:        blueprint.DepsGCC,
+		CommandDeps: []string{"${aidlCmd}"},
+		Description: "AIDL Rust ${in}",
 	}, "imports", "outDir", "optionalFlags")
 
 	aidlDumpApiRule = pctx.StaticRule("aidlDumpApiRule", blueprint.RuleParams{
@@ -120,6 +131,11 @@ var (
 		Description: "Verify ${apiDir} files have not been modified",
 	}, "apiDir", "version", "messageFile", "hashFile")
 
+	aidlRustGlueRule = pctx.StaticRule("aidlRustGlueRule", blueprint.RuleParams{
+		Command:     `${aidlRustGlueCmd} ${out} ${root} ${in} ${imports}`,
+		CommandDeps: []string{"${aidlRustGlueCmd}"},
+	}, "root", "imports")
+
 	joinJsonObjectsToArrayRule = pctx.StaticRule("joinJsonObjectsToArrayRule", blueprint.RuleParams{
 		Rspfile:        "$out.rsp",
 		RspfileContent: "$files",
@@ -139,6 +155,7 @@ var (
 func init() {
 	pctx.HostBinToolVariable("aidlCmd", "aidl")
 	pctx.SourcePathVariable("aidlToJniCmd", "system/tools/aidl/build/aidl_to_jni.py")
+	pctx.SourcePathVariable("aidlRustGlueCmd", "system/tools/aidl/build/aidl_rust_glue.py")
 	android.RegisterModuleType("aidl_interface", aidlInterfaceFactory)
 	android.RegisterModuleType("aidl_mapping", aidlMappingFactory)
 	android.RegisterMakeVarsProvider(pctx, allAidlInterfacesMakeVars)
@@ -170,6 +187,7 @@ func checkDuplicatedVersions(mctx android.BottomUpMutatorContext) {
 	switch mctx.Module().(type) {
 	case *java.Library:
 	case *cc.Module:
+	case *rust.Module:
 	default:
 		return
 	}
@@ -181,6 +199,7 @@ func checkDuplicatedVersions(mctx android.BottomUpMutatorContext) {
 		switch dep.(type) {
 		case *java.Library:
 		case *cc.Module:
+		case *rust.Module:
 		default:
 			return
 		}
@@ -291,7 +310,7 @@ type aidlGenProperties struct {
 	AidlRoot   string   // base directory for the input aidl file
 	Imports    []string
 	Stability  *string
-	Lang       string // target language [java|cpp|ndk]
+	Lang       string // target language [java|cpp|ndk|rust]
 	BaseName   string
 	GenLog     bool
 	Version    string
@@ -389,6 +408,8 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 	var ext string
 	if g.properties.Lang == langJava {
 		ext = "java"
+	} else if g.properties.Lang == langRust {
+		ext = "rs"
 	} else {
 		ext = "cpp"
 	}
@@ -423,6 +444,18 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 	if g.properties.Lang == langJava {
 		ctx.ModuleBuild(pctx, android.ModuleBuildParams{
 			Rule:      aidlJavaRule,
+			Input:     src,
+			Implicits: implicits,
+			Output:    outFile,
+			Args: map[string]string{
+				"imports":       g.importFlags,
+				"outDir":        g.genOutDir.String(),
+				"optionalFlags": strings.Join(optionalFlags, " "),
+			},
+		})
+	} else if g.properties.Lang == langRust {
+		ctx.ModuleBuild(pctx, android.ModuleBuildParams{
+			Rule:      aidlRustRule,
 			Input:     src,
 			Implicits: implicits,
 			Output:    outFile,
@@ -933,6 +966,11 @@ type aidlInterfaceProperties struct {
 		Ndk struct {
 			CommonNativeBackendProperties
 		}
+		// Backend of the compiler generating code for Rust clients.
+		// When enabled, this creates a target called "<name>-rust".
+		Rust struct {
+			CommonNativeBackendProperties
+		}
 	}
 
 	// Marks that this interface does not need to be stable. When set to true, the build system
@@ -964,6 +1002,10 @@ func (i *aidlInterface) shouldGenerateCppBackend() bool {
 func (i *aidlInterface) shouldGenerateNdkBackend() bool {
 	// explicitly true if not specified to give early warning to devs
 	return i.properties.Backend.Ndk.Enabled == nil || *i.properties.Backend.Ndk.Enabled
+}
+
+func (i *aidlInterface) shouldGenerateRustBackend() bool {
+	return i.properties.Backend.Rust.Enabled != nil && *i.properties.Backend.Rust.Enabled
 }
 
 func (i *aidlInterface) gatherInterface(mctx android.LoadHookContext) {
@@ -1001,6 +1043,11 @@ func (i *aidlInterface) checkImports(mctx android.BaseModuleContext) {
 		if i.shouldGenerateNdkBackend() && !other.shouldGenerateNdkBackend() {
 			mctx.PropertyErrorf("backend.ndk.enabled",
 				"NDK backend not enabled in the imported AIDL interface %q", anImport)
+		}
+
+		if i.shouldGenerateRustBackend() && !other.shouldGenerateRustBackend() {
+			mctx.PropertyErrorf("backend.rust.enabled",
+				"Rust backend not enabled in the imported AIDL interface %q", anImport)
 		}
 	}
 }
@@ -1228,6 +1275,17 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 		libs = append(libs, unstableLib)
 		for _, version := range versionsForJava {
 			libs = append(libs, addJavaLibrary(mctx, i, version))
+		}
+	}
+
+	if i.shouldGenerateRustBackend() {
+		unstableLib := addRustLibrary(mctx, i, currentVersion)
+		if needToCheckUnstableVersion {
+			addUnstableModule(mctx, unstableLib)
+		}
+		libs = append(libs, unstableLib)
+		for _, version := range versionsForCpp {
+			addRustLibrary(mctx, i, version)
 		}
 	}
 
@@ -1493,6 +1551,141 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMo
 	})
 
 	return javaModuleGen
+}
+
+type aidlRustSourceProviderProperties struct {
+	SourceGen string `android:"path"`
+	Imports   []string
+}
+
+type aidlRustSourceProvider struct {
+	*rust.BaseSourceProvider
+
+	properties aidlRustSourceProviderProperties
+}
+
+func (sp *aidlRustSourceProvider) GenerateSource(ctx rust.ModuleContext, deps rust.PathDeps) android.Path {
+	sourceStem := proptools.String(sp.BaseSourceProvider.Properties.Source_stem)
+	topLevelOutputFile := android.PathForModuleOut(ctx, sourceStem+".rs")
+	srcPaths := android.PathsForModuleSrc(ctx, []string{sp.properties.SourceGen})
+
+	// Find the gen directory for the source module
+	aidlGenModule, _ := ctx.GetDirectDep(android.SrcIsModule(sp.properties.SourceGen))
+	srcGenDir := aidlGenModule.(*aidlGenRule).genOutDir
+
+	// In Rust, we import our dependency crates into `mangled`:
+	//   use dependency::mangled::*;
+	// so we can use the crate:: Rust path prefix to refer to
+	// both crate-local and imported paths (from dependencies)
+	importFlags := make([]string, len(sp.properties.Imports))
+	for i, dep := range sp.properties.Imports {
+		importFlags[i] = "-I" + fixRustName(dep)
+	}
+
+	// In Rust, we need to do some extra post-processing:
+	// emit a top-level foo.rs that includes all the generated .rs
+	// files verbatim ("glued" together). The generated glue file
+	// replicates the AIDL package hierarchy from the input
+	// .aidl files in two ways:
+	//   * 1:1 mapping in the crate::aidl namespace, used by downstream users
+	//   * mangled in the crate::mangled namespace, used internally
+	//     to resolve AIDL package paths between dependencies
+	ctx.Build(pctx, android.BuildParams{
+		Rule:   aidlRustGlueRule,
+		Inputs: srcPaths,
+		Output: topLevelOutputFile,
+		Args: map[string]string{
+			"root":    srcGenDir.String(),
+			"imports": strings.Join(importFlags, " "),
+		},
+	})
+
+	sp.BaseSourceProvider.OutputFile = topLevelOutputFile
+	return topLevelOutputFile
+}
+
+func (sp *aidlRustSourceProvider) SourceProviderProps() []interface{} {
+	return append(sp.BaseSourceProvider.SourceProviderProps(),
+		&sp.properties)
+}
+
+func (sp *aidlRustSourceProvider) SourceProviderDeps(ctx rust.DepsContext, deps rust.Deps) rust.Deps {
+	deps = sp.BaseSourceProvider.SourceProviderDeps(ctx, deps)
+	deps.Rustlibs = append(deps.Rustlibs, "libbinder_rs", "liblazy_static")
+	deps.Rustlibs = append(deps.Rustlibs, wrap("", sp.properties.Imports, "-rust")...)
+	return deps
+}
+
+func (sp *aidlRustSourceProvider) AndroidMk(ctx rust.AndroidMkContext, ret *android.AndroidMkData) {
+	ctx.SubAndroidMk(ret, sp.BaseSourceProvider)
+	ret.Extra = append(ret.Extra, func(w io.Writer, outputFile android.Path) {
+		fmt.Fprintln(w, "LOCAL_UNINSTALLABLE_MODULE := true")
+	})
+}
+
+func aidlRustLibraryFactory() android.Module {
+	sourceProvider := &aidlRustSourceProvider{
+		BaseSourceProvider: rust.NewSourceProvider(),
+		properties:         aidlRustSourceProviderProperties{},
+	}
+
+	module := rust.NewSourceProviderModule(android.HostAndDeviceSupported, sourceProvider, true)
+	return module.Init()
+}
+
+func fixRustName(name string) string {
+	return strings.Map(func(r rune) rune {
+		switch r {
+		case '-', '.':
+			return '_'
+		default:
+			return r
+		}
+	}, name)
+}
+
+func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForModuleName string) string {
+	rustSourceGen := i.versionedName(mctx, versionForModuleName) + "-rust-source"
+	rustModuleGen := i.versionedName(mctx, versionForModuleName) + "-rust"
+	version := i.normalizeVersion(versionForModuleName)
+	srcs, aidlRoot := i.srcsForVersion(mctx, version)
+	if len(srcs) == 0 {
+		// This can happen when the version is about to be frozen; the version
+		// directory is created but API dump hasn't been copied there.
+		// Don't create a library for the yet-to-be-frozen version.
+		return ""
+	}
+
+	mctx.CreateModule(aidlGenFactory, &nameProperties{
+		Name: proptools.StringPtr(rustSourceGen),
+	}, &aidlGenProperties{
+		Srcs:       srcs,
+		AidlRoot:   aidlRoot,
+		Imports:    concat(i.properties.Imports, []string{i.ModuleBase.Name()}),
+		Stability:  i.properties.Stability,
+		Lang:       langRust,
+		BaseName:   i.ModuleBase.Name(),
+		Version:    version,
+		Unstable:   i.properties.Unstable,
+		Visibility: defaultVisibility(mctx),
+	})
+
+	versionedRustName := fixRustName(i.versionedName(mctx, versionForModuleName))
+
+	mctx.CreateModule(aidlRustLibraryFactory, &rustProperties{
+		Name:           proptools.StringPtr(rustModuleGen),
+		Crate_name:     versionedRustName,
+		Stem:           proptools.StringPtr("lib" + versionedRustName),
+		Defaults:       []string{"aidl-rust-module-defaults"},
+		Host_supported: i.properties.Host_supported,
+	}, &rust.SourceProviderProperties{
+		Source_stem: proptools.StringPtr(versionedRustName),
+	}, &aidlRustSourceProviderProperties{
+		SourceGen: ":" + rustSourceGen,
+		Imports:   i.properties.Imports,
+	})
+
+	return rustModuleGen
 }
 
 func addApiModule(mctx android.LoadHookContext, i *aidlInterface) string {

@@ -63,6 +63,17 @@ type javaProperties struct {
 	Min_sdk_version *string
 }
 
+type rustProperties struct {
+	Name           *string
+	Crate_name     string
+	Owner          *string
+	Defaults       []string
+	Host_supported *bool
+	Srcs           []string
+	Rustlibs       []string
+	Stem           *string
+}
+
 type phonyProperties struct {
 	Name     *string
 	Required []string

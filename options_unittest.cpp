@@ -237,6 +237,26 @@ TEST(OptionsTests, ParsesCompileJavaMultiInput) {
   EXPECT_EQ(string{"src_out/"}, options->OutputDir());
 }
 
+TEST(OptionsTests, ParsesCompileRust) {
+  const char* argv[] = {
+      "aidl",       "--lang=rust",        kCompileCommandIncludePath,
+      "-o src_out", kCompileCommandInput, nullptr,
+  };
+  unique_ptr<Options> options = GetOptions(argv);
+  EXPECT_EQ(Options::Task::COMPILE, options->GetTask());
+  EXPECT_EQ(Options::Language::RUST, options->TargetLanguage());
+  EXPECT_EQ(false, options->FailOnParcelable());
+  EXPECT_EQ(1u, options->ImportDirs().size());
+  EXPECT_EQ(0u, options->PreprocessedFiles().size());
+  EXPECT_EQ(string{kCompileCommandInput}, options->InputFiles().front());
+  EXPECT_EQ(string{""}, options->OutputFile());
+  EXPECT_EQ(string{""}, options->OutputHeaderDir());
+  EXPECT_EQ(string{"src_out/"}, options->OutputDir());
+  EXPECT_EQ(false, options->AutoDepFile());
+  EXPECT_EQ(false, options->DependencyFileNinja());
+  EXPECT_EQ(false, options->GenParcelableToString());
+}
+
 TEST(OptionsTests, ParsesCompileJavaInvalid) {
   // -o option is required
   const char* arg_with_no_out_dir[] = {
@@ -312,6 +332,28 @@ TEST(OptionsTests, ParsesCompileCppInvalid) {
       nullptr,
   };
   EXPECT_EQ(false, GetOptions(arg_with_no_header_dir)->Ok());
+}
+
+TEST(OptionsTests, ParsesCompileRustInvalid) {
+  // -o option is required
+  const char* arg_with_no_out_dir[] = {
+      "aidl",
+      "--lang=rust",
+      kCompileCommandIncludePath,
+      "directory/input1.aidl",
+      "directory/input2.aidl",
+      "directory/input3.aidl",
+      nullptr,
+  };
+  EXPECT_EQ(false, GetOptions(arg_with_no_out_dir)->Ok());
+
+  // -h options is not for Rust
+  const char* arg_with_header_dir[] = {
+      "aidl",          "--lang=rust",           kCompileCommandIncludePath, "-o src_out",
+      "-h header_out", "directory/input1.aidl", "directory/input2.aidl",    "directory/input3.aidl",
+      nullptr,
+  };
+  EXPECT_EQ(false, GetOptions(arg_with_header_dir)->Ok());
 }
 
 }  // namespace aidl

@@ -59,7 +59,7 @@ class ErrorMessage {
 
 class Options final {
  public:
-  enum class Language { UNSPECIFIED, JAVA, CPP, NDK };
+  enum class Language { UNSPECIFIED, JAVA, CPP, NDK, RUST };
 
   enum class Task { UNSPECIFIED, COMPILE, PREPROCESS, DUMP_API, CHECK_API, DUMP_MAPPINGS };
 
