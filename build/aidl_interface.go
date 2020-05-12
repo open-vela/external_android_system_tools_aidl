@@ -1198,8 +1198,10 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 	})
 
 	importExportDependencies := wrap("", i.properties.Imports, "-"+lang)
+	var sharedLibDependency []string
 	var libJSONCppDependency []string
 	var staticLibDependency []string
+	var headerLibs []string
 	var sdkVersion *string
 	var minSdkVersion *string
 	var stl *string
@@ -1213,7 +1215,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 			libJSONCppDependency = []string{"libjsoncpp"}
 		}
 		if genTrace {
-			importExportDependencies = append(importExportDependencies, "libcutils")
+			sharedLibDependency = append(sharedLibDependency, "libcutils")
 		}
 		hostSupported = i.properties.Host_supported
 		minSdkVersion = i.properties.Backend.Cpp.Min_sdk_version
@@ -1222,6 +1224,9 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		if genLog {
 			staticLibDependency = []string{"libjsoncpp_ndk"}
 		}
+		if genTrace {
+			sharedLibDependency = append(sharedLibDependency, "libandroid")
+		}
 		sdkVersion = proptools.StringPtr("current")
 		stl = proptools.StringPtr("c++_shared")
 		minSdkVersion = i.properties.Backend.Ndk.Min_sdk_version
@@ -1229,6 +1234,10 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		importExportDependencies = append(importExportDependencies, "libbinder_ndk")
 		if genLog {
 			libJSONCppDependency = []string{"libjsoncpp"}
+		}
+		if genTrace {
+			headerLibs = append(headerLibs, "libandroid_trace")
+			sharedLibDependency = append(sharedLibDependency, "libcutils")
 		}
 		hostSupported = i.properties.Host_supported
 		addCflags = append(addCflags, "-DBINDER_STABILITY_SUPPORT")
@@ -1260,7 +1269,8 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		Static:                    staticLib{Whole_static_libs: libJSONCppDependency},
 		Shared:                    sharedLib{Shared_libs: libJSONCppDependency, Export_shared_lib_headers: libJSONCppDependency},
 		Static_libs:               staticLibDependency,
-		Shared_libs:               importExportDependencies,
+		Shared_libs:               append(importExportDependencies, sharedLibDependency...),
+		Header_libs:               headerLibs,
 		Export_shared_lib_headers: importExportDependencies,
 		Sdk_version:               sdkVersion,
 		Stl:                       stl,
