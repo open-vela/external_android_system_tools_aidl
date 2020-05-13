@@ -356,7 +356,7 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
 
   std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
-  bool LanguageSpecificCheckValid(Options::Language lang) const;
+  bool LanguageSpecificCheckValid(const AidlTypenames& typenames, Options::Language lang) const;
   const AidlNode& AsAidlNode() const override { return *this; }
 
  private:
@@ -706,7 +706,8 @@ class AidlDefinedType : public AidlAnnotatable {
   virtual const AidlInterface* AsInterface() const { return nullptr; }
   virtual const AidlParameterizable<std::string>* AsParameterizable() const { return nullptr; }
   bool CheckValid(const AidlTypenames& typenames) const override;
-  virtual bool LanguageSpecificCheckValid(Options::Language lang) const = 0;
+  virtual bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
+                                          Options::Language lang) const = 0;
   AidlStructuredParcelable* AsStructuredParcelable() {
     return const_cast<AidlStructuredParcelable*>(
         const_cast<const AidlDefinedType*>(this)->AsStructuredParcelable());
@@ -761,7 +762,8 @@ class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::s
 
   std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
-  bool LanguageSpecificCheckValid(Options::Language lang) const override;
+  bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
+                                  Options::Language lang) const override;
   const AidlParcelable* AsParcelable() const override { return this; }
   const AidlParameterizable<std::string>* AsParameterizable() const override { return this; }
   const AidlNode& AsAidlNode() const override { return *this; }
@@ -793,7 +795,8 @@ class AidlStructuredParcelable : public AidlParcelable {
 
   std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
-  bool LanguageSpecificCheckValid(Options::Language lang) const override;
+  bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
+                                  Options::Language lang) const override;
 
  private:
   const std::vector<std::unique_ptr<AidlVariableDeclaration>> variables_;
@@ -840,7 +843,10 @@ class AidlEnumDeclaration : public AidlDefinedType {
   bool Autofill();
   std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
-  bool LanguageSpecificCheckValid(Options::Language) const override { return true; }
+  bool LanguageSpecificCheckValid(const AidlTypenames& /*typenames*/,
+                                  Options::Language) const override {
+    return true;
+  }
   std::string GetPreprocessDeclarationName() const override { return "enum"; }
   void Dump(CodeWriter* writer) const override;
 
@@ -875,7 +881,8 @@ class AidlInterface final : public AidlDefinedType {
 
   std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
-  bool LanguageSpecificCheckValid(Options::Language lang) const override;
+  bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
+                                  Options::Language lang) const override;
 
  private:
   std::vector<std::unique_ptr<AidlMethod>> methods_;
