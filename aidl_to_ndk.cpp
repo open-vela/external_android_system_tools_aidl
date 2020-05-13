@@ -364,15 +364,18 @@ static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlType
 
   if (aidl.IsArray()) {
     if (aidl.IsNullable()) {
-      AIDL_FATAL_IF(info.nullable_array == nullptr, aidl) << "Unsupported type in NDK Backend.";
+      AIDL_FATAL_IF(info.nullable_array == nullptr, aidl)
+          << "Unsupported type in NDK Backend: " << aidl.ToString();
       return *info.nullable_array;
     }
-    AIDL_FATAL_IF(info.array == nullptr, aidl) << "Unsupported type in NDK Backend.";
+    AIDL_FATAL_IF(info.array == nullptr, aidl)
+        << "Unsupported type in NDK Backend: " << aidl.ToString();
     return *info.array;
   }
 
   if (aidl.IsNullable()) {
-    AIDL_FATAL_IF(info.nullable == nullptr, aidl) << "Unsupported type in NDK Backend.";
+    AIDL_FATAL_IF(info.nullable == nullptr, aidl)
+        << "Unsupported type in NDK Backend: " << aidl.ToString();
     return *info.nullable;
   }
 
