@@ -574,7 +574,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     CHECK(defined_type != nullptr);
 
     // Language specific validation
-    if (!defined_type->LanguageSpecificCheckValid(options.TargetLanguage())) {
+    if (!defined_type->LanguageSpecificCheckValid(*typenames, options.TargetLanguage())) {
       return AidlError::BAD_TYPE;
     }
 
