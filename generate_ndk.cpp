@@ -907,6 +907,9 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
   out << "\n";
   out << "binder_status_t readFromParcel(const AParcel* parcel);\n";
   out << "binder_status_t writeToParcel(AParcel* parcel) const;\n";
+
+  out << "static const bool _aidl_is_stable = "
+      << (defined_type.IsVintfStability() ? "true" : "false") << ";\n";
   out.Dedent();
   out << "};\n";
   LeaveNdkNamespace(out, defined_type);
