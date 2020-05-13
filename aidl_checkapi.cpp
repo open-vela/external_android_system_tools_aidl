@@ -46,12 +46,12 @@ static set<AidlAnnotation> get_strict_annotations(const AidlAnnotatable& node) {
   // - a new implementation might change so that it no longer returns null
   // values (remove @nullable)
   // - a new implementation might start accepting null values (add @nullable)
-  static const set<std::string> kIgnoreAnnotations{
-      "nullable",
+  static const set<AidlAnnotation::Type> kIgnoreAnnotations{
+      AidlAnnotation::Type::NULLABLE,
   };
   set<AidlAnnotation> annotations;
   for (const AidlAnnotation& annotation : node.GetAnnotations()) {
-    if (kIgnoreAnnotations.find(annotation.GetName()) == kIgnoreAnnotations.end()) {
+    if (kIgnoreAnnotations.find(annotation.GetType()) == kIgnoreAnnotations.end()) {
       annotations.insert(annotation);
     }
   }
@@ -165,6 +165,19 @@ static bool are_compatible_interfaces(const AidlInterface& older, const AidlInte
   return compatible;
 }
 
+// returns whether the given type when defaulted will be accepted by
+// unmarshalling code
+static bool has_usable_nil_type(const AidlTypeSpecifier& specifier) {
+  // TODO(b/155238508): fix for primitives
+
+  // This technically only applies in C++, but even if both the client and the
+  // server of an interface are in Java at a particular point in time, where
+  // null is currently always acceptable, we want to make sure that versions
+  // of this service can work in native and future backends without a problem.
+  // Also, in that case, adding nullable does not hurt.
+  return specifier.IsNullable();
+}
+
 static bool are_compatible_parcelables(const AidlStructuredParcelable& older,
                                        const AidlStructuredParcelable& newer) {
   const auto& old_fields = older.GetFields();
@@ -194,7 +207,43 @@ static bool are_compatible_parcelables(const AidlStructuredParcelable& older,
     const string old_value = old_field->ValueString(AidlConstantValueDecorator);
     const string new_value = new_field->ValueString(AidlConstantValueDecorator);
     if (old_value != new_value) {
-      AIDL_ERROR(newer) << "Changed default value: " << old_value << " to " << new_value << ".";
+      AIDL_ERROR(new_field) << "Changed default value: " << old_value << " to " << new_value << ".";
+      compatible = false;
+    }
+  }
+
+  for (size_t i = old_fields.size(); i < new_fields.size(); i++) {
+    const auto& new_field = new_fields.at(i);
+    if (!new_field->GetDefaultValue() && !has_usable_nil_type(new_field->GetType())) {
+      // Old API versions may suffer from the issue presented here. There is
+      // only a finite number in Android, which we must allow indefinitely.
+      struct HistoricalException {
+        std::string canonical;
+        std::string field;
+      };
+      static std::vector<HistoricalException> exceptions = {
+          {"android.net.DhcpResultsParcelable", "serverHostName"},
+          {"android.net.ProvisioningConfigurationParcelable", "enablePreconnection"},
+          {"android.net.ResolverParamsParcel", "resolverOptions"},
+      };
+      bool excepted = false;
+      for (const HistoricalException& exception : exceptions) {
+        if (older.GetCanonicalName() == exception.canonical &&
+            new_field->GetName() == exception.field) {
+          excepted = true;
+          break;
+        }
+      }
+      if (excepted) continue;
+
+      AIDL_ERROR(new_field)
+          << "Field '" << new_field->GetName()
+          << "' does not have a useful default in some backends. Please either provide a default "
+             "value for this field or mark the field as @nullable. This value or a null value will "
+             "be used automatically when an old version of this parcelable is sent to a process "
+             "which understands a new version of this parcelable. In order to make sure your code "
+             "continues to be backwards compatible, make sure the default or null value does not "
+             "cause a semantic change to this parcelable.";
       compatible = false;
     }
   }
@@ -266,7 +315,7 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
   vector<AidlDefinedType*> new_types;
   vector<string> new_files = io_delegate.ListFiles(new_dir);
   if (new_files.size() == 0) {
-    AIDL_ERROR(new_dir) << "No API file exist";
+    AIDL_ERROR(new_dir) << "API files have been removed: " << android::base::Join(old_files, ", ");
     return false;
   }
   for (const auto& file : new_files) {

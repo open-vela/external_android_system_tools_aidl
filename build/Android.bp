@@ -105,6 +105,7 @@ aidl_interface {
     imports: [
         "test-piece-1",
     ],
+    gen_trace: true,
     versions: ["1"],
 }
 
@@ -117,6 +118,7 @@ aidl_interface {
     imports: [
         "test-piece-2",
     ],
+    gen_trace: true,
     versions: ["1"],
 }
 
@@ -129,6 +131,7 @@ aidl_interface {
     imports: [
         "test-piece-1",
     ],
+    gen_trace: true,
     versions: ["1"],
 }
 
@@ -140,6 +143,7 @@ aidl_interface {
     imports: [
         "test-piece-2",
     ],
+    gen_trace: true,
     versions: [
         "1",
         "2",
