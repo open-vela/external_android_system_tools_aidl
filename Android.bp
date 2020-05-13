@@ -256,6 +256,7 @@ cc_library_static {
     name: "libaidl-integration-test",
     defaults: ["aidl_test_defaults"],
     aidl: {
+        generate_traces: true,
         export_aidl_headers: true,
         local_include_dirs: ["tests"],
         include_dirs: ["frameworks/native/aidl/binder"],
@@ -270,7 +271,7 @@ cc_test {
     name: "aidl_test_service",
     gtest: false,
     defaults: ["aidl_test_defaults"],
-    static_libs: ["libaidl-integration-test"],
+    static_libs: ["libaidl-integration-test", "libcutils"],
     srcs: ["tests/aidl_test_service.cpp"],
 }
 
@@ -278,7 +279,7 @@ cc_test {
     name: "aidl_test_client",
     gtest: false,
     defaults: ["aidl_test_defaults"],
-    static_libs: ["libaidl-integration-test"],
+    static_libs: ["libaidl-integration-test", "libcutils"],
     srcs: [
         "tests/aidl_test_client.cpp",
         "tests/aidl_test_client_file_descriptors.cpp",
@@ -322,6 +323,7 @@ android_test_helper_app {
             "system/tools/aidl/tests/",
             "frameworks/native/aidl/binder",
         ],
+        generate_traces: true,
     },
     test_suites: ["device-tests"],
 }
@@ -345,5 +347,8 @@ aidl_interface {
         ndk: {
             gen_log: true,
         },
+        java: {
+            platform_apis: true,
+        }
     },
 }
