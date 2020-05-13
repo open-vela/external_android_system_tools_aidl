@@ -2546,7 +2546,7 @@ public interface IExampleInterface extends android.os.IInterface
       }
       @Override
       public synchronized String getInterfaceHash() throws android.os.RemoteException {
-        if ("-1".equals(mCachedHash)) {
+        if (mCachedHash == "-1") {
           android.os.Parcel data = android.os.Parcel.obtain();
           android.os.Parcel reply = android.os.Parcel.obtain();
           try {
