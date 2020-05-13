@@ -325,6 +325,11 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
     out << cpp::GenLogBeforeExecute(ClassName(defined_type, ClassNames::CLIENT), method,
                                     false /* isServer */, true /* isNdk */);
   }
+  if (options.GenTraces()) {
+    out << "ATrace_beginSection(\"AIDL::" << Options::LanguageToString(options.TargetLanguage())
+        << "::" << ClassName(defined_type, ClassNames::INTERFACE) << "::" << method.GetName()
+        << "::client\");\n";
+  }
 
   out << "_aidl_ret_status = AIBinder_prepareTransaction(asBinder().get(), _aidl_in.getR());\n";
   StatusCheckGoto(out);
@@ -362,8 +367,9 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
   out << "if (_aidl_ret_status == STATUS_UNKNOWN_TRANSACTION && ";
   out << iface << "::getDefaultImpl()) {\n";
   out.Indent();
-  out << "return " << iface << "::getDefaultImpl()->" << method.GetName() << "(";
+  out << "_aidl_status = " << iface << "::getDefaultImpl()->" << method.GetName() << "(";
   out << NdkArgList(types, method, FormatArgNameOnly) << ");\n";
+  out << "goto _aidl_status_return;\n";
   out.Dedent();
   out << "}\n";
 
@@ -373,7 +379,7 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
     out << "_aidl_ret_status = AParcel_readStatusHeader(_aidl_out.get(), _aidl_status.getR());\n";
     StatusCheckGoto(out);
 
-    out << "if (!AStatus_isOk(_aidl_status.get())) return _aidl_status;\n\n";
+    out << "if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;\n";
   }
 
   if (method.GetType().GetName() != "void") {
@@ -396,11 +402,16 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
 
   out << "_aidl_error:\n";
   out << "_aidl_status.set(AStatus_fromStatus(_aidl_ret_status));\n";
+  out << "_aidl_status_return:\n";
   if (options.GenLog()) {
     out << cpp::GenLogAfterExecute(ClassName(defined_type, ClassNames::CLIENT), defined_type,
                                    method, "_aidl_status", "_aidl_return", false /* isServer */,
                                    true /* isNdk */);
   }
+  if (options.GenTraces()) {
+    out << "ATrace_endSection();\n";
+  }
+
   out << "return _aidl_status;\n";
   out.Dedent();
   out << "}\n";
@@ -419,6 +430,11 @@ static void GenerateServerCaseDefinition(CodeWriter& out, const AidlTypenames& t
     out << NdkNameOf(types, method.GetType(), StorageMode::STACK) << " _aidl_return;\n";
   }
   out << "\n";
+  if (options.GenTraces()) {
+    out << "ATrace_beginSection(\"AIDL::" << Options::LanguageToString(options.TargetLanguage())
+        << "::" << ClassName(defined_type, ClassNames::INTERFACE) << "::" << method.GetName()
+        << "::server\");\n";
+  }
 
   for (const auto& arg : method.GetArguments()) {
     const std::string var_name = cpp::BuildVarName(*arg);
@@ -443,6 +459,9 @@ static void GenerateServerCaseDefinition(CodeWriter& out, const AidlTypenames& t
     out << cpp::GenLogAfterExecute(ClassName(defined_type, ClassNames::SERVER), defined_type,
                                    method, "_aidl_status", "_aidl_return", true /* isServer */,
                                    true /* isNdk */);
+  }
+  if (options.GenTraces()) {
+    out << "ATrace_endSection();\n";
   }
   if (method.IsOneway()) {
     // For a oneway transaction, the kernel will have already returned a result. This is for the
@@ -704,6 +723,9 @@ void GenerateClientHeader(CodeWriter& out, const AidlTypenames& types,
     out << "#include <functional>\n";
     out << "#include <chrono>\n";
     out << "#include <sstream>\n";
+  }
+  if (options.GenTraces()) {
+    out << "#include <android/trace.h>\n";
   }
   out << "\n";
   EnterNdkNamespace(out, defined_type);
