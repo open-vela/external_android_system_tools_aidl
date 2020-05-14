@@ -1236,7 +1236,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 			libJSONCppDependency = []string{"libjsoncpp"}
 		}
 		if genTrace {
-			headerLibs = append(headerLibs, "libandroid_trace")
+			headerLibs = append(headerLibs, "libandroid_aidltrace")
 			sharedLibDependency = append(sharedLibDependency, "libcutils")
 		}
 		hostSupported = i.properties.Host_supported
