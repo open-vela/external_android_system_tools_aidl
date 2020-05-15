@@ -1631,25 +1631,6 @@ TEST_F(AidlTestIncompatibleChanges, RenamedMethod) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
-TEST_F(AidlTestIncompatibleChanges, RenamedField) {
-  const string expected_stderr = "ERROR: new/p/Data.aidl:1.21-26: Renamed field: bar to bar2.\n";
-  io_delegate_.SetFileContents("old/p/Data.aidl",
-                               "package p;"
-                               "parcelable Data {"
-                               "  int foo;"
-                               "  int bar;"
-                               "}");
-  io_delegate_.SetFileContents("new/p/Data.aidl",
-                               "package p;"
-                               "parcelable Data {"
-                               "  int foo;"
-                               "  int bar2;"
-                               "}");
-  CaptureStderr();
-  EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
-}
-
 TEST_F(AidlTestIncompatibleChanges, RenamedType) {
   const string expected_stderr = "ERROR: old/p/IFoo.aidl:1.11-20: Removed type: p.IFoo\n";
   io_delegate_.SetFileContents("old/p/IFoo.aidl",
@@ -1714,8 +1695,8 @@ TEST_F(AidlTestIncompatibleChanges, ReorderedMethod) {
 
 TEST_F(AidlTestIncompatibleChanges, ReorderedField) {
   const string expected_stderr =
-      "ERROR: new/p/Data.aidl:1.21-26: Renamed field: foo to bar.\n"
-      "ERROR: new/p/Data.aidl:1.21-26: Renamed field: bar to foo.\n";
+      "ERROR: new/p/Data.aidl:1.33-37: Reordered bar from 1 to 0.\n"
+      "ERROR: new/p/Data.aidl:1.43-47: Reordered foo from 0 to 1.\n";
   io_delegate_.SetFileContents("old/p/Data.aidl",
                                "package p;"
                                "parcelable Data {"
