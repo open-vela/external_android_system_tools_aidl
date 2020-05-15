@@ -13,28 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include <string>
-#include <vector>
+#include <cutils/trace.h>
 
-namespace android {
+inline void ATrace_beginSection(const char* sectionName) {
+  atrace_begin(ATRACE_TAG_AIDL, sectionName);
+}
 
-struct AidlInterfaceMetadata {
-  // name of module defining package
-  std::string name;
-
-  // stability of interface (e.g. "vintf")
-  std::string stability;
-
-  // list of types e.g. android.hardware.foo.IFoo
-  std::vector<std::string> types;
-
-  // list of all hashes
-  std::vector<std::string> hashes;
-
-  static std::vector<AidlInterfaceMetadata> all();
-};
-
-}  // namespace android
+inline void ATrace_endSection() {
+  atrace_end(ATRACE_TAG_AIDL);
+}
