@@ -824,7 +824,16 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
 // TODO: we should treat every backend all the same in future.
 bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                                    Options::Language lang) const {
+  if (lang == Options::Language::NDK && IsArray() && GetName() == "IBinder") {
+    AIDL_ERROR(this) << "The NDK backend does not support array of IBinder";
+    return false;
+  }
   if (lang == Options::Language::NDK && IsArray() && IsNullable()) {
+    if (GetName() == "ParcelFileDescriptor") {
+      AIDL_ERROR(this) << "The NDK backend does not support nullable array of ParcelFileDescriptor";
+      return false;
+    }
+
     const auto defined_type = typenames.TryGetDefinedType(GetName());
     if (defined_type != nullptr && defined_type->AsParcelable() != nullptr) {
       AIDL_ERROR(this) << "The NDK backend does not support nullable array of parcelable";
