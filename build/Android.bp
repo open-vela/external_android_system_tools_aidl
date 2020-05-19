@@ -105,6 +105,12 @@ aidl_interface {
     imports: [
         "test-piece-1",
     ],
+    backend: {
+        java: {
+            platform_apis: true,
+        },
+    },
+    gen_trace: true,
     versions: ["1"],
 }
 
@@ -117,6 +123,12 @@ aidl_interface {
     imports: [
         "test-piece-2",
     ],
+    backend: {
+        java: {
+            platform_apis: true,
+        },
+    },
+    gen_trace: true,
     versions: ["1"],
 }
 
@@ -129,6 +141,12 @@ aidl_interface {
     imports: [
         "test-piece-1",
     ],
+    backend: {
+        java: {
+            platform_apis: true,
+        },
+    },
+    gen_trace: true,
     versions: ["1"],
 }
 
@@ -140,6 +158,12 @@ aidl_interface {
     imports: [
         "test-piece-2",
     ],
+    backend: {
+        java: {
+            platform_apis: true,
+        },
+    },
+    gen_trace: true,
     versions: [
         "1",
         "2",
