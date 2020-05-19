@@ -271,9 +271,9 @@ unique_ptr<Declaration> DefineClientTransaction(const AidlTypenames& typenames,
   b->AddLiteral(StringPrintf("%s %s", kBinderStatusLiteral, kStatusVarName));
 
   if (options.GenTraces()) {
-    b->AddLiteral(StringPrintf("::android::ScopedTrace %s(ATRACE_TAG_AIDL, \"%s::%s::cppClient\")",
-                               kTraceVarName, interface.GetName().c_str(),
-                               method.GetName().c_str()));
+    b->AddLiteral(
+        StringPrintf("::android::ScopedTrace %s(ATRACE_TAG_AIDL, \"AIDL::cpp::%s::%s::cppClient\")",
+                     kTraceVarName, interface.GetName().c_str(), method.GetName().c_str()));
   }
 
   if (options.GenLog()) {
@@ -552,6 +552,12 @@ bool HandleServerTransaction(const AidlTypenames& typenames, const AidlInterface
       new Assignment(kAndroidStatusVarName, "::android::BAD_TYPE"));
   interface_check->OnTrue()->AddLiteral("break");
 
+  if (options.GenTraces()) {
+    b->AddLiteral(
+        StringPrintf("::android::ScopedTrace %s(ATRACE_TAG_AIDL, \"AIDL::cpp::%s::%s::cppServer\")",
+                     kTraceVarName, interface.GetName().c_str(), method.GetName().c_str()));
+  }
+
   // Deserialize each "in" parameter to the transaction.
   for (const auto& a: method.GetArguments()) {
     // Deserialization looks roughly like:
@@ -576,13 +582,6 @@ bool HandleServerTransaction(const AidlTypenames& typenames, const AidlInterface
     }
   }
 
-  if (options.GenTraces()) {
-    b->AddStatement(new Statement(new MethodCall("atrace_begin",
-        ArgList{{"ATRACE_TAG_AIDL",
-        StringPrintf("\"%s::%s::cppServer\"",
-                     interface.GetName().c_str(),
-                     method.GetName().c_str())}})));
-  }
   const string bn_name = ClassName(interface, ClassNames::SERVER);
   if (options.GenLog()) {
     b->AddLiteral(GenLogBeforeExecute(bn_name, method, true /* isServer */, false /* isNdk */),
@@ -595,11 +594,6 @@ bool HandleServerTransaction(const AidlTypenames& typenames, const AidlInterface
   b->AddStatement(new Statement(new MethodCall(
       StringPrintf("%s %s", kBinderStatusLiteral, kStatusVarName),
       ArgList(std::move(status_args)))));
-
-  if (options.GenTraces()) {
-    b->AddStatement(new Statement(new MethodCall("atrace_end",
-                                                 "ATRACE_TAG_AIDL")));
-  }
 
   if (options.GenLog()) {
     b->AddLiteral(GenLogAfterExecute(bn_name, interface, method, kStatusVarName, kReturnVarName,
