@@ -147,10 +147,10 @@ class JavaClient:
 
 def supported_bitnesses(host):
     bitnesses = []
-    if host.run('ls /data/nativetest/', ignore_status=True).exit_status == 0:
-        bitnesses = [BITNESS_32]
-    if host.run('ls /data/nativetest64/', ignore_status=True).exit_status == 0:
-        bitnesses += [BITNESS_64]
+    for bitness in [BITNESS_32, BITNESS_64]:
+        native_client = NATIVE_TEST_CLIENT_FOR_BITNESS % bitness
+        if host.run('ls %s' % native_client, ignore_status=True).exit_status == 0:
+            bitnesses += [bitness]
     return bitnesses
 
 # tests added dynamically below
