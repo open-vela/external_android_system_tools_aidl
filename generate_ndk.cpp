@@ -326,7 +326,7 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
                                     false /* isServer */, true /* isNdk */);
   }
   if (options.GenTraces()) {
-    out << "ATrace_beginSection(\"AIDL::" << Options::LanguageToString(options.TargetLanguage())
+    out << "ScopedTrace _aidl_trace(\"AIDL::" << Options::LanguageToString(options.TargetLanguage())
         << "::" << ClassName(defined_type, ClassNames::INTERFACE) << "::" << method.GetName()
         << "::client\");\n";
   }
@@ -408,9 +408,6 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
                                    method, "_aidl_status", "_aidl_return", false /* isServer */,
                                    true /* isNdk */);
   }
-  if (options.GenTraces()) {
-    out << "ATrace_endSection();\n";
-  }
 
   out << "return _aidl_status;\n";
   out.Dedent();
@@ -431,7 +428,7 @@ static void GenerateServerCaseDefinition(CodeWriter& out, const AidlTypenames& t
   }
   out << "\n";
   if (options.GenTraces()) {
-    out << "ATrace_beginSection(\"AIDL::" << Options::LanguageToString(options.TargetLanguage())
+    out << "ScopedTrace _aidl_trace(\"AIDL::" << Options::LanguageToString(options.TargetLanguage())
         << "::" << ClassName(defined_type, ClassNames::INTERFACE) << "::" << method.GetName()
         << "::server\");\n";
   }
@@ -459,9 +456,6 @@ static void GenerateServerCaseDefinition(CodeWriter& out, const AidlTypenames& t
     out << cpp::GenLogAfterExecute(ClassName(defined_type, ClassNames::SERVER), defined_type,
                                    method, "_aidl_status", "_aidl_return", true /* isServer */,
                                    true /* isNdk */);
-  }
-  if (options.GenTraces()) {
-    out << "ATrace_endSection();\n";
   }
   if (method.IsOneway()) {
     // For a oneway transaction, the kernel will have already returned a result. This is for the
@@ -495,7 +489,19 @@ void GenerateClassSource(CodeWriter& out, const AidlTypenames& types,
                          const AidlInterface& defined_type, const Options& options) {
   const std::string clazz = ClassName(defined_type, ClassNames::INTERFACE);
   const std::string bn_clazz = ClassName(defined_type, ClassNames::SERVER);
-
+  if (options.GenTraces()) {
+    out << "class ScopedTrace {\n";
+    out.Indent();
+    out << "public:\n"
+        << "inline ScopedTrace(const char* name) {\n"
+        << "ATrace_beginSection(name);\n"
+        << "}\n"
+        << "inline ~ScopedTrace() {\n"
+        << "ATrace_endSection();\n"
+        << "}\n";
+    out.Dedent();
+    out << "};\n";
+  }
   out << "static binder_status_t "
       << "_aidl_onTransact"
       << "(AIBinder* _aidl_binder, transaction_code_t _aidl_code, const AParcel* _aidl_in, "
