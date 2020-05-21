@@ -163,6 +163,13 @@ TEST_F(AidlTest, ConfirmStructuredParcelables) {
   EXPECT_TRUE(parcelable.floatDefaultsToPi == 3.14f) << parcelable.floatDefaultsToPi;
   EXPECT_TRUE(parcelable.doubleWithDefault == -3.14e17) << parcelable.doubleWithDefault;
 
+  EXPECT_EQ(parcelable.boolDefault, false);
+  EXPECT_EQ(parcelable.byteDefault, 0);
+  EXPECT_EQ(parcelable.intDefault, 0);
+  EXPECT_EQ(parcelable.longDefault, 0);
+  EXPECT_EQ(parcelable.floatDefault, 0.0f);
+  EXPECT_EQ(parcelable.doubleDefault, 0.0);
+
   ASSERT_EQ(parcelable.arrayDefaultsTo123.size(), 3u);
   EXPECT_EQ(parcelable.arrayDefaultsTo123[0], 1);
   EXPECT_EQ(parcelable.arrayDefaultsTo123[1], 2);

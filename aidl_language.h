@@ -91,6 +91,9 @@ class AidlLocation {
   friend class AidlNode;
 
  private:
+  // INTENTIONALLY HIDDEN: only operator<< should access details here.
+  // Otherwise, locations should only ever be copied around to construct new
+  // objects.
   const std::string file_;
   Point begin_;
   Point end_;
@@ -116,8 +119,6 @@ class AidlNode {
   friend std::string android::aidl::mappings::dump_location(const AidlNode&);
   friend std::string android::aidl::java::dump_location(const AidlNode&);
 
- protected:
-  // This should only be used to construct implicit nodes related to existing nodes
   const AidlLocation& GetLocation() const { return location_; }
 
  private:
@@ -370,6 +371,9 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
 std::string AidlConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value);
 
 class AidlConstantValue;
+// TODO: This class is used for method arguments and also parcelable fields,
+// and it should be split up since default values don't apply to method
+// arguments
 class AidlVariableDeclaration : public AidlNode {
  public:
   AidlVariableDeclaration(const AidlLocation& location, AidlTypeSpecifier* type,
@@ -380,6 +384,10 @@ class AidlVariableDeclaration : public AidlNode {
 
   std::string GetName() const { return name_; }
   const AidlTypeSpecifier& GetType() const { return *type_; }
+  // if this was constructed explicitly with a default value
+  bool IsDefaultUserSpecified() const { return default_user_specified_; }
+  // will return the default value this is constructed with or a default value
+  // if one is available
   const AidlConstantValue* GetDefaultValue() const { return default_value_.get(); }
 
   AidlTypeSpecifier* GetMutableType() { return type_.get(); }
@@ -393,6 +401,7 @@ class AidlVariableDeclaration : public AidlNode {
  private:
   std::unique_ptr<AidlTypeSpecifier> type_;
   std::string name_;
+  bool default_user_specified_;
   std::unique_ptr<AidlConstantValue> default_value_;
 
   DISALLOW_COPY_AND_ASSIGN(AidlVariableDeclaration);
@@ -466,6 +475,10 @@ class AidlConstantValue : public AidlNode {
   T cast() const;
 
   virtual ~AidlConstantValue() = default;
+
+  // creates default value, when one isn't specified
+  // nullptr if no default available
+  static AidlConstantValue* Default(const AidlTypeSpecifier& specifier);
 
   static AidlConstantValue* Boolean(const AidlLocation& location, bool value);
   static AidlConstantValue* Character(const AidlLocation& location, char value);
