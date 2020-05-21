@@ -197,6 +197,30 @@ T AidlConstantValue::cast() const {
   SWITCH_KIND(final_type_, CASE_CAST_T, SHOULD_NOT_REACH(); return 0;);
 }
 
+AidlConstantValue* AidlConstantValue::Default(const AidlTypeSpecifier& specifier) {
+  AidlLocation location = specifier.GetLocation();
+
+  // allocation of int[0] is a bit wasteful in Java
+  if (specifier.IsArray()) {
+    return nullptr;
+  }
+
+  const std::string name = specifier.GetName();
+  if (name == "boolean") {
+    return Boolean(location, false);
+  }
+  if (name == "byte" || name == "int" || name == "long") {
+    return Integral(location, "0");
+  }
+  if (name == "float") {
+    return Floating(location, "0.0f");
+  }
+  if (name == "double") {
+    return Floating(location, "0.0");
+  }
+  return nullptr;
+}
+
 AidlConstantValue* AidlConstantValue::Boolean(const AidlLocation& location, bool value) {
   return new AidlConstantValue(location, Type::BOOLEAN, value ? "true" : "false");
 }
@@ -299,6 +323,7 @@ AidlConstantValue* AidlConstantValue::Integral(const AidlLocation& location, con
 
 AidlConstantValue* AidlConstantValue::Array(
     const AidlLocation& location, std::unique_ptr<vector<unique_ptr<AidlConstantValue>>> values) {
+  CHECK(values != nullptr) << location;
   return new AidlConstantValue(location, Type::ARRAY, std::move(values));
 }
 
@@ -802,8 +827,8 @@ AidlConstantValue::AidlConstantValue(const AidlLocation& location, Type parsed_t
       value_(checked_value),
       final_type_(parsed_type),
       final_value_(parsed_value) {
-  CHECK(!value_.empty() || type_ == Type::ERROR);
-  CHECK(type_ == Type::INT8 || type_ == Type::INT32 || type_ == Type::INT64);
+  CHECK(!value_.empty() || type_ == Type::ERROR) << location;
+  CHECK(type_ == Type::INT8 || type_ == Type::INT32 || type_ == Type::INT64) << location;
 }
 
 AidlConstantValue::AidlConstantValue(const AidlLocation& location, Type type,
@@ -812,7 +837,7 @@ AidlConstantValue::AidlConstantValue(const AidlLocation& location, Type type,
       type_(type),
       value_(checked_value),
       final_type_(type) {
-  CHECK(!value_.empty() || type_ == Type::ERROR);
+  CHECK(!value_.empty() || type_ == Type::ERROR) << location;
   switch (type_) {
     case Type::INT8:
     case Type::INT32:

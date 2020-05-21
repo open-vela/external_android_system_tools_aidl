@@ -43,6 +43,13 @@ parcelable StructuredParcelable {
     int[] arrayDefaultsTo123 = { 1, 2, 3 };
     int[] arrayDefaultsToEmpty = { };
 
+    boolean boolDefault;
+    byte byteDefault;
+    int intDefault;
+    long longDefault;
+    float floatDefault;
+    double doubleDefault;
+
     // parse checks only
     double checkDoubleFromFloat = 3.14f;
     String[] checkStringArray1 = { "a", "b" };

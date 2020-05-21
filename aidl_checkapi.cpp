@@ -230,7 +230,6 @@ static bool are_compatible_parcelables(const AidlStructuredParcelable& older,
       };
       static std::vector<HistoricalException> exceptions = {
           {"android.net.DhcpResultsParcelable", "serverHostName"},
-          {"android.net.ProvisioningConfigurationParcelable", "enablePreconnection"},
           {"android.net.ResolverParamsParcel", "resolverOptions"},
       };
       bool excepted = false;

@@ -86,7 +86,7 @@ public class Rect implements android.os.Parcelable
 
   @android.annotation.Hide
   @android.compat.annotation.UnsupportedAppUsage(expectedSignature = "dummy", implicitMember = "dummy", maxTargetSdk = 28, publicAlternatives = "dummy", trackingBug = 42L, overrideSourcePosition="Rect.aidl:7:1:10:14")
-  public int y;
+  public int y = 0;
 
   public android.os.ParcelFileDescriptor fd;
   public static final android.os.Parcelable.Creator<Rect> CREATOR = new android.os.Parcelable.Creator<Rect>() {
