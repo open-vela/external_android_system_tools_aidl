@@ -20,6 +20,7 @@
 #include <vector>
 
 #include <android-base/stringprintf.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "aidl.h"
@@ -1959,6 +1960,26 @@ TEST_F(AidlTest, FailOnAmbiguousImports) {
   CaptureStderr();
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_F(AidlTest, UnusedImportDoesNotContributeInclude) {
+  io_delegate_.SetFileContents("a/b/IFoo.aidl",
+                               "package a.b;\n"
+                               "import a.b.IBar;\n"
+                               "import a.b.IQux;\n"
+                               "interface IFoo { IQux foo(); }\n");
+  io_delegate_.SetFileContents("a/b/IBar.aidl", "package a.b; interface IBar { void foo(); }");
+  io_delegate_.SetFileContents("a/b/IQux.aidl", "package a.b; interface IQux { void foo(); }");
+
+  Options options = Options::From("aidl --lang=ndk a/b/IFoo.aidl -I . -o out -h out/include");
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+
+  string output;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/include/aidl/a/b/IFoo.h", &output));
+  // IBar was imported but wasn't used. include is not expected.
+  EXPECT_THAT(output, Not(testing::HasSubstr("#include <aidl/a/b/IBar.h>")));
+  // IBar was imported and used. include is expected.
+  EXPECT_THAT(output, (testing::HasSubstr("#include <aidl/a/b/IQux.h>")));
 }
 
 class AidlOutputPathTest : public AidlTest {
