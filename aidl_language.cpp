@@ -296,10 +296,14 @@ const AidlTypeSpecifier* AidlAnnotatable::BackingType(const AidlTypenames& typen
     auto annotation_params = annotation->AnnotationParams(AidlConstantValueDecorator);
     if (auto it = annotation_params.find("type"); it != annotation_params.end()) {
       const string& type = it->second;
+
+      AIDL_FATAL_IF(type.size() < 2, this) << type;
+      AIDL_FATAL_IF(type[0] != '"', this) << type;
+      AIDL_FATAL_IF(type[type.length() - 1] != '"', this) << type;
+      string unquoted_type = type.substr(1, type.length() - 2);
+
       AidlTypeSpecifier* type_specifier =
-          new AidlTypeSpecifier(AIDL_LOCATION_HERE,
-                                // Strip the quotes off the type String.
-                                type.substr(1, type.length() - 2), false, nullptr, "");
+          new AidlTypeSpecifier(AIDL_LOCATION_HERE, unquoted_type, false, nullptr, "");
       type_specifier->Resolve(typenames);
       return type_specifier;
     }
