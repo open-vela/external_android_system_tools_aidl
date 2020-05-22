@@ -19,7 +19,6 @@
 #include "aidl_test_client_defaultimpl.h"
 #include "aidl_test_client_file_descriptors.h"
 #include "aidl_test_client_nullables.h"
-#include "aidl_test_client_parcelables.h"
 #include "aidl_test_client_primitives.h"
 #include "aidl_test_client_service_exceptions.h"
 #include "aidl_test_client_utf8_strings.h"
@@ -36,11 +35,7 @@ TEST_F(AidlTest, UnconvertedTests) {
   EXPECT_TRUE(client_tests::ConfirmReverseArrays(service));
   EXPECT_TRUE(client_tests::ConfirmReverseLists(service));
   EXPECT_TRUE(client_tests::ConfirmReverseBinderLists(service));
-  EXPECT_TRUE(client_tests::ConfirmSimpleParcelables(service));
-  EXPECT_TRUE(client_tests::ConfirmPersistableBundles(service));
   EXPECT_TRUE(client_tests::ConfirmIntfConstantExpressions(service));
-  EXPECT_TRUE(client_tests::ConfirmStructuredParcelables(service));
-  EXPECT_TRUE(client_tests::ConfirmStructuredParcelablesEquality(service));
   EXPECT_TRUE(client_tests::ConfirmFileDescriptors(service));
   EXPECT_TRUE(client_tests::ConfirmFileDescriptorArrays(service));
   EXPECT_TRUE(client_tests::ConfirmParcelFileDescriptors(service));
