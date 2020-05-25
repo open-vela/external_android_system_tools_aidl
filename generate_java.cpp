@@ -119,6 +119,13 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
   }
 
   std::ostringstream out;
+
+  if (parcel->IsVintfStability()) {
+    out << "public final boolean isStable() { return true; }\n";
+    parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(out.str()));
+  }
+
+  out.str("");
   out << "public static final android.os.Parcelable.Creator<" << parcel->GetName() << "> CREATOR = "
       << "new android.os.Parcelable.Creator<" << parcel->GetName() << ">() {\n";
   out << "  @Override\n";
