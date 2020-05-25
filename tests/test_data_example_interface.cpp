@@ -177,6 +177,7 @@ public interface IExampleInterface extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.test.IExampleInterface
   {
+    private static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -564,7 +565,6 @@ public interface IExampleInterface extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
-  public static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
   public static final int EXAMPLE_CONSTANT = 3;
   public boolean isEnabled() throws android.os.RemoteException;
   public int getState() throws android.os.RemoteException;
@@ -645,6 +645,7 @@ public interface IExampleInterface extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.test.IExampleInterface
   {
+    private static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -1084,7 +1085,6 @@ public interface IExampleInterface extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
-  public static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
   public static final int EXAMPLE_CONSTANT = 3;
   public boolean isEnabled() throws android.os.RemoteException;
   public int getState() throws android.os.RemoteException;
@@ -1165,6 +1165,7 @@ public interface IExampleInterface extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.test.IExampleInterface
   {
+    private static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -1201,157 +1202,165 @@ public interface IExampleInterface extends android.os.IInterface
         }
         case TRANSACTION_isEnabled:
         {
+          data.enforceInterface(descriptor);
+          boolean _result;
           try {
-            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::isEnabled::server");
-            data.enforceInterface(descriptor);
-            boolean _result = this.isEnabled();
-            reply.writeNoException();
-            reply.writeInt(((_result)?(1):(0)));
-            return true;
+            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::isEnabled::server");
+            _result = this.isEnabled();
           }
           finally {
             android.os.Trace.traceEnd(android.os.Trace.TRACE_TAG_AIDL);
           }
+          reply.writeNoException();
+          reply.writeInt(((_result)?(1):(0)));
+          return true;
         }
         case TRANSACTION_getState:
         {
+          data.enforceInterface(descriptor);
+          int _result;
           try {
-            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::getState::server");
-            data.enforceInterface(descriptor);
-            int _result = this.getState();
-            reply.writeNoException();
-            reply.writeInt(_result);
-            return true;
+            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::getState::server");
+            _result = this.getState();
           }
           finally {
             android.os.Trace.traceEnd(android.os.Trace.TRACE_TAG_AIDL);
           }
+          reply.writeNoException();
+          reply.writeInt(_result);
+          return true;
         }
         case TRANSACTION_getAddress:
         {
+          data.enforceInterface(descriptor);
+          java.lang.String _result;
           try {
-            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::getAddress::server");
-            data.enforceInterface(descriptor);
-            java.lang.String _result = this.getAddress();
-            reply.writeNoException();
-            reply.writeString(_result);
-            return true;
+            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::getAddress::server");
+            _result = this.getAddress();
           }
           finally {
             android.os.Trace.traceEnd(android.os.Trace.TRACE_TAG_AIDL);
           }
+          reply.writeNoException();
+          reply.writeString(_result);
+          return true;
         }
         case TRANSACTION_getParcelables:
         {
+          data.enforceInterface(descriptor);
+          android.foo.ExampleParcelable[] _result;
           try {
-            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::getParcelables::server");
-            data.enforceInterface(descriptor);
-            android.foo.ExampleParcelable[] _result = this.getParcelables();
-            reply.writeNoException();
-            reply.writeTypedArray(_result, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
-            return true;
+            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::getParcelables::server");
+            _result = this.getParcelables();
           }
           finally {
             android.os.Trace.traceEnd(android.os.Trace.TRACE_TAG_AIDL);
           }
+          reply.writeNoException();
+          reply.writeTypedArray(_result, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+          return true;
         }
         case TRANSACTION_setScanMode:
         {
+          data.enforceInterface(descriptor);
+          int _arg0;
+          _arg0 = data.readInt();
+          int _arg1;
+          _arg1 = data.readInt();
+          boolean _result;
           try {
-            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::setScanMode::server");
-            data.enforceInterface(descriptor);
-            int _arg0;
-            _arg0 = data.readInt();
-            int _arg1;
-            _arg1 = data.readInt();
-            boolean _result = this.setScanMode(_arg0, _arg1);
-            reply.writeNoException();
-            reply.writeInt(((_result)?(1):(0)));
-            return true;
+            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::setScanMode::server");
+            _result = this.setScanMode(_arg0, _arg1);
           }
           finally {
             android.os.Trace.traceEnd(android.os.Trace.TRACE_TAG_AIDL);
           }
+          reply.writeNoException();
+          reply.writeInt(((_result)?(1):(0)));
+          return true;
         }
         case TRANSACTION_registerBinder:
         {
+          data.enforceInterface(descriptor);
+          android.bar.IAuxInterface _arg0;
+          _arg0 = android.bar.IAuxInterface.Stub.asInterface(data.readStrongBinder());
           try {
-            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::registerBinder::server");
-            data.enforceInterface(descriptor);
-            android.bar.IAuxInterface _arg0;
-            _arg0 = android.bar.IAuxInterface.Stub.asInterface(data.readStrongBinder());
+            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::registerBinder::server");
             this.registerBinder(_arg0);
-            reply.writeNoException();
-            return true;
           }
           finally {
             android.os.Trace.traceEnd(android.os.Trace.TRACE_TAG_AIDL);
           }
+          reply.writeNoException();
+          return true;
         }
         case TRANSACTION_getRecursiveBinder:
         {
+          data.enforceInterface(descriptor);
+          android.test.IExampleInterface _result;
           try {
-            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::getRecursiveBinder::server");
-            data.enforceInterface(descriptor);
-            android.test.IExampleInterface _result = this.getRecursiveBinder();
-            reply.writeNoException();
-            reply.writeStrongBinder((((_result!=null))?(_result.asBinder()):(null)));
-            return true;
+            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::getRecursiveBinder::server");
+            _result = this.getRecursiveBinder();
           }
           finally {
             android.os.Trace.traceEnd(android.os.Trace.TRACE_TAG_AIDL);
           }
+          reply.writeNoException();
+          reply.writeStrongBinder((((_result!=null))?(_result.asBinder()):(null)));
+          return true;
         }
         case TRANSACTION_takesAnInterface:
         {
+          data.enforceInterface(descriptor);
+          android.test.IAuxInterface2 _arg0;
+          _arg0 = android.test.IAuxInterface2.Stub.asInterface(data.readStrongBinder());
+          int _result;
           try {
-            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::takesAnInterface::server");
-            data.enforceInterface(descriptor);
-            android.test.IAuxInterface2 _arg0;
-            _arg0 = android.test.IAuxInterface2.Stub.asInterface(data.readStrongBinder());
-            int _result = this.takesAnInterface(_arg0);
-            reply.writeNoException();
-            reply.writeInt(_result);
-            return true;
+            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::takesAnInterface::server");
+            _result = this.takesAnInterface(_arg0);
           }
           finally {
             android.os.Trace.traceEnd(android.os.Trace.TRACE_TAG_AIDL);
           }
+          reply.writeNoException();
+          reply.writeInt(_result);
+          return true;
         }
         case TRANSACTION_takesAParcelable:
         {
+          data.enforceInterface(descriptor);
+          android.test.CompoundParcelable.Subclass1 _arg0;
+          if ((0!=data.readInt())) {
+            _arg0 = android.test.CompoundParcelable.Subclass1.CREATOR.createFromParcel(data);
+          }
+          else {
+            _arg0 = null;
+          }
+          android.test.CompoundParcelable.Subclass2 _arg1;
+          if ((0!=data.readInt())) {
+            _arg1 = android.test.CompoundParcelable.Subclass2.CREATOR.createFromParcel(data);
+          }
+          else {
+            _arg1 = null;
+          }
+          int _result;
           try {
-            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::takesAParcelable::server");
-            data.enforceInterface(descriptor);
-            android.test.CompoundParcelable.Subclass1 _arg0;
-            if ((0!=data.readInt())) {
-              _arg0 = android.test.CompoundParcelable.Subclass1.CREATOR.createFromParcel(data);
-            }
-            else {
-              _arg0 = null;
-            }
-            android.test.CompoundParcelable.Subclass2 _arg1;
-            if ((0!=data.readInt())) {
-              _arg1 = android.test.CompoundParcelable.Subclass2.CREATOR.createFromParcel(data);
-            }
-            else {
-              _arg1 = null;
-            }
-            int _result = this.takesAParcelable(_arg0, _arg1);
-            reply.writeNoException();
-            reply.writeInt(_result);
-            if ((_arg1!=null)) {
-              reply.writeInt(1);
-              _arg1.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
-            }
-            else {
-              reply.writeInt(0);
-            }
-            return true;
+            android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::takesAParcelable::server");
+            _result = this.takesAParcelable(_arg0, _arg1);
           }
           finally {
             android.os.Trace.traceEnd(android.os.Trace.TRACE_TAG_AIDL);
           }
+          reply.writeNoException();
+          reply.writeInt(_result);
+          if ((_arg1!=null)) {
+            reply.writeInt(1);
+            _arg1.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+          }
+          else {
+            reply.writeInt(0);
+          }
+          return true;
         }
         default:
         {
@@ -1380,7 +1389,7 @@ public interface IExampleInterface extends android.os.IInterface
         android.os.Parcel _reply = android.os.Parcel.obtain();
         boolean _result;
         try {
-          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::isEnabled::client");
+          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::isEnabled::client");
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_isEnabled, _data, _reply, 0);
           if (!_status && getDefaultImpl() != null) {
@@ -1402,7 +1411,7 @@ public interface IExampleInterface extends android.os.IInterface
         android.os.Parcel _reply = android.os.Parcel.obtain();
         int _result;
         try {
-          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::getState::client");
+          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::getState::client");
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getState, _data, _reply, 0);
           if (!_status && getDefaultImpl() != null) {
@@ -1424,7 +1433,7 @@ public interface IExampleInterface extends android.os.IInterface
         android.os.Parcel _reply = android.os.Parcel.obtain();
         java.lang.String _result;
         try {
-          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::getAddress::client");
+          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::getAddress::client");
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getAddress, _data, _reply, 0);
           if (!_status && getDefaultImpl() != null) {
@@ -1447,7 +1456,7 @@ public interface IExampleInterface extends android.os.IInterface
         android.os.Parcel _reply = android.os.Parcel.obtain();
         android.foo.ExampleParcelable[] _result;
         try {
-          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::getParcelables::client");
+          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::getParcelables::client");
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getParcelables, _data, _reply, 0);
           if (!_status && getDefaultImpl() != null) {
@@ -1471,7 +1480,7 @@ public interface IExampleInterface extends android.os.IInterface
         android.os.Parcel _reply = android.os.Parcel.obtain();
         boolean _result;
         try {
-          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::setScanMode::client");
+          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::setScanMode::client");
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeInt(mode);
           _data.writeInt(duration);
@@ -1496,7 +1505,7 @@ public interface IExampleInterface extends android.os.IInterface
         android.os.Parcel _data = android.os.Parcel.obtain();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         try {
-          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::registerBinder::client");
+          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::registerBinder::client");
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeStrongBinder((((foo!=null))?(foo.asBinder()):(null)));
           boolean _status = mRemote.transact(Stub.TRANSACTION_registerBinder, _data, _reply, 0);
@@ -1518,7 +1527,7 @@ public interface IExampleInterface extends android.os.IInterface
         android.os.Parcel _reply = android.os.Parcel.obtain();
         android.test.IExampleInterface _result;
         try {
-          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::getRecursiveBinder::client");
+          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::getRecursiveBinder::client");
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getRecursiveBinder, _data, _reply, 0);
           if (!_status && getDefaultImpl() != null) {
@@ -1540,7 +1549,7 @@ public interface IExampleInterface extends android.os.IInterface
         android.os.Parcel _reply = android.os.Parcel.obtain();
         int _result;
         try {
-          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::takesAnInterface::client");
+          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::takesAnInterface::client");
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeStrongBinder((((arg!=null))?(arg.asBinder()):(null)));
           boolean _status = mRemote.transact(Stub.TRANSACTION_takesAnInterface, _data, _reply, 0);
@@ -1563,7 +1572,7 @@ public interface IExampleInterface extends android.os.IInterface
         android.os.Parcel _reply = android.os.Parcel.obtain();
         int _result;
         try {
-          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::takesAParcelable::client");
+          android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "IExampleInterface::takesAParcelable::client");
           _data.writeInterfaceToken(DESCRIPTOR);
           if ((arg!=null)) {
             _data.writeInt(1);
@@ -1624,7 +1633,6 @@ public interface IExampleInterface extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
-  public static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
   public static final int EXAMPLE_CONSTANT = 3;
   public boolean isEnabled() throws android.os.RemoteException;
   public int getState() throws android.os.RemoteException;
@@ -1703,6 +1711,7 @@ public interface IExampleInterface extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.test.IExampleInterface
   {
+    private static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -2120,7 +2129,6 @@ public interface IExampleInterface extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
-  public static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
   public static final int EXAMPLE_CONSTANT = 3;
   public boolean isEnabled() throws android.os.RemoteException;
   public int getState(int a, int b) throws android.os.RemoteException;
@@ -2213,6 +2221,7 @@ public interface IExampleInterface extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.test.IExampleInterface
   {
+    private static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -2692,7 +2701,6 @@ public interface IExampleInterface extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
-  public static final java.lang.String DESCRIPTOR = "android.test.IExampleInterface";
   public static final int EXAMPLE_CONSTANT = 3;
   public boolean isEnabled() throws android.os.RemoteException;
   public int getState(int a, int b) throws android.os.RemoteException;
