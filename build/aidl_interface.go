@@ -827,6 +827,7 @@ type aidlInterfaceProperties struct {
 
 	Backend struct {
 		// Backend of the compiler generating code for Java clients.
+		// When enabled, this creates a target called "<name>-java".
 		Java struct {
 			CommonBackendProperties
 			// Set to the version of the sdk to compile against
@@ -838,11 +839,14 @@ type aidlInterfaceProperties struct {
 		}
 		// Backend of the compiler generating code for C++ clients using
 		// libbinder (unstable C++ interface)
+		// When enabled, this creates a target called "<name>-cpp".
 		Cpp struct {
 			CommonNativeBackendProperties
 		}
 		// Backend of the compiler generating code for C++ clients using
 		// libbinder_ndk (stable C interface to system's libbinder)
+		// When enabled, this creates a target called "<name>-ndk"
+		// (for apps) and "<name>-ndk_platform" (for platform usage).
 		Ndk struct {
 			CommonNativeBackendProperties
 		}
@@ -915,6 +919,15 @@ func (i *aidlInterface) checkImports(mctx android.BaseModuleContext) {
 	}
 }
 
+func (i *aidlInterface) checkGenTrace(mctx android.LoadHookContext) {
+	if !proptools.Bool(i.properties.Gen_trace) {
+		return
+	}
+	if i.shouldGenerateJavaBackend() && !proptools.Bool(i.properties.Backend.Java.Platform_apis) {
+		mctx.PropertyErrorf("gen_trace", "must be false when Java backend is enabled and platform_apis is false")
+	}
+}
+
 func (i *aidlInterface) checkStability(mctx android.LoadHookContext) {
 	if i.properties.Stability == nil {
 		return
@@ -971,10 +984,6 @@ func (i *aidlInterface) hasVersion() bool {
 	return len(i.properties.Versions) > 0
 }
 
-func (i *aidlInterface) isCurrentVersion(ctx android.LoadHookContext, version string) bool {
-	return version == i.currentVersion(ctx)
-}
-
 // This function returns module name with version. Assume that there is foo of which latest version is 2
 // Version -> Module name
 // "1"->foo-V1
@@ -986,7 +995,7 @@ func (i *aidlInterface) versionedName(ctx android.LoadHookContext, version strin
 	if version == "" {
 		return name
 	}
-	if i.isCurrentVersion(ctx, version) {
+	if version == i.currentVersion(ctx) {
 		return name + "-unstable"
 	}
 	return name + "-V" + version
@@ -1017,7 +1026,7 @@ func (i *aidlInterface) cppOutputName(version string) string {
 }
 
 func (i *aidlInterface) srcsForVersion(mctx android.LoadHookContext, version string) (srcs []string, aidlRoot string) {
-	if i.isCurrentVersion(mctx, version) {
+	if version == i.currentVersion(mctx) {
 		return i.properties.Srcs, i.properties.Local_include_dir
 	} else {
 		aidlRoot = filepath.Join(aidlApiDir, i.ModuleBase.Name(), version)
@@ -1046,6 +1055,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 	i.gatherInterface(mctx)
 	i.checkStability(mctx)
 	i.checkVersions(mctx)
+	i.checkGenTrace(mctx)
 
 	if mctx.Failed() {
 		return
@@ -1198,8 +1208,10 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 	})
 
 	importExportDependencies := wrap("", i.properties.Imports, "-"+lang)
+	var sharedLibDependency []string
 	var libJSONCppDependency []string
 	var staticLibDependency []string
+	var headerLibs []string
 	var sdkVersion *string
 	var minSdkVersion *string
 	var stl *string
@@ -1213,7 +1225,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 			libJSONCppDependency = []string{"libjsoncpp"}
 		}
 		if genTrace {
-			importExportDependencies = append(importExportDependencies, "libcutils")
+			sharedLibDependency = append(sharedLibDependency, "libcutils")
 		}
 		hostSupported = i.properties.Host_supported
 		minSdkVersion = i.properties.Backend.Cpp.Min_sdk_version
@@ -1222,6 +1234,9 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		if genLog {
 			staticLibDependency = []string{"libjsoncpp_ndk"}
 		}
+		if genTrace {
+			sharedLibDependency = append(sharedLibDependency, "libandroid")
+		}
 		sdkVersion = proptools.StringPtr("current")
 		stl = proptools.StringPtr("c++_shared")
 		minSdkVersion = i.properties.Backend.Ndk.Min_sdk_version
@@ -1229,6 +1244,10 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		importExportDependencies = append(importExportDependencies, "libbinder_ndk")
 		if genLog {
 			libJSONCppDependency = []string{"libjsoncpp"}
+		}
+		if genTrace {
+			headerLibs = append(headerLibs, "libandroid_aidltrace")
+			sharedLibDependency = append(sharedLibDependency, "libcutils")
 		}
 		hostSupported = i.properties.Host_supported
 		addCflags = append(addCflags, "-DBINDER_STABILITY_SUPPORT")
@@ -1260,7 +1279,8 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		Static:                    staticLib{Whole_static_libs: libJSONCppDependency},
 		Shared:                    sharedLib{Shared_libs: libJSONCppDependency, Export_shared_lib_headers: libJSONCppDependency},
 		Static_libs:               staticLibDependency,
-		Shared_libs:               importExportDependencies,
+		Shared_libs:               append(importExportDependencies, sharedLibDependency...),
+		Header_libs:               headerLibs,
 		Export_shared_lib_headers: importExportDependencies,
 		Sdk_version:               sdkVersion,
 		Stl:                       stl,
@@ -1304,6 +1324,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		Lang:      langJava,
 		BaseName:  i.ModuleBase.Name(),
 		Version:   version,
+		GenTrace:  proptools.Bool(i.properties.Gen_trace),
 		Unstable:  i.properties.Unstable,
 	})
 
