@@ -87,9 +87,7 @@ static std::function<void(const CodeGeneratorContext& c)> StandardWrite(const st
   };
 }
 
-TypeInfo PrimitiveType(const std::string& cpp_name, const std::string& pretty_name,
-                       const std::optional<std::string>& cpp_name_for_array_opt = std::nullopt) {
-  std::string cpp_name_for_array = cpp_name_for_array_opt.value_or(cpp_name);
+TypeInfo PrimitiveType(const std::string& cpp_name, const std::string& pretty_name) {
   return TypeInfo{
       .raw =
           TypeInfo::Aspect{
@@ -99,14 +97,14 @@ TypeInfo PrimitiveType(const std::string& cpp_name, const std::string& pretty_na
               .write_func = StandardWrite("AParcel_write" + pretty_name),
           },
       .array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
-          .cpp_name = "std::vector<" + cpp_name_for_array + ">",
+          .cpp_name = "std::vector<" + cpp_name + ">",
           .value_is_cheap = false,
           .read_func = StandardRead("::ndk::AParcel_readVector"),
           .write_func = StandardWrite("::ndk::AParcel_writeVector"),
       }),
       .nullable = nullptr,
       .nullable_array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
-          .cpp_name = "std::optional<std::vector<" + cpp_name_for_array + ">>",
+          .cpp_name = "std::optional<std::vector<" + cpp_name + ">>",
           .value_is_cheap = false,
           .read_func = StandardRead("::ndk::AParcel_readVector"),
           .write_func = StandardWrite("::ndk::AParcel_writeVector"),
@@ -237,7 +235,7 @@ TypeInfo EnumDeclarationTypeInfo(const AidlEnumDeclaration& enum_decl) {
 static map<std::string, TypeInfo> kNdkTypeInfoMap = {
     {"void", TypeInfo{{"void", true, nullptr, nullptr}, nullptr, nullptr, nullptr}},
     {"boolean", PrimitiveType("bool", "Bool")},
-    {"byte", PrimitiveType("int8_t", "Byte", "uint8_t")},
+    {"byte", PrimitiveType("int8_t", "Byte")},
     {"char", PrimitiveType("char16_t", "Char")},
     {"int", PrimitiveType("int32_t", "Int32")},
     {"long", PrimitiveType("int64_t", "Int64")},
@@ -364,18 +362,15 @@ static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlType
 
   if (aidl.IsArray()) {
     if (aidl.IsNullable()) {
-      AIDL_FATAL_IF(info.nullable_array == nullptr, aidl)
-          << "Unsupported type in NDK Backend: " << aidl.ToString();
+      AIDL_FATAL_IF(info.nullable_array == nullptr, aidl) << "Unsupported type in NDK Backend.";
       return *info.nullable_array;
     }
-    AIDL_FATAL_IF(info.array == nullptr, aidl)
-        << "Unsupported type in NDK Backend: " << aidl.ToString();
+    AIDL_FATAL_IF(info.array == nullptr, aidl) << "Unsupported type in NDK Backend.";
     return *info.array;
   }
 
   if (aidl.IsNullable()) {
-    AIDL_FATAL_IF(info.nullable == nullptr, aidl)
-        << "Unsupported type in NDK Backend: " << aidl.ToString();
+    AIDL_FATAL_IF(info.nullable == nullptr, aidl) << "Unsupported type in NDK Backend.";
     return *info.nullable;
   }
 
