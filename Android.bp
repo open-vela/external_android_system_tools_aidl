@@ -277,7 +277,6 @@ cc_test {
 
 cc_test {
     name: "aidl_test_client",
-    gtest: false,
     defaults: ["aidl_test_defaults"],
     static_libs: ["libaidl-integration-test", "libcutils"],
     srcs: [
