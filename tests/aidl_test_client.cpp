@@ -14,14 +14,7 @@
  * limitations under the License.
  */
 
-#include <iostream>
-
-#include <android-base/logging.h>
-#include <binder/IServiceManager.h>
-#include <utils/String16.h>
-#include <utils/StrongPointer.h>
-
-#include "android/aidl/tests/ITestService.h"
+#include "aidl_test_client.h"
 
 #include "aidl_test_client_defaultimpl.h"
 #include "aidl_test_client_file_descriptors.h"
@@ -31,90 +24,37 @@
 #include "aidl_test_client_service_exceptions.h"
 #include "aidl_test_client_utf8_strings.h"
 
-// libutils:
-using android::OK;
-using android::sp;
-using android::status_t;
-using android::String16;
+#include <android-base/logging.h>
 
-// libbinder:
-using android::getService;
-
-// generated
-using android::aidl::tests::ITestService;
-
-using std::cerr;
-using std::cout;
-using std::endl;
-
-namespace android {
-namespace aidl {
-namespace tests {
-namespace client {
-
-const char kServiceName[] = "android.aidl.tests.ITestService";
-
-bool GetService(sp<ITestService>* service) {
-  cout << "Retrieving test service binder" << endl;
-  status_t status = getService(String16(kServiceName), service);
-  if (status != OK) {
-    cerr << "Failed to get service binder: '" << kServiceName
-         << "' status=" << status << endl;
-    return false;
-  }
-  return true;
-}
-
-}  // namespace client
-}  // namespace tests
-}  // namespace aidl
-}  // namespace android
-
-/* Runs all the test cases in aidl_test_client_*.cpp files. */
-int main(int /* argc */, char * argv []) {
-  android::base::InitLogging(argv, android::base::StderrLogger);
-  sp<ITestService> service;
+// These tests were written without gtest, and not all have been converted to
+// gtest. Places which haven't been converted are still included as part of this
+// test here.
+TEST_F(AidlTest, UnconvertedTests) {
   namespace client_tests = android::aidl::tests::client;
 
-  if (!client_tests::GetService(&service)) return 1;
+  EXPECT_TRUE(client_tests::ConfirmPrimitiveRepeat(service));
+  EXPECT_TRUE(client_tests::ConfirmReverseArrays(service));
+  EXPECT_TRUE(client_tests::ConfirmReverseLists(service));
+  EXPECT_TRUE(client_tests::ConfirmReverseBinderLists(service));
+  EXPECT_TRUE(client_tests::ConfirmSimpleParcelables(service));
+  EXPECT_TRUE(client_tests::ConfirmPersistableBundles(service));
+  EXPECT_TRUE(client_tests::ConfirmIntfConstantExpressions(service));
+  EXPECT_TRUE(client_tests::ConfirmStructuredParcelables(service));
+  EXPECT_TRUE(client_tests::ConfirmStructuredParcelablesEquality(service));
+  EXPECT_TRUE(client_tests::ConfirmFileDescriptors(service));
+  EXPECT_TRUE(client_tests::ConfirmFileDescriptorArrays(service));
+  EXPECT_TRUE(client_tests::ConfirmParcelFileDescriptors(service));
+  EXPECT_TRUE(client_tests::ConfirmParcelFileDescriptorArrays(service));
+  EXPECT_TRUE(client_tests::ConfirmServiceSpecificExceptions(service));
+  EXPECT_TRUE(client_tests::ConfirmNullables(service));
+  EXPECT_TRUE(client_tests::ConfirmUtf8InCppStringRepeat(service));
+  EXPECT_TRUE(client_tests::ConfirmUtf8InCppStringArrayReverse(service));
+  EXPECT_TRUE(client_tests::ConfirmUtf8InCppStringListReverse(service));
+  EXPECT_TRUE(client_tests::ConfirmDefaultImpl(service));
+}
 
-  if (!client_tests::ConfirmPrimitiveRepeat(service)) return 1;
-
-  if (!client_tests::ConfirmReverseArrays(service)) return 1;
-
-  if (!client_tests::ConfirmReverseLists(service)) return 1;
-
-  if (!client_tests::ConfirmReverseBinderLists(service)) return 1;
-
-  if (!client_tests::ConfirmSimpleParcelables(service)) return 1;
-
-  if (!client_tests::ConfirmPersistableBundles(service)) return 1;
-
-  if (!client_tests::ConfirmIntfConstantExpressions(service)) return 1;
-
-  if (!client_tests::ConfirmStructuredParcelables(service)) return 1;
-
-  if (!client_tests::ConfirmStructuredParcelablesEquality(service)) return 1;
-
-  if (!client_tests::ConfirmFileDescriptors(service)) return 1;
-
-  if (!client_tests::ConfirmFileDescriptorArrays(service)) return 1;
-
-  if (!client_tests::ConfirmParcelFileDescriptors(service)) return 1;
-
-  if (!client_tests::ConfirmParcelFileDescriptorArrays(service)) return 1;
-
-  if (!client_tests::ConfirmServiceSpecificExceptions(service)) return 1;
-
-  if (!client_tests::ConfirmNullables(service)) return 1;
-
-  if (!client_tests::ConfirmUtf8InCppStringRepeat(service)) return 1;
-
-  if (!client_tests::ConfirmUtf8InCppStringArrayReverse(service)) return 1;
-
-  if (!client_tests::ConfirmUtf8InCppStringListReverse(service)) return 1;
-
-  if (!client_tests::ConfirmDefaultImpl(service)) return 1;
-
-  return 0;
+int main(int argc, char* argv[]) {
+  android::base::InitLogging(argv, android::base::StderrLogger);
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
