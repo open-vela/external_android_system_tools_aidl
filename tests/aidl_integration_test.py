@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import pipes
 import subprocess
@@ -114,8 +114,8 @@ class NativeClient:
         self.host.run('killall %s' % self.binary, ignore_status=True)
     def run(self):
         result = self.host.run(self.binary, ignore_status=True)
+        print(result.printable_string())
         if result.exit_status:
-            print(result.printable_string())
             raise TestFail('%s returned status code %d' %
                            (self.binary, result.exit_status))
 
@@ -141,8 +141,8 @@ class JavaClient:
                                 JAVA_LOG_FILE, JAVA_SUCCESS_SENTINEL,
                                 JAVA_FAILURE_SENTINEL),
                                ignore_status=True)
+        print(result.printable_string())
         if result.exit_status:
-            print(result.printable_string())
             raise TestFail('Java client did not complete successfully.')
 
 def supported_bitnesses(host):
