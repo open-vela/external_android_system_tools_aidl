@@ -30,9 +30,6 @@
 #include <android-base/macros.h>
 #include <android-base/strings.h>
 
-struct yy_buffer_state;
-typedef yy_buffer_state* YY_BUFFER_STATE;
-
 using android::aidl::AidlTypenames;
 using android::aidl::CodeWriter;
 using android::aidl::Options;
@@ -906,65 +903,3 @@ class AidlImport : public AidlNode {
   DISALLOW_COPY_AND_ASSIGN(AidlImport);
 };
 
-class Parser {
- public:
-  ~Parser();
-
-  // Parse contents of file |filename|. Should only be called once.
-  static std::unique_ptr<Parser> Parse(const std::string& filename,
-                                       const android::aidl::IoDelegate& io_delegate,
-                                       AidlTypenames& typenames);
-
-  void AddError() { error_++; }
-  bool HasError() { return error_ != 0; }
-
-  const std::string& FileName() const { return filename_; }
-  void* Scanner() const { return scanner_; }
-
-  void AddImport(std::unique_ptr<AidlImport>&& import);
-  const std::vector<std::unique_ptr<AidlImport>>& GetImports() {
-    return imports_;
-  }
-
-  void SetPackage(unique_ptr<AidlQualifiedName> name) { package_ = std::move(name); }
-  std::vector<std::string> Package() const;
-
-  void DeferResolution(AidlTypeSpecifier* typespec) {
-    unresolved_typespecs_.emplace_back(typespec);
-  }
-
-  const vector<AidlTypeSpecifier*>& GetUnresolvedTypespecs() const { return unresolved_typespecs_; }
-
-  bool Resolve();
-
-  void AddDefinedType(unique_ptr<AidlDefinedType> type) {
-    // Parser does NOT own AidlDefinedType, it just has references to the types
-    // that it encountered while parsing the input file.
-    defined_types_.emplace_back(type.get());
-
-    // AidlDefinedType IS owned by AidlTypenames
-    if (!typenames_.AddDefinedType(std::move(type))) {
-      AddError();
-    }
-  }
-
-  vector<AidlDefinedType*>& GetDefinedTypes() { return defined_types_; }
-
- private:
-  explicit Parser(const std::string& filename, std::string& raw_buffer,
-                  android::aidl::AidlTypenames& typenames);
-
-  std::string filename_;
-  std::unique_ptr<AidlQualifiedName> package_;
-  AidlTypenames& typenames_;
-
-  void* scanner_ = nullptr;
-  YY_BUFFER_STATE buffer_;
-  int error_ = 0;
-
-  std::vector<std::unique_ptr<AidlImport>> imports_;
-  vector<AidlDefinedType*> defined_types_;
-  vector<AidlTypeSpecifier*> unresolved_typespecs_;
-
-  DISALLOW_COPY_AND_ASSIGN(Parser);
-};

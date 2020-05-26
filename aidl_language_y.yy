@@ -16,6 +16,7 @@
 
 %{
 #include "aidl_language.h"
+#include "parser.h"
 #include "aidl_language_y-module.h"
 #include "logging.h"
 #include <android-base/parseint.h>
