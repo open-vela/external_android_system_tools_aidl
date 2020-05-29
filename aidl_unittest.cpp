@@ -959,6 +959,42 @@ TEST_P(AidlTest, RejectsPrimitiveListInStableAidl) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
+TEST_F(AidlTest, ExtensionTest) {
+  string extendable_parcelable =
+      "package a; parcelable Data {\n"
+      "  ParcelableHolder extension;\n"
+      "  ParcelableHolder extension2;\n"
+      "}";
+  EXPECT_NE(nullptr,
+            Parse("a/Data.aidl", extendable_parcelable, typenames_, Options::Language::JAVA));
+  EXPECT_EQ(nullptr,
+            Parse("a/Data.aidl", extendable_parcelable, typenames_, Options::Language::CPP));
+  EXPECT_EQ(nullptr,
+            Parse("a/Data.aidl", extendable_parcelable, typenames_, Options::Language::NDK));
+
+  string parcelableholder_return_interface =
+      "package a; interface IFoo {\n"
+      "  ParcelableHolder foo();\n"
+      "}";
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", parcelableholder_return_interface, typenames_,
+                           Options::Language::JAVA));
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", parcelableholder_return_interface, typenames_,
+                           Options::Language::CPP));
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", parcelableholder_return_interface, typenames_,
+                           Options::Language::NDK));
+
+  string extendable_parcelable_arg_interface =
+      "package a; interface IFoo {\n"
+      "  void foo(in ParcelableHolder ph);\n"
+      "}";
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", extendable_parcelable_arg_interface, typenames_,
+                           Options::Language::JAVA));
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", extendable_parcelable_arg_interface, typenames_,
+                           Options::Language::CPP));
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", extendable_parcelable_arg_interface, typenames_,
+                           Options::Language::NDK));
+}
+
 TEST_F(AidlTest, ApiDump) {
   io_delegate_.SetFileContents(
       "foo/bar/IFoo.aidl",
