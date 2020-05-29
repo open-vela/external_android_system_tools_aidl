@@ -45,6 +45,17 @@ public class TestLogger {
         throw new TestFailException(line);
     }
 
+    public void assertTrue(boolean b, String line) throws TestFailException {
+      if (!b) {
+        Log.e(TAG, line);
+        mLogFile.println(line);
+        throw new TestFailException(line);
+      }
+    }
+
+    public void assertFalse(boolean b, String line) throws TestFailException {
+      assertTrue(!b, line);
+    }
     public void close() {
         if (mLogFile != null) {
             mLogFile.close();
