@@ -1083,7 +1083,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 		}
 		libs = append(libs, unstableLib)
 		for _, version := range versionsForCpp {
-			addCppLibrary(mctx, i, version, langCpp)
+			libs = append(libs, addCppLibrary(mctx, i, version, langCpp))
 		}
 	}
 
@@ -1095,7 +1095,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 			}
 			libs = append(libs, unstableLib)
 			for _, version := range versionsForCpp {
-				addCppLibrary(mctx, i, version, langNdk)
+				libs = append(libs, addCppLibrary(mctx, i, version, langNdk))
 			}
 		}
 		// TODO(b/121157555): combine with '-ndk' variant
@@ -1105,7 +1105,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 		}
 		libs = append(libs, unstableLib)
 		for _, version := range versionsForCpp {
-			addCppLibrary(mctx, i, version, langNdkPlatform)
+			libs = append(libs, addCppLibrary(mctx, i, version, langNdkPlatform))
 		}
 	}
 	versionsForJava := i.properties.Versions
@@ -1119,7 +1119,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 		}
 		libs = append(libs, unstableLib)
 		for _, version := range versionsForJava {
-			addJavaLibrary(mctx, i, version)
+			libs = append(libs, addJavaLibrary(mctx, i, version))
 		}
 	}
 
