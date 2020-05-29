@@ -618,7 +618,7 @@ func (m *aidlApi) checkEquality(ctx android.ModuleContext, oldDump apiDump, newD
 	}
 	formattedMessageFile := android.PathForModuleOut(ctx, "message_check_equality.txt")
 	rb := android.NewRuleBuilder()
-	rb.Command().Text("sed").Flag(" s/%s/" + m.properties.BaseName + "/g ").Input(messageFile).Text(" > ").Output(formattedMessageFile)
+	rb.Command().Text("sed").Flag(" s/%s/" + m.properties.BaseName + "/ ").Input(messageFile).Text(" > ").Output(formattedMessageFile)
 	rb.Build(pctx, ctx, "format_message_"+m.properties.BaseName, "")
 
 	var implicits android.Paths
@@ -1083,7 +1083,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 		}
 		libs = append(libs, unstableLib)
 		for _, version := range versionsForCpp {
-			libs = append(libs, addCppLibrary(mctx, i, version, langCpp))
+			addCppLibrary(mctx, i, version, langCpp)
 		}
 	}
 
@@ -1095,7 +1095,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 			}
 			libs = append(libs, unstableLib)
 			for _, version := range versionsForCpp {
-				libs = append(libs, addCppLibrary(mctx, i, version, langNdk))
+				addCppLibrary(mctx, i, version, langNdk)
 			}
 		}
 		// TODO(b/121157555): combine with '-ndk' variant
@@ -1105,7 +1105,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 		}
 		libs = append(libs, unstableLib)
 		for _, version := range versionsForCpp {
-			libs = append(libs, addCppLibrary(mctx, i, version, langNdkPlatform))
+			addCppLibrary(mctx, i, version, langNdkPlatform)
 		}
 	}
 	versionsForJava := i.properties.Versions
@@ -1119,7 +1119,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 		}
 		libs = append(libs, unstableLib)
 		for _, version := range versionsForJava {
-			libs = append(libs, addJavaLibrary(mctx, i, version))
+			addJavaLibrary(mctx, i, version)
 		}
 	}
 
