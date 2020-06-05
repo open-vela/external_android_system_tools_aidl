@@ -74,6 +74,7 @@ cc_library_static {
         "line_reader.cpp",
         "io_delegate.cpp",
         "options.cpp",
+        "parser.cpp",
     ],
     yacc: {
         gen_location_hh: true,
