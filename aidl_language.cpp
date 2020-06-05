@@ -136,7 +136,9 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
         {"trackingBug", "long"}}},
       {AidlAnnotation::Type::JAVA_STABLE_PARCELABLE, "JavaOnlyStableParcelable", {}},
       {AidlAnnotation::Type::HIDE, "Hide", {}},
-      {AidlAnnotation::Type::BACKING, "Backing", {{"type", "String"}}}};
+      {AidlAnnotation::Type::BACKING, "Backing", {{"type", "String"}}},
+      {AidlAnnotation::Type::JAVA_PASSTHROUGH, "JavaPassthrough", {{"annotation", "String"}}},
+  };
   return kSchemas;
 }
 
@@ -284,6 +286,10 @@ const AidlAnnotation* AidlAnnotatable::UnsupportedAppUsage() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::UNSUPPORTED_APP_USAGE);
 }
 
+const AidlAnnotation* AidlAnnotatable::JavaPassthrough() const {
+  return GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_PASSTHROUGH);
+}
+
 const AidlTypeSpecifier* AidlAnnotatable::BackingType(const AidlTypenames& typenames) const {
   auto annotation = GetAnnotation(annotations_, AidlAnnotation::Type::BACKING);
   if (annotation != nullptr) {
@@ -416,7 +422,8 @@ std::set<AidlAnnotation::Type> AidlTypeSpecifier::GetSupportedAnnotations() cons
   // kHide and kUnsupportedAppUsage are both method return annotations
   // which we don't distinguish from other type specifiers.
   return {AidlAnnotation::Type::NULLABLE, AidlAnnotation::Type::UTF8_IN_CPP,
-          AidlAnnotation::Type::UNSUPPORTED_APP_USAGE, AidlAnnotation::Type::HIDE};
+          AidlAnnotation::Type::UNSUPPORTED_APP_USAGE, AidlAnnotation::Type::HIDE,
+          AidlAnnotation::Type::JAVA_PASSTHROUGH};
 }
 
 bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
@@ -773,7 +780,8 @@ bool AidlParameterizable<std::string>::CheckValid() const {
 
 std::set<AidlAnnotation::Type> AidlParcelable::GetSupportedAnnotations() const {
   return {AidlAnnotation::Type::VINTF_STABILITY, AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
-          AidlAnnotation::Type::JAVA_STABLE_PARCELABLE, AidlAnnotation::Type::HIDE};
+          AidlAnnotation::Type::JAVA_STABLE_PARCELABLE, AidlAnnotation::Type::HIDE,
+          AidlAnnotation::Type::JAVA_PASSTHROUGH};
 }
 
 bool AidlParcelable::CheckValid(const AidlTypenames& typenames) const {
@@ -814,7 +822,7 @@ void AidlStructuredParcelable::Dump(CodeWriter* writer) const {
 
 std::set<AidlAnnotation::Type> AidlStructuredParcelable::GetSupportedAnnotations() const {
   return {AidlAnnotation::Type::VINTF_STABILITY, AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
-          AidlAnnotation::Type::HIDE};
+          AidlAnnotation::Type::HIDE, AidlAnnotation::Type::JAVA_PASSTHROUGH};
 }
 
 bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const {
@@ -993,7 +1001,7 @@ bool AidlEnumDeclaration::Autofill() {
 
 std::set<AidlAnnotation::Type> AidlEnumDeclaration::GetSupportedAnnotations() const {
   return {AidlAnnotation::Type::VINTF_STABILITY, AidlAnnotation::Type::BACKING,
-          AidlAnnotation::Type::HIDE};
+          AidlAnnotation::Type::HIDE, AidlAnnotation::Type::JAVA_PASSTHROUGH};
 }
 
 bool AidlEnumDeclaration::CheckValid(const AidlTypenames& typenames) const {
@@ -1086,7 +1094,7 @@ void AidlInterface::Dump(CodeWriter* writer) const {
 
 std::set<AidlAnnotation::Type> AidlInterface::GetSupportedAnnotations() const {
   return {AidlAnnotation::Type::VINTF_STABILITY, AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
-          AidlAnnotation::Type::HIDE};
+          AidlAnnotation::Type::HIDE, AidlAnnotation::Type::JAVA_PASSTHROUGH};
 }
 
 bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {

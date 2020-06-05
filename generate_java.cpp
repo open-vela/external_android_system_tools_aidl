@@ -297,14 +297,35 @@ std::string generate_java_unsupportedappusage_parameters(const AidlAnnotation& a
 
 std::vector<std::string> generate_java_annotations(const AidlAnnotatable& a) {
   std::vector<std::string> result;
-  const AidlAnnotation* unsupported_app_usage = a.UnsupportedAppUsage();
   if (a.IsHide()) {
     result.emplace_back("@android.annotation.Hide");
   }
+
+  const AidlAnnotation* unsupported_app_usage = a.UnsupportedAppUsage();
   if (unsupported_app_usage != nullptr) {
     result.emplace_back("@android.compat.annotation.UnsupportedAppUsage" +
                         generate_java_unsupportedappusage_parameters(*unsupported_app_usage));
   }
+
+  auto strip_double_quote = [](const AidlTypeSpecifier& type, const std::string& raw_value) -> std::string {
+    if (!android::base::StartsWith(raw_value, "\"") ||
+        !android::base::EndsWith(raw_value, "\"")) {
+      AIDL_FATAL(type) << "Java passthrough annotation " << raw_value << " is not properly quoted";
+      return "";
+    }
+    return raw_value.substr(1, raw_value.size() - 2);
+  };
+
+  const AidlAnnotation* java_passthrough = a.JavaPassthrough();
+  if (java_passthrough != nullptr) {
+    for (const auto& name_and_param : java_passthrough->AnnotationParams(strip_double_quote)) {
+      if (name_and_param.first == "annotation") {
+        result.emplace_back(name_and_param.second);
+        break;
+      }
+    }
+  }
+
   return result;
 }
 
