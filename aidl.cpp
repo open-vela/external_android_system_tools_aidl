@@ -47,6 +47,7 @@
 #include "logging.h"
 #include "options.h"
 #include "os.h"
+#include "parser.h"
 
 #ifndef O_BINARY
 #  define O_BINARY  0
