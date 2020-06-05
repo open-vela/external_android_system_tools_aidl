@@ -218,6 +218,7 @@ class AidlAnnotation : public AidlNode {
     VINTF_STABILITY,
     NULLABLE,
     UTF8_IN_CPP,
+    JAVA_PASSTHROUGH,
   };
   static std::string TypeToString(Type type);
 
@@ -287,6 +288,7 @@ class AidlAnnotatable : public AidlNode {
   void DumpAnnotations(CodeWriter* writer) const;
 
   const AidlAnnotation* UnsupportedAppUsage() const;
+  const AidlAnnotation* JavaPassthrough() const;
   const AidlTypeSpecifier* BackingType(const AidlTypenames& typenames) const;
   std::string ToString() const;
 
