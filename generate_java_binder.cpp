@@ -406,8 +406,9 @@ static std::shared_ptr<Method> generate_interface_method(const AidlMethod& metho
   decl->annotations = generate_java_annotations(method.GetType());
 
   for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
-    decl->parameters.push_back(
-        std::make_shared<Variable>(JavaSignatureOf(arg->GetType(), typenames), arg->GetName()));
+    auto var = std::make_shared<Variable>(JavaSignatureOf(arg->GetType(), typenames), arg->GetName());
+    var->annotations = generate_java_annotations(arg->GetType());
+    decl->parameters.push_back(var);
   }
 
   decl->exceptions.push_back("android.os.RemoteException");
