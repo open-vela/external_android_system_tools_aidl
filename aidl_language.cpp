@@ -16,6 +16,7 @@
 
 #include "aidl_language.h"
 #include "aidl_typenames.h"
+#include "parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,13 +77,6 @@ inline bool HasHideComment(const std::string& comment) {
   return std::regex_search(comment, std::regex("@hide\\b"));
 }
 }  // namespace
-
-void yylex_init(void **);
-void yylex_destroy(void *);
-void yyset_in(FILE *f, void *);
-int yyparse(Parser*);
-YY_BUFFER_STATE yy_scan_buffer(char *, size_t, void *);
-void yy_delete_buffer(YY_BUFFER_STATE, void *);
 
 AidlToken::AidlToken(const std::string& text, const std::string& comments)
     : text_(text),
@@ -1216,64 +1210,3 @@ void AidlQualifiedName::AddTerm(const std::string& term) {
 
 AidlImport::AidlImport(const AidlLocation& location, const std::string& needed_class)
     : AidlNode(location), needed_class_(needed_class) {}
-
-std::unique_ptr<Parser> Parser::Parse(const std::string& filename,
-                                      const android::aidl::IoDelegate& io_delegate,
-                                      AidlTypenames& typenames) {
-  // Make sure we can read the file first, before trashing previous state.
-  unique_ptr<string> raw_buffer = io_delegate.GetFileContents(filename);
-  if (raw_buffer == nullptr) {
-    AIDL_ERROR(filename) << "Error while opening file for parsing";
-    return nullptr;
-  }
-
-  // We're going to scan this buffer in place, and yacc demands we put two
-  // nulls at the end.
-  raw_buffer->append(2u, '\0');
-
-  std::unique_ptr<Parser> parser(new Parser(filename, *raw_buffer, typenames));
-
-  if (yy::parser(parser.get()).parse() != 0 || parser->HasError()) return nullptr;
-
-  return parser;
-}
-
-std::vector<std::string> Parser::Package() const {
-  if (!package_) {
-    return {};
-  }
-  return package_->GetTerms();
-}
-
-void Parser::AddImport(std::unique_ptr<AidlImport>&& import) {
-  for (const auto& i : imports_) {
-    if (i->GetNeededClass() == import->GetNeededClass()) {
-      return;
-    }
-  }
-  imports_.emplace_back(std::move(import));
-}
-
-bool Parser::Resolve() {
-  bool success = true;
-  for (AidlTypeSpecifier* typespec : unresolved_typespecs_) {
-    if (!typespec->Resolve(typenames_)) {
-      AIDL_ERROR(typespec) << "Failed to resolve '" << typespec->GetUnresolvedName() << "'";
-      success = false;
-      // don't stop to show more errors if any
-    }
-  }
-  return success;
-}
-
-Parser::Parser(const std::string& filename, std::string& raw_buffer,
-               android::aidl::AidlTypenames& typenames)
-    : filename_(filename), typenames_(typenames) {
-  yylex_init(&scanner_);
-  buffer_ = yy_scan_buffer(&raw_buffer[0], raw_buffer.length(), scanner_);
-}
-
-Parser::~Parser() {
-  yy_delete_buffer(buffer_, scanner_);
-  yylex_destroy(scanner_);
-}
