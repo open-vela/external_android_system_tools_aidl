@@ -19,7 +19,6 @@
 #include <stdlib.h>
 
 #include "aidl_language.h"
-#include "parser.h"
 #include "aidl_language_y-module.h"
 
 #define YY_USER_ACTION yylloc->columns(yyleng);
