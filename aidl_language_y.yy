@@ -95,6 +95,9 @@ AidlLocation loc(const yy::parser::location_type& l) {
     AidlDefinedType* declaration;
     std::vector<std::unique_ptr<AidlTypeSpecifier>>* type_args;
     std::vector<std::string>* type_params;
+    std::vector<std::unique_ptr<AidlImport>>* imports;
+    AidlImport* import;
+    std::vector<AidlDefinedType*>* declarations;
 }
 
 %destructor { } <character>
@@ -176,11 +179,18 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %type<const_expr> const_expr
 %type<constant_value_list> constant_value_list
 %type<constant_value_list> constant_value_non_empty_list
+%type<imports> imports
+%type<import> import
+%type<declarations> decls
+%type<qname> package
 
 %type<token> identifier error
+
 %%
+
 document
- : package imports decls {};
+ : package imports decls
+  { ps->SetDocument(std::make_unique<AidlDocument>(loc(@1), *$2, *$3)); }
 
 /* A couple of tokens that are keywords elsewhere are identifiers when
  * occurring in the identifier position. Therefore identifier is a
@@ -197,15 +207,25 @@ identifier
 package
  : {}
  | PACKAGE qualified_name ';'
-  { ps->SetPackage(unique_ptr<AidlQualifiedName>($2)); };
+  { ps->SetPackage(std::unique_ptr<AidlQualifiedName>($2)); }
 
 imports
- : {}
- | import imports {};
+ : { $$ = new std::vector<std::unique_ptr<AidlImport>>(); }
+ | imports import
+  {
+    $$ = $1;
+    auto it = std::find_if($$->begin(), $$->end(), [&](const auto& i) {
+      return $2->GetNeededClass() == i->GetNeededClass();
+    });
+    if (it == $$->end()) {
+      $$->emplace_back($2);
+    }
+  }
 
 import
  : IMPORT qualified_name ';'
-  { ps->AddImport(std::make_unique<AidlImport>(loc(@2), $2->GetDotName()));
+  {
+    $$ = new AidlImport(loc(@2), $2->GetDotName());
     delete $2;
   };
 
@@ -221,16 +241,14 @@ qualified_name
   };
 
 decls
- : decl {
-    if ($1 != nullptr) {
-      ps->AddDefinedType(unique_ptr<AidlDefinedType>($1));
-    }
+ : decl
+  { $$ = new std::vector<AidlDefinedType*>();
+    $$->emplace_back($1);
   }
- | decls decl {
-    if ($2 != nullptr) {
-      ps->AddDefinedType(unique_ptr<AidlDefinedType>($2));
-    }
-  };
+ | decls decl
+  { $$ = $1;
+    $$->emplace_back($2);
+  }
 
 decl
  : annotation_list unannotated_decl

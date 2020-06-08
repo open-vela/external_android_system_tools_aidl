@@ -660,6 +660,10 @@ class AidlQualifiedName : public AidlNode {
   AidlQualifiedName(const AidlLocation& location, const std::string& term,
                     const std::string& comments);
   virtual ~AidlQualifiedName() = default;
+  // Movable, but neither copiable nor assignable
+  AidlQualifiedName(AidlQualifiedName&&) = default;
+  AidlQualifiedName(const AidlQualifiedName&) = delete;
+  AidlQualifiedName& operator=(const AidlQualifiedName&) = delete;
 
   const std::vector<std::string>& GetTerms() const { return terms_; }
   const std::string& GetComments() const { return comments_; }
@@ -671,8 +675,6 @@ class AidlQualifiedName : public AidlNode {
  private:
   std::vector<std::string> terms_;
   std::string comments_;
-
-  DISALLOW_COPY_AND_ASSIGN(AidlQualifiedName);
 };
 
 class AidlInterface;
@@ -905,3 +907,16 @@ class AidlImport : public AidlNode {
   DISALLOW_COPY_AND_ASSIGN(AidlImport);
 };
 
+// AidlDocument models an AIDL file
+class AidlDocument : public AidlNode {
+ public:
+  AidlDocument(const AidlLocation& location, std::vector<std::unique_ptr<AidlImport>>& imports,
+               std::vector<AidlDefinedType*>& defined_types)
+      : AidlNode(location), imports_(std::move(imports)), defined_types_(defined_types) {}
+  const std::vector<std::unique_ptr<AidlImport>>& Imports() const { return imports_; }
+  const std::vector<AidlDefinedType*>& DefinedTypes() const { return defined_types_; }
+
+ private:
+  const std::vector<std::unique_ptr<AidlImport>> imports_;
+  const std::vector<AidlDefinedType*> defined_types_;
+};

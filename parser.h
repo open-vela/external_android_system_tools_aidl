@@ -47,9 +47,6 @@ class Parser {
   const std::string& FileName() const { return filename_; }
   void* Scanner() const { return scanner_; }
 
-  void AddImport(std::unique_ptr<AidlImport>&& import);
-  const std::vector<std::unique_ptr<AidlImport>>& GetImports() { return imports_; }
-
   void SetPackage(unique_ptr<AidlQualifiedName> name) { package_ = std::move(name); }
   std::vector<std::string> Package() const;
 
@@ -60,19 +57,20 @@ class Parser {
   const vector<AidlTypeSpecifier*>& GetUnresolvedTypespecs() const { return unresolved_typespecs_; }
 
   bool Resolve();
-
-  void AddDefinedType(unique_ptr<AidlDefinedType> type) {
-    // Parser does NOT own AidlDefinedType, it just has references to the types
-    // that it encountered while parsing the input file.
-    defined_types_.emplace_back(type.get());
-
-    // AidlDefinedType IS owned by AidlTypenames
-    if (!typenames_.AddDefinedType(std::move(type))) {
-      AddError();
+  void SetDocument(std::unique_ptr<AidlDocument>&& document) {
+    // AidlDocument does not have the ownership to AidlDefinedTypes.
+    // AidlTypenames has the ownership.
+    // TODO(jiyong): fix this by making AidlTypenames to own
+    // AidlDocuments and AidlDocument to own AidlDefinedTypes.
+    for (auto* t : document->DefinedTypes()) {
+      if (!typenames_.AddDefinedType(std::unique_ptr<AidlDefinedType>(t))) {
+        AddError();
+      }
     }
+    document_ = std::move(document);
   }
 
-  vector<AidlDefinedType*>& GetDefinedTypes() { return defined_types_; }
+  const AidlDocument& Document() const { return *document_; }
 
  private:
   explicit Parser(const std::string& filename, std::string& raw_buffer,
@@ -86,7 +84,6 @@ class Parser {
   YY_BUFFER_STATE buffer_;
   int error_ = 0;
 
-  std::vector<std::unique_ptr<AidlImport>> imports_;
-  vector<AidlDefinedType*> defined_types_;
   vector<AidlTypeSpecifier*> unresolved_typespecs_;
+  std::unique_ptr<AidlDocument> document_;
 };
