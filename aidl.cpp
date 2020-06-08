@@ -427,7 +427,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     return AidlError::PARSE_ERROR;
   }
   int num_interfaces_or_structured_parcelables = 0;
-  for (AidlDefinedType* type : main_parser->GetDefinedTypes()) {
+  for (AidlDefinedType* type : main_parser->Document().DefinedTypes()) {
     if (type->AsInterface() != nullptr || type->AsStructuredParcelable() != nullptr) {
       num_interfaces_or_structured_parcelables++;
       if (num_interfaces_or_structured_parcelables > 1) {
@@ -453,7 +453,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
                                  options.InputFiles()};
 
   vector<string> type_from_import_statements;
-  for (const auto& import : main_parser->GetImports()) {
+  for (const auto& import : main_parser->Document().Imports()) {
     if (!AidlTypenames::IsBuiltinTypename(import->GetNeededClass())) {
       type_from_import_statements.emplace_back(import->GetNeededClass());
     }
@@ -570,8 +570,9 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   // serious failures.
   bool contains_unstructured_parcelable = false;
 
-  const int num_defined_types = main_parser->GetDefinedTypes().size();
-  for (const auto defined_type : main_parser->GetDefinedTypes()) {
+  const auto& types = main_parser->Document().DefinedTypes();
+  const int num_defined_types = types.size();
+  for (const auto defined_type : types) {
     CHECK(defined_type != nullptr);
 
     // Language specific validation
@@ -740,7 +741,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   }
 
   if (defined_types != nullptr) {
-    *defined_types = main_parser->GetDefinedTypes();
+    *defined_types = main_parser->Document().DefinedTypes();
   }
 
   if (imported_files != nullptr) {
@@ -850,7 +851,7 @@ bool preprocess_aidl(const Options& options, const IoDelegate& io_delegate) {
     std::unique_ptr<Parser> p = Parser::Parse(file, io_delegate, typenames);
     if (p == nullptr) return false;
 
-    for (const auto& defined_type : p->GetDefinedTypes()) {
+    for (const auto& defined_type : p->Document().DefinedTypes()) {
       if (!writer->Write("%s %s;\n", defined_type->GetPreprocessDeclarationName().c_str(),
                          defined_type->GetCanonicalName().c_str())) {
         return false;
