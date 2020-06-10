@@ -302,8 +302,6 @@ class AidlAnnotatable : public AidlNode {
   vector<AidlAnnotation> annotations_;
 };
 
-class AidlQualifiedName;
-
 // AidlTypeSpecifier represents a reference to either a built-in type,
 // a defined type, or a variant (e.g., array of generic) of a type.
 class AidlTypeSpecifier final : public AidlAnnotatable,
@@ -655,28 +653,6 @@ class AidlInterface;
 class AidlParcelable;
 class AidlStructuredParcelable;
 
-class AidlQualifiedName : public AidlNode {
- public:
-  AidlQualifiedName(const AidlLocation& location, const std::string& term,
-                    const std::string& comments);
-  virtual ~AidlQualifiedName() = default;
-  // Movable, but neither copiable nor assignable
-  AidlQualifiedName(AidlQualifiedName&&) = default;
-  AidlQualifiedName(const AidlQualifiedName&) = delete;
-  AidlQualifiedName& operator=(const AidlQualifiedName&) = delete;
-
-  const std::vector<std::string>& GetTerms() const { return terms_; }
-  const std::string& GetComments() const { return comments_; }
-  std::string GetDotName() const { return android::base::Join(terms_, '.'); }
-  std::string GetColonName() const { return android::base::Join(terms_, "::"); }
-
-  void AddTerm(const std::string& term);
-
- private:
-  std::vector<std::string> terms_;
-  std::string comments_;
-};
-
 class AidlInterface;
 class AidlParcelable;
 class AidlStructuredParcelable;
@@ -685,7 +661,7 @@ class AidlStructuredParcelable;
 class AidlDefinedType : public AidlAnnotatable {
  public:
   AidlDefinedType(const AidlLocation& location, const std::string& name,
-                  const std::string& comments, const std::vector<std::string>& package);
+                  const std::string& comments, const std::string& package);
   virtual ~AidlDefinedType() = default;
 
   const std::string& GetName() const { return name_; };
@@ -694,10 +670,10 @@ class AidlDefinedType : public AidlAnnotatable {
   void SetComments(const std::string comments) { comments_ = comments; }
 
   /* dot joined package, example: "android.package.foo" */
-  std::string GetPackage() const;
+  std::string GetPackage() const { return package_; }
   /* dot joined package and name, example: "android.package.foo.IBar" */
   std::string GetCanonicalName() const;
-  const std::vector<std::string>& GetSplitPackage() const { return package_; }
+  const std::vector<std::string>& GetSplitPackage() const { return split_package_; }
 
   virtual std::string GetPreprocessDeclarationName() const = 0;
 
@@ -744,21 +720,19 @@ class AidlDefinedType : public AidlAnnotatable {
  private:
   std::string name_;
   std::string comments_;
-  const std::vector<std::string> package_;
+  const std::string package_;
+  const std::vector<std::string> split_package_;
 
   DISALLOW_COPY_AND_ASSIGN(AidlDefinedType);
 };
 
 class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::string> {
  public:
-  AidlParcelable(const AidlLocation& location, AidlQualifiedName* name,
-                 const std::vector<std::string>& package, const std::string& comments,
-                 const std::string& cpp_header = "",
+  AidlParcelable(const AidlLocation& location, const std::string& name, const std::string& package,
+                 const std::string& comments, const std::string& cpp_header = "",
                  std::vector<std::string>* type_params = nullptr);
   virtual ~AidlParcelable() = default;
 
-  // C++ uses "::" instead of "." to refer to a inner class.
-  std::string GetCppName() const { return name_->GetColonName(); }
   std::string GetCppHeader() const { return cpp_header_; }
 
   std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
@@ -773,7 +747,6 @@ class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::s
   void Dump(CodeWriter* writer) const override;
 
  private:
-  std::unique_ptr<AidlQualifiedName> name_;
   std::string cpp_header_;
 
   DISALLOW_COPY_AND_ASSIGN(AidlParcelable);
@@ -781,8 +754,8 @@ class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::s
 
 class AidlStructuredParcelable : public AidlParcelable {
  public:
-  AidlStructuredParcelable(const AidlLocation& location, AidlQualifiedName* name,
-                           const std::vector<std::string>& package, const std::string& comments,
+  AidlStructuredParcelable(const AidlLocation& location, const std::string& name,
+                           const std::string& package, const std::string& comments,
                            std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables);
 
   const std::vector<std::unique_ptr<AidlVariableDeclaration>>& GetFields() const {
@@ -833,7 +806,7 @@ class AidlEnumDeclaration : public AidlDefinedType {
  public:
   AidlEnumDeclaration(const AidlLocation& location, const string& name,
                       std::vector<std::unique_ptr<AidlEnumerator>>* enumerators,
-                      const std::vector<std::string>& package, const std::string& comments);
+                      const std::string& package, const std::string& comments);
   virtual ~AidlEnumDeclaration() = default;
 
   void SetBackingType(std::unique_ptr<const AidlTypeSpecifier> type);
@@ -865,7 +838,7 @@ class AidlInterface final : public AidlDefinedType {
  public:
   AidlInterface(const AidlLocation& location, const std::string& name, const std::string& comments,
                 bool oneway_, std::vector<std::unique_ptr<AidlMember>>* members,
-                const std::vector<std::string>& package);
+                const std::string& package);
   virtual ~AidlInterface() = default;
 
   const std::vector<std::unique_ptr<AidlMethod>>& GetMethods() const
