@@ -706,13 +706,13 @@ string AidlMethod::ToString() const {
 }
 
 AidlDefinedType::AidlDefinedType(const AidlLocation& location, const std::string& name,
-                                 const std::string& comments, const std::string& package)
-    : AidlAnnotatable(location),
-      name_(name),
-      comments_(comments),
-      package_(package),
-      split_package_(package.empty() ? std::vector<std::string>()
-                                     : android::base::Split(package, ".")) {}
+                                 const std::string& comments,
+                                 const std::vector<std::string>& package)
+    : AidlAnnotatable(location), name_(name), comments_(comments), package_(package) {}
+
+std::string AidlDefinedType::GetPackage() const {
+  return Join(package_, '.');
+}
 
 bool AidlDefinedType::CheckValid(const AidlTypenames& typenames) const {
   if (!AidlAnnotatable::CheckValid(typenames)) {
@@ -740,11 +740,12 @@ void AidlDefinedType::DumpHeader(CodeWriter* writer) const {
   DumpAnnotations(writer);
 }
 
-AidlParcelable::AidlParcelable(const AidlLocation& location, const std::string& name,
-                               const std::string& package, const std::string& comments,
+AidlParcelable::AidlParcelable(const AidlLocation& location, AidlQualifiedName* name,
+                               const std::vector<std::string>& package, const std::string& comments,
                                const std::string& cpp_header, std::vector<std::string>* type_params)
-    : AidlDefinedType(location, name, comments, package),
+    : AidlDefinedType(location, name->GetDotName(), comments, package),
       AidlParameterizable<std::string>(type_params),
+      name_(name),
       cpp_header_(cpp_header) {
   // Strip off quotation marks if we actually have a cpp header.
   if (cpp_header_.length() >= 2) {
@@ -800,7 +801,7 @@ void AidlParcelable::Dump(CodeWriter* writer) const {
 }
 
 AidlStructuredParcelable::AidlStructuredParcelable(
-    const AidlLocation& location, const std::string& name, const std::string& package,
+    const AidlLocation& location, AidlQualifiedName* name, const std::vector<std::string>& package,
     const std::string& comments, std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables)
     : AidlParcelable(location, name, package, comments, "" /*cpp_header*/),
       variables_(std::move(*variables)) {}
@@ -967,7 +968,8 @@ string AidlEnumerator::ValueString(const AidlTypeSpecifier& backing_type,
 
 AidlEnumDeclaration::AidlEnumDeclaration(const AidlLocation& location, const std::string& name,
                                          std::vector<std::unique_ptr<AidlEnumerator>>* enumerators,
-                                         const std::string& package, const std::string& comments)
+                                         const std::vector<std::string>& package,
+                                         const std::string& comments)
     : AidlDefinedType(location, name, comments, package), enumerators_(std::move(*enumerators)) {}
 
 void AidlEnumDeclaration::SetBackingType(std::unique_ptr<const AidlTypeSpecifier> type) {
@@ -1048,7 +1050,7 @@ bool AidlInterface::LanguageSpecificCheckValid(const AidlTypenames& typenames,
 AidlInterface::AidlInterface(const AidlLocation& location, const std::string& name,
                              const std::string& comments, bool oneway,
                              std::vector<std::unique_ptr<AidlMember>>* members,
-                             const std::string& package)
+                             const std::vector<std::string>& package)
     : AidlDefinedType(location, name, comments, package) {
   for (auto& member : *members) {
     AidlMember* local = member.release();
@@ -1195,6 +1197,23 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
   }
 
   return success;
+}
+
+AidlQualifiedName::AidlQualifiedName(const AidlLocation& location, const std::string& term,
+                                     const std::string& comments)
+    : AidlNode(location), terms_({term}), comments_(comments) {
+  if (term.find('.') != string::npos) {
+    terms_ = Split(term, ".");
+    for (const auto& subterm : terms_) {
+      if (subterm.empty()) {
+        AIDL_FATAL(this) << "Malformed qualified identifier: '" << term << "'";
+      }
+    }
+  }
+}
+
+void AidlQualifiedName::AddTerm(const std::string& term) {
+  terms_.push_back(term);
 }
 
 AidlImport::AidlImport(const AidlLocation& location, const std::string& needed_class)
