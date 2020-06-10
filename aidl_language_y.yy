@@ -89,6 +89,7 @@ AidlLocation loc(const yy::parser::location_type& l) {
     AidlMethod* method;
     AidlMember* constant;
     std::vector<std::unique_ptr<AidlMember>>* interface_members;
+    AidlQualifiedName* qname;
     AidlInterface* interface;
     AidlParcelable* parcelable;
     AidlDefinedType* declaration;
@@ -174,13 +175,16 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %type<direction> direction
 %type<type_args> type_args
 %type<type_params> type_params
+%type<qname> qualified_name
 %type<const_expr> const_expr
 %type<constant_value_list> constant_value_list
 %type<constant_value_list> constant_value_non_empty_list
 %type<imports> imports
 %type<import> import
 %type<declarations> decls
-%type<token> identifier error qualified_name
+%type<qname> package
+
+%type<token> identifier error
 
 %%
 
@@ -203,9 +207,7 @@ identifier
 package
  : {}
  | PACKAGE qualified_name ';'
-  { ps->SetPackage($2->GetText());
-    delete $2;
-  }
+  { ps->SetPackage(std::unique_ptr<AidlQualifiedName>($2)); }
 
 imports
  : { $$ = new std::vector<std::unique_ptr<AidlImport>>(); }
@@ -223,32 +225,29 @@ imports
 import
  : IMPORT qualified_name ';'
   {
-    $$ = new AidlImport(loc(@2), $2->GetText());
+    $$ = new AidlImport(loc(@2), $2->GetDotName());
     delete $2;
   };
 
 qualified_name
  : identifier {
-    $$ = $1;
+    $$ = new AidlQualifiedName(loc(@1), $1->GetText(), $1->GetComments());
+    delete $1;
   }
  | qualified_name '.' identifier
-  { $$ = new AidlToken($1->GetText() + "." + $3->GetText(), $1->GetComments());
-    delete $1;
+  { $$ = $1;
+    $$->AddTerm($3->GetText());
     delete $3;
   };
 
 decls
  : decl
   { $$ = new std::vector<AidlDefinedType*>();
-    if ($1 != nullptr) {
-      $$->emplace_back($1);
-    }
+    $$->emplace_back($1);
   }
  | decls decl
   { $$ = $1;
-    if ($2 != nullptr) {
-      $$->emplace_back($2);
-    }
+    $$->emplace_back($2);
   }
 
 decl
@@ -290,23 +289,21 @@ type_params
 
 parcelable_decl
  : PARCELABLE qualified_name ';' {
-    $$ = new AidlParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments());
+    $$ = new AidlParcelable(loc(@2), $2, ps->Package(), $1->GetComments());
     delete $1;
-    delete $2;
   }
  | PARCELABLE qualified_name '<' type_params '>' ';' {
-    $$ = new AidlParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), "", $4);
+    $$ = new AidlParcelable(loc(@2), $2, ps->Package(), $1->GetComments(), "", $4);
     delete $1;
-    delete $2;
  }
  | PARCELABLE qualified_name CPP_HEADER C_STR ';' {
-    $$ = new AidlParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), $4->GetText());
+    $$ = new AidlParcelable(loc(@2), $2, ps->Package(), $1->GetComments(), $4->GetText());
     delete $1;
-    delete $2;
     delete $4;
   }
  | PARCELABLE identifier '{' variable_decls '}' {
-    $$ = new AidlStructuredParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), $4);
+    AidlQualifiedName* name = new AidlQualifiedName(loc(@2), $2->GetText(), $2->GetComments());
+    $$ = new AidlStructuredParcelable(loc(@2), name, ps->Package(), $1->GetComments(), $4);
     delete $1;
     delete $2;
     delete $4;
@@ -620,17 +617,17 @@ arg
 
 unannotated_type
  : qualified_name {
-    $$ = new AidlTypeSpecifier(loc(@1), $1->GetText(), false, nullptr, $1->GetComments());
+    $$ = new AidlTypeSpecifier(loc(@1), $1->GetDotName(), false, nullptr, $1->GetComments());
     ps->DeferResolution($$);
     delete $1;
   }
  | qualified_name '[' ']' {
-    $$ = new AidlTypeSpecifier(loc(@1), $1->GetText(), true, nullptr, $1->GetComments());
+    $$ = new AidlTypeSpecifier(loc(@1), $1->GetDotName(), true, nullptr, $1->GetComments());
     ps->DeferResolution($$);
     delete $1;
   }
  | qualified_name '<' type_args '>' {
-    $$ = new AidlTypeSpecifier(loc(@1), $1->GetText(), false, $3, $1->GetComments());
+    $$ = new AidlTypeSpecifier(loc(@1), $1->GetDotName(), false, $3, $1->GetComments());
     ps->DeferResolution($$);
     delete $1;
   };
