@@ -730,6 +730,32 @@ TEST_P(AidlTest, FailOnMalformedConstHexValue) {
   EXPECT_EQ(AidlError::PARSE_ERROR, error);
 }
 
+TEST_P(AidlTest, FailOnMalformedQualifiedNameAsIdentifier) {
+  AidlError error;
+  const string expected_stderr =
+      "ERROR: p/IFoo.aidl:1.25-26: syntax error, unexpected ';', expecting identifier or "
+      "cpp_header (which can also be used as an identifier)\n";
+  CaptureStderr();
+  // Notice the trailing dot(.) in the name, which isn't a correct name
+  EXPECT_EQ(nullptr, Parse("p/IFoo.aidl", R"(package p; parcelable A.; )", typenames_,
+                           GetLanguage(), &error));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  EXPECT_EQ(AidlError::PARSE_ERROR, error);
+}
+
+TEST_P(AidlTest, FailOnMalformedQualifiedNameAsPackage) {
+  AidlError error;
+  const string expected_stderr =
+      "ERROR: p/IFoo.aidl:1.11-12: syntax error, unexpected ';', expecting identifier or "
+      "cpp_header (which can also be used as an identifier)\n";
+  CaptureStderr();
+  // Notice the trailing dot(.) in the package name
+  EXPECT_EQ(nullptr, Parse("p/IFoo.aidl", R"(package p.; parcelable A; )", typenames_,
+                           GetLanguage(), &error));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  EXPECT_EQ(AidlError::PARSE_ERROR, error);
+}
+
 TEST_P(AidlTest, ParsePositiveConstHexValue) {
   AidlError error;
   auto parse_result = Parse("p/IFoo.aidl",
