@@ -301,8 +301,8 @@ bool check_and_assign_method_ids(const std::vector<std::unique_ptr<AidlMethod>>&
 }
 
 // TODO: Remove this in favor of using the YACC parser b/25479378
-bool ParsePreprocessedLine(const string& line, string* decl,
-                           vector<string>* package, string* class_name) {
+bool ParsePreprocessedLine(const string& line, string* decl, std::string* package,
+                           string* class_name) {
   // erase all trailing whitespace and semicolons
   const size_t end = line.find_last_not_of(" ;\t");
   if (end == string::npos) {
@@ -336,7 +336,7 @@ bool ParsePreprocessedLine(const string& line, string* decl,
   size_t dot_pos = type.rfind('.');
   if (dot_pos != string::npos) {
     *class_name = type.substr(dot_pos + 1);
-    *package = Split(type.substr(0, dot_pos), ".");
+    *package = type.substr(0, dot_pos);
   } else {
     *class_name = type;
     package->clear();
@@ -368,7 +368,7 @@ bool parse_preprocessed_file(const IoDelegate& io_delegate, const string& filena
     }
 
     string decl;
-    vector<string> package;
+    std::string package;
     string class_name;
     if (!ParsePreprocessedLine(line, &decl, &package, &class_name)) {
       success = false;
@@ -385,14 +385,12 @@ bool parse_preprocessed_file(const IoDelegate& io_delegate, const string& filena
       if (AidlTypenames::IsBuiltinTypename(class_name)) {
         continue;
       }
-      AidlParcelable* doc = new AidlParcelable(
-          location, new AidlQualifiedName(location, class_name, ""), package, "" /* comments */);
+      AidlParcelable* doc = new AidlParcelable(location, class_name, package, "" /* comments */);
       typenames->AddPreprocessedType(unique_ptr<AidlParcelable>(doc));
     } else if (decl == "structured_parcelable") {
       auto temp = new std::vector<std::unique_ptr<AidlVariableDeclaration>>();
       AidlStructuredParcelable* doc =
-          new AidlStructuredParcelable(location, new AidlQualifiedName(location, class_name, ""),
-                                       package, "" /* comments */, temp);
+          new AidlStructuredParcelable(location, class_name, package, "" /* comments */, temp);
       typenames->AddPreprocessedType(unique_ptr<AidlStructuredParcelable>(doc));
     } else if (decl == "interface") {
       auto temp = new std::vector<std::unique_ptr<AidlMember>>();
