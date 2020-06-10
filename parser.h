@@ -47,8 +47,8 @@ class Parser {
   const std::string& FileName() const { return filename_; }
   void* Scanner() const { return scanner_; }
 
-  void SetPackage(unique_ptr<AidlQualifiedName> name) { package_ = std::move(name); }
-  std::vector<std::string> Package() const;
+  void SetPackage(const std::string& package) { package_ = package; }
+  const std::string& Package() const { return package_; }
 
   void DeferResolution(AidlTypeSpecifier* typespec) {
     unresolved_typespecs_.emplace_back(typespec);
@@ -77,7 +77,7 @@ class Parser {
                   android::aidl::AidlTypenames& typenames);
 
   std::string filename_;
-  std::unique_ptr<AidlQualifiedName> package_;
+  std::string package_;
   AidlTypenames& typenames_;
 
   void* scanner_ = nullptr;
