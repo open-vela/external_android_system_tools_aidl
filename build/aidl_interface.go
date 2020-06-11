@@ -144,6 +144,7 @@ func init() {
 	android.RegisterModuleType("aidl_interfaces_metadata", aidlInterfacesMetadataSingletonFactory)
 	android.PostDepsMutators(func(ctx android.RegisterMutatorsContext) {
 		ctx.BottomUp("checkUnstableModule", checkUnstableModuleMutator).Parallel()
+		ctx.BottomUp("checkDuplicatedVersions", checkDuplicatedVersions).Parallel()
 	})
 }
 
@@ -161,6 +162,34 @@ func checkUnstableModuleMutator(mctx android.BottomUpMutatorContext) {
 		}
 
 		mctx.ModuleErrorf(m.Name() + " is disallowed in release version because it is unstable.")
+	})
+}
+
+func checkDuplicatedVersions(mctx android.BottomUpMutatorContext) {
+	// interfacename -> list of internal module names that were used in the tree
+	versionsUsed := make(map[string][]string)
+	mctx.WalkDeps(func(parent android.Module, child android.Module) bool {
+		name := mctx.OtherModuleName(parent)
+		for _, i := range *aidlInterfaces(mctx.Config()) {
+			if android.InList(name, i.internalModuleNames) {
+				versions := versionsUsed[i.ModuleBase.Name()]
+				versions = append(versions, name)
+				versions = android.FirstUniqueStrings(versions)
+				for _, lang := range []string{langJava, langCpp, langNdk, langNdkPlatform} {
+					count := 0
+					for _, v := range versions {
+						if strings.HasSuffix(v, lang) {
+							count++
+						}
+					}
+					if count >= 2 {
+						mctx.ModuleErrorf("multiple versions of aidl_interface %q (backend:%s) are used: %v. Dependency path: %s", i.ModuleBase.Name(), lang, versions, mctx.GetPathString(true))
+					}
+				}
+				versionsUsed[i.ModuleBase.Name()] = versions
+			}
+		}
+		return true
 	})
 }
 
@@ -863,6 +892,9 @@ type aidlInterface struct {
 	properties aidlInterfaceProperties
 
 	computedTypes []string
+
+	// list of module names that are created for this interface
+	internalModuleNames []string
 }
 
 func (i *aidlInterface) shouldGenerateJavaBackend() bool {
@@ -1149,6 +1181,8 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 		Name:     proptools.StringPtr(i.ModuleBase.Name()),
 		Required: libs,
 	})
+
+	i.internalModuleNames = libs
 }
 
 func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version string, lang string) string {
