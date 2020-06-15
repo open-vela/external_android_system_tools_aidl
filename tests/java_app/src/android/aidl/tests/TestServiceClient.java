@@ -974,7 +974,6 @@ public class TestServiceClient extends Activity {
           new NullableTests(service, mLog).runTests();
           new MapTests(mLog).runTests();
           new GenericTests(mLog).runTests();
-          new ExtensionTests(mLog).runTests();
           checkDefaultImpl(service);
 
           mLog.log(mSuccessSentinel);

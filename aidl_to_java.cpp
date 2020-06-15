@@ -85,7 +85,6 @@ const string& JavaNameOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typ
       {"FileDescriptor", "java.io.FileDescriptor"},
       {"CharSequence", "java.lang.CharSequence"},
       {"ParcelFileDescriptor", "android.os.ParcelFileDescriptor"},
-      {"ParcelableHolder", "android.os.ParcelableHolder"},
   };
 
   // map from primitive types to the corresponding boxing types
@@ -365,10 +364,6 @@ bool WriteToParcelFor(const CodeGeneratorContext& c) {
          c.writer.Dedent();
          c.writer << "}\n";
        }},
-      {"ParcelableHolder",
-       [](const CodeGeneratorContext& c) {
-         c.writer << c.parcel << ".writeTypedObject(" << c.var << ", 0);\n";
-       }},
   };
   const string type_name = AidlBackingTypeName(c.type, c.typenames);
   const auto found = method_map.find(type_name);
@@ -594,14 +589,6 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
          c.writer << "else {\n";
          c.writer.Indent();
          c.writer << c.var << " = null;\n";
-         c.writer.Dedent();
-         c.writer << "}\n";
-       }},
-      {"ParcelableHolder",
-       [](const CodeGeneratorContext& c) {
-         c.writer << "if ((0!=" << c.parcel << ".readInt())) {\n";
-         c.writer.Indent();
-         c.writer << c.var << ".readFromParcel(" << c.parcel << ");\n";
          c.writer.Dedent();
          c.writer << "}\n";
        }},
