@@ -187,6 +187,15 @@ func checkDuplicatedVersions(mctx android.BottomUpMutatorContext) {
 					}
 				}
 				versionsUsed[i.ModuleBase.Name()] = versions
+				// Don't track further. This means that we don't check the duplicate versions
+				// for the imported aidl_interfaces. This of course is not ideal, but until
+				// b/146436251 is fixed, we have no control over the version of the aidl_interface
+				// to be imported; the build system always choose the latest stable version.
+				// This might unintionally cause the duplicate versions problem when the
+				// unstable version of the aidl_interface is directly depend on by somewhere
+				// else.
+				// TODO(b/146436251): remove this
+				return false
 			}
 		}
 		return true
