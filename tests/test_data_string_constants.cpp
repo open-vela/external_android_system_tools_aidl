@@ -49,7 +49,6 @@ public interface IStringConstants extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.os.IStringConstants
   {
-    private static final java.lang.String DESCRIPTOR = "android.os.IStringConstants";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -124,6 +123,7 @@ public interface IStringConstants extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
+  public static final java.lang.String DESCRIPTOR = "android.os.IStringConstants";
   public static final String EXAMPLE_CONSTANT = "foo";
 }
 )";
@@ -265,7 +265,6 @@ public interface IStringConstants extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.os.IStringConstants
   {
-    private static final java.lang.String DESCRIPTOR = "android.os.IStringConstants";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -402,6 +401,7 @@ public interface IStringConstants extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
+  public static final java.lang.String DESCRIPTOR = "android.os.IStringConstants";
   public static final String EXAMPLE_CONSTANT = "foo";
   public int getInterfaceVersion() throws android.os.RemoteException;
   public String getInterfaceHash() throws android.os.RemoteException;
