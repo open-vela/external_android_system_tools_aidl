@@ -37,11 +37,6 @@ cc_defaults {
             ],
         },
     },
-    product_variables: {
-        platform_sdk_version: {
-            cflags: ["-DPLATFORM_SDK_VERSION=%d"],
-        },
-    },
 }
 
 // Logic shared between aidl and its unittests
@@ -49,6 +44,9 @@ cc_library_static {
     name: "libaidl-common",
     defaults: ["aidl_defaults"],
     host_supported: true,
+    cflags: [
+        "-Wno-bool-operation", // found in aidl_const_expressions.cpp:69
+    ],
 
     srcs: [
         "aidl.cpp",
@@ -74,7 +72,6 @@ cc_library_static {
         "line_reader.cpp",
         "io_delegate.cpp",
         "options.cpp",
-        "parser.cpp",
     ],
     yacc: {
         gen_location_hh: true,
@@ -112,7 +109,7 @@ cc_test {
     name: "aidl_unittests",
     host_supported: true,
 
-    test_suites: ["general-tests"],
+    test_suites: ["device-tests"],
 
     cflags: [
         "-Wall",
@@ -157,7 +154,6 @@ cc_fuzz {
 
     fuzz_config: {
         cc: [
-            "devinmoore@google.com",
             "smoreland@google.com",
             "jiyong@google.com",
             "jeongik@google.com",
@@ -180,21 +176,17 @@ cc_fuzz {
 }
 
 //
-// Integration testing of generated AIDL code.
+// Everything below here is used for integration testing of generated AIDL code.
 //
-
-python_test_host {
-    name: "aidl_integration_test",
-    main: "tests/aidl_integration_test.py",
-    srcs: ["tests/aidl_integration_test.py"],
-    test_config: "tests/aidl_integration_test.xml",
-    target_required: [
-        "aidl_test_client",
-        "aidl_test_sentinel_searcher",
-        "aidl_test_service",
-        "aidl_test_services",
+cc_test {
+    name: "aidl_test_sentinel_searcher",
+    gtest: false,
+    srcs: ["tests/aidl_test_sentinel_searcher.cpp"],
+    cflags: [
+        "-Wall",
+        "-Wextra",
+        "-Werror",
     ],
-    test_suites: ["device-tests"],
 }
 
 cc_defaults {
@@ -210,41 +202,6 @@ cc_defaults {
         "liblog",
         "libutils",
     ],
-    compile_multilib: "both",
-    multilib: {
-        lib32: {
-            suffix: "32",
-        },
-        lib64: {
-            suffix: "64",
-        },
-    },
-    test_suites: ["device-tests"],
-}
-
-// Header-only library used for atrace in platform NDK builds
-cc_library_headers {
-    name: "libandroid_aidltrace",
-    host_supported: true,
-    vendor_available: true,
-    export_include_dirs: ["trace"],
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-}
-
-// Could consider simplifying this test by removing this.
-cc_test {
-    name: "aidl_test_sentinel_searcher",
-    defaults: ["aidl_test_defaults"],
-    gtest: false,
-    srcs: ["tests/aidl_test_sentinel_searcher.cpp"],
-    cflags: [
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-    ],
 }
 
 filegroup {
@@ -257,7 +214,6 @@ cc_library_static {
     name: "libaidl-integration-test",
     defaults: ["aidl_test_defaults"],
     aidl: {
-        generate_traces: true,
         export_aidl_headers: true,
         local_include_dirs: ["tests"],
         include_dirs: ["frameworks/native/aidl/binder"],
@@ -272,14 +228,15 @@ cc_test {
     name: "aidl_test_service",
     gtest: false,
     defaults: ["aidl_test_defaults"],
-    static_libs: ["libaidl-integration-test", "libcutils"],
+    static_libs: ["libaidl-integration-test"],
     srcs: ["tests/aidl_test_service.cpp"],
 }
 
 cc_test {
     name: "aidl_test_client",
+    gtest: false,
     defaults: ["aidl_test_defaults"],
-    static_libs: ["libaidl-integration-test", "libcutils"],
+    static_libs: ["libaidl-integration-test"],
     srcs: [
         "tests/aidl_test_client.cpp",
         "tests/aidl_test_client_file_descriptors.cpp",
@@ -292,18 +249,13 @@ cc_test {
     ],
 }
 
-android_test_helper_app {
+android_app {
     name: "aidl_test_services",
     platform_apis: true,
     // Turn off Java optimization tools to speed up our test iterations.
     optimize: {
         enabled: false,
     },
-    static_libs: [
-        "aidl_test_nonvintf_parcelable-java",
-        "aidl_test_unstable_parcelable-java",
-        "aidl_test_vintf_parcelable-java",
-    ],
     dex_preopt: {
         enabled: false,
     },
@@ -314,8 +266,6 @@ android_test_helper_app {
         "tests/android/aidl/tests/*.aidl",
         "tests/android/aidl/tests/generic/*.aidl",
         "tests/android/aidl/tests/map/*.aidl",
-        "tests/android/aidl/tests/extension/*.aidl",
-        "tests/java_app/src/android/aidl/tests/ExtensionTests.java",
         "tests/java_app/src/android/aidl/tests/GenericTests.java",
         "tests/java_app/src/android/aidl/tests/MapTests.java",
         "tests/java_app/src/android/aidl/tests/NullableTests.java",
@@ -330,14 +280,8 @@ android_test_helper_app {
             "system/tools/aidl/tests/",
             "frameworks/native/aidl/binder",
         ],
-        generate_traces: true,
     },
-    test_suites: ["device-tests"],
 }
-
-//
-// Testing generation of logs
-//
 
 aidl_interface {
     name: "aidl_test_loggable_interface",
@@ -354,8 +298,5 @@ aidl_interface {
         ndk: {
             gen_log: true,
         },
-        java: {
-            platform_apis: true,
-        }
     },
 }
