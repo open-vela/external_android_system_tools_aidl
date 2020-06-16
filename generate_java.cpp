@@ -109,16 +109,31 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
     for (const auto& a : generate_java_annotations(variable->GetType())) {
       out << a << "\n";
     }
-    out << "public " << JavaSignatureOf(variable->GetType(), typenames) << " "
-        << variable->GetName();
+    out << "public ";
+    if (variable->GetType().GetName() == "ParcelableHolder") {
+      out << "final ";
+    }
+    out << JavaSignatureOf(variable->GetType(), typenames) << " " << variable->GetName();
     if (variable->GetDefaultValue()) {
       out << " = " << variable->ValueString(ConstantValueDecorator);
+    } else if (variable->GetType().GetName() == "ParcelableHolder") {
+      out << std::boolalpha;
+      out << " = new " << JavaSignatureOf(variable->GetType(), typenames) << "("
+          << parcel->IsVintfStability() << ")";
+      out << std::noboolalpha;
     }
     out << ";\n";
     parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(out.str()));
   }
 
   std::ostringstream out;
+
+  if (parcel->IsVintfStability()) {
+    out << "public final boolean isStable() { return true; }\n";
+    parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(out.str()));
+  }
+
+  out.str("");
   out << "public static final android.os.Parcelable.Creator<" << parcel->GetName() << "> CREATOR = "
       << "new android.os.Parcelable.Creator<" << parcel->GetName() << ">() {\n";
   out << "  @Override\n";
@@ -282,14 +297,35 @@ std::string generate_java_unsupportedappusage_parameters(const AidlAnnotation& a
 
 std::vector<std::string> generate_java_annotations(const AidlAnnotatable& a) {
   std::vector<std::string> result;
-  const AidlAnnotation* unsupported_app_usage = a.UnsupportedAppUsage();
   if (a.IsHide()) {
     result.emplace_back("@android.annotation.Hide");
   }
+
+  const AidlAnnotation* unsupported_app_usage = a.UnsupportedAppUsage();
   if (unsupported_app_usage != nullptr) {
     result.emplace_back("@android.compat.annotation.UnsupportedAppUsage" +
                         generate_java_unsupportedappusage_parameters(*unsupported_app_usage));
   }
+
+  auto strip_double_quote = [](const AidlTypeSpecifier& type, const std::string& raw_value) -> std::string {
+    if (!android::base::StartsWith(raw_value, "\"") ||
+        !android::base::EndsWith(raw_value, "\"")) {
+      AIDL_FATAL(type) << "Java passthrough annotation " << raw_value << " is not properly quoted";
+      return "";
+    }
+    return raw_value.substr(1, raw_value.size() - 2);
+  };
+
+  const AidlAnnotation* java_passthrough = a.JavaPassthrough();
+  if (java_passthrough != nullptr) {
+    for (const auto& name_and_param : java_passthrough->AnnotationParams(strip_double_quote)) {
+      if (name_and_param.first == "annotation") {
+        result.emplace_back(name_and_param.second);
+        break;
+      }
+    }
+  }
+
   return result;
 }
 
