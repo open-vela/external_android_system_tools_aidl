@@ -87,6 +87,7 @@ struct StringLiteralExpression : public Expression {
 };
 
 struct Variable : public Expression {
+  std::vector<std::string> annotations;
   const std::string type;
   std::string name;
 
