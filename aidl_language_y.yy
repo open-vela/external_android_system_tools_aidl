@@ -186,7 +186,10 @@ AidlLocation loc(const yy::parser::location_type& l) {
 
 document
  : package imports decls
-  { ps->SetDocument(std::make_unique<AidlDocument>(loc(@1), *$2, *$3)); }
+  { ps->SetDocument(std::make_unique<AidlDocument>(loc(@1), *$2, *$3));
+    delete $2;
+    delete $3;
+  }
 
 /* A couple of tokens that are keywords elsewhere are identifiers when
  * occurring in the identifier position. Therefore identifier is a
