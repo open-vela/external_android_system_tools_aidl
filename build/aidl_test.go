@@ -142,7 +142,6 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 	ctx.RegisterModuleType("java_library_static", java.LibraryStaticFactory)
 	ctx.RegisterModuleType("java_library", java.LibraryFactory)
 	ctx.RegisterModuleType("java_system_modules", java.SystemModulesFactory)
-	ctx.RegisterModuleType("ndk_library", cc.NdkLibraryFactory)
 
 	ctx.PreArchMutators(android.RegisterDefaultsPreArchMutators)
 	ctx.PostDepsMutators(android.RegisterOverridePostDepsMutators)
