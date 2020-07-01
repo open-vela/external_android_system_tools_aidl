@@ -161,7 +161,7 @@ func checkUnstableModuleMutator(mctx android.BottomUpMutatorContext) {
 			return
 		}
 
-		mctx.ModuleErrorf(m.Name() + " is disallowed in release version because it is unstable.")
+		mctx.ModuleErrorf(m.Name() + " is disallowed in release version because it is unstable, and its \"owner\" property is missing.")
 	})
 }
 
@@ -1187,7 +1187,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 	} else {
 		sdkIsFinal := mctx.Config().DefaultAppTargetSdkInt() != android.FutureApiLevel
 		if sdkIsFinal && !i.hasVersion() && i.Owner() == "" {
-			mctx.PropertyErrorf("versions", "must be set (need to be frozen) when \"unstable\" is false and PLATFORM_VERSION_CODENAME is REL.")
+			mctx.PropertyErrorf("versions", "must be set (need to be frozen) when \"unstable\" is false, PLATFORM_VERSION_CODENAME is REL, and \"owner\" property is missing.")
 		}
 		addApiModule(mctx, i)
 	}
