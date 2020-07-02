@@ -101,6 +101,16 @@ AidlLocation loc(const yy::parser::location_type& l) {
 
 %destructor { } <character>
 %destructor { } <direction>
+// TODO(b/160367901) remove this.
+%destructor {
+  // decl is std::vector<AidlDefinedType*>. When deleting it,
+  // we should first delete AidlDefinedType objects in it.
+  // Otherwise, there would be memory leaks.
+  for (auto* t: *($$)) {
+    delete(t);
+  }
+  delete ($$);
+} decls
 %destructor { delete ($$); } <*>
 
 %token<token> ANNOTATION "annotation"
