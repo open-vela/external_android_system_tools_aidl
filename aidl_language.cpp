@@ -526,12 +526,18 @@ std::string AidlConstantValueDecorator(const AidlTypeSpecifier& /*type*/,
 
 AidlVariableDeclaration::AidlVariableDeclaration(const AidlLocation& location,
                                                  AidlTypeSpecifier* type, const std::string& name)
-    : AidlVariableDeclaration(location, type, name, nullptr /*default_value*/) {}
+    : AidlVariableDeclaration(location, type, name, AidlConstantValue::Default(*type)) {
+  default_user_specified_ = false;
+}
 
 AidlVariableDeclaration::AidlVariableDeclaration(const AidlLocation& location,
                                                  AidlTypeSpecifier* type, const std::string& name,
                                                  AidlConstantValue* default_value)
-    : AidlNode(location), type_(type), name_(name), default_value_(default_value) {}
+    : AidlNode(location),
+      type_(type),
+      name_(name),
+      default_user_specified_(true),
+      default_value_(default_value) {}
 
 bool AidlVariableDeclaration::CheckValid(const AidlTypenames& typenames) const {
   bool valid = true;
@@ -553,7 +559,7 @@ bool AidlVariableDeclaration::CheckValid(const AidlTypenames& typenames) const {
 
 string AidlVariableDeclaration::ToString() const {
   string ret = type_->Signature() + " " + name_;
-  if (default_value_ != nullptr) {
+  if (default_value_ != nullptr && default_user_specified_) {
     ret += " = " + ValueString(AidlConstantValueDecorator);
   }
   return ret;
