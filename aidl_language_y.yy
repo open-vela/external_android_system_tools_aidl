@@ -230,6 +230,8 @@ imports
     });
     if (it == $$->end()) {
       $$->emplace_back($2);
+    } else {
+      delete $2;
     }
   }
 
