@@ -510,6 +510,9 @@ constant_value_list
  | constant_value_non_empty_list {
     $$ = $1;
  }
+ | constant_value_non_empty_list  ',' {
+    $$ = $1;
+ }
  ;
 
 constant_value_non_empty_list
