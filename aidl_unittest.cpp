@@ -714,6 +714,17 @@ TEST_P(AidlTest, FailOnNoDefinedTypes) {
   EXPECT_EQ(AidlError::PARSE_ERROR, error);
 }
 
+TEST_P(AidlTest, FailOnEmptyListWithComma) {
+  AidlError error;
+  const string expected_stderr =
+      "ERROR: p/Foo.aidl:1.45-47: syntax error, unexpected ',', expecting '}'\n";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("p/Foo.aidl", R"(package p; parcelable Foo { uint64_t[] a = { , }; })",
+                           typenames_, GetLanguage(), &error));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  EXPECT_EQ(AidlError::PARSE_ERROR, error);
+}
+
 TEST_P(AidlTest, FailOnMalformedConstHexValue) {
   AidlError error;
   const string expected_stderr =
