@@ -25,6 +25,7 @@ $ANDROID_BUILD_TOP/build/soong/soong_ui.bash --make-mode \
     MODULES-IN-system-tools-aidl
 
 adb root
+adb wait-for-device
 adb sync data
 adb install -r \
     ${ANDROID_PRODUCT_OUT}/testcases/aidl_test_services/x86/aidl_test_services.apk
