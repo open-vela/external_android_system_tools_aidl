@@ -28,7 +28,9 @@
 #include <android-base/strings.h>
 
 using android::base::ConsumeSuffix;
+using android::base::EndsWith;
 using android::base::Join;
+using android::base::StartsWith;
 using std::string;
 using std::unique_ptr;
 using std::vector;
@@ -240,26 +242,19 @@ AidlConstantValue* AidlConstantValue::Floating(const AidlLocation& location,
 }
 
 bool AidlConstantValue::IsHex(const string& value) {
-  if (value.length() > (sizeof("0x") - 1)) {
-    if (value[0] == '0' && (value[1] == 'x' || value[1] == 'X')) {
-      return true;
-    }
-  }
-  return false;
+  return StartsWith(value, "0x") || StartsWith(value, "0X");
 }
 
 bool AidlConstantValue::ParseIntegral(const string& value, int64_t* parsed_value,
                                       Type* parsed_type) {
-  bool isLong = false;
-
   if (parsed_value == nullptr || parsed_type == nullptr) {
     return false;
   }
 
-  if (IsHex(value)) {
-    bool parseOK = false;
-    uint32_t rawValue32;
+  const bool isLong = EndsWith(value, 'l') || EndsWith(value, 'L');
+  const std::string value_substr = isLong ? value.substr(0, value.size() - 1) : value;
 
+  if (IsHex(value)) {
     // AIDL considers 'const int foo = 0xffffffff' as -1, but if we want to
     // handle that when computing constant expressions, then we need to
     // represent 0xffffffff as a uint32_t. However, AIDL only has signed types;
@@ -267,35 +262,34 @@ bool AidlConstantValue::ParseIntegral(const string& value, int64_t* parsed_value
     // int. One example of this is in ICameraService.aidl where a constant int
     // is used for bit manipulations which ideally should be handled with an
     // unsigned int.
-    parseOK = android::base::ParseUint<uint32_t>(value, &rawValue32);
-    if (parseOK) {
+    //
+    // Note, for historical consistency, we need to consider small hex values
+    // as an integral type. Recognizing them as INT8 could break some files,
+    // even though it would simplify this code.
+    if (uint32_t rawValue32;
+        !isLong && android::base::ParseUint<uint32_t>(value_substr, &rawValue32)) {
       *parsed_value = static_cast<int32_t>(rawValue32);
       *parsed_type = Type::INT32;
-    } else {
-      parseOK = android::base::ParseInt<int64_t>(value, parsed_value);
-      if (!parseOK) {
-        *parsed_type = Type::ERROR;
-        return false;
-      }
-
+    } else if (uint64_t rawValue64; android::base::ParseUint<uint64_t>(value_substr, &rawValue64)) {
+      *parsed_value = static_cast<int64_t>(rawValue64);
       *parsed_type = Type::INT64;
+    } else {
+      *parsed_value = 0;
+      *parsed_type = Type::ERROR;
+      return false;
     }
     return true;
   }
 
-  if (value[value.size() - 1] == 'l' || value[value.size() - 1] == 'L') {
-    isLong = true;
-    *parsed_type = Type::INT64;
-  }
-
-  string value_substr = value.substr(0, isLong ? value.size() - 1 : value.size());
-  bool parseOK = android::base::ParseInt<int64_t>(value_substr, parsed_value);
-  if (!parseOK) {
+  if (!android::base::ParseInt<int64_t>(value_substr, parsed_value)) {
+    *parsed_value = 0;
     *parsed_type = Type::ERROR;
     return false;
   }
 
-  if (!isLong) {
+  if (isLong) {
+    *parsed_type = Type::INT64;
+  } else {
     // guess literal type.
     if (*parsed_value <= INT8_MAX && *parsed_value >= INT8_MIN) {
       *parsed_type = Type::INT8;

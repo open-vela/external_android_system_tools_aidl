@@ -146,7 +146,13 @@ parcelable StructuredParcelable {
       (0x80000000 - 1) == 2147483647,
       (0x80000000 + 1) == -2147483647,
       (1L << 63)+1 == -9223372036854775807,
-      0xfffffffff == 68719476735
+      0xfffffffff == 68719476735,
+
+      0xffffffffffffffff == -1,
+      (0xfL << 32L) == 0xf00000000,
+      (0xfL << 32) == 0xf00000000,
+      (0xf << 32L) == 0xf,
+      (0xf << 32) == 0xf
     };
     int hexInt32_pos_1 = -0xffffffff;
     int hexInt64_pos_1 = -0xfffffffffff < 0;
