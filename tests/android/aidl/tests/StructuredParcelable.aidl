@@ -40,7 +40,7 @@ parcelable StructuredParcelable {
     char charDefaultsToC = 'C';
     float floatDefaultsToPi = 3.14f;
     double doubleWithDefault = -3.14e17;
-    int[] arrayDefaultsTo123 = { 1, 2, 3 };
+    int[] arrayDefaultsTo123 = { 1, 2, 3, };
     int[] arrayDefaultsToEmpty = { };
 
     boolean boolDefault;
