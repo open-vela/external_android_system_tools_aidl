@@ -166,40 +166,76 @@ func checkUnstableModuleMutator(mctx android.BottomUpMutatorContext) {
 }
 
 func checkDuplicatedVersions(mctx android.BottomUpMutatorContext) {
-	// interfacename -> list of internal module names that were used in the tree
-	versionsUsed := make(map[string][]string)
-	mctx.WalkDeps(func(parent android.Module, child android.Module) bool {
-		name := mctx.OtherModuleName(parent)
+	switch mctx.Module().(type) {
+	case *java.Library:
+	case *cc.Module:
+	default:
+		return
+	}
+
+	// First, gather all the AIDL interfaces modules that are directly or indirectly
+	// depended on by this module
+	myAidlDeps := make(map[DepInfo]bool)
+	mctx.VisitDirectDeps(func(dep android.Module) {
+		switch dep.(type) {
+		case *java.Library:
+		case *cc.Module:
+		default:
+			return
+		}
+		depName := mctx.OtherModuleName(dep)
+		// If this module dgpends on one of the aidl interface module, record it
 		for _, i := range *aidlInterfaces(mctx.Config()) {
-			if android.InList(name, i.internalModuleNames) {
-				versions := versionsUsed[i.ModuleBase.Name()]
-				versions = append(versions, name)
-				versions = android.FirstUniqueStrings(versions)
-				for _, lang := range []string{langJava, langCpp, langNdk, langNdkPlatform} {
-					count := 0
-					for _, v := range versions {
-						if strings.HasSuffix(v, lang) {
-							count++
-						}
-					}
-					if count >= 2 {
-						mctx.ModuleErrorf("multiple versions of aidl_interface %q (backend:%s) are used: %v. Dependency path: %s", i.ModuleBase.Name(), lang, versions, mctx.GetPathString(true))
-					}
-				}
-				versionsUsed[i.ModuleBase.Name()] = versions
-				// Don't track further. This means that we don't check the duplicate versions
-				// for the imported aidl_interfaces. This of course is not ideal, but until
-				// b/146436251 is fixed, we have no control over the version of the aidl_interface
-				// to be imported; the build system always choose the latest stable version.
-				// This might unintionally cause the duplicate versions problem when the
-				// unstable version of the aidl_interface is directly depend on by somewhere
-				// else.
-				// TODO(b/146436251): remove this
-				return false
+			if android.InList(depName, i.internalModuleNames) {
+				ifaceName := i.ModuleBase.Name()
+				verLang := depName[len(ifaceName):]
+				myAidlDeps[DepInfo{ifaceName, verLang}] = true
+				return
 			}
 		}
-		return true
+		// If dep is in aidlDeps, that means dep has direct or indirect dependencies to AIDL interfaces
+		// That becomes this module's aidlDeps as well
+		aidlDepsMutex.RLock()
+		if depsOfDep, ok := aidlDeps(mctx.Config())[dep]; ok {
+			for _, d := range depsOfDep {
+				myAidlDeps[d] = true
+			}
+		}
+		aidlDepsMutex.RUnlock()
 	})
+
+	if len(myAidlDeps) == 0 {
+		// This should be usual case.
+		return
+	}
+
+	// Then, record the aidl deps of this module to the global map so that it can be used by
+	// next runs of this mutator for the modules that depend on this module.
+	var list []DepInfo
+	for d := range myAidlDeps {
+		list = append(list, d)
+	}
+	aidlDepsMutex.Lock()
+	aidlDeps(mctx.Config())[mctx.Module()] = list
+	aidlDepsMutex.Unlock()
+
+	// Lastly, report an error if there is any duplicated versions of the same interface * lang
+	for _, lang := range []string{langJava, langCpp, langNdk, langNdkPlatform} {
+		// interfaceName -> list of module names for the interface
+		versionsOf := make(map[string][]string)
+		for dep := range myAidlDeps {
+			if !strings.HasSuffix(dep.verLang, lang) {
+				continue
+			}
+			versions := versionsOf[dep.ifaceName]
+			versions = append(versions, dep.ifaceName+dep.verLang)
+			if len(versions) >= 2 {
+				mctx.ModuleErrorf("multiple versions of aidl_interface %s (backend:%s) are used: %v",
+					dep.ifaceName, lang, versions)
+			}
+			versionsOf[dep.ifaceName] = versions
+		}
+	}
 }
 
 // wrap(p, a, s) = [p + v + s for v in a]
@@ -1430,8 +1466,10 @@ func (i *aidlInterface) DepsMutator(ctx android.BottomUpMutatorContext) {
 var (
 	aidlInterfacesKey   = android.NewOnceKey("aidlInterfaces")
 	unstableModulesKey  = android.NewOnceKey("unstableModules")
+	aidlDepsKey         = android.NewOnceKey("aidlDeps")
 	aidlInterfaceMutex  sync.Mutex
 	unstableModuleMutex sync.Mutex
+	aidlDepsMutex       sync.RWMutex
 )
 
 func aidlInterfaces(config android.Config) *[]*aidlInterface {
@@ -1444,6 +1482,17 @@ func unstableModules(config android.Config) *[]string {
 	return config.Once(unstableModulesKey, func() interface{} {
 		return &[]string{}
 	}).(*[]string)
+}
+
+type DepInfo struct {
+	ifaceName string
+	verLang   string
+}
+
+func aidlDeps(config android.Config) map[android.Module][]DepInfo {
+	return config.Once(aidlDepsKey, func() interface{} {
+		return make(map[android.Module][]DepInfo)
+	}).(map[android.Module][]DepInfo)
 }
 
 func aidlInterfaceFactory() android.Module {

@@ -580,7 +580,7 @@ func TestImports(t *testing.T) {
 func TestDuplicatedVersions(t *testing.T) {
 	// foo depends on myiface-ndk (v2) via direct dep and also on
 	// myiface-V1-ndk via indirect dep. This should be prohibited.
-	testAidlError(t, `multiple versions of aidl_interface`, `
+	testAidlError(t, `multiple versions of aidl_interface myiface \(backend:ndk\) are used`, `
 		aidl_interface {
 			name: "myiface",
 			srcs: ["IFoo.aidl"],
