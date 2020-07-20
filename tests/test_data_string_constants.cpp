@@ -49,6 +49,7 @@ public interface IStringConstants extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.os.IStringConstants
   {
+    private static final java.lang.String DESCRIPTOR = "android.os.IStringConstants";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -123,7 +124,6 @@ public interface IStringConstants extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
-  public static final java.lang.String DESCRIPTOR = "android.os.IStringConstants";
   public static final String EXAMPLE_CONSTANT = "foo";
 }
 )";
@@ -132,7 +132,8 @@ const char kCppOutputPath[] = "some/path/to/output.cpp";
 const char kGenHeaderDir[] = "output";
 const char kGenInterfaceHeaderPath[] = "output/android/os/IStringConstants.h";
 const char kExpectedIHeaderOutput[] =
-    R"(#pragma once
+    R"(#ifndef AIDL_GENERATED_ANDROID_OS_I_STRING_CONSTANTS_H_
+#define AIDL_GENERATED_ANDROID_OS_I_STRING_CONSTANTS_H_
 
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
@@ -160,6 +161,8 @@ public:
 }  // namespace os
 
 }  // namespace android
+
+#endif  // AIDL_GENERATED_ANDROID_OS_I_STRING_CONSTANTS_H_
 )";
 
 const char kExpectedCppOutput[] =
@@ -262,6 +265,7 @@ public interface IStringConstants extends android.os.IInterface
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.os.IStringConstants
   {
+    private static final java.lang.String DESCRIPTOR = "android.os.IStringConstants";
     /** Construct the stub at attach it to the interface. */
     public Stub()
     {
@@ -398,7 +402,6 @@ public interface IStringConstants extends android.os.IInterface
       return Stub.Proxy.sDefaultImpl;
     }
   }
-  public static final java.lang.String DESCRIPTOR = "android.os.IStringConstants";
   public static final String EXAMPLE_CONSTANT = "foo";
   public int getInterfaceVersion() throws android.os.RemoteException;
   public String getInterfaceHash() throws android.os.RemoteException;
@@ -406,7 +409,8 @@ public interface IStringConstants extends android.os.IInterface
 )";
 
 const char kExpectedIHeaderOutputWithVersionAndHash[] =
-    R"(#pragma once
+    R"(#ifndef AIDL_GENERATED_ANDROID_OS_I_STRING_CONSTANTS_H_
+#define AIDL_GENERATED_ANDROID_OS_I_STRING_CONSTANTS_H_
 
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
@@ -445,6 +449,8 @@ public:
 }  // namespace os
 
 }  // namespace android
+
+#endif  // AIDL_GENERATED_ANDROID_OS_I_STRING_CONSTANTS_H_
 )";
 
 const char kExpectedCppOutputWithVersionAndHash[] =
@@ -568,169 +574,6 @@ std::string BnStringConstants::getInterfaceHash() {
 }  // namespace os
 
 }  // namespace android
-)";
-
-const char kRustOutputDirectory[] = "some/path/to";
-const char kRustOutputPath[] = "some/path/to/android/os/IStringConstants.rs";
-
-const char kExpectedRustOutput[] =
-    R"(#![allow(non_upper_case_globals)]
-#![allow(non_snake_case)]
-#[allow(unused_imports)] use binder::IBinder;
-use binder::declare_binder_interface;
-declare_binder_interface! {
-  IStringConstants["android.os.IStringConstants"] {
-    native: BnStringConstants(on_transact),
-    proxy: BpStringConstants {
-    },
-  }
-}
-pub trait IStringConstants: binder::Interface + Send {
-  fn get_descriptor() -> &'static str where Self: Sized { "android.os.IStringConstants" }
-  fn getDefaultImpl() -> IStringConstantsDefault where Self: Sized {
-    DEFAULT_IMPL.lock().unwrap().clone()
-  }
-  fn setDefaultImpl(d: IStringConstantsDefault) -> IStringConstantsDefault where Self: Sized {
-    std::mem::replace(&mut *DEFAULT_IMPL.lock().unwrap(), d)
-  }
-}
-pub mod transactions {
-  #[allow(unused_imports)] use binder::IBinder;
-}
-pub type IStringConstantsDefault = Option<std::sync::Arc<dyn IStringConstants + Sync>>;
-use lazy_static::lazy_static;
-lazy_static! {
-  static ref DEFAULT_IMPL: std::sync::Mutex<IStringConstantsDefault> = std::sync::Mutex::new(None);
-}
-pub const EXAMPLE_CONSTANT: &str = "foo";
-pub(crate) mod mangled { pub use super::IStringConstants as _7_android_2_os_16_IStringConstants; }
-impl IStringConstants for BpStringConstants {
-}
-impl IStringConstants for binder::Binder<BnStringConstants> {
-}
-fn on_transact(_aidl_service: &dyn IStringConstants, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::Parcel, _aidl_reply: &mut binder::parcel::Parcel) -> binder::Result<()> {
-  match _aidl_code {
-    _ => Err(binder::StatusCode::UNKNOWN_TRANSACTION)
-  }
-}
-)";
-
-const char kExpectedRustOutputWithVersionAndHash[] =
-    R"(#![allow(non_upper_case_globals)]
-#![allow(non_snake_case)]
-#[allow(unused_imports)] use binder::IBinder;
-use binder::declare_binder_interface;
-declare_binder_interface! {
-  IStringConstants["android.os.IStringConstants"] {
-    native: BnStringConstants(on_transact),
-    proxy: BpStringConstants {
-      cached_version: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(-1),
-      cached_hash: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None)
-    },
-  }
-}
-pub trait IStringConstants: binder::Interface + Send {
-  fn get_descriptor() -> &'static str where Self: Sized { "android.os.IStringConstants" }
-  fn getInterfaceVersion(&self) -> binder::public_api::Result<i32> {
-    Ok(VERSION)
-  }
-  fn getInterfaceHash(&self) -> binder::public_api::Result<String> {
-    Ok(HASH.into())
-  }
-  fn getDefaultImpl() -> IStringConstantsDefault where Self: Sized {
-    DEFAULT_IMPL.lock().unwrap().clone()
-  }
-  fn setDefaultImpl(d: IStringConstantsDefault) -> IStringConstantsDefault where Self: Sized {
-    std::mem::replace(&mut *DEFAULT_IMPL.lock().unwrap(), d)
-  }
-}
-pub mod transactions {
-  #[allow(unused_imports)] use binder::IBinder;
-  pub const getInterfaceVersion: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 16777214;
-  pub const getInterfaceHash: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 16777213;
-}
-pub type IStringConstantsDefault = Option<std::sync::Arc<dyn IStringConstants + Sync>>;
-use lazy_static::lazy_static;
-lazy_static! {
-  static ref DEFAULT_IMPL: std::sync::Mutex<IStringConstantsDefault> = std::sync::Mutex::new(None);
-}
-pub const EXAMPLE_CONSTANT: &str = "foo";
-pub(crate) mod mangled { pub use super::IStringConstants as _7_android_2_os_16_IStringConstants; }
-pub const VERSION: i32 = 10;
-pub const HASH: &str = "abcdefg";
-impl IStringConstants for BpStringConstants {
-  fn getInterfaceVersion(&self) -> binder::public_api::Result<i32> {
-    let _aidl_version = self.cached_version.load(std::sync::atomic::Ordering::Relaxed);
-    if _aidl_version != -1 { return Ok(_aidl_version); }
-    let _aidl_reply = self.binder.transact(transactions::getInterfaceVersion, 0, |_aidl_data| {
-      Ok(())
-    });
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as IStringConstants>::getDefaultImpl() {
-        return _aidl_default_impl.getInterfaceVersion();
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: i32 = _aidl_reply.read()?;
-    self.cached_version.store(_aidl_return, std::sync::atomic::Ordering::Relaxed);
-    Ok(_aidl_return)
-  }
-  fn getInterfaceHash(&self) -> binder::public_api::Result<String> {
-    {
-      let _aidl_hash_lock = self.cached_hash.lock().unwrap();
-      if let Some(ref _aidl_hash) = *_aidl_hash_lock {
-        return Ok(_aidl_hash.clone());
-      }
-    }
-    let _aidl_reply = self.binder.transact(transactions::getInterfaceHash, 0, |_aidl_data| {
-      Ok(())
-    });
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as IStringConstants>::getDefaultImpl() {
-        return _aidl_default_impl.getInterfaceHash();
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: String = _aidl_reply.read()?;
-    *self.cached_hash.lock().unwrap() = Some(_aidl_return.clone());
-    Ok(_aidl_return)
-  }
-}
-impl IStringConstants for binder::Binder<BnStringConstants> {
-  fn getInterfaceVersion(&self) -> binder::public_api::Result<i32> { self.0.getInterfaceVersion() }
-  fn getInterfaceHash(&self) -> binder::public_api::Result<String> { self.0.getInterfaceHash() }
-}
-fn on_transact(_aidl_service: &dyn IStringConstants, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::Parcel, _aidl_reply: &mut binder::parcel::Parcel) -> binder::Result<()> {
-  match _aidl_code {
-    transactions::getInterfaceVersion => {
-      let _aidl_return = _aidl_service.getInterfaceVersion();
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::getInterfaceHash => {
-      let _aidl_return = _aidl_service.getInterfaceHash();
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    _ => Err(binder::StatusCode::UNKNOWN_TRANSACTION)
-  }
-}
 )";
 
 }  // namespace string_constants

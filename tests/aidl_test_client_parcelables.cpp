@@ -14,89 +14,84 @@
  * limitations under the License.
  */
 
-#include <android/aidl/tests/ParcelableForToString.h>
-#include <android/aidl/tests/extension/MyExt.h>
-#include <android/aidl/tests/extension/MyExt2.h>
-#include <android/aidl/tests/extension/MyExtLike.h>
-#include "aidl_test_client.h"
+#include "aidl_test_client_parcelables.h"
 
-#include <string>
+#include <iostream>
 #include <vector>
 
-using android::IInterface;
+// libutils:
 using android::sp;
-using android::String16;
-using android::aidl::tests::ConstantExpressionEnum;
-using android::aidl::tests::GenericStructuredParcelable;
-using android::aidl::tests::INamedCallback;
-using android::aidl::tests::IntEnum;
-using android::aidl::tests::ITestService;
-using android::aidl::tests::OtherParcelableForToString;
-using android::aidl::tests::ParcelableForToString;
-using android::aidl::tests::SimpleParcelable;
-using android::aidl::tests::StructuredParcelable;
-using android::aidl::tests::Union;
-using android::aidl::tests::extension::ExtendableParcelable;
-using android::aidl::tests::extension::MyExt;
-using android::aidl::tests::extension::MyExt2;
-using android::aidl::tests::extension::MyExtLike;
+
+// libbinder:
 using android::binder::Status;
+
+// generated
+using android::aidl::tests::ConstantExpressionEnum;
+using android::aidl::tests::ITestService;
+using android::aidl::tests::SimpleParcelable;
 using android::os::PersistableBundle;
-using std::string;
+
+using std::cout;
+using std::endl;
 using std::vector;
 
-TEST_F(AidlTest, RepeatSimpleParcelable) {
-  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
+namespace android {
+namespace aidl {
+namespace tests {
+namespace client {
+
+bool ConfirmSimpleParcelables(const sp<ITestService>& s) {
+  cout << "Confirming passing and returning SimpleParcelable objects works."
+       << endl;
 
   SimpleParcelable input("Booya", 42);
   SimpleParcelable out_param, returned;
-  Status status = cpp_java_tests->RepeatSimpleParcelable(input, &out_param, &returned);
-  ASSERT_TRUE(status.isOk()) << status.toString8();
-  EXPECT_EQ(input, out_param);
-  EXPECT_EQ(input, returned);
-}
+  Status status = s->RepeatSimpleParcelable(input, &out_param, &returned);
+  if (!status.isOk()) {
+    cout << "Binder call failed." << endl;
+    return false;
+  }
+  if (input != out_param || input != returned) {
+    cout << "Failed to repeat SimpleParcelable objects." << endl;
+    return false;
+  }
 
-TEST_F(AidlTest, RepeatGenericStructureParcelable) {
-  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
-
-  GenericStructuredParcelable<int32_t, StructuredParcelable, IntEnum> input, out_param, returned;
-  input.a = 41;
-  input.b = 42;
-  Status status = cpp_java_tests->RepeatGenericParcelable(input, &out_param, &returned);
-  ASSERT_TRUE(status.isOk()) << status.toString8();
-  EXPECT_EQ(input, out_param);
-  EXPECT_EQ(input, returned);
-}
-
-TEST_F(AidlTest, ReverseSimpleParcelable) {
-  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
-
+  cout << "Attempting to reverse an array of SimpleParcelable objects." << endl;
   const vector<SimpleParcelable> original{SimpleParcelable("first", 0),
                                           SimpleParcelable("second", 1),
                                           SimpleParcelable("third", 2)};
   vector<SimpleParcelable> repeated;
   vector<SimpleParcelable> reversed;
-  Status status = cpp_java_tests->ReverseSimpleParcelables(original, &repeated, &reversed);
-  ASSERT_TRUE(status.isOk()) << status.toString8();
-
-  EXPECT_EQ(repeated, original);
-
+  status = s->ReverseSimpleParcelables(original, &repeated, &reversed);
+  if (!status.isOk()) {
+    cout << "Binder call failed." << endl;
+    return false;
+  }
   std::reverse(reversed.begin(), reversed.end());
+  if (repeated != original || reversed != original) {
+    cout << "Failed to reverse an array of SimpleParcelable objects." << endl;
+    return false;
+  }
+
+  return true;
 }
 
-TEST_F(AidlTest, ConfirmPersistableBundles) {
-  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
+bool ConfirmPersistableBundles(const sp<ITestService>& s) {
+  cout << "Confirming passing and returning PersistableBundle objects works."
+       << endl;
 
   PersistableBundle empty_bundle, returned;
-  Status status = cpp_java_tests->RepeatPersistableBundle(empty_bundle, &returned);
-  ASSERT_TRUE(status.isOk()) << status.toString8();
-  EXPECT_EQ(empty_bundle, returned);
-}
+  Status status = s->RepeatPersistableBundle(empty_bundle, &returned);
+  if (!status.isOk()) {
+    cout << "Binder call failed for empty PersistableBundle." << endl;
+    return false;
+  }
+  if (empty_bundle != returned) {
+    cout << "Failed to repeat empty PersistableBundle." << endl;
+    return false;
+  }
 
-TEST_F(AidlTest, ConfirmPersistableBundlesNonEmpty) {
-  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
-
-  PersistableBundle non_empty_bundle, returned;
+  PersistableBundle non_empty_bundle;
   non_empty_bundle.putBoolean(String16("test_bool"), false);
   non_empty_bundle.putInt(String16("test_int"), 33);
   non_empty_bundle.putLong(String16("test_long"), 34359738368L);
@@ -115,14 +110,18 @@ TEST_F(AidlTest, ConfirmPersistableBundlesNonEmpty) {
   non_empty_bundle.putPersistableBundle(String16("test_persistable_bundle"),
                                         nested_bundle);
 
-  Status status = cpp_java_tests->RepeatPersistableBundle(non_empty_bundle, &returned);
-  ASSERT_TRUE(status.isOk()) << status.toString8();
-  EXPECT_EQ(non_empty_bundle, returned);
-}
+  status = s->RepeatPersistableBundle(non_empty_bundle, &returned);
+  if (!status.isOk()) {
+    cout << "Binder call failed. " << endl;
+    return false;
+  }
+  if (non_empty_bundle != returned) {
+    cout << "Failed to repeat PersistableBundle object." << endl;
+    return false;
+  }
 
-TEST_F(AidlTest, ReversePersistableBundles) {
-  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
-
+  cout << "Attempting to reverse an array of PersistableBundle objects."
+       << endl;
   PersistableBundle first;
   PersistableBundle second;
   PersistableBundle third;
@@ -133,316 +132,275 @@ TEST_F(AidlTest, ReversePersistableBundles) {
 
   vector<PersistableBundle> repeated;
   vector<PersistableBundle> reversed;
-  Status status = cpp_java_tests->ReversePersistableBundles(original, &repeated, &reversed);
-  ASSERT_TRUE(status.isOk()) << status.toString8();
-
-  EXPECT_EQ(repeated, original);
-
+  status = s->ReversePersistableBundles(original, &repeated, &reversed);
+  if (!status.isOk()) {
+    cout << "Binder call failed." << endl;
+    return false;
+  }
   std::reverse(reversed.begin(), reversed.end());
-  EXPECT_EQ(reversed, original);
+  if (repeated != original || reversed != original) {
+    cout << "Failed to reverse an array of PersistableBundle objects." << endl;
+    return false;
+  }
+
+  return true;
 }
 
-TEST_F(AidlTest, ReverseUnion) {
-  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
-
-  Union original = Union::make<Union::ns>({1, 2, 3});
-  Union repeated, reversed;
-  Status status = cpp_java_tests->ReverseUnion(original, &repeated, &reversed);
-  ASSERT_TRUE(status.isOk()) << status.toString8();
-
-  EXPECT_EQ(repeated, original);
-
-  std::reverse(reversed.get<Union::ns>().begin(), reversed.get<Union::ns>().end());
-  EXPECT_EQ(reversed, original);
-}
-
-TEST_F(AidlTest, UnionUsage) {
-  // default ctor inits with first member's default value
-  EXPECT_EQ(Union::make<Union::ns>(), Union());
-
-  // make<tag>(...) to create a value for a tag.
-  Union one_two_three = Union::make<Union::ns>({1, 2, 3});
-
-  // getTag() queries the tag of the content
-  EXPECT_EQ(Union::ns, one_two_three.getTag());
-
-  // Ctor(...) works if a target tag has a unique type among fields.
-  EXPECT_EQ(one_two_three, Union(std::vector{1, 2, 3}));
-  EXPECT_EQ(one_two_three, std::vector<int>({1, 2, 3}));
-
-  // Use std::in_place_index<tag> to avoid "move"
-  // Note that make<tag>(...) involves "move" of the content value
-  EXPECT_EQ(Union::make<Union::ns>(3, 0), Union(std::in_place_index<Union::ns>, 3, 0));
-
-  Union one_two = one_two_three;
-  // get<tag> can be used to modify the content
-  one_two.get<Union::ns>().pop_back();
-  EXPECT_EQ(one_two, std::vector<int>({1, 2}));
-  // get<tag> can be lvalue
-  one_two.get<Union::ns>() = std::vector<int>{1, 2};
-  EXPECT_EQ(one_two, std::vector<int>({1, 2}));
-
-  // abort with a bad access
-  EXPECT_DEATH(one_two.get<Union::n>(), "");
-
-  // set<tag>(...) overwrites the content with a new tag
-  one_two_three.set<Union::s>("123");
-  EXPECT_EQ(one_two_three, std::string("123"));
-
-  // Or, you can simply assign a new value.
-  // note that this works only if the target type is unique
-  one_two_three = std::vector<std::string>{"1", "2", "3"};
-  EXPECT_EQ(Union::ss, one_two_three.getTag());
-}
-
-TEST_F(AidlTest, StructuredParcelableEquality) {
-  // TODO: break up equality tests, these are hard to read, because you need to
-  // keep the state of the parcelables in mind
+bool ConfirmStructuredParcelablesEquality(const sp<ITestService>& s) {
   StructuredParcelable parcelable1;
   StructuredParcelable parcelable2;
 
   parcelable1.f = 11;
   parcelable2.f = 11;
 
-  service->FillOutStructuredParcelable(&parcelable1);
-  service->FillOutStructuredParcelable(&parcelable2);
+  s->FillOutStructuredParcelable(&parcelable1);
+  s->FillOutStructuredParcelable(&parcelable2);
 
   sp<INamedCallback> callback1;
   sp<INamedCallback> callback2;
-  service->GetOtherTestService(String16("callback1"), &callback1);
-  service->GetOtherTestService(String16("callback2"), &callback2);
+  s->GetOtherTestService(String16("callback1"), &callback1);
+  s->GetOtherTestService(String16("callback2"), &callback2);
 
   parcelable1.ibinder = IInterface::asBinder(callback1);
   parcelable2.ibinder = IInterface::asBinder(callback1);
 
-  EXPECT_EQ(parcelable1, parcelable2);
-
+  if (parcelable1 != parcelable2) {
+    cout << "parcelable1 and parcelable2 should be same." << endl;
+    return false;
+  }
   parcelable1.f = 0;
-  EXPECT_LT(parcelable1, parcelable2);
+  if (parcelable1 >= parcelable2) {
+    cout << "parcelable1 and parcelable2 should be different because of shouldContainThreeFs"
+         << endl;
+    return false;
+  }
   parcelable1.f = 11;
 
   parcelable1.shouldBeJerry = "Jarry";
-  EXPECT_LT(parcelable1, parcelable2);
+  if (!(parcelable1 < parcelable2)) {
+    cout << "parcelable1 and parcelable2 should be different because of shouldContainThreeFs"
+         << endl;
+    return false;
+  }
   parcelable1.shouldBeJerry = "Jerry";
 
   parcelable2.shouldContainThreeFs = {};
-  EXPECT_GT(parcelable1, parcelable2);
+  if (parcelable1 <= parcelable2) {
+    cout << "parcelable1 and parcelable2 should be different because of shouldContainThreeFs"
+         << endl;
+    return false;
+  }
   parcelable2.shouldContainThreeFs = {parcelable2.f, parcelable2.f, parcelable2.f};
 
   parcelable2.shouldBeIntBar = IntEnum::FOO;
-  EXPECT_GT(parcelable1, parcelable2);
+  if (!(parcelable1 > parcelable2)) {
+    cout << "parcelable1 and parcelable2 should be different because of shouldBeIntBar" << endl;
+    return false;
+  }
   parcelable2.shouldBeIntBar = IntEnum::BAR;
 
   parcelable2.ibinder = IInterface::asBinder(callback2);
-  EXPECT_NE(parcelable1, parcelable2);
+  if (parcelable1 == parcelable2) {
+    cout << "parcelable1 and parcelable2 should be different because of ibinder" << endl;
+    return false;
+  }
+  return true;
 }
 
-TEST_F(AidlTest, ConfirmStructuredParcelables) {
+bool ConfirmStructuredParcelables(const sp<ITestService>& s) {
+  bool success = true;
   constexpr int kDesiredValue = 23;
 
   StructuredParcelable parcelable;
   parcelable.f = kDesiredValue;
 
-  EXPECT_EQ(parcelable.stringDefaultsToFoo, String16("foo"));
-  EXPECT_EQ(parcelable.byteDefaultsToFour, 4);
-  EXPECT_EQ(parcelable.intDefaultsToFive, 5);
-  EXPECT_EQ(parcelable.longDefaultsToNegativeSeven, -7);
-  EXPECT_EQ(parcelable.booleanDefaultsToTrue, true);
-  EXPECT_EQ(parcelable.charDefaultsToC, 'C');
-  EXPECT_TRUE(parcelable.floatDefaultsToPi == 3.14f) << parcelable.floatDefaultsToPi;
-  EXPECT_TRUE(parcelable.doubleWithDefault == -3.14e17) << parcelable.doubleWithDefault;
+  if (parcelable.stringDefaultsToFoo != String16("foo")) {
+    cout << "stringDefaultsToFoo should be 'foo' but is " << parcelable.stringDefaultsToFoo << endl;
+    return false;
+  }
+  if (parcelable.byteDefaultsToFour != 4) {
+    cout << "byteDefaultsToFour should be 4 but is " << parcelable.byteDefaultsToFour << endl;
+    return false;
+  }
+  if (parcelable.intDefaultsToFive != 5) {
+    cout << "intDefaultsToFive should be 5 but is " << parcelable.intDefaultsToFive << endl;
+    return false;
+  }
+  if (parcelable.longDefaultsToNegativeSeven != -7) {
+    cout << "longDefaultsToNegativeSeven should be -7 but is "
+         << parcelable.longDefaultsToNegativeSeven << endl;
+    return false;
+  }
+  if (!parcelable.booleanDefaultsToTrue) {
+    cout << "booleanDefaultsToTrue isn't true" << endl;
+    return false;
+  }
+  if (parcelable.charDefaultsToC != 'C') {
+    cout << "charDefaultsToC is " << parcelable.charDefaultsToC << endl;
+    return false;
+  }
+  if (parcelable.floatDefaultsToPi != 3.14f) {
+    cout << "floatDefaultsToPi is " << parcelable.floatDefaultsToPi << endl;
+    return false;
+  }
+  if (parcelable.doubleWithDefault != -3.14e17) {
+    cout << "doubleWithDefault is " << parcelable.doubleWithDefault << " but should be -3.14e17"
+         << endl;
+    return false;
+  }
+  if (parcelable.arrayDefaultsTo123.size() != 3) {
+    cout << "arrayDefaultsTo123 is of length " << parcelable.arrayDefaultsTo123.size() << endl;
+    return false;
+  }
+  for (int i = 0; i < 3; i++) {
+    if (parcelable.arrayDefaultsTo123[i] != i + 1) {
+      cout << "arrayDefaultsTo123[" << i << "] is " << parcelable.arrayDefaultsTo123[i]
+           << " but should be " << i + 1 << endl;
+      return false;
+    }
+  }
+  if (!parcelable.arrayDefaultsToEmpty.empty()) {
+    cout << "arrayDefaultsToEmpty is not empty " << parcelable.arrayDefaultsToEmpty.size() << endl;
+    return false;
+  }
 
-  EXPECT_EQ(parcelable.boolDefault, false);
-  EXPECT_EQ(parcelable.byteDefault, 0);
-  EXPECT_EQ(parcelable.intDefault, 0);
-  EXPECT_EQ(parcelable.longDefault, 0);
-  EXPECT_EQ(parcelable.floatDefault, 0.0f);
-  EXPECT_EQ(parcelable.doubleDefault, 0.0);
+  s->FillOutStructuredParcelable(&parcelable);
 
-  ASSERT_EQ(parcelable.arrayDefaultsTo123.size(), 3u);
-  EXPECT_EQ(parcelable.arrayDefaultsTo123[0], 1);
-  EXPECT_EQ(parcelable.arrayDefaultsTo123[1], 2);
-  EXPECT_EQ(parcelable.arrayDefaultsTo123[2], 3);
-  EXPECT_TRUE(parcelable.arrayDefaultsToEmpty.empty());
+  if (parcelable.shouldContainThreeFs.size() != 3) {
+    cout << "shouldContainThreeFs is of length " << parcelable.shouldContainThreeFs.size() << endl;
+    return false;
+  }
 
-  service->FillOutStructuredParcelable(&parcelable);
+  for (int i = 0; i < 3; i++) {
+    if (parcelable.shouldContainThreeFs[i] != kDesiredValue) {
+      cout << "shouldContainThreeFs[" << i << "] is " << parcelable.shouldContainThreeFs[i]
+           << " but should be " << kDesiredValue << endl;
+      return false;
+    }
+  }
 
-  ASSERT_EQ(parcelable.shouldContainThreeFs.size(), 3u);
-  EXPECT_EQ(parcelable.shouldContainThreeFs[0], kDesiredValue);
-  EXPECT_EQ(parcelable.shouldContainThreeFs[1], kDesiredValue);
-  EXPECT_EQ(parcelable.shouldContainThreeFs[2], kDesiredValue);
+  if (parcelable.shouldBeJerry != "Jerry") {
+    cout << "shouldBeJerry should be 'Jerry' but is " << parcelable.shouldBeJerry << endl;
+    return false;
+  }
 
-  EXPECT_EQ(parcelable.shouldBeJerry, "Jerry");
-  EXPECT_EQ(parcelable.int32_min, INT32_MIN);
-  EXPECT_EQ(parcelable.int32_max, INT32_MAX);
-  EXPECT_EQ(parcelable.int64_max, INT64_MAX);
-  EXPECT_EQ(parcelable.hexInt32_neg_1, -1);
+  if (parcelable.int32_min != INT32_MIN) {
+    cout << "int32_min should be " << INT32_MIN << "but is " << parcelable.int32_min << endl;
+    return false;
+  }
+
+  if (parcelable.int32_max != INT32_MAX) {
+    cout << "int32_max should be " << INT32_MAX << "but is " << parcelable.int32_max << endl;
+    return false;
+  }
+
+  if (parcelable.int64_max != INT64_MAX) {
+    cout << "int64_max should be " << INT64_MAX << "but is " << parcelable.int64_max << endl;
+    return false;
+  }
+
+  if (parcelable.hexInt32_neg_1 != -1) {
+    cout << "hexInt32_neg_1 should be -1 but is " << parcelable.hexInt32_neg_1 << endl;
+    return false;
+  }
 
   for (size_t ndx = 0; ndx < parcelable.int32_1.size(); ndx++) {
-    EXPECT_EQ(parcelable.int32_1[ndx], 1) << ndx;
+    if (parcelable.int32_1[ndx] != 1) {
+      cout << "int32_1[" << ndx << "] should be 1 but is " << parcelable.int32_1[ndx] << endl;
+      success = false;
+    }
+  }
+  if (!success) {
+    return false;
   }
 
   for (size_t ndx = 0; ndx < parcelable.int64_1.size(); ndx++) {
-    EXPECT_EQ(parcelable.int64_1[ndx], 1) << ndx;
+    if (parcelable.int64_1[ndx] != 1) {
+      cout << "int64_1[" << ndx << "] should be 1 but is " << parcelable.int64_1[ndx] << endl;
+      success = false;
+    }
+  }
+  if (!success) {
+    return false;
   }
 
-  EXPECT_EQ(parcelable.hexInt32_pos_1, 1);
-  EXPECT_EQ(parcelable.hexInt64_pos_1, 1);
+  if (static_cast<int>(parcelable.hexInt32_pos_1) != 1) {
+    cout << "hexInt32_pos_1 should be 1 but is " << parcelable.hexInt32_pos_1 << endl;
+    return false;
+  }
 
-  EXPECT_EQ(static_cast<int>(parcelable.const_exprs_1), 1);
-  EXPECT_EQ(static_cast<int>(parcelable.const_exprs_2), 1);
-  EXPECT_EQ(static_cast<int>(parcelable.const_exprs_3), 1);
-  EXPECT_EQ(static_cast<int>(parcelable.const_exprs_4), 1);
-  EXPECT_EQ(static_cast<int>(parcelable.const_exprs_5), 1);
-  EXPECT_EQ(static_cast<int>(parcelable.const_exprs_6), 1);
-  EXPECT_EQ(static_cast<int>(parcelable.const_exprs_7), 1);
-  EXPECT_EQ(static_cast<int>(parcelable.const_exprs_8), 1);
-  EXPECT_EQ(static_cast<int>(parcelable.const_exprs_9), 1);
-  EXPECT_EQ(static_cast<int>(parcelable.const_exprs_10), 1);
+  if (parcelable.hexInt64_pos_1 != 1) {
+    cout << "hexInt64_pos_1 should be 1 but is " << parcelable.hexInt64_pos_1 << endl;
+    return false;
+  }
 
-  EXPECT_EQ(parcelable.addString1, "hello world!");
-  EXPECT_EQ(parcelable.addString2, "The quick brown fox jumps over the lazy dog.");
+  if (static_cast<int>(parcelable.const_exprs_1) != 1) {
+    cout << "parcelable.const_exprs_1 should be 1 but is "
+         << static_cast<int>(parcelable.const_exprs_1) << endl;
+    return false;
+  }
+  if (static_cast<int>(parcelable.const_exprs_2) != 1) {
+    cout << "parcelable.const_exprs_2 should be 1 but is "
+         << static_cast<int>(parcelable.const_exprs_2) << endl;
+    return false;
+  }
+  if (static_cast<int>(parcelable.const_exprs_3) != 1) {
+    cout << "parcelable.const_exprs_3 should be 1 but is "
+         << static_cast<int>(parcelable.const_exprs_3) << endl;
+    return false;
+  }
+  if (static_cast<int>(parcelable.const_exprs_4) != 1) {
+    cout << "parcelable.const_exprs_4 should be 1 but is "
+         << static_cast<int>(parcelable.const_exprs_4) << endl;
+    return false;
+  }
+  if (static_cast<int>(parcelable.const_exprs_5) != 1) {
+    cout << "parcelable.const_exprs_5 should be 1 but is "
+         << static_cast<int>(parcelable.const_exprs_5) << endl;
+    return false;
+  }
+  if (static_cast<int>(parcelable.const_exprs_6) != 1) {
+    cout << "parcelable.const_exprs_6 should be 1 but is "
+         << static_cast<int>(parcelable.const_exprs_6) << endl;
+    return false;
+  }
+  if (static_cast<int>(parcelable.const_exprs_7) != 1) {
+    cout << "parcelable.const_exprs_7 should be 1 but is "
+         << static_cast<int>(parcelable.const_exprs_7) << endl;
+    return false;
+  }
+  if (static_cast<int>(parcelable.const_exprs_8) != 1) {
+    cout << "parcelable.const_exprs_8 should be 1 but is "
+         << static_cast<int>(parcelable.const_exprs_8) << endl;
+    return false;
+  }
+  if (static_cast<int>(parcelable.const_exprs_9) != 1) {
+    cout << "parcelable.const_exprs_9 should be 1 but is "
+         << static_cast<int>(parcelable.const_exprs_9) << endl;
+    return false;
+  }
+  if (static_cast<int>(parcelable.const_exprs_10) != 1) {
+    cout << "parcelable.const_exprs_10 should be 1 but is "
+         << static_cast<int>(parcelable.const_exprs_10) << endl;
+    return false;
+  }
 
-  EXPECT_EQ(parcelable.u->get<Union::ns>(), vector<int32_t>({1, 2, 3}));
+  if (parcelable.addString1 != "hello world!") {
+    cout << "parcelable.addString1 should be \"hello world!\" but is \"" << parcelable.addString1
+         << "\"" << endl;
+    return false;
+  }
+  if (parcelable.addString2 != "The quick brown fox jumps over the lazy dog.") {
+    cout << "parcelable.addString2 should be \"The quick brown fox jumps over the lazy dog.\""
+            " but is \""
+         << parcelable.addString2 << "\"" << endl;
+    return false;
+  }
+
+  return true;
 }
 
-TEST_F(AidlTest, EmptyParcelableHolder) {
-  using namespace android::aidl::tests::extension;
-  android::Parcel parcel;
-  {
-    ExtendableParcelable ep;
-    ep.writeToParcel(&parcel);
-    auto emptyExt = ep.ext.getParcelable<MyExt>();
-    EXPECT_FALSE(emptyExt);
-  }
-  {
-    parcel.setDataPosition(0);
-    ExtendableParcelable ep;
-    ep.readFromParcel(&parcel);
-    auto emptyExt = ep.ext.getParcelable<MyExt>();
-    EXPECT_FALSE(emptyExt);
-  }
-}
-
-TEST_F(AidlTest, NativeExtednableParcelable) {
-  using namespace android::aidl::tests::extension;
-  MyExt ext;
-  ext.a = 42;
-  ext.b = "EXT";
-
-  MyExt2 ext2;
-  ext2.a = 42;
-  ext2.b.a = 24;
-  ext2.b.b = "INEXT";
-  ext2.c = "EXT2";
-  android::Parcel parcel;
-  {
-    ExtendableParcelable ep;
-    ep.a = 1;
-    ep.b = "a";
-    ep.c = 42L;
-
-    EXPECT_TRUE(ep.ext.setParcelable(ext));
-    EXPECT_TRUE(ep.ext2.setParcelable(ext2));
-
-    auto extLike = ep.ext.getParcelable<MyExtLike>();
-    EXPECT_FALSE(extLike) << "The extension type must be MyExt, so it has to fail even though "
-                             "MyExtLike has the same structure as MyExt.";
-
-    auto actualExt = ep.ext.getParcelable<MyExt>();
-    auto actualExt2 = ep.ext2.getParcelable<MyExt2>();
-
-    EXPECT_TRUE(actualExt);
-    EXPECT_TRUE(actualExt2);
-
-    EXPECT_EQ(ext, *actualExt);
-    EXPECT_EQ(ext2, *actualExt2);
-
-    ep.writeToParcel(&parcel);
-  }
-
-  parcel.setDataPosition(0);
-  {
-    ExtendableParcelable ep;
-    ep.readFromParcel(&parcel);
-
-    auto extLike = ep.ext.getParcelable<MyExtLike>();
-    EXPECT_FALSE(extLike) << "The extension type must be MyExt, so it has to fail even though "
-                             "MyExtLike has the same structure as MyExt.";
-
-    auto actualExt = ep.ext.getParcelable<MyExt>();
-    auto actualExt2 = ep.ext2.getParcelable<MyExt2>();
-
-    auto emptyExt = ep.ext2.getParcelable<MyExt>();
-    EXPECT_FALSE(emptyExt);
-
-    EXPECT_TRUE(actualExt);
-    EXPECT_TRUE(actualExt2);
-
-    EXPECT_EQ(ext, *actualExt);
-    EXPECT_EQ(ext2, *actualExt2);
-  }
-}
-
-TEST_F(AidlTest, ParcelableToString) {
-  ParcelableForToString p;
-  p.intValue = 10;
-  p.intArray = {20, 30};
-  p.longValue = 100L;
-  p.longArray = {200L, 300L};
-  p.doubleValue = 3.14;
-  p.doubleArray = {1.1, 1.2};
-  p.floatValue = 3.14f;
-  p.floatArray = {1.1f, 1.2f};
-  p.byteValue = 3;
-  p.byteArray = {5, 6};
-  p.booleanValue = true;
-  p.booleanArray = {true, false};
-  p.stringValue = String16("this is a string");
-  p.stringArray = {String16("hello"), String16("world")};
-  p.stringList = {String16("alice"), String16("bob")};
-  OtherParcelableForToString op;
-  op.field = String16("other");
-  p.parcelableValue = op;
-  p.parcelableArray = {op, op};
-  p.enumValue = IntEnum::FOO;
-  p.enumArray = {IntEnum::FOO, IntEnum::BAR};
-  // p.nullArray = null;
-  // p.nullList = null;
-  GenericStructuredParcelable<int32_t, StructuredParcelable, IntEnum> gen;
-  gen.a = 1;
-  gen.b = 2;
-  p.parcelableGeneric = gen;
-  p.unionValue = Union(std::vector<std::string>{"union", "value"});
-
-  const string expected =
-      "ParcelableForToString{"
-      "intValue: 10, "
-      "intArray: [20, 30], "
-      "longValue: 100, "
-      "longArray: [200, 300], "
-      "doubleValue: 3.140000, "
-      "doubleArray: [1.100000, 1.200000], "
-      "floatValue: 3.140000, "
-      "floatArray: [1.100000, 1.200000], "
-      "byteValue: 3, "
-      "byteArray: [5, 6], "
-      "booleanValue: true, "
-      "booleanArray: [true, false], "
-      "stringValue: this is a string, "
-      "stringArray: [hello, world], "
-      "stringList: [alice, bob], "
-      "parcelableValue: OtherParcelableForToString{field: other}, "
-      "parcelableArray: ["
-      "OtherParcelableForToString{field: other}, "
-      "OtherParcelableForToString{field: other}], "
-      "enumValue: FOO, "
-      "enumArray: [FOO, BAR], "
-      "nullArray: [], "
-      "nullList: [], "
-      "parcelableGeneric: GenericStructuredParcelable{a: 1, b: 2}, "
-      "unionValue: Union{ss: [union, value]}"
-      "}";
-
-  EXPECT_EQ(expected, p.toString());
-}
+}  // namespace client
+}  // namespace tests
+}  // namespace aidl
+}  // namespace android

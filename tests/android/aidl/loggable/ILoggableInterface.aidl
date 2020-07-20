@@ -1,5 +1,4 @@
 package android.aidl.loggable;
-import  android.aidl.loggable.Data;
 
 interface ILoggableInterface {
     String[] LogThis(boolean boolValue, inout boolean[] boolArray,
@@ -11,7 +10,6 @@ interface ILoggableInterface {
                    double doubleValue, inout double[] doubleArray,
                    String stringValue, inout String[] stringArray,
                    inout List<String> listValue,
-                   in Data dataValue,
-                   @nullable IBinder binderValue,
-                   inout @nullable ParcelFileDescriptor pfdValue, inout ParcelFileDescriptor[] pfdArray);
+                   IBinder binderValue,
+                   inout ParcelFileDescriptor pfdValue, inout ParcelFileDescriptor[] pfdArray);
 }
