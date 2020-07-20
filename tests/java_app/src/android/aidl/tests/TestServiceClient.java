@@ -920,6 +920,65 @@ public class TestServiceClient extends Activity {
             "parcelable.const_exprs_10 should be 1 but is " + parcelable.const_exprs_10);
       }
 
+      final String expected = "android.aidl.tests.StructuredParcelable{" +
+          "shouldContainThreeFs: [17, 17, 17], " +
+          "f: 17, " +
+          "shouldBeJerry: Jerry, " +
+          "shouldBeByteBar: 2, " +
+          "shouldBeIntBar: 2000, " +
+          "shouldBeLongBar: 200000000000, " +
+          "shouldContainTwoByteFoos: [1, 1], " +
+          "shouldContainTwoIntFoos: [1000, 1000], " +
+          "shouldContainTwoLongFoos: [100000000000, 100000000000], " +
+          "stringDefaultsToFoo: foo, " +
+          "byteDefaultsToFour: 4, " +
+          "intDefaultsToFive: 5, " +
+          "longDefaultsToNegativeSeven: -7, " +
+          "booleanDefaultsToTrue: true, " +
+          "charDefaultsToC: C, " +
+          "floatDefaultsToPi: 3.14, " +
+          "doubleWithDefault: -3.14E17, " +
+          "arrayDefaultsTo123: [1, 2, 3], " +
+          "arrayDefaultsToEmpty: [], " +
+          "boolDefault: false, " +
+          "byteDefault: 0, " +
+          "intDefault: 0, " +
+          "longDefault: 0, " +
+          "floatDefault: 0.0, " +
+          "doubleDefault: 0.0, " +
+          "checkDoubleFromFloat: 3.14, " +
+          "checkStringArray1: [a, b], " +
+          "checkStringArray2: [a, b], " +
+          "int32_min: -2147483648, " +
+          "int32_max: 2147483647, " +
+          "int64_max: 9223372036854775807, " +
+          "hexInt32_neg_1: -1, " +
+          "ibinder: null, " +
+          "int32_1: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, " +
+          "1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, " +
+          "1, 1, 1, 1], " +
+          "int64_1: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], " +
+          "hexInt32_pos_1: 1, " +
+          "hexInt64_pos_1: 1, " +
+          "const_exprs_1: 1, " +
+          "const_exprs_2: 1, " +
+          "const_exprs_3: 1, " +
+          "const_exprs_4: 1, " +
+          "const_exprs_5: 1, " +
+          "const_exprs_6: 1, " +
+          "const_exprs_7: 1, " +
+          "const_exprs_8: 1, " +
+          "const_exprs_9: 1, " +
+          "const_exprs_10: 1, " +
+          "addString1: hello world!, " +
+          "addString2: The quick brown fox jumps over the lazy dog." +
+          "}";
+      if (!expected.equals(parcelable.toString())) {
+        mLog.logAndThrow(
+            "parcelable.toString() should be \"" + expected + "\" " +
+            "but is \"" + parcelable.toString() + "\"");
+      }
+
       mLog.log("Successfully verified the StructuredParcelable");
     }
 
@@ -953,6 +1012,64 @@ public class TestServiceClient extends Activity {
       }
     }
 
+    private void checkToString() throws TestFailException {
+      ParcelableForToString p = new ParcelableForToString();
+      p.intValue = 10;
+      p.intArray = new int[]{20, 30};
+      p.longValue = 100L;
+      p.longArray = new long[]{200L, 300L};
+      p.doubleValue = 3.14d;
+      p.doubleArray = new double[]{1.1d, 1.2d};
+      p.floatValue = 3.14f;
+      p.floatArray = new float[]{1.1f, 1.2f};
+      p.byteValue = 3;
+      p.byteArray = new byte[]{5, 6};
+      p.booleanValue = true;
+      p.booleanArray = new boolean[]{true, false};
+      p.stringValue = "this is a string";
+      p.stringArray = new String[]{"hello", "world"};
+      p.stringList = Arrays.asList(new String[]{"alice", "bob"});
+      OtherParcelableForToString op = new OtherParcelableForToString();
+      op.field = "other";
+      p.parcelableValue = op;
+      p.parcelableArray = new OtherParcelableForToString[]{op, op};
+      p.enumValue = IntEnum.FOO;
+      p.enumArray = new int[]{IntEnum.FOO, IntEnum.BAR};
+      p.nullArray = null;
+      p.nullList = null;
+
+      final String expected = "android.aidl.tests.ParcelableForToString{" +
+          "intValue: 10, " +
+          "intArray: [20, 30], " +
+          "longValue: 100, " +
+          "longArray: [200, 300], " +
+          "doubleValue: 3.14, " +
+          "doubleArray: [1.1, 1.2], " +
+          "floatValue: 3.14, " +
+          "floatArray: [1.1, 1.2], " +
+          "byteValue: 3, " +
+          "byteArray: [5, 6], " +
+          "booleanValue: true, " +
+          "booleanArray: [true, false], " +
+          "stringValue: this is a string, " +
+          "stringArray: [hello, world], " +
+          "stringList: [alice, bob], " +
+          "parcelableValue: android.aidl.tests.OtherParcelableForToString{field: other}, " +
+          "parcelableArray: [" +
+          "android.aidl.tests.OtherParcelableForToString{field: other}, " +
+          "android.aidl.tests.OtherParcelableForToString{field: other}], " +
+          "enumValue: 1000, " +
+          "enumArray: [1000, 2000], " +
+          "nullArray: null, " +
+          "nullList: null" +
+          "}";
+      if (!expected.equals(p.toString())) {
+        mLog.logAndThrow(
+            "parcelable.toString() should be \"" + expected + "\" " +
+            "but is \"" + p.toString() + "\"");
+      }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -976,6 +1093,7 @@ public class TestServiceClient extends Activity {
           new GenericTests(mLog).runTests();
           new ExtensionTests(mLog).runTests();
           checkDefaultImpl(service);
+          checkToString();
 
           mLog.log(mSuccessSentinel);
         } catch (TestFailException e) {

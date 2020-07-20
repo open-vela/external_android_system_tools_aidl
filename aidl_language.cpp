@@ -138,6 +138,7 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
       {AidlAnnotation::Type::HIDE, "Hide", {}},
       {AidlAnnotation::Type::BACKING, "Backing", {{"type", "String"}}},
       {AidlAnnotation::Type::JAVA_PASSTHROUGH, "JavaPassthrough", {{"annotation", "String"}}},
+      {AidlAnnotation::Type::JAVA_DEBUG, "JavaDebug", {}},
   };
   return kSchemas;
 }
@@ -318,6 +319,10 @@ bool AidlAnnotatable::IsStableApiParcelable(Options::Language lang) const {
 
 bool AidlAnnotatable::IsHide() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::HIDE);
+}
+
+bool AidlAnnotatable::IsJavaDebug() const {
+  return GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_DEBUG);
 }
 
 void AidlAnnotatable::DumpAnnotations(CodeWriter* writer) const {
@@ -827,7 +832,8 @@ void AidlStructuredParcelable::Dump(CodeWriter* writer) const {
 
 std::set<AidlAnnotation::Type> AidlStructuredParcelable::GetSupportedAnnotations() const {
   return {AidlAnnotation::Type::VINTF_STABILITY, AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
-          AidlAnnotation::Type::HIDE, AidlAnnotation::Type::JAVA_PASSTHROUGH};
+          AidlAnnotation::Type::HIDE, AidlAnnotation::Type::JAVA_PASSTHROUGH,
+          AidlAnnotation::Type::JAVA_DEBUG};
 }
 
 bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const {
