@@ -242,6 +242,32 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
 
   parcel_class->elements.push_back(read_method);
 
+  if (parcel->IsJavaDebug()) {
+    out.str("");
+    out << "@Override\n";
+    out << "public String toString() {\n";
+    out << "  java.util.StringJoiner _aidl_sj = new java.util.StringJoiner(";
+    out << "\", \", \"{\", \"}\");\n";
+    for (const auto& field : parcel->GetFields()) {
+      std::string code;
+      CodeWriterPtr writer = CodeWriter::ForString(&code);
+      CodeGeneratorContext context{
+          .writer = *(writer.get()),
+          .typenames = typenames,
+          .type = field->GetType(),
+          .parcel = parcel_variable->name,
+          .var = field->GetName(),
+          .is_classloader_created = &is_classloader_created,
+      };
+      ToStringFor(context);
+      writer->Close();
+      out << "  _aidl_sj.add(\"" << field->GetName() << ": \" + (" << code << "));\n";
+    }
+    out << "  return \"" << parcel->GetCanonicalName() << "\" + _aidl_sj.toString()  ;\n";
+    out << "}\n";
+    parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(out.str()));
+  }
+
   auto describe_contents_method = std::make_shared<Method>();
   describe_contents_method->modifiers = PUBLIC | OVERRIDE;
   describe_contents_method->returnType = "int";
