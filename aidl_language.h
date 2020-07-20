@@ -739,6 +739,8 @@ class AidlDefinedType : public AidlAnnotatable {
   const std::vector<std::string> split_package_;
 
   DISALLOW_COPY_AND_ASSIGN(AidlDefinedType);
+  AidlDefinedType(AidlDefinedType&&) = delete;
+  AidlDefinedType& operator=(AidlDefinedType&&) = delete;
 };
 
 class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::string> {
@@ -899,12 +901,21 @@ class AidlImport : public AidlNode {
 class AidlDocument : public AidlNode {
  public:
   AidlDocument(const AidlLocation& location, std::vector<std::unique_ptr<AidlImport>>& imports,
-               std::vector<AidlDefinedType*>& defined_types)
-      : AidlNode(location), imports_(std::move(imports)), defined_types_(defined_types) {}
+               std::vector<std::unique_ptr<AidlDefinedType>>&& defined_types)
+      : AidlNode(location),
+        imports_(std::move(imports)),
+        defined_types_(std::move(defined_types)) {}
   const std::vector<std::unique_ptr<AidlImport>>& Imports() const { return imports_; }
-  const std::vector<AidlDefinedType*>& DefinedTypes() const { return defined_types_; }
+  const std::vector<std::unique_ptr<AidlDefinedType>>& DefinedTypes() const {
+    return defined_types_;
+  }
+  AidlDocument(const AidlDocument&) = delete;
+  AidlDocument(AidlDocument&&) = delete;
+  AidlDocument& operator=(const AidlDocument&) = delete;
+  AidlDocument& operator=(AidlDocument&&) = delete;
+  ~AidlDocument() = default;
 
  private:
   const std::vector<std::unique_ptr<AidlImport>> imports_;
-  const std::vector<AidlDefinedType*> defined_types_;
+  const std::vector<std::unique_ptr<AidlDefinedType>> defined_types_;
 };

@@ -20,6 +20,7 @@
 #include "aidl_typenames.h"
 #include "io_delegate.h"
 #include "options.h"
+#include <android-base/logging.h>
 
 #include <memory>
 #include <string>
@@ -42,7 +43,7 @@ class Parser {
                                        AidlTypenames& typenames);
 
   void AddError() { error_++; }
-  bool HasError() { return error_ != 0; }
+  bool HasError() const { return error_ != 0; }
 
   const std::string& FileName() const { return filename_; }
   void* Scanner() const { return scanner_; }
@@ -58,19 +59,19 @@ class Parser {
 
   bool Resolve();
   void SetDocument(std::unique_ptr<AidlDocument>&& document) {
-    // AidlDocument does not have the ownership to AidlDefinedTypes.
-    // AidlTypenames has the ownership.
-    // TODO(jiyong): fix this by making AidlTypenames to own
-    // AidlDocuments and AidlDocument to own AidlDefinedTypes.
-    for (auto* t : document->DefinedTypes()) {
-      if (!typenames_.AddDefinedType(std::unique_ptr<AidlDefinedType>(t))) {
-        AddError();
-      }
+    // The parsed document is owned by typenames_. This parser object only has
+    // a reference to it.
+    document_ = document.get();
+    if (!typenames_.AddDocument(std::move(document))) {
+      document_ = nullptr;
+      AddError();
     }
-    document_ = std::move(document);
   }
 
-  const AidlDocument& Document() const { return *document_; }
+  const AidlDocument& ParsedDocument() const {
+    CHECK(!HasError());
+    return *document_;
+  }
 
  private:
   explicit Parser(const std::string& filename, std::string& raw_buffer,
@@ -85,5 +86,5 @@ class Parser {
   int error_ = 0;
 
   vector<AidlTypeSpecifier*> unresolved_typespecs_;
-  std::unique_ptr<AidlDocument> document_;
+  const AidlDocument* document_;
 };
