@@ -411,7 +411,6 @@ bool parse_preprocessed_file(const IoDelegate& io_delegate, const string& filena
 
 AidlError load_and_validate_aidl(const std::string& input_file_name, const Options& options,
                                  const IoDelegate& io_delegate, AidlTypenames* typenames,
-                                 vector<AidlDefinedType*>* defined_types,
                                  vector<string>* imported_files) {
   AidlError err = AidlError::OK;
 
@@ -425,7 +424,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     return AidlError::PARSE_ERROR;
   }
   int num_interfaces_or_structured_parcelables = 0;
-  for (AidlDefinedType* type : main_parser->Document().DefinedTypes()) {
+  for (const auto& type : main_parser->ParsedDocument().DefinedTypes()) {
     if (type->AsInterface() != nullptr || type->AsStructuredParcelable() != nullptr) {
       num_interfaces_or_structured_parcelables++;
       if (num_interfaces_or_structured_parcelables > 1) {
@@ -451,7 +450,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
                                  options.InputFiles()};
 
   vector<string> type_from_import_statements;
-  for (const auto& import : main_parser->Document().Imports()) {
+  for (const auto& import : main_parser->ParsedDocument().Imports()) {
     if (!AidlTypenames::IsBuiltinTypename(import->GetNeededClass())) {
       type_from_import_statements.emplace_back(import->GetNeededClass());
     }
@@ -568,9 +567,9 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   // serious failures.
   bool contains_unstructured_parcelable = false;
 
-  const auto& types = main_parser->Document().DefinedTypes();
+  const auto& types = main_parser->ParsedDocument().DefinedTypes();
   const int num_defined_types = types.size();
-  for (const auto defined_type : types) {
+  for (const auto& defined_type : types) {
     CHECK(defined_type != nullptr);
 
     // Language specific validation
@@ -738,10 +737,6 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     return err;
   }
 
-  if (defined_types != nullptr) {
-    *defined_types = main_parser->Document().DefinedTypes();
-  }
-
   if (imported_files != nullptr) {
     *imported_files = import_paths;
   }
@@ -761,17 +756,16 @@ int compile_aidl(const Options& options, const IoDelegate& io_delegate) {
   for (const string& input_file : options.InputFiles()) {
     AidlTypenames typenames;
 
-    vector<AidlDefinedType*> defined_types;
     vector<string> imported_files;
 
-    AidlError aidl_err = internals::load_and_validate_aidl(
-        input_file, options, io_delegate, &typenames, &defined_types, &imported_files);
+    AidlError aidl_err = internals::load_and_validate_aidl(input_file, options, io_delegate,
+                                                           &typenames, &imported_files);
     bool allowError = aidl_err == AidlError::FOUND_PARCELABLE && !options.FailOnParcelable();
     if (aidl_err != AidlError::OK && !allowError) {
       return 1;
     }
 
-    for (const auto defined_type : defined_types) {
+    for (const auto& defined_type : typenames.MainDocument().DefinedTypes()) {
       CHECK(defined_type != nullptr);
 
       string output_file_name = options.OutputFile();
@@ -800,8 +794,8 @@ int compile_aidl(const Options& options, const IoDelegate& io_delegate) {
           // Legacy behavior. For parcelable declarations in Java, don't generate output file.
           success = true;
         } else {
-          success =
-              java::generate_java(output_file_name, defined_type, typenames, io_delegate, options);
+          success = java::generate_java(output_file_name, defined_type.get(), typenames,
+                                        io_delegate, options);
         }
       } else {
         LOG(FATAL) << "Should not reach here" << endl;
@@ -819,16 +813,15 @@ bool dump_mappings(const Options& options, const IoDelegate& io_delegate) {
   android::aidl::mappings::SignatureMap all_mappings;
   for (const string& input_file : options.InputFiles()) {
     AidlTypenames typenames;
-    vector<AidlDefinedType*> defined_types;
     vector<string> imported_files;
 
-    AidlError aidl_err = internals::load_and_validate_aidl(
-        input_file, options, io_delegate, &typenames, &defined_types, &imported_files);
+    AidlError aidl_err = internals::load_and_validate_aidl(input_file, options, io_delegate,
+                                                           &typenames, &imported_files);
     if (aidl_err != AidlError::OK) {
       return false;
     }
-    for (const auto defined_type : defined_types) {
-      auto mappings = mappings::generate_mappings(defined_type, typenames);
+    for (const auto& defined_type : typenames.MainDocument().DefinedTypes()) {
+      auto mappings = mappings::generate_mappings(defined_type.get(), typenames);
       all_mappings.insert(mappings.begin(), mappings.end());
     }
   }
@@ -849,7 +842,7 @@ bool preprocess_aidl(const Options& options, const IoDelegate& io_delegate) {
     std::unique_ptr<Parser> p = Parser::Parse(file, io_delegate, typenames);
     if (p == nullptr) return false;
 
-    for (const auto& defined_type : p->Document().DefinedTypes()) {
+    for (const auto& defined_type : p->ParsedDocument().DefinedTypes()) {
       if (!writer->Write("%s %s;\n", defined_type->GetPreprocessDeclarationName().c_str(),
                          defined_type->GetCanonicalName().c_str())) {
         return false;
@@ -870,10 +863,9 @@ static string GetApiDumpPathFor(const AidlDefinedType& defined_type, const Optio
 bool dump_api(const Options& options, const IoDelegate& io_delegate) {
   for (const auto& file : options.InputFiles()) {
     AidlTypenames typenames;
-    vector<AidlDefinedType*> defined_types;
-    if (internals::load_and_validate_aidl(file, options, io_delegate, &typenames, &defined_types,
-                                          nullptr) == AidlError::OK) {
-      for (const auto type : defined_types) {
+    if (internals::load_and_validate_aidl(file, options, io_delegate, &typenames, nullptr) ==
+        AidlError::OK) {
+      for (const auto& type : typenames.MainDocument().DefinedTypes()) {
         unique_ptr<CodeWriter> writer =
             io_delegate.GetCodeWriter(GetApiDumpPathFor(*type, options));
         if (!type->GetPackage().empty()) {

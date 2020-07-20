@@ -1521,40 +1521,38 @@ class ASTTest : public ::testing::Test {
   AidlInterface* ParseSingleInterface() {
     io_delegate_.SetFileContents(options_.InputFiles().at(0), file_contents_);
 
-    vector<AidlDefinedType*> defined_types;
     vector<string> imported_files;
     ImportResolver import_resolver{io_delegate_, options_.InputFiles().at(0), {"."}, {}};
     AidlError err = ::android::aidl::internals::load_and_validate_aidl(
-        options_.InputFiles().front(), options_, io_delegate_, &typenames_, &defined_types,
-        &imported_files);
+        options_.InputFiles().front(), options_, io_delegate_, &typenames_, &imported_files);
 
     if (err != AidlError::OK) {
       return nullptr;
     }
 
+    const auto& defined_types = typenames_.MainDocument().DefinedTypes();
     EXPECT_EQ(1ul, defined_types.size());
-    EXPECT_NE(nullptr, defined_types.front()->AsInterface());
+    EXPECT_NE(nullptr, defined_types.front().get()->AsInterface());
 
-    return defined_types.front()->AsInterface();
+    return defined_types.front().get()->AsInterface();
   }
 
   AidlEnumDeclaration* ParseSingleEnumDeclaration() {
     io_delegate_.SetFileContents(options_.InputFiles().at(0), file_contents_);
 
-    vector<AidlDefinedType*> defined_types;
     vector<string> imported_files;
     AidlError err = ::android::aidl::internals::load_and_validate_aidl(
-        options_.InputFiles().front(), options_, io_delegate_, &typenames_, &defined_types,
-        &imported_files);
+        options_.InputFiles().front(), options_, io_delegate_, &typenames_, &imported_files);
 
     if (err != AidlError::OK) {
       return nullptr;
     }
 
+    const auto& defined_types = typenames_.MainDocument().DefinedTypes();
     EXPECT_EQ(1ul, defined_types.size());
-    EXPECT_NE(nullptr, defined_types.front()->AsEnumDeclaration());
+    EXPECT_NE(nullptr, defined_types.front().get()->AsEnumDeclaration());
 
-    return defined_types.front()->AsEnumDeclaration();
+    return defined_types.front().get()->AsEnumDeclaration();
   }
 
   void Compare(Document* doc, const char* expected) {

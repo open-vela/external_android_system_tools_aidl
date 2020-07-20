@@ -41,7 +41,9 @@ std::unique_ptr<Parser> Parser::Parse(const std::string& filename,
 
   std::unique_ptr<Parser> parser(new Parser(filename, *raw_buffer, typenames));
 
-  if (yy::parser(parser.get()).parse() != 0 || parser->HasError()) return nullptr;
+  if (yy::parser(parser.get()).parse() != 0 || parser->HasError()) {
+    return nullptr;
+  }
 
   return parser;
 }

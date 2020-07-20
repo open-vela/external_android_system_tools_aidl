@@ -115,16 +115,25 @@ bool AidlTypenames::IsIgnorableImport(const string& import) const {
   return in_ignore_import || defined_type_not_from_preprocessed;
 }
 
-bool AidlTypenames::AddDefinedType(unique_ptr<AidlDefinedType> type) {
-  const string name = type->GetCanonicalName();
-  if (defined_types_.find(name) != defined_types_.end()) {
-    return false;
+bool AidlTypenames::AddDocument(std::unique_ptr<AidlDocument> doc) {
+  for (const auto& type : doc->DefinedTypes()) {
+    if (defined_types_.find(type->GetCanonicalName()) != defined_types_.end()) {
+      return false;
+    }
+    if (!HasValidNameComponents(*type)) {
+      return false;
+    }
   }
-  if (!HasValidNameComponents(*type)) {
-    return false;
+  documents_.push_back(std::move(doc));
+  for (const auto& type : documents_.back()->DefinedTypes()) {
+    defined_types_.emplace(type->GetCanonicalName(), type.get());
   }
-  defined_types_.emplace(name, std::move(type));
   return true;
+}
+
+const AidlDocument& AidlTypenames::MainDocument() const {
+  CHECK(documents_.size() != 0) << "Main document doesn't exist";
+  return *(documents_[0]);
 }
 
 bool AidlTypenames::AddPreprocessedType(unique_ptr<AidlDefinedType> type) {
@@ -157,7 +166,7 @@ AidlTypenames::DefinedImplResult AidlTypenames::TryGetDefinedTypeImpl(
   // Do the exact match first.
   auto found_def = defined_types_.find(type_name);
   if (found_def != defined_types_.end()) {
-    return DefinedImplResult(found_def->second.get(), false);
+    return DefinedImplResult(found_def->second, false);
   }
 
   auto found_prep = preprocessed_types_.find(type_name);
@@ -169,7 +178,7 @@ AidlTypenames::DefinedImplResult AidlTypenames::TryGetDefinedTypeImpl(
   // types from the preprocessed file.
   for (auto it = defined_types_.begin(); it != defined_types_.end(); it++) {
     if (it->second->GetName() == type_name) {
-      return DefinedImplResult(it->second.get(), false);
+      return DefinedImplResult(it->second, false);
     }
   }
 
@@ -240,6 +249,7 @@ void AidlTypenames::IterateTypes(const std::function<void(const AidlDefinedType&
 void AidlTypenames::Reset() {
   defined_types_.clear();
   preprocessed_types_.clear();
+  documents_.clear();
 }
 
 }  // namespace aidl

@@ -96,21 +96,11 @@ AidlLocation loc(const yy::parser::location_type& l) {
     std::vector<std::string>* type_params;
     std::vector<std::unique_ptr<AidlImport>>* imports;
     AidlImport* import;
-    std::vector<AidlDefinedType*>* declarations;
+    std::vector<std::unique_ptr<AidlDefinedType>>* declarations;
 }
 
 %destructor { } <character>
 %destructor { } <direction>
-// TODO(b/160367901) remove this.
-%destructor {
-  // decl is std::vector<AidlDefinedType*>. When deleting it,
-  // we should first delete AidlDefinedType objects in it.
-  // Otherwise, there would be memory leaks.
-  for (auto* t: *($$)) {
-    delete(t);
-  }
-  delete ($$);
-} decls
 %destructor { delete ($$); } <*>
 
 %token<token> ANNOTATION "annotation"
@@ -196,7 +186,7 @@ AidlLocation loc(const yy::parser::location_type& l) {
 
 document
  : package imports decls
-  { ps->SetDocument(std::make_unique<AidlDocument>(loc(@1), *$2, *$3));
+  { ps->SetDocument(std::make_unique<AidlDocument>(loc(@1), *$2, std::move(*$3)));
     delete $2;
     delete $3;
   }
@@ -254,7 +244,7 @@ qualified_name
 
 decls
  : decl
-  { $$ = new std::vector<AidlDefinedType*>();
+  { $$ = new std::vector<std::unique_ptr<AidlDefinedType>>();
     if ($1 != nullptr) {
       $$->emplace_back($1);
     }

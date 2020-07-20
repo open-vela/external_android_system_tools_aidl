@@ -80,7 +80,6 @@ namespace internals {
 
 AidlError load_and_validate_aidl(const std::string& input_file_name, const Options& options,
                                  const IoDelegate& io_delegate, AidlTypenames* typenames,
-                                 vector<AidlDefinedType*>* defined_types,
                                  vector<string>* imported_files);
 
 bool parse_preprocessed_file(const IoDelegate& io_delegate, const std::string& filename,

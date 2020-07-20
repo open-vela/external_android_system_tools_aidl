@@ -308,13 +308,16 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
   for (const auto& file : old_files) {
     if (!android::base::EndsWith(file, ".aidl")) continue;
 
-    vector<AidlDefinedType*> types;
-    if (internals::load_and_validate_aidl(file, options, io_delegate, &old_tns, &types,
+    if (internals::load_and_validate_aidl(file, options, io_delegate, &old_tns,
                                           nullptr /* imported_files */) != AidlError::OK) {
       AIDL_ERROR(file) << "Failed to read.";
       return false;
     }
-    old_types.insert(old_types.end(), types.begin(), types.end());
+  }
+  for (const auto& d : old_tns.AllDocuments()) {
+    for (const auto& t : d->DefinedTypes()) {
+      old_types.push_back(t.get());
+    }
   }
 
   AidlTypenames new_tns;
@@ -328,13 +331,16 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
   for (const auto& file : new_files) {
     if (!android::base::EndsWith(file, ".aidl")) continue;
 
-    vector<AidlDefinedType*> types;
-    if (internals::load_and_validate_aidl(file, options, io_delegate, &new_tns, &types,
+    if (internals::load_and_validate_aidl(file, options, io_delegate, &new_tns,
                                           nullptr /* imported_files */) != AidlError::OK) {
       AIDL_ERROR(file) << "Failed to read.";
       return false;
     }
-    new_types.insert(new_types.end(), types.begin(), types.end());
+  }
+  for (const auto& d : new_tns.AllDocuments()) {
+    for (const auto& t : d->DefinedTypes()) {
+      new_types.push_back(t.get());
+    }
   }
 
   map<string, AidlDefinedType*> new_map;

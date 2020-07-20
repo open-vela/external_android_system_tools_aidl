@@ -169,11 +169,10 @@ class AidlTest : public ::testing::TestWithParam<Options::Language> {
     }
     args.emplace_back(path);
     Options options = Options::From(args);
-    vector<AidlDefinedType*> defined_types;
     vector<string> imported_files;
     ImportResolver import_resolver{io_delegate_, path, import_paths_, {}};
     AidlError actual_error = ::android::aidl::internals::load_and_validate_aidl(
-        path, options, io_delegate_, &typenames_, &defined_types, &imported_files);
+        path, options, io_delegate_, &typenames_, &imported_files);
 
     if (error != nullptr) {
       *error = actual_error;
@@ -183,9 +182,10 @@ class AidlTest : public ::testing::TestWithParam<Options::Language> {
       return nullptr;
     }
 
+    const auto& defined_types = typenames_.MainDocument().DefinedTypes();
     EXPECT_EQ(1ul, defined_types.size());
 
-    return defined_types.front();
+    return defined_types.front().get();
   }
 
   Options::Language GetLanguage() { return GetParam(); }
