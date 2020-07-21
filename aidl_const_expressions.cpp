@@ -37,10 +37,16 @@ using std::vector;
 
 #define SHOULD_NOT_REACH() CHECK(false) << LOG(FATAL) << ": should not reach here: "
 #define OPEQ(__y__) (string(op_) == string(__y__))
-#define COMPUTE_UNARY(__op__) \
-  if (op == string(#__op__)) return __op__ val;
+#define COMPUTE_UNARY(__op__)  \
+  if (op == string(#__op__)) { \
+    *out = __op__ val;         \
+    return true;               \
+  }
 #define COMPUTE_BINARY(__op__) \
-  if (op == string(#__op__)) return lval __op__ rval;
+  if (op == string(#__op__)) { \
+    *out = lval __op__ rval;   \
+    return true;               \
+  }
 #define OP_IS_BIN_ARITHMETIC (OPEQ("+") || OPEQ("-") || OPEQ("*") || OPEQ("/") || OPEQ("%"))
 #define OP_IS_BIN_BITFLIP (OPEQ("|") || OPEQ("^") || OPEQ("&"))
 #define OP_IS_BIN_COMP \
@@ -64,7 +70,7 @@ using std::vector;
   }
 
 template <class T>
-T handleUnary(const string& op, T val) {
+bool handleUnary(const AidlConstantValue& context, const string& op, T val, int64_t* out) {
   COMPUTE_UNARY(+)
   COMPUTE_UNARY(-)
   COMPUTE_UNARY(!)
@@ -75,13 +81,13 @@ T handleUnary(const string& op, T val) {
   COMPUTE_UNARY(~)
 #pragma clang diagnostic pop
 
-  // Should not reach here.
-  SHOULD_NOT_REACH() << "Could not handleUnary for " << op << " " << val;
-  return static_cast<T>(0xdeadbeef);
+  AIDL_FATAL(context) << "Could not handleUnary for " << op << " " << val;
+  return false;
 }
 
 template <class T>
-T handleBinaryCommon(T lval, const string& op, T rval) {
+bool handleBinaryCommon(const AidlConstantValue& context, T lval, const string& op, T rval,
+                        int64_t* out) {
   COMPUTE_BINARY(+)
   COMPUTE_BINARY(-)
   COMPUTE_BINARY(*)
@@ -97,26 +103,28 @@ T handleBinaryCommon(T lval, const string& op, T rval) {
   COMPUTE_BINARY(>)
   COMPUTE_BINARY(<=)
   COMPUTE_BINARY(>=)
-  // Should not reach here.
-  SHOULD_NOT_REACH() << "Could not handleBinaryCommon for " << lval << " " << op << " " << rval;
-  return static_cast<T>(0xdeadbeef);
+
+  AIDL_FATAL(context) << "Could not handleBinaryCommon for " << lval << " " << op << " " << rval;
+  return false;
 }
 
 template <class T>
-T handleShift(T lval, const string& op, int64_t rval) {
+bool handleShift(const AidlConstantValue& context, T lval, const string& op, int64_t rval,
+                 int64_t* out) {
   // just cast rval to int64_t and it should fit.
   COMPUTE_BINARY(>>)
   COMPUTE_BINARY(<<)
-  // Should not reach here.
-  SHOULD_NOT_REACH() << "Could not handleShift for " << lval << " " << op << " " << rval;
-  return static_cast<T>(0xdeadbeef);
+
+  AIDL_FATAL(context) << "Could not handleShift for " << lval << " " << op << " " << rval;
+  return false;
 }
 
-bool handleLogical(bool lval, const string& op, bool rval) {
+bool handleLogical(const AidlConstantValue& context, bool lval, const string& op, bool rval,
+                   int64_t* out) {
   COMPUTE_BINARY(||);
   COMPUTE_BINARY(&&);
-  // Should not reach here.
-  SHOULD_NOT_REACH() << "Could not handleLogical for " << lval << " " << op << " " << rval;
+
+  AIDL_FATAL(context) << "Could not handleLogical for " << lval << " " << op << " " << rval;
   return false;
 }
 
@@ -656,9 +664,8 @@ bool AidlUnaryConstExpression::evaluate(const AidlTypeSpecifier& type) const {
     return true;
   }
 
-#define CASE_UNARY(__type__)                                                    \
-  final_value_ = handleUnary(op_, static_cast<__type__>(unary_->final_value_)); \
-  return true;
+#define CASE_UNARY(__type__) \
+  return handleUnary(*this, op_, static_cast<__type__>(unary_->final_value_), &final_value_);
 
   SWITCH_KIND(final_type_, CASE_UNARY, SHOULD_NOT_REACH(); final_type_ = Type::ERROR;
               is_valid_ = false; return false;)
@@ -769,10 +776,9 @@ bool AidlBinaryConstExpression::evaluate(const AidlTypeSpecifier& type) const {
                       ? promoted        // arithmetic or bitflip operators generates promoted type
                       : Type::BOOLEAN;  // comparison operators generates bool
 
-#define CASE_BINARY_COMMON(__type__)                                                     \
-  final_value_ = handleBinaryCommon(static_cast<__type__>(left_val_->final_value_), op_, \
-                                    static_cast<__type__>(right_val_->final_value_));    \
-  return true;
+#define CASE_BINARY_COMMON(__type__)                                                    \
+  return handleBinaryCommon(*this, static_cast<__type__>(left_val_->final_value_), op_, \
+                            static_cast<__type__>(right_val_->final_value_), &final_value_);
 
     SWITCH_KIND(promoted, CASE_BINARY_COMMON, SHOULD_NOT_REACH(); final_type_ = Type::ERROR;
                 is_valid_ = false; return false;)
@@ -791,9 +797,9 @@ bool AidlBinaryConstExpression::evaluate(const AidlTypeSpecifier& type) const {
       numBits = -numBits;
     }
 
-#define CASE_SHIFT(__type__)                                                                  \
-  final_value_ = handleShift(static_cast<__type__>(left_val_->final_value_), newOp, numBits); \
-  return true;
+#define CASE_SHIFT(__type__)                                                                \
+  return handleShift(*this, static_cast<__type__>(left_val_->final_value_), newOp, numBits, \
+                     &final_value_);
 
     SWITCH_KIND(final_type_, CASE_SHIFT, SHOULD_NOT_REACH(); final_type_ = Type::ERROR;
                 is_valid_ = false; return false;)
@@ -803,8 +809,8 @@ bool AidlBinaryConstExpression::evaluate(const AidlTypeSpecifier& type) const {
   if (OP_IS_BIN_LOGICAL) {
     final_type_ = Type::BOOLEAN;
     // easy; everything is bool.
-    final_value_ = handleLogical(left_val_->final_value_, op_, right_val_->final_value_);
-    return true;
+    return handleLogical(*this, left_val_->final_value_, op_, right_val_->final_value_,
+                         &final_value_);
   }
 
   SHOULD_NOT_REACH();
