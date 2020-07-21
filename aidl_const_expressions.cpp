@@ -74,20 +74,13 @@ bool handleUnary(const AidlConstantValue& context, const string& op, T val, int6
   COMPUTE_UNARY(+)
   COMPUTE_UNARY(-)
   COMPUTE_UNARY(!)
-  COMPUTE_UNARY(~)
-  AIDL_FATAL(context) << "Could not handleUnary for " << op << " " << val;
-  return false;
-}
-template <>
-bool handleUnary<bool>(const AidlConstantValue& context, const string& op, bool val, int64_t* out) {
-  COMPUTE_UNARY(+)
-  COMPUTE_UNARY(-)
-  COMPUTE_UNARY(!)
 
-  if (op == "~") {
-    AIDL_ERROR(context) << "Bitwise negation of a boolean expression is always true.";
-    return false;
-  }
+// bitwise negation of a boolean expression always evaluates to 'true'
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wbool-operation"
+  COMPUTE_UNARY(~)
+#pragma clang diagnostic pop
+
   AIDL_FATAL(context) << "Could not handleUnary for " << op << " " << val;
   return false;
 }
