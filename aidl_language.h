@@ -220,6 +220,7 @@ class AidlAnnotation : public AidlNode {
     NULLABLE,
     UTF8_IN_CPP,
     JAVA_PASSTHROUGH,
+    JAVA_DEBUG,
   };
   static std::string TypeToString(Type type);
 
@@ -285,6 +286,7 @@ class AidlAnnotatable : public AidlNode {
   bool IsVintfStability() const;
   bool IsStableApiParcelable(Options::Language lang) const;
   bool IsHide() const;
+  bool IsJavaDebug() const;
 
   void DumpAnnotations(CodeWriter* writer) const;
 
