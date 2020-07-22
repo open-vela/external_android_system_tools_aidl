@@ -28,6 +28,7 @@
 #include "aidl_language.h"
 #include "aidl_to_cpp.h"
 #include "aidl_to_java.h"
+#include "logging.h"
 #include "options.h"
 #include "tests/fake_io_delegate.h"
 
