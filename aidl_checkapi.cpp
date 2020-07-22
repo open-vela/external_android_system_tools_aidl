@@ -24,11 +24,14 @@
 #include <string>
 #include <vector>
 
+#include <android-base/result.h>
 #include <android-base/strings.h>
 
 namespace android {
 namespace aidl {
 
+using android::base::Error;
+using android::base::Result;
 using std::map;
 using std::set;
 using std::string;
@@ -293,55 +296,35 @@ static bool are_compatible_enums(const AidlEnumDeclaration& older,
   return compatible;
 }
 
+static Result<AidlTypenames> load_from_dir(const Options& options, const IoDelegate& io_delegate,
+                                           const std::string& dir) {
+  AidlTypenames typenames;
+  for (const auto& file : io_delegate.ListFiles(dir)) {
+    if (!android::base::EndsWith(file, ".aidl")) continue;
+    if (internals::load_and_validate_aidl(file, options, io_delegate, &typenames,
+                                          nullptr /* imported_files */) != AidlError::OK) {
+      AIDL_ERROR(file) << "Failed to read.";
+      return Error();
+    }
+  }
+  return typenames;
+}
+
 bool check_api(const Options& options, const IoDelegate& io_delegate) {
   CHECK(options.IsStructured());
   CHECK(options.InputFiles().size() == 2) << "--checkapi requires two inputs "
                                           << "but got " << options.InputFiles().size();
-  AidlTypenames old_tns;
-  const string old_dir = options.InputFiles().at(0);
-  vector<AidlDefinedType*> old_types;
-  vector<string> old_files = io_delegate.ListFiles(old_dir);
-  if (old_files.size() == 0) {
-    AIDL_ERROR(old_dir) << "No API file exist";
+  auto old_tns = load_from_dir(options, io_delegate, options.InputFiles().at(0));
+  if (!old_tns.ok()) {
     return false;
   }
-  for (const auto& file : old_files) {
-    if (!android::base::EndsWith(file, ".aidl")) continue;
-
-    if (internals::load_and_validate_aidl(file, options, io_delegate, &old_tns,
-                                          nullptr /* imported_files */) != AidlError::OK) {
-      AIDL_ERROR(file) << "Failed to read.";
-      return false;
-    }
-  }
-  for (const auto& d : old_tns.AllDocuments()) {
-    for (const auto& t : d->DefinedTypes()) {
-      old_types.push_back(t.get());
-    }
-  }
-
-  AidlTypenames new_tns;
-  const string new_dir = options.InputFiles().at(1);
-  vector<AidlDefinedType*> new_types;
-  vector<string> new_files = io_delegate.ListFiles(new_dir);
-  if (new_files.size() == 0) {
-    AIDL_ERROR(new_dir) << "API files have been removed: " << android::base::Join(old_files, ", ");
+  auto new_tns = load_from_dir(options, io_delegate, options.InputFiles().at(1));
+  if (!new_tns.ok()) {
     return false;
   }
-  for (const auto& file : new_files) {
-    if (!android::base::EndsWith(file, ".aidl")) continue;
 
-    if (internals::load_and_validate_aidl(file, options, io_delegate, &new_tns,
-                                          nullptr /* imported_files */) != AidlError::OK) {
-      AIDL_ERROR(file) << "Failed to read.";
-      return false;
-    }
-  }
-  for (const auto& d : new_tns.AllDocuments()) {
-    for (const auto& t : d->DefinedTypes()) {
-      new_types.push_back(t.get());
-    }
-  }
+  std::vector<AidlDefinedType*> old_types = old_tns->AllDefinedTypes();
+  std::vector<AidlDefinedType*> new_types = new_tns->AllDefinedTypes();
 
   map<string, AidlDefinedType*> new_map;
   for (const auto t : new_types) {
