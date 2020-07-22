@@ -29,6 +29,25 @@
 struct yy_buffer_state;
 typedef yy_buffer_state* YY_BUFFER_STATE;
 
+class AidlToken {
+ public:
+  AidlToken(const std::string& text, const std::string& comments)
+      : text_(text), comments_(comments) {}
+  ~AidlToken() = default;
+
+  AidlToken(const AidlToken&) = delete;
+  AidlToken(AidlToken&&) = delete;
+  AidlToken& operator=(const AidlToken&) = delete;
+  AidlToken& operator=(AidlToken&&) = delete;
+
+  const std::string& GetText() const { return text_; }
+  const std::string& GetComments() const { return comments_; }
+
+ private:
+  std::string text_;
+  std::string comments_;
+};
+
 class Parser {
  public:
   // non-copyable, non-assignable
