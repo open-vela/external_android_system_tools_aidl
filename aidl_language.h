@@ -164,8 +164,17 @@ class AidlErrorLog {
   DISALLOW_COPY_AND_ASSIGN(AidlErrorLog);
 };
 
+// A class used to make it obvious to clang that code is going to abort. This
+// informs static analyses of the aborting behavior of `AIDL_FATAL`, and
+// helps generate slightly faster/smaller code.
+class AidlAbortOnDestruction {
+ public:
+  __attribute__((noreturn)) ~AidlAbortOnDestruction() { abort(); }
+};
+
 #define AIDL_ERROR(CONTEXT) ::AidlErrorLog(false /*fatal*/, (CONTEXT)).os_
-#define AIDL_FATAL(CONTEXT) ::AidlErrorLog(true /*fatal*/, (CONTEXT)).os_
+#define AIDL_FATAL(CONTEXT) \
+  (::AidlAbortOnDestruction(), ::AidlErrorLog(true /*fatal*/, (CONTEXT)).os_)
 #define AIDL_FATAL_IF(CONDITION, CONTEXT) \
   if (CONDITION) AIDL_FATAL(CONTEXT) << "Bad internal state: " << #CONDITION << ": "
 
