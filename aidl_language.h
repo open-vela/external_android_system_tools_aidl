@@ -49,25 +49,6 @@ std::string dump_location(const AidlNode& method);
 }  // namespace aidl
 }  // namespace android
 
-class AidlToken {
- public:
-  AidlToken(const std::string& text, const std::string& comments)
-      : text_(text), comments_(comments) {}
-  ~AidlToken() = default;
-
-  AidlToken(const AidlToken&) = delete;
-  AidlToken(AidlToken&&) = delete;
-  AidlToken& operator=(const AidlToken&) = delete;
-  AidlToken& operator=(AidlToken&&) = delete;
-
-  const std::string& GetText() const { return text_; }
-  const std::string& GetComments() const { return comments_; }
-
- private:
-  std::string text_;
-  std::string comments_;
-};
-
 class AidlLocation {
  public:
   struct Point {
