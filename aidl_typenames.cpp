@@ -191,6 +191,16 @@ AidlTypenames::DefinedImplResult AidlTypenames::TryGetDefinedTypeImpl(
   return DefinedImplResult(nullptr, false);
 }
 
+std::vector<AidlDefinedType*> AidlTypenames::AllDefinedTypes() const {
+  std::vector<AidlDefinedType*> res;
+  for (const auto& d : AllDocuments()) {
+    for (const auto& t : d->DefinedTypes()) {
+      res.push_back(t.get());
+    }
+  }
+  return res;
+}
+
 AidlTypenames::ResolvedTypename AidlTypenames::ResolveTypename(const string& type_name) const {
   if (IsBuiltinTypename(type_name)) {
     auto found = kJavaLikeTypeToAidlType.find(type_name);
