@@ -16,6 +16,7 @@
 
 #include "import_resolver.h"
 #include "aidl_language.h"
+#include "logging.h"
 
 #include <algorithm>
 
