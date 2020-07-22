@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+#include <android-base/macros.h>
+
 namespace android {
 namespace aidl {
 class CodeWriter;
@@ -34,13 +36,6 @@ class AstNode {
  public:
   AstNode() = default;
   virtual ~AstNode() = default;
-
-  // All ast nodes are non-copyable and non-movable
-  AstNode(const AstNode&) = delete;
-  AstNode(AstNode&&) = delete;
-  AstNode& operator=(const AstNode&) = delete;
-  AstNode& operator=(AstNode&&) = delete;
-
   virtual void Write(CodeWriter* to) const = 0;
   std::string ToString();
 };  // class AstNode
@@ -49,6 +44,9 @@ class Declaration : public AstNode {
  public:
   Declaration() = default;
   virtual ~Declaration() = default;
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(Declaration);
 };  // class Declaration
 
 class LiteralDecl : public Declaration {
@@ -59,6 +57,8 @@ class LiteralDecl : public Declaration {
 
  private:
   const std::string expression_;
+
+  DISALLOW_COPY_AND_ASSIGN(LiteralDecl);
 };  // class LiteralDecl
 
 class ClassDecl : public Declaration {
@@ -81,6 +81,8 @@ class ClassDecl : public Declaration {
   std::string parent_;
   std::vector<std::unique_ptr<Declaration>> public_members_;
   std::vector<std::unique_ptr<Declaration>> private_members_;
+
+  DISALLOW_COPY_AND_ASSIGN(ClassDecl);
 };  // class ClassDecl
 
 class Enum : public Declaration {
@@ -104,6 +106,8 @@ class Enum : public Declaration {
   std::string underlying_type_;
   bool is_class_;
   std::vector<EnumField> fields_;
+
+  DISALLOW_COPY_AND_ASSIGN(Enum);
 };  // class Enum
 
 class ArgList : public AstNode {
@@ -119,6 +123,8 @@ class ArgList : public AstNode {
 
  private:
   std::vector<std::unique_ptr<AstNode>> arguments_;
+
+  DISALLOW_COPY_AND_ASSIGN(ArgList);
 };  // class ArgList
 
 class ConstructorDecl : public Declaration {
@@ -143,6 +149,8 @@ class ConstructorDecl : public Declaration {
   const std::string name_;
   const ArgList arguments_;
   const uint32_t modifiers_;
+
+  DISALLOW_COPY_AND_ASSIGN(ConstructorDecl);
 };  // class ConstructorDecl
 
 class MacroDecl : public Declaration {
@@ -155,6 +163,8 @@ class MacroDecl : public Declaration {
  private:
   const std::string name_;
   const ArgList arguments_;
+
+  DISALLOW_COPY_AND_ASSIGN(MacroDecl);
 };  // class MacroDecl
 
 class MethodDecl : public Declaration {
@@ -189,6 +199,8 @@ class MethodDecl : public Declaration {
   bool is_pure_virtual_ = false;
   bool is_static_ = true;
   bool is_final_ = false;
+
+  DISALLOW_COPY_AND_ASSIGN(MethodDecl);
 };  // class MethodDecl
 
 class StatementBlock : public Declaration {
@@ -205,6 +217,8 @@ class StatementBlock : public Declaration {
 
  private:
   std::vector<std::unique_ptr<AstNode>> statements_;
+
+  DISALLOW_COPY_AND_ASSIGN(StatementBlock);
 };  // class StatementBlock
 
 class ConstructorImpl : public Declaration {
@@ -224,6 +238,8 @@ class ConstructorImpl : public Declaration {
   ArgList arguments_;
   std::vector<std::string> initializer_list_;
   StatementBlock body_;
+
+  DISALLOW_COPY_AND_ASSIGN(ConstructorImpl);
 };  // class ConstructorImpl
 
 class MethodImpl : public Declaration {
@@ -248,6 +264,8 @@ class MethodImpl : public Declaration {
   const ArgList arguments_;
   StatementBlock statements_;
   bool is_const_method_ = false;
+
+  DISALLOW_COPY_AND_ASSIGN(MethodImpl);
 };  // class MethodImpl
 
 class SwitchStatement : public AstNode {
@@ -267,6 +285,8 @@ class SwitchStatement : public AstNode {
   const std::string switch_expression_;
   std::vector<std::string> case_values_;
   std::vector<std::unique_ptr<StatementBlock>> case_logic_;
+
+  DISALLOW_COPY_AND_ASSIGN(SwitchStatement);
 };  // class SwitchStatement
 
 class Assignment : public AstNode {
@@ -279,6 +299,8 @@ class Assignment : public AstNode {
  private:
   const std::string lhs_;
   std::unique_ptr<AstNode> rhs_;
+
+  DISALLOW_COPY_AND_ASSIGN(Assignment);
 };  // class Assignment
 
 class MethodCall : public AstNode {
@@ -292,6 +314,8 @@ class MethodCall : public AstNode {
  private:
   const std::string method_name_;
   const ArgList arguments_;
+
+  DISALLOW_COPY_AND_ASSIGN(MethodCall);
 };  // class MethodCall
 
 class IfStatement : public AstNode {
@@ -308,6 +332,8 @@ class IfStatement : public AstNode {
   bool invert_expression_ = false;
   StatementBlock on_true_;
   StatementBlock on_false_;
+
+  DISALLOW_COPY_AND_ASSIGN(IfStatement);
 };  // class IfStatement
 
 class Statement : public AstNode {
@@ -320,6 +346,8 @@ class Statement : public AstNode {
 
  private:
   std::unique_ptr<AstNode> expression_;
+
+  DISALLOW_COPY_AND_ASSIGN(Statement);
 };  // class Statement
 
 class Comparison : public AstNode {
@@ -332,6 +360,8 @@ class Comparison : public AstNode {
   std::unique_ptr<AstNode> left_;
   std::unique_ptr<AstNode> right_;
   const std::string operator_;
+
+  DISALLOW_COPY_AND_ASSIGN(Comparison);
 };  // class Comparison
 
 class LiteralExpression : public AstNode {
@@ -342,6 +372,8 @@ class LiteralExpression : public AstNode {
 
  private:
   const std::string expression_;
+
+  DISALLOW_COPY_AND_ASSIGN(LiteralExpression);
 };  // class LiteralExpression
 
 class CppNamespace : public Declaration {
@@ -358,6 +390,8 @@ class CppNamespace : public Declaration {
  private:
   std::vector<std::unique_ptr<Declaration>> declarations_;
   std::string name_;
+
+  DISALLOW_COPY_AND_ASSIGN(CppNamespace);
 };  // class CppNamespace
 
 class Document : public AstNode {
@@ -370,6 +404,8 @@ class Document : public AstNode {
  private:
   std::vector<std::string> include_list_;
   std::vector<std::unique_ptr<Declaration>> declarations_;
+
+  DISALLOW_COPY_AND_ASSIGN(Document);
 };  // class Document
 
 class CppHeader final : public Document {
@@ -380,12 +416,17 @@ class CppHeader final : public Document {
 
  private:
   const std::string include_guard_;
+
+  DISALLOW_COPY_AND_ASSIGN(CppHeader);
 };  // class CppHeader
 
 class CppSource final : public Document {
  public:
   CppSource(const std::vector<std::string>& include_list,
             std::vector<std::unique_ptr<Declaration>> declarations);
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(CppSource);
 };  // class CppSource
 
 }  // namespace cpp

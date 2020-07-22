@@ -29,6 +29,7 @@
 #include <utility>
 #include <vector>
 
+#include <android-base/macros.h>
 #include <android-base/stringprintf.h>
 
 using android::base::Join;
@@ -62,6 +63,8 @@ class VariableFactory {
   std::vector<std::shared_ptr<Variable>> vars_;
   std::string base_;
   int index_;
+
+  DISALLOW_COPY_AND_ASSIGN(VariableFactory);
 };
 
 // =================================================
@@ -69,12 +72,6 @@ class StubClass : public Class {
  public:
   StubClass(const AidlInterface* interfaceType, const Options& options);
   ~StubClass() override = default;
-
-  // non-copyable, non-movable
-  StubClass(const StubClass&) = delete;
-  StubClass(StubClass&&) = delete;
-  StubClass& operator=(const StubClass&) = delete;
-  StubClass& operator=(StubClass&&) = delete;
 
   std::shared_ptr<Variable> transact_code;
   std::shared_ptr<Variable> transact_data;
@@ -101,6 +98,8 @@ class StubClass : public Class {
 
   std::shared_ptr<Variable> transact_descriptor;
   const Options& options_;
+
+  DISALLOW_COPY_AND_ASSIGN(StubClass);
 };
 
 StubClass::StubClass(const AidlInterface* interfaceType, const Options& options)
