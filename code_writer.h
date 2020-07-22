@@ -22,8 +22,6 @@
 
 #include <stdio.h>
 
-#include <android-base/macros.h>
-
 namespace android {
 namespace aidl {
 
