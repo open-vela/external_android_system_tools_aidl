@@ -28,7 +28,6 @@
 #include "aidl_language.h"
 #include "aidl_to_cpp.h"
 #include "aidl_to_java.h"
-#include "logging.h"
 #include "options.h"
 #include "tests/fake_io_delegate.h"
 
@@ -1613,7 +1612,7 @@ class AidlTestIncompatibleChanges : public AidlTest {
 };
 
 TEST_F(AidlTestIncompatibleChanges, RemovedType) {
-  const string expected_stderr = "ERROR: old/p/IFoo.aidl:1.11-20: Removed type: p.IFoo\n";
+  const string expected_stderr = "ERROR: new: API files have been removed: old/p/IFoo.aidl\n";
   io_delegate_.SetFileContents("old/p/IFoo.aidl",
                                "package p;"
                                "interface IFoo {"
