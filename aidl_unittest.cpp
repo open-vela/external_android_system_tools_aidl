@@ -1613,7 +1613,7 @@ class AidlTestIncompatibleChanges : public AidlTest {
 };
 
 TEST_F(AidlTestIncompatibleChanges, RemovedType) {
-  const string expected_stderr = "ERROR: new: API files have been removed: old/p/IFoo.aidl\n";
+  const string expected_stderr = "ERROR: old/p/IFoo.aidl:1.11-20: Removed type: p.IFoo\n";
   io_delegate_.SetFileContents("old/p/IFoo.aidl",
                                "package p;"
                                "interface IFoo {"
