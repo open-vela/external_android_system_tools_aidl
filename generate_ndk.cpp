@@ -20,7 +20,8 @@
 #include "aidl_language.h"
 #include "aidl_to_cpp_common.h"
 #include "aidl_to_ndk.h"
-#include "logging.h"
+
+#include <android-base/logging.h>
 
 namespace android {
 namespace aidl {
