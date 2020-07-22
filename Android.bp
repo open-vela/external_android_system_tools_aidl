@@ -76,6 +76,7 @@ cc_library_static {
         "generate_aidl_mappings.cpp",
         "import_resolver.cpp",
         "line_reader.cpp",
+        "logging.cpp",
         "io_delegate.cpp",
         "options.cpp",
         "parser.cpp",
