@@ -1113,7 +1113,8 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
 
   if (parcel.IsVintfStability()) {
     parcel_class->AddPublic(std::unique_ptr<LiteralDecl>(
-        new LiteralDecl("bool isStable() const override { return true; }\n")));
+        new LiteralDecl("::android::Parcelable::Stability getStability() const override { return "
+                        "::android::Parcelable::Stability::STABILITY_VINTF; }\n")));
   }
 
   unique_ptr<MethodDecl> read(new MethodDecl(kAndroidStatusLiteral, "readFromParcel",

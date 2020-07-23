@@ -118,8 +118,13 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
       out << " = " << variable->ValueString(ConstantValueDecorator);
     } else if (variable->GetType().GetName() == "ParcelableHolder") {
       out << std::boolalpha;
-      out << " = new " << JavaSignatureOf(variable->GetType(), typenames) << "("
-          << parcel->IsVintfStability() << ")";
+      out << " = new " << JavaSignatureOf(variable->GetType(), typenames) << "(";
+      if (parcel->IsVintfStability()) {
+        out << "android.os.Parcelable.PARCELABLE_STABILITY_VINTF";
+      } else {
+        out << "android.os.Parcelable.PARCELABLE_STABILITY_LOCAL";
+      }
+      out << ")";
       out << std::noboolalpha;
     }
     out << ";\n";
@@ -129,7 +134,8 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
   std::ostringstream out;
 
   if (parcel->IsVintfStability()) {
-    out << "public final boolean isStable() { return true; }\n";
+    out << "public final int getStability() { return "
+           "android.os.Parcelable.PARCELABLE_STABILITY_VINTF; }\n";
     parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(out.str()));
   }
 
