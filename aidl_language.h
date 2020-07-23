@@ -27,7 +27,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include <android-base/macros.h>
 #include <android-base/strings.h>
 
 using android::aidl::AidlTypenames;
@@ -52,7 +51,14 @@ std::string dump_location(const AidlNode& method);
 
 class AidlToken {
  public:
-  AidlToken(const std::string& text, const std::string& comments);
+  AidlToken(const std::string& text, const std::string& comments)
+      : text_(text), comments_(comments) {}
+  ~AidlToken() = default;
+
+  AidlToken(const AidlToken&) = delete;
+  AidlToken(AidlToken&&) = delete;
+  AidlToken& operator=(const AidlToken&) = delete;
+  AidlToken& operator=(AidlToken&&) = delete;
 
   const std::string& GetText() const { return text_; }
   const std::string& GetComments() const { return comments_; }
@@ -60,8 +66,6 @@ class AidlToken {
  private:
   std::string text_;
   std::string comments_;
-
-  DISALLOW_COPY_AND_ASSIGN(AidlToken);
 };
 
 class AidlLocation {
@@ -111,8 +115,10 @@ class AidlNode {
   AidlNode(const AidlLocation& location);
 
   AidlNode(const AidlNode&) = default;
-  AidlNode(AidlNode&&) = default;
   virtual ~AidlNode() = default;
+
+  AidlNode(AidlNode&&) = delete;
+  AidlNode& operator=(AidlNode&&) = delete;
 
   // To be able to print AidlLocation
   friend class AidlErrorLog;
@@ -148,20 +154,21 @@ class AidlErrorLog {
     }
   }
 
+  // AidlErrorLog is a single use object. No need to copy or move
+  AidlErrorLog(const AidlErrorLog&) = delete;
+  AidlErrorLog(AidlErrorLog&&) = delete;
+  AidlErrorLog& operator=(const AidlErrorLog&) = delete;
+  AidlErrorLog& operator=(AidlErrorLog&&) = delete;
+
   std::ostream& os_;
 
   static void clearError() { sHadError = false; }
   static bool hadError() { return sHadError; }
 
  private:
-
   bool fatal_;
-
   const AidlLocation location_;
-
   static bool sHadError;
-
-  DISALLOW_COPY_AND_ASSIGN(AidlErrorLog);
 };
 
 // A class used to make it obvious to clang that code is going to abort. This
@@ -393,6 +400,12 @@ class AidlVariableDeclaration : public AidlNode {
                           const std::string& name, AidlConstantValue* default_value);
   virtual ~AidlVariableDeclaration() = default;
 
+  // non-copyable, non-movable
+  AidlVariableDeclaration(const AidlVariableDeclaration&) = delete;
+  AidlVariableDeclaration(AidlVariableDeclaration&&) = delete;
+  AidlVariableDeclaration& operator=(const AidlVariableDeclaration&) = delete;
+  AidlVariableDeclaration& operator=(AidlVariableDeclaration&&) = delete;
+
   std::string GetName() const { return name_; }
   const AidlTypeSpecifier& GetType() const { return *type_; }
   // if this was constructed explicitly with a default value
@@ -414,8 +427,6 @@ class AidlVariableDeclaration : public AidlNode {
   std::string name_;
   bool default_user_specified_;
   std::unique_ptr<AidlConstantValue> default_value_;
-
-  DISALLOW_COPY_AND_ASSIGN(AidlVariableDeclaration);
 };
 
 class AidlArgument : public AidlVariableDeclaration {
@@ -426,6 +437,12 @@ class AidlArgument : public AidlVariableDeclaration {
                AidlTypeSpecifier* type, const std::string& name);
   AidlArgument(const AidlLocation& location, AidlTypeSpecifier* type, const std::string& name);
   virtual ~AidlArgument() = default;
+
+  // non-copyable, non-movable
+  AidlArgument(const AidlArgument&) = delete;
+  AidlArgument(AidlArgument&&) = delete;
+  AidlArgument& operator=(const AidlArgument&) = delete;
+  AidlArgument& operator=(AidlArgument&&) = delete;
 
   Direction GetDirection() const { return direction_; }
   bool IsOut() const { return direction_ & OUT_DIR; }
@@ -439,8 +456,6 @@ class AidlArgument : public AidlVariableDeclaration {
  private:
   Direction direction_;
   bool direction_specified_;
-
-  DISALLOW_COPY_AND_ASSIGN(AidlArgument);
 };
 
 class AidlMethod;
@@ -451,11 +466,14 @@ class AidlMember : public AidlNode {
   AidlMember(const AidlLocation& location);
   virtual ~AidlMember() = default;
 
+  // non-copyable, non-movable
+  AidlMember(const AidlMember&) = delete;
+  AidlMember(AidlMember&&) = delete;
+  AidlMember& operator=(const AidlMember&) = delete;
+  AidlMember& operator=(AidlMember&&) = delete;
+
   virtual AidlMethod* AsMethod() { return nullptr; }
   virtual AidlConstantDeclaration* AsConstantDeclaration() { return nullptr; }
-
- private:
-  DISALLOW_COPY_AND_ASSIGN(AidlMember);
 };
 
 class AidlUnaryConstExpression;
@@ -486,6 +504,12 @@ class AidlConstantValue : public AidlNode {
   T cast() const;
 
   virtual ~AidlConstantValue() = default;
+
+  // non-copyable, non-movable
+  AidlConstantValue(const AidlConstantValue&) = delete;
+  AidlConstantValue(AidlConstantValue&&) = delete;
+  AidlConstantValue& operator=(const AidlConstantValue&) = delete;
+  AidlConstantValue& operator=(AidlConstantValue&&) = delete;
 
   // creates default value, when one isn't specified
   // nullptr if no default available
@@ -535,8 +559,6 @@ class AidlConstantValue : public AidlNode {
   mutable Type final_type_;
   mutable int64_t final_value_;
   mutable string final_string_value_ = "";
-
-  DISALLOW_COPY_AND_ASSIGN(AidlConstantValue);
 
   friend AidlUnaryConstExpression;
   friend AidlBinaryConstExpression;
@@ -588,6 +610,12 @@ class AidlConstantDeclaration : public AidlMember {
                           const string& name, AidlConstantValue* value);
   virtual ~AidlConstantDeclaration() = default;
 
+  // non-copyable, non-movable
+  AidlConstantDeclaration(const AidlConstantDeclaration&) = delete;
+  AidlConstantDeclaration(AidlConstantDeclaration&&) = delete;
+  AidlConstantDeclaration& operator=(const AidlConstantDeclaration&) = delete;
+  AidlConstantDeclaration& operator=(AidlConstantDeclaration&&) = delete;
+
   const AidlTypeSpecifier& GetType() const { return *type_; }
   AidlTypeSpecifier* GetMutableType() { return type_.get(); }
   const string& GetName() const { return name_; }
@@ -606,8 +634,6 @@ class AidlConstantDeclaration : public AidlMember {
   const unique_ptr<AidlTypeSpecifier> type_;
   const string name_;
   unique_ptr<AidlConstantValue> value_;
-
-  DISALLOW_COPY_AND_ASSIGN(AidlConstantDeclaration);
 };
 
 class AidlMethod : public AidlMember {
@@ -618,6 +644,12 @@ class AidlMethod : public AidlMember {
              vector<unique_ptr<AidlArgument>>* args, const string& comments, int id,
              bool is_user_defined = true);
   virtual ~AidlMethod() = default;
+
+  // non-copyable, non-movable
+  AidlMethod(const AidlMethod&) = delete;
+  AidlMethod(AidlMethod&&) = delete;
+  AidlMethod& operator=(const AidlMethod&) = delete;
+  AidlMethod& operator=(AidlMethod&&) = delete;
 
   AidlMethod* AsMethod() override { return this; }
   bool IsHidden() const;
@@ -668,8 +700,6 @@ class AidlMethod : public AidlMember {
   bool has_id_;
   int id_;
   bool is_user_defined_ = true;
-
-  DISALLOW_COPY_AND_ASSIGN(AidlMethod);
 };
 
 class AidlDefinedType;
@@ -687,6 +717,12 @@ class AidlDefinedType : public AidlAnnotatable {
   AidlDefinedType(const AidlLocation& location, const std::string& name,
                   const std::string& comments, const std::string& package);
   virtual ~AidlDefinedType() = default;
+
+  // non-copyable, non-movable
+  AidlDefinedType(const AidlDefinedType&) = delete;
+  AidlDefinedType(AidlDefinedType&&) = delete;
+  AidlDefinedType& operator=(const AidlDefinedType&) = delete;
+  AidlDefinedType& operator=(AidlDefinedType&&) = delete;
 
   const std::string& GetName() const { return name_; };
   bool IsHidden() const;
@@ -746,10 +782,6 @@ class AidlDefinedType : public AidlAnnotatable {
   std::string comments_;
   const std::string package_;
   const std::vector<std::string> split_package_;
-
-  DISALLOW_COPY_AND_ASSIGN(AidlDefinedType);
-  AidlDefinedType(AidlDefinedType&&) = delete;
-  AidlDefinedType& operator=(AidlDefinedType&&) = delete;
 };
 
 class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::string> {
@@ -758,6 +790,12 @@ class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::s
                  const std::string& comments, const std::string& cpp_header = "",
                  std::vector<std::string>* type_params = nullptr);
   virtual ~AidlParcelable() = default;
+
+  // non-copyable, non-movable
+  AidlParcelable(const AidlParcelable&) = delete;
+  AidlParcelable(AidlParcelable&&) = delete;
+  AidlParcelable& operator=(const AidlParcelable&) = delete;
+  AidlParcelable& operator=(AidlParcelable&&) = delete;
 
   std::string GetCppHeader() const { return cpp_header_; }
 
@@ -774,8 +812,6 @@ class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::s
 
  private:
   std::string cpp_header_;
-
-  DISALLOW_COPY_AND_ASSIGN(AidlParcelable);
 };
 
 class AidlStructuredParcelable : public AidlParcelable {
@@ -783,6 +819,13 @@ class AidlStructuredParcelable : public AidlParcelable {
   AidlStructuredParcelable(const AidlLocation& location, const std::string& name,
                            const std::string& package, const std::string& comments,
                            std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables);
+  virtual ~AidlStructuredParcelable() = default;
+
+  // non-copyable, non-movable
+  AidlStructuredParcelable(const AidlStructuredParcelable&) = delete;
+  AidlStructuredParcelable(AidlStructuredParcelable&&) = delete;
+  AidlStructuredParcelable& operator=(const AidlStructuredParcelable&) = delete;
+  AidlStructuredParcelable& operator=(AidlStructuredParcelable&&) = delete;
 
   const std::vector<std::unique_ptr<AidlVariableDeclaration>>& GetFields() const {
     return variables_;
@@ -800,8 +843,6 @@ class AidlStructuredParcelable : public AidlParcelable {
 
  private:
   const std::vector<std::unique_ptr<AidlVariableDeclaration>> variables_;
-
-  DISALLOW_COPY_AND_ASSIGN(AidlStructuredParcelable);
 };
 
 class AidlEnumerator : public AidlNode {
@@ -809,6 +850,12 @@ class AidlEnumerator : public AidlNode {
   AidlEnumerator(const AidlLocation& location, const std::string& name, AidlConstantValue* value,
                  const std::string& comments);
   virtual ~AidlEnumerator() = default;
+
+  // non-copyable, non-movable
+  AidlEnumerator(const AidlEnumerator&) = delete;
+  AidlEnumerator(AidlEnumerator&&) = delete;
+  AidlEnumerator& operator=(const AidlEnumerator&) = delete;
+  AidlEnumerator& operator=(AidlEnumerator&&) = delete;
 
   const std::string& GetName() const { return name_; }
   AidlConstantValue* GetValue() const { return value_.get(); }
@@ -824,8 +871,6 @@ class AidlEnumerator : public AidlNode {
   const std::string name_;
   unique_ptr<AidlConstantValue> value_;
   const std::string comments_;
-
-  DISALLOW_COPY_AND_ASSIGN(AidlEnumerator);
 };
 
 class AidlEnumDeclaration : public AidlDefinedType {
@@ -834,6 +879,12 @@ class AidlEnumDeclaration : public AidlDefinedType {
                       std::vector<std::unique_ptr<AidlEnumerator>>* enumerators,
                       const std::string& package, const std::string& comments);
   virtual ~AidlEnumDeclaration() = default;
+
+  // non-copyable, non-movable
+  AidlEnumDeclaration(const AidlEnumDeclaration&) = delete;
+  AidlEnumDeclaration(AidlEnumDeclaration&&) = delete;
+  AidlEnumDeclaration& operator=(const AidlEnumDeclaration&) = delete;
+  AidlEnumDeclaration& operator=(AidlEnumDeclaration&&) = delete;
 
   void SetBackingType(std::unique_ptr<const AidlTypeSpecifier> type);
   const AidlTypeSpecifier& GetBackingType() const { return *backing_type_; }
@@ -856,8 +907,6 @@ class AidlEnumDeclaration : public AidlDefinedType {
   const std::string name_;
   const std::vector<std::unique_ptr<AidlEnumerator>> enumerators_;
   std::unique_ptr<const AidlTypeSpecifier> backing_type_;
-
-  DISALLOW_COPY_AND_ASSIGN(AidlEnumDeclaration);
 };
 
 class AidlInterface final : public AidlDefinedType {
@@ -866,6 +915,12 @@ class AidlInterface final : public AidlDefinedType {
                 bool oneway_, std::vector<std::unique_ptr<AidlMember>>* members,
                 const std::string& package);
   virtual ~AidlInterface() = default;
+
+  // non-copyable, non-movable
+  AidlInterface(const AidlInterface&) = delete;
+  AidlInterface(AidlInterface&&) = delete;
+  AidlInterface& operator=(const AidlInterface&) = delete;
+  AidlInterface& operator=(AidlInterface&&) = delete;
 
   const std::vector<std::unique_ptr<AidlMethod>>& GetMethods() const
       { return methods_; }
@@ -887,8 +942,6 @@ class AidlInterface final : public AidlDefinedType {
  private:
   std::vector<std::unique_ptr<AidlMethod>> methods_;
   std::vector<std::unique_ptr<AidlConstantDeclaration>> constants_;
-
-  DISALLOW_COPY_AND_ASSIGN(AidlInterface);
 };
 
 class AidlImport : public AidlNode {
@@ -896,14 +949,18 @@ class AidlImport : public AidlNode {
   AidlImport(const AidlLocation& location, const std::string& needed_class);
   virtual ~AidlImport() = default;
 
+  // non-copyable, non-movable
+  AidlImport(const AidlImport&) = delete;
+  AidlImport(AidlImport&&) = delete;
+  AidlImport& operator=(const AidlImport&) = delete;
+  AidlImport& operator=(AidlImport&&) = delete;
+
   const std::string& GetFilename() const { return filename_; }
   const std::string& GetNeededClass() const { return needed_class_; }
 
  private:
   std::string filename_;
   std::string needed_class_;
-
-  DISALLOW_COPY_AND_ASSIGN(AidlImport);
 };
 
 // AidlDocument models an AIDL file
@@ -914,15 +971,18 @@ class AidlDocument : public AidlNode {
       : AidlNode(location),
         imports_(std::move(imports)),
         defined_types_(std::move(defined_types)) {}
-  const std::vector<std::unique_ptr<AidlImport>>& Imports() const { return imports_; }
-  const std::vector<std::unique_ptr<AidlDefinedType>>& DefinedTypes() const {
-    return defined_types_;
-  }
+  ~AidlDocument() = default;
+
+  // non-copyable, non-movable
   AidlDocument(const AidlDocument&) = delete;
   AidlDocument(AidlDocument&&) = delete;
   AidlDocument& operator=(const AidlDocument&) = delete;
   AidlDocument& operator=(AidlDocument&&) = delete;
-  ~AidlDocument() = default;
+
+  const std::vector<std::unique_ptr<AidlImport>>& Imports() const { return imports_; }
+  const std::vector<std::unique_ptr<AidlDefinedType>>& DefinedTypes() const {
+    return defined_types_;
+  }
 
  private:
   const std::vector<std::unique_ptr<AidlImport>> imports_;
