@@ -108,16 +108,6 @@ std::string AidlNode::PrintLocation() const {
   return ss.str();
 }
 
-AidlErrorLog::AidlErrorLog(bool fatal, const AidlLocation& location)
-    : os_(std::cerr), fatal_(fatal), location_(location) {
-  sHadError = true;
-
-  os_ << "ERROR: ";
-  os_ << location << ": ";
-}
-
-bool AidlErrorLog::sHadError = false;
-
 const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
   static const std::vector<Schema> kSchemas{
       {AidlAnnotation::Type::NULLABLE, "nullable", {}},
