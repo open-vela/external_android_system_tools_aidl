@@ -61,6 +61,7 @@ class AidlTypenames final {
   static bool IsBuiltinTypename(const string& type_name);
   static bool IsPrimitiveTypename(const string& type_name);
   const AidlDefinedType* TryGetDefinedType(const string& type_name) const;
+  std::vector<AidlDefinedType*> AllDefinedTypes() const;
 
   struct ResolvedTypename {
     std::string canonical_name;
