@@ -17,8 +17,6 @@
 #ifndef AIDL_TESTS_FAKE_IO_DELEGATE_H_
 #define AIDL_TESTS_FAKE_IO_DELEGATE_H_
 
-#include <android-base/macros.h>
-
 #include <map>
 #include <memory>
 #include <set>
@@ -35,6 +33,12 @@ class FakeIoDelegate : public IoDelegate {
  public:
   FakeIoDelegate() = default;
   virtual ~FakeIoDelegate() = default;
+
+  // non-copyable, non-movable
+  FakeIoDelegate(const FakeIoDelegate&) = delete;
+  FakeIoDelegate(FakeIoDelegate&&) = delete;
+  FakeIoDelegate& operator=(const FakeIoDelegate&) = delete;
+  FakeIoDelegate& operator=(FakeIoDelegate&&) = delete;
 
   // Overrides from the real IoDelegate
   std::unique_ptr<std::string> GetFileContents(
@@ -78,8 +82,6 @@ class FakeIoDelegate : public IoDelegate {
   // files in this list, we simulate I/O errors.
   std::set<std::string> broken_files_;
   mutable std::set<std::string> removed_files_;
-
-  DISALLOW_COPY_AND_ASSIGN(FakeIoDelegate);
 };  // class FakeIoDelegate
 
 }  // namespace test
