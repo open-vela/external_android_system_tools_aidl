@@ -78,10 +78,6 @@ inline bool HasHideComment(const std::string& comment) {
 }
 }  // namespace
 
-AidlToken::AidlToken(const std::string& text, const std::string& comments)
-    : text_(text),
-      comments_(comments) {}
-
 AidlLocation::AidlLocation(const std::string& file, Point begin, Point end, Source source)
     : file_(file), begin_(begin), end_(end), source_(source) {}
 
