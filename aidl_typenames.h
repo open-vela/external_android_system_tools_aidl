@@ -53,7 +53,6 @@ namespace aidl {
 class AidlTypenames final {
  public:
   AidlTypenames() = default;
-  void Reset();
   bool AddDocument(std::unique_ptr<AidlDocument> doc);
   const std::vector<std::unique_ptr<AidlDocument>>& AllDocuments() const { return documents_; }
   const AidlDocument& MainDocument() const;

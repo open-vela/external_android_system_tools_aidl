@@ -256,11 +256,5 @@ void AidlTypenames::IterateTypes(const std::function<void(const AidlDefinedType&
   }
 }
 
-void AidlTypenames::Reset() {
-  defined_types_.clear();
-  preprocessed_types_.clear();
-  documents_.clear();
-}
-
 }  // namespace aidl
 }  // namespace android
