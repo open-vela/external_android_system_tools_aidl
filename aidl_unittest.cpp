@@ -232,8 +232,9 @@ TEST_P(AidlTest, RejectsArraysOfBinders) {
 TEST_P(AidlTest, SupportOnlyOutParameters) {
   const string interface_list = "package a; interface IBar { void f(out List<String> bar); }";
   EXPECT_NE(nullptr, Parse("a/IBar.aidl", interface_list, typenames_, GetLanguage()));
-  typenames_.Reset();
+}
 
+TEST_P(AidlTest, RejectOutParametersForIBinder) {
   const string interface_ibinder = "package a; interface IBaz { void f(out IBinder bar); }";
   const string expected_ibinder_stderr =
       "ERROR: a/IBaz.aidl:1.47-51: 'out IBinder bar' can only be an in parameter.\n";
@@ -242,16 +243,19 @@ TEST_P(AidlTest, SupportOnlyOutParameters) {
   EXPECT_EQ(expected_ibinder_stderr, GetCapturedStderr());
 }
 
-TEST_P(AidlTest, RejectsOnewayOutParameters) {
+TEST_P(AidlTest, RejectsOutParametersInOnewayInterface) {
   const string oneway_interface = "package a; oneway interface IBar { void f(out int bar); }";
   const string expected_stderr =
       "ERROR: a/IBar.aidl:1.40-42: oneway method 'f' cannot have out parameters\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IBar.aidl", oneway_interface, typenames_, GetLanguage()));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
-  typenames_.Reset();
+}
 
+TEST_P(AidlTest, RejectsOutParametersInOnewayMethod) {
   const string oneway_method = "package a; interface IBar { oneway void f(out int bar); }";
+  const string expected_stderr =
+      "ERROR: a/IBar.aidl:1.40-42: oneway method 'f' cannot have out parameters\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IBar.aidl", oneway_method, typenames_, GetLanguage()));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
@@ -340,34 +344,44 @@ TEST_P(AidlTest, RejectUnsupportedParcelableDefineAnnotations) {
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
+TEST_P(AidlTest, ParsesNonNullableAnnotation) {
+  auto parse_result =
+      Parse("a/IFoo.aidl", "package a; interface IFoo { String f(); }", typenames_, GetLanguage());
+  ASSERT_NE(nullptr, parse_result);
+  const AidlInterface* interface = parse_result->AsInterface();
+  ASSERT_NE(nullptr, interface);
+  ASSERT_FALSE(interface->GetMethods().empty());
+  EXPECT_FALSE(interface->GetMethods()[0]->GetType().IsNullable());
+}
+
 TEST_P(AidlTest, ParsesNullableAnnotation) {
-  for (auto is_nullable: {true, false}) {
-    auto parse_result = Parse("a/IFoo.aidl",
-                              StringPrintf("package a; interface IFoo {%s String f(); }",
-                                           (is_nullable) ? "@nullable" : ""),
-                              typenames_, GetLanguage());
-    ASSERT_NE(nullptr, parse_result);
-    const AidlInterface* interface = parse_result->AsInterface();
-    ASSERT_NE(nullptr, interface);
-    ASSERT_FALSE(interface->GetMethods().empty());
-    EXPECT_EQ(interface->GetMethods()[0]->GetType().IsNullable(), is_nullable);
-    typenames_.Reset();
-  }
+  auto parse_result = Parse("a/IFoo.aidl", "package a; interface IFoo { @nullable String f(); }",
+                            typenames_, GetLanguage());
+  ASSERT_NE(nullptr, parse_result);
+  const AidlInterface* interface = parse_result->AsInterface();
+  ASSERT_NE(nullptr, interface);
+  ASSERT_FALSE(interface->GetMethods().empty());
+  EXPECT_TRUE(interface->GetMethods()[0]->GetType().IsNullable());
+}
+
+TEST_P(AidlTest, ParsesNonUtf8Annotations) {
+  auto parse_result =
+      Parse("a/IFoo.aidl", "package a; interface IFoo { String f(); }", typenames_, GetLanguage());
+  ASSERT_NE(nullptr, parse_result);
+  const AidlInterface* interface = parse_result->AsInterface();
+  ASSERT_NE(nullptr, interface);
+  ASSERT_FALSE(interface->GetMethods().empty());
+  EXPECT_FALSE(interface->GetMethods()[0]->GetType().IsUtf8InCpp());
 }
 
 TEST_P(AidlTest, ParsesUtf8Annotations) {
-  for (auto is_utf8: {true, false}) {
-    auto parse_result = Parse(
-        "a/IFoo.aidl",
-        StringPrintf("package a; interface IFoo {%s String f(); }", (is_utf8) ? "@utf8InCpp" : ""),
-        typenames_, GetLanguage());
-    ASSERT_NE(nullptr, parse_result);
-    const AidlInterface* interface = parse_result->AsInterface();
-    ASSERT_NE(nullptr, interface);
-    ASSERT_FALSE(interface->GetMethods().empty());
-    EXPECT_EQ(interface->GetMethods()[0]->GetType().IsUtf8InCpp(), is_utf8);
-    typenames_.Reset();
-  }
+  auto parse_result = Parse("a/IFoo.aidl", "package a; interface IFoo { @utf8InCpp String f(); }",
+                            typenames_, GetLanguage());
+  ASSERT_NE(nullptr, parse_result);
+  const AidlInterface* interface = parse_result->AsInterface();
+  ASSERT_NE(nullptr, interface);
+  ASSERT_FALSE(interface->GetMethods().empty());
+  EXPECT_TRUE(interface->GetMethods()[0]->GetType().IsUtf8InCpp());
 }
 
 TEST_P(AidlTest, VintfRequiresStructuredAndStability) {
@@ -417,7 +431,6 @@ TEST_P(AidlTest, ParsesStabilityAnnotations) {
   const AidlInterface* interface = parse_result->AsInterface();
   ASSERT_NE(nullptr, interface);
   ASSERT_TRUE(interface->IsVintfStability());
-  typenames_.Reset();
 }
 
 TEST_F(AidlTest, ParsesJavaOnlyStableParcelable) {
@@ -481,11 +494,13 @@ TEST_F(AidlTest, RejectsJavaDebugAnnotation) {
   }
 }
 
-TEST_P(AidlTest, AcceptsOneway) {
+TEST_P(AidlTest, AcceptsOnewayMethod) {
   const string oneway_method = "package a; interface IFoo { oneway void f(int a); }";
-  const string oneway_interface = "package a; oneway interface IBar { void f(int a); }";
   EXPECT_NE(nullptr, Parse("a/IFoo.aidl", oneway_method, typenames_, GetLanguage()));
-  typenames_.Reset();
+}
+
+TEST_P(AidlTest, AcceptsOnewayInterface) {
+  const string oneway_interface = "package a; oneway interface IBar { void f(int a); }";
   EXPECT_NE(nullptr, Parse("a/IBar.aidl", oneway_interface, typenames_, GetLanguage()));
 }
 
@@ -996,15 +1011,16 @@ TEST_P(AidlTest, PrimitiveList) {
           << "Unexpected Options::Language enumerator: " << static_cast<size_t>(GetLanguage());
   }
   CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", primitive_interface, typenames_, GetLanguage()));
+  AidlTypenames tn1;
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", primitive_interface, tn1, GetLanguage()));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
-  typenames_.Reset();
 
   string primitive_parcelable =
       "package a; parcelable IFoo {\n"
       "  List<int> foo;}";
   CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", primitive_parcelable, typenames_, GetLanguage()));
+  AidlTypenames tn2;
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", primitive_parcelable, tn2, GetLanguage()));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
@@ -1025,16 +1041,17 @@ TEST_P(AidlTest, RejectsPrimitiveListInStableAidl) {
       "package a; interface IFoo {\n"
       "  List foo(); }";
   CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", primitive_interface, typenames_, GetLanguage(), &error,
+  AidlTypenames tn1;
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", primitive_interface, tn1, GetLanguage(), &error,
                            {"--structured"}));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
-  typenames_.Reset();
 
   string primitive_parcelable =
       "package a; parcelable IFoo {\n"
       "  List foo;}";
   CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", primitive_parcelable, typenames_, GetLanguage(), &error,
+  AidlTypenames tn2;
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", primitive_parcelable, tn2, GetLanguage(), &error,
                            {"--structured"}));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
