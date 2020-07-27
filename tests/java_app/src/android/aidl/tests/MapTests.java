@@ -16,81 +16,65 @@
 
 package android.aidl.tests;
 
+import static org.junit.Assert.assertThat;
+import static org.hamcrest.core.Is.is;
+
 import android.aidl.tests.map.Bar;
 import android.aidl.tests.map.Foo;
 import android.aidl.tests.map.IEmpty;
-import android.os.IBinder;
 import android.os.Parcel;
 import java.util.HashMap;
 
-class MapTests {
-  private TestLogger mLog;
+import org.junit.Test;
+import org.junit.runners.JUnit4;
+import org.junit.runner.RunWith;
 
-  public MapTests(TestLogger logger) { mLog = logger; }
+@RunWith(JUnit4.class)
+public class MapTests {
 
-  public void checkMap() throws TestFailException {
-    mLog.log("Checking if data in a Map object is transferred well.");
-    Parcel parcel = Parcel.obtain();
-    IEmpty intf = new IEmpty.Stub() {};
-    {
-      Foo foo = new Foo();
-      Bar bar = new Bar();
-      bar.a = 42;
-      bar.b = "Bar";
-      foo.barMap = new HashMap<>();
-      foo.barMap.put("Foo", bar);
+    @Test
+    public void testWriteAndThenReadMaps() {
+        Parcel parcel = Parcel.obtain();
 
-      foo.stringMap = new HashMap<>();
-      foo.stringMap.put("Foo", "Bar");
+        // Write
+        IEmpty intf = new IEmpty.Stub() {};
+        Foo foo = new Foo();
+        Bar bar = new Bar();
+        bar.a = 42;
+        bar.b = "Bar";
+        foo.barMap = new HashMap<>();
+        foo.barMap.put("Foo", bar);
 
-      foo.interfaceMap = new HashMap<>();
-      foo.interfaceMap.put("Foo", intf);
+        foo.stringMap = new HashMap<>();
+        foo.stringMap.put("Foo", "Bar");
 
-      foo.ibinderMap = new HashMap<>();
-      foo.ibinderMap.put("Foo", intf.asBinder());
+        foo.interfaceMap = new HashMap<>();
+        foo.interfaceMap.put("Foo", intf);
 
-      foo.writeToParcel(parcel, 0);
+        foo.ibinderMap = new HashMap<>();
+        foo.ibinderMap.put("Foo", intf.asBinder());
+
+        foo.writeToParcel(parcel, 0);
+
+        // And then read
+        parcel.setDataPosition(0);
+
+        Foo readFoo = new Foo();
+        readFoo.readFromParcel(parcel);
+        assertThat(readFoo.barMap.containsKey("Foo"), is(true));
+        assertThat(readFoo.barMap.size(), is(1));
+
+        Bar readBar = readFoo.barMap.get("Foo");
+        assertThat(readBar.a, is(42));
+        assertThat(readBar.b, is("Bar"));
+
+        assertThat(readFoo.stringMap.size(), is(1));
+        assertThat(readFoo.stringMap.get("Foo"), is("Bar"));
+
+        assertThat(readFoo.interfaceMap.size(), is(1));
+        assertThat(readFoo.interfaceMap.get("Foo"), is(intf));
+
+        assertThat(readFoo.ibinderMap.size(), is(1));
+        assertThat(readFoo.ibinderMap.get("Foo"), is(intf.asBinder()));
     }
-    parcel.setDataPosition(0);
-    {
-      Foo foo = new Foo();
-      foo.readFromParcel(parcel);
-      if (!foo.barMap.containsKey("Foo")) {
-        mLog.logAndThrow("Map foo.a must have the element of which key is \"Foo\"");
-      }
-      if (foo.barMap.size() != 1) {
-        mLog.logAndThrow("The size of map a is expected to be 1.");
-      }
-      Bar bar = foo.barMap.get("Foo");
-      if (bar.a != 42 || !"Bar".equals(bar.b)) {
-        mLog.logAndThrow("The content of bar is expected to be {a: 42, b: \"Bar\"}.");
-      }
-
-      if (foo.stringMap.size() != 1) {
-        mLog.logAndThrow("The size of map a is expected to be 1.");
-      }
-      String string = foo.stringMap.get("Foo");
-      if (!"Bar".equals(string)) {
-        mLog.logAndThrow("The content of string is expected to be \"Bar\".");
-      }
-
-      if (foo.interfaceMap.size() != 1) {
-        mLog.logAndThrow("The size of map a is expected to be 1.");
-      }
-
-      if (!intf.equals(foo.interfaceMap.get("Foo"))) {
-        mLog.logAndThrow("The content of service is expected to be same.");
-      }
-
-      if (foo.ibinderMap.size() != 1) {
-        mLog.logAndThrow("The size of map a is expected to be 1.");
-      }
-      IBinder ibinder = foo.ibinderMap.get("Foo");
-      if (!intf.asBinder().equals(ibinder)) {
-        mLog.logAndThrow("The content of IBinder is expected to be same.");
-      }
-    }
-  }
-
-  public void runTests() throws TestFailException { checkMap(); }
 }
