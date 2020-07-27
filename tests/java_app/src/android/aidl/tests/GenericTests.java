@@ -16,45 +16,41 @@
 
 package android.aidl.tests;
 
+import static org.junit.Assert.assertThat;
+import static org.hamcrest.core.Is.is;
+
 import android.aidl.tests.generic.Baz;
 import android.aidl.tests.generic.IFaz;
 import android.aidl.tests.generic.Pair;
 import android.os.IBinder;
 import android.os.RemoteException;
 
-class GenericTests {
-  private TestLogger mLog;
+import org.junit.Test;
+import org.junit.runners.JUnit4;
+import org.junit.runner.RunWith;
 
-  public GenericTests(TestLogger logger) { mLog = logger; }
+@RunWith(JUnit4.class)
+public class GenericTests {
 
-  public void checkGeneric() throws TestFailException {
-    mLog.log("Checking generic feature.");
-    IFaz.Stub ifaz = new IFaz.Stub() {
-      public Pair<Integer, String> getPair() {
-        Pair<Integer, String> ret = new Pair<Integer, String>();
-        ret.mFirst = 15;
-        ret.mSecond = "My";
-        return ret;
-      }
-      public Pair<Baz, Baz> getPair2() {
-        Pair<Baz, Baz> ret = new Pair<Baz, Baz>();
-        ret.mFirst = new Baz();
-        ret.mSecond = new Baz();
-        return ret;
-      }
-    };
-    try {
-      IFaz service = IFaz.Stub.asInterface(ifaz);
-      if (service.getPair().mFirst != 15) {
-        mLog.logAndThrow("mFirst must be 15, but it is " + service.getPair().mFirst);
-      }
-      if (!"My".equals(service.getPair().mSecond)) {
-        mLog.logAndThrow("mSecond must be \"My\", but it is " + service.getPair().mSecond);
-      }
-    } catch (RemoteException e) {
-      mLog.logAndThrow("This test is local, so the exception is not expected: " + e);
+    @Test
+    public void testGeneric() throws RemoteException {
+        IFaz.Stub ifaz = new IFaz.Stub() {
+            public Pair<Integer, String> getPair() {
+                Pair<Integer, String> ret = new Pair<Integer, String>();
+                ret.mFirst = 15;
+                ret.mSecond = "My";
+                return ret;
+            }
+            public Pair<Baz, Baz> getPair2() {
+                Pair<Baz, Baz> ret = new Pair<Baz, Baz>();
+                ret.mFirst = new Baz();
+                ret.mSecond = new Baz();
+                return ret;
+            }
+        };
+
+        IFaz service = IFaz.Stub.asInterface(ifaz);
+        assertThat(service.getPair().mFirst, is(15));
+        assertThat(service.getPair().mSecond, is("My"));
     }
-  }
-
-  public void runTests() throws TestFailException { checkGeneric(); }
 }
