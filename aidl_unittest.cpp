@@ -124,8 +124,8 @@ public class Rect implements android.os.Parcelable
   {
     int _aidl_start_pos = _aidl_parcel.dataPosition();
     int _aidl_parcelable_size = _aidl_parcel.readInt();
-    if (_aidl_parcelable_size < 0) return;
     try {
+      if (_aidl_parcelable_size < 0) return;
       x = _aidl_parcel.readInt();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       y = _aidl_parcel.readInt();
@@ -325,7 +325,8 @@ TEST_P(AidlTest, RejectUnsupportedParcelableAnnotations) {
   const string method = "package a; @nullable parcelable IFoo cpp_header \"IFoo.h\";";
   const string expected_stderr =
       "ERROR: a/Foo.aidl:1.32-37: 'nullable' is not a supported annotation for this node. "
-      "It must be one of: Hide, JavaOnlyStableParcelable, UnsupportedAppUsage, VintfStability, JavaPassthrough\n";
+      "It must be one of: Hide, JavaOnlyStableParcelable, UnsupportedAppUsage, VintfStability, "
+      "JavaPassthrough, Immutable\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, GetLanguage(), &error));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
@@ -337,7 +338,8 @@ TEST_P(AidlTest, RejectUnsupportedParcelableDefineAnnotations) {
   const string method = "package a; @nullable parcelable Foo { String a; String b; }";
   const string expected_stderr =
       "ERROR: a/Foo.aidl:1.32-36: 'nullable' is not a supported annotation for this node. "
-      "It must be one of: Hide, UnsupportedAppUsage, VintfStability, JavaPassthrough, JavaDebug\n";
+      "It must be one of: Hide, UnsupportedAppUsage, VintfStability, JavaPassthrough, JavaDebug, "
+      "Immutable\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, GetLanguage(), &error));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
@@ -2277,6 +2279,37 @@ TEST_P(AidlTest, UnsupportedBackingAnnotationParam) {
                            typenames_, GetLanguage(), &error));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
   EXPECT_EQ(AidlError::BAD_TYPE, error);
+}
+
+TEST_P(AidlTest, SupportImmutableAnnotation) {
+  io_delegate_.SetFileContents(
+      "Foo.aidl",
+      "@Immutable parcelable Foo { int a; Bar b; List<Bar> c; Map<String, Baz> d; Bar[] e; }");
+  io_delegate_.SetFileContents("Bar.aidl", "@Immutable parcelable Bar { String a; }");
+  io_delegate_.SetFileContents("Baz.aidl", "@Immutable @JavaOnlyStableParcelable parcelable Baz;");
+  Options options = Options::From("aidl --lang=java -I . Foo.aidl");
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+}
+
+TEST_P(AidlTest, RejectMutableParcelableFromImmutableParcelable) {
+  io_delegate_.SetFileContents("Foo.aidl", "@Immutable parcelable Foo { Bar bar; }");
+  io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar { String a; }");
+  Options options = Options::From("aidl --lang=java Foo.aidl -I .");
+  EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+}
+
+TEST_P(AidlTest, ImmtuableParcelableCannotBeInOut) {
+  io_delegate_.SetFileContents("Foo.aidl", "@Immutable parcelable Foo { int a; }");
+  io_delegate_.SetFileContents("IBar.aidl", "interface IBar { void my(inout Foo); }");
+  Options options = Options::From("aidl --lang=java IBar.aidl -I .");
+  EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+}
+
+TEST_P(AidlTest, ImmtuableParcelableCannotBeOut) {
+  io_delegate_.SetFileContents("Foo.aidl", "@Immutable parcelable Foo { int a; }");
+  io_delegate_.SetFileContents("IBar.aidl", "interface IBar { void my(out Foo); }");
+  Options options = Options::From("aidl --lang=java IBar.aidl -I .");
+  EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
 }
 
 }  // namespace aidl

@@ -68,6 +68,8 @@ class AidlTypenames final {
   };
   ResolvedTypename ResolveTypename(const string& type_name) const;
   bool CanBeOutParameter(const AidlTypeSpecifier& type) const;
+  bool CanBeImmutable(const AidlTypeSpecifier& type) const;
+
   bool IsIgnorableImport(const string& import) const;
   // Returns the AidlEnumDeclaration of the given type, or nullptr if the type
   // is not an AidlEnumDeclaration;

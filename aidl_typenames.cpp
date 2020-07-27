@@ -217,7 +217,32 @@ AidlTypenames::ResolvedTypename AidlTypenames::ResolveTypename(const string& typ
   }
 }
 
-// Only T[], List, Map, ParcelFileDescriptor and Parcelable can be an out parameter.
+// Only immutable Parcelable, primitive type, and String, and List, Map, array of the types can be
+// immutable.
+bool AidlTypenames::CanBeImmutable(const AidlTypeSpecifier& type) const {
+  const string& name = type.GetName();
+  if (type.IsGeneric()) {
+    if (type.GetName() == "List" || type.GetName() == "Map") {
+      const auto& types = type.GetTypeParameters();
+      return std::all_of(types.begin(), types.end(),
+                         [this](const auto& t) { return CanBeImmutable(*t); });
+    }
+    AIDL_ERROR(type) << "For a generic type, an immutable parcelable can contain only List or Map.";
+    return false;
+  }
+  if (IsPrimitiveTypename(name) || name == "String") {
+    return true;
+  }
+  const AidlDefinedType* t = TryGetDefinedType(type.GetName());
+  if (t == nullptr) {
+    AIDL_ERROR(type) << "An immutable parcelable can contain only immutable Parcelable, primitive "
+                        "type, and String.";
+    return false;
+  }
+  return t->IsImmutable();
+}
+
+// Only T[], List, Map, ParcelFileDescriptor and mutable Parcelable can be an out parameter.
 bool AidlTypenames::CanBeOutParameter(const AidlTypeSpecifier& type) const {
   const string& name = type.GetName();
   if (IsBuiltinTypename(name) || GetEnumDeclaration(type)) {
@@ -226,7 +251,8 @@ bool AidlTypenames::CanBeOutParameter(const AidlTypeSpecifier& type) const {
   }
   const AidlDefinedType* t = TryGetDefinedType(type.GetName());
   CHECK(t != nullptr) << "Unrecognized type: '" << type.GetName() << "'";
-  return t->AsParcelable() != nullptr;
+  // An 'out' field is passed as an argument, so it doesn't make sense if it is immutable.
+  return t->AsParcelable() != nullptr && !t->IsImmutable();
 }
 
 const AidlEnumDeclaration* AidlTypenames::GetEnumDeclaration(const AidlTypeSpecifier& type) const {
