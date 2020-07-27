@@ -195,7 +195,6 @@ python_test_host {
     test_config: "tests/aidl_integration_test.xml",
     target_required: [
         "aidl_test_client",
-        "aidl_test_sentinel_searcher",
         "aidl_test_service",
         "aidl_test_services",
     ],
@@ -236,19 +235,6 @@ cc_library_headers {
     apex_available: [
         "//apex_available:platform",
         "//apex_available:anyapex",
-    ],
-}
-
-// Could consider simplifying this test by removing this.
-cc_test {
-    name: "aidl_test_sentinel_searcher",
-    defaults: ["aidl_test_defaults"],
-    gtest: false,
-    srcs: ["tests/aidl_test_sentinel_searcher.cpp"],
-    cflags: [
-        "-Wall",
-        "-Wextra",
-        "-Werror",
     ],
 }
 
@@ -328,6 +314,8 @@ android_test_helper_app {
         enabled: false,
     },
     static_libs: [
+        "androidx.test.core",
+        "androidx.test.runner",
         "aidl_test_nonvintf_parcelable-java",
         "aidl_test_unstable_parcelable-java",
         "aidl_test_vintf_parcelable-java",
@@ -351,9 +339,9 @@ android_test_helper_app {
         "tests/java_app/src/android/aidl/tests/NullableTests.java",
         "tests/java_app/src/android/aidl/tests/SimpleParcelable.java",
         "tests/java_app/src/android/aidl/tests/TestFailException.java",
-        "tests/java_app/src/android/aidl/tests/TestLogger.java",
         "tests/java_app/src/android/aidl/tests/TestServiceClient.java",
         "tests/java_app/src/android/aidl/tests/generic/Pair.java",
+        "tests/java_app/src/android/aidl/tests/TestVersionedInterface.java",
     ],
     aidl: {
         include_dirs: [
