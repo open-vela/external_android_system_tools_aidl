@@ -16,6 +16,13 @@
 
 package android.aidl.tests;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
+
+import androidx.test.core.app.ApplicationProvider;
 import android.aidl.tests.ByteEnum;
 import android.aidl.tests.INamedCallback;
 import android.aidl.tests.ITestService;
@@ -24,7 +31,6 @@ import android.aidl.tests.LongEnum;
 import android.aidl.tests.SimpleParcelable;
 import android.aidl.tests.StructuredParcelable;
 import android.aidl.tests.TestFailException;
-import android.aidl.tests.TestLogger;
 import android.aidl.versioned.tests.IFooInterface;
 import android.app.Activity;
 import android.content.Context;
@@ -37,6 +43,12 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.ServiceSpecificException;
 import android.util.Log;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runners.JUnit4;
+import org.junit.runner.RunWith;
+
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
@@ -49,941 +61,570 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TestServiceClient extends Activity {
-    private static final String TAG = "TestServiceClient";
+@RunWith(JUnit4.class)
+public class TestServiceClient {
+    private ITestService service;
 
-    private TestLogger mLog;
-    private String mSuccessSentinel;
-    private String mFailureSentinel;
+    @Before
+    public void setUp() {
+        IBinder binder = ServiceManager.getService(ITestService.class.getName());
+        assertNotNull(binder);
+        service = ITestService.Stub.asInterface(binder);
+        assertNotNull(service);
+    }
 
-    private void init() {
-        Intent intent = getIntent();
-        mLog = new TestLogger(this);
-        mLog.log("Reading sentinels from intent...");
-        mSuccessSentinel = intent.getStringExtra("sentinel.success");
-        mFailureSentinel = intent.getStringExtra("sentinel.failure");
-        if (mSuccessSentinel == null || mFailureSentinel == null) {
-            String message = "Failed to read intent extra input.";
-            Log.e(TAG, message);
-            mLog.close();
-            throw new RuntimeException(message);
+    @Test
+    public void testBooleanRepeat() throws RemoteException {
+        boolean query = true;
+        assertThat(service.RepeatBoolean(query), is(query));
+    }
+
+    @Test
+    public void testCharRepeat() throws RemoteException {
+        char query = 'A';
+        assertThat(service.RepeatChar(query), is(query));
+    }
+
+    @Test
+    public void testByteRepeat() throws RemoteException {
+        byte query = -128;
+        assertThat(service.RepeatByte(query), is(query));
+    }
+
+    @Test
+    public void testIntRepeat() throws RemoteException {
+        int query = 1 << 30;
+        assertThat(service.RepeatInt(query), is(query));
+    }
+
+    @Test
+    public void testConstRepeat() throws RemoteException {
+        int query[] = {ITestService.TEST_CONSTANT,
+                       ITestService.TEST_CONSTANT2,
+                       ITestService.TEST_CONSTANT3,
+                       ITestService.TEST_CONSTANT4,
+                       ITestService.TEST_CONSTANT5,
+                       ITestService.TEST_CONSTANT6,
+                       ITestService.TEST_CONSTANT7,
+                       ITestService.TEST_CONSTANT8};
+        for (int i = 0; i < query.length; i++) {
+            assertThat(service.RepeatInt(query[i]), is(query[i]));
         }
     }
 
-    private ITestService getService() throws TestFailException {
-        IBinder service = ServiceManager.getService(
-                ITestService.class.getName());
-        if (service == null) {
-            mLog.logAndThrow("Failed to obtain binder...");
-        }
-        ITestService ret = ITestService.Stub.asInterface(service);
-        if (ret == null) {
-            mLog.logAndThrow("Failed to cast IBinder instance.");
-        }
-        return ret;
+    @Test
+    public void testLongRepeat() throws RemoteException {
+        long query = 1L << 60;
+        assertThat(service.RepeatLong(query), is(query));
     }
 
-    private void checkPrimitiveRepeat(ITestService service)
-            throws TestFailException {
-        mLog.log("Checking that service can repeat primitives back...");
-        try {
-            {
-                boolean query = true;
-                boolean response = service.RepeatBoolean(query);
-                if (query != response) {
-                    mLog.logAndThrow("Repeat with " + query +
-                                     " responded " + response);
-                }
-            }
-            {
-                char query = 'A';
-                char response = service.RepeatChar(query);
-                if (query != response) {
-                    mLog.logAndThrow("Repeat with " + query +
-                                     " responded " + response);
-                }
-            }
-            {
-                byte query = -128;
-                byte response = service.RepeatByte(query);
-                if (query != response) {
-                    mLog.logAndThrow("Repeat with " + query +
-                                     " responded " + response);
-                }
-            }
-            {
-                int query = 1 << 30;
-                int response = service.RepeatInt(query);
-                if (query != response) {
-                    mLog.logAndThrow("Repeat with " + query +
-                                     " responded " + response);
-                }
-            }
-            {
-                int query[] = {ITestService.TEST_CONSTANT,
-                               ITestService.TEST_CONSTANT2,
-                               ITestService.TEST_CONSTANT3,
-                               ITestService.TEST_CONSTANT4,
-                               ITestService.TEST_CONSTANT5,
-                               ITestService.TEST_CONSTANT6,
-                               ITestService.TEST_CONSTANT7,
-                               ITestService.TEST_CONSTANT8};
-                for (int i = 0; i < query.length; i++) {
-                    int response = service.RepeatInt(query[i]);
-                    if (query[i] != response) {
-                        mLog.logAndThrow("Repeat with " + query[i] +
-                                " responded " + response);
-                    }
-                }
-            }
-            {
-                long query = 1L << 60;
-                long response = service.RepeatLong(query);
-                if (query != response) {
-                    mLog.logAndThrow("Repeat with " + query +
-                                     " responded " + response);
-                }
-            }
-            {
-                float query = 1.0f/3.0f;
-                float response = service.RepeatFloat(query);
-                if (query != response) {
-                    mLog.logAndThrow("Repeat with " + query +
-                                     " responded " + response);
-                }
-            }
-            {
-                double query = 1.0/3.0;
-                double response = service.RepeatDouble(query);
-                if (query != response) {
-                    mLog.logAndThrow("Repeat with " + query +
-                                     " responded " + response);
-                }
-            }
-            {
-              byte query = ByteEnum.FOO;
-              byte response = service.RepeatByteEnum(query);
-              if (query != response) {
-                mLog.logAndThrow("Repeat ByteEnum with " + query + " responded " + response);
-              }
-            }
-            {
-              int query = IntEnum.FOO;
-              int response = service.RepeatIntEnum(query);
-              if (query != response) {
-                mLog.logAndThrow("Repeat IntEnum with " + query + " responded " + response);
-              }
-            }
-            {
-              long query = LongEnum.FOO;
-              long response = service.RepeatLongEnum(query);
-              if (query != response) {
-                mLog.logAndThrow("Repeat LongEnum with " + query + " responded " + response);
-              }
-            }
+    @Test
+    public void testFloatRepeat() throws RemoteException {
+        float query = 1.0f/3.0f;
+        assertThat(service.RepeatFloat(query), is(query));
+    }
 
-            List<String> queries = Arrays.asList(
+    @Test
+    public void testDoubleRepeat() throws RemoteException {
+        double query = 1.0/3.0;
+        assertThat(service.RepeatDouble(query), is(query));
+    }
+
+    @Test
+    public void testByteEnumRepeat() throws RemoteException {
+        byte query = ByteEnum.FOO;
+        assertThat(service.RepeatByteEnum(query), is(query));
+    }
+
+    @Test
+    public void testIntEnumRepeat() throws RemoteException {
+        int query = IntEnum.FOO;
+        assertThat(service.RepeatIntEnum(query), is(query));
+    }
+
+    @Test
+    public void testLongEnumRepeat() throws RemoteException {
+        long query = LongEnum.FOO;
+        assertThat(service.RepeatLongEnum(query), is(query));
+    }
+
+    @Test
+    public void testStringListRepeat() throws RemoteException {
+        List<String> queries = Arrays.asList(
                 "not empty", "", "\0",
                 ITestService.STRING_TEST_CONSTANT,
                 ITestService.STRING_TEST_CONSTANT2);
-            for (String query : queries) {
-                String response = service.RepeatString(query);
-                if (!query.equals(response)) {
-                    mLog.logAndThrow("Repeat request with '" + query + "'" +
-                                     " of length " + query.length() +
-                                     " responded with '" + response + "'" +
-                                     " of length " + response.length());
-                }
-            }
-        } catch (RemoteException ex) {
-            mLog.log(ex.toString());
-            mLog.logAndThrow("Service failed to repeat a primitive back.");
+        for (String query : queries) {
+            assertThat(service.RepeatString(query), is(query));
         }
-        mLog.log("...Basic primitive repeating works.");
     }
 
-    private void checkArrayReversal(ITestService service)
-            throws TestFailException {
-        mLog.log("Checking that service can reverse and return arrays...");
-        try {
-            {
-                boolean[] input = {true, false, false, false};
-                boolean echoed[] = new boolean[input.length];
-                boolean[] reversed = service.ReverseBoolean(input, echoed);
-                if (!Arrays.equals(input, echoed)) {
-                    mLog.logAndThrow("Failed to echo input array back.");
-                }
-                if (input.length != reversed.length) {
-                    mLog.logAndThrow("Reversed array is the wrong size.");
-                }
-                for (int i = 0; i < input.length; ++i) {
-                    int j = reversed.length - (1 + i);
-                    if (input[i] != reversed[j]) {
-                        mLog.logAndThrow(
-                                "input[" + i + "] = " + input[i] +
-                                " but reversed value = " + reversed[j]);
-                    }
-                }
-            }
-            {
-                byte[] input = {0, 1, 2};
-                byte echoed[] = new byte[input.length];
-                byte[] reversed = service.ReverseByte(input, echoed);
-                if (!Arrays.equals(input, echoed)) {
-                    mLog.logAndThrow("Failed to echo input array back.");
-                }
-                if (input.length != reversed.length) {
-                    mLog.logAndThrow("Reversed array is the wrong size.");
-                }
-                for (int i = 0; i < input.length; ++i) {
-                    int j = reversed.length - (1 + i);
-                    if (input[i] != reversed[j]) {
-                        mLog.logAndThrow(
-                                "input[" + i + "] = " + input[i] +
-                                " but reversed value = " + reversed[j]);
-                    }
-                }
-            }
-            {
-                char[] input = {'A', 'B', 'C', 'D', 'E'};
-                char echoed[] = new char[input.length];
-                char[] reversed = service.ReverseChar(input, echoed);
-                if (!Arrays.equals(input, echoed)) {
-                    mLog.logAndThrow("Failed to echo input array back.");
-                }
-                if (input.length != reversed.length) {
-                    mLog.logAndThrow("Reversed array is the wrong size.");
-                }
-                for (int i = 0; i < input.length; ++i) {
-                    int j = reversed.length - (1 + i);
-                    if (input[i] != reversed[j]) {
-                        mLog.logAndThrow(
-                                "input[" + i + "] = " + input[i] +
-                                " but reversed value = " + reversed[j]);
-                    }
-                }
-            }
-            {
-                int[] input = {-1, 0, 1, 2, 3, 4, 5, 6};
-                int echoed[] = new int[input.length];
-                int[] reversed = service.ReverseInt(input, echoed);
-                if (!Arrays.equals(input, echoed)) {
-                    mLog.logAndThrow("Failed to echo input array back.");
-                }
-                if (input.length != reversed.length) {
-                    mLog.logAndThrow("Reversed array is the wrong size.");
-                }
-                for (int i = 0; i < input.length; ++i) {
-                    int j = reversed.length - (1 + i);
-                    if (input[i] != reversed[j]) {
-                        mLog.logAndThrow(
-                                "input[" + i + "] = " + input[i] +
-                                " but reversed value = " + reversed[j]);
-                    }
-                }
-            }
-            {
-                long[] input = {-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8};
-                long echoed[] = new long[input.length];
-                long[] reversed = service.ReverseLong(input, echoed);
-                if (!Arrays.equals(input, echoed)) {
-                    mLog.logAndThrow("Failed to echo input array back.");
-                }
-                if (input.length != reversed.length) {
-                    mLog.logAndThrow("Reversed array is the wrong size.");
-                }
-                for (int i = 0; i < input.length; ++i) {
-                    int j = reversed.length - (1 + i);
-                    if (input[i] != reversed[j]) {
-                        mLog.logAndThrow(
-                                "input[" + i + "] = " + input[i] +
-                                " but reversed value = " + reversed[j]);
-                    }
-                }
-            }
-            {
-                float[] input = {0.0f, 1.0f, -0.3f};
-                float echoed[] = new float[input.length];
-                float[] reversed = service.ReverseFloat(input, echoed);
-                if (!Arrays.equals(input, echoed)) {
-                    mLog.logAndThrow("Failed to echo input array back.");
-                }
-                if (input.length != reversed.length) {
-                    mLog.logAndThrow("Reversed array is the wrong size.");
-                }
-                for (int i = 0; i < input.length; ++i) {
-                    int j = reversed.length - (1 + i);
-                    if (input[i] != reversed[j]) {
-                        mLog.logAndThrow(
-                                "input[" + i + "] = " + input[i] +
-                                " but reversed value = " + reversed[j]);
-                    }
-                }
-            }
-            {
-                double[] input = {-1.0, -4.0, -2.0};
-                double echoed[] = new double[input.length];
-                double[] reversed = service.ReverseDouble(input, echoed);
-                if (!Arrays.equals(input, echoed)) {
-                    mLog.logAndThrow("Failed to echo input array back.");
-                }
-                if (input.length != reversed.length) {
-                    mLog.logAndThrow("Reversed array is the wrong size.");
-                }
-                for (int i = 0; i < input.length; ++i) {
-                    int j = reversed.length - (1 + i);
-                    if (input[i] != reversed[j]) {
-                        mLog.logAndThrow(
-                                "input[" + i + "] = " + input[i] +
-                                " but reversed value = " + reversed[j]);
-                    }
-                }
-            }
-            {
-                String[] input = {"For", "relaxing", "times"};
-                String echoed[] = new String[input.length];
-                String[] reversed = service.ReverseString(input, echoed);
-                if (!Arrays.equals(input, echoed)) {
-                    mLog.logAndThrow("Failed to echo input array back.");
-                }
-                if (input.length != reversed.length) {
-                    mLog.logAndThrow("Reversed array is the wrong size.");
-                }
-                for (int i = 0; i < input.length; ++i) {
-                    int j = reversed.length - (1 + i);
-                    if (!input[i].equals(reversed[j])) {
-                        mLog.logAndThrow(
-                                "input[" + i + "] = " + input[i] +
-                                " but reversed value = " + reversed[j]);
-                    }
-                }
-            }
-        } catch (RemoteException ex) {
-            mLog.log(ex.toString());
-            mLog.logAndThrow("Service failed to reverse an array.");
+    @Test
+    public void testBooleanArrayReversal() throws RemoteException {
+        boolean[] input = {true, false, false, false};
+        boolean echoed[] = new boolean[input.length];
+        boolean[] reversed = service.ReverseBoolean(input, echoed);
+        assertThat(echoed, is(input));
+        assertThat(reversed.length, is(input.length));
+        for (int i = 0; i < input.length; ++i) {
+            int j = reversed.length - (1 + i);
+            assertThat(reversed[j], is(input[i]));
         }
-        mLog.log("...service can reverse and return arrays.");
     }
 
-    private void checkBinderExchange(
-                ITestService service) throws TestFailException {
-      mLog.log("Checking exchange of binders...");
-      try {
-          INamedCallback got = service.GetOtherTestService("Smythe");
-          mLog.log("Received test service");
-          String name = got.GetName();
-
-          if (!name.equals("Smythe")) {
-              mLog.logAndThrow("Tried to get service with name 'Smythe'" +
-                               " and found service with name '" + name + "'");
-          }
-
-          if (!service.VerifyName(got, "Smythe")) {
-              mLog.logAndThrow("Test service could not verify name of 'Smythe'");
-          }
-      } catch (RemoteException ex) {
-          mLog.log(ex.toString());
-          mLog.logAndThrow("Service failed to exchange binders.");
-      }
-      mLog.log("...Exchange of binders works");
-    }
-
-    private void checkListReversal(ITestService service)
-            throws TestFailException {
-        mLog.log("Checking that service can reverse and return lists...");
-        try {
-            {
-                List<String> input = Arrays.asList("Walk", "into", "Córdoba");
-                List<String> echoed = new ArrayList<String>();
-                List<String> reversed = service.ReverseStringList(input, echoed);
-                if (!input.equals(echoed)) {
-                    mLog.logAndThrow("Failed to echo input List<String> back.");
-                }
-                Collections.reverse(input);
-                if (!input.equals(reversed)) {
-                    mLog.logAndThrow("Reversed list is not correct.");
-                }
-            }
-        } catch (RemoteException ex) {
-            mLog.log(ex.toString());
-            mLog.logAndThrow("Service failed to reverse an List<String>.");
+    @Test
+    public void testByteArrayReversal() throws RemoteException {
+        byte[] input = {0, 1, 2};
+        byte echoed[] = new byte[input.length];
+        byte[] reversed = service.ReverseByte(input, echoed);
+        assertThat(echoed, is(input));
+        assertThat(reversed.length, is(input.length));
+        for (int i = 0; i < input.length; ++i) {
+            int j = reversed.length - (1 + i);
+            assertThat(reversed[j], is(input[i]));
         }
-        mLog.log("...service can reverse and return lists.");
     }
 
-    private void checkSimpleParcelables(ITestService service)
-            throws TestFailException {
-        mLog.log("Checking that service can repeat and reverse SimpleParcelable objects...");
-        try {
-            {
-                SimpleParcelable input = new SimpleParcelable("foo", 42);
-                SimpleParcelable out_param = new SimpleParcelable();
-                SimpleParcelable returned =
-                        service.RepeatSimpleParcelable(input, out_param);
-                if (!input.equals(out_param)) {
-                    mLog.log(input.toString() + " != " + out_param.toString());
-                    mLog.logAndThrow("out param SimpleParcelable was not equivalent");
-                }
-                if (!input.equals(returned)) {
-                    mLog.log(input.toString() + " != " + returned.toString());
-                    mLog.logAndThrow("returned SimpleParcelable was not equivalent");
-                }
-            }
-            {
-                SimpleParcelable[] input = new SimpleParcelable[3];
-                input[0] = new SimpleParcelable("a", 1);
-                input[1] = new SimpleParcelable("b", 2);
-                input[2] = new SimpleParcelable("c", 3);
-                SimpleParcelable[] repeated = new SimpleParcelable[3];
-                SimpleParcelable[] reversed = service.ReverseSimpleParcelables(
-                        input, repeated);
-                if (!Arrays.equals(input, repeated)) {
-                    mLog.logAndThrow(
-                            "Repeated list of SimpleParcelable objects did not match.");
-                }
-                if (input.length != reversed.length) {
-                    mLog.logAndThrow(
-                            "Reversed list of SimpleParcelable objects had wrong length.");
-                }
-                for (int i = 0, k = input.length - 1;
-                     i < input.length;
-                     ++i, --k) {
-                    if (!input[i].equals(reversed[k])) {
-                        mLog.log(input[i].toString() + " != " +
-                                 reversed[k].toString());
-                        mLog.logAndThrow("reversed SimpleParcelable was not equivalent");
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            mLog.log(ex.toString());
-            mLog.logAndThrow("Service failed to handle SimpleParcelable objects.");
+    @Test
+    public void testCharArrayReversal() throws RemoteException {
+        char[] input = {'A', 'B', 'C', 'D', 'E'};
+        char echoed[] = new char[input.length];
+        char[] reversed = service.ReverseChar(input, echoed);
+        assertThat(echoed, is(input));
+        assertThat(reversed.length, is(input.length));
+        for (int i = 0; i < input.length; ++i) {
+            int j = reversed.length - (1 + i);
+            assertThat(reversed[j], is(input[i]));
         }
-        mLog.log("...service can manipulate SimpleParcelable objects.");
     }
 
-    private void checkPersistableBundles(ITestService service)
-            throws TestFailException {
-        mLog.log("Checking that service can repeat and reverse PersistableBundle objects...");
-        try {
-            {
-                PersistableBundle emptyBundle = new PersistableBundle();
-                PersistableBundle returned = service.RepeatPersistableBundle(emptyBundle);
-                if (emptyBundle.size() != 0 || returned.size() != 0) {
-                    mLog.log(emptyBundle.toString() + " != " + returned.toString());
-                    mLog.logAndThrow("returned empty PersistableBundle object was not equivalent");
-                }
-                mLog.log("...service can repeat and reverse empty PersistableBundle objects...");
-            }
-            {
-                final String testBoolKey = new String("testBool");
-                final String testIntKey = new String("testInt");
-                final String testNestedIntKey = new String("testNestedInt");
-                final String testLongKey = new String("testLong");
-                final String testDoubleKey = new String("testDouble");
-                final String testStringKey = new String("testString");
-                final String testBoolArrayKey = new String("testBoolArray");
-                final String testIntArrayKey = new String("testIntArray");
-                final String testLongArrayKey = new String("testLongArray");
-                final String testDoubleArrayKey = new String("testDoubleArray");
-                final String testStringArrayKey = new String("testStringArray");
-                final String testPersistableBundleKey = new String("testPersistableBundle");
-                PersistableBundle nonEmptyBundle = new PersistableBundle();
-                nonEmptyBundle.putBoolean(testBoolKey, false);
-                nonEmptyBundle.putInt(testIntKey, 33);
-                nonEmptyBundle.putLong(testLongKey, 34359738368L);
-                nonEmptyBundle.putDouble(testDoubleKey, 1.1);
-                nonEmptyBundle.putString(testStringKey, new String("Woot!"));
-                nonEmptyBundle.putBooleanArray(testBoolArrayKey, new boolean[] {true, false, true});
-                nonEmptyBundle.putIntArray(testIntArrayKey, new int[] {33, 44, 55, 142});
-                nonEmptyBundle.putLongArray(
-                    testLongArrayKey, new long[] {34L, 8371L, 34359738375L});
-                nonEmptyBundle.putDoubleArray(testDoubleArrayKey, new double[] {2.2, 5.4});
-                nonEmptyBundle.putStringArray(testStringArrayKey, new String[] {"hello", "world!"});
-                PersistableBundle testNestedPersistableBundle = new PersistableBundle();
-                testNestedPersistableBundle.putInt(testNestedIntKey, 345);
-                nonEmptyBundle.putPersistableBundle(
-                    testPersistableBundleKey, testNestedPersistableBundle);
-                PersistableBundle returned = service.RepeatPersistableBundle(nonEmptyBundle);
-                if (returned.size() != nonEmptyBundle.size()
-                    || returned.getBoolean(testBoolKey) != nonEmptyBundle.getBoolean(testBoolKey)
-                    || returned.getInt(testIntKey) != nonEmptyBundle.getInt(testIntKey)
-                    || returned.getLong(testLongKey) != nonEmptyBundle.getLong(testLongKey)
-                    || returned.getDouble(testDoubleKey) != nonEmptyBundle.getDouble(testDoubleKey)
-                    || !returned.getString(testStringKey)
-                                .equals(nonEmptyBundle.getString(testStringKey))
-                    || !Arrays.equals(nonEmptyBundle.getBooleanArray(testBoolArrayKey),
-                                      returned.getBooleanArray(testBoolArrayKey))
-                    || !Arrays.equals(nonEmptyBundle.getIntArray(testIntArrayKey),
-                                      returned.getIntArray(testIntArrayKey))
-                    || !Arrays.equals(nonEmptyBundle.getLongArray(testLongArrayKey),
-                                      returned.getLongArray(testLongArrayKey))
-                    || !Arrays.equals(nonEmptyBundle.getDoubleArray(testDoubleArrayKey),
-                                      returned.getDoubleArray(testDoubleArrayKey))
-                    || !Arrays.equals(nonEmptyBundle.getStringArray(testStringArrayKey),
-                                      returned.getStringArray(testStringArrayKey))) {
-                    PersistableBundle temp =
-                        returned.getPersistableBundle(testPersistableBundleKey);
-                    if (temp == null
-                        || temp.getInt(testNestedIntKey)
-                            != testNestedPersistableBundle.getInt(testNestedIntKey)) {
-                        mLog.log(nonEmptyBundle.toString() + " != " + returned.toString());
-                        mLog.logAndThrow("returned non-empty PersistableBundle " +
-                                         "object was not equivalent");
-                    }
-                }
-                mLog.log("...service can repeat and reverse non-empty " +
-                         "PersistableBundle objects...");
-            }
-            {
-                PersistableBundle[] input = new PersistableBundle[3];
-                PersistableBundle first = new PersistableBundle();
-                PersistableBundle second = new PersistableBundle();
-                PersistableBundle third = new PersistableBundle();
-                final String testIntKey = new String("testInt");
-                final String testLongKey = new String("testLong");
-                final String testDoubleKey = new String("testDouble");
-                first.putInt(testIntKey, 1231);
-                second.putLong(testLongKey, 222222L);
-                third.putDouble(testDoubleKey, 10.8);
-                input[0] = first;
-                input[1] = second;
-                input[2] = third;
-                final int original_input_size = input.length;
-                PersistableBundle[] repeated = new PersistableBundle[input.length];
-                PersistableBundle[] reversed = service.ReversePersistableBundles(input, repeated);
-                if (input.length != repeated.length || input.length != original_input_size) {
-                    mLog.logAndThrow("Repeated list of PersistableBundle objects had " +
-                                     "wrong length.");
-                }
-                if (input[0].getInt(testIntKey) != repeated[0].getInt(testIntKey)
-                    || input[1].getLong(testLongKey) != repeated[1].getLong(testLongKey)
-                    || input[2].getDouble(testDoubleKey) != repeated[2].getDouble(testDoubleKey)) {
-                    mLog.logAndThrow("Repeated list of PersistableBundle objects did not match.");
-                }
-                if (input.length != reversed.length || input.length != original_input_size) {
-                    mLog.logAndThrow("Reversed list of PersistableBundle objects had " +
-                                     "wrong length.");
-                }
-                if (input[0].getInt(testIntKey) != reversed[2].getInt(testIntKey)
-                    || input[1].getLong(testLongKey) != reversed[1].getLong(testLongKey)
-                    || input[2].getDouble(testDoubleKey) != reversed[0].getDouble(testDoubleKey)) {
-                    mLog.logAndThrow("reversed PersistableBundle objects were not equivalent");
-                }
-                mLog.log("...service can repeat and reverse arrays of " +
-                         "non-empty PersistableBundle objects...");
-            }
-        } catch (Exception ex) {
-            mLog.log(ex.toString());
-            mLog.logAndThrow("Service failed to handle PersistableBundle objects.");
+    @Test
+    public void testIntArrayReversal() throws RemoteException {
+        int[] input = {-1, 0, 1, 2, 3, 4, 5, 6};
+        int echoed[] = new int[input.length];
+        int[] reversed = service.ReverseInt(input, echoed);
+        assertThat(echoed, is(input));
+        assertThat(reversed.length, is(input.length));
+        for (int i = 0; i < input.length; ++i) {
+            int j = reversed.length - (1 + i);
+            assertThat(reversed[j], is(input[i]));
         }
-        mLog.log("...service can manipulate PersistableBundle objects.");
     }
 
-    private void checkFileDescriptorPassing(ITestService service)
-            throws TestFailException {
-        mLog.log("Checking that service can receive and return file descriptors...");
-        try {
-            FileOutputStream fileOutputStream =
-                    openFileOutput("test-dummy", Context.MODE_PRIVATE);
-
-            FileDescriptor descriptor = fileOutputStream.getFD();
-            FileDescriptor journeyed = service.RepeatFileDescriptor(descriptor);
-            fileOutputStream.close();
-
-            FileOutputStream journeyedStream = new FileOutputStream(journeyed);
-
-            String testData = "FrazzleSnazzleFlimFlamFlibbityGumboChops";
-            byte[] output = testData.getBytes();
-            journeyedStream.write(output);
-            journeyedStream.close();
-
-            FileInputStream fileInputStream = openFileInput("test-dummy");
-            byte[] input = new byte[output.length];
-            if (fileInputStream.read(input) != input.length) {
-                mLog.logAndThrow("Read short count from file");
-            }
-
-            if (!Arrays.equals(input, output)) {
-                mLog.logAndThrow("Read incorrect data");
-            }
-        } catch (RemoteException ex) {
-            mLog.log(ex.toString());
-            mLog.logAndThrow("Service failed to repeat a file descriptor.");
-        } catch (IOException ex) {
-            mLog.log(ex.toString());
-            mLog.logAndThrow("Exception while operating on temporary file");
+    @Test
+    public void testLongArrayReversal() throws RemoteException {
+        long[] input = {-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8};
+        long echoed[] = new long[input.length];
+        long[] reversed = service.ReverseLong(input, echoed);
+        assertThat(echoed, is(input));
+        assertThat(reversed.length, is(input.length));
+        for (int i = 0; i < input.length; ++i) {
+            int j = reversed.length - (1 + i);
+            assertThat(reversed[j], is(input[i]));
         }
-        mLog.log("...service can receive and return file descriptors.");
     }
 
-    private void checkParcelFileDescriptorPassing(ITestService service)
-            throws TestFailException {
-        mLog.log("Checking that service can receive and return parcel file descriptors...");
-        try {
-            ParcelFileDescriptor descriptor = ParcelFileDescriptor.open(
-                    getFileStreamPath("test-dummy"), ParcelFileDescriptor.MODE_CREATE |
-                        ParcelFileDescriptor.MODE_WRITE_ONLY);
-            ParcelFileDescriptor journeyed = service.RepeatParcelFileDescriptor(descriptor);
-
-            FileOutputStream journeyedStream = new ParcelFileDescriptor.AutoCloseOutputStream(journeyed);
-
-            String testData = "FrazzleSnazzleFlimFlamFlibbityGumboChops";
-            byte[] output = testData.getBytes();
-            journeyedStream.write(output);
-            journeyedStream.close();
-
-            FileInputStream fileInputStream = openFileInput("test-dummy");
-            byte[] input = new byte[output.length];
-            if (fileInputStream.read(input) != input.length) {
-                mLog.logAndThrow("Read short count from file");
-            }
-
-            if (!Arrays.equals(input, output)) {
-                mLog.logAndThrow("Read incorrect data");
-            }
-        } catch (RemoteException ex) {
-            mLog.log(ex.toString());
-            mLog.logAndThrow("Service failed to repeat a file descriptor.");
-        } catch (IOException ex) {
-            mLog.log(ex.toString());
-            mLog.logAndThrow("Exception while operating on temporary file");
+    @Test
+    public void testFloatArrayReversal() throws RemoteException {
+        float[] input = {0.0f, 1.0f, -0.3f};
+        float echoed[] = new float[input.length];
+        float[] reversed = service.ReverseFloat(input, echoed);
+        assertThat(echoed, is(input));
+        assertThat(reversed.length, is(input.length));
+        for (int i = 0; i < input.length; ++i) {
+            int j = reversed.length - (1 + i);
+            assertThat(reversed[j], is(input[i]));
         }
-        mLog.log("...service can receive and return file descriptors.");
     }
 
-    private void checkServiceSpecificExceptions(
-                ITestService service) throws TestFailException {
-        mLog.log("Checking application exceptions...");
+    @Test
+    public void testDoubleArrayReversal() throws RemoteException {
+        double[] input = {-1.0, -4.0, -2.0};
+        double echoed[] = new double[input.length];
+        double[] reversed = service.ReverseDouble(input, echoed);
+        assertThat(echoed, is(input));
+        assertThat(reversed.length, is(input.length));
+        for (int i = 0; i < input.length; ++i) {
+            int j = reversed.length - (1 + i);
+            assertThat(reversed[j], is(input[i]));
+        }
+    }
+
+    @Test
+    public void testStringArrayReversal() throws RemoteException {
+        String[] input = {"For", "relaxing", "times"};
+        String echoed[] = new String[input.length];
+        String[] reversed = service.ReverseString(input, echoed);
+        assertThat(echoed, is(input));
+        assertThat(reversed.length, is(input.length));
+        for (int i = 0; i < input.length; ++i) {
+            int j = reversed.length - (1 + i);
+            assertThat(reversed[j], is(input[i]));
+        }
+    }
+
+    @Test
+    public void testBinderExchange() throws RemoteException {
+        INamedCallback got = service.GetOtherTestService("Smythe");
+        assertThat(got.GetName(), is("Smythe"));
+
+        assertThat(service.VerifyName(got, "Smythe"), is(true));
+    }
+
+    @Test
+    public void testListReversal() throws RemoteException {
+        List<String> input = Arrays.asList("Walk", "into", "Córdoba");
+        List<String> echoed = new ArrayList<String>();
+        List<String> reversed = service.ReverseStringList(input, echoed);
+        assertThat(echoed, is(input));
+
+        Collections.reverse(input);
+        assertThat(reversed, is(input));
+    }
+
+    @Test
+    public void testRepeatParcelable() throws RemoteException {
+        SimpleParcelable input = new SimpleParcelable("foo", 42);
+        SimpleParcelable out_param = new SimpleParcelable();
+        SimpleParcelable returned = service.RepeatSimpleParcelable(input, out_param);
+        assertThat(out_param, is(input));
+        assertThat(returned, is(input));
+    }
+
+    @Test
+    public void testReverseParcelable() throws RemoteException {
+        SimpleParcelable[] input = new SimpleParcelable[3];
+        input[0] = new SimpleParcelable("a", 1);
+        input[1] = new SimpleParcelable("b", 2);
+        input[2] = new SimpleParcelable("c", 3);
+        SimpleParcelable[] repeated = new SimpleParcelable[3];
+        SimpleParcelable[] reversed = service.ReverseSimpleParcelables(input, repeated);
+        assertThat(repeated, is(input));
+        assertThat(reversed.length, is(input.length));
+        for (int i = 0, k = input.length - 1; i < input.length; ++i, --k) {
+            assertThat(reversed[k], is(input[i]));
+        }
+    }
+
+    @Test
+    public void testRepeatEmptyPersistableBundle() throws RemoteException {
+        PersistableBundle emptyBundle = new PersistableBundle();
+        PersistableBundle returned = service.RepeatPersistableBundle(emptyBundle);
+        assertThat(returned.size(), is(emptyBundle.size()));
+        assertThat(returned.toString(), is(emptyBundle.toString()));
+    }
+
+    @Test
+    public void testRepeatNonEmptyPersistableBundle() throws RemoteException {
+        PersistableBundle pb = new PersistableBundle();
+
+        final String testBoolKey = "testBool";
+        final String testIntKey = "testInt";
+        final String testNestedIntKey = "testNestedInt";
+        final String testLongKey = "testLong";
+        final String testDoubleKey = "testDouble";
+        final String testStringKey = "testString";
+        final String testBoolArrayKey = "testBoolArray";
+        final String testIntArrayKey = "testIntArray";
+        final String testLongArrayKey = "testLongArray";
+        final String testDoubleArrayKey = "testDoubleArray";
+        final String testStringArrayKey = "testStringArray";
+        final String testPersistableBundleKey = "testPersistableBundle";
+
+        pb.putBoolean(testBoolKey, false);
+        pb.putInt(testIntKey, 33);
+        pb.putLong(testLongKey, 34359738368L);
+        pb.putDouble(testDoubleKey, 1.1);
+        pb.putString(testStringKey, new String("Woot!"));
+        pb.putBooleanArray(testBoolArrayKey, new boolean[] {true, false, true});
+        pb.putIntArray(testIntArrayKey, new int[] {33, 44, 55, 142});
+        pb.putLongArray(testLongArrayKey, new long[] {34L, 8371L, 34359738375L});
+        pb.putDoubleArray(testDoubleArrayKey, new double[] {2.2, 5.4});
+        pb.putStringArray(testStringArrayKey, new String[] {"hello", "world!"});
+        PersistableBundle testNestedPersistableBundle = new PersistableBundle();
+        testNestedPersistableBundle.putInt(testNestedIntKey, 345);
+        pb.putPersistableBundle(testPersistableBundleKey, testNestedPersistableBundle);
+
+        PersistableBundle ret = service.RepeatPersistableBundle(pb);
+
+        assertThat(ret.size(), is(pb.size()));
+        assertThat(ret.getBoolean(testBoolKey), is(pb.getBoolean(testBoolKey)));
+        assertThat(ret.getInt(testIntKey), is(pb.getInt(testIntKey)));
+        assertThat(ret.getLong(testLongKey), is(pb.getLong(testLongKey)));
+        assertThat(ret.getDouble(testDoubleKey), is(pb.getDouble(testDoubleKey)));
+        assertThat(ret.getString(testStringKey), is(pb.getString(testStringKey)));
+        assertThat(ret.getBooleanArray(testBoolArrayKey), is(pb.getBooleanArray(testBoolArrayKey)));
+        assertThat(ret.getIntArray(testIntArrayKey), is(pb.getIntArray(testIntArrayKey)));
+        assertThat(ret.getLongArray(testLongArrayKey), is(pb.getLongArray(testLongArrayKey)));
+        assertThat(ret.getDoubleArray(testDoubleArrayKey), is(pb.getDoubleArray(testDoubleArrayKey)));
+        assertThat(ret.getStringArray(testStringArrayKey), is(pb.getStringArray(testStringArrayKey)));
+
+        PersistableBundle nested = ret.getPersistableBundle(testPersistableBundleKey);
+        assertThat(nested, is(notNullValue()));
+        assertThat(nested.getInt(testNestedIntKey), is(testNestedPersistableBundle.getInt(testNestedIntKey)));
+    }
+
+    @Test
+    public void testReversePersistableBundleArray() throws RemoteException {
+        PersistableBundle[] input = new PersistableBundle[3];
+        PersistableBundle first = new PersistableBundle();
+        PersistableBundle second = new PersistableBundle();
+        PersistableBundle third = new PersistableBundle();
+        final String testIntKey = new String("testInt");
+        final String testLongKey = new String("testLong");
+        final String testDoubleKey = new String("testDouble");
+        first.putInt(testIntKey, 1231);
+        second.putLong(testLongKey, 222222L);
+        third.putDouble(testDoubleKey, 10.8);
+        input[0] = first;
+        input[1] = second;
+        input[2] = third;
+        final int original_input_size = input.length;
+
+        PersistableBundle[] repeated = new PersistableBundle[input.length];
+        PersistableBundle[] reversed = service.ReversePersistableBundles(input, repeated);
+
+        assertThat(repeated.length, is(input.length));
+        assertThat(input.length, is(original_input_size));
+        assertThat(repeated[0].getInt(testIntKey), is(input[0].getInt(testIntKey)));
+        assertThat(repeated[1].getLong(testLongKey), is(input[1].getLong(testLongKey)));
+        assertThat(repeated[2].getDouble(testDoubleKey), is(input[2].getDouble(testDoubleKey)));
+
+        assertThat(reversed.length, is(input.length));
+        assertThat(reversed[0].getInt(testIntKey), is(input[2].getInt(testIntKey)));
+        assertThat(reversed[1].getLong(testLongKey), is(input[1].getLong(testLongKey)));
+        assertThat(reversed[2].getDouble(testDoubleKey), is(input[0].getDouble(testDoubleKey)));
+    }
+
+    @Test
+    public void testFileDescriptorPassing() throws RemoteException, IOException {
+        Context context = ApplicationProvider.getApplicationContext();
+        FileOutputStream fos = context.openFileOutput("test-dummy", Context.MODE_PRIVATE);
+
+        FileDescriptor descriptor = fos.getFD();
+        FileDescriptor journeyed = service.RepeatFileDescriptor(descriptor);
+        fos.close();
+
+        FileOutputStream journeyedStream = new FileOutputStream(journeyed);
+
+        String testData = "FrazzleSnazzleFlimFlamFlibbityGumboChops";
+        byte[] output = testData.getBytes();
+        journeyedStream.write(output);
+        journeyedStream.close();
+
+        FileInputStream fis = context.openFileInput("test-dummy");
+        byte[] input = new byte[output.length];
+
+        assertThat(fis.read(input), is(input.length));
+        assertThat(input, is(output));
+    }
+
+    @Test
+    public void testParcelFileDescriptorPassing() throws RemoteException, IOException {
+        Context context = ApplicationProvider.getApplicationContext();
+        ParcelFileDescriptor descriptor = ParcelFileDescriptor.open(
+                context.getFileStreamPath("test-dummy"), ParcelFileDescriptor.MODE_CREATE |
+                    ParcelFileDescriptor.MODE_WRITE_ONLY);
+        ParcelFileDescriptor journeyed = service.RepeatParcelFileDescriptor(descriptor);
+
+        FileOutputStream journeyedStream = new ParcelFileDescriptor.AutoCloseOutputStream(journeyed);
+
+        String testData = "FrazzleSnazzleFlimFlamFlibbityGumboChops";
+        byte[] output = testData.getBytes();
+        journeyedStream.write(output);
+        journeyedStream.close();
+
+        FileInputStream fis = context.openFileInput("test-dummy");
+        byte[] input = new byte[output.length];
+
+        assertThat(fis.read(input), is(input.length));
+        assertThat(input, is(output));
+    }
+
+    @Test
+    public void testServiceSpecificExceptions() throws RemoteException {
         for (int i = -1; i < 2; ++i) {
             try {
                 service.ThrowServiceException(i);
-            } catch (RemoteException ex) {
-                mLog.logAndThrow("Service threw RemoteException: " +
-                                 ex.toString());
             } catch (ServiceSpecificException ex) {
-                if (ex.errorCode != i) {
-                    mLog.logAndThrow("Service threw wrong error code: " + i);
-                }
+                assertThat(ex.errorCode, is(i));
             }
         }
-        mLog.log("...application exceptions work");
     }
 
-    private void checkUtf8Strings(ITestService service)
-            throws TestFailException {
-        mLog.log("Checking that service can work with UTF8 strings...");
-        // Note that Java's underlying encoding is UTF16.
-        final List<String> utf8_queries = Arrays.asList(
-              "typical string",
-              "",
-              "\0\0\0",
-              // Java doesn't handle unicode code points above U+FFFF well.
-              new String(Character.toChars(0x1F701)) + "\u03A9");
+    private static final List<String> utf8_queries = Arrays.asList(
+            "typical string",
+            "",
+            "\0\0\0",
+            // Java doesn't handle unicode code points above U+FFFF well.
+            new String(Character.toChars(0x1F701)) + "\u03A9");
+
+    @Test
+    public void testRepeatUtf8String() throws RemoteException {
+        for (String query : utf8_queries) {
+            String response = service.RepeatUtf8CppString(query);
+            assertThat(response, is(query));
+        }
+    }
+
+    @Test
+    public void testReverseUtf8StringArray() throws RemoteException {
+        String[] input = (String[])utf8_queries.toArray();
+        String echoed[] = new String[input.length];
+
+        String[] reversed = service.ReverseUtf8CppString(input, echoed);
+
+        assertThat(echoed, is(input));
+        assertThat(reversed.length, is(input.length));
+        for (int i = 0; i < input.length; ++i) {
+            int j = reversed.length - (1 + i);
+            assertThat(reversed[j], is(input[i]));
+        }
+    }
+
+    @Test
+    public void testReverseNullableUtf8StringArray() throws RemoteException {
         final List<String> utf8_queries_and_nulls = Arrays.asList(
-              "typical string",
-              null,
-              "",
-              "\0\0\0",
-              null,
-              // Java doesn't handle unicode code points above U+FFFF well.
-              new String(Character.toChars(0x1F701)) + "\u03A9");
-        try {
-            for (String query : utf8_queries) {
-                String response = service.RepeatUtf8CppString(query);
-                if (!query.equals(response)) {
-                    mLog.logAndThrow("Repeat request with '" + query + "'" +
-                                     " of length " + query.length() +
-                                     " responded with '" + response + "'" +
-                                     " of length " + response.length());
-                }
-            }
-            {
-                String[] input = (String[])utf8_queries.toArray();
-                String echoed[] = new String[input.length];
-                String[] reversed = service.ReverseUtf8CppString(input, echoed);
-                if (!Arrays.equals(input, echoed)) {
-                    mLog.logAndThrow("Failed to echo utf8 input array back.");
-                }
-                if (input.length != reversed.length) {
-                    mLog.logAndThrow("Reversed utf8 array is the wrong size.");
-                }
-                for (int i = 0; i < input.length; ++i) {
-                    int j = reversed.length - (1 + i);
-                    if (!input[i].equals(reversed[j])) {
-                        mLog.logAndThrow(
-                                "input[" + i + "] = " + input[i] +
-                                " but reversed value = " + reversed[j]);
-                    }
-                }
-            }
-            {
-                String[] input = (String[])utf8_queries_and_nulls.toArray();
-                String echoed[] = new String[input.length];
-                String[] reversed = service.ReverseNullableUtf8CppString(input,
-                    echoed);
-                if (!Arrays.equals(input, echoed)) {
-                    mLog.logAndThrow("Failed to echo utf8 input array back.");
-                }
-                if (input.length != reversed.length) {
-                    mLog.logAndThrow("Reversed utf8 array is the wrong size.");
-                }
-                for (int i = 0; i < input.length; ++i) {
-                    int j = reversed.length - (1 + i);
-                    if (input[i] == null && reversed[j] == null) {
-                        continue;
-                    }
+                "typical string",
+                null,
+                "",
+                "\0\0\0",
+                null,
+                // Java doesn't handle unicode code points above U+FFFF well.
+                new String(Character.toChars(0x1F701)) + "\u03A9");
+        String[] input = (String[])utf8_queries_and_nulls.toArray();
+        String echoed[] = new String[input.length];
 
-                    if (!input[i].equals(reversed[j])) {
-                        mLog.logAndThrow(
-                                "input[" + i + "] = " + input[i] +
-                                " but reversed value = " + reversed[j]);
-                    }
-                }
+        String[] reversed = service.ReverseNullableUtf8CppString(input, echoed);
+
+        assertThat(echoed, is(input));
+        assertThat(reversed.length, is(input.length));
+        for (int i = 0; i < input.length; ++i) {
+            int j = reversed.length - (1 + i);
+            if (input[i] == null && reversed[j] == null) {
+                continue;
             }
-        } catch (RemoteException ex) {
-            mLog.log(ex.toString());
-            mLog.logAndThrow("Service failed to handle utf8 strings.");
+            assertThat(reversed[j], is(input[i]));
         }
-        mLog.log("...UTF8 annotations work.");
     }
 
-    private void checkStructuredParcelable(ITestService service) throws TestFailException {
-      final int kDesiredFValue = 17;
+    @Test
+    public void testStrucuturedParcelable() throws RemoteException {
+        final int kDesiredFValue = 17;
 
-      StructuredParcelable parcelable = new StructuredParcelable();
-      parcelable.shouldContainThreeFs = new int[0];
-      parcelable.f = kDesiredFValue;
-      parcelable.shouldBeJerry = "";
-      parcelable.shouldContainTwoByteFoos = new byte[2];
-      parcelable.shouldContainTwoIntFoos = new int[2];
-      parcelable.shouldContainTwoLongFoos = new long[2];
+        StructuredParcelable p = new StructuredParcelable();
+        p.shouldContainThreeFs = new int[0];
+        p.f = kDesiredFValue;
+        p.shouldBeJerry = "";
+        p.shouldContainTwoByteFoos = new byte[2];
+        p.shouldContainTwoIntFoos = new int[2];
+        p.shouldContainTwoLongFoos = new long[2];
 
-      if (!parcelable.stringDefaultsToFoo.equals("foo")) {
-        mLog.logAndThrow(
-            "stringDefaultsToFoo should be 'foo' but is " + parcelable.stringDefaultsToFoo);
-      }
-      if (parcelable.byteDefaultsToFour != 4) {
-        mLog.logAndThrow("byteDefaultsToFour should be 4 but is " + parcelable.byteDefaultsToFour);
-      }
-      if (parcelable.intDefaultsToFive != 5) {
-        mLog.logAndThrow("intDefaultsToFive should be 5 but is " + parcelable.intDefaultsToFive);
-      }
-      if (parcelable.longDefaultsToNegativeSeven != -7) {
-        mLog.logAndThrow("longDefaultsToNegativeSeven should be -7 but is "
-            + parcelable.longDefaultsToNegativeSeven);
-      }
-      if (!parcelable.booleanDefaultsToTrue) {
-        mLog.logAndThrow("booleanDefaultsToTrue should be true");
-      }
-      if (parcelable.charDefaultsToC != 'C') {
-        mLog.logAndThrow("charDefaultsToC is " + parcelable.charDefaultsToC);
-      }
-      if (parcelable.floatDefaultsToPi != 3.14f) {
-        mLog.logAndThrow("floatDefaultsToPi is " + parcelable.floatDefaultsToPi);
-      }
-      if (parcelable.doubleWithDefault != -3.14e17) {
-        mLog.logAndThrow(
-            "doubleWithDefault is " + parcelable.doubleWithDefault + " but should be -3.14e17");
-      }
-      if (!Arrays.equals(parcelable.arrayDefaultsTo123, new int[] {1, 2, 3})) {
-        mLog.logAndThrow("arrayDefaultsTo123 should be [1,2,3] but is "
-            + Arrays.toString(parcelable.arrayDefaultsTo123));
-      }
-      if (parcelable.arrayDefaultsToEmpty.length != 0) {
-        mLog.logAndThrow("arrayDefaultsToEmpty should be empty but is "
-            + Arrays.toString(parcelable.arrayDefaultsToEmpty));
-      }
+        // Check the default values
+        assertThat(p.stringDefaultsToFoo, is("foo"));
+        final byte byteFour = 4;
+        assertThat(p.byteDefaultsToFour, is(byteFour));
+        assertThat(p.intDefaultsToFive, is(5));
+        assertThat(p.longDefaultsToNegativeSeven, is(-7L));
+        assertThat(p.booleanDefaultsToTrue, is(true));
+        assertThat(p.charDefaultsToC, is('C'));
+        assertThat(p.floatDefaultsToPi, is(3.14f));
+        assertThat(p.doubleWithDefault, is(-3.14e17));
+        assertThat(p.arrayDefaultsTo123, is(new int[] {1, 2, 3}));
+        assertThat(p.arrayDefaultsToEmpty.length, is(0));
 
-      try {
-        service.FillOutStructuredParcelable(parcelable);
-      } catch (RemoteException ex) {
-        mLog.log(ex.toString());
-        mLog.logAndThrow("Service failed to handle structured parcelable.");
-      }
+        service.FillOutStructuredParcelable(p);
 
-      if (!Arrays.equals(parcelable.shouldContainThreeFs,
-              new int[] {kDesiredFValue, kDesiredFValue, kDesiredFValue})) {
-        mLog.logAndThrow(
-            "shouldContainThreeFs is " + Arrays.toString(parcelable.shouldContainThreeFs));
-      }
-
-      if (!parcelable.shouldBeJerry.equals("Jerry")) {
-        mLog.logAndThrow("shouldBeJerry should be 'Jerry' but is " + parcelable.shouldBeJerry);
-      }
-
-      if (parcelable.shouldBeByteBar != ByteEnum.BAR) {
-        mLog.logAndThrow(
-            "shouldBeByteBar should be ByteEnum.BAR but is " + parcelable.shouldBeByteBar);
-      }
-      if (parcelable.shouldBeIntBar != IntEnum.BAR) {
-        mLog.logAndThrow(
-            "shouldBeIntBar should be IntEnum.BAR but is " + parcelable.shouldBeIntBar);
-      }
-      if (parcelable.shouldBeLongBar != LongEnum.BAR) {
-        mLog.logAndThrow(
-            "shouldBeLongBar should be LongEnum.BAR but is " + parcelable.shouldBeLongBar);
-      }
-
-      if (!Arrays.equals(
-              parcelable.shouldContainTwoByteFoos, new byte[] {ByteEnum.FOO, ByteEnum.FOO})) {
-        mLog.logAndThrow(
-            "shouldContainTwoByteFoos is " + Arrays.toString(parcelable.shouldContainTwoByteFoos));
-      }
-      if (!Arrays.equals(
-              parcelable.shouldContainTwoIntFoos, new int[] {IntEnum.FOO, IntEnum.FOO})) {
-        mLog.logAndThrow(
-            "shouldContainTwoIntFoos is " + Arrays.toString(parcelable.shouldContainTwoIntFoos));
-      }
-      if (!Arrays.equals(
-              parcelable.shouldContainTwoLongFoos, new long[] {LongEnum.FOO, LongEnum.FOO})) {
-        mLog.logAndThrow(
-            "shouldContainTwoLongFoos is " + Arrays.toString(parcelable.shouldContainTwoLongFoos));
-      }
-
-      if (parcelable.int32_min != Integer.MIN_VALUE) {
-        mLog.logAndThrow(
-            "int32_min should be " + Integer.MIN_VALUE + "but is " + parcelable.int32_min);
-      }
-
-      if (parcelable.int32_max != Integer.MAX_VALUE) {
-        mLog.logAndThrow(
-            "int32_max should be " + Integer.MAX_VALUE + "but is " + parcelable.int32_max);
-      }
-
-      if (parcelable.int64_max != Long.MAX_VALUE) {
-        mLog.logAndThrow(
-            "int64_max should be " + Long.MAX_VALUE + "but is " + parcelable.int64_max);
-      }
-
-      if (parcelable.hexInt32_neg_1 != -1) {
-        mLog.logAndThrow("hexInt32_neg_1 should be -1 but is " + parcelable.hexInt32_neg_1);
-      }
-
-      boolean success = true;
-      for (int ndx = 0; ndx < parcelable.int32_1.length; ndx++) {
-        if (parcelable.int32_1[ndx] != 1) {
-          mLog.log("int32_1[" + ndx + "] should be 1 but is " + parcelable.int32_1[ndx]);
-          success = false;
+        // Check the returned values
+        assertThat(p.shouldContainThreeFs, is(new int[] {kDesiredFValue, kDesiredFValue, kDesiredFValue}));
+        assertThat(p.shouldBeJerry, is("Jerry"));
+        assertThat(p.shouldBeByteBar, is(ByteEnum.BAR));
+        assertThat(p.shouldBeIntBar, is(IntEnum.BAR));
+        assertThat(p.shouldBeLongBar, is(LongEnum.BAR));
+        assertThat(p.shouldContainTwoByteFoos, is(new byte[] {ByteEnum.FOO, ByteEnum.FOO}));
+        assertThat(p.shouldContainTwoIntFoos, is(new int[] {IntEnum.FOO, IntEnum.FOO}));
+        assertThat(p.shouldContainTwoLongFoos, is(new long[] {LongEnum.FOO, LongEnum.FOO}));
+        assertThat(p.int32_min, is(Integer.MIN_VALUE));
+        assertThat(p.int32_max, is(Integer.MAX_VALUE));
+        assertThat(p.int64_max, is(Long.MAX_VALUE));
+        assertThat(p.hexInt32_neg_1, is(-1));
+        for (int ndx = 0; ndx < p.int32_1.length; ndx++) {
+            assertThat(p.int32_1[ndx], is(1));
         }
-      }
-      if (!success) {
-        mLog.logAndThrow("Failed to parse int32_1 array");
-      }
-
-      for (int ndx = 0; ndx < parcelable.int64_1.length; ndx++) {
-        if (parcelable.int64_1[ndx] != 1) {
-          mLog.log("int64_1[" + ndx + "] should be 1 but is " + parcelable.int64_1[ndx]);
-          success = false;
+        for (int ndx = 0; ndx < p.int64_1.length; ndx++) {
+            assertThat(p.int64_1[ndx], is(1L));
         }
-      }
-      if (!success) {
-        mLog.logAndThrow("Failed to parse int64_1 array");
-      }
+        assertThat(p.hexInt32_pos_1, is(1));
+        assertThat(p.hexInt64_pos_1, is(1));
+        assertThat(p.const_exprs_1, is(1));
+        assertThat(p.const_exprs_2, is(1));
+        assertThat(p.const_exprs_3, is(1));
+        assertThat(p.const_exprs_4, is(1));
+        assertThat(p.const_exprs_5, is(1));
+        assertThat(p.const_exprs_6, is(1));
+        assertThat(p.const_exprs_7, is(1));
+        assertThat(p.const_exprs_8, is(1));
+        assertThat(p.const_exprs_9, is(1));
+        assertThat(p.const_exprs_10, is(1));
 
-      if (parcelable.hexInt32_pos_1 != 1) {
-        mLog.logAndThrow("hexInt32_pos_1 should be 1 but is " + parcelable.hexInt32_pos_1);
-      }
-
-      if (parcelable.hexInt64_pos_1 != 1) {
-        mLog.logAndThrow("hexInt64_pos_1 should be 1 but is " + parcelable.hexInt64_pos_1);
-      }
-
-      if (parcelable.const_exprs_1 != 1) {
-        mLog.logAndThrow("parcelable.const_exprs_1 should be 1 but is " + parcelable.const_exprs_1);
-      }
-      if (parcelable.const_exprs_2 != 1) {
-        mLog.logAndThrow("parcelable.const_exprs_2 should be 1 but is " + parcelable.const_exprs_2);
-      }
-      if (parcelable.const_exprs_3 != 1) {
-        mLog.logAndThrow("parcelable.const_exprs_3 should be 1 but is " + parcelable.const_exprs_3);
-      }
-      if (parcelable.const_exprs_4 != 1) {
-        mLog.logAndThrow("parcelable.const_exprs_4 should be 1 but is " + parcelable.const_exprs_4);
-      }
-      if (parcelable.const_exprs_5 != 1) {
-        mLog.logAndThrow("parcelable.const_exprs_5 should be 1 but is " + parcelable.const_exprs_5);
-      }
-      if (parcelable.const_exprs_6 != 1) {
-        mLog.logAndThrow("parcelable.const_exprs_6 should be 1 but is " + parcelable.const_exprs_6);
-      }
-      if (parcelable.const_exprs_7 != 1) {
-        mLog.logAndThrow("parcelable.const_exprs_7 should be 1 but is " + parcelable.const_exprs_7);
-      }
-      if (parcelable.const_exprs_8 != 1) {
-        mLog.logAndThrow("parcelable.const_exprs_8 should be 1 but is " + parcelable.const_exprs_8);
-      }
-      if (parcelable.const_exprs_9 != 1) {
-        mLog.logAndThrow("parcelable.const_exprs_9 should be 1 but is " + parcelable.const_exprs_9);
-      }
-      if (parcelable.const_exprs_10 != 1) {
-        mLog.logAndThrow(
-            "parcelable.const_exprs_10 should be 1 but is " + parcelable.const_exprs_10);
-      }
-
-      final String expected = "android.aidl.tests.StructuredParcelable{" +
-          "shouldContainThreeFs: [17, 17, 17], " +
-          "f: 17, " +
-          "shouldBeJerry: Jerry, " +
-          "shouldBeByteBar: 2, " +
-          "shouldBeIntBar: 2000, " +
-          "shouldBeLongBar: 200000000000, " +
-          "shouldContainTwoByteFoos: [1, 1], " +
-          "shouldContainTwoIntFoos: [1000, 1000], " +
-          "shouldContainTwoLongFoos: [100000000000, 100000000000], " +
-          "stringDefaultsToFoo: foo, " +
-          "byteDefaultsToFour: 4, " +
-          "intDefaultsToFive: 5, " +
-          "longDefaultsToNegativeSeven: -7, " +
-          "booleanDefaultsToTrue: true, " +
-          "charDefaultsToC: C, " +
-          "floatDefaultsToPi: 3.14, " +
-          "doubleWithDefault: -3.14E17, " +
-          "arrayDefaultsTo123: [1, 2, 3], " +
-          "arrayDefaultsToEmpty: [], " +
-          "boolDefault: false, " +
-          "byteDefault: 0, " +
-          "intDefault: 0, " +
-          "longDefault: 0, " +
-          "floatDefault: 0.0, " +
-          "doubleDefault: 0.0, " +
-          "checkDoubleFromFloat: 3.14, " +
-          "checkStringArray1: [a, b], " +
-          "checkStringArray2: [a, b], " +
-          "int32_min: -2147483648, " +
-          "int32_max: 2147483647, " +
-          "int64_max: 9223372036854775807, " +
-          "hexInt32_neg_1: -1, " +
-          "ibinder: null, " +
-          "int32_1: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, " +
-          "1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, " +
-          "1, 1, 1, 1], " +
-          "int64_1: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], " +
-          "hexInt32_pos_1: 1, " +
-          "hexInt64_pos_1: 1, " +
-          "const_exprs_1: 1, " +
-          "const_exprs_2: 1, " +
-          "const_exprs_3: 1, " +
-          "const_exprs_4: 1, " +
-          "const_exprs_5: 1, " +
-          "const_exprs_6: 1, " +
-          "const_exprs_7: 1, " +
-          "const_exprs_8: 1, " +
-          "const_exprs_9: 1, " +
-          "const_exprs_10: 1, " +
-          "addString1: hello world!, " +
-          "addString2: The quick brown fox jumps over the lazy dog." +
-          "}";
-      if (!expected.equals(parcelable.toString())) {
-        mLog.logAndThrow(
-            "parcelable.toString() should be \"" + expected + "\" " +
-            "but is \"" + parcelable.toString() + "\"");
-      }
-
-      mLog.log("Successfully verified the StructuredParcelable");
+        final String expected = "android.aidl.tests.StructuredParcelable{" +
+            "shouldContainThreeFs: [17, 17, 17], " +
+            "f: 17, " +
+            "shouldBeJerry: Jerry, " +
+            "shouldBeByteBar: 2, " +
+            "shouldBeIntBar: 2000, " +
+            "shouldBeLongBar: 200000000000, " +
+            "shouldContainTwoByteFoos: [1, 1], " +
+            "shouldContainTwoIntFoos: [1000, 1000], " +
+            "shouldContainTwoLongFoos: [100000000000, 100000000000], " +
+            "stringDefaultsToFoo: foo, " +
+            "byteDefaultsToFour: 4, " +
+            "intDefaultsToFive: 5, " +
+            "longDefaultsToNegativeSeven: -7, " +
+            "booleanDefaultsToTrue: true, " +
+            "charDefaultsToC: C, " +
+            "floatDefaultsToPi: 3.14, " +
+            "doubleWithDefault: -3.14E17, " +
+            "arrayDefaultsTo123: [1, 2, 3], " +
+            "arrayDefaultsToEmpty: [], " +
+            "boolDefault: false, " +
+            "byteDefault: 0, " +
+            "intDefault: 0, " +
+            "longDefault: 0, " +
+            "floatDefault: 0.0, " +
+            "doubleDefault: 0.0, " +
+            "checkDoubleFromFloat: 3.14, " +
+            "checkStringArray1: [a, b], " +
+            "checkStringArray2: [a, b], " +
+            "int32_min: -2147483648, " +
+            "int32_max: 2147483647, " +
+            "int64_max: 9223372036854775807, " +
+            "hexInt32_neg_1: -1, " +
+            "ibinder: null, " +
+            "int32_1: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, " +
+            "1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, " +
+            "1, 1, 1, 1], " +
+            "int64_1: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], " +
+            "hexInt32_pos_1: 1, " +
+            "hexInt64_pos_1: 1, " +
+            "const_exprs_1: 1, " +
+            "const_exprs_2: 1, " +
+            "const_exprs_3: 1, " +
+            "const_exprs_4: 1, " +
+            "const_exprs_5: 1, " +
+            "const_exprs_6: 1, " +
+            "const_exprs_7: 1, " +
+            "const_exprs_8: 1, " +
+            "const_exprs_9: 1, " +
+            "const_exprs_10: 1, " +
+            "addString1: hello world!, " +
+            "addString2: The quick brown fox jumps over the lazy dog." +
+            "}";
+        assertThat(p.toString(), is(expected));
     }
 
-    private void checkDefaultImpl(ITestService service) throws TestFailException {
+    @Test
+    public void testDefaultImpl() throws RemoteException {
       final int expectedArg = 100;
       final int expectedReturnValue = 200;
 
@@ -997,144 +638,65 @@ public class TestServiceClient extends Activity {
           return expectedReturnValue;
         }
       });
-      if (!success) {
-        mLog.logAndThrow("Failed to set default impl for ITestService");
-      }
+      assertThat(success, is(true));
 
-      try {
-        int ret = service.UnimplementedMethod(expectedArg);
-        if (ret != expectedReturnValue) {
-          mLog.logAndThrow("Return value from UnimplementedMethod is expected "
-              + " to be " + expectedReturnValue + ", but got " + ret);
-        }
-      } catch (RemoteException ex) {
-        mLog.log(ex.toString());
-        mLog.logAndThrow("Failed to call UnimplementedMethod");
-      }
+      int ret = service.UnimplementedMethod(expectedArg);
+      assertThat(ret, is(expectedReturnValue));
     }
 
-    private void checkToString() throws TestFailException {
-      ParcelableForToString p = new ParcelableForToString();
-      p.intValue = 10;
-      p.intArray = new int[]{20, 30};
-      p.longValue = 100L;
-      p.longArray = new long[]{200L, 300L};
-      p.doubleValue = 3.14d;
-      p.doubleArray = new double[]{1.1d, 1.2d};
-      p.floatValue = 3.14f;
-      p.floatArray = new float[]{1.1f, 1.2f};
-      p.byteValue = 3;
-      p.byteArray = new byte[]{5, 6};
-      p.booleanValue = true;
-      p.booleanArray = new boolean[]{true, false};
-      p.stringValue = "this is a string";
-      p.stringArray = new String[]{"hello", "world"};
-      p.stringList = Arrays.asList(new String[]{"alice", "bob"});
-      OtherParcelableForToString op = new OtherParcelableForToString();
-      op.field = "other";
-      p.parcelableValue = op;
-      p.parcelableArray = new OtherParcelableForToString[]{op, op};
-      p.enumValue = IntEnum.FOO;
-      p.enumArray = new int[]{IntEnum.FOO, IntEnum.BAR};
-      p.nullArray = null;
-      p.nullList = null;
+    @Test
+    public void testToString() {
+        ParcelableForToString p = new ParcelableForToString();
+        p.intValue = 10;
+        p.intArray = new int[]{20, 30};
+        p.longValue = 100L;
+        p.longArray = new long[]{200L, 300L};
+        p.doubleValue = 3.14d;
+        p.doubleArray = new double[]{1.1d, 1.2d};
+        p.floatValue = 3.14f;
+        p.floatArray = new float[]{1.1f, 1.2f};
+        p.byteValue = 3;
+        p.byteArray = new byte[]{5, 6};
+        p.booleanValue = true;
+        p.booleanArray = new boolean[]{true, false};
+        p.stringValue = "this is a string";
+        p.stringArray = new String[]{"hello", "world"};
+        p.stringList = Arrays.asList(new String[]{"alice", "bob"});
+        OtherParcelableForToString op = new OtherParcelableForToString();
+        op.field = "other";
+        p.parcelableValue = op;
+        p.parcelableArray = new OtherParcelableForToString[]{op, op};
+        p.enumValue = IntEnum.FOO;
+        p.enumArray = new int[]{IntEnum.FOO, IntEnum.BAR};
+        p.nullArray = null;
+        p.nullList = null;
 
-      final String expected = "android.aidl.tests.ParcelableForToString{" +
-          "intValue: 10, " +
-          "intArray: [20, 30], " +
-          "longValue: 100, " +
-          "longArray: [200, 300], " +
-          "doubleValue: 3.14, " +
-          "doubleArray: [1.1, 1.2], " +
-          "floatValue: 3.14, " +
-          "floatArray: [1.1, 1.2], " +
-          "byteValue: 3, " +
-          "byteArray: [5, 6], " +
-          "booleanValue: true, " +
-          "booleanArray: [true, false], " +
-          "stringValue: this is a string, " +
-          "stringArray: [hello, world], " +
-          "stringList: [alice, bob], " +
-          "parcelableValue: android.aidl.tests.OtherParcelableForToString{field: other}, " +
-          "parcelableArray: [" +
-          "android.aidl.tests.OtherParcelableForToString{field: other}, " +
-          "android.aidl.tests.OtherParcelableForToString{field: other}], " +
-          "enumValue: 1000, " +
-          "enumArray: [1000, 2000], " +
-          "nullArray: null, " +
-          "nullList: null" +
-          "}";
-      if (!expected.equals(p.toString())) {
-        mLog.logAndThrow(
-            "parcelable.toString() should be \"" + expected + "\" " +
-            "but is \"" + p.toString() + "\"");
-      }
-    }
+        final String expected = "android.aidl.tests.ParcelableForToString{" +
+            "intValue: 10, " +
+            "intArray: [20, 30], " +
+            "longValue: 100, " +
+            "longArray: [200, 300], " +
+            "doubleValue: 3.14, " +
+            "doubleArray: [1.1, 1.2], " +
+            "floatValue: 3.14, " +
+            "floatArray: [1.1, 1.2], " +
+            "byteValue: 3, " +
+            "byteArray: [5, 6], " +
+            "booleanValue: true, " +
+            "booleanArray: [true, false], " +
+            "stringValue: this is a string, " +
+            "stringArray: [hello, world], " +
+            "stringList: [alice, bob], " +
+            "parcelableValue: android.aidl.tests.OtherParcelableForToString{field: other}, " +
+            "parcelableArray: [" +
+            "android.aidl.tests.OtherParcelableForToString{field: other}, " +
+            "android.aidl.tests.OtherParcelableForToString{field: other}], " +
+            "enumValue: 1000, " +
+            "enumArray: [1000, 2000], " +
+            "nullArray: null, " +
+            "nullList: null" +
+            "}";
 
-    // TODO(b/162211592) rewrite this using junit
-    private void checkVersionedInterface() throws TestFailException {
-        try {
-            IBinder b = ServiceManager.getService(IFooInterface.class.getName());
-            if (b == null) {
-                mLog.logAndThrow("Failed to obtain binder...");
-            }
-            IFooInterface service = IFooInterface.Stub.asInterface(b);
-            if (service == null) {
-                mLog.logAndThrow("Failed to cast IBinder instance.");
-            }
-            int remoteVersion = service.getInterfaceVersion();
-            final int expectedVersion = 1;
-            if (remoteVersion != expectedVersion) {
-                mLog.logAndThrow("incorrect interface version. expected: " + expectedVersion +
-                        ", got: " + remoteVersion);
-            }
-
-            String remoteHash = service.getInterfaceHash();
-            final String expectedHash = "fcd4f9c806cbc8af3694d569fd1de1ecc8cf7d22";
-            if (!expectedHash.equals(remoteHash)) {
-                mLog.logAndThrow("incorrect interface hash. expected: " + expectedHash +
-                        ", got: " + remoteHash);
-            }
-        } catch (RemoteException ex) {
-            mLog.log(ex.toString());
-            mLog.logAndThrow("failed to check interface version and hash.");
-        }
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Log.i(TAG, "Starting!");
-        try {
-          init();
-          ITestService service = getService();
-          checkPrimitiveRepeat(service);
-          checkArrayReversal(service);
-          checkBinderExchange(service);
-          checkListReversal(service);
-          checkSimpleParcelables(service);
-          checkPersistableBundles(service);
-          checkFileDescriptorPassing(service);
-          checkParcelFileDescriptorPassing(service);
-          checkServiceSpecificExceptions(service);
-          checkUtf8Strings(service);
-          checkStructuredParcelable(service);
-          new NullableTests(service, mLog).runTests();
-          new MapTests(mLog).runTests();
-          new GenericTests(mLog).runTests();
-          new ExtensionTests(mLog).runTests();
-          checkDefaultImpl(service);
-          checkToString();
-          checkVersionedInterface();
-
-          mLog.log(mSuccessSentinel);
-        } catch (TestFailException e) {
-            mLog.log(mFailureSentinel);
-            throw new RuntimeException(e);
-        } finally {
-            if (mLog != null) {
-                mLog.close();
-            }
-        }
+        assertThat(p.toString(), is(expected));
     }
 }

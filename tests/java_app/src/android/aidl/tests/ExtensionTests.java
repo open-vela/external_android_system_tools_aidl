@@ -16,6 +16,10 @@
 
 package android.aidl.tests;
 
+import static org.junit.Assert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.nullValue;
+
 import android.aidl.tests.extension.ExtendableParcelable;
 import android.aidl.tests.extension.MyExt;
 import android.aidl.tests.extension.MyExt2;
@@ -31,167 +35,177 @@ import android.os.ParcelableHolder;
 import java.util.Arrays;
 import java.util.HashMap;
 
-class ExtensionTests {
-  private TestLogger mLog;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runners.JUnit4;
+import org.junit.runner.RunWith;
 
-  public ExtensionTests(TestLogger logger) { mLog = logger; }
+@RunWith(JUnit4.class)
+public class ExtensionTests {
+    private VintfExtendableParcelable vep;
+    private VintfParcelable vp;
 
-  private static String dumpMyExt(MyExt ext) {
-    if (ext == null) {
-      return null;
-    }
-    return "{a: " + ext.a + ", b: " + ext.b + "}";
-  }
+    private NonVintfExtendableParcelable sep;
+    private NonVintfParcelable sp;
 
-  private static String dumpMyExt2(MyExt2 ext2) {
-    if (ext2 == null) {
-      return null;
-    }
-    return "{a: " + ext2.a + ", b: " + dumpMyExt(ext2.b) + ", " + ext2.c + "}";
-  }
-  public void checkStability() throws TestFailException {
-    mLog.log("Checking if extension's stability is checked properly.");
+    private UnstableExtendableParcelable uep;
+    private UnstableParcelable up;
 
-    VintfExtendableParcelable vep = new VintfExtendableParcelable();
-    VintfParcelable vp = new VintfParcelable();
+    @Before
+    public void setUp() {
+        vep = new VintfExtendableParcelable();
+        vp = new VintfParcelable();
 
-    NonVintfExtendableParcelable sep = new NonVintfExtendableParcelable();
-    NonVintfParcelable sp = new NonVintfParcelable();
+        sep = new NonVintfExtendableParcelable();
+        sp = new NonVintfParcelable();
 
-    UnstableExtendableParcelable uep = new UnstableExtendableParcelable();
-    UnstableParcelable up = new UnstableParcelable();
-
-    mLog.assertTrue(
-        vep.ext.setParcelable(vp), "vintf ParcelableHolder can contain a vintf parcelable");
-    mLog.assertTrue(vep.ext.getParcelable(VintfParcelable.class) == vp,
-        "vintf ParcelableHolder can contain a vintf parcelable");
-    vep.ext.setParcelable(null);
-    mLog.assertFalse(
-        vep.ext.setParcelable(sp), "vintf ParcelableHolder cannot contain a non-vintf parcelable");
-    mLog.assertTrue(vep.ext.getParcelable(NonVintfParcelable.class) == null,
-        "vintf ParcelableHolder cannot contain a non-vintf parcelable");
-    vep.ext.setParcelable(null);
-    mLog.assertFalse(
-        vep.ext.setParcelable(up), "vintf ParcelableHolder cannot contain an unstable parcelable");
-    mLog.assertTrue(vep.ext.getParcelable(UnstableParcelable.class) == null,
-        "vintf ParcelableHolder cannot contain an unstable parcelable");
-
-    mLog.assertTrue(
-        sep.ext.setParcelable(vp), "a stable ParcelableHolder can contain a vintf parcelable");
-    mLog.assertTrue(sep.ext.getParcelable(VintfParcelable.class) == vp,
-        "a stable ParcelableHolder can contain a vintf parcelable");
-    sep.ext.setParcelable(null);
-    mLog.assertTrue(
-        sep.ext.setParcelable(sp), "a stable ParcelableHolder can contain a non-vintf parcelable");
-    mLog.assertTrue(sep.ext.getParcelable(NonVintfParcelable.class) == sp,
-        "a stable ParcelableHolder can contain a non-vintf parcelable");
-    sep.ext.setParcelable(null);
-    mLog.assertTrue(
-        sep.ext.setParcelable(up), "a stable ParcelableHolder can contain an unstable parcelable");
-    mLog.assertTrue(sep.ext.getParcelable(UnstableParcelable.class) == up,
-        "a stable ParcelableHolder can contain an unstable parcelable");
-
-    mLog.assertTrue(
-        uep.ext.setParcelable(vp), "an unstable ParcelableHolder can contain a vintf parcelable");
-    mLog.assertTrue(uep.ext.getParcelable(VintfParcelable.class) == vp,
-        "an unstable ParcelableHolder can contain a vintf parcelable");
-    uep.ext.setParcelable(null);
-    mLog.assertTrue(uep.ext.setParcelable(sp),
-        "an unstable ParcelableHolder can contain a non-vintf parcelable");
-    mLog.assertTrue(uep.ext.getParcelable(NonVintfParcelable.class) == sp,
-        "an unstable ParcelableHolder can contain a non-vintf parcelable");
-    uep.ext.setParcelable(null);
-    mLog.assertTrue(uep.ext.setParcelable(up),
-        "an unstable ParcelableHolder can contain an unstable parcelable");
-    mLog.assertTrue(uep.ext.getParcelable(UnstableParcelable.class) == up,
-        "an unstable ParcelableHolder can contain an unstable parcelable");
-  }
-  public void checkExtension() throws TestFailException {
-    mLog.log("Checking if extension's data is transferred well.");
-    MyExt ext = new MyExt();
-    ext.a = 42;
-    ext.b = "EXT";
-
-    MyExt2 ext2 = new MyExt2();
-    ext2.a = 42;
-    ext2.b = new MyExt();
-    ext2.b.a = 24;
-    ext2.b.b = "INEXT";
-    ext2.c = "EXT2";
-
-    Parcel parcel = Parcel.obtain();
-    {
-      ExtendableParcelable ep = new ExtendableParcelable();
-      ep.a = 1;
-      ep.b = "a";
-      ep.c = 42L;
-
-      ep.ext.setParcelable(ext);
-
-      ep.ext2.setParcelable(ext2);
-      MyExtLike extLike = ep.ext.<MyExtLike>getParcelable(MyExtLike.class);
-      mLog.assertTrue(extLike == null,
-          "The extension type must be MyExt, so it has to fail even though MyExtLike has the same structure as MyExt.");
-
-      MyExt actualExt = ep.ext.getParcelable(MyExt.class);
-      MyExt2 actualExt2 = ep.ext2.getParcelable(MyExt2.class);
-
-      checkContent(ep, ext, ext2);
-
-      ep.writeToParcel(parcel, 0);
-    }
-    parcel.setDataPosition(0);
-    {
-      ExtendableParcelable ep1 = new ExtendableParcelable();
-      ep1.readFromParcel(parcel);
-
-      parcel.setDataPosition(0);
-      ep1.writeToParcel(parcel, 0);
-      parcel.setDataPosition(0);
-
-      ExtendableParcelable ep2 = new ExtendableParcelable();
-
-      ep2.readFromParcel(parcel);
-
-      MyExtLike extLike = ep2.ext.<MyExtLike>getParcelable(MyExtLike.class);
-      mLog.assertTrue(extLike == null,
-          "The extension type must be MyExt, so it has to fail even though MyExtLike has the same structure as MyExt.");
-
-      MyExt actualExt = ep2.ext.getParcelable(MyExt.class);
-
-      MyExt2 newExt2 = new MyExt2();
-      newExt2.a = 79;
-      newExt2.b = new MyExt();
-      newExt2.b.a = 42;
-      newExt2.b.b = "INNEWEXT";
-      newExt2.c = "NEWEXT2";
-      ep2.ext2.setParcelable(newExt2);
-      checkContent(ep1, ext, ext2);
-      checkContent(ep2, ext, newExt2);
-    }
-  }
-
-  private void checkContent(ExtendableParcelable ep, MyExt ext, MyExt2 ext2)
-      throws TestFailException {
-    if (ep.a != 1 || !"a".equals(ep.b) || ep.c != 42L) {
-      mLog.logAndThrow("ExtendableParcelable must be equal to the original object.");
+        uep = new UnstableExtendableParcelable();
+        up = new UnstableParcelable();
     }
 
-    MyExt actualExt = ep.ext.getParcelable(MyExt.class);
-    MyExt2 actualExt2 = ep.ext2.getParcelable(MyExt2.class);
-    if (!dumpMyExt(actualExt).equals(dumpMyExt(ext))) {
-      mLog.logAndThrow("ext.getParcelable() is expected to be " + dumpMyExt(ext) + ", but "
-          + dumpMyExt(actualExt));
+    @Test
+    public void testVintfParcelableHolderCanContainVintfParcelable() {
+        assertThat(vep.ext.setParcelable(vp), is(true));
+        assertThat(vep.ext.getParcelable(VintfParcelable.class), is(vp));
     }
 
-    if (!dumpMyExt2(actualExt2).equals(dumpMyExt2(ext2))) {
-      mLog.logAndThrow("ext2.getParcelable() is expected to be " + dumpMyExt2(ext2) + ", but "
-          + dumpMyExt2(actualExt2));
+    @Test
+    public void testVintfParcelableHolderCannotContainNonVintfParcelable() {
+        assertThat(vep.ext.setParcelable(sp), is(false));
+        assertThat(vep.ext.getParcelable(VintfParcelable.class), is(nullValue()));
     }
-  }
 
-  public void runTests() throws TestFailException {
-    checkExtension();
-    checkStability();
-  }
+    @Test
+    public void testVintfParcelableHolderCannotContainUnstableParcelable() {
+        assertThat(vep.ext.setParcelable(up), is(false));
+        assertThat(vep.ext.getParcelable(UnstableParcelable.class), is(nullValue()));
+    }
+
+    @Test
+    public void testStableParcelableHolderCanContainVintfParcelable() {
+        assertThat(sep.ext.setParcelable(vp), is(true));
+        assertThat(sep.ext.getParcelable(VintfParcelable.class), is(vp));
+    }
+
+    @Test
+    public void testStableParcelableHolderCanContainNonVintfParcelable() {
+        assertThat(sep.ext.setParcelable(sp), is(true));
+        assertThat(sep.ext.getParcelable(NonVintfParcelable.class), is(sp));
+    }
+
+    @Test
+    public void testStableParcelableHolderCanContainUnstableParcelable() {
+        assertThat(sep.ext.setParcelable(up), is(true));
+        assertThat(sep.ext.getParcelable(UnstableParcelable.class), is(up));
+    }
+
+    @Test
+    public void testUnstableParcelableHolderCanContainVintfParcelable() {
+        assertThat(uep.ext.setParcelable(vp), is(true));
+        assertThat(uep.ext.getParcelable(VintfParcelable.class), is(vp));
+    }
+
+    @Test
+    public void testUnstableParcelableHolderCanContainNonVintfParcelable() {
+        assertThat(uep.ext.setParcelable(sp), is(true));
+        assertThat(uep.ext.getParcelable(NonVintfParcelable.class), is(sp));
+    }
+
+    @Test
+    public void testUnstableParcelableHolderCanContainUnstableParcelable() {
+        assertThat(uep.ext.setParcelable(up), is(true));
+        assertThat(uep.ext.getParcelable(UnstableParcelable.class), is(up));
+    }
+
+    @Test
+    public void testReadWriteExtension() {
+        MyExt ext = new MyExt();
+        ext.a = 42;
+        ext.b = "EXT";
+
+        MyExt2 ext2 = new MyExt2();
+        ext2.a = 42;
+        ext2.b = new MyExt();
+        ext2.b.a = 24;
+        ext2.b.b = "INEXT";
+        ext2.c = "EXT2";
+
+        Parcel parcel = Parcel.obtain();
+        {
+            ExtendableParcelable ep = new ExtendableParcelable();
+            ep.a = 1;
+            ep.b = "a";
+            ep.c = 42L;
+
+            ep.ext.setParcelable(ext);
+
+            ep.ext2.setParcelable(ext2);
+            MyExtLike extLike = ep.ext.<MyExtLike>getParcelable(MyExtLike.class);
+            assertThat("The extension type must be MyExt, so it has to fail even though " +
+                    "MyExtLike has the same structure as MyExt.", extLike, is(nullValue()));
+
+            MyExt actualExt = ep.ext.getParcelable(MyExt.class);
+            MyExt2 actualExt2 = ep.ext2.getParcelable(MyExt2.class);
+
+            checkContent(ep, ext, ext2);
+
+            ep.writeToParcel(parcel, 0);
+        }
+
+        parcel.setDataPosition(0);
+        {
+            ExtendableParcelable ep1 = new ExtendableParcelable();
+            ep1.readFromParcel(parcel);
+
+            parcel.setDataPosition(0);
+            ep1.writeToParcel(parcel, 0);
+            parcel.setDataPosition(0);
+
+            ExtendableParcelable ep2 = new ExtendableParcelable();
+
+            ep2.readFromParcel(parcel);
+
+            MyExtLike extLike = ep2.ext.<MyExtLike>getParcelable(MyExtLike.class);
+            assertThat("The extension type must be MyExt, so it has to fail even though " +
+                "MyExtLike has the same structure as MyExt.", extLike, is(nullValue()));
+
+            MyExt actualExt = ep2.ext.getParcelable(MyExt.class);
+
+            MyExt2 newExt2 = new MyExt2();
+            newExt2.a = 79;
+            newExt2.b = new MyExt();
+            newExt2.b.a = 42;
+            newExt2.b.b = "INNEWEXT";
+            newExt2.c = "NEWEXT2";
+            ep2.ext2.setParcelable(newExt2);
+            checkContent(ep1, ext, ext2);
+            checkContent(ep2, ext, newExt2);
+        }
+    }
+
+    private void checkContent(ExtendableParcelable ep, MyExt ext, MyExt2 ext2) {
+        assertThat(ep.a, is(1));
+        assertThat(ep.b, is("a"));
+        assertThat(ep.c, is(42L));
+
+        MyExt actualExt = ep.ext.getParcelable(MyExt.class);
+        assertThat(dumpMyExt(actualExt), is(dumpMyExt(ext)));
+
+        MyExt2 actualExt2 = ep.ext2.getParcelable(MyExt2.class);
+        assertThat(dumpMyExt2(actualExt2), is(dumpMyExt2(ext2)));
+    }
+
+    private static String dumpMyExt(MyExt ext) {
+        if (ext == null) {
+            return null;
+        }
+        return "{a: " + ext.a + ", b: " + ext.b + "}";
+    }
+
+    private static String dumpMyExt2(MyExt2 ext2) {
+        if (ext2 == null) {
+            return null;
+        }
+        return "{a: " + ext2.a + ", b: " + dumpMyExt(ext2.b) + ", " + ext2.c + "}";
+    }
 }
