@@ -258,6 +258,18 @@ filegroup {
     path: "tests",
 }
 
+aidl_interface {
+    name: "aidl-test-versioned-interface",
+    local_include_dir: "tests/versioned",
+    srcs: [
+        "tests/versioned/**/*.aidl",
+    ],
+    versions: [
+        "1",
+        "2",
+    ],
+}
+
 cc_library_static {
     name: "libaidl-integration-test",
     defaults: ["aidl_test_defaults"],
@@ -277,14 +289,24 @@ cc_test {
     name: "aidl_test_service",
     gtest: false,
     defaults: ["aidl_test_defaults"],
-    static_libs: ["libaidl-integration-test", "libcutils"],
+    static_libs: [
+        "libaidl-integration-test",
+        "libcutils",
+        // service uses the old version
+        "aidl-test-versioned-interface-V1-cpp",
+    ],
     srcs: ["tests/aidl_test_service.cpp"],
 }
 
 cc_test {
     name: "aidl_test_client",
     defaults: ["aidl_test_defaults"],
-    static_libs: ["libaidl-integration-test", "libcutils"],
+    static_libs: [
+        "libaidl-integration-test",
+        "libcutils",
+        //  client uses the latest version
+        "aidl-test-versioned-interface-cpp",
+    ],
     srcs: [
         "tests/aidl_test_client.cpp",
         "tests/aidl_test_client_file_descriptors.cpp",
@@ -294,6 +316,7 @@ cc_test {
         "tests/aidl_test_client_utf8_strings.cpp",
         "tests/aidl_test_client_service_exceptions.cpp",
         "tests/aidl_test_client_defaultimpl.cpp",
+        "tests/aidl_test_client_versioned_interface.cpp",
     ],
 }
 
@@ -308,6 +331,8 @@ android_test_helper_app {
         "aidl_test_nonvintf_parcelable-java",
         "aidl_test_unstable_parcelable-java",
         "aidl_test_vintf_parcelable-java",
+        // client uses the newest version
+        "aidl-test-versioned-interface-java",
     ],
     dex_preopt: {
         enabled: false,
@@ -361,6 +386,6 @@ aidl_interface {
         },
         java: {
             platform_apis: true,
-        }
+        },
     },
 }
