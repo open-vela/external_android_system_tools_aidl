@@ -16,93 +16,74 @@
 
 package android.aidl.tests;
 
-import android.aidl.tests.TestFailException;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.core.IsNull.notNullValue;
+
 import android.os.IBinder;
+import android.os.RemoteException;
+import android.os.ServiceManager;
 import java.util.ArrayList;
 import java.util.List;
 
-class NullableTests {
-    private static final String TAG = "TestServiceClient";
-    private ITestService mService;
-    private TestLogger mLog;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runners.JUnit4;
+import org.junit.runner.RunWith;
 
-    public NullableTests(ITestService service, TestLogger logger) {
-        mService = service;
-        mLog = logger;
+@RunWith(JUnit4.class)
+public class NullableTests {
+    private ITestService mService;
+
+    @Before
+    public void setUp() {
+        IBinder binder = ServiceManager.getService(ITestService.class.getName());
+        assertNotNull(binder);
+        mService = ITestService.Stub.asInterface(binder);
+        assertNotNull(mService);
     }
 
-    public void checkNullHandling() throws TestFailException {
-        mLog.log("Checking that sending null strings reports an error...");
+    @Test
+    public void testExpectNpeWithNullString() throws RemoteException {
         try {
             String response = mService.RepeatString(null);
-            mLog.logAndThrow("Expected to fail on null string input!");
         } catch (NullPointerException ex) {
-            mLog.log("Caught an exception on null string parameter (expected)");
-            mLog.log("null strings behave as expected");
             return;
-        } catch (Exception ex) {
-            mLog.logAndThrow("Expected to receive NullPointerException on " +
-                             "null parameter, but got " + ex.toString());
         }
-        mLog.logAndThrow("Expected to receive NullPointerException on " +
-                         "null parameter, but nothing was thrown??");
+        fail("NullPointerException was expected, but wasn't thrown");
     }
 
-    public void checkNullBinderDetection() throws TestFailException {
-        mLog.log("Checking that service handles @nullable IBinder...");
+    @Test
+    public void testExpectNpeWithNullBinder() throws RemoteException {
         try {
             mService.TakesAnIBinder(null);
-            mLog.logAndThrow("Expected to fail on null Binder!");
         } catch (NullPointerException ex) {
-            mLog.log("Caught an exception on null Binder parameter (expected)");
             return;
-        } catch (Exception ex) {
-            mLog.logAndThrow("Expected to receive NullPointerException," +
-                             "but got " + ex.toString());
         }
-        mLog.logAndThrow("Expected to receive NullPointerException on " +
-                         "null parameter, but nothing was thrown??");
+        fail("NullPointerException was expected, but wasn't thrown");
     }
 
-    public void checkNullBinderInListDetection() throws TestFailException {
+    @Test
+    public void testExpectNpeWithNullBinderList() throws RemoteException {
         List<IBinder> listWithNulls = new ArrayList<IBinder>();
         listWithNulls.add(null);
         try {
             mService.TakesAnIBinderList(listWithNulls);
-            mLog.logAndThrow("Expected to fail on list with null Binder!");
         } catch (NullPointerException ex) {
-            mLog.log("Caught an exception on list with null Binder (expected)");
             return;
-        } catch (Exception ex) {
-            mLog.logAndThrow("Expected to receive NullPointerException," +
-                             "but got " + ex.toString());
         }
-        mLog.logAndThrow("Expected to receive NullPointerException on " +
-                         "null parameter, but nothing was thrown??");
+        fail("NullPointerException was expected, but wasn't thrown");
     }
 
-    public void checkNullInterfaceHandling() throws TestFailException {
-        mLog.log("Checking @nullable IInterface handling...");
-        try {
-            INamedCallback callback  = mService.GetCallback(false);
-            if (callback == null) {
-                mLog.logAndThrow("Expected to get non-null INamedCallback.");
-            }
-            callback  = mService.GetCallback(true);
-            if (callback != null) {
-                mLog.logAndThrow("Expected to get null INamedCallback.");
-            }
-        } catch (Exception ex) {
-            mLog.logAndThrow("Unexpected exception during @nullable IInterface test: " +
-                             ex.toString());
-        }
-        mLog.log("@nullable IInterface handling works as expected.");
-    }
+    @Test
+    public void testNullableIInterface() throws RemoteException {
+        INamedCallback callback  = mService.GetCallback(false);
+        assertThat(callback, is(notNullValue()));
 
-    public void runTests() throws TestFailException {
-        checkNullHandling();
-        checkNullBinderDetection();
-        checkNullBinderInListDetection();
-        checkNullInterfaceHandling();
+        callback = mService.GetCallback(true);
+        assertThat(callback, is(nullValue()));
     }
 }
