@@ -39,6 +39,9 @@
 #include "android/aidl/tests/BnNamedCallback.h"
 #include "android/aidl/tests/INamedCallback.h"
 
+#include "android/aidl/versioned/tests/BnFooInterface.h"
+#include "android/aidl/versioned/tests/IFooInterface.h"
+
 // Used implicitly.
 #undef LOG_TAG
 #define LOG_TAG "aidl_native_service"
@@ -502,6 +505,14 @@ class NativeService : public BnTestService {
   map<String16, sp<INamedCallback>> service_map_;
 };
 
+class VersionedService : public android::aidl::versioned::tests::BnFooInterface {
+ public:
+  VersionedService() {}
+  virtual ~VersionedService() = default;
+
+  Status foo() override { return Status::ok(); }
+};
+
 int Run() {
   android::sp<NativeService> service = new NativeService;
   sp<Looper> looper(Looper::prepare(0 /* opts */));
@@ -522,6 +533,9 @@ int Run() {
 
   defaultServiceManager()->addService(service->getInterfaceDescriptor(),
                                       service);
+
+  android::sp<VersionedService> versionedService = new VersionedService;
+  defaultServiceManager()->addService(versionedService->getInterfaceDescriptor(), versionedService);
 
   ALOGI("Entering loop");
   while (true) {
