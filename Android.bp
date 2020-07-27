@@ -195,7 +195,6 @@ python_test_host {
     test_config: "tests/aidl_integration_test.xml",
     target_required: [
         "aidl_test_client",
-        "aidl_test_sentinel_searcher",
         "aidl_test_service",
         "aidl_test_services",
     ],
@@ -239,23 +238,22 @@ cc_library_headers {
     ],
 }
 
-// Could consider simplifying this test by removing this.
-cc_test {
-    name: "aidl_test_sentinel_searcher",
-    defaults: ["aidl_test_defaults"],
-    gtest: false,
-    srcs: ["tests/aidl_test_sentinel_searcher.cpp"],
-    cflags: [
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-    ],
-}
-
 filegroup {
     name: "libaidl-integration-test-files",
     srcs: ["tests/android/aidl/tests/*.aidl"],
     path: "tests",
+}
+
+aidl_interface {
+    name: "aidl-test-versioned-interface",
+    local_include_dir: "tests/versioned",
+    srcs: [
+        "tests/versioned/**/*.aidl",
+    ],
+    versions: [
+        "1",
+        "2",
+    ],
 }
 
 cc_library_static {
@@ -277,14 +275,24 @@ cc_test {
     name: "aidl_test_service",
     gtest: false,
     defaults: ["aidl_test_defaults"],
-    static_libs: ["libaidl-integration-test", "libcutils"],
+    static_libs: [
+        "libaidl-integration-test",
+        "libcutils",
+        // service uses the old version
+        "aidl-test-versioned-interface-V1-cpp",
+    ],
     srcs: ["tests/aidl_test_service.cpp"],
 }
 
 cc_test {
     name: "aidl_test_client",
     defaults: ["aidl_test_defaults"],
-    static_libs: ["libaidl-integration-test", "libcutils"],
+    static_libs: [
+        "libaidl-integration-test",
+        "libcutils",
+        //  client uses the latest version
+        "aidl-test-versioned-interface-cpp",
+    ],
     srcs: [
         "tests/aidl_test_client.cpp",
         "tests/aidl_test_client_file_descriptors.cpp",
@@ -294,6 +302,7 @@ cc_test {
         "tests/aidl_test_client_utf8_strings.cpp",
         "tests/aidl_test_client_service_exceptions.cpp",
         "tests/aidl_test_client_defaultimpl.cpp",
+        "tests/aidl_test_client_versioned_interface.cpp",
     ],
 }
 
@@ -305,9 +314,13 @@ android_test_helper_app {
         enabled: false,
     },
     static_libs: [
+        "androidx.test.core",
+        "androidx.test.runner",
         "aidl_test_nonvintf_parcelable-java",
         "aidl_test_unstable_parcelable-java",
         "aidl_test_vintf_parcelable-java",
+        // client uses the newest version
+        "aidl-test-versioned-interface-java",
     ],
     dex_preopt: {
         enabled: false,
@@ -326,9 +339,9 @@ android_test_helper_app {
         "tests/java_app/src/android/aidl/tests/NullableTests.java",
         "tests/java_app/src/android/aidl/tests/SimpleParcelable.java",
         "tests/java_app/src/android/aidl/tests/TestFailException.java",
-        "tests/java_app/src/android/aidl/tests/TestLogger.java",
         "tests/java_app/src/android/aidl/tests/TestServiceClient.java",
         "tests/java_app/src/android/aidl/tests/generic/Pair.java",
+        "tests/java_app/src/android/aidl/tests/TestVersionedInterface.java",
     ],
     aidl: {
         include_dirs: [
@@ -361,6 +374,6 @@ aidl_interface {
         },
         java: {
             platform_apis: true,
-        }
+        },
     },
 }
