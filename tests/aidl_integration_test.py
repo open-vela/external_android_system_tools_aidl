@@ -7,14 +7,8 @@ import unittest
 BITNESS_32 = ("", "32")
 BITNESS_64 = ("64", "64")
 
-JAVA_OUTPUT_READER_FOR_BITNESS = '/data/nativetest%s/aidl_test_sentinel_searcher/aidl_test_sentinel_searcher%s'
 NATIVE_TEST_CLIENT_FOR_BITNESS = ' /data/nativetest%s/aidl_test_client/aidl_test_client%s'
 NATIVE_TEST_SERVICE_FOR_BITNESS = ' /data/nativetest%s/aidl_test_service/aidl_test_service%s'
-
-JAVA_CLIENT_TIMEOUT_SECONDS = 30
-JAVA_LOG_FILE = '/data/data/android.aidl.tests/files/test-client.log'
-JAVA_SUCCESS_SENTINEL = '>>> Java Client Success <<<'
-JAVA_FAILURE_SENTINEL = '>>> Java Client Failure <<<'
 
 class TestFail(Exception):
     """Raised on test failures."""
@@ -126,23 +120,16 @@ class JavaClient:
         self.native_bitness = native_bitness
     def cleanup(self):
         host.run('setenforce 1')
-        self.host.run('rm -f %s' % JAVA_LOG_FILE, ignore_status=True)
         self.host.run('killall android.aidl.tests', ignore_status=True)
     def run(self):
         host.run('setenforce 0') # Java app needs selinux off
-        JAVA_OUTPUT_READER = JAVA_OUTPUT_READER_FOR_BITNESS % self.native_bitness
-        self.host.run('am start -S -a android.intent.action.MAIN '
-                      '-n android.aidl.tests/.TestServiceClient '
-                      '--es sentinel.success "%s" '
-                      '--es sentinel.failure "%s"' %
-                      (JAVA_SUCCESS_SENTINEL, JAVA_FAILURE_SENTINEL))
-        result = self.host.run('%s %d %s "%s" "%s"' %
-                               (JAVA_OUTPUT_READER, JAVA_CLIENT_TIMEOUT_SECONDS,
-                                JAVA_LOG_FILE, JAVA_SUCCESS_SENTINEL,
-                                JAVA_FAILURE_SENTINEL),
-                               ignore_status=True)
+        result = self.host.run('am instrument -w --no-hidden-api-checks '
+                               'android.aidl.tests/'
+                               'androidx.test.runner.AndroidJUnitRunner')
         print(result.printable_string())
-        if result.exit_status:
+        # The exit code of 'am instrument' is 0 even for test failure. We have
+        # to check for the existence of the well known error message.
+        if "FAILURES!!!" in result.printable_string():
             raise TestFail('Java client did not complete successfully.')
 
 def supported_bitnesses(host):
