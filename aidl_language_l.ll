@@ -25,7 +25,6 @@
 #define YY_USER_ACTION yylloc->columns(yyleng);
 %}
 
-%option yylineno
 %option noyywrap
 %option nounput
 %option noinput
