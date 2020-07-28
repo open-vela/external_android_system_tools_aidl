@@ -14,36 +14,24 @@
  * limitations under the License.
  */
 
-#include "aidl_test_client_service_exceptions.h"
+#ifndef ANDROID_AIDL_TESTS_CLIENT_SERVICE_EXCEPTIONS_H
+#define ANDROID_AIDL_TESTS_CLIENT_SERVICE_EXCEPTIONS_H
 
-#include <iostream>
+#include <utils/StrongPointer.h>
 
-#include "binder/Status.h"
-
-using android::binder::Status;
-using std::cout;
-using std::endl;
+#include "android/aidl/tests/ITestService.h"
 
 namespace android {
 namespace aidl {
 namespace tests {
 namespace client {
 
-bool ConfirmServiceSpecificExceptions(const sp<ITestService>& s) {
-  cout << "Confirming application exceptions work" << endl;
-
-  for (int32_t i = -1; i < 2; ++i) {
-    Status status = s->ThrowServiceException(i);
-    if (status.exceptionCode() != Status::EX_SERVICE_SPECIFIC ||
-        status.serviceSpecificErrorCode() != i) {
-      return false;
-    }
-  }
-
-  return true;
-}
+// Tests for service specific exception support.
+bool ConfirmServiceSpecificExceptions(const sp<ITestService>& s);
 
 }  // namespace client
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android
+
+#endif  // ANDROID_AIDL_TESTS_CLIENT_SERVICE_EXCEPTIONS_H
