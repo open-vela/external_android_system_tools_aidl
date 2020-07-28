@@ -31,6 +31,7 @@
 #include <utils/Errors.h>
 #include <utils/Log.h>
 #include <utils/Looper.h>
+#include <utils/String8.h>
 #include <utils/StrongPointer.h>
 
 #include "android/aidl/tests/BnTestService.h"
@@ -55,6 +56,7 @@ using android::LooperCallback;
 using android::OK;
 using android::sp;
 using android::String16;
+using android::String8;
 
 // libbinder:
 using android::BnInterface;
@@ -531,11 +533,19 @@ int Run() {
     return -1;
   }
 
-  defaultServiceManager()->addService(service->getInterfaceDescriptor(),
-                                      service);
+  auto status = defaultServiceManager()->addService(service->getInterfaceDescriptor(), service);
+  if (status != OK) {
+    ALOGE("Failed to add service %s", String8(service->getInterfaceDescriptor()).c_str());
+    return -1;
+  }
 
   android::sp<VersionedService> versionedService = new VersionedService;
-  defaultServiceManager()->addService(versionedService->getInterfaceDescriptor(), versionedService);
+  status = defaultServiceManager()->addService(versionedService->getInterfaceDescriptor(),
+                                               versionedService);
+  if (status != OK) {
+    ALOGE("Failed to add service %s", String8(versionedService->getInterfaceDescriptor()).c_str());
+    return -1;
+  }
 
   ALOGI("Entering loop");
   while (true) {

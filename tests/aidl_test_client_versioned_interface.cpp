@@ -22,16 +22,16 @@
 using android::OK;
 using android::sp;
 using android::String16;
+using android::aidl::versioned::tests::IFooInterface;
 
 class VersionedInterfaceTest : public testing::Test {
  public:
   void SetUp() override {
-    constexpr char name[] = "android.aidl.versioned.tests.IFooInterface";
-    ASSERT_EQ(OK, android::getService(String16(name), &service));
+    ASSERT_EQ(OK, android::getService(IFooInterface::descriptor, &service));
     ASSERT_NE(nullptr, service);
   }
 
-  sp<android::aidl::versioned::tests::IFooInterface> service;
+  sp<IFooInterface> service;
 };
 
 TEST_F(VersionedInterfaceTest, getInterfaceVersion) {
