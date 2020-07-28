@@ -14,36 +14,24 @@
  * limitations under the License.
  */
 
-#include "aidl_test_client_service_exceptions.h"
+#ifndef ANDROID_AIDL_TESTS_CLIENT_NULLABLES_H
+#define ANDROID_AIDL_TESTS_CLIENT_NULLABLES_H
 
-#include <iostream>
+#include <utils/StrongPointer.h>
 
-#include "binder/Status.h"
+#include "android/aidl/tests/ITestService.h"
 
-using android::binder::Status;
-using std::cout;
-using std::endl;
-
+// Tests for passing and returning file descriptors.
 namespace android {
 namespace aidl {
 namespace tests {
 namespace client {
 
-bool ConfirmServiceSpecificExceptions(const sp<ITestService>& s) {
-  cout << "Confirming application exceptions work" << endl;
-
-  for (int32_t i = -1; i < 2; ++i) {
-    Status status = s->ThrowServiceException(i);
-    if (status.exceptionCode() != Status::EX_SERVICE_SPECIFIC ||
-        status.serviceSpecificErrorCode() != i) {
-      return false;
-    }
-  }
-
-  return true;
-}
+bool ConfirmNullables(const sp<ITestService>& s);
 
 }  // namespace client
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android
+
+#endif  // ANDROID_AIDL_TESTS_CLIENT_NULLABLES_H
