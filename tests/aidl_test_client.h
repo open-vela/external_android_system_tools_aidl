@@ -31,8 +31,7 @@ class AidlTest : public testing::Test {
     using android::OK;
     using android::String16;
 
-    static const char kServiceName[] = "android.aidl.tests.ITestService";
-    ASSERT_EQ(OK, getService(String16(kServiceName), &service));
+    ASSERT_EQ(OK, getService(ITestService::descriptor, &service));
     ASSERT_NE(nullptr, service);
   }
 
