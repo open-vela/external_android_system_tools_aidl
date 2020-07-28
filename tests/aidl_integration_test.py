@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import pipes
+import re
 import subprocess
 import unittest
 
@@ -9,6 +10,9 @@ BITNESS_64 = ("64", "64")
 
 NATIVE_TEST_CLIENT_FOR_BITNESS = ' /data/nativetest%s/aidl_test_client/aidl_test_client%s'
 NATIVE_TEST_SERVICE_FOR_BITNESS = ' /data/nativetest%s/aidl_test_service/aidl_test_service%s'
+
+# From tools/base/ddmlib/src/main/java/com/android/ddmlib/testrunner/InstrumentationResultParser.java
+INSTRUMENTATION_FAILURES_PATTERN = r'There (was|were) \d+ failure'
 
 class TestFail(Exception):
     """Raised on test failures."""
@@ -127,10 +131,8 @@ class JavaClient:
                                'android.aidl.tests/'
                                'androidx.test.runner.AndroidJUnitRunner')
         print(result.printable_string())
-        # The exit code of 'am instrument' is 0 even for test failure. We have
-        # to check for the existence of the well known error message.
-        if "FAILURES!!!" in result.printable_string():
-            raise TestFail('Java client did not complete successfully.')
+        if re.search(INSTRUMENTATION_FAILURES_PATTERN, result.stdout) is not None:
+            raise TestFail(result.stdout)
 
 def supported_bitnesses(host):
     bitnesses = []
