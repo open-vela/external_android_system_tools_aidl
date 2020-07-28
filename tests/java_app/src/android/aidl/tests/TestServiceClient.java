@@ -25,6 +25,7 @@ import android.aidl.tests.SimpleParcelable;
 import android.aidl.tests.StructuredParcelable;
 import android.aidl.tests.TestFailException;
 import android.aidl.tests.TestLogger;
+import android.aidl.versioned.tests.IFooInterface;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -1070,6 +1071,36 @@ public class TestServiceClient extends Activity {
       }
     }
 
+    // TODO(b/162211592) rewrite this using junit
+    private void checkVersionedInterface() throws TestFailException {
+        try {
+            IBinder b = ServiceManager.getService(IFooInterface.class.getName());
+            if (b == null) {
+                mLog.logAndThrow("Failed to obtain binder...");
+            }
+            IFooInterface service = IFooInterface.Stub.asInterface(b);
+            if (service == null) {
+                mLog.logAndThrow("Failed to cast IBinder instance.");
+            }
+            int remoteVersion = service.getInterfaceVersion();
+            final int expectedVersion = 1;
+            if (remoteVersion != expectedVersion) {
+                mLog.logAndThrow("incorrect interface version. expected: " + expectedVersion +
+                        ", got: " + remoteVersion);
+            }
+
+            String remoteHash = service.getInterfaceHash();
+            final String expectedHash = "fcd4f9c806cbc8af3694d569fd1de1ecc8cf7d22";
+            if (!expectedHash.equals(remoteHash)) {
+                mLog.logAndThrow("incorrect interface hash. expected: " + expectedHash +
+                        ", got: " + remoteHash);
+            }
+        } catch (RemoteException ex) {
+            mLog.log(ex.toString());
+            mLog.logAndThrow("failed to check interface version and hash.");
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -1094,6 +1125,7 @@ public class TestServiceClient extends Activity {
           new ExtensionTests(mLog).runTests();
           checkDefaultImpl(service);
           checkToString();
+          checkVersionedInterface();
 
           mLog.log(mSuccessSentinel);
         } catch (TestFailException e) {
