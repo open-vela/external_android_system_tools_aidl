@@ -125,6 +125,7 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
       {AidlAnnotation::Type::BACKING, "Backing", {{"type", "String"}}},
       {AidlAnnotation::Type::JAVA_PASSTHROUGH, "JavaPassthrough", {{"annotation", "String"}}},
       {AidlAnnotation::Type::JAVA_DEBUG, "JavaDebug", {}},
+      {AidlAnnotation::Type::IMMUTABLE, "Immutable", {}},
   };
   return kSchemas;
 }
@@ -267,6 +268,10 @@ bool AidlAnnotatable::IsUtf8InCpp() const {
 
 bool AidlAnnotatable::IsVintfStability() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::VINTF_STABILITY);
+}
+
+bool AidlAnnotatable::IsImmutable() const {
+  return GetAnnotation(annotations_, AidlAnnotation::Type::IMMUTABLE);
 }
 
 const AidlAnnotation* AidlAnnotatable::UnsupportedAppUsage() const {
@@ -775,9 +780,9 @@ bool AidlParameterizable<std::string>::CheckValid() const {
 }
 
 std::set<AidlAnnotation::Type> AidlParcelable::GetSupportedAnnotations() const {
-  return {AidlAnnotation::Type::VINTF_STABILITY, AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
+  return {AidlAnnotation::Type::VINTF_STABILITY,        AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
           AidlAnnotation::Type::JAVA_STABLE_PARCELABLE, AidlAnnotation::Type::HIDE,
-          AidlAnnotation::Type::JAVA_PASSTHROUGH};
+          AidlAnnotation::Type::JAVA_PASSTHROUGH,       AidlAnnotation::Type::IMMUTABLE};
 }
 
 bool AidlParcelable::CheckValid(const AidlTypenames& typenames) const {
@@ -817,9 +822,12 @@ void AidlStructuredParcelable::Dump(CodeWriter* writer) const {
 }
 
 std::set<AidlAnnotation::Type> AidlStructuredParcelable::GetSupportedAnnotations() const {
-  return {AidlAnnotation::Type::VINTF_STABILITY, AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
-          AidlAnnotation::Type::HIDE, AidlAnnotation::Type::JAVA_PASSTHROUGH,
-          AidlAnnotation::Type::JAVA_DEBUG};
+  return {AidlAnnotation::Type::VINTF_STABILITY,
+          AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
+          AidlAnnotation::Type::HIDE,
+          AidlAnnotation::Type::JAVA_PASSTHROUGH,
+          AidlAnnotation::Type::JAVA_DEBUG,
+          AidlAnnotation::Type::IMMUTABLE};
 }
 
 bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const {
@@ -830,7 +838,11 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
 
   for (const auto& v : GetFields()) {
     success = success && v->CheckValid(typenames);
+    if (IsImmutable()) {
+      success = success && typenames.CanBeImmutable(v->GetType());
+    }
   }
+
   return success;
 }
 
