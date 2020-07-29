@@ -290,6 +290,7 @@ cc_test {
     static_libs: [
         "libaidl-integration-test",
         "libcutils",
+        "libgmock",
         //  client uses the latest version
         "aidl-test-versioned-interface-cpp",
     ],
