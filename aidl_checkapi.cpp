@@ -52,6 +52,7 @@ static set<AidlAnnotation> get_strict_annotations(const AidlAnnotatable& node) {
   static const set<AidlAnnotation::Type> kIgnoreAnnotations{
       AidlAnnotation::Type::NULLABLE,
       AidlAnnotation::Type::JAVA_DEBUG,
+      AidlAnnotation::Type::IMMUTABLE,
   };
   set<AidlAnnotation> annotations;
   for (const AidlAnnotation& annotation : node.GetAnnotations()) {
