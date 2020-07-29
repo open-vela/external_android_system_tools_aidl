@@ -111,7 +111,7 @@ class NativeClient:
     def cleanup(self):
         self.host.run('killall %s' % self.binary, ignore_status=True)
     def run(self):
-        result = self.host.run(self.binary, ignore_status=True)
+        result = self.host.run(self.binary + ' --gtest_color=yes', ignore_status=True)
         print(result.printable_string())
         if result.exit_status:
             raise TestFail(result.stdout)
