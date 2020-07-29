@@ -332,11 +332,13 @@ android_test_helper_app {
     srcs: [
         "tests/android/aidl/tests/*.aidl",
         "tests/android/aidl/tests/generic/*.aidl",
+        "tests/android/aidl/tests/immutable/*.aidl",
         "tests/android/aidl/tests/map/*.aidl",
         "tests/android/aidl/tests/extension/*.aidl",
         "tests/java_app/src/android/aidl/tests/ExtensionTests.java",
         "tests/java_app/src/android/aidl/tests/GenericTests.java",
         "tests/java_app/src/android/aidl/tests/MapTests.java",
+        "tests/java_app/src/android/aidl/tests/ImmutableAnnotationTests.java",
         "tests/java_app/src/android/aidl/tests/NullableTests.java",
         "tests/java_app/src/android/aidl/tests/SimpleParcelable.java",
         "tests/java_app/src/android/aidl/tests/TestFailException.java",
