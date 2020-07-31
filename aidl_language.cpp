@@ -69,6 +69,13 @@ bool IsJavaKeyword(const char* str) {
   return std::find(kJavaKeywords.begin(), kJavaKeywords.end(), str) != kJavaKeywords.end();
 }
 
+inline std::string CapitalizeFirstLetter(const std::string& str) {
+  CHECK(str.size() > 0) << "Input cannot be empty.";
+  std::ostringstream out;
+  out << static_cast<char>(toupper(str[0])) << str.substr(1);
+  return out.str();
+}
+
 void AddHideComment(CodeWriter* writer) {
   writer->Write("/* @hide */\n");
 }
@@ -838,14 +845,18 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
   std::set<std::string> fieldnames;
   for (const auto& v : GetFields()) {
     success = success && v->CheckValid(typenames);
+    bool duplicated;
     if (IsImmutable()) {
       success = success && typenames.CanBeImmutable(v->GetType());
+      duplicated = !fieldnames.emplace(CapitalizeFirstLetter(v->GetName())).second;
+    } else {
+      duplicated = !fieldnames.emplace(v->GetName()).second;
     }
-    auto ret = fieldnames.emplace(v->GetName());
 
-    if (!ret.second) {
+    if (duplicated) {
       AIDL_ERROR(this) << "The parcelable '" << this->GetName() << "' has duplicate field name '"
-                       << v->GetName() << "'";
+                       << v->GetName() << "'"
+                       << (IsImmutable() ? " after capitalizing the first letter" : "");
       return false;
     }
   }
