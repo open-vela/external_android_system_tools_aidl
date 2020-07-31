@@ -2323,5 +2323,15 @@ TEST_P(AidlTest, ImmtuableParcelableCannotBeOut) {
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
 }
 
+TEST_P(AidlTest, ImmtuableParcelableFieldNameRestriction) {
+  io_delegate_.SetFileContents("Foo.aidl", "@Immutable parcelable Foo { int a; int A; }");
+  Options options = Options::From("aidl --lang=java Foo.aidl");
+  const string expected_stderr =
+      "ERROR: Foo.aidl:1.22-26: The parcelable 'Foo' has duplicate field name 'A' after "
+      "capitalizing the first letter\n";
+  CaptureStderr();
+  EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
 }  // namespace aidl
 }  // namespace android
