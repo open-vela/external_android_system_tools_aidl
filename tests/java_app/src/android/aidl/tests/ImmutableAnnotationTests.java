@@ -38,7 +38,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ImmutableAnnotationTests {
   @Test
-  public void testReadWriteImmutableParcelable() throws RemoteException {
+  public void testReadWriteImmutableParcelable() {
     Parcel parcel = Parcel.obtain();
     List<Bar> list = new ArrayList<Bar>();
     list.add(new Bar("aa"));
@@ -68,7 +68,7 @@ public class ImmutableAnnotationTests {
   }
 
   @Test
-  public void testEveryFieldIsFinal() throws RemoteException {
+  public void testEveryFieldIsFinal() {
     for (Field f : Foo.class.getDeclaredFields()) {
       if (!Modifier.isFinal(f.getModifiers())) {
         fail(f.getName() + " should be final.");
@@ -77,7 +77,7 @@ public class ImmutableAnnotationTests {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void testListIsUnmodifiable() throws RemoteException {
+  public void testListIsUnmodifiable() {
     Foo foo =
         new Foo(7, new Bar("my"), new ArrayList<Bar>(), new HashMap<String, Bar>(), new Bar[5]);
     foo.c.add(new Bar("hi"));
@@ -86,7 +86,7 @@ public class ImmutableAnnotationTests {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void testMapIsUnmodifiable() throws RemoteException {
+  public void testMapIsUnmodifiable() {
     Foo foo =
         new Foo(7, new Bar("my"), new ArrayList<Bar>(), new HashMap<String, Bar>(), new Bar[5]);
     foo.d.put("key", new Bar("value"));
