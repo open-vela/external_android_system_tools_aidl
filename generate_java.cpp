@@ -215,9 +215,11 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
 
       out << "this." << field->GetName() << " = ";
       if (field->GetType().GetName() == "List") {
-        out << "java.util.Collections.unmodifiableList(" << field->GetName() << ");\n";
+        out << field->GetName() << " == null ? null : java.util.Collections.unmodifiableList("
+            << field->GetName() << ");\n";
       } else if (field->GetType().GetName() == "Map") {
-        out << "java.util.Collections.unmodifiableMap(" << field->GetName() << ");\n";
+        out << field->GetName() << " == null ? null : java.util.Collections.unmodifiableMap("
+            << field->GetName() << ");\n";
       } else {
         out << field->GetName() << ";\n";
       }
