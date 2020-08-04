@@ -2123,6 +2123,7 @@ TEST_F(AidlTest, ParseJavaPassthroughAnnotation) {
     interface IFoo {
         @JavaPassthrough(annotation="@com.android.Bob")
         void foo(@JavaPassthrough(annotation="@com.android.Cat") int x);
+        const @JavaPassthrough(annotation="@com.android.David") int A = 3;
     })");
 
   Options java_options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
@@ -2133,6 +2134,7 @@ TEST_F(AidlTest, ParseJavaPassthroughAnnotation) {
   EXPECT_THAT(java_out, testing::HasSubstr("@com.android.Alice(arg=com.android.Alice.Value.A)"));
   EXPECT_THAT(java_out, testing::HasSubstr("@com.android.Bob"));
   EXPECT_THAT(java_out, testing::HasSubstr("@com.android.Cat"));
+  EXPECT_THAT(java_out, testing::HasSubstr("@com.android.David"));
 
   // Other backends shouldn't be bothered
   Options cpp_options = Options::From("aidl --lang=cpp -o out -h out a/IFoo.aidl");
