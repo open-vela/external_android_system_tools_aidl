@@ -1096,6 +1096,10 @@ std::unique_ptr<Class> generate_binder_interface_class(const AidlInterface* ifac
       auto code = StringPrintf("%s\n", comment.c_str());
       interface->elements.push_back(std::make_shared<LiteralClassElement>(code));
     }
+    for (const std::string& annotation : generate_java_annotations(constant->GetType())) {
+      auto code = StringPrintf("%s\n", annotation.c_str());
+      interface->elements.push_back(std::make_shared<LiteralClassElement>(code));
+    }
     switch (value.GetType()) {
       case AidlConstantValue::Type::STRING: {
         generate_string_constant(interface.get(), constant->GetName(),
