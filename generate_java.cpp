@@ -177,10 +177,9 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
     parcel_class->elements.push_back(builder_class);
   }
   if (parcel->IsVintfStability()) {
-    out.str("");
-    out << "public final int getStability() { return "
-           "android.os.Parcelable.PARCELABLE_STABILITY_VINTF; }\n";
-    parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(out.str()));
+    parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(
+        "@Override\n public final int getStability() { return "
+        "android.os.Parcelable.PARCELABLE_STABILITY_VINTF; }\n"));
   }
 
   out.str("");
