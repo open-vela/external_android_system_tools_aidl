@@ -132,7 +132,7 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
       {AidlAnnotation::Type::BACKING, "Backing", {{"type", "String"}}},
       {AidlAnnotation::Type::JAVA_PASSTHROUGH, "JavaPassthrough", {{"annotation", "String"}}},
       {AidlAnnotation::Type::JAVA_DEBUG, "JavaDebug", {}},
-      {AidlAnnotation::Type::IMMUTABLE, "Immutable", {}},
+      {AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE, "JavaOnlyImmutable", {}},
   };
   return kSchemas;
 }
@@ -277,8 +277,8 @@ bool AidlAnnotatable::IsVintfStability() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::VINTF_STABILITY);
 }
 
-bool AidlAnnotatable::IsImmutable() const {
-  return GetAnnotation(annotations_, AidlAnnotation::Type::IMMUTABLE);
+bool AidlAnnotatable::IsJavaOnlyImmutable() const {
+  return GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE);
 }
 
 const AidlAnnotation* AidlAnnotatable::UnsupportedAppUsage() const {
@@ -789,7 +789,7 @@ bool AidlParameterizable<std::string>::CheckValid() const {
 std::set<AidlAnnotation::Type> AidlParcelable::GetSupportedAnnotations() const {
   return {AidlAnnotation::Type::VINTF_STABILITY,        AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
           AidlAnnotation::Type::JAVA_STABLE_PARCELABLE, AidlAnnotation::Type::HIDE,
-          AidlAnnotation::Type::JAVA_PASSTHROUGH,       AidlAnnotation::Type::IMMUTABLE};
+          AidlAnnotation::Type::JAVA_PASSTHROUGH,       AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE};
 }
 
 bool AidlParcelable::CheckValid(const AidlTypenames& typenames) const {
@@ -834,7 +834,7 @@ std::set<AidlAnnotation::Type> AidlStructuredParcelable::GetSupportedAnnotations
           AidlAnnotation::Type::HIDE,
           AidlAnnotation::Type::JAVA_PASSTHROUGH,
           AidlAnnotation::Type::JAVA_DEBUG,
-          AidlAnnotation::Type::IMMUTABLE};
+          AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE};
 }
 
 bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const {
@@ -846,8 +846,8 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
   for (const auto& v : GetFields()) {
     success = success && v->CheckValid(typenames);
     bool duplicated;
-    if (IsImmutable()) {
-      success = success && typenames.CanBeImmutable(v->GetType());
+    if (IsJavaOnlyImmutable()) {
+      success = success && typenames.CanBeJavaOnlyImmutable(v->GetType());
       duplicated = !fieldnames.emplace(CapitalizeFirstLetter(v->GetName())).second;
     } else {
       duplicated = !fieldnames.emplace(v->GetName()).second;
@@ -856,7 +856,7 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
     if (duplicated) {
       AIDL_ERROR(this) << "The parcelable '" << this->GetName() << "' has duplicate field name '"
                        << v->GetName() << "'"
-                       << (IsImmutable() ? " after capitalizing the first letter" : "");
+                       << (IsJavaOnlyImmutable() ? " after capitalizing the first letter" : "");
       return false;
     }
   }
