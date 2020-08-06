@@ -18,7 +18,7 @@ package android.aidl.tests.immutable;
 
 import android.aidl.tests.immutable.Bar;
 
-@Immutable
+@JavaOnlyImmutable
 parcelable Foo {
     int a = 10;
     Bar b;
