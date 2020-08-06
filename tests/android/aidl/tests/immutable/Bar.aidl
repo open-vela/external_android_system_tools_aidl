@@ -18,5 +18,5 @@ package android.aidl.tests.immutable;
 
 @Immutable
 parcelable Bar {
-    String s;
+    String s = "bar";
 }
