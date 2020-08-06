@@ -1230,8 +1230,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 
 	// Reserve this module name for future use
 	mctx.CreateModule(phony.PhonyFactory, &phonyProperties{
-		Name:     proptools.StringPtr(i.ModuleBase.Name()),
-		Required: libs,
+		Name: proptools.StringPtr(i.ModuleBase.Name()),
 	})
 
 	i.internalModuleNames = libs
