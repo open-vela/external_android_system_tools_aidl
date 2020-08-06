@@ -16,7 +16,7 @@
 
 package android.aidl.tests.immutable;
 
-@JavaOnlyImmutable
+@Immutable
 parcelable Bar {
-    String s = "bar";
+    String s;
 }
