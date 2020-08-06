@@ -36,9 +36,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class ImmutableAnnotationTests {
+public class JavaOnlyImmutableAnnotationTests {
   @Test
-  public void testReadWriteImmutableParcelable() {
+  public void testReadWriteJavaOnlyImmutableParcelable() {
     Parcel parcel = Parcel.obtain();
     List<Bar> list = new ArrayList<Bar>();
     list.add(new Bar("aa"));
