@@ -335,7 +335,7 @@ TEST_P(AidlTest, RejectUnsupportedParcelableAnnotations) {
   const string expected_stderr =
       "ERROR: a/Foo.aidl:1.32-37: 'nullable' is not a supported annotation for this node. "
       "It must be one of: Hide, JavaOnlyStableParcelable, UnsupportedAppUsage, VintfStability, "
-      "JavaPassthrough, Immutable\n";
+      "JavaPassthrough, JavaOnlyImmutable\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, GetLanguage(), &error));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
@@ -348,7 +348,7 @@ TEST_P(AidlTest, RejectUnsupportedParcelableDefineAnnotations) {
   const string expected_stderr =
       "ERROR: a/Foo.aidl:1.32-36: 'nullable' is not a supported annotation for this node. "
       "It must be one of: Hide, UnsupportedAppUsage, VintfStability, JavaPassthrough, JavaDebug, "
-      "Immutable\n";
+      "JavaOnlyImmutable\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, GetLanguage(), &error));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
@@ -2292,42 +2292,43 @@ TEST_P(AidlTest, UnsupportedBackingAnnotationParam) {
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
-TEST_P(AidlTest, SupportImmutableAnnotation) {
-  io_delegate_.SetFileContents(
-      "Foo.aidl",
-      "@Immutable parcelable Foo { int a; Bar b; List<Bar> c; Map<String, Baz> d; Bar[] e; }");
-  io_delegate_.SetFileContents("Bar.aidl", "@Immutable parcelable Bar { String a; }");
-  io_delegate_.SetFileContents("Baz.aidl", "@Immutable @JavaOnlyStableParcelable parcelable Baz;");
+TEST_P(AidlTest, SupportJavaOnlyImmutableAnnotation) {
+  io_delegate_.SetFileContents("Foo.aidl",
+                               "@JavaOnlyImmutable parcelable Foo { int a; Bar b; List<Bar> c; "
+                               "Map<String, Baz> d; Bar[] e; }");
+  io_delegate_.SetFileContents("Bar.aidl", "@JavaOnlyImmutable parcelable Bar { String a; }");
+  io_delegate_.SetFileContents("Baz.aidl",
+                               "@JavaOnlyImmutable @JavaOnlyStableParcelable parcelable Baz;");
   Options options = Options::From("aidl --lang=java -I . Foo.aidl");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
 }
 
-TEST_P(AidlTest, RejectMutableParcelableFromImmutableParcelable) {
-  io_delegate_.SetFileContents("Foo.aidl", "@Immutable parcelable Foo { Bar bar; }");
+TEST_P(AidlTest, RejectMutableParcelableFromJavaOnlyImmutableParcelable) {
+  io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable parcelable Foo { Bar bar; }");
   io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar { String a; }");
   Options options = Options::From("aidl --lang=java Foo.aidl -I .");
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
 }
 
 TEST_P(AidlTest, ImmtuableParcelableCannotBeInOut) {
-  io_delegate_.SetFileContents("Foo.aidl", "@Immutable parcelable Foo { int a; }");
+  io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable parcelable Foo { int a; }");
   io_delegate_.SetFileContents("IBar.aidl", "interface IBar { void my(inout Foo); }");
   Options options = Options::From("aidl --lang=java IBar.aidl -I .");
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
 }
 
 TEST_P(AidlTest, ImmtuableParcelableCannotBeOut) {
-  io_delegate_.SetFileContents("Foo.aidl", "@Immutable parcelable Foo { int a; }");
+  io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable parcelable Foo { int a; }");
   io_delegate_.SetFileContents("IBar.aidl", "interface IBar { void my(out Foo); }");
   Options options = Options::From("aidl --lang=java IBar.aidl -I .");
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
 }
 
 TEST_P(AidlTest, ImmtuableParcelableFieldNameRestriction) {
-  io_delegate_.SetFileContents("Foo.aidl", "@Immutable parcelable Foo { int a; int A; }");
+  io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable parcelable Foo { int a; int A; }");
   Options options = Options::From("aidl --lang=java Foo.aidl");
   const string expected_stderr =
-      "ERROR: Foo.aidl:1.22-26: The parcelable 'Foo' has duplicate field name 'A' after "
+      "ERROR: Foo.aidl:1.30-34: The parcelable 'Foo' has duplicate field name 'A' after "
       "capitalizing the first letter\n";
   CaptureStderr();
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
