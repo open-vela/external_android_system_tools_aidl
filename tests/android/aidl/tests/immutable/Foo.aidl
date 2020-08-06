@@ -20,7 +20,7 @@ import android.aidl.tests.immutable.Bar;
 
 @Immutable
 parcelable Foo {
-    int a;
+    int a = 10;
     Bar b;
     List<Bar> c;
     Map<String, Bar> d;
