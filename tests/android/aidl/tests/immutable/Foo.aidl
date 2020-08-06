@@ -18,9 +18,9 @@ package android.aidl.tests.immutable;
 
 import android.aidl.tests.immutable.Bar;
 
-@JavaOnlyImmutable
+@Immutable
 parcelable Foo {
-    int a = 10;
+    int a;
     Bar b;
     List<Bar> c;
     Map<String, Bar> d;
