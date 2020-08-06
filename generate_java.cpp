@@ -122,11 +122,11 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
     }
     out << "public ";
 
-    if (variable->GetType().GetName() == "ParcelableHolder" || parcel->IsImmutable()) {
+    if (variable->GetType().GetName() == "ParcelableHolder" || parcel->IsJavaOnlyImmutable()) {
       out << "final ";
     }
     out << JavaSignatureOf(variable->GetType(), typenames) << " " << variable->GetName();
-    if (!parcel->IsImmutable() && variable->GetDefaultValue()) {
+    if (!parcel->IsJavaOnlyImmutable() && variable->GetDefaultValue()) {
       out << " = " << variable->ValueString(ConstantValueDecorator);
     } else if (variable->GetType().GetName() == "ParcelableHolder") {
       out << std::boolalpha;
@@ -144,7 +144,7 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
   }
 
   std::ostringstream out;
-  if (parcel->IsImmutable()) {
+  if (parcel->IsJavaOnlyImmutable()) {
     auto builder_class = std::make_shared<Class>();
     builder_class->modifiers = PUBLIC | FINAL | STATIC;
     builder_class->what = Class::CLASS;
@@ -189,7 +189,7 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
   out << "  @Override\n";
   out << "  public " << parcel->GetName()
       << " createFromParcel(android.os.Parcel _aidl_source) {\n";
-  if (parcel->IsImmutable()) {
+  if (parcel->IsJavaOnlyImmutable()) {
     out << "    return internalCreateFromParcel(_aidl_source);\n";
   } else {
     out << "    " << parcel->GetName() << " _aidl_out = new " << parcel->GetName() << "();\n";
@@ -246,7 +246,7 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
 
   parcel_class->elements.push_back(write_method);
 
-  if (parcel->IsImmutable()) {
+  if (parcel->IsJavaOnlyImmutable()) {
     auto constructor = std::make_shared<Method>();
     constructor->modifiers = PUBLIC;
     constructor->name = parcel->GetName();
@@ -274,7 +274,7 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
   // For an immutable parcelable, generate internalCreateFromParcel method.
   // Otherwise, generate readFromParcel method.
   auto read_or_create_method = std::make_shared<Method>();
-  if (parcel->IsImmutable()) {
+  if (parcel->IsJavaOnlyImmutable()) {
     auto constructor = std::make_shared<Method>();
     read_or_create_method->modifiers = PRIVATE | STATIC;
     read_or_create_method->returnType = parcel->GetName();
@@ -290,14 +290,14 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
   }
   out.str("");
   const string builder_variable = "_aidl_parcelable_builder";
-  if (parcel->IsImmutable()) {
+  if (parcel->IsJavaOnlyImmutable()) {
     out << "Builder " << builder_variable << " = new Builder();\n";
   }
   out << "int _aidl_start_pos = _aidl_parcel.dataPosition();\n"
       << "int _aidl_parcelable_size = _aidl_parcel.readInt();\n"
       << "try {\n"
       << "  if (_aidl_parcelable_size < 0) return";
-  if (parcel->IsImmutable()) {
+  if (parcel->IsJavaOnlyImmutable()) {
     out << " " << builder_variable << ".build()";
   }
   out << ";\n";
@@ -306,7 +306,7 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
 
   out.str("");
   out << "  if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return";
-  if (parcel->IsImmutable()) {
+  if (parcel->IsJavaOnlyImmutable()) {
     out << " " << builder_variable << ".build()";
   }
   out << ";\n";
@@ -317,7 +317,7 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
   bool is_classloader_created = false;
   for (const auto& field : parcel->GetFields()) {
     const auto field_variable_name =
-        (parcel->IsImmutable() ? "_aidl_temp_" : "") + field->GetName();
+        (parcel->IsJavaOnlyImmutable() ? "_aidl_temp_" : "") + field->GetName();
     string code;
     CodeWriterPtr writer = CodeWriter::ForString(&code);
     CodeGeneratorContext context{
@@ -329,12 +329,12 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
         .is_classloader_created = &is_classloader_created,
     };
     context.writer.Indent();
-    if (parcel->IsImmutable()) {
+    if (parcel->IsJavaOnlyImmutable()) {
       context.writer.Write("%s %s;\n", JavaSignatureOf(field->GetType(), typenames).c_str(),
                            field_variable_name.c_str());
     }
     CreateFromParcelFor(context);
-    if (parcel->IsImmutable()) {
+    if (parcel->IsJavaOnlyImmutable()) {
       context.writer.Write("%s.%s(%s);\n", builder_variable.c_str(),
                            get_setter_name(field->GetName()).c_str(), field_variable_name.c_str());
     }
@@ -347,7 +347,7 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
   out.str("");
   out << "} finally {\n"
       << "  _aidl_parcel.setDataPosition(_aidl_start_pos + _aidl_parcelable_size);\n";
-  if (parcel->IsImmutable()) {
+  if (parcel->IsJavaOnlyImmutable()) {
     out << "  return " << builder_variable << ".build();\n";
   }
   out << "}\n";
