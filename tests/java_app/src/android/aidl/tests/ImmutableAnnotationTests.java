@@ -93,4 +93,38 @@ public class ImmutableAnnotationTests {
     // It is supposed to fail.
     fail("A Map in an immutable parcelable isn't modifiable.");
   }
+
+  @Test
+  public void testBuilderRespectDefaultValue() {
+    assertThat(new Foo.Builder().build().a, is(10));
+    assertThat(new Bar.Builder().build().s, is("bar"));
+  }
+
+  @Test
+  public void testBuilder() {
+    Bar b = new Bar("my");
+    List<Bar> list = new ArrayList<Bar>();
+    list.add(new Bar("aa"));
+    Map<String, Bar> map = new HashMap<String, Bar>();
+    map.put("key", new Bar("value"));
+    Bar[] array = new Bar[3];
+    array[0] = new Bar("zero");
+    array[1] = new Bar("one");
+    array[2] = new Bar("two");
+
+    Foo foo = new Foo(7, b, list, map, array);
+    Foo foo2 = new Foo.Builder().setA(7).setB(b).setC(list).setD(map).setE(array).build();
+
+    assertThat(foo.a, is(foo2.a));
+    assertThat(foo.b.s, is(foo2.b.s));
+    assertThat(foo.c.size(), is(foo.c.size()));
+    assertThat(foo.c.get(0).s, is(foo2.c.get(0).s));
+    assertThat(foo.c.size(), is(foo.c.size()));
+    assertThat(foo.d.get("key").s, is(foo2.d.get("key").s));
+    assertThat(foo.e.length, is(foo.e.length));
+
+    for (int i = 0; i < foo.e.length; i++) {
+      assertThat(foo.e[i].s, is(foo2.e[i].s));
+    }
+  }
 }
