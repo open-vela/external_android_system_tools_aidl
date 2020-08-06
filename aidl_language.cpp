@@ -835,11 +835,18 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
   if (!AidlParcelable::CheckValid(typenames)) {
     return false;
   }
-
+  std::set<std::string> fieldnames;
   for (const auto& v : GetFields()) {
     success = success && v->CheckValid(typenames);
     if (IsImmutable()) {
       success = success && typenames.CanBeImmutable(v->GetType());
+    }
+    auto ret = fieldnames.emplace(v->GetName());
+
+    if (!ret.second) {
+      AIDL_ERROR(this) << "The parcelable '" << this->GetName() << "' has duplicate field name '"
+                       << v->GetName() << "'";
+      return false;
     }
   }
 
