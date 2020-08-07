@@ -348,7 +348,7 @@ TEST_P(AidlTest, RejectUnsupportedParcelableDefineAnnotations) {
   const string expected_stderr =
       "ERROR: a/Foo.aidl:1.32-36: 'nullable' is not a supported annotation for this node. "
       "It must be one of: Hide, UnsupportedAppUsage, VintfStability, JavaPassthrough, JavaDebug, "
-      "JavaOnlyImmutable\n";
+      "JavaOnlyImmutable, FixedSize\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, GetLanguage(), &error));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
@@ -1992,6 +1992,78 @@ TEST_F(AidlTestIncompatibleChanges, ChangedConstValue) {
   io_delegate_.SetFileContents("new/p/I.aidl", "package p; interface I { const int A = 2; }");
   CaptureStderr();
   EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_F(AidlTestIncompatibleChanges, FixedSizeAddedField) {
+  const string expected_stderr =
+      "ERROR: new/p/Foo.aidl:1.33-37: Number of fields in p.Foo is changed from 1 to 2. "
+      "This is an incompatible change for FixedSize types.\n";
+  io_delegate_.SetFileContents("old/p/Foo.aidl",
+                               "package p; @FixedSize parcelable Foo { int A = 1; }");
+  io_delegate_.SetFileContents("new/p/Foo.aidl",
+                               "package p; @FixedSize parcelable Foo { int A = 1; int B = 2; }");
+  CaptureStderr();
+  EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_F(AidlTestIncompatibleChanges, FixedSizeRemovedField) {
+  const string expected_stderr =
+      "ERROR: new/p/Foo.aidl:1.33-37: Number of fields in p.Foo is reduced from 2 to 1.\n";
+  io_delegate_.SetFileContents("old/p/Foo.aidl",
+                               "package p; @FixedSize parcelable Foo { int A = 1; int B = 1; }");
+  io_delegate_.SetFileContents("new/p/Foo.aidl",
+                               "package p; @FixedSize parcelable Foo { int A = 1; }");
+  CaptureStderr();
+  EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_P(AidlTest, RejectNonFixedSizeFromFixedSize) {
+  const string expected_stderr =
+      "ERROR: Foo.aidl:1.36-38: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
+      "a.\n"
+      "ERROR: Foo.aidl:1.44-46: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
+      "b.\n"
+      "ERROR: Foo.aidl:1.55-57: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
+      "c.\n"
+      "ERROR: Foo.aidl:1.80-82: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
+      "d.\n"
+      "ERROR: Foo.aidl:1.92-94: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
+      "e.\n"
+      "ERROR: Foo.aidl:1.109-111: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
+      "f.\n";
+
+  io_delegate_.SetFileContents("Foo.aidl",
+                               "@FixedSize parcelable Foo { "
+                               "  int[] a;"
+                               "  Bar b;"
+                               "  String c;"
+                               "  ParcelFileDescriptor d;"
+                               "  IBinder e;"
+                               "  List<String> f;"
+                               "}");
+  io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar { int a; }");
+  Options options =
+      Options::From("aidl Foo.aidl -I . --lang=" + Options::LanguageToString(GetLanguage()));
+
+  CaptureStderr();
+  EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_P(AidlTest, AcceptFixedSizeFromFixedSize) {
+  const string expected_stderr = "";
+
+  io_delegate_.SetFileContents("Foo.aidl", "@FixedSize parcelable Foo { int a; Bar b; }");
+  io_delegate_.SetFileContents("Bar.aidl", "@FixedSize parcelable Bar { Val c; }");
+  io_delegate_.SetFileContents("Val.aidl", "enum Val { A, B, }");
+  Options options =
+      Options::From("aidl Foo.aidl -I . --lang=" + Options::LanguageToString(GetLanguage()));
+
+  CaptureStderr();
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
