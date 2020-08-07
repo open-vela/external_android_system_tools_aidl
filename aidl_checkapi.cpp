@@ -89,7 +89,6 @@ static bool are_compatible_types(const AidlTypeSpecifier& older, const AidlTypeS
 
 static bool are_compatible_interfaces(const AidlInterface& older, const AidlInterface& newer) {
   bool compatible = true;
-  compatible &= have_compatible_annotations(older, newer);
 
   map<string, AidlMethod*> new_methods;
   for (const auto& m : newer.AsInterface()->GetMethods()) {
@@ -342,6 +341,9 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
     }
     const auto new_type = found->second;
 
+    if (!have_compatible_annotations(*old_type, *new_type)) {
+      compatible = false;
+    }
     if (old_type->AsInterface() != nullptr) {
       if (new_type->AsInterface() == nullptr) {
         AIDL_ERROR(new_type) << "Type mismatch: " << old_type->GetCanonicalName()
