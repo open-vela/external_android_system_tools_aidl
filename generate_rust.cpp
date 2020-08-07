@@ -502,23 +502,20 @@ void GenerateParcelSerialize(CodeWriter& out, const AidlStructuredParcelable* pa
   out << "} else {\n";
   out << "  return parcel.write(&0i32);\n";
   out << "};\n";
-  out << "let start_pos = parcel.get_data_position();\n";
-  out << "parcel.write(&0i32)?;\n";
+  out << "parcel.sized_write(|subparcel| {\n";
+  out.Indent();
   for (const auto& variable : parcel->GetFields()) {
     if (!TypeHasDefault(variable->GetType(), typenames)) {
       out << "let __field_ref = this." << variable->GetName()
           << ".as_ref().ok_or(binder::StatusCode::UNEXPECTED_NULL)?;\n";
-      out << "parcel.write(__field_ref)?;\n";
+      out << "subparcel.write(__field_ref)?;\n";
     } else {
-      out << "parcel.write(&this." << variable->GetName() << ")?;\n";
+      out << "subparcel.write(&this." << variable->GetName() << ")?;\n";
     }
   }
-  out << "let end_pos = parcel.get_data_position();\n";
-  out << "let parcelable_size = (end_pos - start_pos) as i32;\n";
-  out << "unsafe { parcel.set_data_position(start_pos)?; }\n";
-  out << "parcel.write(&parcelable_size)?;\n";
-  out << "unsafe { parcel.set_data_position(end_pos)?; }\n";
   out << "Ok(())\n";
+  out.Dedent();
+  out << "})\n";
   out.Dedent();
   out << "}\n";
   out.Dedent();
