@@ -43,7 +43,8 @@ const (
 	langNdk                   = "ndk"
 	langNdkPlatform           = "ndk_platform"
 
-	currentVersion = "current"
+	currentVersion  = "current"
+	unstableVersion = "unstable"
 )
 
 var (
@@ -1074,13 +1075,14 @@ func (i *aidlInterface) hasVersion() bool {
 // "2"->foo-V2
 // "3"(unfrozen)->foo-unstable
 // ""-> foo
+// "unstable" -> "unstable"
 func (i *aidlInterface) versionedName(ctx android.LoadHookContext, version string) string {
 	name := i.ModuleBase.Name()
 	if version == "" {
 		return name
 	}
-	if version == i.currentVersion(ctx) {
-		return name + "-unstable"
+	if version == i.currentVersion(ctx) || version == unstableVersion {
+		return name + "-" + unstableVersion
 	}
 	return name + "-V" + version
 }
@@ -1094,8 +1096,14 @@ func (i *aidlInterface) versionedName(ctx android.LoadHookContext, version strin
 // bar -> bar-V1
 func (i *aidlInterface) cppOutputName(version string) string {
 	name := i.ModuleBase.Name()
-	// Even if the module doesn't have version, it returns with version(-V1)
+	if i.hasVersion() && version == unstableVersion {
+		panic("A versioned module's output name in C++ must not contain 'unstable'")
+	}
+	// Even if the module doesn't have version, it returns with version(-V1) only if 'version' is empty
 	if !i.hasVersion() {
+		if version == unstableVersion {
+			return name + "-" + unstableVersion
+		}
 		// latestVersion() always returns "0"
 		i, err := strconv.Atoi(i.latestVersion())
 		if err != nil {
@@ -1162,6 +1170,9 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 	}
 	if i.shouldGenerateCppBackend() {
 		unstableLib := addCppLibrary(mctx, i, currentVersion, langCpp)
+		if !i.hasVersion() {
+			libs = append(libs, addCppLibrary(mctx, i, unstableVersion, langCpp))
+		}
 		if needToCheckUnstableVersion {
 			addUnstableModule(mctx, unstableLib)
 		}
@@ -1174,6 +1185,9 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 	if i.shouldGenerateNdkBackend() {
 		if !proptools.Bool(i.properties.Vendor_available) {
 			unstableLib := addCppLibrary(mctx, i, currentVersion, langNdk)
+			if !i.hasVersion() {
+				libs = append(libs, addCppLibrary(mctx, i, unstableVersion, langNdk))
+			}
 			if needToCheckUnstableVersion {
 				addUnstableModule(mctx, unstableLib)
 			}
@@ -1184,6 +1198,9 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 		}
 		// TODO(b/121157555): combine with '-ndk' variant
 		unstableLib := addCppLibrary(mctx, i, currentVersion, langNdkPlatform)
+		if !i.hasVersion() {
+			libs = append(libs, addCppLibrary(mctx, i, unstableVersion, langNdkPlatform))
+		}
 		if needToCheckUnstableVersion {
 			addUnstableModule(mctx, unstableLib)
 		}
@@ -1198,6 +1215,9 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 	}
 	if i.shouldGenerateJavaBackend() {
 		unstableLib := addJavaLibrary(mctx, i, currentVersion)
+		if !i.hasVersion() {
+			libs = append(libs, addJavaLibrary(mctx, i, unstableVersion))
+		}
 		if needToCheckUnstableVersion {
 			addUnstableModule(mctx, unstableLib)
 		}
