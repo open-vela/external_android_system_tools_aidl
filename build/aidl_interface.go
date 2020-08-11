@@ -1262,13 +1262,36 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 	i.internalModuleNames = libs
 }
 
-func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version string, lang string) string {
-	cppSourceGen := i.versionedName(mctx, version) + "-" + lang + "-source"
-	cppModuleGen := i.versionedName(mctx, version) + "-" + lang
-	cppOutputGen := i.cppOutputName(version) + "-" + lang
-	if i.hasVersion() && version == "" {
-		version = i.latestVersion()
+// This function returns actual version which is used by AIDL compiler from version for a module name.
+// A 'version' has to be either empty(for a non-versioned module) or a version number(for a versioned module).
+// A 'versionForModuleName' has to be either
+//  - empty: the latest version(unstable)
+//  - "unstable": the same as above, only for non-versioned module.
+//  - a version number
+func (i *aidlInterface) normalizeVersion(versionForModuleName string) string {
+	if i.hasVersion() && versionForModuleName == "" {
+		return i.latestVersion()
 	}
+	if versionForModuleName == unstableVersion {
+		if i.hasVersion() {
+			panic("An interface with versions must not have a module of which name is 'unstable'.")
+		}
+		return ""
+	}
+	return versionForModuleName
+}
+
+func (i *aidlInterface) getImportPostfix(mctx android.LoadHookContext, version string, lang string) string {
+	if version == i.currentVersion(mctx) {
+		return "-" + unstableVersion + "-" + lang
+	}
+	return "-" + lang
+}
+func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForModuleName string, lang string) string {
+	cppSourceGen := i.versionedName(mctx, versionForModuleName) + "-" + lang + "-source"
+	cppModuleGen := i.versionedName(mctx, versionForModuleName) + "-" + lang
+	cppOutputGen := i.cppOutputName(versionForModuleName) + "-" + lang
+	version := i.normalizeVersion(versionForModuleName)
 	srcs, aidlRoot := i.srcsForVersion(mctx, version)
 	if len(srcs) == 0 {
 		// This can happen when the version is about to be frozen; the version
@@ -1317,8 +1340,9 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		GenTrace:  genTrace,
 		Unstable:  i.properties.Unstable,
 	})
+	importPostfix := i.getImportPostfix(mctx, version, lang)
 
-	importExportDependencies := wrap("", i.properties.Imports, "-"+lang)
+	importExportDependencies := wrap("", i.properties.Imports, importPostfix)
 	var sharedLibDependency []string
 	var libJSONCppDependency []string
 	var staticLibDependency []string
@@ -1405,12 +1429,10 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 	return cppModuleGen
 }
 
-func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version string) string {
-	javaSourceGen := i.versionedName(mctx, version) + "-java-source"
-	javaModuleGen := i.versionedName(mctx, version) + "-java"
-	if i.hasVersion() && version == "" {
-		version = i.latestVersion()
-	}
+func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForModuleName string) string {
+	javaSourceGen := i.versionedName(mctx, versionForModuleName) + "-java-source"
+	javaModuleGen := i.versionedName(mctx, versionForModuleName) + "-java"
+	version := i.normalizeVersion(versionForModuleName)
 	srcs, aidlRoot := i.srcsForVersion(mctx, version)
 	if len(srcs) == 0 {
 		// This can happen when the version is about to be frozen; the version
@@ -1439,13 +1461,14 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		Unstable:  i.properties.Unstable,
 	})
 
+	importPostfix := i.getImportPostfix(mctx, version, langJava)
 	mctx.CreateModule(java.LibraryFactory, &javaProperties{
 		Name:            proptools.StringPtr(javaModuleGen),
 		Installable:     proptools.BoolPtr(true),
 		Defaults:        []string{"aidl-java-module-defaults"},
 		Sdk_version:     sdkVersion,
 		Platform_apis:   i.properties.Backend.Java.Platform_apis,
-		Static_libs:     wrap("", i.properties.Imports, "-java"),
+		Static_libs:     wrap("", i.properties.Imports, importPostfix),
 		Srcs:            []string{":" + javaSourceGen},
 		Apex_available:  i.properties.Backend.Java.Apex_available,
 		Min_sdk_version: i.properties.Backend.Java.Min_sdk_version,

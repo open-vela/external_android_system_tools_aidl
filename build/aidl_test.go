@@ -571,7 +571,7 @@ func TestImports(t *testing.T) {
 
 	ldRule := ctx.ModuleForTests("foo-cpp", nativeVariant).Rule("ld")
 	libFlags := ldRule.Args["libFlags"]
-	libBar := filepath.Join("bar-cpp", nativeVariant, "bar-V1-cpp.so")
+	libBar := filepath.Join("bar-unstable-cpp", nativeVariant, "bar-unstable-cpp.so")
 	if !strings.Contains(libFlags, libBar) {
 		t.Errorf("%q is not found in %q", libBar, libFlags)
 	}
