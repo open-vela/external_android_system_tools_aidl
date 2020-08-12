@@ -192,6 +192,12 @@ static bool are_compatible_parcelables(const AidlStructuredParcelable& older,
                       << old_fields.size() << " to " << new_fields.size() << ".";
     return false;
   }
+  if (newer.IsFixedSize() && old_fields.size() != new_fields.size()) {
+    AIDL_ERROR(newer) << "Number of fields in " << older.GetCanonicalName() << " is changed from "
+                      << old_fields.size() << " to " << new_fields.size()
+                      << ". This is an incompatible change for FixedSize types.";
+    return false;
+  }
 
   bool compatible = true;
   for (size_t i = 0; i < old_fields.size(); i++) {
