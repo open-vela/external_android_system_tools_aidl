@@ -1300,12 +1300,13 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 		return ""
 	}
 
-	// For an interface with no versions, this is the ToT interface.
-	// For an interface w/ versions, this is that latest version.
-	isLatest := !i.hasVersion() || version == i.latestVersion()
-
 	var overrideVndkProperties cc.VndkProperties
-	if !isLatest {
+
+	// For an interface with no versions, this is the ToT interface,
+	// especially, choose the module of which 'versionForModuleName' is 'unstable' to have only one version per an interface in VNDK.
+	// For an interface w/ versions, this is that latest stable version.
+	canBeTargetForVndk := (!i.hasVersion() && versionForModuleName == unstableVersion) || (i.hasVersion() && version == i.latestVersion())
+	if !canBeTargetForVndk {
 		// We only want the VNDK to include the latest interface. For interfaces in
 		// development, they will be frozen, so we put their latest version in the
 		// VNDK. For interfaces which are already frozen, we put their latest version
