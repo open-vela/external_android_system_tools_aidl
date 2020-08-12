@@ -242,6 +242,25 @@ bool AidlTypenames::CanBeJavaOnlyImmutable(const AidlTypeSpecifier& type) const 
   return t->IsJavaOnlyImmutable();
 }
 
+// Only FixedSize Parcelable, primitive types, and enum types can be FixedSize.
+bool AidlTypenames::CanBeFixedSize(const AidlTypeSpecifier& type) const {
+  const string& name = type.GetName();
+  if (type.IsGeneric() || type.IsArray()) {
+    return false;
+  }
+  if (IsPrimitiveTypename(name)) {
+    return true;
+  }
+  const AidlDefinedType* t = TryGetDefinedType(type.GetName());
+  AIDL_FATAL_IF(t == nullptr, type)
+      << "Failed to look up type. Cannot determine if it can be fixed size.";
+
+  if (t->AsEnumDeclaration()) {
+    return true;
+  }
+  return t->IsFixedSize();
+}
+
 // Only T[], List, Map, ParcelFileDescriptor and mutable Parcelable can be an out parameter.
 bool AidlTypenames::CanBeOutParameter(const AidlTypeSpecifier& type) const {
   const string& name = type.GetName();

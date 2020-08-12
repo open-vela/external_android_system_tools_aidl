@@ -133,6 +133,7 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
       {AidlAnnotation::Type::JAVA_PASSTHROUGH, "JavaPassthrough", {{"annotation", "String"}}},
       {AidlAnnotation::Type::JAVA_DEBUG, "JavaDebug", {}},
       {AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE, "JavaOnlyImmutable", {}},
+      {AidlAnnotation::Type::FIXED_SIZE, "FixedSize", {}},
   };
   return kSchemas;
 }
@@ -279,6 +280,10 @@ bool AidlAnnotatable::IsVintfStability() const {
 
 bool AidlAnnotatable::IsJavaOnlyImmutable() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE);
+}
+
+bool AidlAnnotatable::IsFixedSize() const {
+  return GetAnnotation(annotations_, AidlAnnotation::Type::FIXED_SIZE);
 }
 
 const AidlAnnotation* AidlAnnotatable::UnsupportedAppUsage() const {
@@ -834,7 +839,8 @@ std::set<AidlAnnotation::Type> AidlStructuredParcelable::GetSupportedAnnotations
           AidlAnnotation::Type::HIDE,
           AidlAnnotation::Type::JAVA_PASSTHROUGH,
           AidlAnnotation::Type::JAVA_DEBUG,
-          AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE};
+          AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE,
+          AidlAnnotation::Type::FIXED_SIZE};
 }
 
 bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const {
@@ -850,6 +856,13 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
       success = success && typenames.CanBeJavaOnlyImmutable(v->GetType());
       duplicated = !fieldnames.emplace(CapitalizeFirstLetter(v->GetName())).second;
     } else {
+      if (IsFixedSize()) {
+        success = success && typenames.CanBeFixedSize(v->GetType());
+        if (!success) {
+          AIDL_ERROR(v) << "The @FixedSize parcelable '" << this->GetName() << "' has a "
+                        << "non-fixed size field named " << v->GetName() << ".";
+        }
+      }
       duplicated = !fieldnames.emplace(v->GetName()).second;
     }
 
