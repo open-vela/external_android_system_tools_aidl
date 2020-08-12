@@ -22,6 +22,8 @@
 #include "aidl_to_ndk.h"
 #include "logging.h"
 
+#include <android-base/stringprintf.h>
+
 namespace android {
 namespace aidl {
 namespace ndk {
@@ -69,6 +71,15 @@ void GenerateNdkParcel(const string& output_file, const Options& options,
       options.OutputHeaderDir() + NdkHeaderFile(defined_type, ClassNames::RAW);
   unique_ptr<CodeWriter> header_writer(io_delegate.GetCodeWriter(header_path));
   GenerateParcelHeader(*header_writer, types, defined_type, options);
+
+  unique_ptr<CodeWriter> source_writer(io_delegate.GetCodeWriter(output_file));
+  if (defined_type.IsGeneric()) {
+    // Need to write source to header if this is a template
+    GenerateParcelSource(*header_writer, types, defined_type, options);
+  } else {
+    GenerateParcelSource(*source_writer, types, defined_type, options);
+  }
+  CHECK(source_writer->Close());
   CHECK(header_writer->Close());
 
   const string bp_header =
@@ -82,10 +93,6 @@ void GenerateNdkParcel(const string& output_file, const Options& options,
   unique_ptr<CodeWriter> bn_writer(io_delegate.GetCodeWriter(bn_header));
   *bn_writer << "#error TODO(b/111362593) defined_types do not have bn classes\n";
   CHECK(bn_writer->Close());
-
-  unique_ptr<CodeWriter> source_writer = io_delegate.GetCodeWriter(output_file);
-  GenerateParcelSource(*source_writer, types, defined_type, options);
-  CHECK(source_writer->Close());
 }
 
 void GenerateNdkParcelDeclaration(const std::string& filename, const IoDelegate& io_delegate) {
@@ -210,6 +217,12 @@ static void GenerateHeaderIncludes(CodeWriter& out, const AidlTypenames& types,
       includes.insert(headerFilePath(method->GetType()));
       for (const auto& argument : method->GetArguments()) {
         includes.insert(headerFilePath(argument->GetType()));
+        // Check the method arguments for generic type arguments
+        if (argument->GetType().IsGeneric()) {
+          for (const auto& type_argument : argument->GetType().GetTypeParameters()) {
+            includes.insert(headerFilePath(*type_argument));
+          }
+        }
       }
     }
   }
@@ -218,6 +231,12 @@ static void GenerateHeaderIncludes(CodeWriter& out, const AidlTypenames& types,
   if (parcelable != nullptr) {
     for (const auto& field : parcelable->GetFields()) {
       includes.insert(headerFilePath(field->GetType()));
+      // Check the fields for generic type arguments
+      if (field->GetType().IsGeneric()) {
+        for (const auto& type_argument : field->GetType().GetTypeParameters()) {
+          includes.insert(headerFilePath(*type_argument));
+        }
+      }
     }
   }
 
@@ -931,6 +950,7 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
   GenerateHeaderIncludes(out, types, defined_type);
 
   EnterNdkNamespace(out, defined_type);
+  out << cpp::TemplateDecl(defined_type);
   out << "class " << clazz << " {\n";
   out << "public:\n";
   out.Indent();
@@ -956,7 +976,14 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
 void GenerateParcelSource(CodeWriter& out, const AidlTypenames& types,
                           const AidlStructuredParcelable& defined_type,
                           const Options& /*options*/) {
-  const std::string clazz = ClassName(defined_type, ClassNames::RAW);
+  std::string clazz = ClassName(defined_type, ClassNames::RAW);
+  if (defined_type.IsGeneric()) {
+    std::vector<std::string> template_params;
+    for (const auto& parameter : defined_type.GetTypeParameters()) {
+      template_params.push_back(parameter);
+    }
+    clazz += base::StringPrintf("<%s>", base::Join(template_params, ", ").c_str());
+  }
 
   out << "#include \"" << NdkHeaderFile(defined_type, ClassNames::RAW, false /*use_os_sep*/)
       << "\"\n";
@@ -964,10 +991,12 @@ void GenerateParcelSource(CodeWriter& out, const AidlTypenames& types,
   GenerateSourceIncludes(out, types, defined_type);
   out << "\n";
   EnterNdkNamespace(out, defined_type);
+  out << cpp::TemplateDecl(defined_type);
   out << "const char* " << clazz << "::" << kDescriptor << " = \""
       << defined_type.GetCanonicalName() << "\";\n";
   out << "\n";
 
+  out << cpp::TemplateDecl(defined_type);
   out << "binder_status_t " << clazz << "::readFromParcel(const AParcel* parcel) {\n";
   out.Indent();
   out << "int32_t _aidl_parcelable_size;\n";
@@ -992,6 +1021,7 @@ void GenerateParcelSource(CodeWriter& out, const AidlTypenames& types,
   out.Dedent();
   out << "}\n";
 
+  out << cpp::TemplateDecl(defined_type);
   out << "binder_status_t " << clazz << "::writeToParcel(AParcel* parcel) const {\n";
   out.Indent();
   out << "binder_status_t _aidl_ret_status;\n";

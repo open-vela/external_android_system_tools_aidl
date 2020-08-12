@@ -18,6 +18,7 @@
 #include "logging.h"
 #include "os.h"
 
+#include <android-base/stringprintf.h>
 #include <android-base/strings.h>
 
 #include <functional>
@@ -136,9 +137,17 @@ TypeInfo InterfaceTypeInfo(const AidlInterface& type) {
   };
 }
 
-TypeInfo ParcelableTypeInfo(const AidlParcelable& type) {
-  const std::string clazz = NdkFullClassName(type, cpp::ClassNames::RAW);
-
+TypeInfo ParcelableTypeInfo(const AidlParcelable& type, const AidlTypeSpecifier& typeSpec,
+                            const AidlTypenames& types) {
+  std::string clazz = NdkFullClassName(type, cpp::ClassNames::RAW);
+  std::string template_params = "";
+  if (typeSpec.IsGeneric()) {
+    std::vector<std::string> type_params;
+    for (const auto& parameter : typeSpec.GetTypeParameters()) {
+      type_params.push_back(NdkNameOf(types, *parameter, StorageMode::STACK));
+    }
+    clazz += base::StringPrintf("<%s>", base::Join(type_params, ", ").c_str());
+  }
   return TypeInfo{
       .raw =
           TypeInfo::Aspect{
@@ -326,7 +335,7 @@ static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlType
     AIDL_FATAL_IF(!aidl.IsGeneric(), aidl) << "List must be generic type.";
     AIDL_FATAL_IF(aidl.GetTypeParameters().size() != 1, aidl)
         << "List can accept only one type parameter.";
-    auto& type_param = aidl.GetTypeParameters()[0];
+    const auto& type_param = aidl.GetTypeParameters()[0];
     // TODO(b/136048684) AIDL doesn't support nested type parameter yet.
     AIDL_FATAL_IF(type_param->IsGeneric(), aidl) << "AIDL doesn't support nested type parameter";
 
@@ -339,9 +348,6 @@ static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlType
     return GetTypeAspect(types, array_type);
   }
 
-  // All generic types should be handled above.
-  AIDL_FATAL_IF(aidl.IsGeneric(), aidl);
-
   if (AidlTypenames::IsBuiltinTypename(aidl_name)) {
     auto it = kNdkTypeInfoMap.find(aidl_name);
     CHECK(it != kNdkTypeInfoMap.end());
@@ -353,7 +359,7 @@ static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlType
     if (const AidlInterface* intf = type->AsInterface(); intf != nullptr) {
       info = InterfaceTypeInfo(*intf);
     } else if (const AidlParcelable* parcelable = type->AsParcelable(); parcelable != nullptr) {
-      info = ParcelableTypeInfo(*parcelable);
+      info = ParcelableTypeInfo(*parcelable, aidl, types);
     } else if (const AidlEnumDeclaration* enum_decl = type->AsEnumDeclaration();
                enum_decl != nullptr) {
       info = EnumDeclarationTypeInfo(*enum_decl);

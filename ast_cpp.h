@@ -63,10 +63,10 @@ class LiteralDecl : public Declaration {
 
 class ClassDecl : public Declaration {
  public:
-  ClassDecl(const std::string& name,
-            const std::string& parent);
-  ClassDecl(const std::string& name,
-            const std::string& parent,
+  ClassDecl(const std::string& name, const std::string& parent,
+            const std::vector<std::string>& template_params);
+  ClassDecl(const std::string& name, const std::string& parent,
+            const std::vector<std::string>& template_params,
             std::vector<std::unique_ptr<Declaration>> public_members,
             std::vector<std::unique_ptr<Declaration>> private_members);
   virtual ~ClassDecl() = default;
@@ -79,6 +79,7 @@ class ClassDecl : public Declaration {
  private:
   std::string name_;
   std::string parent_;
+  std::vector<std::string> template_params_;
   std::vector<std::unique_ptr<Declaration>> public_members_;
   std::vector<std::unique_ptr<Declaration>> private_members_;
 };  // class ClassDecl
@@ -230,11 +231,9 @@ class MethodImpl : public Declaration {
  public:
   // Passing an empty class name causes the method to be declared as a normal
   // function (ie. no ClassName:: qualifier).
-  MethodImpl(const std::string& return_type,
-             const std::string& class_name,
-             const std::string& method_name,
-             ArgList&& arg_list,
-             bool is_const_method = false);
+  MethodImpl(const std::string& return_type, const std::string& class_name,
+             const std::string& method_name, const std::vector<std::string>& template_params,
+             ArgList&& arg_list, bool is_const_method = false);
   virtual ~MethodImpl() = default;
 
   // MethodImpl retains ownership of the statement block.
@@ -248,6 +247,7 @@ class MethodImpl : public Declaration {
   const ArgList arguments_;
   StatementBlock statements_;
   bool is_const_method_ = false;
+  std::vector<std::string> template_params_;
 };  // class MethodImpl
 
 class SwitchStatement : public AstNode {

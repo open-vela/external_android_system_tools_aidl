@@ -153,6 +153,7 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %type<declaration> decl
 %type<variable_list> variable_decls
 %type<variable> variable_decl
+%type<type_params> optional_type_params
 %type<interface_members> interface_members
 %type<declaration> unannotated_decl
 %type<interface> interface_decl
@@ -292,17 +293,23 @@ type_params
     delete $3;
   };
 
+ optional_type_params
+  : /* none */ { $$ = nullptr; }
+  | '<' type_params '>' {
+    $$ = $2;
+  };
 
 parcelable_decl
- : PARCELABLE qualified_name ';' {
-    $$ = new AidlParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments());
+ : PARCELABLE qualified_name optional_type_params ';' {
+    $$ = new AidlParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), "", $3);
     delete $1;
     delete $2;
-  }
- | PARCELABLE qualified_name '<' type_params '>' ';' {
-    $$ = new AidlParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), "", $4);
+ }
+ | PARCELABLE qualified_name optional_type_params '{' variable_decls '}' {
+    $$ = new AidlStructuredParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), $5, $3);
     delete $1;
     delete $2;
+    delete $5;
  }
  | PARCELABLE qualified_name CPP_HEADER C_STR ';' {
     $$ = new AidlParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), $4->GetText());
@@ -310,12 +317,6 @@ parcelable_decl
     delete $2;
     delete $4;
   }
- | PARCELABLE identifier '{' variable_decls '}' {
-    $$ = new AidlStructuredParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), $4);
-    delete $1;
-    delete $2;
-    delete $4;
- }
  | PARCELABLE error ';' {
     ps->AddError();
     $$ = nullptr;
