@@ -1248,6 +1248,12 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 		addApiModule(mctx, i)
 	}
 
+	if proptools.Bool(i.properties.VndkProperties.Vndk.Enabled) {
+		if "vintf" != proptools.String(i.properties.Stability) {
+			mctx.PropertyErrorf("stability", "must be \"vintf\" if the module is for VNDK.")
+		}
+	}
+
 	// Reserve this module name for future use
 	mctx.CreateModule(phony.PhonyFactory, &phonyProperties{
 		Name: proptools.StringPtr(i.ModuleBase.Name()),

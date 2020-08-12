@@ -604,3 +604,38 @@ func TestDuplicatedVersions(t *testing.T) {
 		"aidl_api/myiface/2/.hash":          nil,
 	}))
 }
+
+func TestUnstableVndkModule(t *testing.T) {
+	testAidlError(t, `module "myiface_interface": stability: must be "vintf" if the module is for VNDK.`, `
+		aidl_interface {
+			name: "myiface",
+			srcs: ["IFoo.aidl"],
+			vendor_available: true,
+			unstable: true,
+			vndk: {
+				enabled: true,
+			},
+		}
+	`)
+	testAidlError(t, `module "myiface_interface": stability: must be "vintf" if the module is for VNDK.`, `
+		aidl_interface {
+			name: "myiface",
+			vendor_available: true,
+			srcs: ["IFoo.aidl"],
+			vndk: {
+				enabled: true,
+			},
+		}
+	`)
+	testAidl(t, `
+		aidl_interface {
+			name: "myiface",
+			vendor_available: true,
+			srcs: ["IFoo.aidl"],
+			stability: "vintf",
+			vndk: {
+				enabled: true,
+			},
+		}
+	`)
+}
