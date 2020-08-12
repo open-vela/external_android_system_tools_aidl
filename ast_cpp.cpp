@@ -41,36 +41,38 @@ void LiteralDecl::Write(CodeWriter* to) const {
   to->Write("%s", expression_.c_str());
 }
 
-ClassDecl::ClassDecl(const std::string& name, const std::string& parent)
-    : name_(name),
-      parent_(parent) {}
+ClassDecl::ClassDecl(const std::string& name, const std::string& parent,
+                     const std::vector<std::string>& template_params)
+    : name_(name), parent_(parent), template_params_(template_params) {}
 
 ClassDecl::ClassDecl(const std::string& name, const std::string& parent,
+                     const std::vector<std::string>& template_params,
                      std::vector<unique_ptr<Declaration>> public_members,
                      std::vector<unique_ptr<Declaration>> private_members)
     : name_(name),
       parent_(parent),
+      template_params_(template_params),
       public_members_(std::move(public_members)),
       private_members_(std::move(private_members)) {}
 
 void ClassDecl::Write(CodeWriter* to) const {
+  if (!template_params_.empty())
+    to->Write("template <typename %s>\n", base::Join(template_params_, ", typename ").c_str());
+
   to->Write("class %s ", name_.c_str());
 
-  if (parent_.length() > 0)
-      to->Write(": public %s ", parent_.c_str());
+  if (parent_.length() > 0) to->Write(": public %s ", parent_.c_str());
 
   to->Write("{\n");
 
-  if (!public_members_.empty())
-      to->Write("public:\n");
+  if (!public_members_.empty()) to->Write("public:\n");
 
   to->Indent();
   for (const auto& dec : public_members_)
     dec->Write(to);
   to->Dedent();
 
-  if (!private_members_.empty())
-      to->Write("private:\n");
+  if (!private_members_.empty()) to->Write("private:\n");
 
   to->Indent();
   for (const auto& dec : private_members_)
@@ -285,17 +287,20 @@ void ConstructorImpl::Write(CodeWriter* to) const {
   body_.Write(to);
 }
 
-MethodImpl::MethodImpl(const string& return_type,
-                       const string& class_name,
-                       const string& method_name,
-                       ArgList&& arg_list,
-                       bool is_const_method)
+MethodImpl::MethodImpl(const string& return_type, const string& class_name,
+                       const string& method_name, const std::vector<std::string>& template_params,
+                       ArgList&& arg_list, bool is_const_method)
     : return_type_(return_type),
       method_name_(method_name),
       arguments_(std::move(arg_list)),
-      is_const_method_(is_const_method) {
+      is_const_method_(is_const_method),
+      template_params_(template_params) {
   if (!class_name.empty()) {
-    method_name_ = class_name + "::" + method_name;
+    if (!template_params.empty()) {
+      method_name_ = class_name + "<" + base::Join(template_params, ",") + ">::" + method_name;
+    } else {
+      method_name_ = class_name + "::" + method_name;
+    }
   }
 }
 
@@ -304,6 +309,8 @@ StatementBlock* MethodImpl::GetStatementBlock() {
 }
 
 void MethodImpl::Write(CodeWriter* to) const {
+  if (!template_params_.empty())
+    to->Write("template <typename %s>\n", base::Join(template_params_, ", typename ").c_str());
   to->Write("%s %s", return_type_.c_str(), method_name_.c_str());
   arguments_.Write(to);
   to->Write("%s ", (is_const_method_) ? " const" : "");

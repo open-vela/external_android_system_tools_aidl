@@ -77,12 +77,14 @@ using android::aidl::tests::BnOldName;
 using android::aidl::tests::BnTestService;
 using android::aidl::tests::ByteEnum;
 using android::aidl::tests::ConstantExpressionEnum;
+using android::aidl::tests::GenericStructuredParcelable;
 using android::aidl::tests::INamedCallback;
 using android::aidl::tests::INewName;
 using android::aidl::tests::IntEnum;
 using android::aidl::tests::IOldName;
 using android::aidl::tests::LongEnum;
 using android::aidl::tests::SimpleParcelable;
+using android::aidl::tests::StructuredParcelable;
 using android::os::ParcelFileDescriptor;
 using android::os::PersistableBundle;
 
@@ -425,6 +427,16 @@ class NativeService : public BnTestService {
     return RepeatNullable(input, _aidl_return);
   }
 
+  Status RepeatGenericParcelable(
+      const GenericStructuredParcelable<int32_t, StructuredParcelable, IntEnum>& input,
+      GenericStructuredParcelable<int32_t, StructuredParcelable, IntEnum>* repeat,
+      GenericStructuredParcelable<int32_t, StructuredParcelable, IntEnum>* _aidl_return) {
+    ALOGI("Repeating Generic Parcelable");
+    *repeat = input;
+    *_aidl_return = input;
+    return Status::ok();
+  }
+
   Status TakesAnIBinder(const sp<IBinder>& input) override {
     (void)input;
     return Status::ok();
@@ -493,8 +505,7 @@ class NativeService : public BnTestService {
     return Status::ok();
   }
 
-  virtual ::android::binder::Status FillOutStructuredParcelable(
-      ::android::aidl::tests::StructuredParcelable* parcelable) {
+  virtual ::android::binder::Status FillOutStructuredParcelable(StructuredParcelable* parcelable) {
     parcelable->shouldBeJerry = "Jerry";
     parcelable->shouldContainThreeFs = {parcelable->f, parcelable->f, parcelable->f};
     parcelable->shouldBeByteBar = ByteEnum::BAR;

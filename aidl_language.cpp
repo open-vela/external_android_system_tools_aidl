@@ -833,8 +833,9 @@ void AidlParcelable::Dump(CodeWriter* writer) const {
 
 AidlStructuredParcelable::AidlStructuredParcelable(
     const AidlLocation& location, const std::string& name, const std::string& package,
-    const std::string& comments, std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables)
-    : AidlParcelable(location, name, package, comments, "" /*cpp_header*/),
+    const std::string& comments, std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables,
+    std::vector<std::string>* type_params)
+    : AidlParcelable(location, name, package, comments, "" /*cpp_header*/, type_params),
       variables_(std::move(*variables)) {}
 
 void AidlStructuredParcelable::Dump(CodeWriter* writer) const {

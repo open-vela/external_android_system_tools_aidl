@@ -16,14 +16,14 @@
 
 package android.aidl.tests;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
-import androidx.test.core.app.ApplicationProvider;
 import android.aidl.tests.ByteEnum;
+import android.aidl.tests.GenericStructuredParcelable;
 import android.aidl.tests.INamedCallback;
 import android.aidl.tests.ITestService;
 import android.aidl.tests.IntEnum;
@@ -43,12 +43,7 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.ServiceSpecificException;
 import android.util.Log;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runners.JUnit4;
-import org.junit.runner.RunWith;
-
+import androidx.test.core.app.ApplicationProvider;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
@@ -60,6 +55,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class TestServiceClient {
@@ -280,6 +279,24 @@ public class TestServiceClient {
 
         Collections.reverse(input);
         assertThat(reversed, is(input));
+    }
+
+    @Test
+    public void testRepeatGenericParcelable() throws RemoteException {
+      GenericStructuredParcelable<Integer, StructuredParcelable, Integer> input =
+          new GenericStructuredParcelable<Integer, StructuredParcelable, Integer>();
+      GenericStructuredParcelable<Integer, StructuredParcelable, Integer> out_param =
+          new GenericStructuredParcelable<Integer, StructuredParcelable, Integer>();
+      input.a = 41;
+      input.b = 42;
+      GenericStructuredParcelable<Integer, StructuredParcelable, Integer> testing = input;
+      assertThat(testing, is(input));
+      GenericStructuredParcelable<Integer, StructuredParcelable, Integer> returned =
+          service.RepeatGenericParcelable(input, out_param);
+      assertThat(out_param.a, is(input.a));
+      assertThat(out_param.b, is(input.b));
+      assertThat(returned.a, is(input.a));
+      assertThat(returned.b, is(input.b));
     }
 
     @Test
@@ -670,32 +687,38 @@ public class TestServiceClient {
         p.enumArray = new int[]{IntEnum.FOO, IntEnum.BAR};
         p.nullArray = null;
         p.nullList = null;
+        GenericStructuredParcelable<Integer, StructuredParcelable, Integer> gen =
+            new GenericStructuredParcelable<Integer, StructuredParcelable, Integer>();
+        gen.a = 1;
+        gen.b = 2;
+        p.parcelableGeneric = gen;
 
-        final String expected = "android.aidl.tests.ParcelableForToString{" +
-            "intValue: 10, " +
-            "intArray: [20, 30], " +
-            "longValue: 100, " +
-            "longArray: [200, 300], " +
-            "doubleValue: 3.14, " +
-            "doubleArray: [1.1, 1.2], " +
-            "floatValue: 3.14, " +
-            "floatArray: [1.1, 1.2], " +
-            "byteValue: 3, " +
-            "byteArray: [5, 6], " +
-            "booleanValue: true, " +
-            "booleanArray: [true, false], " +
-            "stringValue: this is a string, " +
-            "stringArray: [hello, world], " +
-            "stringList: [alice, bob], " +
-            "parcelableValue: android.aidl.tests.OtherParcelableForToString{field: other}, " +
-            "parcelableArray: [" +
-            "android.aidl.tests.OtherParcelableForToString{field: other}, " +
-            "android.aidl.tests.OtherParcelableForToString{field: other}], " +
-            "enumValue: 1000, " +
-            "enumArray: [1000, 2000], " +
-            "nullArray: null, " +
-            "nullList: null" +
-            "}";
+        final String expected = "android.aidl.tests.ParcelableForToString{"
+            + "intValue: 10, "
+            + "intArray: [20, 30], "
+            + "longValue: 100, "
+            + "longArray: [200, 300], "
+            + "doubleValue: 3.14, "
+            + "doubleArray: [1.1, 1.2], "
+            + "floatValue: 3.14, "
+            + "floatArray: [1.1, 1.2], "
+            + "byteValue: 3, "
+            + "byteArray: [5, 6], "
+            + "booleanValue: true, "
+            + "booleanArray: [true, false], "
+            + "stringValue: this is a string, "
+            + "stringArray: [hello, world], "
+            + "stringList: [alice, bob], "
+            + "parcelableValue: android.aidl.tests.OtherParcelableForToString{field: other}, "
+            + "parcelableArray: ["
+            + "android.aidl.tests.OtherParcelableForToString{field: other}, "
+            + "android.aidl.tests.OtherParcelableForToString{field: other}], "
+            + "enumValue: 1000, "
+            + "enumArray: [1000, 2000], "
+            + "nullArray: null, "
+            + "nullList: null, "
+            + "parcelableGeneric: android.aidl.tests.GenericStructuredParcelable{a: 1, b: 2}"
+            + "}";
 
         assertThat(p.toString(), is(expected));
     }

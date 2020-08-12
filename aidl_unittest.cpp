@@ -2571,5 +2571,37 @@ TEST_P(AidlTest, ImmtuableParcelableFieldNameRestriction) {
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
+
+TEST_P(AidlTest, GenericStructuredParcelable) {
+  io_delegate_.SetFileContents("Foo.aidl", "parcelable Foo<T, U> { int a; int A; }");
+  Options options =
+      Options::From("aidl Foo.aidl --lang=" + Options::LanguageToString(GetLanguage()));
+  const string expected_stderr = "";
+  CaptureStderr();
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_P(AidlTest, RejectGenericStructuredParcelabelRepeatedParam) {
+  io_delegate_.SetFileContents("Foo.aidl", "parcelable Foo<T,T> { int a; int A; }");
+  Options options =
+      Options::From("aidl Foo.aidl --lang=" + Options::LanguageToString(GetLanguage()));
+  const string expected_stderr =
+      "ERROR: Foo.aidl:1.11-15: Every type parameter should be unique.\n";
+  CaptureStderr();
+  EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_P(AidlTest, RejectGenericStructuredParcelableField) {
+  io_delegate_.SetFileContents("Foo.aidl", "parcelable Foo<T,T> { T a; int A; }");
+  Options options =
+      Options::From("aidl Foo.aidl --lang=" + Options::LanguageToString(GetLanguage()));
+  const string expected_stderr = "ERROR: Foo.aidl:1.22-24: Failed to resolve 'T'\n";
+  CaptureStderr();
+  EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
 }  // namespace aidl
 }  // namespace android
