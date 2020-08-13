@@ -374,12 +374,9 @@ class Document : public AstNode {
 
 class CppHeader final : public Document {
  public:
-  CppHeader(const std::string& include_guard, const std::vector<std::string>& include_list,
+  CppHeader(const std::vector<std::string>& include_list,
             std::vector<std::unique_ptr<Declaration>> declarations);
   void Write(CodeWriter* to) const override;
-
- private:
-  const std::string include_guard_;
 };  // class CppHeader
 
 class CppSource final : public Document {

@@ -457,18 +457,14 @@ void Document::Write(CodeWriter* to) const {
   }
 }
 
-CppHeader::CppHeader(const std::string& include_guard, const std::vector<std::string>& include_list,
+CppHeader::CppHeader(const std::vector<std::string>& include_list,
                      std::vector<std::unique_ptr<Declaration>> declarations)
-    : Document(include_list, std::move(declarations)), include_guard_(include_guard) {}
+    : Document(include_list, std::move(declarations)) {}
 
 void CppHeader::Write(CodeWriter* to) const {
-  to->Write("#ifndef %s\n", include_guard_.c_str());
-  to->Write("#define %s\n\n", include_guard_.c_str());
+  to->Write("#pragma once\n\n");
 
   Document::Write(to);
-  to->Write("\n");
-
-  to->Write("#endif  // %s\n", include_guard_.c_str());
 }
 
 CppSource::CppSource(const std::vector<std::string>& include_list,
