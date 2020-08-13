@@ -1075,7 +1075,7 @@ func (i *aidlInterface) hasVersion() bool {
 // "2"->foo-V2
 // "3"(unfrozen)->foo-unstable
 // ""-> foo
-// "unstable" -> foo-unstable
+// "unstable" -> "unstable"
 func (i *aidlInterface) versionedName(ctx android.LoadHookContext, version string) string {
 	name := i.ModuleBase.Name()
 	if version == "" {
@@ -1093,19 +1093,16 @@ func (i *aidlInterface) versionedName(ctx android.LoadHookContext, version strin
 // foo-unstable -> foo-V3
 // foo -> foo-V2 (latest frozen version)
 // Assume that there is bar of which version hasn't been defined yet.
-// bar -> bar
-// bar-unstable -> bar-V1
+// bar -> bar-V1
 func (i *aidlInterface) cppOutputName(version string) string {
 	name := i.ModuleBase.Name()
 	if i.hasVersion() && version == unstableVersion {
 		panic("A versioned module's output name in C++ must not contain 'unstable'")
 	}
-	// If the module doesn't have version, it returns with version(-V1) only if 'version' is unstable,
-	// otherwise, it returns the name without version.
+	// Even if the module doesn't have version, it returns with version(-V1) only if 'version' is empty
 	if !i.hasVersion() {
-		// TODO(b/150578172): Use "-V1" as 'unstable' when the build system supports it, or remove it altogether later.
-		if version == "" {
-			return name
+		if version == unstableVersion {
+			return name + "-" + unstableVersion
 		}
 		// latestVersion() always returns "0"
 		i, err := strconv.Atoi(i.latestVersion())
@@ -1303,13 +1300,12 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 		return ""
 	}
 
-	var overrideVndkProperties cc.VndkProperties
+	// For an interface with no versions, this is the ToT interface.
+	// For an interface w/ versions, this is that latest version.
+	isLatest := !i.hasVersion() || version == i.latestVersion()
 
-	// For an interface with no versions, this is the ToT interface,
-	// especially, choose the module of which 'versionForModuleName' is 'unstable' to have only one version per an interface in VNDK.
-	// For an interface w/ versions, this is that latest stable version.
-	canBeTargetForVndk := (!i.hasVersion() && versionForModuleName == unstableVersion) || (i.hasVersion() && version == i.latestVersion())
-	if !canBeTargetForVndk {
+	var overrideVndkProperties cc.VndkProperties
+	if !isLatest {
 		// We only want the VNDK to include the latest interface. For interfaces in
 		// development, they will be frozen, so we put their latest version in the
 		// VNDK. For interfaces which are already frozen, we put their latest version
