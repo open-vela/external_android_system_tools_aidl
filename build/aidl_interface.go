@@ -1075,7 +1075,7 @@ func (i *aidlInterface) hasVersion() bool {
 // "2"->foo-V2
 // "3"(unfrozen)->foo-unstable
 // ""-> foo
-// "unstable" -> "unstable"
+// "unstable" -> foo-unstable
 func (i *aidlInterface) versionedName(ctx android.LoadHookContext, version string) string {
 	name := i.ModuleBase.Name()
 	if version == "" {
@@ -1093,16 +1093,19 @@ func (i *aidlInterface) versionedName(ctx android.LoadHookContext, version strin
 // foo-unstable -> foo-V3
 // foo -> foo-V2 (latest frozen version)
 // Assume that there is bar of which version hasn't been defined yet.
-// bar -> bar-V1
+// bar -> bar
+// bar-unstable -> bar-V1
 func (i *aidlInterface) cppOutputName(version string) string {
 	name := i.ModuleBase.Name()
 	if i.hasVersion() && version == unstableVersion {
 		panic("A versioned module's output name in C++ must not contain 'unstable'")
 	}
-	// Even if the module doesn't have version, it returns with version(-V1) only if 'version' is empty
+	// If the module doesn't have version, it returns with version(-V1) only if 'version' is unstable,
+	// otherwise, it returns the name without version.
 	if !i.hasVersion() {
-		if version == unstableVersion {
-			return name + "-" + unstableVersion
+		// TODO(b/150578172): Use "-V1" as 'unstable' when the build system supports it, or remove it altogether later.
+		if version == "" {
+			return name
 		}
 		// latestVersion() always returns "0"
 		i, err := strconv.Atoi(i.latestVersion())
