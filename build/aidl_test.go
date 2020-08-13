@@ -425,9 +425,12 @@ func TestNativeOutputIsAlwaysVersioned(t *testing.T) {
 			],
 		}
 	`)
-
+	// It's the only exception, <name>-<backend> generates the artifact of which name is <name>-<backend>,
+	// if it doesn't have a version.
 	assertOutput("foo-java", androidVariant, "foo-java.jar")
-	assertOutput("foo-cpp", nativeVariant, "foo-V1-cpp.so")
+
+	assertOutput("foo-cpp", nativeVariant, "foo-cpp.so")
+	assertOutput("foo-unstable-cpp", nativeVariant, "foo-V1-cpp.so")
 
 	// With versions: "1", "2"
 	ctx, _ = testAidl(t, `
@@ -571,7 +574,7 @@ func TestImports(t *testing.T) {
 
 	ldRule := ctx.ModuleForTests("foo-cpp", nativeVariant).Rule("ld")
 	libFlags := ldRule.Args["libFlags"]
-	libBar := filepath.Join("bar-unstable-cpp", nativeVariant, "bar-unstable-cpp.so")
+	libBar := filepath.Join("bar-unstable-cpp", nativeVariant, "bar-V1-cpp.so")
 	if !strings.Contains(libFlags, libBar) {
 		t.Errorf("%q is not found in %q", libBar, libFlags)
 	}
