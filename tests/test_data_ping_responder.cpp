@@ -385,8 +385,7 @@ BnPingResponder::BnPingResponder()
 )";
 
 const char kExpectedIHeaderOutput[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_I_PING_RESPONDER_H_
-#define AIDL_GENERATED_ANDROID_OS_I_PING_RESPONDER_H_
+    R"(#pragma once
 
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
@@ -431,13 +430,10 @@ public:
 }  // namespace os
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_I_PING_RESPONDER_H_
 )";
 
 const char kExpectedBpHeaderOutput[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_BP_PING_RESPONDER_H_
-#define AIDL_GENERATED_ANDROID_OS_BP_PING_RESPONDER_H_
+    R"(#pragma once
 
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
@@ -461,13 +457,10 @@ public:
 }  // namespace os
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_BP_PING_RESPONDER_H_
 )";
 
 const char kExpectedBnHeaderOutput[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
-#define AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
+    R"(#pragma once
 
 #include <binder/IInterface.h>
 #include <android/os/IPingResponder.h>
@@ -485,8 +478,6 @@ public:
 }  // namespace os
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
 )";
 
 const char kExpectedCppOutputWithVersionAndHash[] =
@@ -856,8 +847,7 @@ std::string BnPingResponder::getInterfaceHash() {
 )";
 
 const char kExpectedIHeaderOutputWithVersionAndHash[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_I_PING_RESPONDER_H_
-#define AIDL_GENERATED_ANDROID_OS_I_PING_RESPONDER_H_
+    R"(#pragma once
 
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
@@ -913,13 +903,10 @@ public:
 }  // namespace os
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_I_PING_RESPONDER_H_
 )";
 
 const char kExpectedBpHeaderOutputWithVersionAndHash[] =
-R"(#ifndef AIDL_GENERATED_ANDROID_OS_BP_PING_RESPONDER_H_
-#define AIDL_GENERATED_ANDROID_OS_BP_PING_RESPONDER_H_
+R"(#pragma once
 
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
@@ -949,13 +936,10 @@ private:
 }  // namespace os
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_BP_PING_RESPONDER_H_
 )";
 
 const char kExpectedBnHeaderOutputWithVersionAndHash[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
-#define AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
+    R"(#pragma once
 
 #include <binder/IInterface.h>
 #include <android/os/IPingResponder.h>
@@ -975,8 +959,6 @@ public:
 }  // namespace os
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
 )";
 
 // clang-format on

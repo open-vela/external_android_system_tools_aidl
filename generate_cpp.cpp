@@ -229,25 +229,6 @@ bool DeclareLocalVariable(const AidlArgument& a, StatementBlock* b,
   return true;
 }
 
-string BuildHeaderGuard(const AidlDefinedType& defined_type, ClassNames header_type) {
-  string class_name = ClassName(defined_type, header_type);
-  for (size_t i = 1; i < class_name.size(); ++i) {
-    if (isupper(class_name[i])) {
-      class_name.insert(i, "_");
-      ++i;
-    }
-  }
-  string ret = StringPrintf("AIDL_GENERATED_%s_%s_H_", defined_type.GetPackage().c_str(),
-                            class_name.c_str());
-  for (char& c : ret) {
-    if (c == '.') {
-      c = '_';
-    }
-    c = toupper(c);
-  }
-  return ret;
-}
-
 unique_ptr<Declaration> DefineClientTransaction(const AidlTypenames& typenames,
                                                 const AidlInterface& interface,
                                                 const AidlMethod& method, const Options& options) {
@@ -877,8 +858,7 @@ unique_ptr<Document> BuildClientHeader(const AidlTypenames& typenames,
   }};
 
   return unique_ptr<Document>{
-      new CppHeader{BuildHeaderGuard(interface, ClassNames::CLIENT), includes,
-                    NestInNamespaces(std::move(bp_class), interface.GetSplitPackage())}};
+      new CppHeader{includes, NestInNamespaces(std::move(bp_class), interface.GetSplitPackage())}};
 }
 
 unique_ptr<Document> BuildServerHeader(const AidlTypenames& /* typenames */,
@@ -930,8 +910,7 @@ unique_ptr<Document> BuildServerHeader(const AidlTypenames& /* typenames */,
       }};
 
   return unique_ptr<Document>{
-      new CppHeader{BuildHeaderGuard(interface, ClassNames::SERVER), includes,
-                    NestInNamespaces(std::move(bn_class), interface.GetSplitPackage())}};
+      new CppHeader{includes, NestInNamespaces(std::move(bn_class), interface.GetSplitPackage())}};
 }
 
 unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
@@ -1061,8 +1040,7 @@ unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
       ClassName(interface, ClassNames::DEFAULT_IMPL), i_name, std::move(method_decls), {}});
 
   return unique_ptr<Document>{
-      new CppHeader{BuildHeaderGuard(interface, ClassNames::INTERFACE),
-                    vector<string>(includes.begin(), includes.end()),
+      new CppHeader{vector<string>(includes.begin(), includes.end()),
                     NestInNamespaces(std::move(decls), interface.GetSplitPackage())}};
 }
 
@@ -1126,9 +1104,9 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
       MethodDecl::IS_OVERRIDE | MethodDecl::IS_CONST | MethodDecl::IS_FINAL));
   parcel_class->AddPublic(std::move(write));
 
-  return unique_ptr<Document>{new CppHeader{
-      BuildHeaderGuard(parcel, ClassNames::RAW), vector<string>(includes.begin(), includes.end()),
-      NestInNamespaces(std::move(parcel_class), parcel.GetSplitPackage())}};
+  return unique_ptr<Document>{
+      new CppHeader{vector<string>(includes.begin(), includes.end()),
+                    NestInNamespaces(std::move(parcel_class), parcel.GetSplitPackage())}};
 }
 std::unique_ptr<Document> BuildParcelSource(const AidlTypenames& typenames,
                                             const AidlStructuredParcelable& parcel,
@@ -1253,8 +1231,7 @@ std::unique_ptr<Document> BuildEnumHeader(const AidlTypenames& typenames,
   decls2.push_back(std::make_unique<LiteralDecl>(GenerateEnumValues(enum_decl, {""})));
 
   return unique_ptr<Document>{
-      new CppHeader{BuildHeaderGuard(enum_decl, ClassNames::RAW),
-                    vector<string>(includes.begin(), includes.end()),
+      new CppHeader{vector<string>(includes.begin(), includes.end()),
                     Append(NestInNamespaces(std::move(decls1), enum_decl.GetSplitPackage()),
                            NestInNamespaces(std::move(decls2), {"android", "internal"}))}};
 }
