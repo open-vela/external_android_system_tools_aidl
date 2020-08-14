@@ -132,8 +132,7 @@ const char kCppOutputPath[] = "some/path/to/output.cpp";
 const char kGenHeaderDir[] = "output";
 const char kGenInterfaceHeaderPath[] = "output/android/os/IStringConstants.h";
 const char kExpectedIHeaderOutput[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_I_STRING_CONSTANTS_H_
-#define AIDL_GENERATED_ANDROID_OS_I_STRING_CONSTANTS_H_
+    R"(#pragma once
 
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
@@ -161,8 +160,6 @@ public:
 }  // namespace os
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_I_STRING_CONSTANTS_H_
 )";
 
 const char kExpectedCppOutput[] =
@@ -409,8 +406,7 @@ public interface IStringConstants extends android.os.IInterface
 )";
 
 const char kExpectedIHeaderOutputWithVersionAndHash[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_I_STRING_CONSTANTS_H_
-#define AIDL_GENERATED_ANDROID_OS_I_STRING_CONSTANTS_H_
+    R"(#pragma once
 
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
@@ -449,8 +445,6 @@ public:
 }  // namespace os
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_I_STRING_CONSTANTS_H_
 )";
 
 const char kExpectedCppOutputWithVersionAndHash[] =
