@@ -55,8 +55,7 @@ interface IComplexTypeInterface {
 })";
 
 const char kExpectedComplexTypeClientHeaderOutput[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_BP_COMPLEX_TYPE_INTERFACE_H_
-#define AIDL_GENERATED_ANDROID_OS_BP_COMPLEX_TYPE_INTERFACE_H_
+    R"(#pragma once
 
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
@@ -84,8 +83,6 @@ public:
 }  // namespace os
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_BP_COMPLEX_TYPE_INTERFACE_H_
 )";
 
 const char kExpectedComplexTypeClientSourceOutput[] =
@@ -727,8 +724,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 )";
 
 const char kExpectedComplexTypeServerHeaderOutput[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_BN_COMPLEX_TYPE_INTERFACE_H_
-#define AIDL_GENERATED_ANDROID_OS_BN_COMPLEX_TYPE_INTERFACE_H_
+    R"(#pragma once
 
 #include <binder/IInterface.h>
 #include <android/os/IComplexTypeInterface.h>
@@ -746,8 +742,6 @@ public:
 }  // namespace os
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_BN_COMPLEX_TYPE_INTERFACE_H_
 )";
 
 const char kExpectedComplexTypeServerSourceOutput[] =
@@ -1265,8 +1259,7 @@ BnComplexTypeInterface::BnComplexTypeInterface()
 )";
 
 const char kExpectedComplexTypeInterfaceHeaderOutput[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_I_COMPLEX_TYPE_INTERFACE_H_
-#define AIDL_GENERATED_ANDROID_OS_I_COMPLEX_TYPE_INTERFACE_H_
+    R"(#pragma once
 
 #include <android-base/unique_fd.h>
 #include <binder/IBinder.h>
@@ -1333,8 +1326,6 @@ public:
 }  // namespace os
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_I_COMPLEX_TYPE_INTERFACE_H_
 )";
 
 const char kExpectedComplexTypeInterfaceSourceOutput[] =
@@ -1367,8 +1358,7 @@ enum TestEnum {
 })";
 
 const char kExpectedEnumHeaderOutput[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
-#define AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
+    R"(#pragma once
 
 #include <array>
 #include <binder/Enums.h>
@@ -1446,8 +1436,6 @@ constexpr inline std::array<::android::os::TestEnum, 10> enum_values<::android::
 }  // namespace internal
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
 )";
 
 const string kEnumWithBackingTypeAIDL = R"(package android.os;
@@ -1458,8 +1446,7 @@ enum TestEnum {
 })";
 
 const char kExpectedEnumWithBackingTypeHeaderOutput[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
-#define AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
+    R"(#pragma once
 
 #include <array>
 #include <binder/Enums.h>
@@ -1505,8 +1492,6 @@ constexpr inline std::array<::android::os::TestEnum, 2> enum_values<::android::o
 }  // namespace internal
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
 )";
 // clang-format on
 

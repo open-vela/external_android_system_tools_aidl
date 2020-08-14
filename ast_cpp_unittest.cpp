@@ -31,8 +31,7 @@ namespace cpp {
 namespace {
 
 const char kExpectedHeaderOutput[] =
-R"(#ifndef HEADER_INCLUDE_GUARD_H_
-#define HEADER_INCLUDE_GUARD_H_
+    R"(#pragma once
 
 #include <string>
 #include <memory>
@@ -55,8 +54,6 @@ public:
 }  // namespace test
 
 }  // namespace android
-
-#endif  // HEADER_INCLUDE_GUARD_H_
 )";
 
 const char kExpectedSwitchOutput[] =
@@ -135,7 +132,7 @@ TEST_F(AstCppTests, GeneratesHeader) {
   vector<unique_ptr<Declaration>> test_ns_globals;
   test_ns_globals.push_back(std::move(android_ns));
 
-  CppHeader cpp_header{"HEADER_INCLUDE_GUARD_H_", {"string", "memory"}, std::move(test_ns_globals)};
+  CppHeader cpp_header{{"string", "memory"}, std::move(test_ns_globals)};
   CompareGeneratedCode(cpp_header, kExpectedHeaderOutput);
 }
 
