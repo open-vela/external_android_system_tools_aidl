@@ -135,6 +135,15 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
       {AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE, "JavaOnlyImmutable", {}},
       {AidlAnnotation::Type::FIXED_SIZE, "FixedSize", {}},
       {AidlAnnotation::Type::DESCRIPTOR, "Descriptor", {{"value", "String"}}},
+      {AidlAnnotation::Type::RUST_DERIVE,
+       "RustDerive",
+       {{"Copy", "boolean"},
+        {"Clone", "boolean"},
+        {"PartialOrd", "boolean"},
+        {"Ord", "boolean"},
+        {"PartialEq", "boolean"},
+        {"Eq", "boolean"},
+        {"Hash", "boolean"}}},
   };
   return kSchemas;
 }
@@ -293,6 +302,10 @@ const AidlAnnotation* AidlAnnotatable::UnsupportedAppUsage() const {
 
 const AidlAnnotation* AidlAnnotatable::JavaPassthrough() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_PASSTHROUGH);
+}
+
+const AidlAnnotation* AidlAnnotatable::RustDerive() const {
+  return GetAnnotation(annotations_, AidlAnnotation::Type::RUST_DERIVE);
 }
 
 const AidlTypeSpecifier* AidlAnnotatable::BackingType(const AidlTypenames& typenames) const {
@@ -859,7 +872,8 @@ std::set<AidlAnnotation::Type> AidlStructuredParcelable::GetSupportedAnnotations
           AidlAnnotation::Type::JAVA_PASSTHROUGH,
           AidlAnnotation::Type::JAVA_DEBUG,
           AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE,
-          AidlAnnotation::Type::FIXED_SIZE};
+          AidlAnnotation::Type::FIXED_SIZE,
+          AidlAnnotation::Type::RUST_DERIVE};
 }
 
 bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const {
