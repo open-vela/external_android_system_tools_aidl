@@ -1065,7 +1065,7 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
       rhs_variable_name.push_back("rhs." + variable->GetName());
     }
 
-    operator_code << "inline bool operator" << op << "(const " << parcel.GetName()
+    operator_code << "inline bool operator" << op << "([[maybe_unused]] const " << parcel.GetName()
                   << "& rhs) const {\n"
                   << "  return "
                   << "std::tie(" << Join(variable_name, ", ") << ")" << op << "std::tie("
@@ -1119,10 +1119,11 @@ std::unique_ptr<Document> BuildParcelSource(const AidlTypenames& typenames,
       StringPrintf("%s %s = %s", kAndroidStatusLiteral, kAndroidStatusVarName, kAndroidStatusOk));
 
   read_block->AddLiteral(
-      "size_t _aidl_start_pos = _aidl_parcel->dataPosition();\n"
+      "[[maybe_unused]] size_t _aidl_start_pos = _aidl_parcel->dataPosition();\n"
       "int32_t _aidl_parcelable_raw_size = _aidl_parcel->readInt32();\n"
       "if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;\n"
-      "size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);\n");
+      "[[maybe_unused]] size_t _aidl_parcelable_size = "
+      "static_cast<size_t>(_aidl_parcelable_raw_size);\n");
 
   for (const auto& variable : parcel.GetFields()) {
     string method = ParcelReadMethodOf(variable->GetType(), typenames);
