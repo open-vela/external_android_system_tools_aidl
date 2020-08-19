@@ -169,3 +169,13 @@ aidl_interface {
         "2",
     ],
 }
+
+aidl_interface {
+    name: "test-piece-5",
+    unstable: true,
+    local_include_dir: "tests_3",
+    srcs: [
+        "tests_3/EmptyParcelable.aidl",
+        "tests_3/EmptyInterface.aidl",
+    ],
+}
