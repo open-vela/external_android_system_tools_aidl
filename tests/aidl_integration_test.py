@@ -10,6 +10,8 @@ BITNESS_64 = ("64", "64")
 
 NATIVE_TEST_CLIENT_FOR_BITNESS = ' /data/nativetest%s/aidl_test_client/aidl_test_client%s'
 NATIVE_TEST_SERVICE_FOR_BITNESS = ' /data/nativetest%s/aidl_test_service/aidl_test_service%s'
+RUST_TEST_CLIENT_FOR_BITNESS = ' /data/nativetest%s/aidl_test_rust_client/aidl_test_rust_client%s'
+RUST_TEST_SERVICE_FOR_BITNESS = ' /data/nativetest%s/aidl_test_rust_service/aidl_test_rust_service%s'
 
 # From tools/base/ddmlib/src/main/java/com/android/ddmlib/testrunner/InstrumentationResultParser.java
 INSTRUMENTATION_FAILURES_PATTERN = r'There (was|were) \d+ failure'
@@ -136,6 +138,30 @@ class JavaClient:
 def getprop(host, prop):
     return host.run('getprop "%s"' % prop).stdout.strip()
 
+class RustClient:
+    def __init__(self, host, bitness):
+        self.name = "%s_bit_rust_client" % pretty_bitness(bitness)
+        self.host = host
+        self.binary = RUST_TEST_CLIENT_FOR_BITNESS % bitness
+    def cleanup(self):
+        self.host.run('killall %s' % self.binary, ignore_status=True)
+    def run(self):
+        result = self.host.run(self.binary, ignore_status=True)
+        print(result.printable_string())
+        if result.exit_status:
+            raise TestFail('%s returned status code %d' %
+                           (self.binary, result.exit_status))
+
+class RustServer:
+    def __init__(self, host, bitness):
+        self.name = "%s_bit_rust_server" % pretty_bitness(bitness)
+        self.host = host
+        self.binary = RUST_TEST_SERVICE_FOR_BITNESS % bitness
+    def cleanup(self):
+        self.host.run('killall %s' % self.binary, ignore_status=True)
+    def run(self):
+        return self.host.run(self.binary, background=True)
+
 def supported_bitnesses(host):
     bitnesses = []
     if getprop(host, "ro.product.cpu.abilist32") != "":
@@ -177,6 +203,10 @@ if __name__ == '__main__':
     # Java only supports one bitness, but needs to run a native binary
     # to process its results
     clients += [JavaClient(host, bitnesses[-1])]
+
+    for bitness in bitnesses:
+        clients += [RustClient(host, bitness)]
+        servers += [RustServer(host, bitness)]
 
     for client in clients:
         for server in servers:

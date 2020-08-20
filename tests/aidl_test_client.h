@@ -16,12 +16,14 @@
 
 #pragma once
 
+#include <android/aidl/tests/ICppJavaTests.h>
 #include <android/aidl/tests/ITestService.h>
 #include <binder/IServiceManager.h>
 #include <gtest/gtest.h>
 #include <utils/String16.h>
 
 using android::sp;
+using android::aidl::tests::ICppJavaTests;
 using android::aidl::tests::ITestService;
 
 class AidlTest : public testing::Test {
@@ -33,7 +35,13 @@ class AidlTest : public testing::Test {
 
     ASSERT_EQ(OK, getService(ITestService::descriptor, &service));
     ASSERT_NE(nullptr, service);
+
+    sp<android::IBinder> ibinder;
+    auto status = service->GetCppJavaTests(&ibinder);
+    ASSERT_TRUE(status.isOk());
+    cpp_java_tests = android::interface_cast<ICppJavaTests>(ibinder);
   }
 
   sp<ITestService> service;
+  sp<ICppJavaTests> cpp_java_tests;
 };
