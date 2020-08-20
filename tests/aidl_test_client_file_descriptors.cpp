@@ -63,12 +63,14 @@ struct FdTest : public AidlTest {
 };
 
 TEST_F(FdTest, fileDescriptor) {
+  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
+
   unique_fd read_fd;
   unique_fd write_fd;
   DoPipe(&read_fd, &write_fd);
 
   unique_fd return_fd;
-  auto status = service->RepeatFileDescriptor(std::move(write_fd), &return_fd);
+  auto status = cpp_java_tests->RepeatFileDescriptor(std::move(write_fd), &return_fd);
   ASSERT_TRUE(status.isOk());
 
   /* A note on some of the spookier stuff going on here: IIUC writes to pipes
@@ -80,13 +82,15 @@ TEST_F(FdTest, fileDescriptor) {
 }
 
 TEST_F(FdTest, fileDescriptorArray) {
+  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
+
   std::vector<unique_fd> array;
   array.resize(2);
   DoPipe(&array[0], &array[1]);
 
   std::vector<unique_fd> repeated;
   std::vector<unique_fd> reversed;
-  auto status = service->ReverseFileDescriptorArray(array, &repeated, &reversed);
+  auto status = cpp_java_tests->ReverseFileDescriptorArray(array, &repeated, &reversed);
   ASSERT_TRUE(status.isOk());
 
   WriteStringToFd("First", array[1]);

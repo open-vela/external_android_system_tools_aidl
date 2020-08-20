@@ -46,6 +46,9 @@
 #include "android/aidl/tests/BnNewName.h"
 #include "android/aidl/tests/BnOldName.h"
 
+#include "android/aidl/tests/BnCppJavaTests.h"
+#include "android/aidl/tests/ICppJavaTests.h"
+
 #include "android/aidl/tests/extension/MyExt.h"
 #include "android/aidl/tests/extension/MyExt2.h"
 
@@ -74,6 +77,7 @@ using android::ProcessState;
 using android::binder::Status;
 
 // Generated code:
+using android::aidl::tests::BnCppJavaTests;
 using android::aidl::tests::BnNamedCallback;
 using android::aidl::tests::BnNewName;
 using android::aidl::tests::BnOldName;
@@ -81,6 +85,7 @@ using android::aidl::tests::BnTestService;
 using android::aidl::tests::ByteEnum;
 using android::aidl::tests::ConstantExpressionEnum;
 using android::aidl::tests::GenericStructuredParcelable;
+using android::aidl::tests::ICppJavaTests;
 using android::aidl::tests::INamedCallback;
 using android::aidl::tests::INewName;
 using android::aidl::tests::IntEnum;
@@ -141,6 +146,114 @@ class NewName : public BnNewName {
 
   Status RealName(String16* output) override {
     *output = String16("NewName");
+    return Status::ok();
+  }
+};
+
+template <typename T>
+Status ReverseArray(const vector<T>& input, vector<T>* repeated, vector<T>* _aidl_return) {
+  ALOGI("Reversing array of length %zu", input.size());
+  *repeated = input;
+  *_aidl_return = input;
+  std::reverse(_aidl_return->begin(), _aidl_return->end());
+  return Status::ok();
+}
+
+template <typename T>
+Status RepeatNullable(const optional<T>& input, optional<T>* _aidl_return) {
+  ALOGI("Repeating nullable value");
+  *_aidl_return = input;
+  return Status::ok();
+}
+
+class CppJavaTests : public BnCppJavaTests {
+ public:
+  CppJavaTests() = default;
+  ~CppJavaTests() = default;
+
+  Status RepeatSimpleParcelable(const SimpleParcelable& input, SimpleParcelable* repeat,
+                                SimpleParcelable* _aidl_return) override {
+    ALOGI("Repeated a SimpleParcelable %s", input.toString().c_str());
+    *repeat = input;
+    *_aidl_return = input;
+    return Status::ok();
+  }
+
+  Status RepeatGenericParcelable(
+      const GenericStructuredParcelable<int32_t, StructuredParcelable, IntEnum>& input,
+      GenericStructuredParcelable<int32_t, StructuredParcelable, IntEnum>* repeat,
+      GenericStructuredParcelable<int32_t, StructuredParcelable, IntEnum>* _aidl_return) {
+    ALOGI("Repeating Generic Parcelable");
+    *repeat = input;
+    *_aidl_return = input;
+    return Status::ok();
+  }
+
+  Status RepeatPersistableBundle(const PersistableBundle& input,
+                                 PersistableBundle* _aidl_return) override {
+    ALOGI("Repeated a PersistableBundle");
+    *_aidl_return = input;
+    return Status::ok();
+  }
+
+  Status ReverseSimpleParcelables(const vector<SimpleParcelable>& input,
+                                  vector<SimpleParcelable>* repeated,
+                                  vector<SimpleParcelable>* _aidl_return) override {
+    return ReverseArray(input, repeated, _aidl_return);
+  }
+  Status ReversePersistableBundles(const vector<PersistableBundle>& input,
+                                   vector<PersistableBundle>* repeated,
+                                   vector<PersistableBundle>* _aidl_return) override {
+    return ReverseArray(input, repeated, _aidl_return);
+  }
+
+  Status ReverseNamedCallbackList(const vector<sp<IBinder>>& input, vector<sp<IBinder>>* repeated,
+                                  vector<sp<IBinder>>* _aidl_return) override {
+    return ReverseArray(input, repeated, _aidl_return);
+  }
+
+  Status RepeatFileDescriptor(unique_fd read, unique_fd* _aidl_return) override {
+    ALOGE("Repeating file descriptor");
+    *_aidl_return = unique_fd(dup(read.get()));
+    return Status::ok();
+  }
+
+  Status ReverseFileDescriptorArray(const vector<unique_fd>& input, vector<unique_fd>* repeated,
+                                    vector<unique_fd>* _aidl_return) override {
+    ALOGI("Reversing descriptor array of length %zu", input.size());
+    for (const auto& item : input) {
+      repeated->push_back(unique_fd(dup(item.get())));
+      _aidl_return->push_back(unique_fd(dup(item.get())));
+    }
+    std::reverse(_aidl_return->begin(), _aidl_return->end());
+    return Status::ok();
+  }
+
+  Status RepeatNullableParcelable(const optional<SimpleParcelable>& input,
+                                  optional<SimpleParcelable>* _aidl_return) {
+    return RepeatNullable(input, _aidl_return);
+  }
+
+  Status TakesAnIBinderList(const vector<sp<IBinder>>& input) override {
+    (void)input;
+    return Status::ok();
+  }
+  Status TakesANullableIBinderList(const optional<vector<sp<IBinder>>>& input) {
+    (void)input;
+    return Status::ok();
+  }
+
+  ::android::binder::Status RepeatExtendableParcelable(
+      const ::android::aidl::tests::extension::ExtendableParcelable& ep,
+      ::android::aidl::tests::extension::ExtendableParcelable* ep2) {
+    ep2->a = ep.a * 2;
+    ep2->b = ep.b + "BAR";
+    auto myExt = ep.ext.getParcelable<android::aidl::tests::extension::MyExt>();
+    ::android::aidl::tests::extension::MyExt retMyExt;
+    retMyExt.a = myExt->a * 2;
+    retMyExt.b = myExt->b + "BAR";
+    ep2->ext.setParcelable(retMyExt);
+
     return Status::ok();
   }
 };
@@ -218,39 +331,6 @@ class NativeService : public BnTestService {
     return Status::ok();
   }
 
-  Status RepeatSimpleParcelable(const SimpleParcelable& input,
-                                SimpleParcelable* repeat,
-                                SimpleParcelable* _aidl_return) override {
-    ALOGI("Repeated a SimpleParcelable %s", input.toString().c_str());
-    *repeat = input;
-    *_aidl_return = input;
-    return Status::ok();
-  }
-
-  Status RepeatPersistableBundle(const PersistableBundle& input,
-                                 PersistableBundle* _aidl_return) override {
-    ALOGI("Repeated a PersistableBundle");
-    *_aidl_return = input;
-    return Status::ok();
-  }
-
-  template <typename T>
-  Status ReverseArray(const vector<T>& input, vector<T>* repeated,
-                      vector<T>* _aidl_return) {
-    ALOGI("Reversing array of length %zu", input.size());
-    *repeated = input;
-    *_aidl_return = input;
-    std::reverse(_aidl_return->begin(), _aidl_return->end());
-    return Status::ok();
-  }
-
-  template <typename T>
-  Status RepeatNullable(const optional<T>& input, optional<T>* _aidl_return) {
-    ALOGI("Repeating nullable value");
-    *_aidl_return = input;
-    return Status::ok();
-  }
-
   Status ReverseBoolean(const vector<bool>& input,
                         vector<bool>* repeated,
                         vector<bool>* _aidl_return) override {
@@ -303,18 +383,6 @@ class NativeService : public BnTestService {
                          vector<LongEnum>* _aidl_return) override {
     return ReverseArray(input, repeated, _aidl_return);
   }
-  Status ReverseSimpleParcelables(
-      const vector<SimpleParcelable>& input,
-      vector<SimpleParcelable>* repeated,
-      vector<SimpleParcelable>* _aidl_return) override {
-    return ReverseArray(input, repeated, _aidl_return);
-  }
-  Status ReversePersistableBundles(
-      const vector<PersistableBundle>& input,
-      vector<PersistableBundle>* repeated,
-      vector<PersistableBundle>* _aidl_return) override {
-    return ReverseArray(input, repeated, _aidl_return);
-  }
 
   Status GetOtherTestService(const String16& name,
                              sp<INamedCallback>* returned_service) override {
@@ -343,31 +411,6 @@ class NativeService : public BnTestService {
                            vector<String16>* repeated,
                            vector<String16>* _aidl_return) override {
     return ReverseArray(input, repeated, _aidl_return);
-  }
-
-  Status ReverseNamedCallbackList(const vector<sp<IBinder>>& input,
-                                  vector<sp<IBinder>>* repeated,
-                                  vector<sp<IBinder>>* _aidl_return) override {
-    return ReverseArray(input, repeated, _aidl_return);
-  }
-
-  Status RepeatFileDescriptor(unique_fd read,
-                              unique_fd* _aidl_return) override {
-    ALOGE("Repeating file descriptor");
-    *_aidl_return = unique_fd(dup(read.get()));
-    return Status::ok();
-  }
-
-  Status ReverseFileDescriptorArray(const vector<unique_fd>& input,
-                                    vector<unique_fd>* repeated,
-                                    vector<unique_fd>* _aidl_return) override {
-    ALOGI("Reversing descriptor array of length %zu", input.size());
-    for (const auto& item : input) {
-      repeated->push_back(unique_fd(dup(item.get())));
-      _aidl_return->push_back(unique_fd(dup(item.get())));
-    }
-    std::reverse(_aidl_return->begin(), _aidl_return->end());
-    return Status::ok();
   }
 
   Status RepeatParcelFileDescriptor(const ParcelFileDescriptor& read,
@@ -425,34 +468,11 @@ class NativeService : public BnTestService {
     return RepeatNullable(input, _aidl_return);
   }
 
-  Status RepeatNullableParcelable(const optional<SimpleParcelable>& input,
-                                  optional<SimpleParcelable>* _aidl_return) {
-    return RepeatNullable(input, _aidl_return);
-  }
-
-  Status RepeatGenericParcelable(
-      const GenericStructuredParcelable<int32_t, StructuredParcelable, IntEnum>& input,
-      GenericStructuredParcelable<int32_t, StructuredParcelable, IntEnum>* repeat,
-      GenericStructuredParcelable<int32_t, StructuredParcelable, IntEnum>* _aidl_return) {
-    ALOGI("Repeating Generic Parcelable");
-    *repeat = input;
-    *_aidl_return = input;
-    return Status::ok();
-  }
-
   Status TakesAnIBinder(const sp<IBinder>& input) override {
     (void)input;
     return Status::ok();
   }
-  Status TakesAnIBinderList(const vector<sp<IBinder>>& input) override {
-    (void)input;
-    return Status::ok();
-  }
   Status TakesANullableIBinder(const sp<IBinder>& input) {
-    (void)input;
-    return Status::ok();
-  }
-  Status TakesANullableIBinderList(const optional<vector<sp<IBinder>>>& input) {
     (void)input;
     return Status::ok();
   }
@@ -532,20 +552,6 @@ class NativeService : public BnTestService {
     return Status::ok();
   }
 
-  ::android::binder::Status RepeatExtendableParcelable(
-      const ::android::aidl::tests::extension::ExtendableParcelable& ep,
-      ::android::aidl::tests::extension::ExtendableParcelable* ep2) {
-    ep2->a = ep.a * 2;
-    ep2->b = ep.b + "BAR";
-    auto myExt = ep.ext.getParcelable<android::aidl::tests::extension::MyExt>();
-    ::android::aidl::tests::extension::MyExt retMyExt;
-    retMyExt.a = myExt->a * 2;
-    retMyExt.b = myExt->b + "BAR";
-    ep2->ext.setParcelable(retMyExt);
-
-    return Status::ok();
-  }
-
   Status UnimplementedMethod(int32_t /* arg */, int32_t* /* _aidl_return */) override {
     LOG_ALWAYS_FATAL("UnimplementedMethod shouldn't be called");
   }
@@ -557,6 +563,11 @@ class NativeService : public BnTestService {
 
   Status GetNewNameInterface(sp<INewName>* ret) {
     *ret = new NewName;
+    return Status::ok();
+  }
+
+  Status GetCppJavaTests(sp<IBinder>* ret) {
+    *ret = new CppJavaTests;
     return Status::ok();
   }
 

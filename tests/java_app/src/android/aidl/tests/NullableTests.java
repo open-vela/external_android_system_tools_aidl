@@ -19,6 +19,7 @@ package android.aidl.tests;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -37,13 +38,19 @@ import org.junit.runner.RunWith;
 @RunWith(JUnit4.class)
 public class NullableTests {
     private ITestService mService;
+    private ICppJavaTests mCppJavaTests;
 
     @Before
-    public void setUp() {
+    public void setUp() throws RemoteException {
         IBinder binder = ServiceManager.getService(ITestService.class.getName());
         assertNotNull(binder);
         mService = ITestService.Stub.asInterface(binder);
         assertNotNull(mService);
+
+        IBinder binder2 = mService.GetCppJavaTests();
+        if (binder2 != null) {
+            mCppJavaTests = ICppJavaTests.Stub.asInterface(binder2);
+        }
     }
 
     @Test
@@ -68,10 +75,12 @@ public class NullableTests {
 
     @Test
     public void testExpectNpeWithNullBinderList() throws RemoteException {
+        assumeTrue(mCppJavaTests != null);
+
         List<IBinder> listWithNulls = new ArrayList<IBinder>();
         listWithNulls.add(null);
         try {
-            mService.TakesAnIBinderList(listWithNulls);
+            mCppJavaTests.TakesAnIBinderList(listWithNulls);
         } catch (NullPointerException ex) {
             return;
         }
