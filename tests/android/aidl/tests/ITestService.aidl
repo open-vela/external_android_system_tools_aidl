@@ -44,6 +44,19 @@ interface ITestService {
 
   const @utf8InCpp String STRING_TEST_CONSTANT_UTF8 = "baz";
 
+  // This is to emulate a method that is added after the service is implemented.
+  // So the client cannot assume that a call to this method will be successful
+  // or not. However, inside the test environment, we can't build client and
+  // the server with different version of this AIDL file. So, we let the server
+  // actually implement this and intercept the dispatch to the method
+  // inside onTransact().
+  // WARNING: Must be first method.
+  // This requires hard coding the transaction number. As long as this method is
+  // the first in this interface, it can keep the
+  // "::android::IBinder::FIRST_CALL_TRANSACTION + 0" value and allow
+  // methods to be added and removed.
+  int UnimplementedMethod(int arg);
+
   // Test that primitives work as parameters and return types.
   boolean RepeatBoolean(boolean token);
   byte RepeatByte(byte token);
@@ -135,14 +148,6 @@ interface ITestService {
   // Since this paracelable has clearly defined default values, it would be
   // inefficient to use an IPC to fill it out in practice.
   void FillOutStructuredParcelable(inout StructuredParcelable parcel);
-
-  // This is to emulate a method that is added after the service is implemented.
-  // So the client cannot assume that call to this method will be successful
-  // or not. However, inside the test environment, we can't build client and
-  // the server with different version of this AIDL file. So, we let the server
-  // to actually implement this, but intercept the dispatch to the method
-  // inside onTransact().
-  int UnimplementedMethod(int arg);
 
   // All these constant expressions should be equal to 1
   const int A1 = (~(-1)) == 0;
