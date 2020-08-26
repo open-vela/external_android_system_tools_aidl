@@ -1428,7 +1428,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 		Stem:                      proptools.StringPtr(cppOutputGen),
 		Apex_available:            commonProperties.Apex_available,
 		Min_sdk_version:           minSdkVersion,
-		UseApexNameMacro:          true,
 	}, &i.properties.VndkProperties, &commonProperties.VndkProperties, &overrideVndkProperties)
 
 	return cppModuleGen
