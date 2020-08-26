@@ -47,7 +47,6 @@ type ccProperties struct {
 	Stem                      *string
 	Apex_available            []string
 	Min_sdk_version           *string
-	UseApexNameMacro          bool
 }
 
 type javaProperties struct {
