@@ -65,10 +65,9 @@ std::string RawParcelMethod(const AidlTypeSpecifier& raw_type, const AidlTypenam
   };
 
   const bool nullable = raw_type.IsNullable();
-  const bool isVector =
-      raw_type.IsArray() || (raw_type.IsGeneric() && raw_type.GetName() == "List");
+  const bool isVector = raw_type.IsArray() || typenames.IsList(raw_type);
   const bool utf8 = raw_type.IsUtf8InCpp();
-  const auto& type = raw_type.IsGeneric() ? *raw_type.GetTypeParameters().at(0) : raw_type;
+  const auto& type = typenames.IsList(raw_type) ? *raw_type.GetTypeParameters().at(0) : raw_type;
   const string& aidl_name = type.GetName();
 
   if (auto enum_decl = typenames.GetEnumDeclaration(raw_type); enum_decl != nullptr) {
@@ -136,7 +135,7 @@ std::string GetRawCppName(const AidlTypeSpecifier& type) {
 
 std::string WrapIfNullable(const std::string type_str, const AidlTypeSpecifier& raw_type,
                            const AidlTypenames& typenames) {
-  const auto& type = raw_type.IsGeneric() ? (*raw_type.GetTypeParameters().at(0)) : raw_type;
+  const auto& type = typenames.IsList(raw_type) ? (*raw_type.GetTypeParameters().at(0)) : raw_type;
 
   if (raw_type.IsNullable() && !AidlTypenames::IsPrimitiveTypename(type.GetName()) &&
       type.GetName() != "IBinder" && typenames.GetEnumDeclaration(type) == nullptr) {
@@ -161,10 +160,8 @@ std::string GetCppName(const AidlTypeSpecifier& raw_type, const AidlTypenames& t
       {"String", "::android::String16"},
       {"void", "void"},
   };
-
-  CHECK(!raw_type.IsGeneric() ||
-        (raw_type.GetName() == "List" && raw_type.GetTypeParameters().size() == 1));
-  const auto& type = raw_type.IsGeneric() ? (*raw_type.GetTypeParameters().at(0)) : raw_type;
+  CHECK(!typenames.IsList(raw_type) || raw_type.GetTypeParameters().size() == 1);
+  const auto& type = typenames.IsList(raw_type) ? (*raw_type.GetTypeParameters().at(0)) : raw_type;
   const string& aidl_name = type.GetName();
   if (m.find(aidl_name) != m.end()) {
     CHECK(AidlTypenames::IsBuiltinTypename(aidl_name));
@@ -209,7 +206,7 @@ std::string GetTransactionIdFor(const AidlMethod& method) {
 }
 
 std::string CppNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
-  if (type.IsArray() || type.IsGeneric()) {
+  if (type.IsArray() || typenames.IsList(type)) {
     std::string cpp_name = GetCppName(type, typenames);
     if (type.IsNullable()) {
       return "::std::optional<::std::vector<" + cpp_name + ">>";
@@ -220,7 +217,7 @@ std::string CppNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typena
 }
 
 bool IsNonCopyableType(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
-  if (type.IsArray() || type.IsGeneric()) {
+  if (type.IsArray() || typenames.IsList(type)) {
     return false;
   }
 
@@ -269,13 +266,12 @@ std::string ParcelWriteCastOf(const AidlTypeSpecifier& type, const AidlTypenames
 
 void AddHeaders(const AidlTypeSpecifier& raw_type, const AidlTypenames& typenames,
                 std::set<std::string>& headers) {
-  bool isVector = raw_type.IsArray() || raw_type.IsGeneric();
+  bool isVector = raw_type.IsArray() || typenames.IsList(raw_type);
   bool isNullable = raw_type.IsNullable();
   bool utf8 = raw_type.IsUtf8InCpp();
 
-  CHECK(!raw_type.IsGeneric() ||
-        (raw_type.GetName() == "List" && raw_type.GetTypeParameters().size() == 1));
-  const auto& type = raw_type.IsGeneric() ? *raw_type.GetTypeParameters().at(0) : raw_type;
+  CHECK(!typenames.IsList(raw_type) || raw_type.GetTypeParameters().size() == 1);
+  const auto& type = typenames.IsList(raw_type) ? *raw_type.GetTypeParameters().at(0) : raw_type;
   auto definedType = typenames.TryGetDefinedType(type.GetName());
 
   if (isVector) {

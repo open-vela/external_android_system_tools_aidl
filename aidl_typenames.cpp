@@ -261,6 +261,10 @@ bool AidlTypenames::CanBeFixedSize(const AidlTypeSpecifier& type) const {
   return t->IsFixedSize();
 }
 
+bool AidlTypenames::IsList(const AidlTypeSpecifier& type) const {
+  return type.GetName() == "List";
+}
+
 // Only T[], List, Map, ParcelFileDescriptor and mutable Parcelable can be an out parameter.
 bool AidlTypenames::CanBeOutParameter(const AidlTypeSpecifier& type) const {
   const string& name = type.GetName();
