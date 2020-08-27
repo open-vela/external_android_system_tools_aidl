@@ -168,6 +168,7 @@ class AidlAnnotation : public AidlNode {
     JAVA_DEBUG,
     JAVA_ONLY_IMMUTABLE,
     FIXED_SIZE,
+    DESCRIPTOR,
   };
   static std::string TypeToString(Type type);
 
@@ -236,6 +237,7 @@ class AidlAnnotatable : public AidlNode {
   bool IsStableApiParcelable(Options::Language lang) const;
   bool IsHide() const;
   bool IsJavaDebug() const;
+  std::string GetDescriptor() const;
 
   void DumpAnnotations(CodeWriter* writer) const;
 
@@ -871,6 +873,8 @@ class AidlInterface final : public AidlDefinedType {
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                   Options::Language lang) const override;
+
+  std::string GetDescriptor() const;
 
  private:
   std::vector<std::unique_ptr<AidlMethod>> methods_;

@@ -43,6 +43,9 @@
 #include "android/aidl/versioned/tests/BnFooInterface.h"
 #include "android/aidl/versioned/tests/IFooInterface.h"
 
+#include "android/aidl/tests/BnNewName.h"
+#include "android/aidl/tests/BnOldName.h"
+
 // Used implicitly.
 #undef LOG_TAG
 #define LOG_TAG "aidl_native_service"
@@ -69,11 +72,15 @@ using android::binder::Status;
 
 // Generated code:
 using android::aidl::tests::BnNamedCallback;
+using android::aidl::tests::BnNewName;
+using android::aidl::tests::BnOldName;
 using android::aidl::tests::BnTestService;
 using android::aidl::tests::ByteEnum;
 using android::aidl::tests::ConstantExpressionEnum;
 using android::aidl::tests::INamedCallback;
+using android::aidl::tests::INewName;
 using android::aidl::tests::IntEnum;
+using android::aidl::tests::IOldName;
 using android::aidl::tests::LongEnum;
 using android::aidl::tests::SimpleParcelable;
 using android::os::ParcelFileDescriptor;
@@ -109,6 +116,28 @@ class NamedCallback : public BnNamedCallback {
 
  private:
   String16 name_;
+};
+
+class OldName : public BnOldName {
+ public:
+  OldName() = default;
+  ~OldName() = default;
+
+  Status RealName(String16* output) override {
+    *output = String16("OldName");
+    return Status::ok();
+  }
+};
+
+class NewName : public BnNewName {
+ public:
+  NewName() = default;
+  ~NewName() = default;
+
+  Status RealName(String16* output) override {
+    *output = String16("NewName");
+    return Status::ok();
+  }
 };
 
 class NativeService : public BnTestService {
@@ -491,6 +520,16 @@ class NativeService : public BnTestService {
 
   Status UnimplementedMethod(int32_t /* arg */, int32_t* /* _aidl_return */) override {
     LOG_ALWAYS_FATAL("UnimplementedMethod shouldn't be called");
+  }
+
+  Status GetOldNameInterface(sp<IOldName>* ret) {
+    *ret = new OldName;
+    return Status::ok();
+  }
+
+  Status GetNewNameInterface(sp<INewName>* ret) {
+    *ret = new NewName;
+    return Status::ok();
   }
 
   android::status_t onTransact(uint32_t code, const Parcel& data, Parcel* reply,

@@ -699,4 +699,27 @@ public class TestServiceClient {
 
         assertThat(p.toString(), is(expected));
     }
+
+    @Test
+    public void testRenamedInterface() throws RemoteException {
+      IOldName oldAsOld = service.GetOldNameInterface();
+      assertNotNull(oldAsOld);
+      assertThat(oldAsOld.DESCRIPTOR, is("android.aidl.tests.IOldName"));
+      assertThat(oldAsOld.RealName(), is("OldName"));
+
+      INewName newAsNew = service.GetNewNameInterface();
+      assertNotNull(newAsNew);
+      assertThat(newAsNew.DESCRIPTOR, is("android.aidl.tests.IOldName"));
+      assertThat(oldAsOld.RealName(), is("OldName"));
+
+      IOldName newAsOld = IOldName.Stub.asInterface(service.GetNewNameInterface().asBinder());
+      assertNotNull(newAsOld);
+      assertThat(newAsOld.DESCRIPTOR, is("android.aidl.tests.IOldName"));
+      assertThat(newAsOld.RealName(), is("NewName"));
+
+      INewName oldAsNew = INewName.Stub.asInterface(service.GetOldNameInterface().asBinder());
+      assertNotNull(oldAsNew);
+      assertThat(oldAsNew.DESCRIPTOR, is("android.aidl.tests.IOldName"));
+      assertThat(oldAsNew.RealName(), is("OldName"));
+    }
 }

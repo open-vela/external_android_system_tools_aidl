@@ -134,6 +134,7 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
       {AidlAnnotation::Type::JAVA_DEBUG, "JavaDebug", {}},
       {AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE, "JavaOnlyImmutable", {}},
       {AidlAnnotation::Type::FIXED_SIZE, "FixedSize", {}},
+      {AidlAnnotation::Type::DESCRIPTOR, "Descriptor", {{"value", "String"}}},
   };
   return kSchemas;
 }
@@ -326,6 +327,23 @@ bool AidlAnnotatable::IsHide() const {
 
 bool AidlAnnotatable::IsJavaDebug() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_DEBUG);
+}
+
+std::string AidlAnnotatable::GetDescriptor() const {
+  auto annotation = GetAnnotation(annotations_, AidlAnnotation::Type::DESCRIPTOR);
+  if (annotation != nullptr) {
+    auto params = annotation->AnnotationParams(AidlConstantValueDecorator);
+    if (auto it = params.find("value"); it != params.end()) {
+      const string& value = it->second;
+
+      AIDL_FATAL_IF(value.size() < 2, this) << value;
+      AIDL_FATAL_IF(value[0] != '"', this) << value;
+      AIDL_FATAL_IF(value[value.length() - 1] != '"', this) << value;
+      std::string unquoted_value = value.substr(1, value.length() - 2);
+      return unquoted_value;
+    }
+  }
+  return "";
 }
 
 void AidlAnnotatable::DumpAnnotations(CodeWriter* writer) const {
@@ -1133,7 +1151,8 @@ void AidlInterface::Dump(CodeWriter* writer) const {
 
 std::set<AidlAnnotation::Type> AidlInterface::GetSupportedAnnotations() const {
   return {AidlAnnotation::Type::VINTF_STABILITY, AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
-          AidlAnnotation::Type::HIDE, AidlAnnotation::Type::JAVA_PASSTHROUGH};
+          AidlAnnotation::Type::HIDE, AidlAnnotation::Type::JAVA_PASSTHROUGH,
+          AidlAnnotation::Type::DESCRIPTOR};
 }
 
 bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
@@ -1236,6 +1255,14 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
   }
 
   return success;
+}
+
+std::string AidlInterface::GetDescriptor() const {
+  std::string annotatedDescriptor = AidlAnnotatable::GetDescriptor();
+  if (annotatedDescriptor != "") {
+    return annotatedDescriptor;
+  }
+  return GetCanonicalName();
 }
 
 AidlImport::AidlImport(const AidlLocation& location, const std::string& needed_class)
