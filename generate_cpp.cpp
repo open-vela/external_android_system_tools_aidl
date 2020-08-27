@@ -760,16 +760,12 @@ unique_ptr<Document> BuildInterfaceSource(const AidlTypenames& typenames,
       HeaderFile(interface, ClassNames::CLIENT, false),
   };
 
-  string fq_name = ClassName(interface, ClassNames::INTERFACE);
-  if (!interface.GetPackage().empty()) {
-    fq_name = interface.GetPackage() + "." + fq_name;
-  }
-
   vector<unique_ptr<Declaration>> decls;
 
-  unique_ptr<MacroDecl> meta_if{new MacroDecl{
-      "DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE",
-      ArgList{vector<string>{ClassName(interface, ClassNames::BASE), '"' + fq_name + '"'}}}};
+  unique_ptr<MacroDecl> meta_if{
+      new MacroDecl{"DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE",
+                    ArgList{vector<string>{ClassName(interface, ClassNames::BASE),
+                                           '"' + interface.GetDescriptor() + '"'}}}};
   decls.push_back(std::move(meta_if));
 
   for (const auto& constant : interface.GetConstantDeclarations()) {

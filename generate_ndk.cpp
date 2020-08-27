@@ -636,8 +636,8 @@ void GenerateInterfaceSource(CodeWriter& out, const AidlTypenames& types,
   const std::string bp_clazz = ClassName(defined_type, ClassNames::CLIENT);
 
   out << "// Source for " << clazz << "\n";
-  out << "const char* " << clazz << "::" << kDescriptor << " = \""
-      << defined_type.GetCanonicalName() << "\";\n";
+  out << "const char* " << clazz << "::" << kDescriptor << " = \"" << defined_type.GetDescriptor()
+      << "\";\n";
   out << clazz << "::" << clazz << "() {}\n";
   out << clazz << "::~" << clazz << "() {}\n";
   out << "\n";

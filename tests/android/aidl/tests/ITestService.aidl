@@ -22,6 +22,8 @@ import android.aidl.tests.IntEnum;
 import android.aidl.tests.LongEnum;
 import android.aidl.tests.SimpleParcelable;
 import android.aidl.tests.StructuredParcelable;
+import android.aidl.tests.IOldName;
+import android.aidl.tests.INewName;
 import android.os.PersistableBundle;
 
 interface ITestService {
@@ -207,4 +209,7 @@ interface ITestService {
   const int A55 = (2 + 3 - 4 * -7 / (10 % 3)) - 33 == 0;
   const int A56 = (2 + (-3&4 / 7)) == 2;
   const int A57 = (((((1 + 0)))));
+
+  IOldName GetOldNameInterface();
+  INewName GetNewNameInterface();
 }

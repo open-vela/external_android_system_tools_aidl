@@ -920,14 +920,14 @@ static void generate_interface_descriptors(const Options& options, const AidlInt
   }
   auto descriptor = std::make_shared<Field>(
       STATIC | FINAL | PUBLIC, std::make_shared<Variable>("java.lang.String", "DESCRIPTOR"));
+  std::string name = iface->GetDescriptor();
   if (options.IsStructured()) {
     // mangle the interface name at build time and demangle it at runtime, to avoid
     // being renamed by jarjar. See b/153843174
-    std::string name = iface->GetCanonicalName();
     std::replace(name.begin(), name.end(), '.', '$');
     descriptor->value = "\"" + name + "\".replace('$', '.')";
   } else {
-    descriptor->value = "\"" + iface->GetCanonicalName() + "\"";
+    descriptor->value = "\"" + name + "\"";
   }
   classToAddDescriptor->elements.push_back(descriptor);
 }
