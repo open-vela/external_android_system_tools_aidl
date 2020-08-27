@@ -25,6 +25,7 @@ import (
 	"github.com/google/blueprint/proptools"
 
 	"android/soong/android"
+	"android/soong/apex"
 	"android/soong/cc"
 	"android/soong/java"
 )
@@ -94,6 +95,9 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 		}
 		cc_library {
 			name: "libbinder_ndk",
+			stubs: {
+				versions: ["29"],
+			}
 		}
 		ndk_library {
 			name: "libbinder_ndk",
@@ -143,8 +147,13 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 	ctx.RegisterModuleType("java_library", java.LibraryFactory)
 	ctx.RegisterModuleType("java_system_modules", java.SystemModulesFactory)
 
+	ctx.RegisterModuleType("apex", apex.BundleFactory)
+	ctx.RegisterModuleType("apex_key", apex.ApexKeyFactory)
+
 	ctx.PreArchMutators(android.RegisterDefaultsPreArchMutators)
 	ctx.PostDepsMutators(android.RegisterOverridePostDepsMutators)
+	ctx.PreDepsMutators(apex.RegisterPreDepsMutators)
+	ctx.PostDepsMutators(apex.RegisterPostDepsMutators)
 	ctx.PostDepsMutators(func(ctx android.RegisterMutatorsContext) {
 		ctx.BottomUp("checkUnstableModule", checkUnstableModuleMutator).Parallel()
 		ctx.BottomUp("checkDuplicatedVersions", checkDuplicatedVersions).Parallel()
@@ -641,4 +650,42 @@ func TestUnstableVndkModule(t *testing.T) {
 			},
 		}
 	`)
+}
+
+func TestCcModuleWithApexNameMacro(t *testing.T) {
+	ctx, _ := testAidl(t, `
+		aidl_interface {
+			name: "myiface",
+			srcs: ["IFoo.aidl"],
+			backend: {
+				ndk: {
+					apex_available: ["myapex"],
+				},
+			},
+		}
+		apex {
+			name: "myapex",
+			key: "myapex.key",
+			native_shared_libs: ["myiface-ndk_platform"],
+		}
+		apex_key {
+			name: "myapex.key",
+			public_key: "testkey.avbpubkey",
+			private_key: "testkey.pem",
+		}
+	`, withFiles(map[string][]byte{
+		"system/sepolicy/apex/myapex-file_contexts": nil,
+	}))
+
+	assertContains := func(t *testing.T, actual, expected string) {
+		t.Helper()
+		if !strings.Contains(actual, expected) {
+			t.Errorf("%q is not found in %q.", expected, actual)
+		}
+	}
+
+	ccRule := ctx.ModuleForTests("myiface-ndk_platform", "android_arm64_armv8-a_static_myapex").Rule("cc")
+	assertContains(t, ccRule.Args["cFlags"], "-D__ANDROID_APEX__")
+	assertContains(t, ccRule.Args["cFlags"], "-D__ANDROID_APEX_NAME__='\"myapex\"'")
+	assertContains(t, ccRule.Args["cFlags"], "-D__ANDROID_APEX_MYAPEX__")
 }
