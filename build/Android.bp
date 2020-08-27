@@ -18,6 +18,7 @@ bootstrap_go_package {
     deps: [
         "blueprint",
         "soong",
+        "soong-apex",
         "soong-android",
         "soong-cc",
         "soong-genrule",
