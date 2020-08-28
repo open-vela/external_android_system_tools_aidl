@@ -101,7 +101,11 @@ const string& JavaNameOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typ
     const string& backing_type_name = enum_decl->GetBackingType().GetName();
     CHECK(m.find(backing_type_name) != m.end());
     CHECK(AidlTypenames::IsBuiltinTypename(backing_type_name));
-    return m[backing_type_name];
+    if (boxing) {
+      return boxing_types[backing_type_name];
+    } else {
+      return m[backing_type_name];
+    }
   }
 
   const string& aidl_name = aidl.GetName();
