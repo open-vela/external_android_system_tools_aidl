@@ -914,12 +914,6 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
       return false;
     }
   }
-  if (lang != Options::Language::JAVA) {
-    if (this->GetName() == "List" && !this->IsGeneric()) {
-      AIDL_ERROR(this) << "Currently, only the Java backend supports non-generic List.";
-      return false;
-    }
-  }
   if (this->GetName() == "FileDescriptor" && lang == Options::Language::NDK) {
     AIDL_ERROR(this) << "FileDescriptor isn't supported with the NDK.";
     return false;
@@ -951,20 +945,23 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
       }
     }
   }
-  if (this->GetName() == "Map" || this->GetName() == "CharSequence") {
-    if (lang != Options::Language::JAVA) {
-      AIDL_ERROR(this) << "Currently, only Java backend supports " << this->GetName() << ".";
+
+  if (this->IsArray()) {
+    if (this->GetName() == "List" || this->GetName() == "Map" ||
+        this->GetName() == "CharSequence") {
+      AIDL_ERROR(this) << this->GetName() << "[] is not supported.";
       return false;
     }
   }
-  if (lang == Options::Language::JAVA) {
-    const string name = this->GetName();
-    // List[], Map[], CharSequence[] are not supported.
-    if (AidlTypenames::IsBuiltinTypename(name) && this->IsArray()) {
-      if (name == "List" || name == "Map" || name == "CharSequence") {
-        AIDL_ERROR(this) << "List[], Map[], CharSequence[] are not supported.";
-        return false;
-      }
+
+  if (lang != Options::Language::JAVA) {
+    if (this->GetName() == "List" && !this->IsGeneric()) {
+      AIDL_ERROR(this) << "Currently, only the Java backend supports non-generic List.";
+      return false;
+    }
+    if (this->GetName() == "Map" || this->GetName() == "CharSequence") {
+      AIDL_ERROR(this) << "Currently, only Java backend supports " << this->GetName() << ".";
+      return false;
     }
   }
 
