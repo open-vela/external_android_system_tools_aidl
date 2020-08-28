@@ -271,45 +271,60 @@ std::string ParcelWriteCastOf(const AidlTypeSpecifier& type, const AidlTypenames
   return variable_name;
 }
 
-void AddHeaders(const AidlTypeSpecifier& raw_type, const AidlTypenames& typenames,
-                std::set<std::string>& headers) {
-  bool isVector = raw_type.IsArray() || typenames.IsList(raw_type);
-  bool isNullable = raw_type.IsNullable();
-  bool utf8 = raw_type.IsUtf8InCpp();
-
-  CHECK(!typenames.IsList(raw_type) || raw_type.GetTypeParameters().size() == 1);
-  const auto& type = typenames.IsList(raw_type) ? *raw_type.GetTypeParameters().at(0) : raw_type;
-  auto definedType = typenames.TryGetDefinedType(type.GetName());
+void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
+                std::set<std::string>* headers) {
+  CHECK(!typenames.IsList(type) || type.GetTypeParameters().size() == 1);
+  bool isVector = type.IsArray() || typenames.IsList(type);
+  bool isNullable = type.IsNullable();
+  bool utf8 = type.IsUtf8InCpp();
 
   if (isVector) {
-    headers.insert("vector");
+    headers->insert("vector");
+  }
+  if (type.IsGeneric()) {
+    for (const auto& parameter : type.GetTypeParameters()) {
+      AddHeaders(*parameter, typenames, headers);
+    }
   }
   if (isNullable) {
     if (type.GetName() != "IBinder") {
-      headers.insert("optional");
+      headers->insert("optional");
     }
   }
+  if (typenames.IsList(type)) {
+    // Nothing else to do for List.
+    return;
+  }
   if (type.GetName() == "String") {
-    headers.insert(utf8 ? "string" : "utils/String16.h");
+    headers->insert(utf8 ? "string" : "utils/String16.h");
+    return;
   }
   if (type.GetName() == "IBinder") {
-    headers.insert("binder/IBinder.h");
+    headers->insert("binder/IBinder.h");
+    return;
   }
   if (type.GetName() == "FileDescriptor") {
-    headers.insert("android-base/unique_fd.h");
+    headers->insert("android-base/unique_fd.h");
+    return;
   }
   if (type.GetName() == "ParcelFileDescriptor") {
-    headers.insert("binder/ParcelFileDescriptor.h");
+    headers->insert("binder/ParcelFileDescriptor.h");
+    return;
   }
 
   static const std::set<string> need_cstdint{"byte", "int", "long"};
   if (need_cstdint.find(type.GetName()) != need_cstdint.end()) {
-    headers.insert("cstdint");
-  }
-
-  if (definedType == nullptr) {
+    headers->insert("cstdint");
     return;
   }
+
+  if (AidlTypenames::IsPrimitiveTypename(type.GetName())) {
+    return;
+  }
+
+  auto definedType = typenames.TryGetDefinedType(type.GetName());
+  AIDL_FATAL_IF(definedType == nullptr, type) << "Unexpected type: " << type.GetName();
+
   if (definedType->AsInterface() != nullptr || definedType->AsStructuredParcelable() != nullptr ||
       definedType->AsEnumDeclaration() != nullptr) {
     AddHeaders(*definedType, headers);
@@ -318,15 +333,15 @@ void AddHeaders(const AidlTypeSpecifier& raw_type, const AidlTypenames& typename
     AIDL_FATAL_IF(cpp_header.empty(), definedType->AsParcelable())
         << "Parcelable " << definedType->AsParcelable()->GetCanonicalName()
         << " has no C++ header defined.";
-    headers.insert(cpp_header);
+    headers->insert(cpp_header);
   }
 }
 
-void AddHeaders(const AidlDefinedType& definedType, std::set<std::string>& headers) {
+void AddHeaders(const AidlDefinedType& definedType, std::set<std::string>* headers) {
   vector<string> name = definedType.GetSplitPackage();
   name.push_back(definedType.GetName());
   const std::string cpp_header = Join(name, '/') + ".h";
-  headers.insert(cpp_header);
+  headers->insert(cpp_header);
 }
 
 }  // namespace cpp

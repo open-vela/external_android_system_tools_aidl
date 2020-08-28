@@ -148,6 +148,35 @@ public class Rect implements android.os.Parcelable
 }
 )";
 
+// clang-format off
+const char kExpectedCppHeaderOutput[] =
+    R"(#pragma once
+
+#include <binder/IBinder.h>
+#include <binder/IInterface.h>
+#include <binder/Status.h>
+#include <optional>
+#include <utils/String16.h>
+#include <utils/StrongPointer.h>
+#include <vector>
+
+class IFoo : public ::android::IInterface {
+public:
+  DECLARE_META_INTERFACE(Foo)
+  virtual ::android::binder::Status foo(::std::optional<::std::vector<::std::optional<::android::String16>>>* _aidl_return) = 0;
+};  // class IFoo
+class IFooDefault : public IFoo {
+public:
+  ::android::IBinder* onAsBinder() override {
+    return nullptr;
+  }
+  ::android::binder::Status foo(::std::optional<::std::vector<::std::optional<::android::String16>>>*) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+};  // class IFooDefault
+)";
+// clang-format on
+
 }  // namespace
 
 class AidlTest : public ::testing::TestWithParam<Options::Language> {
@@ -276,6 +305,14 @@ TEST_P(AidlTest, RejectsNullablePrimitive) {
       "ERROR: a/IFoo.aidl:1.38-42: Primitive type cannot get nullable annotation\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", oneway_method, typenames_, GetLanguage()));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_P(AidlTest, AcceptNullableList) {
+  const string oneway_method = "package a; interface IFoo { @nullable List<String> f(); }";
+  const string expected_stderr = "";
+  CaptureStderr();
+  EXPECT_NE(nullptr, Parse("a/IFoo.aidl", oneway_method, typenames_, GetLanguage()));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
@@ -673,6 +710,26 @@ TEST_F(AidlTest, JavaParcelableOutput) {
   EXPECT_EQ(kExpectedJavaParcelableOutputContests, output);
 }
 
+TEST_F(AidlTest, CppHeaderIncludes) {
+  io_delegate_.SetFileContents("IFoo.aidl",
+                               "interface IFoo {\n"
+                               "  @nullable List<String> foo();\n"
+                               "}");
+
+  vector<string> args{"aidl", "--lang=cpp", "IFoo.aidl"};
+  Options options = Options::From(args);
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  std::vector<std::string> empty;
+  EXPECT_EQ(empty, io_delegate_.ListFiles(""));
+  EXPECT_EQ(empty, io_delegate_.ListFiles("/"));
+  EXPECT_EQ(empty, io_delegate_.ListFiles("out"));
+
+  // Make sure the optional and String16.h includes are added
+  string output;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("IFoo.h", &output));
+  EXPECT_EQ(kExpectedCppHeaderOutput, output);
+}
+
 TEST_P(AidlTest, RequireOuterClass) {
   const string expected_stderr = "ERROR: p/IFoo.aidl:1.54-60: Failed to resolve 'Inner'\n";
   io_delegate_.SetFileContents("p/Outer.aidl",
@@ -921,7 +978,7 @@ TEST_P(AidlTest, UnderstandsNativeParcelables) {
   // C++ understands C++ specific stuff
   EXPECT_EQ("::p::Bar", cpp::CppNameOf(native_type, typenames_));
   set<string> headers;
-  cpp::AddHeaders(native_type, typenames_, headers);
+  cpp::AddHeaders(native_type, typenames_, &headers);
   EXPECT_EQ(1u, headers.size());
   EXPECT_EQ(1u, headers.count("baz/header"));
 }

@@ -906,10 +906,10 @@ unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
 
   for (const auto& method : interface.GetMethods()) {
     for (const auto& argument : method->GetArguments()) {
-      AddHeaders(argument->GetType(), typenames, includes);
+      AddHeaders(argument->GetType(), typenames, &includes);
     }
 
-    AddHeaders(method->GetType(), typenames, includes);
+    AddHeaders(method->GetType(), typenames, &includes);
   }
 
   const string i_name = ClassName(interface, ClassNames::INTERFACE);
@@ -1039,7 +1039,7 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
   set<string> includes = {kStatusHeader, kParcelHeader};
   includes.insert("tuple");
   for (const auto& variable : parcel.GetFields()) {
-    AddHeaders(variable->GetType(), typenames, includes);
+    AddHeaders(variable->GetType(), typenames, &includes);
   }
 
   set<string> operators = {"<", ">", "==", ">=", "<=", "!="};
@@ -1161,7 +1161,7 @@ std::unique_ptr<Document> BuildParcelSource(const AidlTypenames& typenames,
   file_decls.push_back(std::move(write));
 
   set<string> includes = {};
-  AddHeaders(parcel, includes);
+  AddHeaders(parcel, &includes);
 
   return unique_ptr<Document>{
       new CppSource{vector<string>(includes.begin(), includes.end()),
@@ -1209,7 +1209,7 @@ std::unique_ptr<Document> BuildEnumHeader(const AidlTypenames& typenames,
       "binder/Enums.h",
       "string",
   };
-  AddHeaders(enum_decl.GetBackingType(), typenames, includes);
+  AddHeaders(enum_decl.GetBackingType(), typenames, &includes);
 
   std::vector<std::unique_ptr<Declaration>> decls1;
   decls1.push_back(std::move(generated_enum));
