@@ -261,7 +261,7 @@ bool AidlTypenames::CanBeFixedSize(const AidlTypeSpecifier& type) const {
   return t->IsFixedSize();
 }
 
-bool AidlTypenames::IsList(const AidlTypeSpecifier& type) {
+bool AidlTypenames::IsList(const AidlTypeSpecifier& type) const {
   return type.GetName() == "List";
 }
 
