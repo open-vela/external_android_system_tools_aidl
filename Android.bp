@@ -242,7 +242,7 @@ cc_library_headers {
 
 filegroup {
     name: "libaidl-integration-test-files",
-    srcs: ["tests/android/aidl/tests/*.aidl"],
+    srcs: ["tests/android/aidl/tests/*.aidl", "tests/android/aidl/tests/extension/*.aidl"],
     path: "tests",
 }
 

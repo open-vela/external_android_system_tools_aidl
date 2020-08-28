@@ -48,6 +48,7 @@ std::string RawParcelMethod(const AidlTypeSpecifier& type, const AidlTypenames& 
       {"long", "Int64"},
       {"ParcelFileDescriptor", "Parcelable"},
       {"String", "String16"},
+      {"ParcelableHolder", "Parcelable"},
   };
 
   static map<string, string> kBuiltinVector = {
@@ -166,6 +167,7 @@ std::string GetCppName(const AidlTypeSpecifier& raw_type, const AidlTypenames& t
       {"ParcelFileDescriptor", "::android::os::ParcelFileDescriptor"},
       {"String", "::android::String16"},
       {"void", "void"},
+      {"ParcelableHolder", "::android::os::ParcelableHolder"},
   };
   AIDL_FATAL_IF(typenames.IsList(raw_type) && raw_type.GetTypeParameters().size() != 1, raw_type);
   const auto& type = typenames.IsList(raw_type) ? (*raw_type.GetTypeParameters().at(0)) : raw_type;
@@ -316,6 +318,10 @@ void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
   }
   if (type.GetName() == "ParcelFileDescriptor") {
     headers->insert("binder/ParcelFileDescriptor.h");
+    return;
+  }
+  if (type.GetName() == "ParcelableHolder") {
+    headers->insert("binder/ParcelableHolder.h");
     return;
   }
 
