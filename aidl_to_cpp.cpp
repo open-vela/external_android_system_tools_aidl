@@ -34,7 +34,7 @@ namespace aidl {
 namespace cpp {
 
 namespace {
-std::string RawParcelMethod(const AidlTypeSpecifier& raw_type, const AidlTypenames& typenames,
+std::string RawParcelMethod(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
                             bool readMethod) {
   static map<string, string> kBuiltin = {
       {"byte", "Byte"},
@@ -64,13 +64,11 @@ std::string RawParcelMethod(const AidlTypeSpecifier& raw_type, const AidlTypenam
       {"ParcelFileDescriptor", "ParcelableVector"},
   };
 
-  const bool nullable = raw_type.IsNullable();
-  const bool isVector = raw_type.IsArray() || typenames.IsList(raw_type);
-  const bool utf8 = raw_type.IsUtf8InCpp();
-  const auto& type = typenames.IsList(raw_type) ? *raw_type.GetTypeParameters().at(0) : raw_type;
-  const string& aidl_name = type.GetName();
+  const bool nullable = type.IsNullable();
+  const bool isVector = type.IsArray() || typenames.IsList(type);
+  const bool utf8 = type.IsUtf8InCpp();
 
-  if (auto enum_decl = typenames.GetEnumDeclaration(raw_type); enum_decl != nullptr) {
+  if (auto enum_decl = typenames.GetEnumDeclaration(type); enum_decl != nullptr) {
     if (isVector) {
       return "EnumVector";
     } else {
@@ -79,31 +77,40 @@ std::string RawParcelMethod(const AidlTypeSpecifier& raw_type, const AidlTypenam
   }
 
   if (isVector) {
-    if (kBuiltinVector.find(aidl_name) != kBuiltinVector.end()) {
-      CHECK(AidlTypenames::IsBuiltinTypename(aidl_name));
+    string element_name;
+    if (typenames.IsList(type)) {
+      CHECK(type.GetTypeParameters().size() == 1);
+      element_name = type.GetTypeParameters().at(0)->GetName();
+    } else {
+      element_name = type.GetName();
+    }
+    if (kBuiltinVector.find(element_name) != kBuiltinVector.end()) {
+      CHECK(AidlTypenames::IsBuiltinTypename(element_name));
       if (utf8) {
-        CHECK(aidl_name == "String");
+        CHECK(element_name == "String");
         return readMethod ? "Utf8VectorFromUtf16Vector" : "Utf8VectorAsUtf16Vector";
       }
-      return kBuiltinVector[aidl_name];
+      return kBuiltinVector[element_name];
     }
+    CHECK(!typenames.IsList(type));
   } else {
-    if (kBuiltin.find(aidl_name) != kBuiltin.end()) {
-      CHECK(AidlTypenames::IsBuiltinTypename(aidl_name));
-      if (aidl_name == "IBinder" && nullable && readMethod) {
+    const string& type_name = type.GetName();
+    if (kBuiltin.find(type_name) != kBuiltin.end()) {
+      CHECK(AidlTypenames::IsBuiltinTypename(type_name));
+      if (type_name == "IBinder" && nullable && readMethod) {
         return "NullableStrongBinder";
       }
-      if (aidl_name == "ParcelFileDescriptor" && nullable && !readMethod) {
+      if (type_name == "ParcelFileDescriptor" && nullable && !readMethod) {
         return "NullableParcelable";
       }
       if (utf8) {
-        CHECK(aidl_name == "String");
+        CHECK(type_name == "String");
         return readMethod ? "Utf8FromUtf16" : "Utf8AsUtf16";
       }
-      return kBuiltin[aidl_name];
+      return kBuiltin[type_name];
     }
   }
-  CHECK(!AidlTypenames::IsBuiltinTypename(aidl_name));
+  CHECK(!AidlTypenames::IsBuiltinTypename(type.GetName()));
   auto definedType = typenames.TryGetDefinedType(type.GetName());
   if (definedType != nullptr && definedType->AsInterface() != nullptr) {
     if (isVector) {
