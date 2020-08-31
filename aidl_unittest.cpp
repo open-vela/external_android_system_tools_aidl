@@ -1048,13 +1048,7 @@ TEST_P(AidlTest, PrimitiveList) {
 }
 
 TEST_P(AidlTest, RejectsListArray) {
-  string expected_stderr;
-  if (GetLanguage() == Options::Language::JAVA) {
-    expected_stderr = "ERROR: a/Foo.aidl:2.1-7: List[], Map[], CharSequence[] are not supported.\n";
-  } else {
-    expected_stderr =
-        "ERROR: a/Foo.aidl:2.1-7: Currently, only the Java backend supports non-generic List.\n";
-  }
+  const string expected_stderr = "ERROR: a/Foo.aidl:2.1-7: List[] is not supported.\n";
   const string list_array_parcelable =
       "package a; parcelable Foo {\n"
       "  List[] lists; }";
