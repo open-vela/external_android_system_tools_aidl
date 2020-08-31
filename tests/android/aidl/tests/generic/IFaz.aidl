@@ -18,10 +18,8 @@ package android.aidl.tests.generic;
 
 import android.aidl.tests.generic.Baz;
 import android.aidl.tests.generic.Pair;
-import android.aidl.tests.IntEnum;
 
 interface IFaz {
     Pair<int, String> getPair();
     Pair<Baz, Baz> getPair2();
-    Pair<int, IntEnum> getPair3();
 }
