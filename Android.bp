@@ -304,6 +304,7 @@ cc_test {
         "tests/aidl_test_client_service_exceptions.cpp",
         "tests/aidl_test_client_defaultimpl.cpp",
         "tests/aidl_test_client_versioned_interface.cpp",
+        "tests/aidl_test_client_renamed_interface.cpp",
     ],
 }
 
