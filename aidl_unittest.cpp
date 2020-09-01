@@ -138,6 +138,9 @@ public class Rect implements android.os.Parcelable
       }
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
     } finally {
+      if (_aidl_start_pos > (Integer.MAX_VALUE - _aidl_parcelable_size)) {
+        throw new android.os.BadParcelableException("Overflow in the size of parcelable");
+      }
       _aidl_parcel.setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     }
   }

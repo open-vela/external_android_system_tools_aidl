@@ -973,6 +973,7 @@ void GenerateParcelSource(CodeWriter& out, const AidlTypenames& types,
   out << "int32_t _aidl_parcelable_size;\n";
   out << "int32_t _aidl_start_pos = AParcel_getDataPosition(parcel);\n";
   out << "binder_status_t _aidl_ret_status = AParcel_readInt32(parcel, &_aidl_parcelable_size);\n";
+  out << "if (_aidl_start_pos > INT32_MAX - _aidl_parcelable_size) return STATUS_BAD_VALUE;\n";
   out << "if (_aidl_parcelable_size < 0) return STATUS_BAD_VALUE;\n";
   StatusCheckReturn(out);
 

@@ -345,6 +345,10 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
 
   out.str("");
   out << "} finally {\n"
+      << "  if (_aidl_start_pos > (Integer.MAX_VALUE - _aidl_parcelable_size)) {\n"
+      << "    throw new android.os.BadParcelableException(\"Overflow in the size of "
+         "parcelable\");\n"
+      << "  }\n"
       << "  _aidl_parcel.setDataPosition(_aidl_start_pos + _aidl_parcelable_size);\n";
   if (parcel->IsJavaOnlyImmutable()) {
     out << "  return " << builder_variable << ".build();\n";
