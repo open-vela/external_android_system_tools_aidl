@@ -287,16 +287,17 @@ func isRelativePath(path string) bool {
 }
 
 type aidlGenProperties struct {
-	Srcs      []string `android:"path"`
-	AidlRoot  string   // base directory for the input aidl file
-	Imports   []string
-	Stability *string
-	Lang      string // target language [java|cpp|ndk]
-	BaseName  string
-	GenLog    bool
-	Version   string
-	GenTrace  bool
-	Unstable  *bool
+	Srcs       []string `android:"path"`
+	AidlRoot   string   // base directory for the input aidl file
+	Imports    []string
+	Stability  *string
+	Lang       string // target language [java|cpp|ndk]
+	BaseName   string
+	GenLog     bool
+	Version    string
+	GenTrace   bool
+	Unstable   *bool
+	Visibility []string
 }
 
 type aidlGenRule struct {
@@ -1290,6 +1291,16 @@ func (i *aidlInterface) getImportPostfix(mctx android.LoadHookContext, version s
 	}
 	return "-" + lang
 }
+
+func defaultVisibility(mctx android.LoadHookContext) []string {
+	return []string{
+		"//" + mctx.ModuleDir(),
+		// system/tools/aidl/build is always added because aidl_metadata_json in the directory has
+		// dependencies to all aidl_interface modules.
+		"//system/tools/aidl/build",
+	}
+}
+
 func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForModuleName string, lang string) string {
 	cppSourceGen := i.versionedName(mctx, versionForModuleName) + "-" + lang + "-source"
 	cppModuleGen := i.versionedName(mctx, versionForModuleName) + "-" + lang
@@ -1333,16 +1344,17 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 	mctx.CreateModule(aidlGenFactory, &nameProperties{
 		Name: proptools.StringPtr(cppSourceGen),
 	}, &aidlGenProperties{
-		Srcs:      srcs,
-		AidlRoot:  aidlRoot,
-		Imports:   concat(i.properties.Imports, []string{i.ModuleBase.Name()}),
-		Stability: i.properties.Stability,
-		Lang:      lang,
-		BaseName:  i.ModuleBase.Name(),
-		GenLog:    genLog,
-		Version:   version,
-		GenTrace:  genTrace,
-		Unstable:  i.properties.Unstable,
+		Srcs:       srcs,
+		AidlRoot:   aidlRoot,
+		Imports:    concat(i.properties.Imports, []string{i.ModuleBase.Name()}),
+		Stability:  i.properties.Stability,
+		Lang:       lang,
+		BaseName:   i.ModuleBase.Name(),
+		GenLog:     genLog,
+		Version:    version,
+		GenTrace:   genTrace,
+		Unstable:   i.properties.Unstable,
+		Visibility: defaultVisibility(mctx),
 	})
 	importPostfix := i.getImportPostfix(mctx, version, lang)
 
@@ -1455,15 +1467,16 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMo
 	mctx.CreateModule(aidlGenFactory, &nameProperties{
 		Name: proptools.StringPtr(javaSourceGen),
 	}, &aidlGenProperties{
-		Srcs:      srcs,
-		AidlRoot:  aidlRoot,
-		Imports:   concat(i.properties.Imports, []string{i.ModuleBase.Name()}),
-		Stability: i.properties.Stability,
-		Lang:      langJava,
-		BaseName:  i.ModuleBase.Name(),
-		Version:   version,
-		GenTrace:  proptools.Bool(i.properties.Gen_trace),
-		Unstable:  i.properties.Unstable,
+		Srcs:       srcs,
+		AidlRoot:   aidlRoot,
+		Imports:    concat(i.properties.Imports, []string{i.ModuleBase.Name()}),
+		Stability:  i.properties.Stability,
+		Lang:       langJava,
+		BaseName:   i.ModuleBase.Name(),
+		Version:    version,
+		GenTrace:   proptools.Bool(i.properties.Gen_trace),
+		Unstable:   i.properties.Unstable,
+		Visibility: defaultVisibility(mctx),
 	})
 
 	importPostfix := i.getImportPostfix(mctx, version, langJava)
