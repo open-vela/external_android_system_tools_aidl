@@ -1110,7 +1110,8 @@ std::unique_ptr<Document> BuildParcelSource(const AidlTypenames& typenames,
       "int32_t _aidl_parcelable_raw_size = _aidl_parcel->readInt32();\n"
       "if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;\n"
       "[[maybe_unused]] size_t _aidl_parcelable_size = "
-      "static_cast<size_t>(_aidl_parcelable_raw_size);\n");
+      "static_cast<size_t>(_aidl_parcelable_raw_size);\n"
+      "if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;\n");
 
   for (const auto& variable : parcel.GetFields()) {
     string method = ParcelReadMethodOf(variable->GetType(), typenames);
