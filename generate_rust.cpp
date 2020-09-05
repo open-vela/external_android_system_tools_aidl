@@ -595,12 +595,16 @@ bool GenerateRustEnumDeclaration(const string& filename, const AidlEnumDeclarati
   auto backing_type = RustNameOf(aidl_backing_type, typenames, StorageMode::VALUE);
 
   *code_writer << "#![allow(non_upper_case_globals)]\n";
-  *code_writer << "pub type " << enum_decl->GetName() << " = " << backing_type << ";\n";
+  *code_writer << "use binder::declare_binder_enum;\n";
+  *code_writer << "declare_binder_enum! { " << enum_decl->GetName() << " : " << backing_type
+               << " {\n";
+  code_writer->Indent();
   for (const auto& enumerator : enum_decl->GetEnumerators()) {
     auto value = enumerator->GetValue()->ValueString(aidl_backing_type, ConstantValueDecorator);
-    *code_writer << "pub const " << enumerator->GetName() << ": " << enum_decl->GetName() << " = "
-                 << value << ";\n";
+    *code_writer << enumerator->GetName() << " = " << value << ",\n";
   }
+  code_writer->Dedent();
+  *code_writer << "} }\n";
 
   GenerateMangledAlias(*code_writer, enum_decl);
 
