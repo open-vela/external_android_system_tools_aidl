@@ -1103,6 +1103,12 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
       MethodDecl::IS_OVERRIDE | MethodDecl::IS_CONST | MethodDecl::IS_FINAL));
   parcel_class->AddPublic(std::move(write));
 
+  parcel_class->AddPublic(std::unique_ptr<LiteralDecl>(
+      new LiteralDecl(StringPrintf("static const std::string& getParcelableDescriptor() {\n"
+                                   "  static const std::string DESCIPTOR = \"%s\";\n"
+                                   "  return DESCIPTOR;\n"
+                                   "}\n",
+                                   parcel.GetCanonicalName().c_str()))));
   return unique_ptr<Document>{
       new CppHeader{vector<string>(includes.begin(), includes.end()),
                     NestInNamespaces(std::move(parcel_class), parcel.GetSplitPackage())}};
