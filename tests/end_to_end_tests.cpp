@@ -198,6 +198,57 @@ TEST_F(EndToEndTest, IExampleInterface_WithVersionAndHash) {
   CheckFileContents(options.DependencyFile(), kExpectedJavaDepsOutput);
 }
 
+TEST_F(EndToEndTest, IExampleInterfaceRust) {
+  using namespace ::android::aidl::test_data::example_interface;
+
+  vector<string> args = {"aidl",
+                         "--lang=rust",
+                         "-b",
+                         "-I .",
+                         "-d an/arbitrary/path/to/dep.P",
+                         "-o",
+                         kRustOutputDirectory,
+                         CanonicalNameToPath(kCanonicalName, ".aidl")};
+  Options options = Options::From(args);
+
+  // Load up our fake file system with data.
+  io_delegate_.SetFileContents(options.InputFiles().front(), kInterfaceDefinition);
+  io_delegate_.AddCompoundParcelable("android.test.CompoundParcelable", {"Subclass1", "Subclass2"});
+  AddStubAidls(kImportedParcelables, kImportedInterfaces);
+
+  // Check that we parse correctly.
+  EXPECT_EQ(android::aidl::compile_aidl(options, io_delegate_), 0);
+  CheckFileContents(kRustOutputPath, kExpectedRustOutput);
+  CheckFileContents(options.DependencyFile(), kExpectedRustDepsOutput);
+}
+
+TEST_F(EndToEndTest, IExampleInterfaceRust_WithVersionAndHash) {
+  using namespace ::android::aidl::test_data::example_interface;
+
+  vector<string> args = {"aidl",
+                         "--lang=rust",
+                         "-b",
+                         "-I .",
+                         "-d an/arbitrary/path/to/dep.P",
+                         "--version=10",
+                         "--hash=abcdefg",
+                         "-o",
+                         kRustOutputDirectory,
+                         CanonicalNameToPath(kCanonicalName, ".aidl")};
+  Options options = Options::From(args);
+  options.onTransact_outline_threshold_ = 4;
+  options.onTransact_non_outline_count_ = 3;
+
+  // Load up our fake file system with data.
+  io_delegate_.SetFileContents(options.InputFiles().front(), kInterfaceDefinitionOutlining);
+  io_delegate_.AddCompoundParcelable("android.test.CompoundParcelable", {"Subclass1", "Subclass2"});
+  AddStubAidls(kImportedParcelables, kImportedInterfaces);
+
+  // Check that we parse correctly.
+  EXPECT_EQ(android::aidl::compile_aidl(options, io_delegate_), 0);
+  CheckFileContents(kRustOutputPath, kExpectedRustOutputWithVersionAndHash);
+  CheckFileContents(options.DependencyFile(), kExpectedRustDepsOutput);
+}
 
 TEST_F(EndToEndTest, IPingResponderCpp) {
   using namespace ::android::aidl::test_data::ping_responder;
@@ -251,6 +302,47 @@ TEST_F(EndToEndTest, IPingResponderCpp_WithVersionAndHash) {
   CheckFileContents(options.DependencyFile(), kExpectedCppDepsOutput);
 }
 
+TEST_F(EndToEndTest, IPingResponderRust) {
+  using namespace ::android::aidl::test_data::ping_responder;
+
+  vector<string> args = {"aidl",
+                         "--lang=rust",
+                         "-d deps.P",
+                         "-I .",
+                         "-o",
+                         kRustOutputDirectory,
+                         CanonicalNameToPath(kCanonicalName, ".aidl")};
+  Options options = Options::From(args);
+
+  // Set up input paths.
+  io_delegate_.SetFileContents(CanonicalNameToPath(kCanonicalName, ".aidl"), kInterfaceDefinition);
+  AddStubAidls(kImportedParcelables, kImportedInterfaces);
+
+  // Check that we parse and generate code correctly.
+  EXPECT_EQ(android::aidl::compile_aidl(options, io_delegate_), 0);
+  CheckFileContents(kRustOutputPath, kExpectedRustOutput);
+  CheckFileContents(options.DependencyFile(), kExpectedRustDepsOutput);
+}
+
+TEST_F(EndToEndTest, IPingResponderRust_WithVersionAndHash) {
+  using namespace ::android::aidl::test_data::ping_responder;
+
+  vector<string> args = {
+      "aidl", "--lang=rust",        "-d deps.P",
+      "-I .", "--version=10",       "--hash=abcdefg",
+      "-o",   kRustOutputDirectory, CanonicalNameToPath(kCanonicalName, ".aidl")};
+  Options options = Options::From(args);
+
+  // Set up input paths.
+  io_delegate_.SetFileContents(CanonicalNameToPath(kCanonicalName, ".aidl"), kInterfaceDefinition);
+  AddStubAidls(kImportedParcelables, kImportedInterfaces);
+
+  // Check that we parse and generate code correctly.
+  EXPECT_EQ(android::aidl::compile_aidl(options, io_delegate_), 0);
+  CheckFileContents(kRustOutputPath, kExpectedRustOutputWithVersionAndHash);
+  CheckFileContents(options.DependencyFile(), kExpectedRustDepsOutput);
+}
+
 TEST_F(EndToEndTest, StringConstantsInCpp) {
   using namespace ::android::aidl::test_data::string_constants;
 
@@ -286,6 +378,22 @@ TEST_F(EndToEndTest, StringConstantsInJava) {
   // Check that we parse correctly.
   EXPECT_EQ(android::aidl::compile_aidl(options, io_delegate_), 0);
   CheckFileContents(kJavaOutputPath, kExpectedJavaOutput);
+}
+
+TEST_F(EndToEndTest, StringConstantsInRust) {
+  using namespace ::android::aidl::test_data::string_constants;
+
+  vector<string> args = {
+      "aidl", "--lang=rust",        "-b",
+      "-o",   kRustOutputDirectory, CanonicalNameToPath(kCanonicalName, ".aidl")};
+  Options options = Options::From(args);
+
+  // Load up our fake file system with data.
+  io_delegate_.SetFileContents(CanonicalNameToPath(kCanonicalName, ".aidl"), kInterfaceDefinition);
+
+  // Check that we parse correctly.
+  EXPECT_EQ(android::aidl::compile_aidl(options, io_delegate_), 0);
+  CheckFileContents(kRustOutputPath, kExpectedRustOutput);
 }
 
 TEST_F(EndToEndTest, StringConstantsInCpp_WithVersionAndHash) {
@@ -327,6 +435,27 @@ TEST_F(EndToEndTest, StringConstantsInJava_WithVersionAndHash) {
   // Check that we parse correctly.
   EXPECT_EQ(android::aidl::compile_aidl(options, io_delegate_), 0);
   CheckFileContents(kJavaOutputPath, kExpectedJavaOutputWithVersionAndHash);
+}
+
+TEST_F(EndToEndTest, StringConstantsInRust_WithVersionAndHash) {
+  using namespace ::android::aidl::test_data::string_constants;
+
+  vector<string> args = {"aidl",
+                         "--lang=rust",
+                         "-b",
+                         "--version=10",
+                         "--hash=abcdefg",
+                         "-o",
+                         kRustOutputDirectory,
+                         CanonicalNameToPath(kCanonicalName, ".aidl")};
+  Options options = Options::From(args);
+
+  // Load up our fake file system with data.
+  io_delegate_.SetFileContents(CanonicalNameToPath(kCanonicalName, ".aidl"), kInterfaceDefinition);
+
+  // Check that we parse correctly.
+  EXPECT_EQ(android::aidl::compile_aidl(options, io_delegate_), 0);
+  CheckFileContents(kRustOutputPath, kExpectedRustOutputWithVersionAndHash);
 }
 
 }  // namespace aidl
