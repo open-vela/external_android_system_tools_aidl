@@ -43,6 +43,7 @@
 #include "generate_cpp.h"
 #include "generate_java.h"
 #include "generate_ndk.h"
+#include "generate_rust.h"
 #include "import_resolver.h"
 #include "logging.h"
 #include "options.h"
@@ -240,6 +241,8 @@ string generate_outputFileName(const Options& options, const AidlDefinedType& de
     result += ".java";
   } else if (options.IsCppOutput()) {
     result += ".cpp";
+  } else if (options.TargetLanguage() == Options::Language::RUST) {
+    result += ".rs";
   } else {
     LOG(FATAL) << "Should not reach here" << endl;
     return "";
@@ -797,6 +800,9 @@ int compile_aidl(const Options& options, const IoDelegate& io_delegate) {
           success = java::generate_java(output_file_name, defined_type.get(), typenames,
                                         io_delegate, options);
         }
+      } else if (lang == Options::Language::RUST) {
+        success = rust::GenerateRust(output_file_name, defined_type.get(), typenames, io_delegate,
+                                     options);
       } else {
         LOG(FATAL) << "Should not reach here" << endl;
         return 1;
