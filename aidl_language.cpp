@@ -898,24 +898,31 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
 // TODO: we should treat every backend all the same in future.
 bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                                    Options::Language lang) const {
-  if (lang == Options::Language::NDK && IsArray() && GetName() == "IBinder") {
-    AIDL_ERROR(this) << "The NDK backend does not support array of IBinder";
+  if ((lang == Options::Language::NDK || lang == Options::Language::RUST) && IsArray() &&
+      GetName() == "IBinder") {
+    AIDL_ERROR(this) << "The " << Options::LanguageToString(lang)
+                     << " backend does not support array of IBinder";
     return false;
   }
-  if (lang == Options::Language::NDK && IsArray() && IsNullable()) {
+  if ((lang == Options::Language::NDK || lang == Options::Language::RUST) && IsArray() &&
+      IsNullable()) {
     if (GetName() == "ParcelFileDescriptor") {
-      AIDL_ERROR(this) << "The NDK backend does not support nullable array of ParcelFileDescriptor";
+      AIDL_ERROR(this) << "The " << Options::LanguageToString(lang)
+                       << " backend does not support nullable array of ParcelFileDescriptor";
       return false;
     }
 
     const auto defined_type = typenames.TryGetDefinedType(GetName());
     if (defined_type != nullptr && defined_type->AsParcelable() != nullptr) {
-      AIDL_ERROR(this) << "The NDK backend does not support nullable array of parcelable";
+      AIDL_ERROR(this) << "The " << Options::LanguageToString(lang)
+                       << " backend does not support nullable array of parcelable";
       return false;
     }
   }
-  if (this->GetName() == "FileDescriptor" && lang == Options::Language::NDK) {
-    AIDL_ERROR(this) << "FileDescriptor isn't supported with the NDK.";
+  if (this->GetName() == "FileDescriptor" &&
+      (lang == Options::Language::NDK || lang == Options::Language::RUST)) {
+    AIDL_ERROR(this) << "FileDescriptor isn't supported by the " << Options::LanguageToString(lang)
+                     << " backend.";
     return false;
   }
   if (this->IsGeneric()) {
@@ -971,7 +978,7 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
 // TODO: we should treat every backend all the same in future.
 bool AidlParcelable::LanguageSpecificCheckValid(const AidlTypenames& /*typenames*/,
                                                 Options::Language lang) const {
-  if (lang != Options::Language::JAVA) {
+  if (lang == Options::Language::CPP || lang == Options::Language::NDK) {
     const AidlParcelable* unstructured_parcelable = this->AsUnstructuredParcelable();
     if (unstructured_parcelable != nullptr) {
       if (unstructured_parcelable->GetCppHeader().empty()) {

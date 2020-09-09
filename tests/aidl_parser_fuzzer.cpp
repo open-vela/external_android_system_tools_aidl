@@ -75,6 +75,7 @@ void fuzz(uint8_t options, const std::string& content) {
   fuzz("ndk", content);
   fuzz("cpp", content);
   fuzz("java", content);
+  fuzz("rust", content);
 }
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
