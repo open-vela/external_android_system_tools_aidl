@@ -22,6 +22,7 @@ using android::IInterface;
 using android::sp;
 using android::String16;
 using android::aidl::tests::ConstantExpressionEnum;
+using android::aidl::tests::GenericStructuredParcelable;
 using android::aidl::tests::INamedCallback;
 using android::aidl::tests::IntEnum;
 using android::aidl::tests::ITestService;
@@ -35,6 +36,16 @@ TEST_F(AidlTest, RepeatSimpleParcelable) {
   SimpleParcelable input("Booya", 42);
   SimpleParcelable out_param, returned;
   Status status = service->RepeatSimpleParcelable(input, &out_param, &returned);
+  ASSERT_TRUE(status.isOk()) << status.toString8();
+  EXPECT_EQ(input, out_param);
+  EXPECT_EQ(input, returned);
+}
+
+TEST_F(AidlTest, RepeatGenericStructureParcelable) {
+  GenericStructuredParcelable<int32_t, StructuredParcelable, IntEnum> input, out_param, returned;
+  input.a = 41;
+  input.b = 42;
+  Status status = service->RepeatGenericParcelable(input, &out_param, &returned);
   ASSERT_TRUE(status.isOk()) << status.toString8();
   EXPECT_EQ(input, out_param);
   EXPECT_EQ(input, returned);

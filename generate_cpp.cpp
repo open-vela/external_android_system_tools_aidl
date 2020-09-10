@@ -227,7 +227,10 @@ unique_ptr<Declaration> DefineClientTransaction(const AidlTypenames& typenames,
   const string i_name = ClassName(interface, ClassNames::INTERFACE);
   const string bp_name = ClassName(interface, ClassNames::CLIENT);
   unique_ptr<MethodImpl> ret{
-      new MethodImpl{kBinderStatusLiteral, bp_name, method.GetName(),
+      new MethodImpl{kBinderStatusLiteral,
+                     bp_name,
+                     method.GetName(),
+                     {},
                      ArgList{BuildArgList(typenames, method, true /* for method decl */)}}};
   StatementBlock* b = ret->GetStatementBlock();
 
@@ -663,14 +666,15 @@ unique_ptr<Document> BuildServerSource(const AidlTypenames& typenames,
         "::android::internal::Stability::markCompilationUnit(this)");
   }
 
-  unique_ptr<MethodImpl> on_transact{new MethodImpl{
-      kAndroidStatusLiteral, bn_name, "onTransact",
-      ArgList{{StringPrintf("uint32_t %s", kCodeVarName),
-               StringPrintf("const %s& %s", kAndroidParcelLiteral,
-                            kDataVarName),
-               StringPrintf("%s* %s", kAndroidParcelLiteral, kReplyVarName),
-               StringPrintf("uint32_t %s", kFlagsVarName)}}
-      }};
+  unique_ptr<MethodImpl> on_transact{
+      new MethodImpl{kAndroidStatusLiteral,
+                     bn_name,
+                     "onTransact",
+                     {},
+                     ArgList{{StringPrintf("uint32_t %s", kCodeVarName),
+                              StringPrintf("const %s& %s", kAndroidParcelLiteral, kDataVarName),
+                              StringPrintf("%s* %s", kAndroidParcelLiteral, kReplyVarName),
+                              StringPrintf("uint32_t %s", kFlagsVarName)}}}};
 
   // Declare the status_t variable
   on_transact->GetStatementBlock()->AddLiteral(
@@ -775,7 +779,7 @@ unique_ptr<Document> BuildInterfaceSource(const AidlTypenames& typenames,
     std::string cppType = CppNameOf(constant->GetType(), typenames);
     unique_ptr<MethodImpl> getter(new MethodImpl("const " + cppType + "&",
                                                  ClassName(interface, ClassNames::INTERFACE),
-                                                 constant->GetName(), {}));
+                                                 constant->GetName(), {}, {}));
     getter->GetStatementBlock()->AddLiteral(
         StringPrintf("static const %s value(%s)", cppType.c_str(),
                      constant->ValueString(ConstantValueDecorator).c_str()));
@@ -840,6 +844,7 @@ unique_ptr<Document> BuildClientHeader(const AidlTypenames& typenames,
   unique_ptr<ClassDecl> bp_class{new ClassDecl{
       bp_name,
       "::android::BpInterface<" + i_name + ">",
+      {},
       std::move(publics),
       std::move(privates),
   }};
@@ -890,11 +895,7 @@ unique_ptr<Document> BuildServerHeader(const AidlTypenames& /* typenames */,
         new LiteralDecl{"static std::function<void(const Json::Value&)> logFunc;\n"});
   }
   unique_ptr<ClassDecl> bn_class{
-      new ClassDecl{bn_name,
-                    "::android::BnInterface<" + i_name + ">",
-                    std::move(publics),
-                    {}
-      }};
+      new ClassDecl{bn_name, "::android::BnInterface<" + i_name + ">", {}, std::move(publics), {}}};
 
   return unique_ptr<Document>{
       new CppHeader{includes, NestInNamespaces(std::move(bn_class), interface.GetSplitPackage())}};
@@ -913,7 +914,7 @@ unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
   }
 
   const string i_name = ClassName(interface, ClassNames::INTERFACE);
-  unique_ptr<ClassDecl> if_class{new ClassDecl{i_name, "::android::IInterface"}};
+  unique_ptr<ClassDecl> if_class{new ClassDecl{i_name, "::android::IInterface", {}}};
   if_class->AddPublic(unique_ptr<Declaration>{new MacroDecl{
       "DECLARE_META_INTERFACE",
       ArgList{vector<string>{ClassName(interface, ClassNames::BASE)}}}});
@@ -1024,7 +1025,7 @@ unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
   vector<unique_ptr<Declaration>> decls;
   decls.emplace_back(std::move(if_class));
   decls.emplace_back(new ClassDecl{
-      ClassName(interface, ClassNames::DEFAULT_IMPL), i_name, std::move(method_decls), {}});
+      ClassName(interface, ClassNames::DEFAULT_IMPL), i_name, {}, std::move(method_decls), {}});
 
   return unique_ptr<Document>{
       new CppHeader{vector<string>(includes.begin(), includes.end()),
@@ -1034,7 +1035,10 @@ unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
 std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
                                             const AidlStructuredParcelable& parcel,
                                             const Options&) {
-  unique_ptr<ClassDecl> parcel_class{new ClassDecl{parcel.GetName(), "::android::Parcelable"}};
+  const std::vector<std::string>& type_params =
+      parcel.IsGeneric() ? parcel.GetTypeParameters() : std::vector<std::string>();
+  unique_ptr<ClassDecl> parcel_class{
+      new ClassDecl{parcel.GetName(), "::android::Parcelable", type_params}};
 
   set<string> includes = {kStatusHeader, kParcelHeader};
   includes.insert("tuple");
@@ -1098,8 +1102,10 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
 std::unique_ptr<Document> BuildParcelSource(const AidlTypenames& typenames,
                                             const AidlStructuredParcelable& parcel,
                                             const Options&) {
+  const std::vector<std::string>& type_params =
+      parcel.IsGeneric() ? parcel.GetTypeParameters() : std::vector<std::string>();
   unique_ptr<MethodImpl> read{new MethodImpl{kAndroidStatusLiteral, parcel.GetName(),
-                                             "readFromParcel",
+                                             "readFromParcel", type_params,
                                              ArgList("const ::android::Parcel* _aidl_parcel")}};
   StatementBlock* read_block = read->GetStatementBlock();
   read_block->AddLiteral(
@@ -1131,7 +1137,7 @@ std::unique_ptr<Document> BuildParcelSource(const AidlTypenames& typenames,
   read_block->AddLiteral(StringPrintf("return %s", kAndroidStatusVarName));
 
   unique_ptr<MethodImpl> write{
-      new MethodImpl{kAndroidStatusLiteral, parcel.GetName(), "writeToParcel",
+      new MethodImpl{kAndroidStatusLiteral, parcel.GetName(), "writeToParcel", type_params,
                      ArgList("::android::Parcel* _aidl_parcel"), true /*const*/}};
   StatementBlock* write_block = write->GetStatementBlock();
   write_block->AddLiteral(
@@ -1307,6 +1313,10 @@ bool GenerateCppParcel(const string& output_file, const Options& options,
   const string header_path = options.OutputHeaderDir() + HeaderFile(parcelable, ClassNames::RAW);
   unique_ptr<CodeWriter> header_writer(io_delegate.GetCodeWriter(header_path));
   header->Write(header_writer.get());
+  if (parcelable.IsGeneric()) {
+    // Need to write all of the source in the header file, not cpp file.
+    source->Write(header_writer.get());
+  }
   CHECK(header_writer->Close());
 
   // TODO(b/111362593): no unecessary files just to have consistent output with interfaces
@@ -1320,7 +1330,13 @@ bool GenerateCppParcel(const string& output_file, const Options& options,
   CHECK(bn_writer->Close());
 
   unique_ptr<CodeWriter> source_writer = io_delegate.GetCodeWriter(output_file);
-  source->Write(source_writer.get());
+  if (parcelable.IsGeneric()) {
+    // Since the type is generic, the source is written in the header file
+    auto empty_source = unique_ptr<Document>{new CppSource{{}, {}}};
+    empty_source->Write(source_writer.get());
+  } else {
+    source->Write(source_writer.get());
+  }
   CHECK(source_writer->Close());
 
   return true;
