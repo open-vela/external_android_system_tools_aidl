@@ -15,6 +15,7 @@
  */
 #include "aidl_to_cpp_common.h"
 
+#include <android-base/stringprintf.h>
 #include <android-base/strings.h>
 #include <unordered_map>
 
@@ -374,6 +375,19 @@ std::string GenerateEnumValues(const AidlEnumDeclaration& enum_decl,
   code << "};\n";
   code << "#pragma clang diagnostic pop\n";
   return code.str();
+}
+
+std::string TemplateDecl(const AidlStructuredParcelable& defined_type) {
+  std::string decl = "";
+  if (defined_type.IsGeneric()) {
+    std::vector<std::string> template_params;
+    for (const auto& parameter : defined_type.GetTypeParameters()) {
+      template_params.push_back(parameter);
+    }
+    decl = base::StringPrintf("template <typename %s>\n",
+                              base::Join(template_params, ", typename ").c_str());
+  }
+  return decl;
 }
 
 }  // namespace cpp

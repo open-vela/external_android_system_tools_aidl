@@ -392,8 +392,8 @@ bool parse_preprocessed_file(const IoDelegate& io_delegate, const string& filena
       typenames->AddPreprocessedType(unique_ptr<AidlParcelable>(doc));
     } else if (decl == "structured_parcelable") {
       auto temp = new std::vector<std::unique_ptr<AidlVariableDeclaration>>();
-      AidlStructuredParcelable* doc =
-          new AidlStructuredParcelable(location, class_name, package, "" /* comments */, temp);
+      AidlStructuredParcelable* doc = new AidlStructuredParcelable(
+          location, class_name, package, "" /* comments */, temp, nullptr);
       typenames->AddPreprocessedType(unique_ptr<AidlStructuredParcelable>(doc));
     } else if (decl == "interface") {
       auto temp = new std::vector<std::unique_ptr<AidlMember>>();

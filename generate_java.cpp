@@ -114,6 +114,10 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
   parcel_class->interfaces.push_back("android.os.Parcelable");
   parcel_class->annotations = generate_java_annotations(*parcel);
 
+  if (parcel->IsGeneric()) {
+    parcel_class->type += "<" + base::Join(parcel->GetTypeParameters(), ",") + ">";
+  }
+
   for (const auto& variable : parcel->GetFields()) {
     std::ostringstream out;
     out << variable->GetType().GetComments() << "\n";
