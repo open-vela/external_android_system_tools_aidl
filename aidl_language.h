@@ -753,7 +753,8 @@ class AidlStructuredParcelable : public AidlParcelable {
  public:
   AidlStructuredParcelable(const AidlLocation& location, const std::string& name,
                            const std::string& package, const std::string& comments,
-                           std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables);
+                           std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables,
+                           std::vector<std::string>* type_params);
   virtual ~AidlStructuredParcelable() = default;
 
   // non-copyable, non-movable
