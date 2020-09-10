@@ -293,11 +293,6 @@ void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
       AddHeaders(*parameter, typenames, headers);
     }
   }
-  if (type.IsGeneric()) {
-    for (const auto& parameter : type.GetTypeParameters()) {
-      AddHeaders(*parameter, typenames, headers);
-    }
-  }
   if (isNullable) {
     if (type.GetName() != "IBinder") {
       headers->insert("optional");
