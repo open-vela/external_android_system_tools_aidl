@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <memory>
 
 #include <android-base/parsedouble.h>
@@ -35,17 +36,117 @@ using std::string;
 using std::unique_ptr;
 using std::vector;
 
+template <typename T>
+class OverflowGuard {
+ public:
+  OverflowGuard(T value) : mValue(value) {}
+  bool Overflowed() const { return mOverflowed; }
+
+  T operator+() { return +mValue; }
+  T operator-() {
+    if (isMin()) {
+      mOverflowed = true;
+      return 0;
+    }
+    return -mValue;
+  }
+  T operator!() { return !mValue; }
+  T operator~() { return ~mValue; }
+
+  T operator+(T o) {
+    T out;
+    mOverflowed = __builtin_add_overflow(mValue, o, &out);
+    return out;
+  }
+  T operator-(T o) {
+    T out;
+    mOverflowed = __builtin_sub_overflow(mValue, o, &out);
+    return out;
+  }
+  T operator*(T o) {
+    T out;
+#ifdef _WIN32
+    // ___mulodi4 not on windows https://bugs.llvm.org/show_bug.cgi?id=46669
+    // we should still get an error here from ubsan, but the nice error
+    // is needed on linux for aidl_parser_fuzzer, where we are more
+    // concerned about overflows elsewhere in the compiler in addition to
+    // those in interfaces.
+    out = mValue * o;
+#else
+    mOverflowed = __builtin_mul_overflow(mValue, o, &out);
+#endif
+    return out;
+  }
+  T operator/(T o) {
+    if (o == 0 || (isMin() && o == -1)) {
+      mOverflowed = true;
+      return 0;
+    }
+    return mValue / o;
+  }
+  T operator%(T o) {
+    if (o == 0 || (isMin() && o == -1)) {
+      mOverflowed = true;
+      return 0;
+    }
+    return mValue % o;
+  }
+  T operator|(T o) { return mValue | o; }
+  T operator^(T o) { return mValue ^ o; }
+  T operator&(T o) { return mValue & o; }
+  T operator<(T o) { return mValue < o; }
+  T operator>(T o) { return mValue > o; }
+  T operator<=(T o) { return mValue <= o; }
+  T operator>=(T o) { return mValue >= o; }
+  T operator==(T o) { return mValue == o; }
+  T operator!=(T o) { return mValue != o; }
+  T operator>>(T o) {
+    if (o < 0) {
+      mOverflowed = true;
+      return 0;
+    }
+    return mValue >> o;
+  }
+  T operator<<(T o) {
+    if (o < 0 || o > static_cast<T>(sizeof(T) * 8)) {
+      mOverflowed = true;
+      return 0;
+    }
+    return mValue << o;
+  }
+  T operator||(T o) { return mValue || o; }
+  T operator&&(T o) { return mValue && o; }
+
+ private:
+  bool isMin() { return mValue == std::numeric_limits<T>::min(); }
+
+  T mValue;
+  bool mOverflowed = false;
+};
+
+template <typename T>
+bool processGuard(const OverflowGuard<T>& guard, const AidlConstantValue& context) {
+  if (guard.Overflowed()) {
+    AIDL_ERROR(context) << "Constant expression computation overflows.";
+    return false;
+  }
+  return true;
+}
+
+// TODO: factor out all these macros
 #define SHOULD_NOT_REACH() CHECK(false) << LOG(FATAL) << ": should not reach here: "
 #define OPEQ(__y__) (string(op_) == string(__y__))
-#define COMPUTE_UNARY(__op__)  \
-  if (op == string(#__op__)) { \
-    *out = __op__ val;         \
-    return true;               \
+#define COMPUTE_UNARY(T, __op__)         \
+  if (op == string(#__op__)) {           \
+    OverflowGuard<T> guard(val);         \
+    *out = __op__ guard;                 \
+    return processGuard(guard, context); \
   }
-#define COMPUTE_BINARY(__op__) \
-  if (op == string(#__op__)) { \
-    *out = lval __op__ rval;   \
-    return true;               \
+#define COMPUTE_BINARY(T, __op__)        \
+  if (op == string(#__op__)) {           \
+    OverflowGuard<T> guard(lval);        \
+    *out = guard __op__ rval;            \
+    return processGuard(guard, context); \
   }
 #define OP_IS_BIN_ARITHMETIC (OPEQ("+") || OPEQ("-") || OPEQ("*") || OPEQ("/") || OPEQ("%"))
 #define OP_IS_BIN_BITFLIP (OPEQ("|") || OPEQ("^") || OPEQ("&"))
@@ -71,18 +172,18 @@ using std::vector;
 
 template <class T>
 bool handleUnary(const AidlConstantValue& context, const string& op, T val, int64_t* out) {
-  COMPUTE_UNARY(+)
-  COMPUTE_UNARY(-)
-  COMPUTE_UNARY(!)
-  COMPUTE_UNARY(~)
+  COMPUTE_UNARY(T, +)
+  COMPUTE_UNARY(T, -)
+  COMPUTE_UNARY(T, !)
+  COMPUTE_UNARY(T, ~)
   AIDL_FATAL(context) << "Could not handleUnary for " << op << " " << val;
   return false;
 }
 template <>
 bool handleUnary<bool>(const AidlConstantValue& context, const string& op, bool val, int64_t* out) {
-  COMPUTE_UNARY(+)
-  COMPUTE_UNARY(-)
-  COMPUTE_UNARY(!)
+  COMPUTE_UNARY(bool, +)
+  COMPUTE_UNARY(bool, -)
+  COMPUTE_UNARY(bool, !)
 
   if (op == "~") {
     AIDL_ERROR(context) << "Bitwise negation of a boolean expression is always true.";
@@ -95,21 +196,21 @@ bool handleUnary<bool>(const AidlConstantValue& context, const string& op, bool 
 template <class T>
 bool handleBinaryCommon(const AidlConstantValue& context, T lval, const string& op, T rval,
                         int64_t* out) {
-  COMPUTE_BINARY(+)
-  COMPUTE_BINARY(-)
-  COMPUTE_BINARY(*)
-  COMPUTE_BINARY(/)
-  COMPUTE_BINARY(%)
-  COMPUTE_BINARY(|)
-  COMPUTE_BINARY(^)
-  COMPUTE_BINARY(&)
+  COMPUTE_BINARY(T, +)
+  COMPUTE_BINARY(T, -)
+  COMPUTE_BINARY(T, *)
+  COMPUTE_BINARY(T, /)
+  COMPUTE_BINARY(T, %)
+  COMPUTE_BINARY(T, |)
+  COMPUTE_BINARY(T, ^)
+  COMPUTE_BINARY(T, &)
   // comparison operators: return 0 or 1 by nature.
-  COMPUTE_BINARY(==)
-  COMPUTE_BINARY(!=)
-  COMPUTE_BINARY(<)
-  COMPUTE_BINARY(>)
-  COMPUTE_BINARY(<=)
-  COMPUTE_BINARY(>=)
+  COMPUTE_BINARY(T, ==)
+  COMPUTE_BINARY(T, !=)
+  COMPUTE_BINARY(T, <)
+  COMPUTE_BINARY(T, >)
+  COMPUTE_BINARY(T, <=)
+  COMPUTE_BINARY(T, >=)
 
   AIDL_FATAL(context) << "Could not handleBinaryCommon for " << lval << " " << op << " " << rval;
   return false;
@@ -119,8 +220,8 @@ template <class T>
 bool handleShift(const AidlConstantValue& context, T lval, const string& op, int64_t rval,
                  int64_t* out) {
   // just cast rval to int64_t and it should fit.
-  COMPUTE_BINARY(>>)
-  COMPUTE_BINARY(<<)
+  COMPUTE_BINARY(T, >>)
+  COMPUTE_BINARY(T, <<)
 
   AIDL_FATAL(context) << "Could not handleShift for " << lval << " " << op << " " << rval;
   return false;
@@ -128,8 +229,8 @@ bool handleShift(const AidlConstantValue& context, T lval, const string& op, int
 
 bool handleLogical(const AidlConstantValue& context, bool lval, const string& op, bool rval,
                    int64_t* out) {
-  COMPUTE_BINARY(||);
-  COMPUTE_BINARY(&&);
+  COMPUTE_BINARY(bool, ||);
+  COMPUTE_BINARY(bool, &&);
 
   AIDL_FATAL(context) << "Could not handleLogical for " << lval << " " << op << " " << rval;
   return false;
@@ -768,13 +869,6 @@ bool AidlBinaryConstExpression::evaluate(const AidlTypeSpecifier& type) const {
 
   // CASE: + - *  / % | ^ & < > <= >= == !=
   if (isArithmeticOrBitflip || OP_IS_BIN_COMP) {
-    if ((op_ == "/" || op_ == "%") && right_val_->final_value_ == 0) {
-      final_type_ = Type::ERROR;
-      is_valid_ = false;
-      AIDL_ERROR(this) << "Cannot do division operation with zero for expression: " + value_;
-      return false;
-    }
-
     // promoted kind for both operands.
     Type promoted = UsualArithmeticConversion(IntegralPromotion(left_val_->final_type_),
                                               IntegralPromotion(right_val_->final_type_));
