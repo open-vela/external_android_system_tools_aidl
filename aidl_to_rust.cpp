@@ -96,11 +96,12 @@ std::string GetRustName(const AidlTypeSpecifier& type, const AidlTypenames& type
   };
 
   // If the type is an array/List<T>, get the inner element type
-  CHECK(!type.IsGeneric() || (type.GetName() == "List" && type.GetTypeParameters().size() == 1));
+  AIDL_FATAL_IF(
+      type.IsGeneric() && (type.GetName() != "List" || type.GetTypeParameters().size() != 1), type);
   const auto& element_type = type.IsGeneric() ? (*type.GetTypeParameters().at(0)) : type;
   const string& element_type_name = element_type.GetName();
   if (m.find(element_type_name) != m.end()) {
-    CHECK(AidlTypenames::IsBuiltinTypename(element_type_name));
+    AIDL_FATAL_IF(!AidlTypenames::IsBuiltinTypename(element_type_name), type);
     if (element_type_name == "byte" && type.IsArray()) {
       return "u8";
     } else if (element_type_name == "String" && mode == StorageMode::UNSIZED_ARGUMENT) {

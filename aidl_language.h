@@ -86,7 +86,7 @@ class AidlLocation {
 };
 
 #define AIDL_LOCATION_HERE \
-  AidlLocation { __FILE__, {__LINE__, 0}, {__LINE__, 0}, AidlLocation::Source::INTERNAL }
+  (AidlLocation{__FILE__, {__LINE__, 0}, {__LINE__, 0}, AidlLocation::Source::INTERNAL})
 
 std::ostream& operator<<(std::ostream& os, const AidlLocation& l);
 

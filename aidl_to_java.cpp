@@ -49,7 +49,7 @@ std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::str
 
 const string& JavaNameOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typenames,
                          bool instantiable = false, bool boxing = false) {
-  CHECK(aidl.IsResolved()) << aidl.ToString();
+  AIDL_FATAL_IF(!aidl.IsResolved(), aidl) << aidl.ToString();
 
   if (instantiable) {
     // An instantiable type is used in only out type(not even inout type),
@@ -99,8 +99,8 @@ const string& JavaNameOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typ
   if (const AidlEnumDeclaration* enum_decl = typenames.GetEnumDeclaration(aidl);
       enum_decl != nullptr) {
     const string& backing_type_name = enum_decl->GetBackingType().GetName();
-    CHECK(m.find(backing_type_name) != m.end());
-    CHECK(AidlTypenames::IsBuiltinTypename(backing_type_name));
+    AIDL_FATAL_IF(m.find(backing_type_name) == m.end(), enum_decl);
+    AIDL_FATAL_IF(!AidlTypenames::IsBuiltinTypename(backing_type_name), enum_decl);
     if (boxing) {
       return boxing_types[backing_type_name];
     } else {
@@ -111,11 +111,11 @@ const string& JavaNameOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typ
   const string& aidl_name = aidl.GetName();
   if (boxing && AidlTypenames::IsPrimitiveTypename(aidl_name)) {
     // Every primitive type must have the corresponding boxing type
-    CHECK(boxing_types.find(aidl_name) != m.end());
+    AIDL_FATAL_IF(boxing_types.find(aidl_name) == m.end(), aidl);
     return boxing_types[aidl_name];
   }
   if (m.find(aidl_name) != m.end()) {
-    CHECK(AidlTypenames::IsBuiltinTypename(aidl_name));
+    AIDL_FATAL_IF(!AidlTypenames::IsBuiltinTypename(aidl_name), aidl);
     return m[aidl_name];
   } else {
     // 'foo.bar.IFoo' in AIDL maps to 'foo.bar.IFoo' in Java
@@ -177,10 +177,10 @@ string DefaultJavaValueOf(const AidlTypeSpecifier& aidl, const AidlTypenames& ty
   };
 
   const string name = AidlBackingTypeName(aidl, typenames);
-  CHECK(name != "void");
+  AIDL_FATAL_IF(name == "void", aidl);
 
   if (!aidl.IsArray() && m.find(name) != m.end()) {
-    CHECK(AidlTypenames::IsBuiltinTypename(name));
+    AIDL_FATAL_IF(!AidlTypenames::IsBuiltinTypename(name), aidl);
     return m[name];
   } else {
     return "null";
@@ -273,7 +273,7 @@ bool WriteToParcelFor(const CodeGeneratorContext& c) {
              }
            } else {
              const AidlDefinedType* t = c.typenames.TryGetDefinedType(contained_type);
-             CHECK(t != nullptr) << "Unknown type: " << contained_type << endl;
+             AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << contained_type << endl;
              if (t->AsParcelable() != nullptr) {
                c.writer << c.parcel << ".writeTypedList(" << c.var << ");\n";
              }
@@ -380,7 +380,7 @@ bool WriteToParcelFor(const CodeGeneratorContext& c) {
     found->second(c);
   } else {
     const AidlDefinedType* t = c.typenames.TryGetDefinedType(c.type.GetName());
-    CHECK(t != nullptr) << "Unknown type: " << c.type.GetName() << endl;
+    AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName() << endl;
     if (t->AsInterface() != nullptr) {
       if (!c.type.IsArray()) {
         // Why don't we use writeStrongInterface which does the exact same thing?
@@ -414,7 +414,7 @@ bool WriteToParcelFor(const CodeGeneratorContext& c) {
 // Ensures that a variable is initialized to refer to the classloader
 // of the current object and returns the name of the variable.
 static string EnsureAndGetClassloader(CodeGeneratorContext& c) {
-  CHECK(c.is_classloader_created != nullptr);
+  AIDL_FATAL_IF(c.is_classloader_created == nullptr, AIDL_LOCATION_HERE);
   if (!*(c.is_classloader_created)) {
     c.writer << "java.lang.ClassLoader cl = "
              << "(java.lang.ClassLoader)this.getClass().getClassLoader();\n";
@@ -501,7 +501,7 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
              }
            } else {
              const AidlDefinedType* t = c.typenames.TryGetDefinedType(contained_type);
-             CHECK(t != nullptr) << "Unknown type: " << contained_type << endl;
+             AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << contained_type << endl;
              if (t->AsParcelable() != nullptr) {
                c.writer << c.var << " = " << c.parcel << ".createTypedArrayList("
                         << JavaNameOf(*(c.type.GetTypeParameters().at(0)), c.typenames)
@@ -615,7 +615,7 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
     found->second(c);
   } else {
     const AidlDefinedType* t = c.typenames.TryGetDefinedType(c.type.GetName());
-    CHECK(t != nullptr) << "Unknown type: " << c.type.GetName() << endl;
+    AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName() << endl;
     if (t->AsInterface() != nullptr) {
       if (!c.type.IsArray()) {
         c.writer << c.var << " = " << c.type.GetName() << ".Stub.asInterface(" << c.parcel
@@ -691,7 +691,7 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
              }
            } else {
              const AidlDefinedType* t = c.typenames.TryGetDefinedType(contained_type);
-             CHECK(t != nullptr) << "Unknown type: " << contained_type << endl;
+             AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << contained_type << endl;
              if (t->AsParcelable() != nullptr) {
                c.writer << c.parcel << ".readTypedList(" << c.var << ", "
                         << JavaNameOf(*(c.type.GetTypeParameters().at(0)), c.typenames)
@@ -762,7 +762,7 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
     found->second(c);
   } else {
     const AidlDefinedType* t = c.typenames.TryGetDefinedType(c.type.GetName());
-    CHECK(t != nullptr) << "Unknown type: " << c.type.GetName() << endl;
+    AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName() << endl;
     if (t->AsParcelable() != nullptr) {
       if (c.type.IsArray()) {
         c.writer << c.parcel << ".readTypedArray(" << c.var << ", " << c.type.GetName()
@@ -820,7 +820,9 @@ void ToStringFor(const CodeGeneratorContext& c) {
     c.writer << c.var << ".toString()";
     return;
   }
-  CHECK(true) << "Unhandled typename: " << name << endl;
+
+  // TODO(b/168261721): turn into a real error
+  // CHECK(true) << "Unhandled typename: " << name << endl;
 }
 
 }  // namespace java

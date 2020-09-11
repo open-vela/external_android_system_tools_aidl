@@ -132,7 +132,7 @@ bool AidlTypenames::AddDocument(std::unique_ptr<AidlDocument> doc) {
 }
 
 const AidlDocument& AidlTypenames::MainDocument() const {
-  CHECK(documents_.size() != 0) << "Main document doesn't exist";
+  AIDL_FATAL_IF(documents_.size() == 0, AIDL_LOCATION_HERE) << "Main document doesn't exist";
   return *(documents_[0]);
 }
 
@@ -273,7 +273,7 @@ bool AidlTypenames::CanBeOutParameter(const AidlTypeSpecifier& type) const {
            type.GetName() == "ParcelFileDescriptor";
   }
   const AidlDefinedType* t = TryGetDefinedType(type.GetName());
-  CHECK(t != nullptr) << "Unrecognized type: '" << type.GetName() << "'";
+  AIDL_FATAL_IF(t == nullptr, type) << "Unrecognized type: '" << type.GetName() << "'";
   // An 'out' field is passed as an argument, so it doesn't make sense if it is immutable.
   return t->AsParcelable() != nullptr && !t->IsJavaOnlyImmutable();
 }
