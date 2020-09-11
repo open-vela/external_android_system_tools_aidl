@@ -19,8 +19,8 @@
 #include "aidl_language.h"
 #include "aidl_typenames.h"
 #include "io_delegate.h"
+#include "logging.h"
 #include "options.h"
-#include <android-base/logging.h>
 
 #include <memory>
 #include <string>
@@ -88,7 +88,7 @@ class Parser {
   }
 
   const AidlDocument& ParsedDocument() const {
-    CHECK(!HasError());
+    AIDL_FATAL_IF(HasError(), FileName());
     return *document_;
   }
 

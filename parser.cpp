@@ -15,7 +15,7 @@
  */
 
 #include "parser.h"
-#include "aidl_language_y-module.h"
+#include "aidl_language_y.h"
 #include "logging.h"
 
 void yylex_init(void**);

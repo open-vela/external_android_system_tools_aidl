@@ -20,13 +20,6 @@
 
 #include <iostream>
 
-// We must include windows.h before android-base/logging.h on Windows.
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-#include <android-base/logging.h>
-
 // Generic point for printing any error in the AIDL compiler.
 class AidlErrorLog {
  public:
