@@ -210,7 +210,7 @@ func checkDuplicatedVersions(mctx android.BottomUpMutatorContext) {
 				ifaceName := i.ModuleBase.Name()
 				verLang := depName[len(ifaceName):]
 				myAidlDeps[DepInfo{ifaceName, verLang}] = true
-				return
+				break
 			}
 		}
 		// If dep is in aidlDeps, that means dep has direct or indirect dependencies to AIDL interfaces

@@ -722,6 +722,50 @@ func TestDuplicatedVersions(t *testing.T) {
 		"aidl_api/myiface/2/myiface.2.aidl": nil,
 		"aidl_api/myiface/2/.hash":          nil,
 	}))
+	testAidlError(t, `multiple versions of aidl_interface myiface \(backend:ndk\) are used`, `
+		aidl_interface {
+			name: "myiface",
+			srcs: ["IFoo.aidl"],
+			versions: ["1"],
+		}
+
+		aidl_interface {
+			name: "myiface2",
+			srcs: ["IBar.aidl"],
+			imports: ["myiface"]
+		}
+
+		cc_library {
+			name: "foobar",
+			shared_libs: ["myiface-ndk", "myiface2-ndk"],
+		}
+
+	`, withFiles(map[string][]byte{
+		"aidl_api/myiface/1/myiface.1.aidl": nil,
+		"aidl_api/myiface/1/.hash":          nil,
+	}))
+	testAidl(t, `
+		aidl_interface {
+			name: "myiface",
+			srcs: ["IFoo.aidl"],
+			versions: ["1"],
+		}
+
+		aidl_interface {
+			name: "myiface2",
+			srcs: ["IBar.aidl"],
+			imports: ["myiface"]
+		}
+
+		cc_library {
+			name: "foobar",
+			shared_libs: ["myiface-unstable-ndk", "myiface2-ndk"],
+		}
+
+	`, withFiles(map[string][]byte{
+		"aidl_api/myiface/1/myiface.1.aidl": nil,
+		"aidl_api/myiface/1/.hash":          nil,
+	}))
 }
 
 func TestUnstableVndkModule(t *testing.T) {
