@@ -169,7 +169,6 @@ class AidlAnnotation : public AidlNode {
     JAVA_ONLY_IMMUTABLE,
     FIXED_SIZE,
     DESCRIPTOR,
-    RUST_DERIVE,
   };
   static std::string TypeToString(Type type);
 
@@ -244,7 +243,6 @@ class AidlAnnotatable : public AidlNode {
 
   const AidlAnnotation* UnsupportedAppUsage() const;
   const AidlAnnotation* JavaPassthrough() const;
-  const AidlAnnotation* RustDerive() const;
   const AidlTypeSpecifier* BackingType(const AidlTypenames& typenames) const;
   std::string ToString() const;
 
