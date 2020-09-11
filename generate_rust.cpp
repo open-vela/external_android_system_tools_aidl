@@ -24,12 +24,14 @@
 #include <sstream>
 
 #include <android-base/stringprintf.h>
+#include <android-base/strings.h>
 
 #include "aidl_to_cpp_common.h"
 #include "aidl_to_rust.h"
 #include "code_writer.h"
 #include "logging.h"
 
+using android::base::Join;
 using std::ostringstream;
 using std::shared_ptr;
 using std::string;
@@ -570,6 +572,20 @@ bool GenerateRustParcel(const string& filename, const AidlStructuredParcelable* 
                         const AidlTypenames& typenames, const IoDelegate& io_delegate) {
   CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
 
+  // Debug is always derived because all Rust AIDL types implement it
+  // ParcelFileDescriptor doesn't support any of the others because
+  // it's a newtype over std::fs::File which only implements Debug
+  vector<string> derives{"Debug"};
+  const AidlAnnotation* derive_annotation = parcel->RustDerive();
+  if (derive_annotation != nullptr) {
+    for (const auto& name_and_param : derive_annotation->AnnotationParams(ConstantValueDecorator)) {
+      if (name_and_param.second == "true") {
+        derives.push_back(name_and_param.first);
+      }
+    }
+  }
+
+  *code_writer << "#[derive(" << Join(derives, ", ") << ")]\n";
   *code_writer << "pub struct " << parcel->GetName() << " {\n";
   code_writer->Indent();
   for (const auto& variable : parcel->GetFields()) {
