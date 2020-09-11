@@ -957,6 +957,11 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
   out << "class " << clazz << " {\n";
   out << "public:\n";
   out.Indent();
+  if (defined_type.IsFixedSize()) {
+    out << "typedef std::true_type fixed_size;\n";
+  } else {
+    out << "typedef std::false_type fixed_size;\n";
+  }
   out << "static const char* descriptor;\n";
   out << "\n";
   for (const auto& variable : defined_type.GetFields()) {
