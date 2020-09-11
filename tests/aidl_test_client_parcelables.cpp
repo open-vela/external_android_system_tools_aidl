@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <android/aidl/tests/FixedSizeParcelable.h>
 #include <android/aidl/tests/extension/MyExt.h>
 #include <android/aidl/tests/extension/MyExt2.h>
 #include <android/aidl/tests/extension/MyExtLike.h>
@@ -25,6 +26,7 @@ using android::IInterface;
 using android::sp;
 using android::String16;
 using android::aidl::tests::ConstantExpressionEnum;
+using android::aidl::tests::FixedSizeParcelable;
 using android::aidl::tests::GenericStructuredParcelable;
 using android::aidl::tests::INamedCallback;
 using android::aidl::tests::IntEnum;
@@ -70,6 +72,16 @@ TEST_F(AidlTest, ReverseSimpleParcelable) {
   EXPECT_EQ(repeated, original);
 
   std::reverse(reversed.begin(), reversed.end());
+}
+
+TEST_F(AidlTest, ConfirmFixedSizeTrue) {
+  bool res = std::is_same<FixedSizeParcelable::fixed_size, std::true_type>::value;
+  EXPECT_EQ(res, true);
+}
+
+TEST_F(AidlTest, ConfirmFixedSizeFalse) {
+  bool res = std::is_same<StructuredParcelable::fixed_size, std::true_type>::value;
+  EXPECT_EQ(res, false);
 }
 
 TEST_F(AidlTest, ConfirmPersistableBundles) {
