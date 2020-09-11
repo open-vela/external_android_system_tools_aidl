@@ -388,7 +388,7 @@ TEST_P(AidlTest, RejectUnsupportedParcelableDefineAnnotations) {
   const string expected_stderr =
       "ERROR: a/Foo.aidl:1.32-36: 'nullable' is not a supported annotation for this node. "
       "It must be one of: Hide, UnsupportedAppUsage, VintfStability, JavaPassthrough, JavaDebug, "
-      "JavaOnlyImmutable, FixedSize\n";
+      "JavaOnlyImmutable, FixedSize, RustDerive\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, GetLanguage(), &error));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
@@ -2388,6 +2388,31 @@ TEST_F(AidlTest, ParseJavaPassthroughAnnotation) {
 
   Options rust_options = Options::From("aidl --lang=rust -o out a/IFoo.aidl");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(rust_options, io_delegate_));
+}
+
+TEST_F(AidlTest, ParseRustDerive) {
+  io_delegate_.SetFileContents("a/Foo.aidl", R"(package a;
+    @RustDerive(Clone=true, Copy=false)
+    parcelable Foo {
+        int a;
+    })");
+
+  Options rust_options = Options::From("aidl --lang=rust -o out a/Foo.aidl");
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(rust_options, io_delegate_));
+
+  string rust_out;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/Foo.rs", &rust_out));
+  EXPECT_THAT(rust_out, testing::HasSubstr("#[derive(Debug, Clone)]"));
+
+  // Other backends shouldn't be bothered
+  Options cpp_options = Options::From("aidl --lang=cpp -o out -h out a/Foo.aidl");
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(cpp_options, io_delegate_));
+
+  Options ndk_options = Options::From("aidl --lang=ndk -o out -h out a/Foo.aidl");
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(ndk_options, io_delegate_));
+
+  Options java_options = Options::From("aidl --lang=java -o out a/Foo.aidl");
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
 }
 
 class AidlOutputPathTest : public AidlTest {
