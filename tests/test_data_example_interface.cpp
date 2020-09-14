@@ -340,10 +340,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_isEnabled, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().isEnabled();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().isEnabled();
           }
           _reply.readException();
           _result = (0!=_reply.readInt());
@@ -362,10 +360,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getState, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getState();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getState();
           }
           _reply.readException();
           _result = _reply.readInt();
@@ -384,10 +380,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getAddress, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getAddress();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getAddress();
           }
           _reply.readException();
           _result = _reply.readString();
@@ -407,10 +401,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getParcelables, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getParcelables();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getParcelables();
           }
           _reply.readException();
           _result = _reply.createTypedArray(android.foo.ExampleParcelable.CREATOR);
@@ -433,10 +425,8 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInt(mode);
           _data.writeInt(duration);
           boolean _status = mRemote.transact(Stub.TRANSACTION_setScanMode, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().setScanMode(mode, duration);
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().setScanMode(mode, duration);
           }
           _reply.readException();
           _result = (0!=_reply.readInt());
@@ -457,11 +447,9 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeStrongBinder((((foo!=null))?(foo.asBinder()):(null)));
           boolean _status = mRemote.transact(Stub.TRANSACTION_registerBinder, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              getDefaultImpl().registerBinder(foo);
-              return;
-            }
+          if (!_status && getDefaultImpl() != null) {
+            getDefaultImpl().registerBinder(foo);
+            return;
           }
           _reply.readException();
         }
@@ -478,10 +466,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getRecursiveBinder, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getRecursiveBinder();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getRecursiveBinder();
           }
           _reply.readException();
           _result = android.test.IExampleInterface.Stub.asInterface(_reply.readStrongBinder());
@@ -501,10 +487,8 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeStrongBinder((((arg!=null))?(arg.asBinder()):(null)));
           boolean _status = mRemote.transact(Stub.TRANSACTION_takesAnInterface, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().takesAnInterface(arg);
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().takesAnInterface(arg);
           }
           _reply.readException();
           _result = _reply.readInt();
@@ -537,10 +521,8 @@ public interface IExampleInterface extends android.os.IInterface
             _data.writeInt(0);
           }
           boolean _status = mRemote.transact(Stub.TRANSACTION_takesAParcelable, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().takesAParcelable(arg, arg2);
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().takesAParcelable(arg, arg2);
           }
           _reply.readException();
           _result = _reply.readInt();
@@ -878,10 +860,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_isEnabled, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().isEnabled();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().isEnabled();
           }
           _reply.readException();
           _result = (0!=_reply.readInt());
@@ -900,10 +880,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getState, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getState();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getState();
           }
           _reply.readException();
           _result = _reply.readInt();
@@ -922,10 +900,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getAddress, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getAddress();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getAddress();
           }
           _reply.readException();
           _result = _reply.readString();
@@ -945,10 +921,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getParcelables, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getParcelables();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getParcelables();
           }
           _reply.readException();
           _result = _reply.createTypedArray(android.foo.ExampleParcelable.CREATOR);
@@ -971,10 +945,8 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInt(mode);
           _data.writeInt(duration);
           boolean _status = mRemote.transact(Stub.TRANSACTION_setScanMode, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().setScanMode(mode, duration);
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().setScanMode(mode, duration);
           }
           _reply.readException();
           _result = (0!=_reply.readInt());
@@ -995,11 +967,9 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeStrongBinder((((foo!=null))?(foo.asBinder()):(null)));
           boolean _status = mRemote.transact(Stub.TRANSACTION_registerBinder, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              getDefaultImpl().registerBinder(foo);
-              return;
-            }
+          if (!_status && getDefaultImpl() != null) {
+            getDefaultImpl().registerBinder(foo);
+            return;
           }
           _reply.readException();
         }
@@ -1016,10 +986,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getRecursiveBinder, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getRecursiveBinder();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getRecursiveBinder();
           }
           _reply.readException();
           _result = android.test.IExampleInterface.Stub.asInterface(_reply.readStrongBinder());
@@ -1039,10 +1007,8 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeStrongBinder((((arg!=null))?(arg.asBinder()):(null)));
           boolean _status = mRemote.transact(Stub.TRANSACTION_takesAnInterface, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().takesAnInterface(arg);
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().takesAnInterface(arg);
           }
           _reply.readException();
           _result = _reply.readInt();
@@ -1075,10 +1041,8 @@ public interface IExampleInterface extends android.os.IInterface
             _data.writeInt(0);
           }
           boolean _status = mRemote.transact(Stub.TRANSACTION_takesAParcelable, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().takesAParcelable(arg, arg2);
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().takesAParcelable(arg, arg2);
           }
           _reply.readException();
           _result = _reply.readInt();
@@ -1419,10 +1383,8 @@ public interface IExampleInterface extends android.os.IInterface
           android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::isEnabled::client");
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_isEnabled, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().isEnabled();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().isEnabled();
           }
           _reply.readException();
           _result = (0!=_reply.readInt());
@@ -1443,10 +1405,8 @@ public interface IExampleInterface extends android.os.IInterface
           android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::getState::client");
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getState, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getState();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getState();
           }
           _reply.readException();
           _result = _reply.readInt();
@@ -1467,10 +1427,8 @@ public interface IExampleInterface extends android.os.IInterface
           android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::getAddress::client");
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getAddress, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getAddress();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getAddress();
           }
           _reply.readException();
           _result = _reply.readString();
@@ -1492,10 +1450,8 @@ public interface IExampleInterface extends android.os.IInterface
           android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::getParcelables::client");
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getParcelables, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getParcelables();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getParcelables();
           }
           _reply.readException();
           _result = _reply.createTypedArray(android.foo.ExampleParcelable.CREATOR);
@@ -1520,10 +1476,8 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInt(mode);
           _data.writeInt(duration);
           boolean _status = mRemote.transact(Stub.TRANSACTION_setScanMode, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().setScanMode(mode, duration);
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().setScanMode(mode, duration);
           }
           _reply.readException();
           _result = (0!=_reply.readInt());
@@ -1546,11 +1500,9 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeStrongBinder((((foo!=null))?(foo.asBinder()):(null)));
           boolean _status = mRemote.transact(Stub.TRANSACTION_registerBinder, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              getDefaultImpl().registerBinder(foo);
-              return;
-            }
+          if (!_status && getDefaultImpl() != null) {
+            getDefaultImpl().registerBinder(foo);
+            return;
           }
           _reply.readException();
         }
@@ -1569,10 +1521,8 @@ public interface IExampleInterface extends android.os.IInterface
           android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::IExampleInterface::getRecursiveBinder::client");
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getRecursiveBinder, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getRecursiveBinder();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getRecursiveBinder();
           }
           _reply.readException();
           _result = android.test.IExampleInterface.Stub.asInterface(_reply.readStrongBinder());
@@ -1594,10 +1544,8 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeStrongBinder((((arg!=null))?(arg.asBinder()):(null)));
           boolean _status = mRemote.transact(Stub.TRANSACTION_takesAnInterface, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().takesAnInterface(arg);
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().takesAnInterface(arg);
           }
           _reply.readException();
           _result = _reply.readInt();
@@ -1632,10 +1580,8 @@ public interface IExampleInterface extends android.os.IInterface
             _data.writeInt(0);
           }
           boolean _status = mRemote.transact(Stub.TRANSACTION_takesAParcelable, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().takesAParcelable(arg, arg2);
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().takesAParcelable(arg, arg2);
           }
           _reply.readException();
           _result = _reply.readInt();
@@ -1868,10 +1814,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_isEnabled, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().isEnabled();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().isEnabled();
           }
           _reply.readException();
           _result = (0!=_reply.readInt());
@@ -1892,10 +1836,8 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInt(a);
           _data.writeInt(b);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getState, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getState(a, b);
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getState(a, b);
           }
           _reply.readException();
           _result = _reply.readInt();
@@ -1914,10 +1856,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getAddress, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getAddress();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getAddress();
           }
           _reply.readException();
           _result = _reply.readString();
@@ -1937,10 +1877,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getParcelables, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getParcelables();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getParcelables();
           }
           _reply.readException();
           _result = _reply.createTypedArray(android.foo.ExampleParcelable.CREATOR);
@@ -1963,10 +1901,8 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInt(mode);
           _data.writeInt(duration);
           boolean _status = mRemote.transact(Stub.TRANSACTION_setScanMode, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().setScanMode(mode, duration);
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().setScanMode(mode, duration);
           }
           _reply.readException();
           _result = (0!=_reply.readInt());
@@ -1987,11 +1923,9 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeStrongBinder((((foo!=null))?(foo.asBinder()):(null)));
           boolean _status = mRemote.transact(Stub.TRANSACTION_registerBinder, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              getDefaultImpl().registerBinder(foo);
-              return;
-            }
+          if (!_status && getDefaultImpl() != null) {
+            getDefaultImpl().registerBinder(foo);
+            return;
           }
           _reply.readException();
         }
@@ -2008,10 +1942,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getRecursiveBinder, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getRecursiveBinder();
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getRecursiveBinder();
           }
           _reply.readException();
           _result = android.test.IExampleInterface.Stub.asInterface(_reply.readStrongBinder());
@@ -2031,10 +1963,8 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeStrongBinder((((arg!=null))?(arg.asBinder()):(null)));
           boolean _status = mRemote.transact(Stub.TRANSACTION_takesAnInterface, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().takesAnInterface(arg);
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().takesAnInterface(arg);
           }
           _reply.readException();
           _result = _reply.readInt();
@@ -2067,10 +1997,8 @@ public interface IExampleInterface extends android.os.IInterface
             _data.writeInt(0);
           }
           boolean _status = mRemote.transact(Stub.TRANSACTION_takesAParcelable, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().takesAParcelable(arg, arg2);
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().takesAParcelable(arg, arg2);
           }
           _reply.readException();
           _result = _reply.readInt();
@@ -2412,13 +2340,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_isEnabled, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().isEnabled();
-            }
-            else {
-              throw new RuntimeException("Method isEnabled is unimplemented.");
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().isEnabled();
           }
           _reply.readException();
           _result = (0!=_reply.readInt());
@@ -2439,13 +2362,8 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInt(a);
           _data.writeInt(b);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getState, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getState(a, b);
-            }
-            else {
-              throw new RuntimeException("Method getState is unimplemented.");
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getState(a, b);
           }
           _reply.readException();
           _result = _reply.readInt();
@@ -2464,13 +2382,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getAddress, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getAddress();
-            }
-            else {
-              throw new RuntimeException("Method getAddress is unimplemented.");
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getAddress();
           }
           _reply.readException();
           _result = _reply.readString();
@@ -2490,13 +2403,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getParcelables, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getParcelables();
-            }
-            else {
-              throw new RuntimeException("Method getParcelables is unimplemented.");
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getParcelables();
           }
           _reply.readException();
           _result = _reply.createTypedArray(android.foo.ExampleParcelable.CREATOR);
@@ -2519,13 +2427,8 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInt(mode);
           _data.writeInt(duration);
           boolean _status = mRemote.transact(Stub.TRANSACTION_setScanMode, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().setScanMode(mode, duration);
-            }
-            else {
-              throw new RuntimeException("Method setScanMode is unimplemented.");
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().setScanMode(mode, duration);
           }
           _reply.readException();
           _result = (0!=_reply.readInt());
@@ -2546,14 +2449,9 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeStrongBinder((((foo!=null))?(foo.asBinder()):(null)));
           boolean _status = mRemote.transact(Stub.TRANSACTION_registerBinder, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              getDefaultImpl().registerBinder(foo);
-              return;
-            }
-            else {
-              throw new RuntimeException("Method registerBinder is unimplemented.");
-            }
+          if (!_status && getDefaultImpl() != null) {
+            getDefaultImpl().registerBinder(foo);
+            return;
           }
           _reply.readException();
         }
@@ -2570,13 +2468,8 @@ public interface IExampleInterface extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_getRecursiveBinder, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().getRecursiveBinder();
-            }
-            else {
-              throw new RuntimeException("Method getRecursiveBinder is unimplemented.");
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().getRecursiveBinder();
           }
           _reply.readException();
           _result = android.test.IExampleInterface.Stub.asInterface(_reply.readStrongBinder());
@@ -2596,13 +2489,8 @@ public interface IExampleInterface extends android.os.IInterface
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeStrongBinder((((arg!=null))?(arg.asBinder()):(null)));
           boolean _status = mRemote.transact(Stub.TRANSACTION_takesAnInterface, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().takesAnInterface(arg);
-            }
-            else {
-              throw new RuntimeException("Method takesAnInterface is unimplemented.");
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().takesAnInterface(arg);
           }
           _reply.readException();
           _result = _reply.readInt();
@@ -2635,13 +2523,8 @@ public interface IExampleInterface extends android.os.IInterface
             _data.writeInt(0);
           }
           boolean _status = mRemote.transact(Stub.TRANSACTION_takesAParcelable, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().takesAParcelable(arg, arg2);
-            }
-            else {
-              throw new RuntimeException("Method takesAParcelable is unimplemented.");
-            }
+          if (!_status && getDefaultImpl() != null) {
+            return getDefaultImpl().takesAParcelable(arg, arg2);
           }
           _reply.readException();
           _result = _reply.readInt();
