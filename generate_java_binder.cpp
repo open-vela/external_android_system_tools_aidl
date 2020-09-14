@@ -662,22 +662,41 @@ static std::shared_ptr<Method> generate_proxy_method(
   auto _status = std::make_shared<Variable>("boolean", "_status");
   tryStatement->statements->Add(std::make_shared<VariableDeclaration>(_status, call));
 
-  // If the transaction returns false, which means UNKNOWN_TRANSACTION, fall
-  // back to the local method in the default impl, if set before.
+  // If the transaction returns false, which means UNKNOWN_TRANSACTION, fall back to the local
+  // method in the default impl, if set before. Otherwise, throw a RuntimeException if the interface
+  // is versioned. We can't throw the exception for unversioned interface because that would be an
+  // app breaking change.
   vector<string> arg_names;
   for (const auto& arg : method.GetArguments()) {
     arg_names.emplace_back(arg->GetName());
   }
   bool has_return_type = method.GetType().GetName() != "void";
-  tryStatement->statements->Add(std::make_shared<LiteralStatement>(
-      android::base::StringPrintf(has_return_type ? "if (!_status && getDefaultImpl() != null) {\n"
-                                                    "  return getDefaultImpl().%s(%s);\n"
-                                                    "}\n"
-                                                  : "if (!_status && getDefaultImpl() != null) {\n"
-                                                    "  getDefaultImpl().%s(%s);\n"
-                                                    "  return;\n"
-                                                    "}\n",
-                                  method.GetName().c_str(), Join(arg_names, ", ").c_str())));
+
+  auto checkDefaultImpl = std::make_shared<IfStatement>();
+  checkDefaultImpl->expression = std::make_shared<LiteralExpression>("getDefaultImpl() != null");
+  if (has_return_type) {
+    checkDefaultImpl->statements->Add(std::make_shared<LiteralStatement>(
+        android::base::StringPrintf("return getDefaultImpl().%s(%s);\n", method.GetName().c_str(),
+                                    Join(arg_names, ", ").c_str())));
+  } else {
+    checkDefaultImpl->statements->Add(std::make_shared<LiteralStatement>(
+        android::base::StringPrintf("getDefaultImpl().%s(%s);\n", method.GetName().c_str(),
+                                    Join(arg_names, ", ").c_str())));
+    checkDefaultImpl->statements->Add(std::make_shared<LiteralStatement>("return;\n"));
+  }
+  if (options.Version() > 0) {
+    checkDefaultImpl->elseif = std::make_shared<IfStatement>();
+    checkDefaultImpl->elseif->statements->Add(
+        std::make_shared<LiteralStatement>(android::base::StringPrintf(
+            "throw new RuntimeException(\"Method %s is unimplemented.\");\n",
+            method.GetName().c_str())));
+  }
+
+  auto checkTransactionError = std::make_shared<IfStatement>();
+  checkTransactionError->expression = std::make_shared<LiteralExpression>("!_status");
+  checkTransactionError->statements->Add(checkDefaultImpl);
+
+  tryStatement->statements->Add(checkTransactionError);
 
   // throw back exceptions.
   if (_reply) {
