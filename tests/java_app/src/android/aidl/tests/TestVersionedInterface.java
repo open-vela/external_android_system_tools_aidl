@@ -16,22 +16,21 @@
 
 package android.aidl.tests;
 
-import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
+import static org.hamcrest.core.Is.is;
 
+import androidx.test.core.app.ApplicationProvider;
 import android.aidl.versioned.tests.IFooInterface;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.ServiceManager;
-import androidx.test.core.app.ApplicationProvider;
+
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.junit.runner.RunWith;
 
 @RunWith(JUnit4.class)
 public class TestVersionedInterface {
@@ -53,15 +52,5 @@ public class TestVersionedInterface {
     @Test
     public void testGetInterfaceHash() throws RemoteException {
         assertThat(service.getInterfaceHash(), is("fcd4f9c806cbc8af3694d569fd1de1ecc8cf7d22"));
-    }
-
-    @Rule public ExpectedException expectedException = ExpectedException.none();
-
-    @Test
-    public void testUnimplementedMethodTriggersException() throws RemoteException {
-      expectedException.expect(RuntimeException.class);
-      expectedException.expectMessage("Method bar is unimplemented.");
-
-      service.bar();
     }
 }
