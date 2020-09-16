@@ -46,6 +46,9 @@
 #include "android/aidl/tests/BnNewName.h"
 #include "android/aidl/tests/BnOldName.h"
 
+#include "android/aidl/tests/extension/MyExt.h"
+#include "android/aidl/tests/extension/MyExt2.h"
+
 // Used implicitly.
 #undef LOG_TAG
 #define LOG_TAG "aidl_native_service"
@@ -525,6 +528,21 @@ class NativeService : public BnTestService {
     parcelable->const_exprs_8 = ConstantExpressionEnum::hexInt32_2;
     parcelable->const_exprs_9 = ConstantExpressionEnum::hexInt32_3;
     parcelable->const_exprs_10 = ConstantExpressionEnum::hexInt64_1;
+
+    return Status::ok();
+  }
+
+  ::android::binder::Status RepeatExtendableParcelable(
+      const ::android::aidl::tests::extension::ExtendableParcelable& ep,
+      ::android::aidl::tests::extension::ExtendableParcelable* ep2) {
+    std::string type1 = "android::aidl::tests::extension::MyExt";
+    ep2->a = ep.a * 2;
+    ep2->b = ep.b + "BAR";
+    auto myExt = ep.ext.getParcelable<android::aidl::tests::extension::MyExt>(type1);
+    ::android::aidl::tests::extension::MyExt retMyExt;
+    retMyExt.a = myExt->a * 2;
+    retMyExt.b = myExt->b + "BAR";
+    ep2->ext.setParcelable(retMyExt, type1);
 
     return Status::ok();
   }
