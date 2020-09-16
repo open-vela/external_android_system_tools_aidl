@@ -422,7 +422,7 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
         break;
       }
       default: {
-        LOG(FATAL) << "Unrecognized constant type: " << static_cast<int>(value.GetType());
+        AIDL_FATAL(value) << "Unrecognized constant type: " << static_cast<int>(value.GetType());
       }
     }
     *code_writer << "pub const " << constant->GetName() << ": " << const_type << " = "
@@ -644,7 +644,7 @@ bool GenerateRust(const string& filename, const AidlDefinedType* defined_type,
     return GenerateRustInterface(filename, interface, typenames, io_delegate, options);
   }
 
-  CHECK(false) << "Unrecognized type sent for Rust generation.";
+  AIDL_FATAL(filename) << "Unrecognized type sent for Rust generation.";
   return false;
 }
 

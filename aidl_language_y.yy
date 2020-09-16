@@ -17,7 +17,7 @@
 %{
 #include "aidl_language.h"
 #include "parser.h"
-#include "aidl_language_y-module.h"
+#include "aidl_language_y.h"
 #include "logging.h"
 #include <android-base/parseint.h>
 #include <set>
@@ -29,9 +29,9 @@
 int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void *);
 
 AidlLocation loc(const yy::parser::location_type& begin, const yy::parser::location_type& end) {
-  CHECK(begin.begin.filename == begin.end.filename);
-  CHECK(begin.end.filename == end.begin.filename);
-  CHECK(end.begin.filename == end.end.filename);
+  AIDL_FATAL_IF(begin.begin.filename != begin.end.filename, AIDL_LOCATION_HERE);
+  AIDL_FATAL_IF(begin.end.filename != end.begin.filename, AIDL_LOCATION_HERE);
+  AIDL_FATAL_IF(end.begin.filename != end.end.filename, AIDL_LOCATION_HERE);
   AidlLocation::Point begin_point {
     .line = begin.begin.line,
     .column = begin.begin.column,

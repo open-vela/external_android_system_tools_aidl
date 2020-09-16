@@ -30,13 +30,9 @@ constexpr Options::Language kDefaultLang = Options::Language::JAVA;
 #endif
 
 int main(int argc, char* argv[]) {
-  android::base::InitLogging(argv);
-  LOG(DEBUG) << "aidl starting";
-
   Options options(argc, argv, kDefaultLang);
   if (!options.Ok()) {
-    std::cerr << options.GetErrorMessage();
-    std::cerr << options.GetUsage();
+    AIDL_ERROR(options.GetErrorMessage()) << options.GetUsage();
     return 1;
   }
 

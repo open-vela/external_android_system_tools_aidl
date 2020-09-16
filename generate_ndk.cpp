@@ -45,23 +45,23 @@ void GenerateNdkInterface(const string& output_file, const Options& options,
   const string i_header = options.OutputHeaderDir() + NdkHeaderFile(defined_type, ClassNames::RAW);
   unique_ptr<CodeWriter> i_writer(io_delegate.GetCodeWriter(i_header));
   GenerateInterfaceHeader(*i_writer, types, defined_type, options);
-  CHECK(i_writer->Close());
+  AIDL_FATAL_IF(!i_writer->Close(), i_header);
 
   const string bp_header =
       options.OutputHeaderDir() + NdkHeaderFile(defined_type, ClassNames::CLIENT);
   unique_ptr<CodeWriter> bp_writer(io_delegate.GetCodeWriter(bp_header));
   GenerateClientHeader(*bp_writer, types, defined_type, options);
-  CHECK(bp_writer->Close());
+  AIDL_FATAL_IF(!bp_writer->Close(), bp_header);
 
   const string bn_header =
       options.OutputHeaderDir() + NdkHeaderFile(defined_type, ClassNames::SERVER);
   unique_ptr<CodeWriter> bn_writer(io_delegate.GetCodeWriter(bn_header));
   GenerateServerHeader(*bn_writer, types, defined_type, options);
-  CHECK(bn_writer->Close());
+  AIDL_FATAL_IF(!bn_writer->Close(), bn_header);
 
   unique_ptr<CodeWriter> source_writer = io_delegate.GetCodeWriter(output_file);
   GenerateSource(*source_writer, types, defined_type, options);
-  CHECK(source_writer->Close());
+  AIDL_FATAL_IF(!source_writer->Close(), output_file);
 }
 
 void GenerateNdkParcel(const string& output_file, const Options& options,
@@ -79,27 +79,27 @@ void GenerateNdkParcel(const string& output_file, const Options& options,
   } else {
     GenerateParcelSource(*source_writer, types, defined_type, options);
   }
-  CHECK(source_writer->Close());
-  CHECK(header_writer->Close());
+  (source_writer->Close());
+  AIDL_FATAL_IF(!header_writer->Close(), header_path);
 
   const string bp_header =
       options.OutputHeaderDir() + NdkHeaderFile(defined_type, ClassNames::CLIENT);
   unique_ptr<CodeWriter> bp_writer(io_delegate.GetCodeWriter(bp_header));
   *bp_writer << "#error TODO(b/111362593) defined_types do not have bp classes\n";
-  CHECK(bp_writer->Close());
+  AIDL_FATAL_IF(!bp_writer->Close(), bp_header);
 
   const string bn_header =
       options.OutputHeaderDir() + NdkHeaderFile(defined_type, ClassNames::SERVER);
   unique_ptr<CodeWriter> bn_writer(io_delegate.GetCodeWriter(bn_header));
   *bn_writer << "#error TODO(b/111362593) defined_types do not have bn classes\n";
-  CHECK(bn_writer->Close());
+  AIDL_FATAL_IF(!bn_writer->Close(), bn_header);
 }
 
 void GenerateNdkParcelDeclaration(const std::string& filename, const IoDelegate& io_delegate) {
   CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
   *code_writer
       << "// This file is intentionally left blank as placeholder for parcel declaration.\n";
-  CHECK(code_writer->Close());
+  AIDL_FATAL_IF(!code_writer->Close(), filename);
 }
 
 void GenerateNdkEnumDeclaration(const string& output_file, const Options& options,
@@ -109,24 +109,24 @@ void GenerateNdkEnumDeclaration(const string& output_file, const Options& option
       options.OutputHeaderDir() + NdkHeaderFile(defined_type, ClassNames::RAW);
   unique_ptr<CodeWriter> header_writer(io_delegate.GetCodeWriter(header_path));
   GenerateEnumHeader(*header_writer, types, defined_type, options);
-  CHECK(header_writer->Close());
+  AIDL_FATAL_IF(!header_writer->Close(), header_path);
 
   const string bp_header =
       options.OutputHeaderDir() + NdkHeaderFile(defined_type, ClassNames::CLIENT);
   unique_ptr<CodeWriter> bp_writer(io_delegate.GetCodeWriter(bp_header));
   *bp_writer << "#error TODO(b/111362593) enums do not have bp classes\n";
-  CHECK(bp_writer->Close());
+  AIDL_FATAL_IF(!bp_writer->Close(), bp_header);
 
   const string bn_header =
       options.OutputHeaderDir() + NdkHeaderFile(defined_type, ClassNames::SERVER);
   unique_ptr<CodeWriter> bn_writer(io_delegate.GetCodeWriter(bn_header));
   *bn_writer << "#error TODO(b/111362593) enums do not have bn classes\n";
-  CHECK(bn_writer->Close());
+  AIDL_FATAL_IF(!bn_writer->Close(), bn_header);
 
   unique_ptr<CodeWriter> source_writer = io_delegate.GetCodeWriter(output_file);
   *source_writer
       << "// This file is intentionally left blank as placeholder for enum declaration.\n";
-  CHECK(source_writer->Close());
+  AIDL_FATAL_IF(!source_writer->Close(), output_file);
 }
 
 void GenerateNdk(const string& output_file, const Options& options, const AidlTypenames& types,
@@ -154,7 +154,7 @@ void GenerateNdk(const string& output_file, const Options& options, const AidlTy
     return;
   }
 
-  CHECK(false) << "Unrecognized type sent for NDK cpp generation.";
+  AIDL_FATAL(defined_type) << "Unrecognized type sent for NDK cpp generation.";
 }
 namespace internals {
 
@@ -272,8 +272,9 @@ static void GenerateSourceIncludes(CodeWriter& out, const AidlTypenames& types,
 static void GenerateConstantDeclarations(CodeWriter& out, const AidlInterface& interface) {
   for (const auto& constant : interface.GetConstantDeclarations()) {
     const AidlConstantValue& value = constant->GetValue();
-    CHECK(value.GetType() != AidlConstantValue::Type::UNARY &&
-          value.GetType() != AidlConstantValue::Type::BINARY);
+    AIDL_FATAL_IF(value.GetType() == AidlConstantValue::Type::UNARY ||
+                      value.GetType() == AidlConstantValue::Type::BINARY,
+                  value);
     if (value.GetType() == AidlConstantValue::Type::STRING) {
       out << "static const char* " << constant->GetName() << ";\n";
     }
@@ -283,8 +284,9 @@ static void GenerateConstantDeclarations(CodeWriter& out, const AidlInterface& i
   bool hasIntegralConstant = false;
   for (const auto& constant : interface.GetConstantDeclarations()) {
     const AidlConstantValue& value = constant->GetValue();
-    CHECK(value.GetType() != AidlConstantValue::Type::UNARY &&
-          value.GetType() != AidlConstantValue::Type::BINARY);
+    AIDL_FATAL_IF(value.GetType() == AidlConstantValue::Type::UNARY ||
+                      value.GetType() == AidlConstantValue::Type::BINARY,
+                  value);
     if (value.GetType() == AidlConstantValue::Type::BOOLEAN ||
         value.GetType() == AidlConstantValue::Type::INT8 ||
         value.GetType() == AidlConstantValue::Type::INT32) {
@@ -314,8 +316,9 @@ static void GenerateConstantDefinitions(CodeWriter& out, const AidlInterface& in
 
   for (const auto& constant : interface.GetConstantDeclarations()) {
     const AidlConstantValue& value = constant->GetValue();
-    CHECK(value.GetType() != AidlConstantValue::Type::UNARY &&
-          value.GetType() != AidlConstantValue::Type::BINARY);
+    AIDL_FATAL_IF(value.GetType() == AidlConstantValue::Type::UNARY ||
+                      value.GetType() == AidlConstantValue::Type::BINARY,
+                  value);
     if (value.GetType() == AidlConstantValue::Type::STRING) {
       out << "const char* " << clazz << "::" << constant->GetName() << " = "
           << constant->ValueString(ConstantValueDecorator) << ";\n";

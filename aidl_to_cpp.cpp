@@ -79,24 +79,24 @@ std::string RawParcelMethod(const AidlTypeSpecifier& type, const AidlTypenames& 
   if (isVector) {
     string element_name;
     if (typenames.IsList(type)) {
-      CHECK(type.GetTypeParameters().size() == 1);
+      AIDL_FATAL_IF(type.GetTypeParameters().size() != 1, type);
       element_name = type.GetTypeParameters().at(0)->GetName();
     } else {
       element_name = type.GetName();
     }
     if (kBuiltinVector.find(element_name) != kBuiltinVector.end()) {
-      CHECK(AidlTypenames::IsBuiltinTypename(element_name));
+      AIDL_FATAL_IF(!AidlTypenames::IsBuiltinTypename(element_name), type);
       if (utf8) {
-        CHECK(element_name == "String");
+        AIDL_FATAL_IF(element_name != "String", type);
         return readMethod ? "Utf8VectorFromUtf16Vector" : "Utf8VectorAsUtf16Vector";
       }
       return kBuiltinVector[element_name];
     }
-    CHECK(!typenames.IsList(type));
+    AIDL_FATAL_IF(typenames.IsList(type), type);
   } else {
     const string& type_name = type.GetName();
     if (kBuiltin.find(type_name) != kBuiltin.end()) {
-      CHECK(AidlTypenames::IsBuiltinTypename(type_name));
+      AIDL_FATAL_IF(!AidlTypenames::IsBuiltinTypename(type_name), type);
       if (type_name == "IBinder" && nullable && readMethod) {
         return "NullableStrongBinder";
       }
@@ -104,13 +104,13 @@ std::string RawParcelMethod(const AidlTypeSpecifier& type, const AidlTypenames& 
         return "NullableParcelable";
       }
       if (utf8) {
-        CHECK(type_name == "String");
+        AIDL_FATAL_IF(type_name != "String", type);
         return readMethod ? "Utf8FromUtf16" : "Utf8AsUtf16";
       }
       return kBuiltin[type_name];
     }
   }
-  CHECK(!AidlTypenames::IsBuiltinTypename(type.GetName()));
+  AIDL_FATAL_IF(AidlTypenames::IsBuiltinTypename(type.GetName()), type);
   auto definedType = typenames.TryGetDefinedType(type.GetName());
   if (definedType != nullptr && definedType->AsInterface() != nullptr) {
     if (isVector) {
@@ -124,7 +124,7 @@ std::string RawParcelMethod(const AidlTypeSpecifier& type, const AidlTypenames& 
 
   // The type must be either primitive or interface or parcelable,
   // so it cannot be nullptr.
-  CHECK(definedType != nullptr) << type.GetName() << " is not found.";
+  AIDL_FATAL_IF(definedType == nullptr, type) << type.GetName() << " is not found.";
 
   // Parcelable
   if (isVector) {
@@ -167,15 +167,15 @@ std::string GetCppName(const AidlTypeSpecifier& raw_type, const AidlTypenames& t
       {"String", "::android::String16"},
       {"void", "void"},
   };
-  CHECK(!typenames.IsList(raw_type) || raw_type.GetTypeParameters().size() == 1);
+  AIDL_FATAL_IF(typenames.IsList(raw_type) && raw_type.GetTypeParameters().size() != 1, raw_type);
   const auto& type = typenames.IsList(raw_type) ? (*raw_type.GetTypeParameters().at(0)) : raw_type;
   const string& aidl_name = type.GetName();
   if (m.find(aidl_name) != m.end()) {
-    CHECK(AidlTypenames::IsBuiltinTypename(aidl_name));
+    AIDL_FATAL_IF(!AidlTypenames::IsBuiltinTypename(aidl_name), raw_type);
     if (aidl_name == "byte" && type.IsArray()) {
       return "uint8_t";
     } else if (raw_type.IsUtf8InCpp()) {
-      CHECK(aidl_name == "String");
+      AIDL_FATAL_IF(aidl_name != "String", type);
       return WrapIfNullable("::std::string", raw_type, typenames);
     }
     return WrapIfNullable(m[aidl_name], raw_type, typenames);
@@ -280,7 +280,7 @@ std::string ParcelWriteCastOf(const AidlTypeSpecifier& type, const AidlTypenames
 
 void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
                 std::set<std::string>* headers) {
-  CHECK(!typenames.IsList(type) || type.GetTypeParameters().size() == 1);
+  AIDL_FATAL_IF(typenames.IsList(type) && type.GetTypeParameters().size() != 1, type);
   bool isVector = type.IsArray() || typenames.IsList(type);
   bool isNullable = type.IsNullable();
   bool utf8 = type.IsUtf8InCpp();
