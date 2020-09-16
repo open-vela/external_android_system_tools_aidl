@@ -32,7 +32,7 @@
 #include <android-base/parseint.h>
 #include <android-base/strings.h>
 
-#include "aidl_language_y-module.h"
+#include "aidl_language_y.h"
 #include "logging.h"
 
 #include "aidl.h"
@@ -69,8 +69,8 @@ bool IsJavaKeyword(const char* str) {
   return std::find(kJavaKeywords.begin(), kJavaKeywords.end(), str) != kJavaKeywords.end();
 }
 
-inline std::string CapitalizeFirstLetter(const std::string& str) {
-  CHECK(str.size() > 0) << "Input cannot be empty.";
+inline std::string CapitalizeFirstLetter(const AidlNode& context, const std::string& str) {
+  AIDL_FATAL_IF(str.size() <= 0, context) << "Input cannot be empty.";
   std::ostringstream out;
   out << static_cast<char>(toupper(str[0])) << str.substr(1);
   return out.str();
@@ -448,7 +448,7 @@ string AidlTypeSpecifier::Signature() const {
 }
 
 bool AidlTypeSpecifier::Resolve(const AidlTypenames& typenames) {
-  CHECK(!IsResolved());
+  AIDL_FATAL_IF(IsResolved(), this);
   AidlTypenames::ResolvedTypename result = typenames.ResolveTypename(unresolved_name_);
   if (result.is_resolved) {
     fully_qualified_name_ = result.canonical_name;
@@ -801,7 +801,7 @@ AidlParameterizable<T>::AidlParameterizable(const AidlParameterizable& other) {
   // Copying is not supported if it has type parameters.
   // It doesn't make a problem because only ArrayBase() makes a copy,
   // and it can be called only if a type is not generic.
-  CHECK(!other.IsGeneric());
+  AIDL_FATAL_IF(other.IsGeneric(), AIDL_LOCATION_HERE);
 }
 
 template <typename T>
@@ -887,7 +887,7 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
     bool duplicated;
     if (IsJavaOnlyImmutable()) {
       success = success && typenames.CanBeJavaOnlyImmutable(v->GetType());
-      duplicated = !fieldnames.emplace(CapitalizeFirstLetter(v->GetName())).second;
+      duplicated = !fieldnames.emplace(CapitalizeFirstLetter(*v, v->GetName())).second;
     } else {
       if (IsFixedSize()) {
         success = success && typenames.CanBeFixedSize(v->GetType());
@@ -1133,7 +1133,7 @@ AidlInterface::AidlInterface(const AidlLocation& location, const std::string& na
     AidlMethod* method = local->AsMethod();
     AidlConstantDeclaration* constant = local->AsConstantDeclaration();
 
-    CHECK(method == nullptr || constant == nullptr);
+    AIDL_FATAL_IF(method != nullptr && constant != nullptr, member);
 
     if (method) {
       method->ApplyInterfaceOneway(oneway);

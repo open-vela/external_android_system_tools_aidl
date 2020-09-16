@@ -166,7 +166,7 @@ const static std::unordered_map<std::string, TypeInfo> kTypeInfoMap = {
 };
 
 TypeInfo GetTypeInfo(const AidlTypeSpecifier& aidl) {
-  CHECK(aidl.IsResolved()) << aidl.ToString();
+  AIDL_FATAL_IF(!aidl.IsResolved(), aidl) << aidl.ToString();
   const string& aidl_name = aidl.GetName();
 
   TypeInfo info;
