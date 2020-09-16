@@ -234,25 +234,24 @@ TEST_F(AidlTest, ConfirmStructuredParcelables) {
 }
 
 TEST_F(AidlTest, EmptyParcelableHolder) {
-  using namespace android::aidl::tests::extension;
   android::Parcel parcel;
+  std::string myExtTypeName = "android::aidl::tests::extension::MyExt";
   {
     ExtendableParcelable ep;
     ep.writeToParcel(&parcel);
-    auto emptyExt = ep.ext.getParcelable<MyExt>();
+    auto emptyExt = ep.ext.getParcelable<android::aidl::tests::extension::MyExt>(myExtTypeName);
     EXPECT_FALSE(emptyExt);
   }
   {
     parcel.setDataPosition(0);
     ExtendableParcelable ep;
     ep.readFromParcel(&parcel);
-    auto emptyExt = ep.ext.getParcelable<MyExt>();
+    auto emptyExt = ep.ext.getParcelable<android::aidl::tests::extension::MyExt>(myExtTypeName);
     EXPECT_FALSE(emptyExt);
   }
 }
 
 TEST_F(AidlTest, NativeExtednableParcelable) {
-  using namespace android::aidl::tests::extension;
   MyExt ext;
   ext.a = 42;
   ext.b = "EXT";
@@ -262,6 +261,9 @@ TEST_F(AidlTest, NativeExtednableParcelable) {
   ext2.b.a = 24;
   ext2.b.b = "INEXT";
   ext2.c = "EXT2";
+  std::string myExtTypeName = "::android::aidl::tests::extension::MyExt";
+  std::string myExt2TypeName = "android::aidl::tests::extension::MyExt2";
+  std::string myExtLikeTypeName = "android::aidl::tests::extension::MyExtLike";
   android::Parcel parcel;
   {
     ExtendableParcelable ep;
@@ -269,15 +271,17 @@ TEST_F(AidlTest, NativeExtednableParcelable) {
     ep.b = "a";
     ep.c = 42L;
 
-    EXPECT_TRUE(ep.ext.setParcelable(ext));
-    EXPECT_TRUE(ep.ext2.setParcelable(ext2));
+    EXPECT_TRUE(ep.ext.setParcelable(ext, myExtTypeName));
+    EXPECT_TRUE(ep.ext2.setParcelable(ext2, myExt2TypeName));
 
-    auto extLike = ep.ext.getParcelable<MyExtLike>();
+    auto extLike =
+        ep.ext.getParcelable<android::aidl::tests::extension::MyExtLike>(myExtLikeTypeName);
     EXPECT_FALSE(extLike) << "The extension type must be MyExt, so it has to fail even though "
                              "MyExtLike has the same structure as MyExt.";
 
-    auto actualExt = ep.ext.getParcelable<MyExt>();
-    auto actualExt2 = ep.ext2.getParcelable<MyExt2>();
+    auto actualExt = ep.ext.getParcelable<android::aidl::tests::extension::MyExt>(myExtTypeName);
+    auto actualExt2 =
+        ep.ext2.getParcelable<android::aidl::tests::extension::MyExt2>(myExt2TypeName);
 
     EXPECT_TRUE(actualExt);
     EXPECT_TRUE(actualExt2);
@@ -293,14 +297,16 @@ TEST_F(AidlTest, NativeExtednableParcelable) {
     ExtendableParcelable ep;
     ep.readFromParcel(&parcel);
 
-    auto extLike = ep.ext.getParcelable<MyExtLike>();
+    auto extLike =
+        ep.ext.getParcelable<android::aidl::tests::extension::MyExtLike>(myExtLikeTypeName);
     EXPECT_FALSE(extLike) << "The extension type must be MyExt, so it has to fail even though "
                              "MyExtLike has the same structure as MyExt.";
 
-    auto actualExt = ep.ext.getParcelable<MyExt>();
-    auto actualExt2 = ep.ext2.getParcelable<MyExt2>();
+    auto actualExt = ep.ext.getParcelable<android::aidl::tests::extension::MyExt>(myExtTypeName);
+    auto actualExt2 =
+        ep.ext2.getParcelable<android::aidl::tests::extension::MyExt2>(myExt2TypeName);
 
-    auto emptyExt = ep.ext2.getParcelable<MyExt>();
+    auto emptyExt = ep.ext2.getParcelable<android::aidl::tests::extension::MyExt>(myExtTypeName);
     EXPECT_FALSE(emptyExt);
 
     EXPECT_TRUE(actualExt);
