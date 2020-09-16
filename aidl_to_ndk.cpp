@@ -181,7 +181,7 @@ TypeInfo EnumDeclarationTypeInfo(const AidlEnumDeclaration& enum_decl) {
       {"long", "Int64"},
   };
   auto aparcel_name_it = kAParcelTypeNameMap.find(enum_decl.GetBackingType().GetName());
-  CHECK(aparcel_name_it != kAParcelTypeNameMap.end());
+  AIDL_FATAL_IF(aparcel_name_it == kAParcelTypeNameMap.end(), enum_decl);
   const std::string aparcel_name = aparcel_name_it->second;
 
   const std::string backing_type_name =
@@ -325,7 +325,7 @@ static map<std::string, TypeInfo> kNdkTypeInfoMap = {
 };
 
 static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlTypeSpecifier& aidl) {
-  CHECK(aidl.IsResolved()) << aidl.ToString();
+  AIDL_FATAL_IF(!aidl.IsResolved(), aidl) << aidl.ToString();
   auto& aidl_name = aidl.GetName();
 
   TypeInfo info;
@@ -350,7 +350,7 @@ static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlType
 
   if (AidlTypenames::IsBuiltinTypename(aidl_name)) {
     auto it = kNdkTypeInfoMap.find(aidl_name);
-    CHECK(it != kNdkTypeInfoMap.end());
+    AIDL_FATAL_IF(it == kNdkTypeInfoMap.end(), aidl_name);
     info = it->second;
   } else {
     const AidlDefinedType* type = types.TryGetDefinedType(aidl_name);
