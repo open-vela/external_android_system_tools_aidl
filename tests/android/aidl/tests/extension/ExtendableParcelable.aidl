@@ -18,7 +18,7 @@ package android.aidl.tests.extension;
 
 parcelable ExtendableParcelable {
     int a;
-    @utf8InCpp String b;
+    String b;
     ParcelableHolder ext;
     long c;
     ParcelableHolder ext2;

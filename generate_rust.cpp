@@ -417,9 +417,7 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
       }
       case AidlConstantValue::Type::BOOLEAN:  // fall-through
       case AidlConstantValue::Type::INT8:     // fall-through
-      case AidlConstantValue::Type::INT32:    // fall-through
-      // Type promotion may cause this. Value should be small enough to fit in int32.
-      case AidlConstantValue::Type::INT64: {
+      case AidlConstantValue::Type::INT32: {
         const_type = "i32";
         break;
       }
