@@ -16,10 +16,9 @@
 
 package android.aidl.tests;
 
+import static org.junit.Assert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 
 import android.aidl.tests.extension.ExtendableParcelable;
 import android.aidl.tests.extension.MyExt;
@@ -31,17 +30,15 @@ import android.aidl.tests.unstable.UnstableExtendableParcelable;
 import android.aidl.tests.unstable.UnstableParcelable;
 import android.aidl.tests.vintf.VintfExtendableParcelable;
 import android.aidl.tests.vintf.VintfParcelable;
-import android.os.IBinder;
 import android.os.Parcel;
 import android.os.ParcelableHolder;
-import android.os.RemoteException;
-import android.os.ServiceManager;
 import java.util.Arrays;
 import java.util.HashMap;
+
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.junit.runner.RunWith;
 
 @RunWith(JUnit4.class)
 public class ExtensionTests {
@@ -54,46 +51,16 @@ public class ExtensionTests {
     private UnstableExtendableParcelable uep;
     private UnstableParcelable up;
 
-    private ITestService mService;
-
     @Before
     public void setUp() {
-      IBinder binder = ServiceManager.getService(ITestService.class.getName());
-      assertNotNull(binder);
-      mService = ITestService.Stub.asInterface(binder);
-      assertNotNull(mService);
+        vep = new VintfExtendableParcelable();
+        vp = new VintfParcelable();
 
-      vep = new VintfExtendableParcelable();
-      vp = new VintfParcelable();
+        sep = new NonVintfExtendableParcelable();
+        sp = new NonVintfParcelable();
 
-      sep = new NonVintfExtendableParcelable();
-      sp = new NonVintfParcelable();
-
-      uep = new UnstableExtendableParcelable();
-      up = new UnstableParcelable();
-    }
-
-    @Test
-    public void testRepeatExtendableParcelable() throws RemoteException {
-      MyExt ext = new MyExt();
-      ext.a = 42;
-      ext.b = "EXT";
-
-      ExtendableParcelable ep = new ExtendableParcelable();
-      ep.a = 1;
-      ep.b = "a";
-      ep.c = 42L;
-
-      ep.ext.setParcelable(ext);
-
-      ExtendableParcelable ep2 = new ExtendableParcelable();
-      mService.RepeatExtendableParcelable(ep, ep2);
-      assertThat(ep2.a, is(2));
-      assertThat(ep2.b, is("aBAR"));
-
-      MyExt retExt = ep2.ext.getParcelable(MyExt.class);
-      assertThat(retExt.a, is(84));
-      assertThat(retExt.b, is("EXTBAR"));
+        uep = new UnstableExtendableParcelable();
+        up = new UnstableParcelable();
     }
 
     @Test

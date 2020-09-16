@@ -947,9 +947,7 @@ unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
       }
       case AidlConstantValue::Type::BOOLEAN:  // fall-through
       case AidlConstantValue::Type::INT8:     // fall-through
-      case AidlConstantValue::Type::INT32:    // fall-through
-      // Type promotion may cause this. Value should be small enough to fit in int32.
-      case AidlConstantValue::Type::INT64: {
+      case AidlConstantValue::Type::INT32: {
         int_constant_enum->AddValue(constant->GetName(),
                                     constant->ValueString(ConstantValueDecorator));
         break;
@@ -1076,12 +1074,6 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
     if (variable->GetDefaultValue()) {
       out << " = " << cppType.c_str() << "(" << variable->ValueString(ConstantValueDecorator)
           << ")";
-    } else if (variable->GetType().GetName() == "ParcelableHolder") {
-      if (parcel.IsVintfStability()) {
-        out << " { ::android::Parcelable::Stability::STABILITY_VINTF }";
-      } else {
-        out << " { ::android::Parcelable::Stability::STABILITY_LOCAL }";
-      }
     }
     out << ";\n";
 
@@ -1103,12 +1095,6 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
       MethodDecl::IS_OVERRIDE | MethodDecl::IS_CONST | MethodDecl::IS_FINAL));
   parcel_class->AddPublic(std::move(write));
 
-  parcel_class->AddPublic(std::unique_ptr<LiteralDecl>(
-      new LiteralDecl(StringPrintf("static const std::string& getParcelableDescriptor() {\n"
-                                   "  static const std::string DESCIPTOR = \"%s\";\n"
-                                   "  return DESCIPTOR;\n"
-                                   "}\n",
-                                   parcel.GetCanonicalName().c_str()))));
   return unique_ptr<Document>{
       new CppHeader{vector<string>(includes.begin(), includes.end()),
                     NestInNamespaces(std::move(parcel_class), parcel.GetSplitPackage())}};
