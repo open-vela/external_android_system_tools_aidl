@@ -18,5 +18,5 @@ package android.aidl.tests.extension;
 
 parcelable MyExt {
     int a;
-    String b;
+    @utf8InCpp String b;
 }
