@@ -535,14 +535,13 @@ class NativeService : public BnTestService {
   ::android::binder::Status RepeatExtendableParcelable(
       const ::android::aidl::tests::extension::ExtendableParcelable& ep,
       ::android::aidl::tests::extension::ExtendableParcelable* ep2) {
-    std::string type1 = "android::aidl::tests::extension::MyExt";
     ep2->a = ep.a * 2;
     ep2->b = ep.b + "BAR";
-    auto myExt = ep.ext.getParcelable<android::aidl::tests::extension::MyExt>(type1);
+    auto myExt = ep.ext.getParcelable<android::aidl::tests::extension::MyExt>();
     ::android::aidl::tests::extension::MyExt retMyExt;
     retMyExt.a = myExt->a * 2;
     retMyExt.b = myExt->b + "BAR";
-    ep2->ext.setParcelable(retMyExt, type1);
+    ep2->ext.setParcelable(retMyExt);
 
     return Status::ok();
   }
