@@ -36,8 +36,8 @@ using ::android::aidl::java::Variable;
 using std::string;
 
 namespace {
-inline string get_setter_name(const string& variablename) {
-  CHECK(variablename.size() > 0) << "A field name cannot be empty.";
+inline string get_setter_name(const AidlNode& context, const string& variablename) {
+  AIDL_FATAL_IF(variablename.size() <= 0, context) << "A field name cannot be empty.";
   std::ostringstream out;
   out << "set" << static_cast<char>(toupper(variablename[0])) << variablename.substr(1);
   return out.str();
@@ -100,7 +100,7 @@ bool generate_java(const std::string& filename, const AidlDefinedType* defined_t
     return generate_java_interface(filename, interface, typenames, io_delegate, options);
   }
 
-  CHECK(false) << "Unrecognized type sent for java generation.";
+  AIDL_FATAL(defined_type) << "Unrecognized type sent for Java generation.";
   return false;
 }
 
@@ -162,7 +162,7 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
         out << " = " << variable->ValueString(ConstantValueDecorator);
       }
       out << ";\n";
-      out << "public Builder " << get_setter_name(variable->GetName()) << "("
+      out << "public Builder " << get_setter_name(*variable, variable->GetName()) << "("
           << JavaSignatureOf(variable->GetType(), typenames) << " " << variable->GetName()
           << ") {\n"
           << "  "
@@ -339,7 +339,8 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
     CreateFromParcelFor(context);
     if (parcel->IsJavaOnlyImmutable()) {
       context.writer.Write("%s.%s(%s);\n", builder_variable.c_str(),
-                           get_setter_name(field->GetName()).c_str(), field_variable_name.c_str());
+                           get_setter_name(*field, field->GetName()).c_str(),
+                           field_variable_name.c_str());
     }
     writer->Close();
     read_or_create_method->statements->Add(std::make_shared<LiteralStatement>(code));
