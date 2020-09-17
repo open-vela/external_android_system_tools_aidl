@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#include <android/aidl/tests/extension/MyExt.h>
+#include <android/aidl/tests/extension/MyExt2.h>
+#include <android/aidl/tests/extension/MyExtLike.h>
 #include "aidl_test_client.h"
 
 #include <vector>
@@ -28,6 +31,10 @@ using android::aidl::tests::IntEnum;
 using android::aidl::tests::ITestService;
 using android::aidl::tests::SimpleParcelable;
 using android::aidl::tests::StructuredParcelable;
+using android::aidl::tests::extension::ExtendableParcelable;
+using android::aidl::tests::extension::MyExt;
+using android::aidl::tests::extension::MyExt2;
+using android::aidl::tests::extension::MyExtLike;
 using android::binder::Status;
 using android::os::PersistableBundle;
 using std::vector;
@@ -224,4 +231,88 @@ TEST_F(AidlTest, ConfirmStructuredParcelables) {
 
   EXPECT_EQ(parcelable.addString1, "hello world!");
   EXPECT_EQ(parcelable.addString2, "The quick brown fox jumps over the lazy dog.");
+}
+
+TEST_F(AidlTest, EmptyParcelableHolder) {
+  android::Parcel parcel;
+  std::string myExtTypeName = "android::aidl::tests::extension::MyExt";
+  {
+    ExtendableParcelable ep;
+    ep.writeToParcel(&parcel);
+    auto emptyExt = ep.ext.getParcelable<android::aidl::tests::extension::MyExt>(myExtTypeName);
+    EXPECT_FALSE(emptyExt);
+  }
+  {
+    parcel.setDataPosition(0);
+    ExtendableParcelable ep;
+    ep.readFromParcel(&parcel);
+    auto emptyExt = ep.ext.getParcelable<android::aidl::tests::extension::MyExt>(myExtTypeName);
+    EXPECT_FALSE(emptyExt);
+  }
+}
+
+TEST_F(AidlTest, NativeExtednableParcelable) {
+  MyExt ext;
+  ext.a = 42;
+  ext.b = "EXT";
+
+  MyExt2 ext2;
+  ext2.a = 42;
+  ext2.b.a = 24;
+  ext2.b.b = "INEXT";
+  ext2.c = "EXT2";
+  std::string myExtTypeName = "::android::aidl::tests::extension::MyExt";
+  std::string myExt2TypeName = "android::aidl::tests::extension::MyExt2";
+  std::string myExtLikeTypeName = "android::aidl::tests::extension::MyExtLike";
+  android::Parcel parcel;
+  {
+    ExtendableParcelable ep;
+    ep.a = 1;
+    ep.b = "a";
+    ep.c = 42L;
+
+    EXPECT_TRUE(ep.ext.setParcelable(ext, myExtTypeName));
+    EXPECT_TRUE(ep.ext2.setParcelable(ext2, myExt2TypeName));
+
+    auto extLike =
+        ep.ext.getParcelable<android::aidl::tests::extension::MyExtLike>(myExtLikeTypeName);
+    EXPECT_FALSE(extLike) << "The extension type must be MyExt, so it has to fail even though "
+                             "MyExtLike has the same structure as MyExt.";
+
+    auto actualExt = ep.ext.getParcelable<android::aidl::tests::extension::MyExt>(myExtTypeName);
+    auto actualExt2 =
+        ep.ext2.getParcelable<android::aidl::tests::extension::MyExt2>(myExt2TypeName);
+
+    EXPECT_TRUE(actualExt);
+    EXPECT_TRUE(actualExt2);
+
+    EXPECT_EQ(ext, *actualExt);
+    EXPECT_EQ(ext2, *actualExt2);
+
+    ep.writeToParcel(&parcel);
+  }
+
+  parcel.setDataPosition(0);
+  {
+    ExtendableParcelable ep;
+    ep.readFromParcel(&parcel);
+
+    auto extLike =
+        ep.ext.getParcelable<android::aidl::tests::extension::MyExtLike>(myExtLikeTypeName);
+    EXPECT_FALSE(extLike) << "The extension type must be MyExt, so it has to fail even though "
+                             "MyExtLike has the same structure as MyExt.";
+
+    auto actualExt = ep.ext.getParcelable<android::aidl::tests::extension::MyExt>(myExtTypeName);
+    auto actualExt2 =
+        ep.ext2.getParcelable<android::aidl::tests::extension::MyExt2>(myExt2TypeName);
+
+    auto emptyExt = ep.ext2.getParcelable<android::aidl::tests::extension::MyExt>(myExtTypeName);
+    EXPECT_FALSE(emptyExt);
+
+    EXPECT_TRUE(actualExt);
+    EXPECT_TRUE(actualExt2);
+
+    EXPECT_EQ(ext, *actualExt);
+    EXPECT_EQ(ext2, *actualExt2);
+  }
 }
