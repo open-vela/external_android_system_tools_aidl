@@ -101,7 +101,7 @@ class OverflowGuard {
   T operator==(T o) { return mValue == o; }
   T operator!=(T o) { return mValue != o; }
   T operator>>(T o) {
-    if (o < 0) {
+    if (o < 0 || o > static_cast<T>(sizeof(T) * 8)) {
       mOverflowed = true;
       return 0;
     }
@@ -217,8 +217,7 @@ bool handleBinaryCommon(const AidlConstantValue& context, T lval, const string& 
 }
 
 template <class T>
-bool handleShift(const AidlConstantValue& context, T lval, const string& op, int64_t rval,
-                 int64_t* out) {
+bool handleShift(const AidlConstantValue& context, T lval, const string& op, T rval, int64_t* out) {
   // just cast rval to int64_t and it should fit.
   COMPUTE_BINARY(T, >>)
   COMPUTE_BINARY(T, <<)
@@ -889,9 +888,10 @@ bool AidlBinaryConstExpression::evaluate(const AidlTypeSpecifier& type) const {
   // CASE: << >>
   string newOp = op_;
   if (OP_IS_BIN_SHIFT) {
-    final_type_ = IntegralPromotion(left_val_->final_type_);
-    // instead of promoting rval, simply casting it to int64 should also be good.
-    int64_t numBits = right_val_->cast<int64_t>();
+    // promoted kind for both operands.
+    final_type_ = UsualArithmeticConversion(IntegralPromotion(left_val_->final_type_),
+                                            IntegralPromotion(right_val_->final_type_));
+    auto numBits = right_val_->final_value_;
     if (numBits < 0) {
       // shifting with negative number of bits is undefined in C. In AIDL it
       // is defined as shifting into the other direction.
@@ -899,9 +899,9 @@ bool AidlBinaryConstExpression::evaluate(const AidlTypeSpecifier& type) const {
       numBits = -numBits;
     }
 
-#define CASE_SHIFT(__type__)                                                                \
-  return handleShift(*this, static_cast<__type__>(left_val_->final_value_), newOp, numBits, \
-                     &final_value_);
+#define CASE_SHIFT(__type__)                                                       \
+  return handleShift(*this, static_cast<__type__>(left_val_->final_value_), newOp, \
+                     static_cast<__type__>(numBits), &final_value_);
 
     SWITCH_KIND(final_type_, CASE_SHIFT, SHOULD_NOT_REACH(); final_type_ = Type::ERROR;
                 is_valid_ = false; return false;)
