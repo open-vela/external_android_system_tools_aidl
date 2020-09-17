@@ -207,7 +207,7 @@ interface ITestService {
   const int A48 = (1 << 2) >= 0;
   const int A49 = (4 >> 1) == 2;
   const int A50 = (8 << -1) == 4;
-  const int A51 = (1 << 31 >> 31) == -1;
+  const int A51 = (1 << 30 >> 30) == 1;
   const int A52 = (1 | 16 >> 2) == 5;
   const int A53 = (0x0f ^ 0x33 & 0x99) == 0x1e; // & higher than ^
   const int A54 = (~42 & (1 << 3 | 16 >> 2) ^ 7) == 3;
