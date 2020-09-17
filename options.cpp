@@ -507,8 +507,9 @@ Options::Options(int argc, const char* const argv[], Options::Language default_l
     }
   }
 
-  CHECK(output_dir_.empty() || output_dir_.back() == OS_PATH_SEPARATOR);
-  CHECK(output_header_dir_.empty() || output_header_dir_.back() == OS_PATH_SEPARATOR);
+  AIDL_FATAL_IF(!output_dir_.empty() && output_dir_.back() != OS_PATH_SEPARATOR, output_dir_);
+  AIDL_FATAL_IF(!output_header_dir_.empty() && output_header_dir_.back() != OS_PATH_SEPARATOR,
+                output_header_dir_);
 }
 
 }  // namespace aidl

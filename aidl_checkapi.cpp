@@ -127,7 +127,7 @@ static bool are_compatible_interfaces(const AidlInterface& older, const AidlInte
     const auto& old_args = old_m->GetArguments();
     const auto& new_args = new_m->GetArguments();
     // this is guaranteed because arguments are part of AidlMethod::Signature()
-    CHECK(old_args.size() == new_args.size());
+    AIDL_FATAL_IF(old_args.size() != new_args.size(), old_m);
     for (size_t i = 0; i < old_args.size(); i++) {
       const AidlArgument& old_a = *(old_args.at(i));
       const AidlArgument& new_a = *(new_args.at(i));
@@ -317,9 +317,10 @@ static Result<AidlTypenames> load_from_dir(const Options& options, const IoDeleg
 }
 
 bool check_api(const Options& options, const IoDelegate& io_delegate) {
-  CHECK(options.IsStructured());
-  CHECK(options.InputFiles().size() == 2) << "--checkapi requires two inputs "
-                                          << "but got " << options.InputFiles().size();
+  AIDL_FATAL_IF(!options.IsStructured(), AIDL_LOCATION_HERE);
+  AIDL_FATAL_IF(options.InputFiles().size() != 2, AIDL_LOCATION_HERE)
+      << "--checkapi requires two inputs "
+      << "but got " << options.InputFiles().size();
   auto old_tns = load_from_dir(options, io_delegate, options.InputFiles().at(0));
   if (!old_tns.ok()) {
     return false;
