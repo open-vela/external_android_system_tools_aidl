@@ -101,14 +101,14 @@ class OverflowGuard {
   T operator==(T o) { return mValue == o; }
   T operator!=(T o) { return mValue != o; }
   T operator>>(T o) {
-    if (o < 0 || o > static_cast<T>(sizeof(T) * 8)) {
+    if (o < 0 || o > static_cast<T>(sizeof(T) * 8) || mValue < 0) {
       mOverflowed = true;
       return 0;
     }
     return mValue >> o;
   }
   T operator<<(T o) {
-    if (o < 0 || o > static_cast<T>(sizeof(T) * 8)) {
+    if (o < 0 || o > static_cast<T>(sizeof(T) * 8) || mValue < 0) {
       mOverflowed = true;
       return 0;
     }
