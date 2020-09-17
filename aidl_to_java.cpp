@@ -33,7 +33,6 @@ namespace java {
 
 using android::base::Join;
 
-using std::endl;
 using std::function;
 using std::map;
 using std::string;
@@ -273,7 +272,7 @@ bool WriteToParcelFor(const CodeGeneratorContext& c) {
              }
            } else {
              const AidlDefinedType* t = c.typenames.TryGetDefinedType(contained_type);
-             AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << contained_type << endl;
+             AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << contained_type;
              if (t->AsParcelable() != nullptr) {
                c.writer << c.parcel << ".writeTypedList(" << c.var << ");\n";
              }
@@ -380,7 +379,7 @@ bool WriteToParcelFor(const CodeGeneratorContext& c) {
     found->second(c);
   } else {
     const AidlDefinedType* t = c.typenames.TryGetDefinedType(c.type.GetName());
-    AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName() << endl;
+    AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName();
     if (t->AsInterface() != nullptr) {
       if (!c.type.IsArray()) {
         // Why don't we use writeStrongInterface which does the exact same thing?
@@ -501,7 +500,7 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
              }
            } else {
              const AidlDefinedType* t = c.typenames.TryGetDefinedType(contained_type);
-             AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << contained_type << endl;
+             AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << contained_type;
              if (t->AsParcelable() != nullptr) {
                c.writer << c.var << " = " << c.parcel << ".createTypedArrayList("
                         << JavaNameOf(*(c.type.GetTypeParameters().at(0)), c.typenames)
@@ -615,7 +614,7 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
     found->second(c);
   } else {
     const AidlDefinedType* t = c.typenames.TryGetDefinedType(c.type.GetName());
-    AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName() << endl;
+    AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName();
     if (t->AsInterface() != nullptr) {
       if (!c.type.IsArray()) {
         c.writer << c.var << " = " << c.type.GetName() << ".Stub.asInterface(" << c.parcel
@@ -691,7 +690,7 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
              }
            } else {
              const AidlDefinedType* t = c.typenames.TryGetDefinedType(contained_type);
-             AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << contained_type << endl;
+             AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << contained_type;
              if (t->AsParcelable() != nullptr) {
                c.writer << c.parcel << ".readTypedList(" << c.var << ", "
                         << JavaNameOf(*(c.type.GetTypeParameters().at(0)), c.typenames)
@@ -762,7 +761,7 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
     found->second(c);
   } else {
     const AidlDefinedType* t = c.typenames.TryGetDefinedType(c.type.GetName());
-    AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName() << endl;
+    AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName();
     if (t->AsParcelable() != nullptr) {
       if (c.type.IsArray()) {
         c.writer << c.parcel << ".readTypedArray(" << c.var << ", " << c.type.GetName()
@@ -821,8 +820,7 @@ void ToStringFor(const CodeGeneratorContext& c) {
     return;
   }
 
-  // TODO(b/168261721): turn into a real error
-  // CHECK(true) << "Unhandled typename: " << name << endl;
+  AIDL_FATAL(AIDL_LOCATION_HERE) << "Unhandled typename: " << name;
 }
 
 }  // namespace java
