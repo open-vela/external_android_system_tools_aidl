@@ -1076,6 +1076,12 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
     if (variable->GetDefaultValue()) {
       out << " = " << cppType.c_str() << "(" << variable->ValueString(ConstantValueDecorator)
           << ")";
+    } else if (variable->GetType().GetName() == "ParcelableHolder") {
+      if (parcel.IsVintfStability()) {
+        out << " { ::android::Parcelable::Stability::STABILITY_VINTF }";
+      } else {
+        out << " { ::android::Parcelable::Stability::STABILITY_LOCAL }";
+      }
     }
     out << ";\n";
 
