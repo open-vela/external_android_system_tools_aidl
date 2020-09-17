@@ -119,12 +119,14 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 			crate_name: "std",
 			srcs: [""],
 			no_stdlibs: true,
+			sysroot: true,
 		}
 		rust_library {
 			name: "libtest",
 			crate_name: "test",
 			srcs: [""],
 			no_stdlibs: true,
+			sysroot: true,
 		}
 		rust_library {
 			name: "liblazy_static",
@@ -189,6 +191,8 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 	ctx.PreArchMutators(android.RegisterDefaultsPreArchMutators)
 	ctx.PreDepsMutators(func(ctx android.RegisterMutatorsContext) {
 		ctx.BottomUp("rust_libraries", rust.LibraryMutator).Parallel()
+		ctx.BottomUp("rust_stdlinkage", rust.LibstdMutator).Parallel()
+		ctx.BottomUp("rust_begin", rust.BeginMutator).Parallel()
 	})
 	ctx.PostDepsMutators(android.RegisterOverridePostDepsMutators)
 	ctx.PreDepsMutators(apex.RegisterPreDepsMutators)
