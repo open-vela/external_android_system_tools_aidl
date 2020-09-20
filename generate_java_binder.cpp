@@ -688,7 +688,7 @@ static std::shared_ptr<Method> generate_proxy_method(
     checkDefaultImpl->elseif = std::make_shared<IfStatement>();
     checkDefaultImpl->elseif->statements->Add(
         std::make_shared<LiteralStatement>(android::base::StringPrintf(
-            "throw new RuntimeException(\"Method %s is unimplemented.\");\n",
+            "throw new android.os.RemoteException(\"Method %s is unimplemented.\");\n",
             method.GetName().c_str())));
   }
 
