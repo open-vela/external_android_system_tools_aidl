@@ -2417,7 +2417,7 @@ public interface IExampleInterface extends android.os.IInterface
               return getDefaultImpl().isEnabled();
             }
             else {
-              throw new RuntimeException("Method isEnabled is unimplemented.");
+              throw new android.os.RemoteException("Method isEnabled is unimplemented.");
             }
           }
           _reply.readException();
@@ -2444,7 +2444,7 @@ public interface IExampleInterface extends android.os.IInterface
               return getDefaultImpl().getState(a, b);
             }
             else {
-              throw new RuntimeException("Method getState is unimplemented.");
+              throw new android.os.RemoteException("Method getState is unimplemented.");
             }
           }
           _reply.readException();
@@ -2469,7 +2469,7 @@ public interface IExampleInterface extends android.os.IInterface
               return getDefaultImpl().getAddress();
             }
             else {
-              throw new RuntimeException("Method getAddress is unimplemented.");
+              throw new android.os.RemoteException("Method getAddress is unimplemented.");
             }
           }
           _reply.readException();
@@ -2495,7 +2495,7 @@ public interface IExampleInterface extends android.os.IInterface
               return getDefaultImpl().getParcelables();
             }
             else {
-              throw new RuntimeException("Method getParcelables is unimplemented.");
+              throw new android.os.RemoteException("Method getParcelables is unimplemented.");
             }
           }
           _reply.readException();
@@ -2524,7 +2524,7 @@ public interface IExampleInterface extends android.os.IInterface
               return getDefaultImpl().setScanMode(mode, duration);
             }
             else {
-              throw new RuntimeException("Method setScanMode is unimplemented.");
+              throw new android.os.RemoteException("Method setScanMode is unimplemented.");
             }
           }
           _reply.readException();
@@ -2552,7 +2552,7 @@ public interface IExampleInterface extends android.os.IInterface
               return;
             }
             else {
-              throw new RuntimeException("Method registerBinder is unimplemented.");
+              throw new android.os.RemoteException("Method registerBinder is unimplemented.");
             }
           }
           _reply.readException();
@@ -2575,7 +2575,7 @@ public interface IExampleInterface extends android.os.IInterface
               return getDefaultImpl().getRecursiveBinder();
             }
             else {
-              throw new RuntimeException("Method getRecursiveBinder is unimplemented.");
+              throw new android.os.RemoteException("Method getRecursiveBinder is unimplemented.");
             }
           }
           _reply.readException();
@@ -2601,7 +2601,7 @@ public interface IExampleInterface extends android.os.IInterface
               return getDefaultImpl().takesAnInterface(arg);
             }
             else {
-              throw new RuntimeException("Method takesAnInterface is unimplemented.");
+              throw new android.os.RemoteException("Method takesAnInterface is unimplemented.");
             }
           }
           _reply.readException();
@@ -2640,7 +2640,7 @@ public interface IExampleInterface extends android.os.IInterface
               return getDefaultImpl().takesAParcelable(arg, arg2);
             }
             else {
-              throw new RuntimeException("Method takesAParcelable is unimplemented.");
+              throw new android.os.RemoteException("Method takesAParcelable is unimplemented.");
             }
           }
           _reply.readException();
