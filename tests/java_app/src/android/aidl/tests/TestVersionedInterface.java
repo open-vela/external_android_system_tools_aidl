@@ -59,7 +59,7 @@ public class TestVersionedInterface {
 
     @Test
     public void testUnimplementedMethodTriggersException() throws RemoteException {
-      expectedException.expect(RemoteException.class);
+      expectedException.expect(RuntimeException.class);
       expectedException.expectMessage("Method bar is unimplemented.");
 
       service.bar();
