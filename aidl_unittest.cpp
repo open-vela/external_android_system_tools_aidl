@@ -874,7 +874,7 @@ TEST_P(AidlTest, FailOnEmptyListWithComma) {
 TEST_P(AidlTest, FailOnMalformedConstHexValue) {
   AidlError error;
   const string expected_stderr =
-      "ERROR: Could not parse hexvalue: 0xffffffffffffffffff at p/IFoo.aidl:3.50-70.\n";
+      "ERROR: p/IFoo.aidl:3.50-71: Could not parse hexvalue: 0xffffffffffffffffff\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("p/IFoo.aidl",
                            R"(package p;
@@ -2500,7 +2500,7 @@ TEST_P(AidlTest, FailOnOutOfBoundsInt32MinConstInt) {
 TEST_P(AidlTest, FailOnOutOfBoundsInt64MaxConstInt) {
   AidlError error;
   const string expected_stderr =
-      "ERROR: Could not parse integer: 21474836509999999999999999 at p/IFoo.aidl:3.59-85.\n";
+      "ERROR: p/IFoo.aidl:3.59-86: Could not parse integer: 21474836509999999999999999\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("p/IFoo.aidl",
                            R"(package p;
@@ -2516,7 +2516,7 @@ TEST_P(AidlTest, FailOnOutOfBoundsInt64MaxConstInt) {
 TEST_P(AidlTest, FailOnOutOfBoundsInt64MinConstInt) {
   AidlError error;
   const string expected_stderr =
-      "ERROR: Could not parse integer: 21474836509999999999999999 at p/IFoo.aidl:3.61-86.\n";
+      "ERROR: p/IFoo.aidl:3.61-87: Could not parse integer: 21474836509999999999999999\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("p/IFoo.aidl",
                            R"(package p;
