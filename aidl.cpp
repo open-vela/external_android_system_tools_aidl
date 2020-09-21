@@ -56,8 +56,6 @@
 
 using android::base::Join;
 using android::base::Split;
-using std::cerr;
-using std::endl;
 using std::set;
 using std::string;
 using std::unique_ptr;
@@ -503,7 +501,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
 
     std::unique_ptr<Parser> import_parser = Parser::Parse(import_path, io_delegate, *typenames);
     if (import_parser == nullptr) {
-      cerr << "error while importing " << import_path << " for " << import << endl;
+      AIDL_ERROR(import_path) << "error while importing " << import_path << " for " << import;
       err = AidlError::BAD_IMPORT;
       continue;
     }
