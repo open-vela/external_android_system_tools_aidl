@@ -387,8 +387,8 @@ const_expr
  | INTVALUE {
     $$ = AidlConstantValue::Integral(loc(@1), $1->GetText());
     if ($$ == nullptr) {
-      AIDL_ERROR(loc(@1)) << "Could not parse integer: "
-                << $1->GetText();
+      std::cerr << "ERROR: Could not parse integer: "
+                << $1->GetText() << " at " << @1 << ".\n";
       ps->AddError();
       $$ = AidlConstantValue::Integral(loc(@1), "0");
     }
@@ -401,8 +401,8 @@ const_expr
  | HEXVALUE {
     $$ = AidlConstantValue::Integral(loc(@1), $1->GetText());
     if ($$ == nullptr) {
-      AIDL_ERROR(loc(@1)) << "Could not parse hexvalue: "
-                << $1->GetText();
+      std::cerr << "ERROR: Could not parse hexvalue: "
+                << $1->GetText() << " at " << @1 << ".\n";
       ps->AddError();
       $$ = AidlConstantValue::Integral(loc(@1), "0");
     }
@@ -487,7 +487,7 @@ const_expr
   }
  | '(' error ')'
    {
-     AIDL_ERROR(loc(@1)) << "invalid const expression within parenthesis";
+     std::cerr << "ERROR: invalid const expression within parenthesis at " << @1 << ".\n";
      ps->AddError();
      // to avoid segfaults
      $$ = AidlConstantValue::Integral(loc(@1), "0");
