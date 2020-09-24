@@ -251,9 +251,12 @@ bool AidlTypenames::CanBeFixedSize(const AidlTypeSpecifier& type) const {
   if (IsPrimitiveTypename(name)) {
     return true;
   }
+  if (IsBuiltinTypename(name)) {
+    return false;
+  }
   const AidlDefinedType* t = TryGetDefinedType(type.GetName());
   AIDL_FATAL_IF(t == nullptr, type)
-      << "Failed to look up type. Cannot determine if it can be fixed size.";
+      << "Failed to look up type. Cannot determine if it can be fixed size: " << type.GetName();
 
   if (t->AsEnumDeclaration()) {
     return true;
