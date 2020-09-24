@@ -37,11 +37,6 @@ using std::unique_ptr;
 using std::vector;
 
 template <typename T>
-constexpr int CLZ(T x) {
-  return (sizeof(T) == sizeof(uint64_t)) ? __builtin_clzl(x) : __builtin_clz(x);
-}
-
-template <typename T>
 class OverflowGuard {
  public:
   OverflowGuard(T value) : mValue(value) {}
@@ -113,7 +108,7 @@ class OverflowGuard {
     return mValue >> o;
   }
   T operator<<(T o) {
-    if (o < 0 || mValue < 0 || o > CLZ(mValue)) {
+    if (o < 0 || o > static_cast<T>(sizeof(T) * 8) || mValue < 0) {
       mOverflowed = true;
       return 0;
     }
