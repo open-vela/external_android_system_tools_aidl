@@ -721,7 +721,7 @@ func (m *aidlApi) checkEquality(ctx android.ModuleContext, oldDump apiDump, newD
 	// If it's not finalized, we let users to update the current version by invoking
 	// `m <name>-update-api`.
 	messageFile := android.PathForSource(ctx, "system/tools/aidl/build/message_check_equality.txt")
-	sdkIsFinal := ctx.Config().DefaultAppTargetSdkInt() != android.FutureApiLevel
+	sdkIsFinal := !ctx.Config().DefaultAppTargetSdk(ctx).IsPreview()
 	if sdkIsFinal {
 		messageFile = android.PathForSource(ctx, "system/tools/aidl/build/message_check_equality_release.txt")
 	}
@@ -1210,7 +1210,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 
 	versionsForCpp := make([]string, len(i.properties.Versions))
 
-	sdkIsFinal := mctx.Config().DefaultAppTargetSdkInt() != android.FutureApiLevel
+	sdkIsFinal := !mctx.Config().DefaultAppTargetSdk(mctx).IsPreview()
 
 	needToCheckUnstableVersion := sdkIsFinal && i.hasVersion() && i.Owner() == ""
 	copy(versionsForCpp, i.properties.Versions)
@@ -1303,7 +1303,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 			mctx.ModuleErrorf("unstable:true and stability:%q cannot happen at the same time", i.properties.Stability)
 		}
 	} else {
-		sdkIsFinal := mctx.Config().DefaultAppTargetSdkInt() != android.FutureApiLevel
+		sdkIsFinal := !mctx.Config().DefaultAppTargetSdk(mctx).IsPreview()
 		if sdkIsFinal && !i.hasVersion() && i.Owner() == "" {
 			mctx.PropertyErrorf("versions", "must be set (need to be frozen) when \"unstable\" is false, PLATFORM_VERSION_CODENAME is REL, and \"owner\" property is missing.")
 		}
