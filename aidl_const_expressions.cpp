@@ -831,6 +831,9 @@ bool AidlBinaryConstExpression::evaluate(const AidlTypeSpecifier& type) const {
   }
   is_valid_ = AreCompatibleTypes(left_val_->final_type_, right_val_->final_type_);
   if (!is_valid_) {
+    AIDL_ERROR(this) << "Cannot perform operation '" << op_ << "' on "
+                     << ToString(right_val_->GetType()) << " and " << ToString(left_val_->GetType())
+                     << ".";
     return false;
   }
 
