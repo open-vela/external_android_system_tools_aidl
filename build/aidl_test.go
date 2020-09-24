@@ -159,7 +159,6 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 	// To keep tests stable, fix Platform_sdk_codename and Platform_sdk_final
 	// Use setReleaseEnv() to test release version
 	config.TestProductVariables.Platform_sdk_codename = proptools.StringPtr("Q")
-	config.TestProductVariables.Platform_version_active_codenames = []string{"Q"}
 	config.TestProductVariables.Platform_sdk_final = proptools.BoolPtr(false)
 
 	for _, c := range customizers {
