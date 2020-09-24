@@ -948,6 +948,7 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
 
   out << "#pragma once\n";
   out << "#include <android/binder_interface_utils.h>\n";
+  out << "#include <android/binder_parcelable_utils.h>\n";
   out << "\n";
 
   GenerateHeaderIncludes(out, types, defined_type);
@@ -975,8 +976,8 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
   out << "binder_status_t readFromParcel(const AParcel* parcel);\n";
   out << "binder_status_t writeToParcel(AParcel* parcel) const;\n";
 
-  out << "static const bool _aidl_is_stable = "
-      << (defined_type.IsVintfStability() ? "true" : "false") << ";\n";
+  out << "static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::"
+      << (defined_type.IsVintfStability() ? "STABILITY_VINTF" : "STABILITY_LOCAL") << ";\n";
   out.Dedent();
   out << "};\n";
   LeaveNdkNamespace(out, defined_type);
