@@ -883,17 +883,18 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
   }
   std::set<std::string> fieldnames;
   for (const auto& v : GetFields()) {
-    success = success && v->CheckValid(typenames);
+    const bool field_valid = v->CheckValid(typenames);
+    success = success && field_valid;
     bool duplicated;
     if (IsJavaOnlyImmutable()) {
       success = success && typenames.CanBeJavaOnlyImmutable(v->GetType());
       duplicated = !fieldnames.emplace(CapitalizeFirstLetter(*v, v->GetName())).second;
     } else {
       if (IsFixedSize()) {
-        success = success && typenames.CanBeFixedSize(v->GetType());
-        if (!success) {
+        if (field_valid && !typenames.CanBeFixedSize(v->GetType())) {
           AIDL_ERROR(v) << "The @FixedSize parcelable '" << this->GetName() << "' has a "
                         << "non-fixed size field named " << v->GetName() << ".";
+          success = false;
         }
       }
       duplicated = !fieldnames.emplace(v->GetName()).second;
