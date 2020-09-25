@@ -2181,6 +2181,7 @@ TEST_P(AidlTest, RejectNonFixedSizeFromFixedSize) {
                                "  ParcelFileDescriptor d;"
                                "  IBinder e;"
                                "  List<String> f;"
+                               "  int isFixedSize;"
                                "}");
   io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar { int a; }");
   Options options =
