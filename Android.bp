@@ -200,7 +200,7 @@ python_test_host {
         "aidl_test_service",
         "aidl_test_services",
     ],
-    test_suites: ["device-tests"],
+    test_suites: ["general-tests"],
 }
 
 cc_defaults {
@@ -225,7 +225,7 @@ cc_defaults {
             suffix: "64",
         },
     },
-    test_suites: ["device-tests"],
+    test_suites: ["general-tests"],
 }
 
 // Header-only library used for atrace in platform NDK builds
@@ -356,7 +356,7 @@ android_test_helper_app {
         ],
         generate_traces: true,
     },
-    test_suites: ["device-tests"],
+    test_suites: ["general-tests"],
 }
 
 //
