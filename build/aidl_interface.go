@@ -907,6 +907,9 @@ type aidlInterfaceProperties struct {
 	// Whether the library can be installed on the vendor image.
 	Vendor_available *bool
 
+	// Whether the library can be loaded multiple times into the same process
+	Double_loadable *bool
+
 	// Whether the library can be used on host
 	Host_supported *bool
 
@@ -1495,6 +1498,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 		Vendor_available:          vendorAvailable,
 		Host_supported:            hostSupported,
 		Defaults:                  []string{"aidl-cpp-module-defaults"},
+		Double_loadable:           i.properties.Double_loadable,
 		Generated_sources:         []string{cppSourceGen},
 		Generated_headers:         []string{cppSourceGen},
 		Export_generated_headers:  []string{cppSourceGen},
