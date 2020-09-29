@@ -133,12 +133,15 @@ class JavaClient:
         if re.search(INSTRUMENTATION_FAILURES_PATTERN, result.stdout) is not None:
             raise TestFail(result.stdout)
 
+def getprop(host, prop):
+    return host.run('getprop "%s"' % prop).stdout.strip()
+
 def supported_bitnesses(host):
     bitnesses = []
-    for bitness in [BITNESS_32, BITNESS_64]:
-        native_client = NATIVE_TEST_CLIENT_FOR_BITNESS % bitness
-        if host.run('ls %s' % native_client, ignore_status=True).exit_status == 0:
-            bitnesses += [bitness]
+    if getprop(host, "ro.product.cpu.abilist32") != "":
+        bitnesses += [BITNESS_32]
+    if getprop(host, "ro.product.cpu.abilist64") != "":
+        bitnesses += [BITNESS_64]
     return bitnesses
 
 # tests added dynamically below
