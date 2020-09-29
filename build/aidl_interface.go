@@ -1234,7 +1234,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 	}
 
 	if i.shouldGenerateNdkBackend() {
-		if !proptools.Bool(i.properties.Vendor_available) {
+		{
 			unstableLib := addCppLibrary(mctx, i, currentVersion, langNdk)
 			if !i.hasVersion() {
 				libs = append(libs, addCppLibrary(mctx, i, unstableVersion, langNdk))
@@ -1247,17 +1247,19 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 				libs = append(libs, addCppLibrary(mctx, i, version, langNdk))
 			}
 		}
-		// TODO(b/121157555): combine with '-ndk' variant
-		unstableLib := addCppLibrary(mctx, i, currentVersion, langNdkPlatform)
-		if !i.hasVersion() {
-			libs = append(libs, addCppLibrary(mctx, i, unstableVersion, langNdkPlatform))
-		}
-		if needToCheckUnstableVersion {
-			addUnstableModule(mctx, unstableLib)
-		}
-		libs = append(libs, unstableLib)
-		for _, version := range versionsForCpp {
-			libs = append(libs, addCppLibrary(mctx, i, version, langNdkPlatform))
+		{
+			// TODO(b/121157555): combine with '-ndk' variant
+			unstableLib := addCppLibrary(mctx, i, currentVersion, langNdkPlatform)
+			if !i.hasVersion() {
+				libs = append(libs, addCppLibrary(mctx, i, unstableVersion, langNdkPlatform))
+			}
+			if needToCheckUnstableVersion {
+				addUnstableModule(mctx, unstableLib)
+			}
+			libs = append(libs, unstableLib)
+			for _, version := range versionsForCpp {
+				libs = append(libs, addCppLibrary(mctx, i, version, langNdkPlatform))
+			}
 		}
 	}
 	versionsForJava := i.properties.Versions
@@ -1475,6 +1477,17 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 		// helper should be used by both libbinder vendor things using /dev/vndbinder as well
 		// as those things using /dev/binder + libbinder_ndk to talk to stable interfaces).
 		vendorAvailable = proptools.BoolPtr(false)
+	}
+
+	if lang == langNdk {
+		// TODO(b/121157555): when the NDK variant is its own variant, these wouldn't interact,
+		// but we can't create a vendor version of an NDK variant
+		//
+		// nil (unspecified) is used instead of false so that this can't conflict with
+		// 'vendor: true', for instance.
+		vendorAvailable = nil
+		overrideVndkProperties.Vndk.Enabled = proptools.BoolPtr(false)
+		overrideVndkProperties.Vndk.Support_system_process = proptools.BoolPtr(false)
 	}
 
 	mctx.CreateModule(cc.LibraryFactory, &ccProperties{
