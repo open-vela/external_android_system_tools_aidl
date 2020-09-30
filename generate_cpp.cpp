@@ -1068,13 +1068,6 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
 
     parcel_class->AddPublic(std::unique_ptr<LiteralDecl>(new LiteralDecl(operator_code.str())));
   }
-  if (parcel.IsFixedSize()) {
-    parcel_class->AddPublic(
-        std::unique_ptr<LiteralDecl>(new LiteralDecl("typedef std::true_type fixed_size;\n")));
-  } else {
-    parcel_class->AddPublic(
-        std::unique_ptr<LiteralDecl>(new LiteralDecl("typedef std::false_type fixed_size;\n")));
-  }
   for (const auto& variable : parcel.GetFields()) {
 
     std::ostringstream out;
