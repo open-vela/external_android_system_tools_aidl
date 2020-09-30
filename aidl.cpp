@@ -573,25 +573,48 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   for (const auto& defined_type : types) {
     AIDL_FATAL_IF(defined_type == nullptr, main_parser->FileName());
 
-    // Language specific validation
-    if (!defined_type->LanguageSpecificCheckValid(*typenames, options.TargetLanguage())) {
-      return AidlError::BAD_TYPE;
+    // Ensure type is exactly one of the following:
+    AidlInterface* interface = defined_type->AsInterface();
+    AidlStructuredParcelable* parcelable = defined_type->AsStructuredParcelable();
+    AidlParcelable* unstructured_parcelable = defined_type->AsUnstructuredParcelable();
+    AidlEnumDeclaration* enum_decl = defined_type->AsEnumDeclaration();
+    AIDL_FATAL_IF(!!interface + !!parcelable + !!unstructured_parcelable + !!enum_decl != 1,
+                  defined_type);
+
+    // Ensure that foo.bar.IFoo is defined in <some_path>/foo/bar/IFoo.aidl
+    if (num_defined_types == 1 && !check_filename(input_file_name, *defined_type)) {
+      return AidlError::BAD_PACKAGE;
     }
 
-    AidlParcelable* unstructuredParcelable = defined_type->AsUnstructuredParcelable();
-    if (unstructuredParcelable != nullptr) {
-      if (!unstructuredParcelable->CheckValid(*typenames)) {
+    {
+      bool valid_type = true;
+
+      if (!is_check_api) {
+        // Ideally, we could do this for check api, but we can't resolve imports
+        if (!defined_type->CheckValid(*typenames)) {
+          valid_type = false;
+        }
+      }
+
+      if (!defined_type->LanguageSpecificCheckValid(*typenames, options.TargetLanguage())) {
+        valid_type = false;
+      }
+
+      if (!valid_type) {
         return AidlError::BAD_TYPE;
       }
-      bool isStable = unstructuredParcelable->IsStableApiParcelable(options.TargetLanguage());
+    }
+
+    if (unstructured_parcelable != nullptr) {
+      bool isStable = unstructured_parcelable->IsStableApiParcelable(options.TargetLanguage());
       if (options.IsStructured() && !isStable) {
-        AIDL_ERROR(unstructuredParcelable)
+        AIDL_ERROR(unstructured_parcelable)
             << "Cannot declared parcelable in a --structured interface. Parcelable must be defined "
                "in AIDL directly.";
         return AidlError::NOT_STRUCTURED;
       }
       if (options.FailOnParcelable()) {
-        AIDL_ERROR(unstructuredParcelable)
+        AIDL_ERROR(unstructured_parcelable)
             << "Refusing to generate code with unstructured parcelables. Declared parcelables "
                "should be in their own file and/or cannot be used with --structured interfaces.";
         // Continue parsing for more errors
@@ -614,27 +637,6 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
         success = false;
       }
       if (!success) return AidlError::NOT_STRUCTURED;
-    }
-
-    // Ensure that a type is either an interface, structured parcelable, or
-    // enum.
-    AidlInterface* interface = defined_type->AsInterface();
-    AidlStructuredParcelable* parcelable = defined_type->AsStructuredParcelable();
-    AidlEnumDeclaration* enum_decl = defined_type->AsEnumDeclaration();
-    AIDL_FATAL_IF(!!interface + !!parcelable + !!enum_decl != 1, defined_type);
-
-    // Ensure that foo.bar.IFoo is defined in <some_path>/foo/bar/IFoo.aidl
-    if (num_defined_types == 1 && !check_filename(input_file_name, *defined_type)) {
-      return AidlError::BAD_PACKAGE;
-    }
-
-    // Check the referenced types in parsed_doc to make sure we've imported them
-    if (!is_check_api) {
-      // No need to do this for check api because all typespecs are already
-      // using fully qualified name and we don't import in AIDL files.
-      if (!defined_type->CheckValid(*typenames)) {
-        return AidlError::BAD_TYPE;
-      }
     }
 
     if (interface != nullptr) {
