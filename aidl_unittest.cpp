@@ -246,6 +246,42 @@ TEST_P(AidlTest, EndsInSingleLineComment) {
   EXPECT_NE(nullptr, Parse("IFoo.aidl", "interface IFoo { } // foo", typenames_, GetLanguage()));
 }
 
+TEST_P(AidlTest, InterfaceRequiresCorrectPath) {
+  const string expected_stderr =
+      "ERROR: a/Foo.aidl:1.11-21: IBar should be declared in a file called a/IBar.aidl\n";
+  const std::string file_contents = "package a; interface IBar {}";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", file_contents, typenames_, GetLanguage()));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr()) << file_contents;
+}
+
+TEST_P(AidlTest, ParcelableRequiresCorrectPath) {
+  const string expected_stderr =
+      "ERROR: a/Foo.aidl:1.11-21: Bar should be declared in a file called a/Bar.aidl\n";
+  const std::string file_contents = "package a; interface Bar {}";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", file_contents, typenames_, GetLanguage()));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr()) << file_contents;
+}
+
+TEST_P(AidlTest, UnstructuredParcelableRequiresCorrectPath) {
+  const string expected_stderr =
+      "ERROR: a/Foo.aidl:1.22-26: Bar should be declared in a file called a/Bar.aidl\n";
+  const std::string file_contents = "package a; parcelable Bar cpp_header \"anything.h\";";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", file_contents, typenames_, GetLanguage()));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr()) << file_contents;
+}
+
+TEST_P(AidlTest, EnumRequiresCorrectPath) {
+  const string expected_stderr =
+      "ERROR: a/Foo.aidl:1.16-20: Bar should be declared in a file called a/Bar.aidl\n";
+  const std::string file_contents = "package a; enum Bar { A, }";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", file_contents, typenames_, GetLanguage()));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr()) << file_contents;
+}
+
 TEST_P(AidlTest, RejectsArraysOfBinders) {
   import_paths_.emplace("");
   io_delegate_.SetFileContents("bar/IBar.aidl",
@@ -373,24 +409,24 @@ TEST_P(AidlTest, RejectUnsupportedParcelableAnnotations) {
   AidlError error;
   const string method = "package a; @nullable parcelable IFoo cpp_header \"IFoo.h\";";
   const string expected_stderr =
-      "ERROR: a/Foo.aidl:1.32-37: 'nullable' is not a supported annotation for this node. "
+      "ERROR: a/IFoo.aidl:1.32-37: 'nullable' is not a supported annotation for this node. "
       "It must be one of: Hide, JavaOnlyStableParcelable, UnsupportedAppUsage, VintfStability, "
       "JavaPassthrough, JavaOnlyImmutable\n";
   CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, GetLanguage(), &error));
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
 TEST_P(AidlTest, RejectUnsupportedParcelableDefineAnnotations) {
   AidlError error;
-  const string method = "package a; @nullable parcelable Foo { String a; String b; }";
+  const string method = "package a; @nullable parcelable IFoo { String a; String b; }";
   const string expected_stderr =
-      "ERROR: a/Foo.aidl:1.32-36: 'nullable' is not a supported annotation for this node. "
+      "ERROR: a/IFoo.aidl:1.32-37: 'nullable' is not a supported annotation for this node. "
       "It must be one of: Hide, UnsupportedAppUsage, VintfStability, JavaPassthrough, JavaDebug, "
       "JavaOnlyImmutable, FixedSize, RustDerive\n";
   CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, GetLanguage(), &error));
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
@@ -1082,18 +1118,17 @@ TEST_P(AidlTest, PrimitiveList) {
   switch (GetLanguage()) {
     case Options::Language::CPP:
       expected_stderr =
+          "ERROR: a/IFoo.aidl:2.1-7: A generic type cannot have any primitive type parameters.\n"
           "ERROR: a/IFoo.aidl:2.1-7: List<int> is not supported. List in cpp supports only "
           "String and IBinder.\n";
       break;
     case Options::Language::JAVA:
       expected_stderr =
+          "ERROR: a/IFoo.aidl:2.1-7: A generic type cannot have any primitive type parameters.\n"
           "ERROR: a/IFoo.aidl:2.1-7: List<int> is not supported. List in Java supports only "
           "String, IBinder, and ParcelFileDescriptor.\n";
       break;
     case Options::Language::NDK:
-      expected_stderr =
-          "ERROR: a/IFoo.aidl:2.1-7: A generic type cannot have any primitive type parameters.\n";
-      break;
     case Options::Language::RUST:
       expected_stderr =
           "ERROR: a/IFoo.aidl:2.1-7: A generic type cannot have any primitive type parameters.\n";
@@ -1187,6 +1222,7 @@ TEST_P(AidlTest, ParcelableHolderAsReturnType) {
 
   if (GetLanguage() == Options::Language::NDK || GetLanguage() == Options::Language::RUST) {
     EXPECT_EQ(
+        "ERROR: a/IFoo.aidl:2.19-23: ParcelableHolder cannot be a return type\n"
         "ERROR: a/IFoo.aidl:2.1-19: The NDK and Rust backend does not support ParcelableHolder "
         "yet.\n",
         GetCapturedStderr());
@@ -1207,6 +1243,7 @@ TEST_P(AidlTest, ParcelableHolderAsArgumentType) {
 
   if (GetLanguage() == Options::Language::NDK || GetLanguage() == Options::Language::RUST) {
     EXPECT_EQ(
+        "ERROR: a/IFoo.aidl:2.31-34: ParcelableHolder cannot be an argument type\n"
         "ERROR: a/IFoo.aidl:2.14-31: The NDK and Rust backend does not support ParcelableHolder "
         "yet.\n",
         GetCapturedStderr());
@@ -1334,7 +1371,8 @@ TEST_F(AidlTest, ApiDumpWithManualIdsOnlyOnSomeMethods) {
 
 TEST_F(AidlTest, CheckNumGenericTypeSecifier) {
   const string expected_list_stderr =
-      "ERROR: p/IFoo.aidl:1.37-41: List must have only one type parameter.\n";
+      "ERROR: p/IFoo.aidl:1.37-41: List can only have one type parameter, but got: "
+      "'List<String,String>'\n";
   const string expected_map_stderr =
       "ERROR: p/IFoo.aidl:1.37-40: Map must have 0 or 2 type parameters, but got 'Map<String>'\n";
   Options options = Options::From("aidl p/IFoo.aidl IFoo.java");
