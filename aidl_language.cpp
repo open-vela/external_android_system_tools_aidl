@@ -490,8 +490,8 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
     const size_t num_params = GetTypeParameters().size();
     if (type_name == "List") {
       if (num_params > 1) {
-        AIDL_ERROR(this) << " List cannot have type parameters more than one, but got "
-                         << "'" << ToString() << "'";
+        AIDL_ERROR(this) << "List can only have one type parameter, but got: '" << ToString()
+                         << "'";
         return false;
       }
     } else if (type_name == "Map") {
@@ -953,10 +953,6 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
   }
   if (this->IsGeneric()) {
     if (this->GetName() == "List") {
-      if (this->GetTypeParameters().size() != 1) {
-        AIDL_ERROR(this) << "List must have only one type parameter.";
-        return false;
-      }
       if (lang == Options::Language::CPP) {
         const string& contained_type = this->GetTypeParameters()[0]->GetName();
         if (!(contained_type == "String" || contained_type == "IBinder")) {
