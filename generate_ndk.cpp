@@ -967,6 +967,12 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
   out << "\n";
   for (const auto& variable : defined_type.GetFields()) {
     out << NdkNameOf(types, variable->GetType(), StorageMode::STACK) << " " << variable->GetName();
+    if (defined_type.IsFixedSize()) {
+      int alignment = NdkAlignmentOf(types, variable->GetType());
+      if (alignment > 0) {
+        out << " __attribute__((aligned (" << std::to_string(alignment) << ")))";
+      }
+    }
     if (variable->GetDefaultValue()) {
       out << " = " << variable->ValueString(ConstantValueDecorator);
     }
