@@ -846,9 +846,8 @@ bool AidlBinaryConstExpression::evaluate(const AidlTypeSpecifier& type) const {
 
   // Handle String case first
   if (left_val_->final_type_ == Type::STRING) {
-    AIDL_FATAL_IF(right_val_->final_type_ != Type::STRING, this);
     if (!OPEQ("+")) {
-      AIDL_ERROR(this) << "Only '+' is supported for strings, not '" << op_ << "'.";
+      // invalid operation on strings
       final_type_ = Type::ERROR;
       is_valid_ = false;
       return false;
