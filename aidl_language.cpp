@@ -542,6 +542,10 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
       AIDL_ERROR(this) << "Binder type cannot be an array";
       return false;
     }
+    if (GetName() == "ParcelableHolder") {
+      AIDL_ERROR(this) << "Arrays of ParcelableHolder are not supported.";
+      return false;
+    }
   }
 
   if (IsNullable()) {
