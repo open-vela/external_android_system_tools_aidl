@@ -38,6 +38,8 @@ using std::vector;
 
 template <typename T>
 constexpr int CLZ(T x) {
+  // __builtin_clz(0) is undefined
+  if (x == 0) return sizeof(T) * 8;
   return (sizeof(T) == sizeof(uint64_t)) ? __builtin_clzl(x) : __builtin_clz(x);
 }
 
@@ -113,7 +115,7 @@ class OverflowGuard {
     return mValue >> o;
   }
   T operator<<(T o) {
-    if (o < 0 || mValue < 0 || o > CLZ(mValue)) {
+    if (o < 0 || mValue < 0 || o > CLZ(mValue) || o >= static_cast<T>(sizeof(T) * 8)) {
       mOverflowed = true;
       return 0;
     }
