@@ -198,7 +198,7 @@ python_test_host {
     target_required: [
         "aidl_test_client",
         "aidl_test_service",
-        "aidl_test_services",
+        "aidl_test_java",
         "aidl_test_rust_client",
         "aidl_test_rust_service",
     ],
@@ -341,11 +341,14 @@ cc_test {
     ],
 }
 
-android_test_helper_app {
-    name: "aidl_test_services",
+java_test {
+    name: "aidl_test_java",
     platform_apis: true,
     // Turn off Java optimization tools to speed up our test iterations.
     optimize: {
+        enabled: false,
+    },
+    dex_preopt: {
         enabled: false,
     },
     static_libs: [
@@ -357,27 +360,13 @@ android_test_helper_app {
         // client uses the newest version
         "aidl-test-versioned-interface-java",
     ],
-    dex_preopt: {
-        enabled: false,
-    },
-    certificate: "platform",
-    manifest: "tests/java_app/AndroidManifest.xml",
-    resource_dirs: ["tests/java_app/resources"],
     srcs: [
         "tests/android/aidl/tests/*.aidl",
         "tests/android/aidl/tests/generic/*.aidl",
         "tests/android/aidl/tests/immutable/*.aidl",
         "tests/android/aidl/tests/map/*.aidl",
         "tests/android/aidl/tests/extension/*.aidl",
-        "tests/java_app/src/android/aidl/tests/ExtensionTests.java",
-        "tests/java_app/src/android/aidl/tests/GenericTests.java",
-        "tests/java_app/src/android/aidl/tests/MapTests.java",
-        "tests/java_app/src/android/aidl/tests/JavaOnlyImmutableAnnotationTests.java",
-        "tests/java_app/src/android/aidl/tests/NullableTests.java",
-        "tests/java_app/src/android/aidl/tests/SimpleParcelable.java",
-        "tests/java_app/src/android/aidl/tests/TestServiceClient.java",
-        "tests/java_app/src/android/aidl/tests/generic/Pair.java",
-        "tests/java_app/src/android/aidl/tests/TestVersionedInterface.java",
+        "tests/java/src/android/aidl/tests/**/*.java",
     ],
     aidl: {
         include_dirs: [

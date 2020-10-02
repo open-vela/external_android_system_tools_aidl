@@ -13,8 +13,8 @@ NATIVE_TEST_SERVICE_FOR_BITNESS = ' /data/nativetest%s/aidl_test_service/aidl_te
 RUST_TEST_CLIENT_FOR_BITNESS = ' /data/nativetest%s/aidl_test_rust_client/aidl_test_rust_client%s'
 RUST_TEST_SERVICE_FOR_BITNESS = ' /data/nativetest%s/aidl_test_rust_service/aidl_test_rust_service%s'
 
-# From tools/base/ddmlib/src/main/java/com/android/ddmlib/testrunner/InstrumentationResultParser.java
-INSTRUMENTATION_FAILURES_PATTERN = r'There (was|were) \d+ failure'
+# From AidlTestsJava.java
+INSTRUMENTATION_SUCCESS_PATTERN = r'TEST SUCCESS\n$'
 
 class TestFail(Exception):
     """Raised on test failures."""
@@ -124,15 +124,13 @@ class JavaClient:
         self.host = host
         self.native_bitness = native_bitness
     def cleanup(self):
-        host.run('setenforce 1')
-        self.host.run('killall android.aidl.tests', ignore_status=True)
+        self.host.run('killall app_process', ignore_status=True)
     def run(self):
-        host.run('setenforce 0') # Java app needs selinux off
-        result = self.host.run('am instrument -w --no-hidden-api-checks '
-                               'android.aidl.tests/'
-                               'androidx.test.runner.AndroidJUnitRunner')
+        result = self.host.run('CLASSPATH=/data/framework/aidl_test_java.jar '
+                               'app_process /data/framework '
+                               'android.aidl.tests.AidlJavaTests')
         print(result.printable_string())
-        if re.search(INSTRUMENTATION_FAILURES_PATTERN, result.stdout) is not None:
+        if re.search(INSTRUMENTATION_SUCCESS_PATTERN, result.stdout) is None:
             raise TestFail(result.stdout)
 
 def getprop(host, prop):
