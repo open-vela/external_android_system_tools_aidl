@@ -31,7 +31,6 @@ import android.aidl.tests.IntEnum;
 import android.aidl.tests.LongEnum;
 import android.aidl.tests.SimpleParcelable;
 import android.aidl.tests.StructuredParcelable;
-import android.aidl.tests.TestFailException;
 import android.aidl.versioned.tests.IFooInterface;
 import android.app.Activity;
 import android.content.Context;

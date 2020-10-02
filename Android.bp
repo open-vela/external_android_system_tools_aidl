@@ -375,7 +375,6 @@ android_test_helper_app {
         "tests/java_app/src/android/aidl/tests/JavaOnlyImmutableAnnotationTests.java",
         "tests/java_app/src/android/aidl/tests/NullableTests.java",
         "tests/java_app/src/android/aidl/tests/SimpleParcelable.java",
-        "tests/java_app/src/android/aidl/tests/TestFailException.java",
         "tests/java_app/src/android/aidl/tests/TestServiceClient.java",
         "tests/java_app/src/android/aidl/tests/generic/Pair.java",
         "tests/java_app/src/android/aidl/tests/TestVersionedInterface.java",
