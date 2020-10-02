@@ -199,6 +199,8 @@ python_test_host {
         "aidl_test_client",
         "aidl_test_service",
         "aidl_test_services",
+        "aidl_test_rust_client",
+        "aidl_test_rust_service",
     ],
     test_suites: ["general-tests"],
 }
@@ -242,7 +244,30 @@ cc_library_headers {
 
 filegroup {
     name: "libaidl-integration-test-files",
-    srcs: ["tests/android/aidl/tests/*.aidl", "tests/android/aidl/tests/extension/*.aidl"],
+    srcs: [
+        "tests/android/aidl/tests/ByteEnum.aidl",
+        "tests/android/aidl/tests/ConstantExpressionEnum.aidl",
+        "tests/android/aidl/tests/GenericStructuredParcelable.aidl",
+        "tests/android/aidl/tests/INamedCallback.aidl",
+        "tests/android/aidl/tests/INewName.aidl",
+        "tests/android/aidl/tests/IntEnum.aidl",
+        "tests/android/aidl/tests/IOldName.aidl",
+        "tests/android/aidl/tests/ITestService.aidl",
+        "tests/android/aidl/tests/LongEnum.aidl",
+        "tests/android/aidl/tests/OtherParcelableForToString.aidl",
+        "tests/android/aidl/tests/ParcelableForToString.aidl",
+        "tests/android/aidl/tests/StructuredParcelable.aidl",
+    ],
+    path: "tests",
+}
+
+filegroup {
+    name: "libaidl-integration-cpp-java-test-files",
+    srcs: [
+        "tests/android/aidl/tests/ICppJavaTests.aidl",
+        "tests/android/aidl/tests/SimpleParcelable.aidl",
+        "tests/android/aidl/tests/extension/*.aidl",
+    ],
     path: "tests",
 }
 
@@ -256,6 +281,11 @@ aidl_interface {
         "1",
         "2",
     ],
+    backend: {
+        rust: {
+            enabled: true,
+        },
+    },
 }
 
 cc_library_static {
@@ -269,6 +299,7 @@ cc_library_static {
     },
     srcs: [
         ":libaidl-integration-test-files",
+        ":libaidl-integration-cpp-java-test-files",
         "tests/simple_parcelable.cpp",
     ],
 }
@@ -382,4 +413,67 @@ aidl_interface {
             platform_apis: true,
         },
     },
+}
+
+//
+// Rust tests
+//
+
+aidl_interface {
+    name: "aidl-test-interface",
+    unstable: true,
+    srcs: [":libaidl-integration-test-files"],
+    local_include_dir: "tests",
+    backend: {
+        rust: {
+            enabled: true,
+        },
+    },
+}
+
+rust_test {
+    name: "aidl_test_rust_client",
+    srcs: [
+        "tests/rust/test_client.rs",
+    ],
+    rustlibs: [
+        "aidl-test-interface-rust",
+        "aidl-test-versioned-interface-rust",
+        "liblibc",
+    ],
+    prefer_rlib: true,
+    compile_multilib: "both",
+    multilib: {
+        lib32: {
+            suffix: "32",
+        },
+        lib64: {
+            suffix: "64",
+        },
+    },
+    test_suites: ["general-tests"],
+}
+
+rust_test {
+    name: "aidl_test_rust_service",
+    test_harness: false,
+    srcs: [
+        "tests/rust/test_service.rs",
+    ],
+    rustlibs: [
+        "aidl-test-interface-rust",
+        "aidl-test-versioned-interface-V1-rust",
+        "liblibc",
+    ],
+    prefer_rlib: true,
+    compile_multilib: "both",
+    multilib: {
+        lib32: {
+            suffix: "32",
+        },
+        lib64: {
+            suffix: "64",
+        },
+    },
+    test_suites: ["general-tests"],
 }
