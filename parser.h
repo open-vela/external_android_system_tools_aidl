@@ -43,6 +43,11 @@ class AidlToken {
   const std::string& GetText() const { return text_; }
   const std::string& GetComments() const { return comments_; }
 
+  template <typename T>
+  void Append(T&& text) {
+    text_ += std::forward<T>(text);
+  }
+
  private:
   std::string text_;
   std::string comments_;
