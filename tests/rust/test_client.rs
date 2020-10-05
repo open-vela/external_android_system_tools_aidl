@@ -373,6 +373,20 @@ test_nullable! {
 }
 
 #[test]
+fn test_nullable_parcelable() {
+    let mut value = StructuredParcelable::StructuredParcelable::default();
+    value.f = 42;
+
+    let service = get_test_service();
+    let value = Some(value);
+    let result = service.RepeatNullableParcelable(value.as_ref());
+    assert_eq!(result, Ok(value));
+
+    let result = service.RepeatNullableParcelable(None);
+    assert_eq!(result, Ok(None));
+}
+
+#[test]
 fn test_binder() {
     let service = get_test_service();
     assert!(service

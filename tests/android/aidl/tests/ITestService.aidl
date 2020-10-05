@@ -105,6 +105,7 @@ interface ITestService {
   @nullable LongEnum[] RepeatNullableLongEnumArray(in @nullable LongEnum[] input);
   @nullable String RepeatNullableString(in @nullable String input);
   @nullable List<String> RepeatNullableStringList(in @nullable List<String> input);
+  @nullable StructuredParcelable RepeatNullableParcelable(in @nullable StructuredParcelable input);
 
   void TakesAnIBinder(in IBinder input);
   void TakesANullableIBinder(in @nullable IBinder input);
