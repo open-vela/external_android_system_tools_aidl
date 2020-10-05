@@ -35,13 +35,9 @@
       <option name="push" value="aidl_test_rust_service32->/data/nativetest/aidl_test_rust_service/aidl_test_rust_service32" />
       <option name="push" value="aidl_test_rust_service64->/data/nativetest64/aidl_test_rust_service/aidl_test_rust_service64" />
 
-      <option name="cleanup" value="true" />
-    </target_preparer>
+      <option name="push" value="aidl_test_java.jar->/data/framework/aidl_test_java.jar" />
 
-    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
-        <option name="force-install-mode" value="FULL"/>
-        <option name="cleanup-apks" value="true" />
-        <option name="test-file-name" value="aidl_test_services.apk" />
+      <option name="cleanup" value="true" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.python.PythonBinaryHostTest" >
