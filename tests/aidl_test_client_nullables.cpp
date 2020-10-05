@@ -36,6 +36,7 @@ using android::aidl::tests::IntEnum;
 using android::aidl::tests::ITestService;
 using android::aidl::tests::LongEnum;
 using android::aidl::tests::SimpleParcelable;
+using android::aidl::tests::StructuredParcelable;
 
 using testing::Eq;
 using testing::Ne;
@@ -93,17 +94,17 @@ TEST_F(RepeatNullableTest, stringArray) {
 }
 
 TEST_F(RepeatNullableTest, parcelable) {
-  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
+  auto input = std::make_optional<StructuredParcelable>();
+  input->f = 42;
 
-  auto input = std::make_optional<SimpleParcelable>("Booya", 42);
-  std::optional<SimpleParcelable> output;
-  auto status = cpp_java_tests->RepeatNullableParcelable(input, &output);
+  std::optional<StructuredParcelable> output;
+  auto status = service->RepeatNullableParcelable(input, &output);
   ASSERT_TRUE(status.isOk());
   ASSERT_TRUE(output.has_value());
   ASSERT_THAT(*output, Eq(*input));
 
   input.reset();
-  status = cpp_java_tests->RepeatNullableParcelable(input, &output);
+  status = service->RepeatNullableParcelable(input, &output);
   ASSERT_TRUE(status.isOk());
   ASSERT_FALSE(output.has_value());
 }

@@ -43,9 +43,6 @@ interface ICppJavaTests {
   FileDescriptor[] ReverseFileDescriptorArray(in FileDescriptor[] input,
                                               out FileDescriptor[] repeated);
 
-  // Test nullability
-  @nullable SimpleParcelable RepeatNullableParcelable(in @nullable SimpleParcelable input);
-
   void TakesAnIBinderList(in List<IBinder> input);
   void TakesANullableIBinderList(in @nullable List<IBinder> input);
 
