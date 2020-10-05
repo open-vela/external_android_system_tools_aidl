@@ -649,6 +649,25 @@ TEST_P(AidlTest, WritesComments) {
   EXPECT_EQ("/* k */", interface->GetMethods()[2]->GetComments());
 }
 
+TEST_P(AidlTest, CppHeaderCanBeIdentifierAsWell) {
+  io_delegate_.SetFileContents("p/cpp_header.aidl",
+                               R"(package p;
+         parcelable cpp_header cpp_header "bar/header";)");
+  import_paths_.emplace("");
+  const string input_path = "p/IFoo.aidl";
+  const string input = R"(package p;
+                          import p.cpp_header;
+                          interface IFoo {
+                            // get bar
+                            cpp_header get();
+                          })";
+
+  auto parse_result = Parse(input_path, input, typenames_, GetLanguage());
+  EXPECT_NE(nullptr, parse_result);
+  const AidlInterface* interface = parse_result->AsInterface();
+  EXPECT_EQ("// get bar\n", interface->GetMethods()[0]->GetComments());
+}
+
 TEST_F(AidlTest, ParsesPreprocessedFile) {
   string simple_content = "parcelable a.Foo;\ninterface b.IBar;";
   io_delegate_.SetFileContents("path", simple_content);

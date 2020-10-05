@@ -117,7 +117,7 @@ AidlLocation loc(const yy::parser::location_type& l) {
 
 %token '(' ')' ',' '=' '[' ']' '.' '{' '}' ';'
 %token UNKNOWN "unrecognized character"
-%token CPP_HEADER "cpp_header (which can also be used as an identifier)"
+%token<token> CPP_HEADER "cpp_header (which can also be used as an identifier)"
 %token IMPORT "import"
 %token IN "in"
 %token INOUT "inout"
@@ -198,9 +198,7 @@ document
  */
 identifier
  : IDENTIFIER
-  { $$ = $1; }
  | CPP_HEADER
-  { $$ = new AidlToken("cpp_header", ""); }
  ;
 
 package
@@ -313,6 +311,7 @@ parcelable_decl
     $$ = new AidlParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), $4->GetText());
     delete $1;
     delete $2;
+    delete $3;
     delete $4;
   }
  | PARCELABLE error ';' {
