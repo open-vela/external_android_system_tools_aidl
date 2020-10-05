@@ -43,7 +43,6 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.ServiceSpecificException;
 import android.util.Log;
-import androidx.test.core.app.ApplicationProvider;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
@@ -435,8 +434,8 @@ public class TestServiceClient {
     public void testFileDescriptorPassing() throws RemoteException, IOException {
         assumeTrue(cpp_java_tests != null);
 
-        Context context = ApplicationProvider.getApplicationContext();
-        FileOutputStream fos = context.openFileOutput("test-dummy", Context.MODE_PRIVATE);
+        String file = "/data/local/tmp/aidl-test-file";
+        FileOutputStream fos = new FileOutputStream(file, false /*append*/);
 
         FileDescriptor descriptor = fos.getFD();
         FileDescriptor journeyed = cpp_java_tests.RepeatFileDescriptor(descriptor);
@@ -449,7 +448,7 @@ public class TestServiceClient {
         journeyedStream.write(output);
         journeyedStream.close();
 
-        FileInputStream fis = context.openFileInput("test-dummy");
+        FileInputStream fis = new FileInputStream(file);
         byte[] input = new byte[output.length];
 
         assertThat(fis.read(input), is(input.length));
@@ -458,9 +457,9 @@ public class TestServiceClient {
 
     @Test
     public void testParcelFileDescriptorPassing() throws RemoteException, IOException {
-        Context context = ApplicationProvider.getApplicationContext();
+        String file = "/data/local/tmp/aidl-test-file";
         ParcelFileDescriptor descriptor = ParcelFileDescriptor.open(
-                context.getFileStreamPath("test-dummy"), ParcelFileDescriptor.MODE_CREATE |
+                new File(file), ParcelFileDescriptor.MODE_CREATE |
                     ParcelFileDescriptor.MODE_WRITE_ONLY);
         ParcelFileDescriptor journeyed = service.RepeatParcelFileDescriptor(descriptor);
 
@@ -471,7 +470,7 @@ public class TestServiceClient {
         journeyedStream.write(output);
         journeyedStream.close();
 
-        FileInputStream fis = context.openFileInput("test-dummy");
+        FileInputStream fis = new FileInputStream(file);
         byte[] input = new byte[output.length];
 
         assertThat(fis.read(input), is(input.length));
