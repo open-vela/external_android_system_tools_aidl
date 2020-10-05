@@ -424,11 +424,11 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   if (main_parser == nullptr) {
     return AidlError::PARSE_ERROR;
   }
-  int num_interfaces_or_structured_parcelables = 0;
+  int num_top_level_decls = 0;
   for (const auto& type : main_parser->ParsedDocument().DefinedTypes()) {
-    if (type->AsInterface() != nullptr || type->AsStructuredParcelable() != nullptr) {
-      num_interfaces_or_structured_parcelables++;
-      if (num_interfaces_or_structured_parcelables > 1) {
+    if (type->AsUnstructuredParcelable() == nullptr) {
+      num_top_level_decls++;
+      if (num_top_level_decls > 1) {
         AIDL_ERROR(*type) << "You must declare only one type per file.";
         return AidlError::BAD_TYPE;
       }
@@ -578,8 +578,10 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     AidlStructuredParcelable* parcelable = defined_type->AsStructuredParcelable();
     AidlParcelable* unstructured_parcelable = defined_type->AsUnstructuredParcelable();
     AidlEnumDeclaration* enum_decl = defined_type->AsEnumDeclaration();
-    AIDL_FATAL_IF(!!interface + !!parcelable + !!unstructured_parcelable + !!enum_decl != 1,
-                  defined_type);
+    AidlUnionDecl* union_decl = defined_type->AsUnionDeclaration();
+    AIDL_FATAL_IF(
+        !!interface + !!parcelable + !!unstructured_parcelable + !!enum_decl + !!union_decl != 1,
+        defined_type);
 
     // Ensure that foo.bar.IFoo is defined in <some_path>/foo/bar/IFoo.aidl
     if (num_defined_types == 1 && !check_filename(input_file_name, *defined_type)) {

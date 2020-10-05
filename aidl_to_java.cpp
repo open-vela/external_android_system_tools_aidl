@@ -762,7 +762,7 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
   } else {
     const AidlDefinedType* t = c.typenames.TryGetDefinedType(c.type.GetName());
     AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName();
-    if (t->AsParcelable() != nullptr) {
+    if (t->AsParcelable() != nullptr || t->AsUnionDeclaration() != nullptr) {
       if (c.type.IsArray()) {
         c.writer << c.parcel << ".readTypedArray(" << c.var << ", " << c.type.GetName()
                  << ".CREATOR);\n";
