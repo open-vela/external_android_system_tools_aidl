@@ -229,11 +229,6 @@ class CppJavaTests : public BnCppJavaTests {
     return Status::ok();
   }
 
-  Status RepeatNullableParcelable(const optional<SimpleParcelable>& input,
-                                  optional<SimpleParcelable>* _aidl_return) {
-    return RepeatNullable(input, _aidl_return);
-  }
-
   Status TakesAnIBinderList(const vector<sp<IBinder>>& input) override {
     (void)input;
     return Status::ok();
@@ -465,6 +460,11 @@ class NativeService : public BnTestService {
   }
 
   Status RepeatNullableString(const optional<String16>& input, optional<String16>* _aidl_return) {
+    return RepeatNullable(input, _aidl_return);
+  }
+
+  Status RepeatNullableParcelable(const optional<StructuredParcelable>& input,
+                                  optional<StructuredParcelable>* _aidl_return) {
     return RepeatNullable(input, _aidl_return);
   }
 

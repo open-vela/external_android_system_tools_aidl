@@ -191,6 +191,13 @@ impl ITestService::ITestService for TestService {
         Ok(input.map(String::from))
     }
 
+    fn RepeatNullableParcelable(
+        &self,
+        input: Option<&StructuredParcelable::StructuredParcelable>,
+    ) -> binder::Result<Option<StructuredParcelable::StructuredParcelable>> {
+        Ok(input.cloned())
+    }
+
     fn TakesAnIBinder(&self, _: &SpIBinder) -> binder::Result<()> {
         Ok(())
     }
