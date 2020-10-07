@@ -621,7 +621,6 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
       }
 
       contains_unstructured_parcelable = true;
-      continue;
     }
 
     if (defined_type->IsVintfStability()) {
