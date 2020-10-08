@@ -895,11 +895,9 @@ class AidlImport : public AidlNode {
   AidlImport& operator=(const AidlImport&) = delete;
   AidlImport& operator=(AidlImport&&) = delete;
 
-  const std::string& GetFilename() const { return filename_; }
   const std::string& GetNeededClass() const { return needed_class_; }
 
  private:
-  std::string filename_;
   std::string needed_class_;
 };
 
