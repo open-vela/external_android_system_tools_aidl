@@ -8,6 +8,7 @@ import unittest
 BITNESS_32 = ("", "32")
 BITNESS_64 = ("64", "64")
 
+APP_PROCESS_FOR_PRETTY_BITNESS = 'app_process%s'
 NATIVE_TEST_CLIENT_FOR_BITNESS = ' /data/nativetest%s/aidl_test_client/aidl_test_client%s'
 NATIVE_TEST_SERVICE_FOR_BITNESS = ' /data/nativetest%s/aidl_test_service/aidl_test_service%s'
 RUST_TEST_CLIENT_FOR_BITNESS = ' /data/nativetest%s/aidl_test_rust_client/aidl_test_rust_client%s'
@@ -119,16 +120,16 @@ class NativeClient:
             raise TestFail(result.stdout)
 
 class JavaClient:
-    def __init__(self, host, native_bitness):
-        self.name = "java_client"
+    def __init__(self, host, bitness):
+        self.name = "java_client_%s" % pretty_bitness(bitness)
         self.host = host
-        self.native_bitness = native_bitness
+        self.bitness = bitness
     def cleanup(self):
         self.host.run('killall app_process', ignore_status=True)
     def run(self):
         result = self.host.run('CLASSPATH=/data/framework/aidl_test_java.jar '
-                               'app_process /data/framework '
-                               'android.aidl.tests.AidlJavaTests')
+                               + APP_PROCESS_FOR_PRETTY_BITNESS % pretty_bitness(self.bitness) +
+                               ' /data/framework android.aidl.tests.AidlJavaTests')
         print(result.printable_string())
         if re.search(INSTRUMENTATION_SUCCESS_PATTERN, result.stdout) is None:
             raise TestFail(result.stdout)
@@ -198,9 +199,10 @@ if __name__ == '__main__':
         clients += [NativeClient(host, bitness)]
         servers += [NativeServer(host, bitness)]
 
-    # Java only supports one bitness, but needs to run a native binary
-    # to process its results
-    clients += [JavaClient(host, bitnesses[-1])]
+
+    for bitness in bitnesses:
+        clients += [JavaClient(host, bitness)]
+        # TODO(b/169704480): Java server
 
     for bitness in bitnesses:
         clients += [RustClient(host, bitness)]
