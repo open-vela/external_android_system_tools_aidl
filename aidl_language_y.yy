@@ -238,9 +238,8 @@ qualified_name
     $$ = $1;
   }
  | qualified_name '.' identifier
-  { $$ = $1;
-    $$->Append('.');
-    $$->Append($3->GetText());
+  { $$ = new AidlToken($1->GetText() + "." + $3->GetText(), $1->GetComments());
+    delete $1;
     delete $3;
   };
 
