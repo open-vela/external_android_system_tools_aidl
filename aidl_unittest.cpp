@@ -2416,23 +2416,28 @@ TEST_F(AidlTest, UnusedImportDoesNotContributeInclude) {
 }
 
 TEST_F(AidlTest, ParseJavaPassthroughAnnotation) {
-  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
-    @JavaPassthrough(annotation="@com.android.Alice(arg=com.android.Alice.Value.A) ")
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"--(package a;
+    @JavaPassthrough(annotation="@com.android.Alice(arg=com.android.Alice.Value.A)")
+    @JavaPassthrough(annotation="@com.android.AliceTwo")
     interface IFoo {
         @JavaPassthrough(annotation="@com.android.Bob")
         void foo(@JavaPassthrough(annotation="@com.android.Cat") int x);
         const @JavaPassthrough(annotation="@com.android.David") int A = 3;
-    })");
+    })--");
 
   Options java_options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
 
   string java_out;
   EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/IFoo.java", &java_out));
-  EXPECT_THAT(java_out, testing::HasSubstr("@com.android.Alice(arg=com.android.Alice.Value.A)"));
-  EXPECT_THAT(java_out, testing::HasSubstr("@com.android.Bob"));
-  EXPECT_THAT(java_out, testing::HasSubstr("@com.android.Cat"));
-  EXPECT_THAT(java_out, testing::HasSubstr("@com.android.David"));
+  // type-decl-level annotations with newline at the end
+  EXPECT_THAT(java_out, testing::HasSubstr("@com.android.Alice(arg=com.android.Alice.Value.A)\n"));
+  EXPECT_THAT(java_out, testing::HasSubstr("@com.android.AliceTwo\n"));
+  // member-decl-level annotations with newline at the end
+  EXPECT_THAT(java_out, testing::HasSubstr("@com.android.Bob\n"));
+  EXPECT_THAT(java_out, testing::HasSubstr("@com.android.David\n"));
+  // inline annotations with space at the end
+  EXPECT_THAT(java_out, testing::HasSubstr("@com.android.Cat "));
 
   // Other backends shouldn't be bothered
   Options cpp_options = Options::From("aidl --lang=cpp -o out -h out a/IFoo.aidl");
