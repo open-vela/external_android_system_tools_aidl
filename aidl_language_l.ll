@@ -124,9 +124,6 @@ oneway                { yylval->token = new AidlToken("oneway", extra_text);
 enum                  { yylval->token = new AidlToken("enum", extra_text);
                         return yy::parser::token::ENUM;
                       }
-union                 { yylval->token = new AidlToken("union", extra_text);
-                        return yy::parser::token::UNION;
-                      }
 
     /* scalars */
 {identifier}          { yylval->token = new AidlToken(yytext, extra_text);
