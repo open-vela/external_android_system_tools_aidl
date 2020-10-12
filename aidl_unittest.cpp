@@ -2417,15 +2417,24 @@ TEST_F(AidlTest, UnusedImportDoesNotContributeInclude) {
 
 TEST_F(AidlTest, ParseJavaPassthroughAnnotation) {
   io_delegate_.SetFileContents("a/IFoo.aidl", R"--(package a;
+    import a.MyEnum;
     @JavaPassthrough(annotation="@com.android.Alice(arg=com.android.Alice.Value.A)")
     @JavaPassthrough(annotation="@com.android.AliceTwo")
     interface IFoo {
         @JavaPassthrough(annotation="@com.android.Bob")
-        void foo(@JavaPassthrough(annotation="@com.android.Cat") int x);
+        void foo(@JavaPassthrough(annotation="@com.android.Cat") int x, MyEnum y);
         const @JavaPassthrough(annotation="@com.android.David") int A = 3;
     })--");
+  // JavaPassthrough should work with other types as well (e.g. enum)
+  io_delegate_.SetFileContents("a/MyEnum.aidl", R"--(package a;
+    @JavaPassthrough(annotation="@com.android.Alice(arg=com.android.Alice.Value.A)")
+    @JavaPassthrough(annotation="@com.android.AliceTwo")
+    @Backing(type="byte")
+    enum MyEnum {
+      a, b, c
+    })--");
 
-  Options java_options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  Options java_options = Options::From("aidl -I . --lang=java -o out a/IFoo.aidl a/MyEnum.aidl");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
 
   string java_out;
@@ -2439,14 +2448,21 @@ TEST_F(AidlTest, ParseJavaPassthroughAnnotation) {
   // inline annotations with space at the end
   EXPECT_THAT(java_out, testing::HasSubstr("@com.android.Cat "));
 
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/MyEnum.java", &java_out));
+  // type-decl-level annotations with newline at the end
+  EXPECT_THAT(java_out, testing::HasSubstr("@com.android.Alice(arg=com.android.Alice.Value.A)\n"));
+  EXPECT_THAT(java_out, testing::HasSubstr("@com.android.AliceTwo\n"));
+
   // Other backends shouldn't be bothered
-  Options cpp_options = Options::From("aidl --lang=cpp -o out -h out a/IFoo.aidl");
+  Options cpp_options =
+      Options::From("aidl -I . --lang=cpp -o out -h out a/IFoo.aidl a/MyEnum.aidl");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(cpp_options, io_delegate_));
 
-  Options ndk_options = Options::From("aidl --lang=ndk -o out -h out a/IFoo.aidl");
+  Options ndk_options =
+      Options::From("aidl -I . --lang=ndk -o out -h out a/IFoo.aidl a/MyEnum.aidl");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(ndk_options, io_delegate_));
 
-  Options rust_options = Options::From("aidl --lang=rust -o out a/IFoo.aidl");
+  Options rust_options = Options::From("aidl -I . --lang=rust -o out a/IFoo.aidl a/MyEnum.aidl");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(rust_options, io_delegate_));
 }
 
