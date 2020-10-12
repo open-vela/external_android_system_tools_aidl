@@ -90,8 +90,9 @@ void ClassDecl::AddPrivate(std::unique_ptr<Declaration> member) {
   private_members_.push_back(std::move(member));
 }
 
-Enum::EnumField::EnumField(const string& k, const string& v, const string& c)
-    : key(k), value(v), comment(c) {}
+Enum::EnumField::EnumField(const string& k, const string& v)
+    : key(k),
+      value(v) {}
 
 Enum::Enum(const string& name, const string& base_type, bool is_class)
     : enum_name_(name), underlying_type_(base_type), is_class_(is_class) {}
@@ -108,9 +109,6 @@ void Enum::Write(CodeWriter* to) const {
   }
   to->Indent();
   for (const auto& field : fields_) {
-    if (!field.comment.empty()) {
-      to->Write("%s\n", field.comment.c_str());
-    }
     if (field.value.empty()) {
       to->Write("%s,\n", field.key.c_str());
     } else {
@@ -121,8 +119,8 @@ void Enum::Write(CodeWriter* to) const {
   to->Write("};\n");
 }
 
-void Enum::AddValue(const string& key, const string& value, const string& comment) {
-  fields_.emplace_back(key, value, comment);
+void Enum::AddValue(const string& key, const string& value) {
+  fields_.emplace_back(key, value);
 }
 
 ArgList::ArgList(const std::string& single_argument)
