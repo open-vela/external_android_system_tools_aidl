@@ -31,6 +31,7 @@ import android.aidl.tests.IntEnum;
 import android.aidl.tests.LongEnum;
 import android.aidl.tests.SimpleParcelable;
 import android.aidl.tests.StructuredParcelable;
+import android.aidl.tests.Union;
 import android.aidl.versioned.tests.IFooInterface;
 import android.app.Activity;
 import android.content.Context;
@@ -763,5 +764,19 @@ public class TestServiceClient {
       assertNotNull(oldAsNew);
       assertThat(oldAsNew.DESCRIPTOR, is("android.aidl.tests.IOldName"));
       assertThat(oldAsNew.RealName(), is("OldName"));
+    }
+
+    @Test
+    public void testReverseUnion() throws RemoteException {
+      assumeTrue(cpp_java_tests != null);
+
+      Union original = Union.ns(new int[] {1, 2, 3});
+      Union repeated = new Union();
+
+      Union reversed = cpp_java_tests.ReverseUnion(original, repeated);
+
+      assertNotNull(reversed);
+      assertThat(repeated.getNs(), is(new int[] {1, 2, 3}));
+      assertThat(reversed.getNs(), is(new int[] {3, 2, 1}));
     }
 }
