@@ -31,16 +31,25 @@
 #include "code_writer.h"
 #include "logging.h"
 
-using std::unique_ptr;
-using ::android::aidl::java::Variable;
+using ::android::base::EndsWith;
+using ::android::base::Join;
+using ::android::base::StartsWith;
 using std::string;
+using std::unique_ptr;
 
 namespace {
-inline string get_setter_name(const AidlNode& context, const string& variablename) {
-  AIDL_FATAL_IF(variablename.size() <= 0, context) << "A field name cannot be empty.";
-  std::ostringstream out;
-  out << "set" << static_cast<char>(toupper(variablename[0])) << variablename.substr(1);
-  return out.str();
+// join two non-empty strings according to `camelCase` naming.
+inline string camelcase_join(const string& a, const string& b, const AidlNode& context) {
+  AIDL_FATAL_IF(b.size() <= 0 || a.size() <= 0, context) << "Name cannot be empty.";
+  std::string name = a + b;
+  name[a.size()] = static_cast<char>(toupper(name[a.size()]));
+  return name;
+}
+inline string getter_name(const AidlVariableDeclaration& variable) {
+  return camelcase_join("get", variable.GetName(), variable);
+}
+inline string setter_name(const AidlVariableDeclaration& variable) {
+  return camelcase_join("set", variable.GetName(), variable);
 }
 }  // namespace
 
@@ -83,6 +92,14 @@ bool generate_java_enum_declaration(const std::string& filename,
   return true;
 }
 
+bool generate_java_union_declaration(const std::string& filename, const AidlUnionDecl* decl,
+                                     const AidlTypenames& typenames,
+                                     const IoDelegate& io_delegate) {
+  CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
+  generate_union(*code_writer, decl, typenames);
+  return true;
+}
+
 bool generate_java(const std::string& filename, const AidlDefinedType* defined_type,
                    const AidlTypenames& typenames, const IoDelegate& io_delegate,
                    const Options& options) {
@@ -98,6 +115,10 @@ bool generate_java(const std::string& filename, const AidlDefinedType* defined_t
 
   if (const AidlInterface* interface = defined_type->AsInterface(); interface != nullptr) {
     return generate_java_interface(filename, interface, typenames, io_delegate, options);
+  }
+
+  if (const AidlUnionDecl* union_decl = defined_type->AsUnionDeclaration(); union_decl != nullptr) {
+    return generate_java_union_declaration(filename, union_decl, typenames, io_delegate);
   }
 
   AIDL_FATAL(defined_type) << "Unrecognized type sent for Java generation.";
@@ -162,7 +183,7 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
         out << " = " << variable->ValueString(ConstantValueDecorator);
       }
       out << ";\n";
-      out << "public Builder " << get_setter_name(*variable, variable->GetName()) << "("
+      out << "public Builder " << setter_name(*variable) << "("
           << JavaSignatureOf(variable->GetType(), typenames) << " " << variable->GetName()
           << ") {\n"
           << "  "
@@ -338,8 +359,7 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
     }
     CreateFromParcelFor(context);
     if (parcel->IsJavaOnlyImmutable()) {
-      context.writer.Write("%s.%s(%s);\n", builder_variable.c_str(),
-                           get_setter_name(*field, field->GetName()).c_str(),
+      context.writer.Write("%s.%s(%s);\n", builder_variable.c_str(), setter_name(*field).c_str(),
                            field_variable_name.c_str());
     }
     writer->Close();
@@ -427,6 +447,209 @@ void generate_enum(const CodeWriterPtr& code_writer, const AidlEnumDeclaration* 
   code_writer->Write("}\n");
 }
 
+void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypenames& typenames) {
+  const string tag_type = "int";
+  const AidlTypeSpecifier tag_type_specifier(AIDL_LOCATION_HERE, tag_type, false /* isArray */,
+                                             nullptr /* type_params */, "");
+  const string tag_name = "_tag";
+  const string value_name = "_value";
+  const string clazz = decl->GetName();
+
+  out << "/*\n";
+  out << " * This file is auto-generated.  DO NOT MODIFY.\n";
+  out << " */\n";
+
+  out << "package " + decl->GetPackage() + ";\n";
+  out << "\n";
+  out << decl->GetComments() << "\n";
+  for (const auto& annotation : generate_java_annotations(*decl)) {
+    out << annotation << "\n";
+  }
+
+  out << "public final class " + clazz + " implements android.os.Parcelable {\n";
+  out.Indent();
+
+  size_t tag_index = 0;
+  out << "// tags union fields\n";
+  for (const auto& variable : decl->GetFields()) {
+    auto raw_type = variable->GetType().ToString();
+    out << "public final static " + tag_type + " " + variable->GetName() + " = " +
+               std::to_string(tag_index++) + ";  // " + raw_type + "\n";
+  }
+  out << "\n";
+
+  out << "private " + tag_type + " " + tag_name + ";\n";
+  out << "private Object " + value_name + ";\n";
+  out << "\n";
+
+  const auto& first_field = decl->GetFields()[0];
+  // ctor()
+  out << "public " + clazz + "() {\n";
+  out << "  this(" + first_field->GetName() + ", " +
+             first_field->ValueString(ConstantValueDecorator) + ");\n";
+  out << "}\n";
+  // ctor(Parcel)
+  out << "private " + clazz + "(android.os.Parcel _aidl_parcel) {\n";
+  out << "  readFromParcel(_aidl_parcel);\n";
+  out << "}\n";
+  // ctor(tag, value)
+  out << "private " + clazz + "(" + tag_type + " tag, Object value) {\n";
+  out << "  _set(tag, value);\n";
+  out << "}\n";
+  out << "\n";
+
+  // getTag()
+  out << "public " + tag_type + " " + "getTag() {\n";
+  out << "  return " + tag_name + ";\n";
+  out << "}\n";
+  out << "\n";
+
+  // value ctor, getter, setter for each field
+  for (const auto& variable : decl->GetFields()) {
+    auto var_name = variable->GetName();
+    auto var_type = JavaSignatureOf(variable->GetType(), typenames);
+    auto raw_type = variable->GetType().ToString();
+
+    out << "// " + raw_type + " " + var_name + "\n";
+    // value ctor
+    out << variable->GetType().GetComments() + "\n";
+    out << "public static " + clazz + " " + var_name + "(" + var_type + " " + value_name + ") {\n";
+    out << "  return new " + clazz + "(" + var_name + ", " + value_name + ");\n";
+    out << "}\n";
+    // getter
+    if (variable->GetType().IsGeneric()) {
+      out << "@SuppressWarnings(\"unchecked\")\n";
+    }
+    out << "public " + var_type + " " + getter_name(*variable) + "() {\n";
+    out << "  _assertTag(" + var_name + ");\n";
+    out << "  return (" + var_type + ") " + value_name + ";\n";
+    out << "}\n";
+    // setter
+    out << "public void " + setter_name(*variable) + "(" + var_type + " " + value_name + ") {\n";
+    out << "  _set(" + var_name + ", " + value_name + ");\n";
+    out << "}\n";
+    out << "\n";
+  }
+
+  if (decl->IsVintfStability()) {
+    out << "@Override\n";
+    out << "public final int getStability() {\n";
+    out << "  return android.os.Parcelable.PARCELABLE_STABILITY_VINTF;\n";
+    out << "}\n";
+    out << "\n";
+  }
+
+  out << "public static final android.os.Parcelable.Creator<" << clazz << "> CREATOR = "
+      << "new android.os.Parcelable.Creator<" << clazz << ">() {\n";
+  out << "  @Override\n";
+  out << "  public " << clazz << " createFromParcel(android.os.Parcel _aidl_source) {\n";
+  out << "    return new Union(_aidl_source);\n";  // to avoid unnecessary allocation of "default"
+  out << "  }\n";
+  out << "  @Override\n";
+  out << "  public " << clazz << "[] newArray(int _aidl_size) {\n";
+  out << "    return new " << clazz << "[_aidl_size];\n";
+  out << "  }\n";
+  out << "};\n";
+
+  auto write_to_parcel = [&](const AidlTypeSpecifier& type, std::string name, std::string parcel) {
+    string code;
+    CodeWriterPtr writer = CodeWriter::ForString(&code);
+    CodeGeneratorContext context{
+        .writer = *(writer.get()),
+        .typenames = typenames,
+        .type = type,
+        .parcel = parcel,
+        .var = name,
+        .is_return_value = false,
+    };
+    WriteToParcelFor(context);
+    writer->Close();
+    return code;
+  };
+
+  out << "@Override\n";
+  out << "public final void writeToParcel(android.os.Parcel _aidl_parcel, int _aidl_flag) {\n";
+  out << "  " + write_to_parcel(tag_type_specifier, tag_name, "_aidl_parcel");
+  out << "  switch (" + tag_name + ") {\n";
+  for (const auto& variable : decl->GetFields()) {
+    out << "  case " + variable->GetName() + ":\n";
+    out << "    " +
+               write_to_parcel(variable->GetType(), getter_name(*variable) + "()", "_aidl_parcel");
+    out << "    break;\n";
+  }
+  out << "  }\n";
+  out << "}\n";
+
+  // keep this across different fields in order to create the classloader
+  // at most once.
+  bool is_classloader_created = false;
+  auto read_from_parcel = [&](const AidlTypeSpecifier& type, std::string name, std::string parcel) {
+    string code;
+    CodeWriterPtr writer = CodeWriter::ForString(&code);
+    CodeGeneratorContext context{
+        .writer = *(writer.get()),
+        .typenames = typenames,
+        .type = type,
+        .parcel = parcel,
+        .var = name,
+        .is_classloader_created = &is_classloader_created,
+    };
+    CreateFromParcelFor(context);
+    writer->Close();
+    return code;
+  };
+
+  // Not override, but as a user-defined parcelable, this method should be public
+  out << "public void readFromParcel(android.os.Parcel _aidl_parcel) {\n";
+  out << "  " + tag_type + " _aidl_tag;\n";
+  out << "  " + read_from_parcel(tag_type_specifier, "_aidl_tag", "_aidl_parcel");
+  out << "  switch (_aidl_tag) {\n";
+  for (const auto& variable : decl->GetFields()) {
+    auto var_name = variable->GetName();
+    auto var_type = JavaSignatureOf(variable->GetType(), typenames);
+    out << "  case " + var_name + ": {\n";
+    out << "    " + var_type + " _aidl_value;\n";
+    out << "    " + read_from_parcel(variable->GetType(), "_aidl_value", "_aidl_parcel");
+    out << "    _set(_aidl_tag, _aidl_value);\n";
+    out << "    return; }\n";
+  }
+  out << "  }\n";
+  out << "  throw new RuntimeException(\"union: out of range: \" + _aidl_tag);\n";
+  out << "}\n";
+
+  out << "@Override\n";
+  out << "public int describeContents() {\n";
+  out << "  return 0;\n";
+  out << "}\n";
+  out << "\n";
+
+  // helper: _assertTag
+  out << "private void _assertTag(" + tag_type + " tag) {\n";
+  out << "  if (getTag() != tag) {\n";
+  out << "    throw new IllegalStateException(\"bad access: \" + _tagString(tag) + \", \" + "
+         "_tagString(tag) + \" is available.\");\n";
+  out << "  }\n";
+  out << "}\n";
+  // helper: _tagString
+  out << "private String _tagString(" + tag_type + " " + tag_name + ") {\n";
+  out << "  switch (" + tag_name + ") {\n";
+  for (const auto& variable : decl->GetFields()) {
+    auto var_name = variable->GetName();
+    out << "  case " + var_name + ": return \"" + var_name + "\";\n";
+  }
+  out << "  }\n";
+  out << "  throw new IllegalStateException(\"unknown field: \" + " + tag_name + ");\n";
+  out << "}\n";
+  // helper: _set
+  out << "private void _set(" + tag_type + " tag, Object value) {\n";
+  out << "  this." + tag_name + " = tag;\n";
+  out << "  this." + value_name + " = value;\n";
+  out << "}\n";
+
+  out.Dedent();
+  out << "}\n";
+}
+
 std::string dump_location(const AidlNode& method) {
   return method.PrintLocation();
 }
@@ -440,7 +663,7 @@ std::string generate_java_unsupportedappusage_parameters(const AidlAnnotation& a
     parameters_decl.push_back(param_name + " = " + param_value);
   }
   parameters_decl.push_back("overrideSourcePosition=\"" + dump_location(a) + "\"");
-  return "(" + base::Join(parameters_decl, ", ") + ")";
+  return "(" + Join(parameters_decl, ", ") + ")";
 }
 
 std::vector<std::string> generate_java_annotations(const AidlAnnotatable& a) {
@@ -455,9 +678,9 @@ std::vector<std::string> generate_java_annotations(const AidlAnnotatable& a) {
                         generate_java_unsupportedappusage_parameters(*unsupported_app_usage));
   }
 
-  auto strip_double_quote = [](const AidlTypeSpecifier& type, const std::string& raw_value) -> std::string {
-    if (!android::base::StartsWith(raw_value, "\"") ||
-        !android::base::EndsWith(raw_value, "\"")) {
+  auto strip_double_quote = [](const AidlTypeSpecifier& type,
+                               const std::string& raw_value) -> std::string {
+    if (!StartsWith(raw_value, "\"") || !EndsWith(raw_value, "\"")) {
       AIDL_FATAL(type) << "Java passthrough annotation " << raw_value << " is not properly quoted";
       return "";
     }

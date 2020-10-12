@@ -182,8 +182,8 @@ static bool has_usable_nil_type(const AidlTypeSpecifier& specifier) {
   return specifier.IsNullable();
 }
 
-static bool are_compatible_parcelables(const AidlStructuredParcelable& older,
-                                       const AidlStructuredParcelable& newer) {
+template <typename ParcelableType>
+static bool are_compatible_parcelables(const ParcelableType& older, const ParcelableType& newer) {
   const auto& old_fields = older.GetFields();
   const auto& new_fields = newer.GetFields();
   if (old_fields.size() > new_fields.size()) {
@@ -370,6 +370,16 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
       }
       compatible &= are_compatible_parcelables(*(old_type->AsStructuredParcelable()),
                                                *(new_type->AsStructuredParcelable()));
+    } else if (old_type->AsUnionDeclaration() != nullptr) {
+      if (new_type->AsUnionDeclaration() == nullptr) {
+        AIDL_ERROR(new_type) << "Type mismatch: " << old_type->GetCanonicalName()
+                             << " is changed from " << old_type->GetPreprocessDeclarationName()
+                             << " to " << new_type->GetPreprocessDeclarationName();
+        compatible = false;
+        continue;
+      }
+      compatible &= are_compatible_parcelables(*(old_type->AsUnionDeclaration()),
+                                               *(new_type->AsUnionDeclaration()));
     } else if (old_type->AsEnumDeclaration() != nullptr) {
       if (new_type->AsEnumDeclaration() == nullptr) {
         AIDL_ERROR(new_type) << "Type mismatch: " << old_type->GetCanonicalName()
