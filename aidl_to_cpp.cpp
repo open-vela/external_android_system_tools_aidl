@@ -339,7 +339,7 @@ void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
   AIDL_FATAL_IF(definedType == nullptr, type) << "Unexpected type: " << type.GetName();
 
   if (definedType->AsInterface() != nullptr || definedType->AsStructuredParcelable() != nullptr ||
-      definedType->AsEnumDeclaration() != nullptr) {
+      definedType->AsEnumDeclaration() != nullptr || definedType->AsUnionDeclaration() != nullptr) {
     AddHeaders(*definedType, headers);
   } else if (definedType->AsParcelable() != nullptr) {
     const std::string cpp_header = definedType->AsParcelable()->GetCppHeader();
