@@ -31,6 +31,7 @@ using android::aidl::tests::IntEnum;
 using android::aidl::tests::ITestService;
 using android::aidl::tests::SimpleParcelable;
 using android::aidl::tests::StructuredParcelable;
+using android::aidl::tests::Union;
 using android::aidl::tests::extension::ExtendableParcelable;
 using android::aidl::tests::extension::MyExt;
 using android::aidl::tests::extension::MyExt2;
@@ -134,6 +135,56 @@ TEST_F(AidlTest, ReversePersistableBundles) {
 
   std::reverse(reversed.begin(), reversed.end());
   EXPECT_EQ(reversed, original);
+}
+
+TEST_F(AidlTest, ReverseUnion) {
+  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
+
+  Union original = Union::make<Union::ns>({1, 2, 3});
+  Union repeated, reversed;
+  Status status = cpp_java_tests->ReverseUnion(original, &repeated, &reversed);
+  ASSERT_TRUE(status.isOk()) << status.toString8();
+
+  EXPECT_EQ(repeated, original);
+
+  std::reverse(reversed.get<Union::ns>().begin(), reversed.get<Union::ns>().end());
+  EXPECT_EQ(reversed, original);
+}
+
+TEST_F(AidlTest, UnionUsage) {
+  // make<tag>(...) to create a value for a tag.
+  Union one_two_three = Union::make<Union::ns>({1, 2, 3});
+
+  // getTag() queries the tag of the content
+  EXPECT_EQ(Union::ns, one_two_three.getTag());
+
+  // Ctor(...) works if a target tag has a unique type among fields.
+  EXPECT_EQ(one_two_three, Union(std::vector{1, 2, 3}));
+  EXPECT_EQ(one_two_three, std::vector<int>({1, 2, 3}));
+
+  // Use std::in_place_index<tag> to avoid "move"
+  // Note that make<tag>(...) involves "move" of the content value
+  EXPECT_EQ(Union::make<Union::ns>(3, 0), Union(std::in_place_index<Union::ns>, 3, 0));
+
+  Union one_two = one_two_three;
+  // get<tag> can be used to modify the content
+  one_two.get<Union::ns>().pop_back();
+  EXPECT_EQ(one_two, std::vector<int>({1, 2}));
+  // get<tag> can be lvalue
+  one_two.get<Union::ns>() = std::vector<int>{1, 2};
+  EXPECT_EQ(one_two, std::vector<int>({1, 2}));
+
+  // abort with a bad access
+  EXPECT_DEATH(one_two.get<Union::n>(), "");
+
+  // set<tag>(...) overwrites the content with a new tag
+  one_two_three.set<Union::s>("123");
+  EXPECT_EQ(one_two_three, std::string("123"));
+
+  // Or, you can simply assign a new value.
+  // note that this works only if the target type is unique
+  one_two_three = std::vector<std::string>{"1", "2", "3"};
+  EXPECT_EQ(Union::ss, one_two_three.getTag());
 }
 
 TEST_F(AidlTest, StructuredParcelableEquality) {
