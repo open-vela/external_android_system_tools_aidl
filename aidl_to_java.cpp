@@ -620,7 +620,7 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
         c.writer << c.var << " = " << c.type.GetName() << ".Stub.asInterface(" << c.parcel
                  << ".readStrongBinder());\n";
       }
-    } else if (t->AsParcelable() != nullptr || t->AsStructuredParcelable() != nullptr) {
+    } else if (t->AsParcelable() != nullptr) {
       if (c.type.IsArray()) {
         c.writer << c.var << " = " << c.parcel << ".createTypedArray("
                  << JavaNameOf(c.type, c.typenames) << ".CREATOR);\n";
