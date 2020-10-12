@@ -243,6 +243,7 @@ class AidlAnnotatable : public AidlNode {
   void DumpAnnotations(CodeWriter* writer) const;
 
   const AidlAnnotation* UnsupportedAppUsage() const;
+  const AidlAnnotation* JavaPassthrough() const;
   const AidlAnnotation* RustDerive() const;
   const AidlTypeSpecifier* BackingType(const AidlTypenames& typenames) const;
   std::string ToString() const;
