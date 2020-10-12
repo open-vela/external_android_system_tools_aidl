@@ -92,14 +92,13 @@ class Enum : public Declaration {
   bool HasValues() const { return !fields_.empty(); }
   void Write(CodeWriter* to) const override;
 
-  void AddValue(const std::string& key, const std::string& value, const std::string& comment = "");
+  void AddValue(const std::string& key, const std::string& value);
 
  private:
   struct EnumField {
-    EnumField(const std::string& k, const std::string& v, const std::string& c);
+    EnumField(const std::string& k, const std::string& v);
     const std::string key;
     const std::string value;
-    const std::string comment;
   };
 
   std::string enum_name_;
