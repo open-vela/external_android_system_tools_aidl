@@ -17,6 +17,7 @@
 package android.aidl.tests;
 
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import android.aidl.tests.Union;
@@ -31,9 +32,9 @@ import org.junit.runners.JUnit4;
 public class UnionTests {
   @Test
   public void defaultConstructorInitsWithFirstField() {
-    Union u = new Union();
-    assertThat(u.getTag(), is(Union.n));
-    assertThat(u.getN(), is(0));
+    Union u = new Union(); // `int[] ns`
+    assertThat(u.getTag(), is(Union.ns));
+    assertNull(u.getNs());
   }
 
   @Test

@@ -2692,6 +2692,23 @@ TEST_P(AidlTest, ImmtuableParcelableFieldNameRestriction) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
+TEST_P(AidlTest, UnionRejectsEmptyDecl) {
+  const string method = "package a; union Foo {}";
+  const string expected_stderr = "ERROR: a/Foo.aidl:1.17-21: The union 'Foo' has no fields.\n";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, GetLanguage()));
+  EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr(expected_stderr));
+}
+
+TEST_P(AidlTest, UnionRejectsParcelableHolder) {
+  const string method = "package a; union Foo { ParcelableHolder x; }";
+  const string expected_stderr =
+      "ERROR: a/Foo.aidl:1.40-42: A union can't have a member of ParcelableHolder 'x'\n";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, GetLanguage()));
+  EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr(expected_stderr));
+}
+
 TEST_P(AidlTest, GenericStructuredParcelable) {
   io_delegate_.SetFileContents("Foo.aidl", "parcelable Foo<T, U> { int a; int A; }");
   Options options =
