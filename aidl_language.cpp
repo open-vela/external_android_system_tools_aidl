@@ -300,10 +300,6 @@ const AidlAnnotation* AidlAnnotatable::UnsupportedAppUsage() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::UNSUPPORTED_APP_USAGE);
 }
 
-const AidlAnnotation* AidlAnnotatable::JavaPassthrough() const {
-  return GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_PASSTHROUGH);
-}
-
 const AidlAnnotation* AidlAnnotatable::RustDerive() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::RUST_DERIVE);
 }
