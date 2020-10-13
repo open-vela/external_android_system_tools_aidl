@@ -200,6 +200,7 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 	ctx.PostDepsMutators(apex.RegisterPostDepsMutators)
 	ctx.PostDepsMutators(func(ctx android.RegisterMutatorsContext) {
 		ctx.BottomUp("checkUnstableModule", checkUnstableModuleMutator).Parallel()
+		ctx.BottomUp("recordVersions", recordVersions).Parallel()
 		ctx.BottomUp("checkDuplicatedVersions", checkDuplicatedVersions).Parallel()
 	})
 	ctx.Register(config)
@@ -704,7 +705,7 @@ func TestImports(t *testing.T) {
 func TestDuplicatedVersions(t *testing.T) {
 	// foo depends on myiface-ndk (v2) via direct dep and also on
 	// myiface-V1-ndk via indirect dep. This should be prohibited.
-	testAidlError(t, `multiple versions of aidl_interface myiface \(backend:ndk\) are used`, `
+	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-ndk, myiface-ndk`, `
 		aidl_interface {
 			name: "myiface",
 			srcs: ["IFoo.aidl"],
@@ -727,7 +728,7 @@ func TestDuplicatedVersions(t *testing.T) {
 		"aidl_api/myiface/2/myiface.2.aidl": nil,
 		"aidl_api/myiface/2/.hash":          nil,
 	}))
-	testAidlError(t, `multiple versions of aidl_interface myiface \(backend:ndk\) are used`, `
+	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-ndk, myiface-unstable-ndk`, `
 		aidl_interface {
 			name: "myiface",
 			srcs: ["IFoo.aidl"],

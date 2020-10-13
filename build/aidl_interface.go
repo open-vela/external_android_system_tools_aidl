@@ -162,6 +162,7 @@ func init() {
 	android.RegisterModuleType("aidl_interfaces_metadata", aidlInterfacesMetadataSingletonFactory)
 	android.PostDepsMutators(func(ctx android.RegisterMutatorsContext) {
 		ctx.BottomUp("checkUnstableModule", checkUnstableModuleMutator).Parallel()
+		ctx.BottomUp("recordVersions", recordVersions).Parallel()
 		ctx.BottomUp("checkDuplicatedVersions", checkDuplicatedVersions).Parallel()
 	})
 }
@@ -183,7 +184,7 @@ func checkUnstableModuleMutator(mctx android.BottomUpMutatorContext) {
 	})
 }
 
-func checkDuplicatedVersions(mctx android.BottomUpMutatorContext) {
+func recordVersions(mctx android.BottomUpMutatorContext) {
 	switch mctx.Module().(type) {
 	case *java.Library:
 	case *cc.Module:
@@ -204,7 +205,7 @@ func checkDuplicatedVersions(mctx android.BottomUpMutatorContext) {
 			return
 		}
 		depName := mctx.OtherModuleName(dep)
-		// If this module dgpends on one of the aidl interface module, record it
+		// If this module depends on one of the aidl interface module, record it
 		for _, i := range *aidlInterfaces(mctx.Config()) {
 			if android.InList(depName, i.internalModuleNames) {
 				ifaceName := i.ModuleBase.Name()
@@ -238,24 +239,55 @@ func checkDuplicatedVersions(mctx android.BottomUpMutatorContext) {
 	aidlDepsMutex.Lock()
 	aidlDeps(mctx.Config())[mctx.Module()] = list
 	aidlDepsMutex.Unlock()
+}
+
+func checkDuplicatedVersions(mctx android.BottomUpMutatorContext) {
+	switch mctx.Module().(type) {
+	case *java.Library:
+	case *cc.Module:
+	case *rust.Module:
+	default:
+		return
+	}
+
+	aidlDepsMutex.RLock()
+	myAidlDeps := aidlDeps(mctx.Config())[mctx.Module()]
+	aidlDepsMutex.RUnlock()
+	if myAidlDeps == nil || len(myAidlDeps) == 0 {
+		return // This should be the usual case
+	}
+
+	var violators []string
 
 	// Lastly, report an error if there is any duplicated versions of the same interface * lang
 	for _, lang := range []string{langJava, langCpp, langNdk, langNdkPlatform} {
 		// interfaceName -> list of module names for the interface
 		versionsOf := make(map[string][]string)
-		for dep := range myAidlDeps {
+		for _, dep := range myAidlDeps {
 			if !strings.HasSuffix(dep.verLang, lang) {
 				continue
 			}
 			versions := versionsOf[dep.ifaceName]
 			versions = append(versions, dep.ifaceName+dep.verLang)
 			if len(versions) >= 2 {
-				mctx.ModuleErrorf("multiple versions of aidl_interface %s (backend:%s) are used: %v",
-					dep.ifaceName, lang, versions)
+				violators = append(violators, versions...)
 			}
 			versionsOf[dep.ifaceName] = versions
 		}
 	}
+	if violators == nil || len(violators) == 0 {
+		return
+	}
+
+	violators = android.SortedUniqueStrings(violators)
+	mctx.ModuleErrorf("depends on multiple versions of the same aidl_interface: %s", strings.Join(violators, ", "))
+	mctx.WalkDeps(func(child android.Module, parent android.Module) bool {
+		if android.InList(child.Name(), violators) {
+			mctx.ModuleErrorf("Dependency path: %s", mctx.GetPathString(true))
+			return false
+		}
+		return true
+	})
 }
 
 // wrap(p, a, s) = [p + v + s for v in a]
