@@ -52,6 +52,7 @@ const char kFlagsVarName[] = "_aidl_flags";
 const char kDataVarName[] = "_aidl_data";
 const char kErrorLabel[] = "_aidl_error";
 const char kImplVarName[] = "_aidl_impl";
+const char kParcelVarName[] = "_aidl_parcel";
 const char kReplyVarName[] = "_aidl_reply";
 const char kReturnVarName[] = "_aidl_return";
 const char kStatusVarName[] = "_aidl_status";
@@ -59,6 +60,7 @@ const char kTraceVarName[] = "_aidl_trace";
 const char kAndroidParcelLiteral[] = "::android::Parcel";
 const char kAndroidStatusLiteral[] = "::android::status_t";
 const char kAndroidStatusOk[] = "::android::OK";
+const char kAndroidStatusBadValue[] = "::android::BAD_VALUE";
 const char kBinderStatusLiteral[] = "::android::binder::Status";
 const char kIBinderHeader[] = "binder/IBinder.h";
 const char kIInterfaceHeader[] = "binder/IInterface.h";
@@ -1136,6 +1138,173 @@ struct ParcelableTraits<AidlStructuredParcelable> {
   }
 };
 
+template <>
+struct ParcelableTraits<AidlUnionDecl> {
+  static void AddIncludes(set<string>& includes) {
+    includes.insert("variant");  // std::variant for value
+    includes.insert("utility");  // std::mode/forward for value
+  }
+  static string GetComparable(const AidlUnionDecl&, const string& var_prefix) {
+    return var_prefix + "_value";
+  }
+  static void AddFields(ClassDecl& clazz, const AidlUnionDecl& decl,
+                        const AidlTypenames& typenames) {
+    AidlTypeSpecifier tag_type(AIDL_LOCATION_HERE, "int", /* is_array= */ false,
+                               /* type_params= */ nullptr, /* comments= */ "");
+    auto enum_tag =
+        std::make_unique<Enum>("Tag", CppNameOf(tag_type, typenames), /* is_class= */ false);
+    bool is_first = true;
+    for (const auto& f : decl.GetFields()) {
+      auto raw_decl = f->Signature();
+      enum_tag->AddValue(f->GetName(), is_first ? "0" : "", "// " + raw_decl);
+      is_first = false;
+    }
+    clazz.AddPublic(std::move(enum_tag));
+
+    auto name = decl.GetName();
+    // clang-format off
+    auto helper_methods = vector<string>{
+        // type classification
+        "template<typename _Tp>\n"
+        "static constexpr bool not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, " + name + ">;\n\n",
+
+        // ctors
+        name + "() = default;\n",
+        name + "(const " + name + "& other) = default;\n",
+        name + "(" + name + "&& other) = default;\n",
+        name + "& operator=(const " + name + "&) = default;\n",
+        name + "& operator=(" + name + "&&) = default;\n\n",
+
+        // conversion from value
+        "template <typename T, std::enable_if_t<not_self<T>, int> = 0>\n"
+        "constexpr " + name + "(T&& arg)\n"
+        "    : _value(std::forward<T>(arg)) {}\n",
+
+        // to support in-place construction using in_place_index/in_place_type
+        "template <typename... T>\n"
+        "constexpr explicit " + name + "(T&&... args)\n"
+        "    : _value(std::forward<T>(args)...) {}\n",
+
+        // value ctor: make<tag>(args...)
+        "template <Tag tag, typename... T>\n"
+        "static " + name + " make(T&&... args) {\n"
+        "  return " + name + "(std::in_place_index<tag>, std::forward<T>(args)...);\n"
+        "}\n",
+
+        // value ctor: make<tag>({initializer_list})
+        "template <Tag tag, typename T, typename... U>\n"
+        "static " + name + " make(std::initializer_list<T> il, U&&... args) {\n"
+        "  return " + name + "(std::in_place_index<tag>, std::move(il), std::forward<U>(args)...);\n"
+        "}\n\n",
+
+        // getTag
+        "Tag getTag() const {\n"
+        "  return (Tag)_value.index();\n"
+        "}\n\n",
+
+        // const-getter
+        "template <Tag tag>\n"
+        "const auto& get() const {\n"
+        "  if (getTag() != tag) { abort(); }\n"
+        "  return std::get<tag>(_value);\n"
+        "}\n\n",
+
+        // getter
+        "template <Tag tag>\n"
+        "auto& get() {\n"
+        "  if (getTag() != tag) { abort(); }\n"
+        "  return std::get<tag>(_value);\n"
+        "}\n\n",
+
+        // setter
+        "template <Tag tag, typename... T>\n"
+        "void set(T&&... args) {\n"
+        "  _value.emplace<tag>(std::forward<T>(args)...);\n"
+        "}\n\n",
+    };
+    // clang-format on
+    for (const auto& helper_method : helper_methods) {
+      clazz.AddPublic(std::make_unique<LiteralDecl>(helper_method));
+    }
+
+    vector<string> field_types;
+    for (const auto& f : decl.GetFields()) {
+      field_types.push_back(CppNameOf(f->GetType(), typenames));
+    }
+    clazz.AddPrivate(
+        std::make_unique<LiteralDecl>("std::variant<" + Join(field_types, ",") + "> _value;\n"));
+  }
+  static void GenReadFromParcel(const AidlUnionDecl& parcel, const AidlTypenames& typenames,
+                                StatementBlock* read_block) {
+    const AidlTypeSpecifier tag_type(AIDL_LOCATION_HERE, "int", /* is_array= */ false,
+                                     /* type_params= */ nullptr, /* comments= */ "");
+    const string tag = "_aidl_tag";
+    const string value = "_aidl_value";
+
+    string block;
+    CodeWriterPtr out = CodeWriter::ForString(&block);
+
+    auto read_var = [&](const string& var, const AidlTypeSpecifier& type) {
+      *out << StringPrintf("%s %s;\n", CppNameOf(type, typenames).c_str(), var.c_str());
+      *out << StringPrintf("if ((%s = %s->%s(&%s)) != %s) return %s;\n", kAndroidStatusVarName,
+                           kParcelVarName, ParcelReadMethodOf(type, typenames).c_str(), var.c_str(),
+                           kAndroidStatusOk, kAndroidStatusVarName);
+    };
+
+    // begin
+    *out << StringPrintf("%s %s;\n", kAndroidStatusLiteral, kAndroidStatusVarName);
+    read_var(tag, tag_type);
+    *out << StringPrintf("switch (%s) {\n", tag.c_str());
+    for (const auto& variable : parcel.GetFields()) {
+      *out << StringPrintf("case %s: {\n", variable->GetName().c_str());
+      out->Indent();
+      read_var(value, variable->GetType());
+      *out << StringPrintf("set<%s>(std::move(%s));\n", variable->GetName().c_str(), value.c_str());
+      *out << StringPrintf("return %s; }\n", kAndroidStatusOk);
+      out->Dedent();
+    }
+    *out << "}\n";
+    *out << StringPrintf("return %s;\n", kAndroidStatusBadValue);
+    // end
+
+    out->Close();
+    read_block->AddLiteral(block, /*add_semicolon=*/false);
+  }
+  static void GenWriteToParcel(const AidlUnionDecl& parcel, const AidlTypenames& typenames,
+                               StatementBlock* write_block) {
+    const AidlTypeSpecifier tag_type(AIDL_LOCATION_HERE, "int", /* is_array= */ false,
+                                     /* type_params= */ nullptr, /* comments= */ "");
+    const string tag = "_aidl_tag";
+    const string value = "_aidl_value";
+
+    string block;
+    CodeWriterPtr out = CodeWriter::ForString(&block);
+
+    auto write_value = [&](const string& value, const AidlTypeSpecifier& type) {
+      return StringPrintf("%s->%s(%s)", kParcelVarName,
+                          ParcelWriteMethodOf(type, typenames).c_str(), value.c_str());
+    };
+
+    // begin
+    *out << StringPrintf("%s %s = %s;\n", kAndroidStatusLiteral, kAndroidStatusVarName,
+                         write_value("getTag()", tag_type).c_str());
+    *out << StringPrintf("if (%s != %s) return %s;\n", kAndroidStatusVarName, kAndroidStatusOk,
+                         kAndroidStatusVarName);
+    *out << "switch (getTag()) {\n";
+    for (const auto& variable : parcel.GetFields()) {
+      const string value = "get<" + variable->GetName() + ">()";
+      *out << StringPrintf("case %s: return %s;\n", variable->GetName().c_str(),
+                           write_value(value, variable->GetType()).c_str());
+    }
+    *out << "}\n";
+    *out << "abort();\n";
+    // end
+
+    out->Close();
+    write_block->AddLiteral(block, /*add_semicolon=*/false);
+  }
+};
+
 template <typename T, typename Traits = ParcelableTraits<T>>
 std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames, const T& parcel,
                                             const Options&) {
@@ -1446,6 +1615,13 @@ bool GenerateCpp(const string& output_file, const Options& options, const AidlTy
     return GenerateCppParcelable(output_file, options, typenames, *parcelable, io_delegate);
   }
 
+  // should come before AsParcelable() because union is a parcelable
+  const AidlUnionDecl* union_decl = defined_type.AsUnionDeclaration();
+  if (union_decl != nullptr) {
+    return GenerateCppParcelable(output_file, options, typenames, *union_decl, io_delegate);
+  }
+
+  // unstructured parcelable
   const AidlParcelable* parcelable_decl = defined_type.AsParcelable();
   if (parcelable_decl != nullptr) {
     return GenerateCppParcelDeclaration(output_file, options, *parcelable_decl, io_delegate);

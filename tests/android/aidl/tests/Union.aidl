@@ -20,9 +20,8 @@ union Union {
     int n;
     int m;
     int[] ns;
-    String s;
-    @utf8InCpp String s2;
+    @utf8InCpp String s;
     @nullable IBinder ibinder;
-    List<String> ss;
+    @utf8InCpp List<String> ss;
 }
 
