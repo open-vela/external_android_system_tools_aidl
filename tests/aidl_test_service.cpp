@@ -49,6 +49,7 @@
 #include "android/aidl/tests/BnCppJavaTests.h"
 #include "android/aidl/tests/ICppJavaTests.h"
 
+#include "android/aidl/tests/Union.h"
 #include "android/aidl/tests/extension/MyExt.h"
 #include "android/aidl/tests/extension/MyExt2.h"
 
@@ -93,6 +94,7 @@ using android::aidl::tests::IOldName;
 using android::aidl::tests::LongEnum;
 using android::aidl::tests::SimpleParcelable;
 using android::aidl::tests::StructuredParcelable;
+using android::aidl::tests::Union;
 using android::os::ParcelFileDescriptor;
 using android::os::PersistableBundle;
 
@@ -206,7 +208,28 @@ class CppJavaTests : public BnCppJavaTests {
                                    vector<PersistableBundle>* _aidl_return) override {
     return ReverseArray(input, repeated, _aidl_return);
   }
-
+  Status ReverseUnion(const Union& input, Union* repeated, Union* _aidl_return) override {
+    ALOGI("Repeated a Union");
+    *repeated = input;
+    *_aidl_return = input;
+    auto reverse = [](auto& reversible) {
+      std::reverse(std::begin(reversible), std::end(reversible));
+    };
+    switch (input.getTag()) {
+      case Union::ns:  // int[]
+        reverse(_aidl_return->get<Union::ns>());
+        break;
+      case Union::s:  // String
+        reverse(_aidl_return->get<Union::s>());
+        break;
+      case Union::ss:  // List<String>
+        reverse(_aidl_return->get<Union::ss>());
+        break;
+      default:
+        break;
+    }
+    return Status::ok();
+  }
   Status ReverseNamedCallbackList(const vector<sp<IBinder>>& input, vector<sp<IBinder>>* repeated,
                                   vector<sp<IBinder>>* _aidl_return) override {
     return ReverseArray(input, repeated, _aidl_return);

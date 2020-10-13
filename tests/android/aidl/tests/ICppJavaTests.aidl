@@ -20,6 +20,7 @@ import android.aidl.tests.GenericStructuredParcelable;
 import android.aidl.tests.IntEnum;
 import android.aidl.tests.SimpleParcelable;
 import android.aidl.tests.StructuredParcelable;
+import android.aidl.tests.Union;
 import android.aidl.tests.extension.ExtendableParcelable;
 import android.os.PersistableBundle;
 
@@ -34,7 +35,7 @@ interface ICppJavaTests {
                                                out SimpleParcelable[] repeated);
   PersistableBundle[] ReversePersistableBundles(
       in PersistableBundle[] input, out PersistableBundle[] repeated);
-
+  Union ReverseUnion(in Union input, out Union repeated);
   // Test that List<T> types work correctly.
   List<IBinder> ReverseNamedCallbackList(in List<IBinder> input,
                                          out List<IBinder> repeated);
