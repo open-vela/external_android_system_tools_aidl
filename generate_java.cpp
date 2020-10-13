@@ -411,7 +411,7 @@ void generate_enum(const CodeWriterPtr& code_writer, const AidlEnumDeclaration* 
   code_writer->Write("package %s;\n", enum_decl->GetPackage().c_str());
   code_writer->Write("%s\n", enum_decl->GetComments().c_str());
   for (const std::string& annotation : generate_java_annotations(*enum_decl)) {
-    code_writer->Write("%s", annotation.c_str());
+    code_writer->Write("%s\n", annotation.c_str());
   }
   code_writer->Write("public @interface %s {\n", enum_decl->GetName().c_str());
   code_writer->Indent();
