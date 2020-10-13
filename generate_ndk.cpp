@@ -1000,6 +1000,10 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
   out << "\n";
   for (const auto& variable : defined_type.GetFields()) {
     out << NdkNameOf(types, variable->GetType(), StorageMode::STACK) << " " << variable->GetName();
+    if (variable->GetType().GetName() == "ParcelableHolder") {
+      out << "{::ndk::" << (defined_type.IsVintfStability() ? "STABILITY_VINTF" : "STABILITY_LOCAL")
+          << "}";
+    }
     if (defined_type.IsFixedSize()) {
       int alignment = NdkAlignmentOf(types, variable->GetType());
       if (alignment > 0) {
