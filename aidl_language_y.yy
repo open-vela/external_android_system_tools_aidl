@@ -81,7 +81,6 @@ AidlLocation loc(const yy::parser::location_type& l) {
     AidlConstantValue* const_expr;
     AidlEnumerator* enumerator;
     std::vector<std::unique_ptr<AidlEnumerator>>* enumerators;
-    AidlEnumDeclaration* enum_decl;
     std::vector<std::unique_ptr<AidlConstantValue>>* constant_value_list;
     std::vector<std::unique_ptr<AidlArgument>>* arg_list;
     AidlVariableDeclaration* variable;
@@ -89,8 +88,6 @@ AidlLocation loc(const yy::parser::location_type& l) {
     AidlMethod* method;
     AidlMember* constant;
     std::vector<std::unique_ptr<AidlMember>>* interface_members;
-    AidlInterface* interface;
-    AidlParcelable* parcelable;
     AidlDefinedType* declaration;
     std::vector<std::unique_ptr<AidlTypeSpecifier>>* type_args;
     std::vector<std::string>* type_params;
@@ -110,6 +107,7 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %token<token> PARCELABLE "parcelable"
 %token<token> ONEWAY "oneway"
 %token<token> ENUM "enum"
+%token<token> UNION "union"
 %token<token> CONST "const"
 
 %token<character> CHARVALUE "char literal"
@@ -151,18 +149,19 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %right UNARY_PLUS UNARY_MINUS  '!' '~'
 
 %type<declaration> decl
+%type<declaration> unannotated_decl
+%type<declaration> interface_decl
+%type<declaration> parcelable_decl
+%type<declaration> enum_decl
+%type<declaration> union_decl
 %type<variable_list> variable_decls
 %type<variable> variable_decl
 %type<type_params> optional_type_params
 %type<interface_members> interface_members
-%type<declaration> unannotated_decl
-%type<interface> interface_decl
-%type<parcelable> parcelable_decl
 %type<method> method_decl
 %type<constant> constant_decl
 %type<enumerator> enumerator
 %type<enumerators> enumerators enum_decl_body
-%type<enum_decl> enum_decl
 %type<param> parameter
 %type<param_list> parameter_list
 %type<param_list> parameter_non_empty_list
@@ -275,11 +274,9 @@ decl
 
 unannotated_decl
  : parcelable_decl
-  { $$ = $1; }
  | interface_decl
-  { $$ = $1; }
  | enum_decl
-  { $$ = $1; }
+ | union_decl
  ;
 
 type_params
@@ -561,6 +558,15 @@ enum_decl
     delete $2;
     delete $3;
    }
+ ;
+
+union_decl
+ : UNION qualified_name optional_type_params '{' variable_decls '}' {
+    $$ = new AidlUnionDecl(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), $5, $3);
+    delete $1;
+    delete $2;
+    delete $5;
+  }
  ;
 
 method_decl
