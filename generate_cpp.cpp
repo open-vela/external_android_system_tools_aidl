@@ -1246,9 +1246,10 @@ struct ParcelableTraits<AidlUnionDecl> {
 
     auto read_var = [&](const string& var, const AidlTypeSpecifier& type) {
       *out << StringPrintf("%s %s;\n", CppNameOf(type, typenames).c_str(), var.c_str());
-      *out << StringPrintf("if ((%s = %s->%s(&%s)) != %s) return %s;\n", kAndroidStatusVarName,
-                           kParcelVarName, ParcelReadMethodOf(type, typenames).c_str(), var.c_str(),
-                           kAndroidStatusOk, kAndroidStatusVarName);
+      *out << StringPrintf("if ((%s = %s->%s(%s)) != %s) return %s;\n", kAndroidStatusVarName,
+                           kParcelVarName, ParcelReadMethodOf(type, typenames).c_str(),
+                           ParcelReadCastOf(type, typenames, "&" + var).c_str(), kAndroidStatusOk,
+                           kAndroidStatusVarName);
     };
 
     // begin
@@ -1282,7 +1283,8 @@ struct ParcelableTraits<AidlUnionDecl> {
 
     auto write_value = [&](const string& value, const AidlTypeSpecifier& type) {
       return StringPrintf("%s->%s(%s)", kParcelVarName,
-                          ParcelWriteMethodOf(type, typenames).c_str(), value.c_str());
+                          ParcelWriteMethodOf(type, typenames).c_str(),
+                          ParcelWriteCastOf(type, typenames, value).c_str());
     };
 
     // begin
