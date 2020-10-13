@@ -502,7 +502,7 @@ Options::Options(int argc, const char* const argv[], Options::Language default_l
   }
   if (task_ == Options::Task::DUMP_API) {
     if (output_dir_.empty()) {
-      error_message_ << "--dump_api requires output directory. Use --out." << endl;
+      error_message_ << "--dumpapi requires output directory. Use --out." << endl;
       return;
     }
   }
