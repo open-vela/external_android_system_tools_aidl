@@ -1110,6 +1110,32 @@ void AidlEnumDeclaration::Dump(CodeWriter* writer) const {
   writer->Write("}\n");
 }
 
+AidlUnionDecl::AidlUnionDecl(const AidlLocation& location, const std::string& name,
+                             const std::string& package, const std::string& comments,
+                             std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables,
+                             std::vector<std::string>* type_params)
+    : AidlParcelable(location, name, package, comments, "" /*cpp_header*/, type_params),
+      variables_(std::move(*variables)) {}
+
+std::set<AidlAnnotation::Type> AidlUnionDecl::GetSupportedAnnotations() const {
+  return {AidlAnnotation::Type::VINTF_STABILITY, AidlAnnotation::Type::HIDE,
+          AidlAnnotation::Type::JAVA_PASSTHROUGH};
+}
+
+void AidlUnionDecl::Dump(CodeWriter* writer) const {
+  DumpHeader(writer);
+  writer->Write("union %s {\n", GetName().c_str());
+  writer->Indent();
+  for (const auto& field : GetFields()) {
+    if (field->GetType().IsHidden()) {
+      AddHideComment(writer);
+    }
+    writer->Write("%s;\n", field->ToString().c_str());
+  }
+  writer->Dedent();
+  writer->Write("}\n");
+}
+
 // TODO: we should treat every backend all the same in future.
 bool AidlInterface::LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                                Options::Language lang) const {
