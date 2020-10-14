@@ -1343,6 +1343,24 @@ TEST_P(AidlTest, ParcelableHolderAsArgumentType) {
             GetCapturedStderr());
 }
 
+TEST_P(AidlTest, RejectNullableParcelableHolderField) {
+  io_delegate_.SetFileContents("Foo.aidl", "parcelable Foo { @nullable ParcelableHolder ext; }");
+  Options options =
+      Options::From("aidl Foo.aidl --lang=" + Options::LanguageToString(GetLanguage()));
+  const string expected_stderr = "ERROR: Foo.aidl:1.27-44: ParcelableHolder cannot be nullable.\n";
+  CaptureStderr();
+  EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  if (GetLanguage() == Options::Language::RUST) {
+    EXPECT_EQ(
+        "ERROR: Foo.aidl:1.27-44: ParcelableHolder cannot be nullable.\n"
+        "ERROR: Foo.aidl:1.27-44: The Rust backend does not support ParcelableHolder "
+        "yet.\n",
+        GetCapturedStderr());
+    return;
+  }
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
 TEST_F(AidlTest, ApiDump) {
   io_delegate_.SetFileContents(
       "foo/bar/IFoo.aidl",

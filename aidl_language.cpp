@@ -570,6 +570,10 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
       AIDL_ERROR(this) << "Enum type cannot get nullable annotation";
       return false;
     }
+    if (GetName() == "ParcelableHolder") {
+      AIDL_ERROR(this) << "ParcelableHolder cannot be nullable.";
+      return false;
+    }
   }
   return true;
 }
