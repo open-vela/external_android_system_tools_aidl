@@ -633,7 +633,7 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   out << "private void _assertTag(" + tag_type + " tag) {\n";
   out << "  if (getTag() != tag) {\n";
   out << "    throw new IllegalStateException(\"bad access: \" + _tagString(tag) + \", \" + "
-         "_tagString(tag) + \" is available.\");\n";
+         "_tagString(getTag()) + \" is available.\");\n";
   out << "  }\n";
   out << "}\n";
   // helper: _tagString
