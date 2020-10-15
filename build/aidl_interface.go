@@ -1649,7 +1649,7 @@ func (sp *aidlRustSourceProvider) GenerateSource(ctx rust.ModuleContext, deps ru
 		},
 	})
 
-	sp.BaseSourceProvider.OutputFile = topLevelOutputFile
+	sp.BaseSourceProvider.OutputFiles = android.Paths{topLevelOutputFile}
 	return topLevelOutputFile
 }
 
