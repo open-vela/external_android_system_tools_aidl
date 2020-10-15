@@ -152,6 +152,9 @@ TEST_F(AidlTest, ReverseUnion) {
 }
 
 TEST_F(AidlTest, UnionUsage) {
+  // default ctor inits with first member's default value
+  EXPECT_EQ(Union::make<Union::ns>(), Union());
+
   // make<tag>(...) to create a value for a tag.
   Union one_two_three = Union::make<Union::ns>({1, 2, 3});
 

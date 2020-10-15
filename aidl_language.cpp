@@ -1136,6 +1136,52 @@ void AidlUnionDecl::Dump(CodeWriter* writer) const {
   writer->Write("}\n");
 }
 
+bool AidlUnionDecl::CheckValid(const AidlTypenames& typenames) const {
+  // visit parent
+  if (!AidlParcelable::CheckValid(typenames)) {
+    return false;
+  }
+  // visit members
+  for (const auto& v : GetFields()) {
+    if (!v->CheckValid(typenames)) {
+      return false;
+    }
+  }
+
+  // now, visit self!
+  bool success = true;
+
+  // TODO(b/170807936) do we need to allow ParcelableHolder in union?
+  for (const auto& v : GetFields()) {
+    if (v->GetType().GetName() == "ParcelableHolder") {
+      AIDL_ERROR(*v) << "A union can't have a member of ParcelableHolder '" << v->GetName() << "'";
+      success = false;
+    }
+  }
+
+  // first member should have default value (implicit or explicit)
+  if (GetFields().empty()) {
+    AIDL_ERROR(*this) << "The union '" << this->GetName() << "' has no fields.";
+    return false;
+  }
+
+  return success;
+}
+
+// TODO: we should treat every backend all the same in future.
+bool AidlUnionDecl::LanguageSpecificCheckValid(const AidlTypenames& typenames,
+                                               Options::Language lang) const {
+  if (!AidlParcelable::LanguageSpecificCheckValid(typenames, lang)) {
+    return false;
+  }
+  for (const auto& v : this->GetFields()) {
+    if (!v->GetType().LanguageSpecificCheckValid(typenames, lang)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // TODO: we should treat every backend all the same in future.
 bool AidlInterface::LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                                Options::Language lang) const {
