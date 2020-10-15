@@ -15,6 +15,7 @@
  */
 
 package android.aidl.tests;
+import android.aidl.tests.ByteEnum;
 
 union Union {
     int n;
@@ -23,5 +24,6 @@ union Union {
     @utf8InCpp String s;
     @nullable IBinder ibinder;
     @utf8InCpp List<String> ss;
+    ByteEnum be;
 }
 
