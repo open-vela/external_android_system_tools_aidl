@@ -482,11 +482,17 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   out << "private Object " + value_name + ";\n";
   out << "\n";
 
+  AIDL_FATAL_IF(decl->GetFields().empty(), *decl) << "Union '" << clazz << "' is empty.";
   const auto& first_field = decl->GetFields()[0];
-  // ctor()
+  const auto& first_type = JavaSignatureOf(first_field->GetType(), typenames);
+  const auto& first_value = first_field->ValueString(ConstantValueDecorator);
+
+  // default ctor() inits with first member's default value
   out << "public " + clazz + "() {\n";
-  out << "  this(" + first_field->GetName() + ", " +
-             first_field->ValueString(ConstantValueDecorator) + ");\n";
+  out.Indent();
+  out << first_type + " value = " << (first_value.empty() ? "null" : first_value) << ";\n";
+  out << "_set(" + first_field->GetName() + ", value);\n";
+  out.Dedent();
   out << "}\n";
   // ctor(Parcel)
   out << "private " + clazz + "(android.os.Parcel _aidl_parcel) {\n";
