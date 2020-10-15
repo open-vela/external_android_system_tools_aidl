@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-#include <memory>
-#include <set>
-#include <string>
-#include <vector>
+#include "aidl.h"
 
 #include <android-base/stringprintf.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "aidl.h"
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <vector>
+
 #include "aidl_checkapi.h"
 #include "aidl_language.h"
 #include "aidl_to_cpp.h"
@@ -35,6 +37,7 @@
 using android::aidl::internals::parse_preprocessed_file;
 using android::aidl::test::FakeIoDelegate;
 using android::base::StringPrintf;
+using std::map;
 using std::set;
 using std::string;
 using std::unique_ptr;
@@ -2690,6 +2693,295 @@ TEST_P(AidlTest, ImmtuableParcelableFieldNameRestriction) {
   CaptureStderr();
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+const char kUnionExampleExpectedOutputCppHeader[] = R"(#pragma once
+
+#include <a/ByteEnum.h>
+#include <binder/Parcel.h>
+#include <binder/Status.h>
+#include <cstdint>
+#include <utility>
+#include <variant>
+#include <vector>
+
+namespace a {
+
+class Foo : public ::android::Parcelable {
+public:
+  inline bool operator!=([[maybe_unused]] const Foo& rhs) const {
+    return _value!=rhs._value;
+  }
+  inline bool operator<([[maybe_unused]] const Foo& rhs) const {
+    return _value<rhs._value;
+  }
+  inline bool operator<=([[maybe_unused]] const Foo& rhs) const {
+    return _value<=rhs._value;
+  }
+  inline bool operator==([[maybe_unused]] const Foo& rhs) const {
+    return _value==rhs._value;
+  }
+  inline bool operator>([[maybe_unused]] const Foo& rhs) const {
+    return _value>rhs._value;
+  }
+  inline bool operator>=([[maybe_unused]] const Foo& rhs) const {
+    return _value>=rhs._value;
+  }
+  enum Tag : int32_t {
+    // int[] ns
+    ns = 0,
+    // a.ByteEnum e
+    e,
+  };
+  template<typename _Tp>
+  static constexpr bool not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, Foo>;
+
+  Foo() : _value(std::in_place_index<ns>, ::std::vector<int32_t>({42})) { }
+  Foo(const Foo& other) = default;
+  Foo(Foo&& other) = default;
+  Foo& operator=(const Foo&) = default;
+  Foo& operator=(Foo&&) = default;
+
+  template <typename T, std::enable_if_t<not_self<T>, int> = 0>
+  constexpr Foo(T&& arg)
+      : _value(std::forward<T>(arg)) {}
+  template <typename... T>
+  constexpr explicit Foo(T&&... args)
+      : _value(std::forward<T>(args)...) {}
+  template <Tag tag, typename... T>
+  static Foo make(T&&... args) {
+    return Foo(std::in_place_index<tag>, std::forward<T>(args)...);
+  }
+  template <Tag tag, typename T, typename... U>
+  static Foo make(std::initializer_list<T> il, U&&... args) {
+    return Foo(std::in_place_index<tag>, std::move(il), std::forward<U>(args)...);
+  }
+
+  Tag getTag() const {
+    return (Tag)_value.index();
+  }
+
+  template <Tag tag>
+  const auto& get() const {
+    if (getTag() != tag) { abort(); }
+    return std::get<tag>(_value);
+  }
+
+  template <Tag tag>
+  auto& get() {
+    if (getTag() != tag) { abort(); }
+    return std::get<tag>(_value);
+  }
+
+  template <Tag tag, typename... T>
+  void set(T&&... args) {
+    _value.emplace<tag>(std::forward<T>(args)...);
+  }
+
+  ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) override final;
+  ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const override final;
+  static const std::string& getParcelableDescriptor() {
+    static const std::string DESCIPTOR = "a.Foo";
+    return DESCIPTOR;
+  }
+private:
+  std::variant<::std::vector<int32_t>,::a::ByteEnum> _value;
+};  // class Foo
+
+}  // namespace a
+)";
+
+const char kUnionExampleExpectedOutputCppSource[] = R"(#include <a/Foo.h>
+
+namespace a {
+
+::android::status_t Foo::readFromParcel(const ::android::Parcel* _aidl_parcel) {
+  ::android::status_t _aidl_ret_status;
+  int32_t _aidl_tag;
+  if ((_aidl_ret_status = _aidl_parcel->readInt32(&_aidl_tag)) != ::android::OK) return _aidl_ret_status;
+  switch (_aidl_tag) {
+  case ns: {
+    ::std::vector<int32_t> _aidl_value;
+    if ((_aidl_ret_status = _aidl_parcel->readInt32Vector(&_aidl_value)) != ::android::OK) return _aidl_ret_status;
+    set<ns>(std::move(_aidl_value));
+    return ::android::OK; }
+  case e: {
+    ::a::ByteEnum _aidl_value;
+    if ((_aidl_ret_status = _aidl_parcel->readByte(reinterpret_cast<int8_t *>(&_aidl_value))) != ::android::OK) return _aidl_ret_status;
+    set<e>(std::move(_aidl_value));
+    return ::android::OK; }
+  }
+  return ::android::BAD_VALUE;
+}
+
+::android::status_t Foo::writeToParcel(::android::Parcel* _aidl_parcel) const {
+  ::android::status_t _aidl_ret_status = _aidl_parcel->writeInt32(getTag());
+  if (_aidl_ret_status != ::android::OK) return _aidl_ret_status;
+  switch (getTag()) {
+  case ns: return _aidl_parcel->writeInt32Vector(get<ns>());
+  case e: return _aidl_parcel->writeByte(static_cast<int8_t>(get<e>()));
+  }
+  abort();
+}
+
+}  // namespace a
+)";
+
+const char kUnionExampleExpectedOutputJava[] = R"(/*
+ * This file is auto-generated.  DO NOT MODIFY.
+ */
+package a;
+
+
+public final class Foo implements android.os.Parcelable {
+  // tags union fields
+  public final static int ns = 0;  // int[]
+  public final static int e = 1;  // a.ByteEnum
+
+  private int _tag;
+  private Object _value;
+
+  public Foo() {
+    int[] value = {42};
+    _set(ns, value);
+  }
+  private Foo(android.os.Parcel _aidl_parcel) {
+    readFromParcel(_aidl_parcel);
+  }
+  private Foo(int tag, Object value) {
+    _set(tag, value);
+  }
+
+  public int getTag() {
+    return _tag;
+  }
+
+  // int[] ns
+
+  public static Foo ns(int[] _value) {
+    return new Foo(ns, _value);
+  }
+  public int[] getNs() {
+    _assertTag(ns);
+    return (int[]) _value;
+  }
+  public void setNs(int[] _value) {
+    _set(ns, _value);
+  }
+
+  // a.ByteEnum e
+
+  public static Foo e(byte _value) {
+    return new Foo(e, _value);
+  }
+  public byte getE() {
+    _assertTag(e);
+    return (byte) _value;
+  }
+  public void setE(byte _value) {
+    _set(e, _value);
+  }
+
+  public static final android.os.Parcelable.Creator<Foo> CREATOR = new android.os.Parcelable.Creator<Foo>() {
+    @Override
+    public Foo createFromParcel(android.os.Parcel _aidl_source) {
+      return new Union(_aidl_source);
+    }
+    @Override
+    public Foo[] newArray(int _aidl_size) {
+      return new Foo[_aidl_size];
+    }
+  };
+  @Override
+  public final void writeToParcel(android.os.Parcel _aidl_parcel, int _aidl_flag) {
+    _aidl_parcel.writeInt(_tag);
+    switch (_tag) {
+    case ns:
+      _aidl_parcel.writeIntArray(getNs());
+      break;
+    case e:
+      _aidl_parcel.writeByte(getE());
+      break;
+    }
+  }
+  public void readFromParcel(android.os.Parcel _aidl_parcel) {
+    int _aidl_tag;
+    _aidl_tag = _aidl_parcel.readInt();
+    switch (_aidl_tag) {
+    case ns: {
+      int[] _aidl_value;
+      _aidl_value = _aidl_parcel.createIntArray();
+      _set(_aidl_tag, _aidl_value);
+      return; }
+    case e: {
+      byte _aidl_value;
+      _aidl_value = _aidl_parcel.readByte();
+      _set(_aidl_tag, _aidl_value);
+      return; }
+    }
+    throw new RuntimeException("union: out of range: " + _aidl_tag);
+  }
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  private void _assertTag(int tag) {
+    if (getTag() != tag) {
+      throw new IllegalStateException("bad access: " + _tagString(tag) + ", " + _tagString(tag) + " is available.");
+    }
+  }
+  private String _tagString(int _tag) {
+    switch (_tag) {
+    case ns: return "ns";
+    case e: return "e";
+    }
+    throw new IllegalStateException("unknown field: " + _tag);
+  }
+  private void _set(int tag, Object value) {
+    this._tag = tag;
+    this._value = value;
+  }
+}
+)";
+
+TEST_F(AidlTest, UnionExample) {
+  io_delegate_.SetFileContents("a/Foo.aidl", R"(
+package a;
+import a.ByteEnum;
+union Foo {
+  int[] ns = {42};
+  ByteEnum  e;
+}
+)");
+  io_delegate_.SetFileContents("a/ByteEnum.aidl", R"(
+package a;
+@Backing(type="byte")
+enum ByteEnum {
+  a, b, c
+}
+)");
+
+  auto EXPECT_COMPILE_OUTPUT = [&](string lang, auto output) {
+    auto opts = Options::From("aidl a/Foo.aidl -I . --out=out --header_out=out --lang=" + lang);
+    CaptureStderr();
+    auto ret = ::android::aidl::compile_aidl(opts, io_delegate_);
+    auto err = GetCapturedStderr();
+    EXPECT_EQ(0, ret) << err;
+    for (const auto& [path, expected] : output) {
+      string actual;
+      EXPECT_TRUE(io_delegate_.GetWrittenContents(path, &actual)) << path << " not found.";
+      EXPECT_EQ(expected, actual);
+    }
+  };
+
+  EXPECT_COMPILE_OUTPUT(
+      "cpp", map<string, string>({{"out/a/Foo.cpp", kUnionExampleExpectedOutputCppSource},
+                                  {"out/a/Foo.h", kUnionExampleExpectedOutputCppHeader}}));
+  EXPECT_COMPILE_OUTPUT("java",
+                        map<string, string>({{"out/a/Foo.java", kUnionExampleExpectedOutputJava}}));
+  // TODO(b/170784707) NDK
+  // TODO(b/170689477) Rust
 }
 
 TEST_P(AidlTest, UnionRejectsEmptyDecl) {
