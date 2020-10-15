@@ -875,10 +875,9 @@ class AidlUnionDecl : public AidlParcelable {
   const std::vector<std::unique_ptr<AidlVariableDeclaration>>& GetFields() const {
     return variables_;
   }
-  bool LanguageSpecificCheckValid(const AidlTypenames& /*typenames*/,
-                                  Options::Language) const override {
-    return true;
-  }
+  bool CheckValid(const AidlTypenames& typenames) const override;
+  bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
+                                  Options::Language lang) const override;
   std::string GetPreprocessDeclarationName() const override { return "union"; }
 
   void Dump(CodeWriter* writer) const override;
