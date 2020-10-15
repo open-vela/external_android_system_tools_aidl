@@ -1155,15 +1155,18 @@ struct ParcelableTraits<AidlUnionDecl> {
                         const AidlTypenames& typenames) {
     AidlTypeSpecifier tag_type(AIDL_LOCATION_HERE, "int", /* is_array= */ false,
                                /* type_params= */ nullptr, /* comments= */ "");
-    auto enum_tag =
-        std::make_unique<Enum>("Tag", CppNameOf(tag_type, typenames), /* is_class= */ false);
+    tag_type.Resolve(typenames);
+
+    std::ostringstream out;
+    out << "enum Tag : " << CppNameOf(tag_type, typenames) << " {\n";
     bool is_first = true;
     for (const auto& f : decl.GetFields()) {
-      auto raw_decl = f->Signature();
-      enum_tag->AddValue(f->GetName(), is_first ? "0" : "", "// " + raw_decl);
+      out << "  " << f->GetName() << (is_first ? " = 0" : "") << ",  // " << f->Signature()
+          << ";\n";
       is_first = false;
     }
-    clazz.AddPublic(std::move(enum_tag));
+    out << "};\n\n";
+    clazz.AddPublic(std::make_unique<LiteralDecl>(out.str()));
 
     const auto& name = decl.GetName();
 
@@ -1176,62 +1179,62 @@ struct ParcelableTraits<AidlUnionDecl> {
     auto helper_methods = vector<string>{
         // type classification
         "template<typename _Tp>\n"
-        "static constexpr bool not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, " + name + ">;\n\n",
+        "static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, " + name + ">;\n\n",
 
         // default ctor inits with the first member's default value
         name + "() : _value(std::in_place_index<" + first_name + ">, " + first_value + ") { }\n",
 
         // other ctors with default implementation
-        name + "(const " + name + "& other) = default;\n",
-        name + "(" + name + "&& other) = default;\n",
+        name + "(const " + name + "&) = default;\n",
+        name + "(" + name + "&&) = default;\n",
         name + "& operator=(const " + name + "&) = default;\n",
         name + "& operator=(" + name + "&&) = default;\n\n",
 
         // conversion ctor from value
-        "template <typename T, std::enable_if_t<not_self<T>, int> = 0>\n"
-        "constexpr " + name + "(T&& arg)\n"
-        "    : _value(std::forward<T>(arg)) {}\n",
+        "template <typename _Tp, std::enable_if_t<_not_self<_Tp>, int> = 0>\n"
+        "constexpr " + name + "(_Tp&& _arg)\n"
+        "    : _value(std::forward<_Tp>(_arg)) {}\n\n",
 
         // ctor to support in-place construction using in_place_index/in_place_type
-        "template <typename... T>\n"
-        "constexpr explicit " + name + "(T&&... args)\n"
-        "    : _value(std::forward<T>(args)...) {}\n",
+        "template <typename... _Tp>\n"
+        "constexpr explicit " + name + "(_Tp&&... _args)\n"
+        "    : _value(std::forward<_Tp>(_args)...) {}\n\n",
 
         // value ctor: make<tag>(args...)
-        "template <Tag tag, typename... T>\n"
-        "static " + name + " make(T&&... args) {\n"
-        "  return " + name + "(std::in_place_index<tag>, std::forward<T>(args)...);\n"
-        "}\n",
+        "template <Tag _tag, typename... _Tp>\n"
+        "static " + name + " make(_Tp&&... _args) {\n"
+        "  return " + name + "(std::in_place_index<_tag>, std::forward<_Tp>(_args)...);\n"
+        "}\n\n",
 
         // value ctor: make<tag>({initializer_list})
-        "template <Tag tag, typename T, typename... U>\n"
-        "static " + name + " make(std::initializer_list<T> il, U&&... args) {\n"
-        "  return " + name + "(std::in_place_index<tag>, std::move(il), std::forward<U>(args)...);\n"
+        "template <Tag _tag, typename _Tp, typename... _Up>\n"
+        "static " + name + " make(std::initializer_list<_Tp> _il, _Up&&... _args) {\n"
+        "  return " + name + "(std::in_place_index<_tag>, std::move(_il), std::forward<_Up>(_args)...);\n"
         "}\n\n",
 
         // getTag
         "Tag getTag() const {\n"
-        "  return (Tag)_value.index();\n"
+        "  return static_cast<Tag>(_value.index());\n"
         "}\n\n",
 
         // const-getter
-        "template <Tag tag>\n"
+        "template <Tag _tag>\n"
         "const auto& get() const {\n"
-        "  if (getTag() != tag) { abort(); }\n"
-        "  return std::get<tag>(_value);\n"
+        "  if (getTag() != _tag) { abort(); }\n"
+        "  return std::get<_tag>(_value);\n"
         "}\n\n",
 
         // getter
-        "template <Tag tag>\n"
+        "template <Tag _tag>\n"
         "auto& get() {\n"
-        "  if (getTag() != tag) { abort(); }\n"
-        "  return std::get<tag>(_value);\n"
+        "  if (getTag() != _tag) { abort(); }\n"
+        "  return std::get<_tag>(_value);\n"
         "}\n\n",
 
         // setter
-        "template <Tag tag, typename... T>\n"
-        "void set(T&&... args) {\n"
-        "  _value.emplace<tag>(std::forward<T>(args)...);\n"
+        "template <Tag _tag, typename... _Tp>\n"
+        "void set(_Tp&&... _args) {\n"
+        "  _value.emplace<_tag>(std::forward<_Tp>(_args)...);\n"
         "}\n\n",
     };
     // clang-format on
@@ -1244,7 +1247,7 @@ struct ParcelableTraits<AidlUnionDecl> {
       field_types.push_back(CppNameOf(f->GetType(), typenames));
     }
     clazz.AddPrivate(
-        std::make_unique<LiteralDecl>("std::variant<" + Join(field_types, ",") + "> _value;\n"));
+        std::make_unique<LiteralDecl>("std::variant<" + Join(field_types, ", ") + "> _value;\n"));
   }
   static void GenReadFromParcel(const AidlUnionDecl& parcel, const AidlTypenames& typenames,
                                 StatementBlock* read_block) {
@@ -1336,15 +1339,16 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames, cons
   set<string> operators = {"<", ">", "==", ">=", "<=", "!="};
   string lhs = Traits::GetComparable(parcel, "");
   string rhs = Traits::GetComparable(parcel, "rhs.");
+  bool is_empty = parcel.GetFields().empty();
+  std::ostringstream operator_code;
   for (const auto& op : operators) {
-    std::ostringstream operator_code;
-    operator_code << "inline bool operator" << op << "([[maybe_unused]] const " << parcel.GetName()
-                  << "& rhs) const {\n"
-                  << "  return " << lhs << op << rhs << ";\n"
+    operator_code << "inline bool operator" << op << "(const " << parcel.GetName() << "&"
+                  << (is_empty ? "" : " rhs") << ") const {\n"
+                  << "  return " << lhs << " " << op << " " << rhs << ";\n"
                   << "}\n";
-
-    parcel_class->AddPublic(std::make_unique<LiteralDecl>(operator_code.str()));
   }
+  operator_code << "\n";
+  parcel_class->AddPublic(std::make_unique<LiteralDecl>(operator_code.str()));
 
   Traits::AddFields(*parcel_class, parcel, typenames);
 
