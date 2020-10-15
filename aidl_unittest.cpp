@@ -2928,7 +2928,7 @@ public final class Foo implements android.os.Parcelable {
 
   private void _assertTag(int tag) {
     if (getTag() != tag) {
-      throw new IllegalStateException("bad access: " + _tagString(tag) + ", " + _tagString(tag) + " is available.");
+      throw new IllegalStateException("bad access: " + _tagString(tag) + ", " + _tagString(getTag()) + " is available.");
     }
   }
   private String _tagString(int _tag) {
