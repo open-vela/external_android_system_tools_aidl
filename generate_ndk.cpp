@@ -211,18 +211,22 @@ static void GenerateHeaderIncludes(CodeWriter& out, const AidlTypenames& types,
 
   std::set<std::string> includes;
 
+  // visit a type and collect all reference types' headers
+  std::function<void(const AidlTypeSpecifier& type)> visit = [&](const AidlTypeSpecifier& type) {
+    includes.insert(headerFilePath(type));
+    if (type.IsGeneric()) {
+      for (const auto& param : type.GetTypeParameters()) {
+        visit(*param);
+      }
+    }
+  };
+
   const AidlInterface* interface = defined_type.AsInterface();
   if (interface != nullptr) {
     for (const auto& method : interface->GetMethods()) {
-      includes.insert(headerFilePath(method->GetType()));
+      visit(method->GetType());
       for (const auto& argument : method->GetArguments()) {
-        includes.insert(headerFilePath(argument->GetType()));
-        // Check the method arguments for generic type arguments
-        if (argument->GetType().IsGeneric()) {
-          for (const auto& type_argument : argument->GetType().GetTypeParameters()) {
-            includes.insert(headerFilePath(*type_argument));
-          }
-        }
+        visit(argument->GetType());
       }
     }
   }
@@ -230,11 +234,11 @@ static void GenerateHeaderIncludes(CodeWriter& out, const AidlTypenames& types,
   const AidlStructuredParcelable* parcelable = defined_type.AsStructuredParcelable();
   if (parcelable != nullptr) {
     for (const auto& field : parcelable->GetFields()) {
-      includes.insert(headerFilePath(field->GetType()));
+      visit(field->GetType());
       // Check the fields for generic type arguments
       if (field->GetType().IsGeneric()) {
         for (const auto& type_argument : field->GetType().GetTypeParameters()) {
-          includes.insert(headerFilePath(*type_argument));
+          visit(*type_argument);
         }
       }
     }
@@ -242,7 +246,7 @@ static void GenerateHeaderIncludes(CodeWriter& out, const AidlTypenames& types,
 
   const AidlEnumDeclaration* enum_decl = defined_type.AsEnumDeclaration();
   if (enum_decl != nullptr) {
-    includes.insert(headerFilePath(enum_decl->GetBackingType()));
+    visit(enum_decl->GetBackingType());
   }
 
   for (const auto& path : includes) {
