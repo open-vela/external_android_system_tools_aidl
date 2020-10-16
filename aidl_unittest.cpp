@@ -3011,6 +3011,39 @@ TEST_P(AidlTest, GenericStructuredParcelable) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
+struct GenericAidlTest : ::testing::Test {
+  FakeIoDelegate io_delegate_;
+  void Compile(string cmd) {
+    io_delegate_.SetFileContents("Foo.aidl", "parcelable Foo { Bar<Baz<Qux> > x; }");
+    io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar<T> {  }");
+    io_delegate_.SetFileContents("Baz.aidl", "parcelable Baz<T> {  }");
+    io_delegate_.SetFileContents("Qux.aidl", "parcelable Qux {  }");
+
+    Options options = Options::From(cmd);
+    CaptureStderr();
+    EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+    EXPECT_EQ("", GetCapturedStderr());
+  }
+};
+
+TEST_F(GenericAidlTest, ImportGenericParameterTypesCPP) {
+  Compile("aidl Foo.aidl --lang=cpp -I . -o out -h out");
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/Foo.h", &code));
+  EXPECT_THAT(code, testing::HasSubstr("#include <Bar.h>"));
+  EXPECT_THAT(code, testing::HasSubstr("#include <Baz.h>"));
+  EXPECT_THAT(code, testing::HasSubstr("#include <Qux.h>"));
+}
+
+TEST_F(GenericAidlTest, ImportGenericParameterTypesNDK) {
+  Compile("aidl Foo.aidl --lang=ndk -I . -o out -h out");
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/aidl/Foo.h", &code));
+  EXPECT_THAT(code, testing::HasSubstr("#include <aidl/Bar.h>"));
+  EXPECT_THAT(code, testing::HasSubstr("#include <aidl/Baz.h>"));
+  EXPECT_THAT(code, testing::HasSubstr("#include <aidl/Qux.h>"));
+}
+
 TEST_P(AidlTest, RejectGenericStructuredParcelabelRepeatedParam) {
   io_delegate_.SetFileContents("Foo.aidl", "parcelable Foo<T,T> { int a; int A; }");
   Options options =
