@@ -613,7 +613,7 @@ func (m *aidlApi) apiDir() string {
 }
 
 // `m <iface>-freeze-api` will freeze ToT as this version
-func (m *aidlApi) nextVersion(ctx android.ModuleContext) string {
+func (m *aidlApi) nextVersion() string {
 	if len(m.properties.Versions) == 0 {
 		return "1"
 	} else {
@@ -879,7 +879,7 @@ func (m *aidlApi) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	m.updateApiTimestamp = m.makeApiDumpAsVersion(ctx, totApiDump, currentVersion)
 
 	// API dump from source is frozen as the next stable version. Triggered by `m <name>-freeze-api`
-	nextVersion := m.nextVersion(ctx)
+	nextVersion := m.nextVersion()
 	m.freezeApiTimestamp = m.makeApiDumpAsVersion(ctx, totApiDump, nextVersion)
 }
 
@@ -1122,7 +1122,7 @@ func (i *aidlInterface) checkVersions(mctx android.LoadHookContext) {
 	}
 }
 
-func (i *aidlInterface) currentVersion(ctx android.LoadHookContext) string {
+func (i *aidlInterface) currentVersion() string {
 	if !i.hasVersion() {
 		return ""
 	} else {
@@ -1159,12 +1159,12 @@ func (i *aidlInterface) hasVersion() bool {
 // "3"(unfrozen)->foo-unstable
 // ""-> foo
 // "unstable" -> foo-unstable
-func (i *aidlInterface) versionedName(ctx android.LoadHookContext, version string) string {
+func (i *aidlInterface) versionedName(version string) string {
 	name := i.ModuleBase.Name()
 	if version == "" {
 		return name
 	}
-	if version == i.currentVersion(ctx) || version == unstableVersion {
+	if version == i.currentVersion() || version == unstableVersion {
 		return name + "-" + unstableVersion
 	}
 	return name + "-V" + version
@@ -1204,7 +1204,7 @@ func (i *aidlInterface) cppOutputName(version string) string {
 }
 
 func (i *aidlInterface) srcsForVersion(mctx android.LoadHookContext, version string) (srcs []string, aidlRoot string) {
-	if version == i.currentVersion(mctx) {
+	if version == i.currentVersion() {
 		return i.properties.Srcs, i.properties.Local_include_dir
 	} else {
 		aidlRoot = filepath.Join(aidlApiDir, i.ModuleBase.Name(), version)
@@ -1241,7 +1241,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 
 	var libs []string
 
-	currentVersion := i.currentVersion(mctx)
+	currentVersion := i.currentVersion()
 
 	versionsForCpp := make([]string, len(i.properties.Versions))
 
@@ -1381,7 +1381,7 @@ func (i *aidlInterface) normalizeVersion(versionForModuleName string) string {
 }
 
 func (i *aidlInterface) getImportPostfix(mctx android.LoadHookContext, version string, lang string) string {
-	if version == i.currentVersion(mctx) {
+	if version == i.currentVersion() {
 		return "-" + unstableVersion + "-" + lang
 	}
 	return "-" + lang
@@ -1397,8 +1397,8 @@ func defaultVisibility(mctx android.LoadHookContext) []string {
 }
 
 func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForModuleName string, lang string) string {
-	cppSourceGen := i.versionedName(mctx, versionForModuleName) + "-" + lang + "-source"
-	cppModuleGen := i.versionedName(mctx, versionForModuleName) + "-" + lang
+	cppSourceGen := i.versionedName(versionForModuleName) + "-" + lang + "-source"
+	cppModuleGen := i.versionedName(versionForModuleName) + "-" + lang
 	cppOutputGen := i.cppOutputName(versionForModuleName) + "-" + lang
 	version := i.normalizeVersion(versionForModuleName)
 	srcs, aidlRoot := i.srcsForVersion(mctx, version)
@@ -1554,8 +1554,8 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 }
 
 func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForModuleName string) string {
-	javaSourceGen := i.versionedName(mctx, versionForModuleName) + "-java-source"
-	javaModuleGen := i.versionedName(mctx, versionForModuleName) + "-java"
+	javaSourceGen := i.versionedName(versionForModuleName) + "-java-source"
+	javaModuleGen := i.versionedName(versionForModuleName) + "-java"
 	version := i.normalizeVersion(versionForModuleName)
 	srcs, aidlRoot := i.srcsForVersion(mctx, version)
 	if len(srcs) == 0 {
@@ -1694,8 +1694,8 @@ func fixRustName(name string) string {
 }
 
 func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForModuleName string) string {
-	rustSourceGen := i.versionedName(mctx, versionForModuleName) + "-rust-source"
-	rustModuleGen := i.versionedName(mctx, versionForModuleName) + "-rust"
+	rustSourceGen := i.versionedName(versionForModuleName) + "-rust-source"
+	rustModuleGen := i.versionedName(versionForModuleName) + "-rust"
 	version := i.normalizeVersion(versionForModuleName)
 	srcs, aidlRoot := i.srcsForVersion(mctx, version)
 	if len(srcs) == 0 {
@@ -1719,7 +1719,7 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMo
 		Visibility: defaultVisibility(mctx),
 	})
 
-	versionedRustName := fixRustName(i.versionedName(mctx, versionForModuleName))
+	versionedRustName := fixRustName(i.versionedName(versionForModuleName))
 
 	mctx.CreateModule(aidlRustLibraryFactory, &rustProperties{
 		Name:           proptools.StringPtr(rustModuleGen),
@@ -1739,7 +1739,7 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMo
 
 func addApiModule(mctx android.LoadHookContext, i *aidlInterface) string {
 	apiModule := i.ModuleBase.Name() + aidlApiSuffix
-	srcs, aidlRoot := i.srcsForVersion(mctx, i.currentVersion(mctx))
+	srcs, aidlRoot := i.srcsForVersion(mctx, i.currentVersion())
 	mctx.CreateModule(aidlApiFactory, &nameProperties{
 		Name: proptools.StringPtr(apiModule),
 	}, &aidlApiProperties{
