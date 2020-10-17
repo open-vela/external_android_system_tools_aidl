@@ -380,7 +380,7 @@ std::string GenerateEnumValues(const AidlEnumDeclaration& enum_decl,
   return code.str();
 }
 
-std::string TemplateDecl(const AidlStructuredParcelable& defined_type) {
+std::string TemplateDecl(const AidlParcelable& defined_type) {
   std::string decl = "";
   if (defined_type.IsGeneric()) {
     std::vector<std::string> template_params;
