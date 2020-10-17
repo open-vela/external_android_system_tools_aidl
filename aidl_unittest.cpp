@@ -2831,6 +2831,132 @@ namespace a {
 }  // namespace a
 )";
 
+const char kUnionExampleExpectedOutputNdkHeader[] = R"(#pragma once
+#include <android/binder_interface_utils.h>
+#include <android/binder_parcelable_utils.h>
+
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
+#ifdef BINDER_STABILITY_SUPPORT
+#include <android/binder_stability.h>
+#endif  // BINDER_STABILITY_SUPPORT
+#include <aidl/a/ByteEnum.h>
+namespace aidl {
+namespace a {
+class Foo {
+public:
+  typedef std::false_type fixed_size;
+  static const char* descriptor;
+
+  enum Tag : int32_t {
+    ns = 0,  // int[] ns;
+    e,  // a.ByteEnum e;
+  };
+
+  template<typename _Tp>
+  static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, Foo>;
+
+  Foo() : _value(std::in_place_index<ns>, std::vector<int32_t>({42})) { }
+  Foo(const Foo&) = default;
+  Foo(Foo&&) = default;
+  Foo& operator=(const Foo&) = default;
+  Foo& operator=(Foo&&) = default;
+
+  template <typename _Tp, std::enable_if_t<_not_self<_Tp>, int> = 0>
+  constexpr Foo(_Tp&& _arg)
+      : _value(std::forward<_Tp>(_arg)) {}
+
+  template <typename... _Tp>
+  constexpr explicit Foo(_Tp&&... _args)
+      : _value(std::forward<_Tp>(_args)...) {}
+
+  template <Tag _tag, typename... _Tp>
+  static Foo make(_Tp&&... _args) {
+    return Foo(std::in_place_index<_tag>, std::forward<_Tp>(_args)...);
+  }
+
+  template <Tag _tag, typename _Tp, typename... _Up>
+  static Foo make(std::initializer_list<_Tp> _il, _Up&&... _args) {
+    return Foo(std::in_place_index<_tag>, std::move(_il), std::forward<_Up>(_args)...);
+  }
+
+  Tag getTag() const {
+    return static_cast<Tag>(_value.index());
+  }
+
+  template <Tag _tag>
+  const auto& get() const {
+    if (getTag() != _tag) { abort(); }
+    return std::get<_tag>(_value);
+  }
+
+  template <Tag _tag>
+  auto& get() {
+    if (getTag() != _tag) { abort(); }
+    return std::get<_tag>(_value);
+  }
+
+  template <Tag _tag, typename... _Tp>
+  void set(_Tp&&... _args) {
+    _value.emplace<_tag>(std::forward<_Tp>(_args)...);
+  }
+
+  binder_status_t readFromParcel(const AParcel* _parcel);
+  binder_status_t writeToParcel(AParcel* _parcel) const;
+  static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::STABILITY_LOCAL;
+private:
+  std::variant<std::vector<int32_t>, ::aidl::a::ByteEnum> _value;
+};
+}  // namespace a
+}  // namespace aidl
+)";
+
+const char kUnionExampleExpectedOutputNdkSource[] = R"(#include "aidl/a/Foo.h"
+
+#include <android/binder_parcel_utils.h>
+
+namespace aidl {
+namespace a {
+const char* Foo::descriptor = "a.Foo";
+
+binder_status_t Foo::readFromParcel(const AParcel* _parcel) {
+  binder_status_t _aidl_ret_status;
+  int32_t _aidl_tag;
+  if ((_aidl_ret_status = AParcel_readInt32(_parcel, &_aidl_tag)) != STATUS_OK) return _aidl_ret_status;
+  switch (_aidl_tag) {
+  case ns: {
+    std::vector<int32_t> _aidl_value;
+    if ((_aidl_ret_status = ::ndk::AParcel_readVector(_parcel, &_aidl_value)) != STATUS_OK) return _aidl_ret_status;
+    set<ns>(std::move(_aidl_value));
+    return STATUS_OK; }
+  case e: {
+    ::aidl::a::ByteEnum _aidl_value;
+    if ((_aidl_ret_status = AParcel_readByte(_parcel, reinterpret_cast<int8_t*>(&_aidl_value))) != STATUS_OK) return _aidl_ret_status;
+    set<e>(std::move(_aidl_value));
+    return STATUS_OK; }
+  }
+  return STATUS_BAD_VALUE;
+}
+binder_status_t Foo::writeToParcel(AParcel* _parcel) const {
+  binder_status_t _aidl_ret_status = AParcel_writeInt32(_parcel, getTag());
+  if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
+  switch (getTag()) {
+  case ns: return ::ndk::AParcel_writeVector(_parcel, get<ns>());
+  case e: return AParcel_writeByte(_parcel, static_cast<int8_t>(get<e>()));
+  }
+  abort();
+}
+
+}  // namespace a
+}  // namespace aidl
+)";
+
 const char kUnionExampleExpectedOutputJava[] = R"(/*
  * This file is auto-generated.  DO NOT MODIFY.
  */
@@ -3007,11 +3133,17 @@ TEST_F(AidlUnionTest, Example_Cpp) {
                            {"out/a/Foo.h", kUnionExampleExpectedOutputCppHeader}}));
 }
 
+TEST_F(AidlUnionTest, Example_Ndk) {
+  Compile("ndk");
+  EXPECT_COMPILE_OUTPUTS(
+      map<string, string>({{"out/a/Foo.cpp", kUnionExampleExpectedOutputNdkSource},
+                           {"out/aidl/a/Foo.h", kUnionExampleExpectedOutputNdkHeader}}));
+}
+
 TEST_F(AidlUnionTest, Example_Java) {
   Compile("java");
   EXPECT_COMPILE_OUTPUTS(
       map<string, string>({{"out/a/Foo.java", kUnionExampleExpectedOutputJava}}));
-  // TODO(b/170784707) NDK
   // TODO(b/170689477) Rust
 }
 
