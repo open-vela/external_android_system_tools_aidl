@@ -470,11 +470,11 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   out.Indent();
 
   size_t tag_index = 0;
-  out << "// tags union fields\n";
+  out << "// tags for union fields\n";
   for (const auto& variable : decl->GetFields()) {
-    auto raw_type = variable->GetType().ToString();
+    auto signature = variable->Signature() + ";";
     out << "public final static " + tag_type + " " + variable->GetName() + " = " +
-               std::to_string(tag_index++) + ";  // " + raw_type + "\n";
+               std::to_string(tag_index++) + ";  // " + signature + "\n";
   }
   out << "\n";
 
@@ -493,35 +493,35 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   out << first_type + " value = " << (first_value.empty() ? "null" : first_value) << ";\n";
   out << "_set(" + first_field->GetName() + ", value);\n";
   out.Dedent();
-  out << "}\n";
+  out << "}\n\n";
+
   // ctor(Parcel)
   out << "private " + clazz + "(android.os.Parcel _aidl_parcel) {\n";
   out << "  readFromParcel(_aidl_parcel);\n";
-  out << "}\n";
+  out << "}\n\n";
+
   // ctor(tag, value)
   out << "private " + clazz + "(" + tag_type + " tag, Object value) {\n";
   out << "  _set(tag, value);\n";
-  out << "}\n";
-  out << "\n";
+  out << "}\n\n";
 
   // getTag()
   out << "public " + tag_type + " " + "getTag() {\n";
   out << "  return " + tag_name + ";\n";
-  out << "}\n";
-  out << "\n";
+  out << "}\n\n";
 
   // value ctor, getter, setter for each field
   for (const auto& variable : decl->GetFields()) {
     auto var_name = variable->GetName();
     auto var_type = JavaSignatureOf(variable->GetType(), typenames);
-    auto raw_type = variable->GetType().ToString();
 
-    out << "// " + raw_type + " " + var_name + "\n";
+    out << "// " + variable->Signature() + ";\n";
     // value ctor
     out << variable->GetType().GetComments() + "\n";
     out << "public static " + clazz + " " + var_name + "(" + var_type + " " + value_name + ") {\n";
     out << "  return new " + clazz + "(" + var_name + ", " + value_name + ");\n";
-    out << "}\n";
+    out << "}\n\n";
+
     // getter
     if (variable->GetType().IsGeneric()) {
       out << "@SuppressWarnings(\"unchecked\")\n";
@@ -529,33 +529,32 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
     out << "public " + var_type + " " + getter_name(*variable) + "() {\n";
     out << "  _assertTag(" + var_name + ");\n";
     out << "  return (" + var_type + ") " + value_name + ";\n";
-    out << "}\n";
+    out << "}\n\n";
+
     // setter
     out << "public void " + setter_name(*variable) + "(" + var_type + " " + value_name + ") {\n";
     out << "  _set(" + var_name + ", " + value_name + ");\n";
-    out << "}\n";
-    out << "\n";
+    out << "}\n\n";
   }
 
   if (decl->IsVintfStability()) {
     out << "@Override\n";
     out << "public final int getStability() {\n";
     out << "  return android.os.Parcelable.PARCELABLE_STABILITY_VINTF;\n";
-    out << "}\n";
-    out << "\n";
+    out << "}\n\n";
   }
 
   out << "public static final android.os.Parcelable.Creator<" << clazz << "> CREATOR = "
       << "new android.os.Parcelable.Creator<" << clazz << ">() {\n";
   out << "  @Override\n";
   out << "  public " << clazz << " createFromParcel(android.os.Parcel _aidl_source) {\n";
-  out << "    return new Union(_aidl_source);\n";  // to avoid unnecessary allocation of "default"
+  out << "    return new " << clazz << "(_aidl_source);\n";
   out << "  }\n";
   out << "  @Override\n";
   out << "  public " << clazz << "[] newArray(int _aidl_size) {\n";
   out << "    return new " << clazz << "[_aidl_size];\n";
   out << "  }\n";
-  out << "};\n";
+  out << "};\n\n";
 
   auto write_to_parcel = [&](const AidlTypeSpecifier& type, std::string name, std::string parcel) {
     string code;
@@ -584,7 +583,7 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
     out << "    break;\n";
   }
   out << "  }\n";
-  out << "}\n";
+  out << "}\n\n";
 
   // keep this across different fields in order to create the classloader
   // at most once.
@@ -621,13 +620,12 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   }
   out << "  }\n";
   out << "  throw new RuntimeException(\"union: out of range: \" + _aidl_tag);\n";
-  out << "}\n";
+  out << "}\n\n";
 
   out << "@Override\n";
   out << "public int describeContents() {\n";
   out << "  return 0;\n";
-  out << "}\n";
-  out << "\n";
+  out << "}\n\n";
 
   // helper: _assertTag
   out << "private void _assertTag(" + tag_type + " tag) {\n";
@@ -635,7 +633,8 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   out << "    throw new IllegalStateException(\"bad access: \" + _tagString(tag) + \", \" + "
          "_tagString(getTag()) + \" is available.\");\n";
   out << "  }\n";
-  out << "}\n";
+  out << "}\n\n";
+
   // helper: _tagString
   out << "private String _tagString(" + tag_type + " " + tag_name + ") {\n";
   out << "  switch (" + tag_name + ") {\n";
@@ -645,7 +644,8 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   }
   out << "  }\n";
   out << "  throw new IllegalStateException(\"unknown field: \" + " + tag_name + ");\n";
-  out << "}\n";
+  out << "}\n\n";
+
   // helper: _set
   out << "private void _set(" + tag_type + " tag, Object value) {\n";
   out << "  this." + tag_name + " = tag;\n";
