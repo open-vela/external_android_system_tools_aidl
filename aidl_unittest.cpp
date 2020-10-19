@@ -76,7 +76,7 @@ const char kExpectedStructuredParcelableDepFileContents[] =
 p/Foo.aidl :
 )";
 
-const char kExpectedJavaParcelableOutputContents[] =
+const char kExpectedJavaParcelableOutputContests[] =
     R"(/*
  * This file is auto-generated.  DO NOT MODIFY.
  */
@@ -93,8 +93,6 @@ public class Rect implements android.os.Parcelable
   public int y = 0;
 
   public android.os.ParcelFileDescriptor fd;
-
-  public java.util.List<android.os.ParcelFileDescriptor> fds;
   public static final android.os.Parcelable.Creator<Rect> CREATOR = new android.os.Parcelable.Creator<Rect>() {
     @Override
     public Rect createFromParcel(android.os.Parcel _aidl_source) {
@@ -120,7 +118,6 @@ public class Rect implements android.os.Parcelable
     else {
       _aidl_parcel.writeInt(0);
     }
-    _aidl_parcel.writeTypedList(fds);
     int _aidl_end_pos = _aidl_parcel.dataPosition();
     _aidl_parcel.setDataPosition(_aidl_start_pos);
     _aidl_parcel.writeInt(_aidl_end_pos - _aidl_start_pos);
@@ -143,8 +140,6 @@ public class Rect implements android.os.Parcelable
         fd = null;
       }
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      fds = _aidl_parcel.createTypedArrayList(android.os.ParcelFileDescriptor.CREATOR);
-      if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
     } finally {
       if (_aidl_start_pos > (Integer.MAX_VALUE - _aidl_parcelable_size)) {
         throw new android.os.BadParcelableException("Overflow in the size of parcelable");
@@ -152,12 +147,9 @@ public class Rect implements android.os.Parcelable
       _aidl_parcel.setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     }
   }
-  @Override
-  public int describeContents() {
-    int _mask = 0;
-    if (fd != null) _mask |= fd.describeContents();
-    if (fds != null) for (ParcelFileDescriptor _v0: fds) if (_v0 != null) _mask |= _v0.describeContents();
-    return _mask;
+  @Override public int describeContents()
+  {
+    return 0;
   }
 }
 )";
@@ -773,7 +765,6 @@ TEST_F(AidlTest, JavaParcelableOutput) {
       "+ \"y\")\n"
       "  int y;\n"
       "  ParcelFileDescriptor fd;\n"
-      "  List<ParcelFileDescriptor> fds;\n"
       "}");
 
   vector<string> args{"aidl", "Rect.aidl"};
@@ -782,7 +773,7 @@ TEST_F(AidlTest, JavaParcelableOutput) {
 
   string output;
   EXPECT_TRUE(io_delegate_.GetWrittenContents("Rect.java", &output));
-  EXPECT_EQ(kExpectedJavaParcelableOutputContents, output);
+  EXPECT_EQ(kExpectedJavaParcelableOutputContests, output);
 }
 
 TEST_F(AidlTest, CppHeaderIncludes) {
@@ -2708,7 +2699,6 @@ const char kUnionExampleExpectedOutputCppHeader[] = R"(#pragma once
 
 #include <a/ByteEnum.h>
 #include <binder/Parcel.h>
-#include <binder/ParcelFileDescriptor.h>
 #include <binder/Status.h>
 #include <cstdint>
 #include <type_traits>
@@ -2742,7 +2732,6 @@ public:
   enum Tag : int32_t {
     ns = 0,  // int[] ns;
     e,  // a.ByteEnum e;
-    pfd,  // ParcelFileDescriptor pfd;
   };
 
   template<typename _Tp>
@@ -2800,7 +2789,7 @@ public:
     return DESCIPTOR;
   }
 private:
-  std::variant<::std::vector<int32_t>, ::a::ByteEnum, ::android::os::ParcelFileDescriptor> _value;
+  std::variant<::std::vector<int32_t>, ::a::ByteEnum> _value;
 };  // class Foo
 
 }  // namespace a
@@ -2825,11 +2814,6 @@ namespace a {
     if ((_aidl_ret_status = _aidl_parcel->readByte(reinterpret_cast<int8_t *>(&_aidl_value))) != ::android::OK) return _aidl_ret_status;
     set<e>(std::move(_aidl_value));
     return ::android::OK; }
-  case pfd: {
-    ::android::os::ParcelFileDescriptor _aidl_value;
-    if ((_aidl_ret_status = _aidl_parcel->readParcelable(&_aidl_value)) != ::android::OK) return _aidl_ret_status;
-    set<pfd>(std::move(_aidl_value));
-    return ::android::OK; }
   }
   return ::android::BAD_VALUE;
 }
@@ -2840,145 +2824,11 @@ namespace a {
   switch (getTag()) {
   case ns: return _aidl_parcel->writeInt32Vector(get<ns>());
   case e: return _aidl_parcel->writeByte(static_cast<int8_t>(get<e>()));
-  case pfd: return _aidl_parcel->writeParcelable(get<pfd>());
   }
   abort();
 }
 
 }  // namespace a
-)";
-
-const char kUnionExampleExpectedOutputNdkHeader[] = R"(#pragma once
-#include <android/binder_interface_utils.h>
-#include <android/binder_parcelable_utils.h>
-
-#include <type_traits>
-#include <utility>
-#include <variant>
-#include <cstdint>
-#include <memory>
-#include <optional>
-#include <string>
-#include <vector>
-#ifdef BINDER_STABILITY_SUPPORT
-#include <android/binder_stability.h>
-#endif  // BINDER_STABILITY_SUPPORT
-#include <aidl/a/ByteEnum.h>
-namespace aidl {
-namespace a {
-class Foo {
-public:
-  typedef std::false_type fixed_size;
-  static const char* descriptor;
-
-  enum Tag : int32_t {
-    ns = 0,  // int[] ns;
-    e,  // a.ByteEnum e;
-    pfd,  // ParcelFileDescriptor pfd;
-  };
-
-  template<typename _Tp>
-  static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, Foo>;
-
-  Foo() : _value(std::in_place_index<ns>, std::vector<int32_t>({42})) { }
-  Foo(const Foo&) = default;
-  Foo(Foo&&) = default;
-  Foo& operator=(const Foo&) = default;
-  Foo& operator=(Foo&&) = default;
-
-  template <typename _Tp, std::enable_if_t<_not_self<_Tp>, int> = 0>
-  constexpr Foo(_Tp&& _arg)
-      : _value(std::forward<_Tp>(_arg)) {}
-
-  template <typename... _Tp>
-  constexpr explicit Foo(_Tp&&... _args)
-      : _value(std::forward<_Tp>(_args)...) {}
-
-  template <Tag _tag, typename... _Tp>
-  static Foo make(_Tp&&... _args) {
-    return Foo(std::in_place_index<_tag>, std::forward<_Tp>(_args)...);
-  }
-
-  template <Tag _tag, typename _Tp, typename... _Up>
-  static Foo make(std::initializer_list<_Tp> _il, _Up&&... _args) {
-    return Foo(std::in_place_index<_tag>, std::move(_il), std::forward<_Up>(_args)...);
-  }
-
-  Tag getTag() const {
-    return static_cast<Tag>(_value.index());
-  }
-
-  template <Tag _tag>
-  const auto& get() const {
-    if (getTag() != _tag) { abort(); }
-    return std::get<_tag>(_value);
-  }
-
-  template <Tag _tag>
-  auto& get() {
-    if (getTag() != _tag) { abort(); }
-    return std::get<_tag>(_value);
-  }
-
-  template <Tag _tag, typename... _Tp>
-  void set(_Tp&&... _args) {
-    _value.emplace<_tag>(std::forward<_Tp>(_args)...);
-  }
-
-  binder_status_t readFromParcel(const AParcel* _parcel);
-  binder_status_t writeToParcel(AParcel* _parcel) const;
-  static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::STABILITY_LOCAL;
-private:
-  std::variant<std::vector<int32_t>, ::aidl::a::ByteEnum, ::ndk::ScopedFileDescriptor> _value;
-};
-}  // namespace a
-}  // namespace aidl
-)";
-
-const char kUnionExampleExpectedOutputNdkSource[] = R"(#include "aidl/a/Foo.h"
-
-#include <android/binder_parcel_utils.h>
-
-namespace aidl {
-namespace a {
-const char* Foo::descriptor = "a.Foo";
-
-binder_status_t Foo::readFromParcel(const AParcel* _parcel) {
-  binder_status_t _aidl_ret_status;
-  int32_t _aidl_tag;
-  if ((_aidl_ret_status = AParcel_readInt32(_parcel, &_aidl_tag)) != STATUS_OK) return _aidl_ret_status;
-  switch (_aidl_tag) {
-  case ns: {
-    std::vector<int32_t> _aidl_value;
-    if ((_aidl_ret_status = ::ndk::AParcel_readVector(_parcel, &_aidl_value)) != STATUS_OK) return _aidl_ret_status;
-    set<ns>(std::move(_aidl_value));
-    return STATUS_OK; }
-  case e: {
-    ::aidl::a::ByteEnum _aidl_value;
-    if ((_aidl_ret_status = AParcel_readByte(_parcel, reinterpret_cast<int8_t*>(&_aidl_value))) != STATUS_OK) return _aidl_ret_status;
-    set<e>(std::move(_aidl_value));
-    return STATUS_OK; }
-  case pfd: {
-    ::ndk::ScopedFileDescriptor _aidl_value;
-    if ((_aidl_ret_status = ::ndk::AParcel_readRequiredParcelFileDescriptor(_parcel, &_aidl_value)) != STATUS_OK) return _aidl_ret_status;
-    set<pfd>(std::move(_aidl_value));
-    return STATUS_OK; }
-  }
-  return STATUS_BAD_VALUE;
-}
-binder_status_t Foo::writeToParcel(AParcel* _parcel) const {
-  binder_status_t _aidl_ret_status = AParcel_writeInt32(_parcel, getTag());
-  if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
-  switch (getTag()) {
-  case ns: return ::ndk::AParcel_writeVector(_parcel, get<ns>());
-  case e: return AParcel_writeByte(_parcel, static_cast<int8_t>(get<e>()));
-  case pfd: return ::ndk::AParcel_writeRequiredParcelFileDescriptor(_parcel, get<pfd>());
-  }
-  abort();
-}
-
-}  // namespace a
-}  // namespace aidl
 )";
 
 const char kUnionExampleExpectedOutputJava[] = R"(/*
@@ -2991,7 +2841,6 @@ public final class Foo implements android.os.Parcelable {
   // tags for union fields
   public final static int ns = 0;  // int[] ns;
   public final static int e = 1;  // a.ByteEnum e;
-  public final static int pfd = 2;  // ParcelFileDescriptor pfd;
 
   private int _tag;
   private Object _value;
@@ -3043,21 +2892,6 @@ public final class Foo implements android.os.Parcelable {
     _set(e, _value);
   }
 
-  // ParcelFileDescriptor pfd;
-
-  public static Foo pfd(android.os.ParcelFileDescriptor _value) {
-    return new Foo(pfd, _value);
-  }
-
-  public android.os.ParcelFileDescriptor getPfd() {
-    _assertTag(pfd);
-    return (android.os.ParcelFileDescriptor) _value;
-  }
-
-  public void setPfd(android.os.ParcelFileDescriptor _value) {
-    _set(pfd, _value);
-  }
-
   public static final android.os.Parcelable.Creator<Foo> CREATOR = new android.os.Parcelable.Creator<Foo>() {
     @Override
     public Foo createFromParcel(android.os.Parcel _aidl_source) {
@@ -3079,15 +2913,6 @@ public final class Foo implements android.os.Parcelable {
     case e:
       _aidl_parcel.writeByte(getE());
       break;
-    case pfd:
-      if ((getPfd()!=null)) {
-        _aidl_parcel.writeInt(1);
-        getPfd().writeToParcel(_aidl_parcel, 0);
-      }
-      else {
-        _aidl_parcel.writeInt(0);
-      }
-      break;
     }
   }
 
@@ -3105,29 +2930,13 @@ public final class Foo implements android.os.Parcelable {
       _aidl_value = _aidl_parcel.readByte();
       _set(_aidl_tag, _aidl_value);
       return; }
-    case pfd: {
-      android.os.ParcelFileDescriptor _aidl_value;
-      if ((0!=_aidl_parcel.readInt())) {
-        _aidl_value = android.os.ParcelFileDescriptor.CREATOR.createFromParcel(_aidl_parcel);
-      }
-      else {
-        _aidl_value = null;
-      }
-      _set(_aidl_tag, _aidl_value);
-      return; }
     }
     throw new RuntimeException("union: out of range: " + _aidl_tag);
   }
 
   @Override
   public int describeContents() {
-    int _mask = 0;
-    switch (getTag()) {
-    case pfd:
-      if (getPfd() != null) _mask |= getPfd().describeContents();
-      break;
-    }
-    return _mask;
+    return 0;
   }
 
   private void _assertTag(int tag) {
@@ -3140,7 +2949,6 @@ public final class Foo implements android.os.Parcelable {
     switch (_tag) {
     case ns: return "ns";
     case e: return "e";
-    case pfd: return "pfd";
     }
     throw new IllegalStateException("unknown field: " + _tag);
   }
@@ -3160,7 +2968,6 @@ import a.ByteEnum;
 union Foo {
   int[] ns = {42};
   ByteEnum  e;
-  ParcelFileDescriptor pfd;
 }
 )");
     io_delegate_.SetFileContents("a/ByteEnum.aidl", R"(
@@ -3200,17 +3007,11 @@ TEST_F(AidlUnionTest, Example_Cpp) {
                            {"out/a/Foo.h", kUnionExampleExpectedOutputCppHeader}}));
 }
 
-TEST_F(AidlUnionTest, Example_Ndk) {
-  Compile("ndk");
-  EXPECT_COMPILE_OUTPUTS(
-      map<string, string>({{"out/a/Foo.cpp", kUnionExampleExpectedOutputNdkSource},
-                           {"out/aidl/a/Foo.h", kUnionExampleExpectedOutputNdkHeader}}));
-}
-
 TEST_F(AidlUnionTest, Example_Java) {
   Compile("java");
   EXPECT_COMPILE_OUTPUTS(
       map<string, string>({{"out/a/Foo.java", kUnionExampleExpectedOutputJava}}));
+  // TODO(b/170784707) NDK
   // TODO(b/170689477) Rust
 }
 

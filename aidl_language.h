@@ -267,7 +267,7 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   virtual ~AidlTypeSpecifier() = default;
 
   // Copy of this type which is not an array.
-  const AidlTypeSpecifier& ArrayBase() const;
+  AidlTypeSpecifier ArrayBase() const;
 
   // Returns the full-qualified name of the base type.
   // int -> int
@@ -319,7 +319,6 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   bool is_array_;
   string comments_;
   vector<string> split_name_;
-  mutable shared_ptr<AidlTypeSpecifier> array_base_;
 };
 
 // Returns the universal value unaltered.
