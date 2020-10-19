@@ -264,18 +264,14 @@ bool WriteToParcelFor(const CodeGeneratorContext& c) {
        [](const CodeGeneratorContext& c) {
          if (c.type.IsGeneric()) {
            const string& contained_type = c.type.GetTypeParameters().at(0)->GetName();
-           if (AidlTypenames::IsBuiltinTypename(contained_type)) {
-             if (contained_type == "String") {
-               c.writer << c.parcel << ".writeStringList(" << c.var << ");\n";
-             } else if (contained_type == "IBinder") {
-               c.writer << c.parcel << ".writeBinderList(" << c.var << ");\n";
-             }
+           if (contained_type == "String") {
+             c.writer << c.parcel << ".writeStringList(" << c.var << ");\n";
+           } else if (contained_type == "IBinder") {
+             c.writer << c.parcel << ".writeBinderList(" << c.var << ");\n";
+           } else if (c.typenames.IsParcelable(contained_type)) {
+             c.writer << c.parcel << ".writeTypedList(" << c.var << ");\n";
            } else {
-             const AidlDefinedType* t = c.typenames.TryGetDefinedType(contained_type);
-             AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << contained_type;
-             if (t->AsParcelable() != nullptr) {
-               c.writer << c.parcel << ".writeTypedList(" << c.var << ");\n";
-             }
+             AIDL_FATAL(c.type) << "write: NOT IMPLEMENTED for " << contained_type;
            }
          } else {
            c.writer << c.parcel << ".writeList(" << c.var << ");\n";
@@ -492,20 +488,16 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
        [](const CodeGeneratorContext& c) {
          if (c.type.IsGeneric()) {
            const string& contained_type = c.type.GetTypeParameters().at(0)->GetName();
-           if (AidlTypenames::IsBuiltinTypename(contained_type)) {
-             if (contained_type == "String") {
-               c.writer << c.var << " = " << c.parcel << ".createStringArrayList();\n";
-             } else if (contained_type == "IBinder") {
-               c.writer << c.var << " = " << c.parcel << ".createBinderArrayList();\n";
-             }
+           if (contained_type == "String") {
+             c.writer << c.var << " = " << c.parcel << ".createStringArrayList();\n";
+           } else if (contained_type == "IBinder") {
+             c.writer << c.var << " = " << c.parcel << ".createBinderArrayList();\n";
+           } else if (c.typenames.IsParcelable(contained_type)) {
+             c.writer << c.var << " = " << c.parcel << ".createTypedArrayList("
+                      << JavaNameOf(*(c.type.GetTypeParameters().at(0)), c.typenames)
+                      << ".CREATOR);\n";
            } else {
-             const AidlDefinedType* t = c.typenames.TryGetDefinedType(contained_type);
-             AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << contained_type;
-             if (t->AsParcelable() != nullptr) {
-               c.writer << c.var << " = " << c.parcel << ".createTypedArrayList("
-                        << JavaNameOf(*(c.type.GetTypeParameters().at(0)), c.typenames)
-                        << ".CREATOR);\n";
-             }
+             AIDL_FATAL(c.type) << "create: NOT IMPLEMENTED for " << contained_type;
            }
          } else {
            const string classloader = EnsureAndGetClassloader(const_cast<CodeGeneratorContext&>(c));
@@ -682,20 +674,16 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
        [](const CodeGeneratorContext& c) {
          if (c.type.IsGeneric()) {
            const string& contained_type = c.type.GetTypeParameters().at(0)->GetName();
-           if (AidlTypenames::IsBuiltinTypename(contained_type)) {
-             if (contained_type == "String") {
-               c.writer << c.parcel << ".readStringList(" << c.var << ");\n";
-             } else if (contained_type == "IBinder") {
-               c.writer << c.parcel << ".readBinderList(" << c.var << ");\n";
-             }
+           if (contained_type == "String") {
+             c.writer << c.parcel << ".readStringList(" << c.var << ");\n";
+           } else if (contained_type == "IBinder") {
+             c.writer << c.parcel << ".readBinderList(" << c.var << ");\n";
+           } else if (c.typenames.IsParcelable(contained_type)) {
+             c.writer << c.parcel << ".readTypedList(" << c.var << ", "
+                      << JavaNameOf(*(c.type.GetTypeParameters().at(0)), c.typenames)
+                      << ".CREATOR);\n";
            } else {
-             const AidlDefinedType* t = c.typenames.TryGetDefinedType(contained_type);
-             AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << contained_type;
-             if (t->AsParcelable() != nullptr) {
-               c.writer << c.parcel << ".readTypedList(" << c.var << ", "
-                        << JavaNameOf(*(c.type.GetTypeParameters().at(0)), c.typenames)
-                        << ".CREATOR);\n";
-             }
+             AIDL_FATAL(c.type) << "read: NOT IMPLEMENTED for " << contained_type;
            }
          } else {
            const string classloader = EnsureAndGetClassloader(const_cast<CodeGeneratorContext&>(c));
