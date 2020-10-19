@@ -60,6 +60,7 @@ class AidlTypenames final {
   bool AddPreprocessedType(unique_ptr<AidlDefinedType> type);
   static bool IsBuiltinTypename(const string& type_name);
   static bool IsPrimitiveTypename(const string& type_name);
+  bool IsParcelable(const string& type_name) const;
   const AidlDefinedType* TryGetDefinedType(const string& type_name) const;
   std::vector<AidlDefinedType*> AllDefinedTypes() const;
 
