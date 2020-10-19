@@ -23,8 +23,10 @@
 #include <algorithm>
 #include <map>
 #include <memory>
+#include <optional>
 #include <sstream>
 
+#include <android-base/format.h>
 #include <android-base/stringprintf.h>
 
 #include "aidl_to_java.h"
@@ -36,6 +38,7 @@ using ::android::base::Join;
 using ::android::base::StartsWith;
 using std::string;
 using std::unique_ptr;
+using std::vector;
 
 namespace {
 // join two non-empty strings according to `camelCase` naming.
@@ -50,6 +53,87 @@ inline string getter_name(const AidlVariableDeclaration& variable) {
 }
 inline string setter_name(const AidlVariableDeclaration& variable) {
   return camelcase_join("set", variable.GetName(), variable);
+}
+
+// Some types contribute to Parcelable.describeContents().
+// e.g. FileDescriptor, Parcelables, List<Parcelables> ...
+std::optional<string> DescribeContents(const AidlTypenames& types, const AidlTypeSpecifier& type,
+                                       const string& value, int nest_level = 0) {
+  if (type.IsArray() || type.GetName() == "List") {
+    const auto& base_type = type.IsArray() ? type.ArrayBase() : *type.GetTypeParameters()[0];
+    auto base_var = "_v" + std::to_string(nest_level);
+    auto base_describer = DescribeContents(types, base_type, base_var, nest_level + 1);
+    if (base_describer) {
+      return fmt::format(
+          "if ({value} != null) for ({base_type} {base_var}: {value}) {base_describer}",
+          fmt::arg("value", value), fmt::arg("base_type", base_type.GetName()),
+          fmt::arg("base_var", base_var), fmt::arg("base_describer", *base_describer));
+    }
+    return std::nullopt;
+  }
+
+  if (type.GetName() == "Map") {
+    const auto& base_type = type.GetTypeParameters()[1];
+    auto base_var = "_v" + std::to_string(nest_level);
+    auto base_describer = DescribeContents(types, *base_type, base_var, nest_level + 1);
+    if (base_describer) {
+      return fmt::format(
+          "if ({value} != null) for ({base_type} {base_var}: {value}.values()) {base_describer}",
+          fmt::arg("value", value), fmt::arg("base_type", base_type->GetName()),
+          fmt::arg("base_var", base_var), fmt::arg("base_describer", *base_describer));
+    }
+    return std::nullopt;
+  }
+
+  if (type.GetName() == "FileDescriptor") {
+    return fmt::format(
+        "_mask |= ({} != null) ? android.os.Parcelable.CONTENTS_FILE_DESCRIPTOR : 0;\n", value);
+  }
+
+  if (type.GetName() == "ParcelFileDescriptor" || type.GetName() == "ParcelableHolder" ||
+      types.GetParcelable(type) != nullptr) {
+    return fmt::format("if ({} != null) _mask |= {}.describeContents();\n", value, value);
+  }
+
+  return std::nullopt;
+}
+
+void GenerateParcelableDescribeContents(CodeWriter& out, const AidlStructuredParcelable& decl,
+                                        const AidlTypenames& types) {
+  out << "@Override\n";
+  out << "public int describeContents() {\n";
+  out.Indent();
+  out << "int _mask = 0;\n";
+  for (const auto& f : decl.GetFields()) {
+    if (auto describer = DescribeContents(types, f->GetType(), f->GetName()); describer) {
+      out << *describer;
+    }
+  }
+  out << "return _mask;\n";
+  out.Dedent();
+  out << "}\n";
+}
+
+void GenerateParcelableDescribeContents(CodeWriter& out, const AidlUnionDecl& decl,
+                                        const AidlTypenames& types) {
+  out << "@Override\n";
+  out << "public int describeContents() {\n";
+  out.Indent();
+  out << "int _mask = 0;\n";
+  out << "switch (getTag()) {\n";
+  for (const auto& f : decl.GetFields()) {
+    if (auto describer = DescribeContents(types, f->GetType(), getter_name(*f) + "()"); describer) {
+      out << fmt::format("case {}:\n", f->GetName());
+      out.Indent();
+      out << *describer;
+      out << "break;\n";
+      out.Dedent();
+    }
+  }
+  out << "}\n";
+  out << "return _mask;\n";
+  out.Dedent();
+  out << "}\n";
 }
 }  // namespace
 
@@ -410,13 +494,9 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
     parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(out.str()));
   }
 
-  auto describe_contents_method = std::make_shared<Method>();
-  describe_contents_method->modifiers = PUBLIC | OVERRIDE;
-  describe_contents_method->returnType = "int";
-  describe_contents_method->name = "describeContents";
-  describe_contents_method->statements = std::make_shared<StatementBlock>();
-  describe_contents_method->statements->Add(std::make_shared<LiteralStatement>("return 0;\n"));
-  parcel_class->elements.push_back(describe_contents_method);
+  auto describe_contents_method =
+      CodeWriter::RunWith(GenerateParcelableDescribeContents, *parcel, typenames);
+  parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(describe_contents_method));
 
   return parcel_class;
 }
@@ -574,15 +654,18 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
 
   out << "@Override\n";
   out << "public final void writeToParcel(android.os.Parcel _aidl_parcel, int _aidl_flag) {\n";
-  out << "  " + write_to_parcel(tag_type_specifier, tag_name, "_aidl_parcel");
-  out << "  switch (" + tag_name + ") {\n";
+  out.Indent();
+  out << write_to_parcel(tag_type_specifier, tag_name, "_aidl_parcel");
+  out << "switch (" + tag_name + ") {\n";
   for (const auto& variable : decl->GetFields()) {
-    out << "  case " + variable->GetName() + ":\n";
-    out << "    " +
-               write_to_parcel(variable->GetType(), getter_name(*variable) + "()", "_aidl_parcel");
-    out << "    break;\n";
+    out << "case " + variable->GetName() + ":\n";
+    out.Indent();
+    out << write_to_parcel(variable->GetType(), getter_name(*variable) + "()", "_aidl_parcel");
+    out << "break;\n";
+    out.Dedent();
   }
-  out << "  }\n";
+  out << "}\n";
+  out.Dedent();
   out << "}\n\n";
 
   // keep this across different fields in order to create the classloader
@@ -606,26 +689,28 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
 
   // Not override, but as a user-defined parcelable, this method should be public
   out << "public void readFromParcel(android.os.Parcel _aidl_parcel) {\n";
-  out << "  " + tag_type + " _aidl_tag;\n";
-  out << "  " + read_from_parcel(tag_type_specifier, "_aidl_tag", "_aidl_parcel");
-  out << "  switch (_aidl_tag) {\n";
+  out.Indent();
+  out << tag_type + " _aidl_tag;\n";
+  out << read_from_parcel(tag_type_specifier, "_aidl_tag", "_aidl_parcel");
+  out << "switch (_aidl_tag) {\n";
   for (const auto& variable : decl->GetFields()) {
     auto var_name = variable->GetName();
     auto var_type = JavaSignatureOf(variable->GetType(), typenames);
-    out << "  case " + var_name + ": {\n";
-    out << "    " + var_type + " _aidl_value;\n";
-    out << "    " + read_from_parcel(variable->GetType(), "_aidl_value", "_aidl_parcel");
-    out << "    _set(_aidl_tag, _aidl_value);\n";
-    out << "    return; }\n";
+    out << "case " + var_name + ": {\n";
+    out.Indent();
+    out << var_type + " _aidl_value;\n";
+    out << read_from_parcel(variable->GetType(), "_aidl_value", "_aidl_parcel");
+    out << "_set(_aidl_tag, _aidl_value);\n";
+    out << "return; }\n";
+    out.Dedent();
   }
-  out << "  }\n";
-  out << "  throw new RuntimeException(\"union: out of range: \" + _aidl_tag);\n";
+  out << "}\n";
+  out << "throw new RuntimeException(\"union: out of range: \" + _aidl_tag);\n";
+  out.Dedent();
   out << "}\n\n";
 
-  out << "@Override\n";
-  out << "public int describeContents() {\n";
-  out << "  return 0;\n";
-  out << "}\n\n";
+  GenerateParcelableDescribeContents(out, *decl, typenames);
+  out << "\n";
 
   // helper: _assertTag
   out << "private void _assertTag(" + tag_type + " tag) {\n";
