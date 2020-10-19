@@ -33,7 +33,6 @@ using std::vector;
 class AidlDefinedType;
 class AidlEnumDeclaration;
 class AidlInterface;
-class AidlParcelable;
 class AidlTypeSpecifier;
 class AidlDocument;
 
@@ -60,7 +59,6 @@ class AidlTypenames final {
   bool AddPreprocessedType(unique_ptr<AidlDefinedType> type);
   static bool IsBuiltinTypename(const string& type_name);
   static bool IsPrimitiveTypename(const string& type_name);
-  bool IsParcelable(const string& type_name) const;
   const AidlDefinedType* TryGetDefinedType(const string& type_name) const;
   std::vector<AidlDefinedType*> AllDefinedTypes() const;
 
@@ -81,9 +79,6 @@ class AidlTypenames final {
   // Returns the AidlInterface of the given type, or nullptr if the type
   // is not an AidlInterface;
   const AidlInterface* GetInterface(const AidlTypeSpecifier& type) const;
-  // Returns the AidlParcelable of the given type, or nullptr if the type
-  // is not an AidlParcelable;
-  const AidlParcelable* GetParcelable(const AidlTypeSpecifier& type) const;
   // Iterates over all defined and then preprocessed types
   void IterateTypes(const std::function<void(const AidlDefinedType&)>& body) const;
 
