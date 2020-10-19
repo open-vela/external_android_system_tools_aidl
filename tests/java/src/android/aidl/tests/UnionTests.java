@@ -19,9 +19,16 @@ package android.aidl.tests;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import android.aidl.tests.Union;
+import android.aidl.tests.UnionWithFd;
 import android.os.Parcel;
+import android.os.ParcelFileDescriptor;
+import android.os.Parcelable;
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Test;
@@ -64,6 +71,29 @@ public class UnionTests {
 
     assertThat(v.getTag(), is(Union.ss));
     assertThat(v.getSs(), is(ss));
+
+    parcel.recycle();
+  }
+
+  @Test
+  public void unionDescribeContents() {
+    UnionWithFd u = UnionWithFd.num(0);
+    assertTrue((u.describeContents() & Parcelable.CONTENTS_FILE_DESCRIPTOR) == 0);
+
+    final Parcel parcel = Parcel.obtain();
+    try {
+      u.setPfd(ParcelFileDescriptor.open(new File("/system"), ParcelFileDescriptor.MODE_READ_ONLY));
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException("can't open /system", e);
+    }
+    assertTrue((u.describeContents() & Parcelable.CONTENTS_FILE_DESCRIPTOR) != 0);
+
+    u.writeToParcel(parcel, 0);
+
+    UnionWithFd v = UnionWithFd.num(0);
+    parcel.setDataPosition(0);
+    v.readFromParcel(parcel);
+    assertTrue((v.describeContents() & Parcelable.CONTENTS_FILE_DESCRIPTOR) != 0);
 
     parcel.recycle();
   }
