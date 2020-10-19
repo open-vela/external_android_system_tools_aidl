@@ -405,14 +405,16 @@ AidlTypeSpecifier::AidlTypeSpecifier(const AidlLocation& location, const string&
       comments_(comments),
       split_name_(Split(unresolved_name, ".")) {}
 
-AidlTypeSpecifier AidlTypeSpecifier::ArrayBase() const {
+const AidlTypeSpecifier& AidlTypeSpecifier::ArrayBase() const {
   AIDL_FATAL_IF(!is_array_, this);
   // Declaring array of generic type cannot happen, it is grammar error.
   AIDL_FATAL_IF(IsGeneric(), this);
 
-  AidlTypeSpecifier array_base = *this;
-  array_base.is_array_ = false;
-  return array_base;
+  if (!array_base_) {
+    array_base_.reset(new AidlTypeSpecifier(*this));
+    array_base_->is_array_ = false;
+  }
+  return *array_base_;
 }
 
 bool AidlTypeSpecifier::IsHidden() const {
