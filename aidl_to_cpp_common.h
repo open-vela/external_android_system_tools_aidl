@@ -73,7 +73,7 @@ std::vector<T> Append(std::vector<T>&& as, std::vector<T>&& bs) {
 
 std::string GenerateEnumValues(const AidlEnumDeclaration& enum_decl,
                                const std::vector<std::string>& enclosing_namespaces_of_enum_decl);
-std::string TemplateDecl(const AidlStructuredParcelable& defined_type);
+std::string TemplateDecl(const AidlParcelable& defined_type);
 
 void GenerateParcelableComparisonOperators(CodeWriter& out, const AidlParcelable& parcelable);
 
