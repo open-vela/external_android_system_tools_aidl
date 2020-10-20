@@ -157,6 +157,16 @@ bool AidlTypenames::IsPrimitiveTypename(const string& type_name) {
   return kPrimitiveTypes.find(type_name) != kPrimitiveTypes.end();
 }
 
+bool AidlTypenames::IsParcelable(const string& type_name) const {
+  if (IsBuiltinTypename(type_name)) {
+    return type_name == "ParcelableHolder" || type_name == "ParcelFileDescriptor";
+  }
+  if (auto defined_type = TryGetDefinedType(type_name); defined_type) {
+    return defined_type->AsParcelable() != nullptr;
+  }
+  return false;
+}
+
 const AidlDefinedType* AidlTypenames::TryGetDefinedType(const string& type_name) const {
   return TryGetDefinedTypeImpl(type_name).type;
 }
