@@ -37,6 +37,17 @@ static constexpr const char* kCachedHash = "_aidl_cached_hash";
 static constexpr const char* kCachedHashMutex = "_aidl_cached_hash_mutex";
 
 using namespace internals;
+namespace internals {
+void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
+                          const AidlStructuredParcelable& defined_type, const Options& options);
+void GenerateParcelSource(CodeWriter& out, const AidlTypenames& types,
+                          const AidlStructuredParcelable& defined_type, const Options& options);
+void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
+                          const AidlUnionDecl& defined_type, const Options& options);
+void GenerateParcelSource(CodeWriter& out, const AidlTypenames& types,
+                          const AidlUnionDecl& defined_type, const Options& options);
+}  // namespace internals
+
 using cpp::ClassNames;
 
 void GenerateNdkInterface(const string& output_file, const Options& options,
@@ -64,8 +75,9 @@ void GenerateNdkInterface(const string& output_file, const Options& options,
   AIDL_FATAL_IF(!source_writer->Close(), output_file);
 }
 
+template <typename ParcelableType>
 void GenerateNdkParcel(const string& output_file, const Options& options,
-                       const AidlTypenames& types, const AidlStructuredParcelable& defined_type,
+                       const AidlTypenames& types, const ParcelableType& defined_type,
                        const IoDelegate& io_delegate) {
   const string header_path =
       options.OutputHeaderDir() + NdkHeaderFile(defined_type, ClassNames::RAW);
@@ -133,7 +145,13 @@ void GenerateNdk(const string& output_file, const Options& options, const AidlTy
                  const AidlDefinedType& defined_type, const IoDelegate& io_delegate) {
   if (const AidlStructuredParcelable* parcelable = defined_type.AsStructuredParcelable();
       parcelable != nullptr) {
-    GenerateNdkParcel(output_file, options, types, *parcelable, io_delegate);
+    GenerateNdkParcel<AidlStructuredParcelable>(output_file, options, types, *parcelable,
+                                                io_delegate);
+    return;
+  }
+
+  if (const AidlUnionDecl* union_decl = defined_type.AsUnionDeclaration(); union_decl != nullptr) {
+    GenerateNdkParcel<AidlUnionDecl>(output_file, options, types, *union_decl, io_delegate);
     return;
   }
 
@@ -199,6 +217,8 @@ static void GenerateHeaderIncludes(CodeWriter& out, const AidlTypenames& types,
       return NdkHeaderFile(*type, ClassNames::RAW, false /*use_os_sep*/);
     } else if (type->AsStructuredParcelable() != nullptr) {
       return NdkHeaderFile(*type, ClassNames::RAW, false /*use_os_sep*/);
+    } else if (type->AsUnionDeclaration() != nullptr) {
+      return NdkHeaderFile(*type, ClassNames::RAW, false /*use_os_sep*/);
     } else if (type->AsParcelable() != nullptr) {
       return type->AsParcelable()->GetCppHeader();
     } else if (type->AsEnumDeclaration() != nullptr) {
@@ -231,9 +251,8 @@ static void GenerateHeaderIncludes(CodeWriter& out, const AidlTypenames& types,
     }
   }
 
-  const AidlStructuredParcelable* parcelable = defined_type.AsStructuredParcelable();
-  if (parcelable != nullptr) {
-    for (const auto& field : parcelable->GetFields()) {
+  auto visit_parcelable = [&](const auto& parcelable) {
+    for (const auto& field : parcelable.GetFields()) {
       visit(field->GetType());
       // Check the fields for generic type arguments
       if (field->GetType().IsGeneric()) {
@@ -242,6 +261,16 @@ static void GenerateHeaderIncludes(CodeWriter& out, const AidlTypenames& types,
         }
       }
     }
+  };
+
+  const AidlStructuredParcelable* parcelable = defined_type.AsStructuredParcelable();
+  if (parcelable != nullptr) {
+    visit_parcelable(*parcelable);
+  }
+
+  const AidlUnionDecl* union_decl = defined_type.AsUnionDeclaration();
+  if (union_decl != nullptr) {
+    visit_parcelable(*union_decl);
   }
 
   const AidlEnumDeclaration* enum_decl = defined_type.AsEnumDeclaration();
@@ -1061,6 +1090,110 @@ void GenerateParcelSource(CodeWriter& out, const AidlTypenames& types,
   out << "AParcel_setDataPosition(parcel, _aidl_end_pos);\n";
 
   out << "return _aidl_ret_status;\n";
+  out.Dedent();
+  out << "}\n";
+  out << "\n";
+  LeaveNdkNamespace(out, defined_type);
+}
+
+void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
+                          const AidlUnionDecl& defined_type, const Options& /*options*/) {
+  const std::string clazz = ClassName(defined_type, ClassNames::RAW);
+  cpp::UnionWriter uw{defined_type, types,
+                      [&](const AidlTypeSpecifier& type, const AidlTypenames& types) {
+                        return NdkNameOf(types, type, StorageMode::STACK);
+                      },
+                      &ConstantValueDecorator};
+
+  out << "#pragma once\n";
+  out << "#include <android/binder_interface_utils.h>\n";
+  out << "#include <android/binder_parcelable_utils.h>\n";
+  out << "\n";
+
+  for (const auto& header : cpp::UnionWriter::headers) {
+    out << "#include <" << header << ">\n";
+  }
+  GenerateHeaderIncludes(out, types, defined_type);
+
+  EnterNdkNamespace(out, defined_type);
+  out << cpp::TemplateDecl(defined_type);
+  out << "class " << clazz << " {\n";
+  out << "public:\n";
+  out.Indent();
+  if (defined_type.IsFixedSize()) {
+    out << "typedef std::true_type fixed_size;\n";
+  } else {
+    out << "typedef std::false_type fixed_size;\n";
+  }
+  out << "static const char* descriptor;\n";
+  out << "\n";
+  uw.PublicFields(out);
+
+  out << "binder_status_t readFromParcel(const AParcel* _parcel);\n";
+  out << "binder_status_t writeToParcel(AParcel* _parcel) const;\n";
+
+  out << "static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::"
+      << (defined_type.IsVintfStability() ? "STABILITY_VINTF" : "STABILITY_LOCAL") << ";\n";
+  out.Dedent();
+  out << "private:\n";
+  out.Indent();
+  uw.PrivateFields(out);
+  out.Dedent();
+  out << "};\n";
+  LeaveNdkNamespace(out, defined_type);
+}
+void GenerateParcelSource(CodeWriter& out, const AidlTypenames& types,
+                          const AidlUnionDecl& defined_type, const Options& /*options*/) {
+  std::string clazz = ClassName(defined_type, ClassNames::RAW);
+  if (defined_type.IsGeneric()) {
+    std::vector<std::string> template_params;
+    for (const auto& parameter : defined_type.GetTypeParameters()) {
+      template_params.push_back(parameter);
+    }
+    clazz += base::StringPrintf("<%s>", base::Join(template_params, ", ").c_str());
+  }
+
+  cpp::UnionWriter uw{defined_type, types,
+                      [&](const AidlTypeSpecifier& type, const AidlTypenames& types) {
+                        return NdkNameOf(types, type, StorageMode::STACK);
+                      },
+                      &ConstantValueDecorator};
+  cpp::ParcelWriterContext ctx{
+      .status_type = "binder_status_t",
+      .status_ok = "STATUS_OK",
+      .status_bad = "STATUS_BAD_VALUE",
+      .read_func =
+          [&](CodeWriter& out, const std::string& var, const AidlTypeSpecifier& type) {
+            ReadFromParcelFor({out, types, type, "_parcel", "&" + var});
+          },
+      .write_func =
+          [&](CodeWriter& out, const std::string& value, const AidlTypeSpecifier& type) {
+            WriteToParcelFor({out, types, type, "_parcel", value});
+          },
+  };
+
+  out << "#include \"" << NdkHeaderFile(defined_type, ClassNames::RAW, false /*use_os_sep*/)
+      << "\"\n";
+  out << "\n";
+  GenerateSourceIncludes(out, types, defined_type);
+  out << "\n";
+  EnterNdkNamespace(out, defined_type);
+  out << cpp::TemplateDecl(defined_type);
+  out << "const char* " << clazz << "::" << kDescriptor << " = \""
+      << defined_type.GetCanonicalName() << "\";\n";
+  out << "\n";
+
+  out << cpp::TemplateDecl(defined_type);
+  out << "binder_status_t " << clazz << "::readFromParcel(const AParcel* _parcel) {\n";
+  out.Indent();
+  uw.ReadFromParcel(out, ctx);
+  out.Dedent();
+  out << "}\n";
+
+  out << cpp::TemplateDecl(defined_type);
+  out << "binder_status_t " << clazz << "::writeToParcel(AParcel* _parcel) const {\n";
+  out.Indent();
+  uw.WriteToParcel(out, ctx);
   out.Dedent();
   out << "}\n";
   out << "\n";
