@@ -936,6 +936,16 @@ type aidlInterfaceProperties struct {
 	// Vndk properties for C++/NDK libraries only (preferred to use backend-specific settings)
 	cc.VndkProperties
 
+	// How to interpret VNDK options. We only want one library in the VNDK (not multiple
+	// versions, since this would be a waste of space/unclear, and ultimately we want all
+	// code in a given release to be updated to use a specific version). By default, this
+	// puts either the latest stable version of the library or, if there is no stable
+	// version, the unstable version of the library in the VNDK. When using this field,
+	// explicitly set it to one of the values in the 'versions' field to put that version
+	// in the VNDK or set it to the next version (1 higher than this) to mean the version
+	// that will be frozen in the next update.
+	Vndk_use_version *string
+
 	// Whether the library can be installed on the vendor image.
 	Vendor_available *bool
 
@@ -1121,6 +1131,24 @@ func (i *aidlInterface) checkVersions(mctx android.LoadHookContext) {
 		}
 	}
 }
+func (i *aidlInterface) checkVndkUseVersion(mctx android.LoadHookContext) {
+	if i.properties.Vndk_use_version == nil {
+		return
+	}
+	if !i.hasVersion() {
+		mctx.PropertyErrorf("vndk_use_version", "This does not make sense when no 'versions' are specified.")
+
+	}
+	if *i.properties.Vndk_use_version == i.currentVersion() {
+		return
+	}
+	for _, ver := range i.properties.Versions {
+		if *i.properties.Vndk_use_version == ver {
+			return
+		}
+	}
+	mctx.PropertyErrorf("vndk_use_version", "Specified version %q does not exist", *i.properties.Vndk_use_version)
+}
 
 func (i *aidlInterface) currentVersion(ctx android.LoadHookContext) string {
 	if !i.hasVersion() {
@@ -1233,6 +1261,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 	i.gatherInterface(mctx)
 	i.checkStability(mctx)
 	i.checkVersions(mctx)
+	i.checkVndkUseVersion(mctx)
 	i.checkGenTrace(mctx)
 
 	if mctx.Failed() {
@@ -1387,6 +1416,27 @@ func (i *aidlInterface) getImportPostfix(mctx android.LoadHookContext, version s
 	return "-" + lang
 }
 
+func (i *aidlInterface) moduleVersionForVndk() string {
+	if i.properties.Vndk_use_version != nil {
+		use_version := *i.properties.Vndk_use_version
+		if !i.hasVersion() {
+			panic("does not make sense, vndk_use_version specififed")
+		}
+		if use_version == i.latestVersion() {
+			// Latest version module name is empty
+			return ""
+		}
+		// Will be exactly one of the version numbers or 'unstable'
+		return use_version
+	}
+	// For an interface with no versions, this is the ToT interface.
+	if !i.hasVersion() {
+		return unstableVersion
+	}
+	// For an interface w/ versions, this is that latest stable version.
+	return ""
+}
+
 func defaultVisibility(mctx android.LoadHookContext) []string {
 	return []string{
 		"//" + mctx.ModuleDir(),
@@ -1411,11 +1461,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 
 	var overrideVndkProperties cc.VndkProperties
 
-	// For an interface with no versions, this is the ToT interface,
-	// especially, choose the module of which 'versionForModuleName' is 'unstable' to have only one version per an interface in VNDK.
-	// For an interface w/ versions, this is that latest stable version.
-	canBeTargetForVndk := (!i.hasVersion() && versionForModuleName == unstableVersion) || (i.hasVersion() && version == i.latestVersion())
-	if !canBeTargetForVndk {
+	if i.moduleVersionForVndk() != versionForModuleName {
 		// We only want the VNDK to include the latest interface. For interfaces in
 		// development, they will be frozen, so we put their latest version in the
 		// VNDK. For interfaces which are already frozen, we put their latest version
