@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <functional>
 #include <string>
 #include <type_traits>
 
@@ -73,6 +74,31 @@ std::vector<T> Append(std::vector<T>&& as, std::vector<T>&& bs) {
 std::string GenerateEnumValues(const AidlEnumDeclaration& enum_decl,
                                const std::vector<std::string>& enclosing_namespaces_of_enum_decl);
 std::string TemplateDecl(const AidlStructuredParcelable& defined_type);
+
+void GenerateParcelableComparisonOperators(CodeWriter& out, const AidlParcelable& parcelable);
+
+struct ParcelWriterContext {
+  string status_type;
+  string status_ok;
+  string status_bad;
+  std::function<void(CodeWriter& out, const std::string& var, const AidlTypeSpecifier& type)>
+      read_func;
+  std::function<void(CodeWriter& out, const std::string& value, const AidlTypeSpecifier& type)>
+      write_func;
+};
+
+struct UnionWriter {
+  const AidlUnionDecl& decl;
+  const AidlTypenames& typenames;
+  const std::function<std::string(const AidlTypeSpecifier&, const AidlTypenames&)> name_of;
+  const ::ConstantValueDecorator& decorator;
+  static const std::vector<std::string> headers;
+
+  void PrivateFields(CodeWriter& out) const;
+  void PublicFields(CodeWriter& out) const;
+  void ReadFromParcel(CodeWriter& out, const ParcelWriterContext&) const;
+  void WriteToParcel(CodeWriter& out, const ParcelWriterContext&) const;
+};
 
 }  // namespace cpp
 }  // namespace aidl
