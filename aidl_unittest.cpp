@@ -2701,6 +2701,7 @@ const char kUnionExampleExpectedOutputCppHeader[] = R"(#pragma once
 #include <binder/Parcel.h>
 #include <binder/Status.h>
 #include <cstdint>
+#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
