@@ -1231,10 +1231,10 @@ TEST_P(AidlTest, ExtensionTest) {
       "  ParcelableHolder extension;\n"
       "  ParcelableHolder extension2;\n"
       "}";
-  if (GetLanguage() == Options::Language::NDK || GetLanguage() == Options::Language::RUST) {
+  if (GetLanguage() == Options::Language::RUST) {
     EXPECT_EQ(nullptr, Parse("a/Data.aidl", extendable_parcelable, typenames_, GetLanguage()));
     EXPECT_EQ(
-        "ERROR: a/Data.aidl:2.1-19: The NDK and Rust backend does not support ParcelableHolder "
+        "ERROR: a/Data.aidl:2.1-19: The Rust backend does not support ParcelableHolder "
         "yet.\n",
         GetCapturedStderr());
   } else {
@@ -1251,10 +1251,10 @@ TEST_P(AidlTest, ParcelableHolderAsReturnType) {
   EXPECT_EQ(nullptr,
             Parse("a/IFoo.aidl", parcelableholder_return_interface, typenames_, GetLanguage()));
 
-  if (GetLanguage() == Options::Language::NDK || GetLanguage() == Options::Language::RUST) {
+  if (GetLanguage() == Options::Language::RUST) {
     EXPECT_EQ(
         "ERROR: a/IFoo.aidl:2.19-23: ParcelableHolder cannot be a return type\n"
-        "ERROR: a/IFoo.aidl:2.1-19: The NDK and Rust backend does not support ParcelableHolder "
+        "ERROR: a/IFoo.aidl:2.1-19: The Rust backend does not support ParcelableHolder "
         "yet.\n",
         GetCapturedStderr());
     return;
@@ -1272,10 +1272,10 @@ TEST_P(AidlTest, ParcelableHolderAsArgumentType) {
   EXPECT_EQ(nullptr,
             Parse("a/IFoo.aidl", extendable_parcelable_arg_interface, typenames_, GetLanguage()));
 
-  if (GetLanguage() == Options::Language::NDK || GetLanguage() == Options::Language::RUST) {
+  if (GetLanguage() == Options::Language::RUST) {
     EXPECT_EQ(
         "ERROR: a/IFoo.aidl:2.31-34: ParcelableHolder cannot be an argument type\n"
-        "ERROR: a/IFoo.aidl:2.14-31: The NDK and Rust backend does not support ParcelableHolder "
+        "ERROR: a/IFoo.aidl:2.14-31: The Rust backend does not support ParcelableHolder "
         "yet.\n",
         GetCapturedStderr());
     return;
