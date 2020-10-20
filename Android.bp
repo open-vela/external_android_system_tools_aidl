@@ -267,6 +267,7 @@ filegroup {
         "tests/android/aidl/tests/ICppJavaTests.aidl",
         "tests/android/aidl/tests/SimpleParcelable.aidl",
         "tests/android/aidl/tests/Union.aidl",
+        "tests/android/aidl/tests/UnionWithFd.aidl",
         "tests/android/aidl/tests/extension/*.aidl",
     ],
     path: "tests",

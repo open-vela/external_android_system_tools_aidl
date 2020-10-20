@@ -299,6 +299,15 @@ const AidlInterface* AidlTypenames::GetInterface(const AidlTypeSpecifier& type) 
   return nullptr;
 }
 
+const AidlParcelable* AidlTypenames::GetParcelable(const AidlTypeSpecifier& type) const {
+  if (auto defined_type = TryGetDefinedType(type.GetName()); defined_type != nullptr) {
+    if (auto parcelable = defined_type->AsParcelable(); parcelable != nullptr) {
+      return parcelable;
+    }
+  }
+  return nullptr;
+}
+
 void AidlTypenames::IterateTypes(const std::function<void(const AidlDefinedType&)>& body) const {
   for (const auto& kv : defined_types_) {
     body(*kv.second);
