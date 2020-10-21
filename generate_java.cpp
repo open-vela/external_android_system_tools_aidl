@@ -55,77 +55,143 @@ inline string setter_name(const AidlVariableDeclaration& variable) {
   return camelcase_join("set", variable.GetName(), variable);
 }
 
+// clang-format off
+const map<string, string> contents_describers {
+  {"FileDescriptor", R"(if (_v instanceof java.io.FileDescriptor) {
+  return android.os.Parcelable.CONTENTS_FILE_DESCRIPTOR;
+})"},
+  {"Parcelable", R"(if (_v instanceof android.os.Parcelable) {
+  return ((android.os.Parcelable) _v).describeContents();
+})"},
+  {"Map", R"(if (_v instanceof java.util.Map) {
+  return describeContents(((java.util.Map) _v).values());
+})"},
+  {"List", R"(if (_v instanceof java.util.Collection) {
+  int _mask = 0;
+  for (Object o : (java.util.Collection) _v) {
+    _mask |= describeContents(o);
+  }
+  return _mask;
+})"},
+  {"SparseArray", R"(if (_v instanceof android.util.SparseArray) {
+  android.util.SparseArray _sa = (android.util.SparseArray) _v;
+  int _mask = 0;
+  int _N = _sa.size();
+  int _i = 0;
+  while (_i < _N) {
+    _mask |= describeContents(_sa.valueAt(_i));
+    _i++;
+  }
+  return _mask;
+})"},
+  {"Array", R"(Class<?> _clazz = _v.getClass();
+if (_clazz.isArray() && _clazz.getComponentType() == Object.class) {
+  int _mask = 0;
+  for (Object o : (Object[]) _v) {
+    _mask |= describeContents(o);
+  }
+  return _mask;
+})"},
+};
+// clang-format on
+
+void GenerateDescribeContentsHelper(CodeWriter& out, const set<string>& describers) {
+  out << "private int describeContents(Object _v) {\n";
+  out.Indent();
+  out << "if (_v == null) return 0;\n";
+  for (const auto& d : describers) {
+    out << contents_describers.at(d) << "\n";
+  }
+  out << "return 0;\n";
+  out.Dedent();
+  out << "}\n";
+}
+
 // Some types contribute to Parcelable.describeContents().
 // e.g. FileDescriptor, Parcelables, List<Parcelables> ...
-std::optional<string> DescribeContents(const AidlTypenames& types, const AidlTypeSpecifier& type,
-                                       const string& value, int nest_level = 0) {
-  if (type.IsArray() || type.GetName() == "List") {
-    const auto& base_type = type.IsArray() ? type.ArrayBase() : *type.GetTypeParameters()[0];
-    auto base_var = "_v" + std::to_string(nest_level);
-    auto base_describer = DescribeContents(types, base_type, base_var, nest_level + 1);
-    if (base_describer) {
-      return fmt::format(
-          "if ({value} != null) for ({base_type} {base_var}: {value}) {base_describer}",
-          fmt::arg("value", value), fmt::arg("base_type", base_type.GetName()),
-          fmt::arg("base_var", base_var), fmt::arg("base_describer", *base_describer));
+bool CanDescribeContents(const AidlTypeSpecifier& type, const AidlTypenames& types,
+                         set<string>* describers) {
+  if ((type.GetName() == "List" || type.GetName() == "Map") && !type.IsGeneric()) {
+    // needs all describers
+    for (const auto d : contents_describers) {
+      describers->insert(d.first);
     }
-    return std::nullopt;
+    return true;
+  }
+
+  if (type.IsArray()) {
+    if (CanDescribeContents(type.ArrayBase(), types, describers)) {
+      describers->insert("Array");
+      return true;
+    }
+    return false;
+  }
+
+  if (type.GetName() == "List") {
+    if (CanDescribeContents(*type.GetTypeParameters()[0], types, describers)) {
+      describers->insert("List");
+      return true;
+    }
+    return false;
   }
 
   if (type.GetName() == "Map") {
-    const auto& base_type = type.GetTypeParameters()[1];
-    auto base_var = "_v" + std::to_string(nest_level);
-    auto base_describer = DescribeContents(types, *base_type, base_var, nest_level + 1);
-    if (base_describer) {
-      return fmt::format(
-          "if ({value} != null) for ({base_type} {base_var}: {value}.values()) {base_describer}",
-          fmt::arg("value", value), fmt::arg("base_type", base_type->GetName()),
-          fmt::arg("base_var", base_var), fmt::arg("base_describer", *base_describer));
+    if (CanDescribeContents(*type.GetTypeParameters()[1], types, describers)) {
+      describers->insert("Map");  // Map describer uses List describer
+      describers->insert("List");
+      return true;
     }
-    return std::nullopt;
+    return false;
   }
 
   if (type.GetName() == "FileDescriptor") {
-    return fmt::format(
-        "_mask |= ({} != null) ? android.os.Parcelable.CONTENTS_FILE_DESCRIPTOR : 0;\n", value);
+    describers->insert("FileDescriptor");
+    return true;
   }
 
   if (type.GetName() == "ParcelFileDescriptor" || type.GetName() == "ParcelableHolder" ||
       types.GetParcelable(type) != nullptr) {
-    return fmt::format("if ({} != null) _mask |= {}.describeContents();\n", value, value);
+    describers->insert("Parcelable");
+    return true;
   }
 
-  return std::nullopt;
+  return false;
 }
-
 void GenerateParcelableDescribeContents(CodeWriter& out, const AidlStructuredParcelable& decl,
                                         const AidlTypenames& types) {
+  set<string> describers;
+
   out << "@Override\n";
   out << "public int describeContents() {\n";
   out.Indent();
   out << "int _mask = 0;\n";
   for (const auto& f : decl.GetFields()) {
-    if (auto describer = DescribeContents(types, f->GetType(), f->GetName()); describer) {
-      out << *describer;
+    if (CanDescribeContents(f->GetType(), types, &describers)) {
+      out << "_mask |= describeContents(" << f->GetName() << ");\n";
     }
   }
   out << "return _mask;\n";
   out.Dedent();
   out << "}\n";
+  if (!describers.empty()) {
+    GenerateDescribeContentsHelper(out, describers);
+  }
 }
 
 void GenerateParcelableDescribeContents(CodeWriter& out, const AidlUnionDecl& decl,
                                         const AidlTypenames& types) {
+  set<string> describers;
+
   out << "@Override\n";
   out << "public int describeContents() {\n";
   out.Indent();
   out << "int _mask = 0;\n";
   out << "switch (getTag()) {\n";
   for (const auto& f : decl.GetFields()) {
-    if (auto describer = DescribeContents(types, f->GetType(), getter_name(*f) + "()"); describer) {
-      out << fmt::format("case {}:\n", f->GetName());
+    if (CanDescribeContents(f->GetType(), types, &describers)) {
+      out << "case " << f->GetName() << ":\n";
       out.Indent();
-      out << *describer;
+      out << "_mask |= describeContents(" << getter_name(*f) << "());\n";
       out << "break;\n";
       out.Dedent();
     }
@@ -134,6 +200,9 @@ void GenerateParcelableDescribeContents(CodeWriter& out, const AidlUnionDecl& de
   out << "return _mask;\n";
   out.Dedent();
   out << "}\n";
+  if (!describers.empty()) {
+    GenerateDescribeContentsHelper(out, describers);
+  }
 }
 }  // namespace
 

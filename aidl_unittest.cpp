@@ -155,9 +155,23 @@ public class Rect implements android.os.Parcelable
   @Override
   public int describeContents() {
     int _mask = 0;
-    if (fd != null) _mask |= fd.describeContents();
-    if (fds != null) for (ParcelFileDescriptor _v0: fds) if (_v0 != null) _mask |= _v0.describeContents();
+    _mask |= describeContents(fd);
+    _mask |= describeContents(fds);
     return _mask;
+  }
+  private int describeContents(Object _v) {
+    if (_v == null) return 0;
+    if (_v instanceof java.util.Collection) {
+      int _mask = 0;
+      for (Object o : (java.util.Collection) _v) {
+        _mask |= describeContents(o);
+      }
+      return _mask;
+    }
+    if (_v instanceof android.os.Parcelable) {
+      return ((android.os.Parcelable) _v).describeContents();
+    }
+    return 0;
   }
 }
 )";
@@ -3124,10 +3138,17 @@ public final class Foo implements android.os.Parcelable {
     int _mask = 0;
     switch (getTag()) {
     case pfd:
-      if (getPfd() != null) _mask |= getPfd().describeContents();
+      _mask |= describeContents(getPfd());
       break;
     }
     return _mask;
+  }
+  private int describeContents(Object _v) {
+    if (_v == null) return 0;
+    if (_v instanceof android.os.Parcelable) {
+      return ((android.os.Parcelable) _v).describeContents();
+    }
+    return 0;
   }
 
   private void _assertTag(int tag) {
@@ -3293,6 +3314,66 @@ TEST_P(AidlTest, RejectGenericStructuredParcelableField) {
   CaptureStderr();
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+constexpr char kDescriptContentsWithUntypedListMapInJava[] = R"(
+  @Override
+  public int describeContents() {
+    int _mask = 0;
+    _mask |= describeContents(l);
+    _mask |= describeContents(m);
+    return _mask;
+  }
+  private int describeContents(Object _v) {
+    if (_v == null) return 0;
+    Class<?> _clazz = _v.getClass();
+    if (_clazz.isArray() && _clazz.getComponentType() == Object.class) {
+      int _mask = 0;
+      for (Object o : (Object[]) _v) {
+        _mask |= describeContents(o);
+      }
+      return _mask;
+    }
+    if (_v instanceof java.io.FileDescriptor) {
+      return android.os.Parcelable.CONTENTS_FILE_DESCRIPTOR;
+    }
+    if (_v instanceof java.util.Collection) {
+      int _mask = 0;
+      for (Object o : (java.util.Collection) _v) {
+        _mask |= describeContents(o);
+      }
+      return _mask;
+    }
+    if (_v instanceof java.util.Map) {
+      return describeContents(((java.util.Map) _v).values());
+    }
+    if (_v instanceof android.os.Parcelable) {
+      return ((android.os.Parcelable) _v).describeContents();
+    }
+    if (_v instanceof android.util.SparseArray) {
+      android.util.SparseArray _sa = (android.util.SparseArray) _v;
+      int _mask = 0;
+      int _N = _sa.size();
+      int _i = 0;
+      while (_i < _N) {
+        _mask |= describeContents(_sa.valueAt(_i));
+        _i++;
+      }
+      return _mask;
+    }
+    return 0;
+  }
+)";
+TEST_F(AidlTest, SupportUntypeListAndMap) {
+  io_delegate_.SetFileContents("a/Foo.aidl", "package a; parcelable Foo { List l; Map m; }");
+  Options options = Options::From("aidl a/Foo.aidl --lang=java -o out");
+  CaptureStderr();
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/Foo.java", &code));
+  EXPECT_THAT(code, testing::HasSubstr(kDescriptContentsWithUntypedListMapInJava));
 }
 
 }  // namespace aidl
