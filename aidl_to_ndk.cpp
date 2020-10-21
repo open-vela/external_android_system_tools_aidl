@@ -322,6 +322,19 @@ static map<std::string, TypeInfo> kNdkTypeInfoMap = {
          }),
          .nullable_array = nullptr,
      }},
+    {"ParcelableHolder",
+     TypeInfo{
+         .raw =
+             TypeInfo::Aspect{
+                 .cpp_name = "::ndk::AParcelableHolder",
+                 .value_is_cheap = false,
+                 .read_func = StandardRead("::ndk::AParcel_readParcelable"),
+                 .write_func = StandardWrite("::ndk::AParcel_writeParcelable"),
+             },
+         .array = nullptr,
+         .nullable = nullptr,
+         .nullable_array = nullptr,
+     }},
 };
 
 static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlTypeSpecifier& aidl) {
