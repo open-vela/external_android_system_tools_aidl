@@ -1788,6 +1788,21 @@ TEST_F(AidlTestCompatibleChanges, ReorderedEnumerator) {
   EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
 }
 
+TEST_F(AidlTestCompatibleChanges, NewUnionField) {
+  io_delegate_.SetFileContents("old/p/Union.aidl",
+                               "package p;"
+                               "union Union {"
+                               "  String foo;"
+                               "}");
+  io_delegate_.SetFileContents("new/p/Union.aidl",
+                               "package p;"
+                               "union Union {"
+                               "  String foo;"
+                               "  int num;"
+                               "}");
+  EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
+}
+
 TEST_F(AidlTestCompatibleChanges, NewPackage) {
   io_delegate_.SetFileContents("old/p/IFoo.aidl",
                                "package p;"
@@ -1958,6 +1973,30 @@ TEST_F(AidlTestIncompatibleChanges, RemovedField) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
+TEST_F(AidlTestIncompatibleChanges, NewFieldWithNoDefault) {
+  const string expected_stderr =
+      "ERROR: new/p/Data.aidl:1.46-50: Field 'str' does not have a useful default in some "
+      "backends. Please either provide a default value for this field or mark the field as "
+      "@nullable. This value or a null value will be used automatically when an old version of "
+      "this parcelable is sent to a process which understands a new version of this parcelable. In "
+      "order to make sure your code continues to be backwards compatible, make sure the default or "
+      "null value does not cause a semantic change to this parcelable.\n";
+  io_delegate_.SetFileContents("old/p/Data.aidl",
+                               "package p;"
+                               "parcelable Data {"
+                               "  int num;"
+                               "}");
+  io_delegate_.SetFileContents("new/p/Data.aidl",
+                               "package p;"
+                               "parcelable Data {"
+                               "  int num;"
+                               "  String str;"
+                               "}");
+  CaptureStderr();
+  EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
 TEST_F(AidlTestIncompatibleChanges, RemovedEnumerator) {
   const string expected_stderr =
       "ERROR: new/p/Enum.aidl:1.15-20: Removed enumerator from p.Enum: FOO\n";
@@ -1971,6 +2010,25 @@ TEST_F(AidlTestIncompatibleChanges, RemovedEnumerator) {
                                "package p;"
                                "enum Enum {"
                                "  BAR = 2,"
+                               "}");
+  CaptureStderr();
+  EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_F(AidlTestIncompatibleChanges, RemovedUnionField) {
+  const string expected_stderr =
+      "ERROR: new/p/Union.aidl:1.16-22: Number of fields in p.Union is reduced from 2 to 1.\n";
+  io_delegate_.SetFileContents("old/p/Union.aidl",
+                               "package p;"
+                               "union Union {"
+                               "  String str;"
+                               "  int num;"
+                               "}");
+  io_delegate_.SetFileContents("new/p/Union.aidl",
+                               "package p;"
+                               "union Union {"
+                               "  String str;"
                                "}");
   CaptureStderr();
   EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
