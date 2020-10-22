@@ -1871,6 +1871,28 @@ TEST_F(AidlTestCompatibleChanges, ChangedConstValueOrder) {
   EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
 }
 
+TEST_F(AidlTestCompatibleChanges, NewFieldOfNewType) {
+  io_delegate_.SetFileContents("old/p/Data.aidl",
+                               "package p;"
+                               "parcelable Data {"
+                               "  int num;"
+                               "}");
+  io_delegate_.SetFileContents(
+      "new/p/Data.aidl",
+      "package p;"
+      "parcelable Data {"
+      "  int num;"
+      "  p.Enum e;"  // this is considered as valid since 0(enum default) is valid for "Enum" type
+      "}");
+  io_delegate_.SetFileContents("new/p/Enum.aidl",
+                               "package p;"
+                               "enum Enum {"
+                               "  FOO = 0,"
+                               "  BAR = 1,"
+                               "}");
+  EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
+}
+
 class AidlTestIncompatibleChanges : public AidlTest {
  protected:
   Options options_ = Options::From("aidl --checkapi old new");
@@ -1991,6 +2013,32 @@ TEST_F(AidlTestIncompatibleChanges, NewFieldWithNoDefault) {
                                "parcelable Data {"
                                "  int num;"
                                "  String str;"
+                               "}");
+  CaptureStderr();
+  EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_F(AidlTestIncompatibleChanges, NewFieldWithNonZeroEnum) {
+  const string expected_stderr =
+      "ERROR: new/p/Data.aidl:1.46-48: Field 'e' of enum 'Enum' can't be initialized as '0'. "
+      "Please make sure 'Enum' has '0' as a valid value.\n";
+  io_delegate_.SetFileContents("old/p/Data.aidl",
+                               "package p;"
+                               "parcelable Data {"
+                               "  int num;"
+                               "}");
+  io_delegate_.SetFileContents("new/p/Data.aidl",
+                               "package p;"
+                               "parcelable Data {"
+                               "  int num;"
+                               "  p.Enum e;"
+                               "}");
+  io_delegate_.SetFileContents("new/p/Enum.aidl",
+                               "package p;"
+                               "enum Enum {"
+                               "  FOO = 1,"
+                               "  BAR = 2,"
                                "}");
   CaptureStderr();
   EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
