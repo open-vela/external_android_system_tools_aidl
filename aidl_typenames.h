@@ -18,12 +18,14 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
 using std::map;
+using std::optional;
 using std::pair;
 using std::set;
 using std::string;
@@ -69,7 +71,7 @@ class AidlTypenames final {
     bool is_resolved;
   };
   ResolvedTypename ResolveTypename(const string& type_name) const;
-  bool CanBeOutParameter(const AidlTypeSpecifier& type) const;
+  pair<bool, string> CanBeOutParameter(const AidlTypeSpecifier& type) const;
   bool CanBeJavaOnlyImmutable(const AidlTypeSpecifier& type) const;
   bool CanBeFixedSize(const AidlTypeSpecifier& type) const;
   static bool IsList(const AidlTypeSpecifier& type);

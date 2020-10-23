@@ -279,16 +279,30 @@ bool AidlTypenames::IsList(const AidlTypeSpecifier& type) {
 }
 
 // Only T[], List, Map, ParcelFileDescriptor and mutable Parcelable can be an out parameter.
-bool AidlTypenames::CanBeOutParameter(const AidlTypeSpecifier& type) const {
+// Returns pair of
+//  - bool: tells if the type can be an out/inout parameter
+//  - string: the aspect of the type which decides whether the type can be "out" or not.
+pair<bool, string> AidlTypenames::CanBeOutParameter(const AidlTypeSpecifier& type) const {
   const string& name = type.GetName();
-  if (IsBuiltinTypename(name) || GetEnumDeclaration(type)) {
-    return type.IsArray() || type.GetName() == "List" || type.GetName() == "Map" ||
-           type.GetName() == "ParcelFileDescriptor";
+  if (type.IsArray()) return {true, "array"};
+
+  if (IsBuiltinTypename(name)) {
+    if (name == "List" || name == "Map" || name == "ParcelFileDescriptor") {
+      return {true, name};
+    }
+    return {false, name};
   }
-  const AidlDefinedType* t = TryGetDefinedType(type.GetName());
-  AIDL_FATAL_IF(t == nullptr, type) << "Unrecognized type: '" << type.GetName() << "'";
+
+  const AidlDefinedType* t = TryGetDefinedType(name);
+  AIDL_FATAL_IF(t == nullptr, type) << "Unrecognized type: '" << name << "'";
+
   // An 'out' field is passed as an argument, so it doesn't make sense if it is immutable.
-  return t->AsParcelable() != nullptr && !t->IsJavaOnlyImmutable();
+  if (t->AsParcelable() != nullptr) {
+    if (t->IsJavaOnlyImmutable()) return {false, "@JavaOnlyImmutable"};
+    return {true, "parcelable/union"};
+  }
+
+  return {false, t->GetPreprocessDeclarationName()};
 }
 
 const AidlEnumDeclaration* AidlTypenames::GetEnumDeclaration(const AidlTypeSpecifier& type) const {

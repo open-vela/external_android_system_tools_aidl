@@ -330,7 +330,8 @@ TEST_P(AidlTest, SupportOnlyOutParameters) {
 TEST_P(AidlTest, RejectOutParametersForIBinder) {
   const string interface_ibinder = "package a; interface IBaz { void f(out IBinder bar); }";
   const string expected_ibinder_stderr =
-      "ERROR: a/IBaz.aidl:1.47-51: 'out IBinder bar' can only be an in parameter.\n";
+      "ERROR: a/IBaz.aidl:1.47-51: 'bar' can't be an out parameter because IBinder can only be an "
+      "in parameter.\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IBaz.aidl", interface_ibinder, typenames_, GetLanguage()));
   EXPECT_EQ(expected_ibinder_stderr, GetCapturedStderr());
@@ -2816,16 +2817,26 @@ TEST_F(AidlTest, RejectMutableParcelableFromJavaOnlyImmutableParcelable) {
 
 TEST_F(AidlTest, ImmutableParcelableCannotBeInOut) {
   io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable parcelable Foo { int a; }");
-  io_delegate_.SetFileContents("IBar.aidl", "interface IBar { void my(inout Foo); }");
+  io_delegate_.SetFileContents("IBar.aidl", "interface IBar { void my(inout Foo foo); }");
+  string expected_error =
+      "ERROR: IBar.aidl:1.35-39: 'foo' can't be an inout parameter because @JavaOnlyImmutable can "
+      "only be an in parameter.\n";
+  CaptureStderr();
   Options options = Options::From("aidl --lang=java IBar.aidl -I .");
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expected_error, GetCapturedStderr());
 }
 
 TEST_F(AidlTest, ImmutableParcelableCannotBeOut) {
   io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable parcelable Foo { int a; }");
-  io_delegate_.SetFileContents("IBar.aidl", "interface IBar { void my(out Foo); }");
+  io_delegate_.SetFileContents("IBar.aidl", "interface IBar { void my(out Foo foo); }");
+  string expected_error =
+      "ERROR: IBar.aidl:1.33-37: 'foo' can't be an out parameter because @JavaOnlyImmutable can "
+      "only be an in parameter.\n";
+  CaptureStderr();
   Options options = Options::From("aidl --lang=java IBar.aidl -I .");
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expected_error, GetCapturedStderr());
 }
 
 TEST_F(AidlTest, ImmutableParcelableFieldNameRestriction) {
