@@ -21,7 +21,7 @@ import android.aidl.tests.StructuredParcelable;
 import android.aidl.tests.OtherParcelableForToString;
 import android.aidl.tests.IntEnum;
 
-@JavaDebug
+@JavaDerive(toString=true)
 parcelable ParcelableForToString {
     int intValue;
     int[] intArray;

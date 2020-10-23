@@ -132,7 +132,7 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
       {AidlAnnotation::Type::HIDE, "Hide", {}, false},
       {AidlAnnotation::Type::BACKING, "Backing", {{"type", "String"}}, false},
       {AidlAnnotation::Type::JAVA_PASSTHROUGH, "JavaPassthrough", {{"annotation", "String"}}, true},
-      {AidlAnnotation::Type::JAVA_DEBUG, "JavaDebug", {}, false},
+      {AidlAnnotation::Type::JAVA_DERIVE, "JavaDerive", {{"toString", "boolean"}}, false},
       {AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE, "JavaOnlyImmutable", {}, false},
       {AidlAnnotation::Type::FIXED_SIZE, "FixedSize", {}, false},
       {AidlAnnotation::Type::DESCRIPTOR, "Descriptor", {{"value", "String"}}, false},
@@ -338,8 +338,8 @@ bool AidlAnnotatable::IsHide() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::HIDE);
 }
 
-bool AidlAnnotatable::IsJavaDebug() const {
-  return GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_DEBUG);
+const AidlAnnotation* AidlAnnotatable::JavaDerive() const {
+  return GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_DERIVE);
 }
 
 std::string AidlAnnotatable::GetDescriptor() const {
@@ -886,7 +886,7 @@ std::set<AidlAnnotation::Type> AidlStructuredParcelable::GetSupportedAnnotations
           AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
           AidlAnnotation::Type::HIDE,
           AidlAnnotation::Type::JAVA_PASSTHROUGH,
-          AidlAnnotation::Type::JAVA_DEBUG,
+          AidlAnnotation::Type::JAVA_DERIVE,
           AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE,
           AidlAnnotation::Type::FIXED_SIZE,
           AidlAnnotation::Type::RUST_DERIVE};

@@ -21,7 +21,7 @@ import android.aidl.tests.IntEnum;
 import android.aidl.tests.LongEnum;
 import android.aidl.tests.ConstantExpressionEnum;
 
-@JavaDebug
+@JavaDerive(toString=true)
 @RustDerive(Clone=true, PartialEq=true)
 parcelable StructuredParcelable {
     int[] shouldContainThreeFs;
