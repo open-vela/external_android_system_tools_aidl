@@ -16,30 +16,8 @@
 
 package android.aidl.tests;
 
-import android.aidl.tests.OtherParcelableForToString;
-import android.aidl.tests.IntEnum;
-
 @JavaDerive(toString=true)
-parcelable ParcelableForToString {
-    int intValue;
-    int[] intArray;
-    long longValue;
-    long[] longArray;
-    double doubleValue;
-    double[] doubleArray;
-    float floatValue;
-    float[] floatArray;
-    byte byteValue;
-    byte[] byteArray;
-    boolean booleanValue;
-    boolean[] booleanArray;
-    String stringValue;
-    String[] stringArray;
-    List<String> stringList;
-    OtherParcelableForToString parcelableValue;
-    OtherParcelableForToString[] parcelableArray;
-    IntEnum enumValue;
-    IntEnum[] enumArray;
-    String[] nullArray;
-    List<String> nullList;
+parcelable GenericStructuredParcelable<T, U, B> {
+  int a;
+  int b;
 }

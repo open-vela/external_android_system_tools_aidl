@@ -33,6 +33,49 @@ using std::unique_ptr;
 using ::android::aidl::java::Variable;
 using std::string;
 
+namespace {
+using android::aidl::java::CodeGeneratorContext;
+using android::aidl::java::ConstantValueDecorator;
+
+void GenerateToString(CodeWriter& out, const AidlStructuredParcelable& parcel,
+                      const AidlTypenames& typenames) {
+  out << "@Override\n";
+  out << "public String toString() {\n";
+  out.Indent();
+  out << "java.util.StringJoiner _aidl_sj = new java.util.StringJoiner(";
+  out << "\", \", \"{\", \"}\");\n";
+  for (const auto& field : parcel.GetFields()) {
+    CodeGeneratorContext ctx{
+        .writer = out,
+        .typenames = typenames,
+        .type = field->GetType(),
+        .var = field->GetName(),
+    };
+    out << "_aidl_sj.add(\"" << field->GetName() << ": \" + (";
+    ToStringFor(ctx);
+    out << "));\n";
+  }
+  out << "return \"" << parcel.GetCanonicalName() << "\" + _aidl_sj.toString()  ;\n";
+  out.Dedent();
+  out << "}\n";
+}
+
+template <typename ParcelableType>
+void GenerateDerivedMethods(CodeWriter& out, const ParcelableType& parcel,
+                            const AidlTypenames& typenames) {
+  if (auto java_derive = parcel.JavaDerive(); java_derive) {
+    auto synthetic_methods = java_derive->AnnotationParams(ConstantValueDecorator);
+    for (const auto& [method_name, generate] : synthetic_methods) {
+      if (generate == "true") {
+        if (method_name == "toString") {
+          GenerateToString(out, parcel, typenames);
+        }
+      }
+    }
+  }
+}
+}  // namespace
+
 namespace android {
 namespace aidl {
 namespace java {
@@ -227,31 +270,8 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
 
   parcel_class->elements.push_back(read_method);
 
-  if (parcel->IsJavaDebug()) {
-    out.str("");
-    out << "@Override\n";
-    out << "public String toString() {\n";
-    out << "  java.util.StringJoiner _aidl_sj = new java.util.StringJoiner(";
-    out << "\", \", \"{\", \"}\");\n";
-    for (const auto& field : parcel->GetFields()) {
-      std::string code;
-      CodeWriterPtr writer = CodeWriter::ForString(&code);
-      CodeGeneratorContext context{
-          .writer = *(writer.get()),
-          .typenames = typenames,
-          .type = field->GetType(),
-          .parcel = parcel_variable->name,
-          .var = field->GetName(),
-          .is_classloader_created = &is_classloader_created,
-      };
-      ToStringFor(context);
-      writer->Close();
-      out << "  _aidl_sj.add(\"" << field->GetName() << ": \" + (" << code << "));\n";
-    }
-    out << "  return \"" << parcel->GetCanonicalName() << "\" + _aidl_sj.toString()  ;\n";
-    out << "}\n";
-    parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(out.str()));
-  }
+  auto method = CodeWriter::RunWith(GenerateDerivedMethods, *parcel, typenames);
+  parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(method));
 
   auto describe_contents_method = std::make_shared<Method>();
   describe_contents_method->modifiers = PUBLIC | OVERRIDE;

@@ -398,9 +398,9 @@ TEST_F(AidlTest, AcceptsAnnotatedOnewayMethod) {
   EXPECT_NE(nullptr, Parse("a/IFoo.aidl", oneway_method, typenames_, Options::Language::JAVA));
 }
 
-TEST_F(AidlTest, ParsesJavaDebugAnnotation) {
+TEST_F(AidlTest, ParsesJavaDeriveAnnotation) {
   io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
-    @JavaDebug parcelable IFoo { int a; float b; })");
+    @JavaDerive(toString=true) parcelable IFoo { int a; float b; })");
   Options java_options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
 
