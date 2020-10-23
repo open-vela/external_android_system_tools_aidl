@@ -182,8 +182,9 @@ class AidlAnnotation : public AidlNode {
   virtual ~AidlAnnotation() = default;
   bool CheckValid() const;
 
-  const string& GetName() const { return schema_.name; };
+  const string& GetName() const { return schema_.name; }
   const Type& GetType() const { return schema_.type; }
+  bool Repeatable() const { return schema_.repeatable; }
   string ToString(const ConstantValueDecorator& decorator) const;
   std::map<std::string, std::string> AnnotationParams(
       const ConstantValueDecorator& decorator) const;
@@ -199,6 +200,8 @@ class AidlAnnotation : public AidlNode {
 
     // map from param name -> value type
     std::map<std::string, std::string> supported_parameters;
+
+    bool repeatable;
   };
   static const std::vector<Schema>& AllSchemas();
 
