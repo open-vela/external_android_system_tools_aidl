@@ -1324,7 +1324,8 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
         AIDL_ERROR(m) << "oneway method '" << m->GetName() << "' cannot have out parameters";
         return false;
       }
-      const bool can_be_out = typenames.CanBeOutParameter(arg->GetType());
+
+      const auto [can_be_out, type_aspect] = typenames.CanBeOutParameter(arg->GetType());
       if (!arg->DirectionWasSpecified() && can_be_out) {
         AIDL_ERROR(arg) << "'" << arg->GetType().ToString()
                         << "' can be an out type, so you must declare it as in, out, or inout.";
@@ -1332,7 +1333,8 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
       }
 
       if (arg->GetDirection() != AidlArgument::IN_DIR && !can_be_out) {
-        AIDL_ERROR(arg) << "'" << arg->ToString() << "' can only be an in parameter.";
+        AIDL_ERROR(arg) << "'" << arg->GetName() << "' can't be an " << arg->GetDirectionSpecifier()
+                        << " parameter because " << type_aspect << " can only be an in parameter.";
         return false;
       }
 
