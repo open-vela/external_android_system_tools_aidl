@@ -2805,8 +2805,13 @@ TEST_F(AidlTest, SupportJavaOnlyImmutableAnnotation) {
 TEST_F(AidlTest, RejectMutableParcelableFromJavaOnlyImmutableParcelable) {
   io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable parcelable Foo { Bar bar; }");
   io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar { String a; }");
+  string expected_error =
+      "ERROR: Foo.aidl:1.40-44: The @JavaOnlyImmutable parcelable 'Foo' has a non-immutable field "
+      "named 'bar'.\n";
+  CaptureStderr();
   Options options = Options::From("aidl --lang=java Foo.aidl -I .");
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expected_error, GetCapturedStderr());
 }
 
 TEST_F(AidlTest, ImmutableParcelableCannotBeInOut) {
