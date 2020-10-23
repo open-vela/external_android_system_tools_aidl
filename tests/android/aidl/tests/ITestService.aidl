@@ -16,16 +16,14 @@
 
 package android.aidl.tests;
 
-import android.aidl.tests.BackendType;
 import android.aidl.tests.ByteEnum;
 import android.aidl.tests.INamedCallback;
 import android.aidl.tests.IntEnum;
 import android.aidl.tests.LongEnum;
+import android.aidl.tests.SimpleParcelable;
 import android.aidl.tests.StructuredParcelable;
-import android.aidl.tests.IOldName;
-import android.aidl.tests.INewName;
+import android.os.PersistableBundle;
 
-@SensitiveData
 interface ITestService {
   // Test that constants are accessible
   const int TEST_CONSTANT = 42;
@@ -41,28 +39,10 @@ interface ITestService {
   const int TEST_CONSTANT11 = 0xFA;
   const int TEST_CONSTANT12 = 0xffffffff;
 
-  const byte BYTE_TEST_CONSTANT = 17;
-  const long LONG_TEST_CONSTANT = 1L << 40;
-
   const String STRING_TEST_CONSTANT = "foo";
   const String STRING_TEST_CONSTANT2 = "bar";
 
   const @utf8InCpp String STRING_TEST_CONSTANT_UTF8 = "baz";
-
-  // This is to emulate a method that is added after the service is implemented.
-  // So the client cannot assume that a call to this method will be successful
-  // or not. However, inside the test environment, we can't build client and
-  // the server with different version of this AIDL file. So, we let the server
-  // actually implement this and intercept the dispatch to the method
-  // inside onTransact().
-  // WARNING: Must be first method.
-  // This requires hard coding the transaction number. As long as this method is
-  // the first in this interface, it can keep the
-  // "::android::IBinder::FIRST_CALL_TRANSACTION + 0" value and allow
-  // methods to be added and removed.
-  int UnimplementedMethod(int arg);
-
-  oneway void TestOneway();
 
   // Test that primitives work as parameters and return types.
   boolean RepeatBoolean(boolean token);
@@ -77,6 +57,10 @@ interface ITestService {
   IntEnum RepeatIntEnum(IntEnum token);
   LongEnum RepeatLongEnum(LongEnum token);
 
+  SimpleParcelable RepeatSimpleParcelable(in SimpleParcelable input,
+                                          out SimpleParcelable repeat);
+  PersistableBundle RepeatPersistableBundle(in PersistableBundle input);
+
   // Test that arrays work as parameters and return types.
   boolean[]   ReverseBoolean  (in boolean[]   input, out boolean[]   repeated);
   byte[]      ReverseByte     (in byte[]      input, out byte[]      repeated);
@@ -90,6 +74,11 @@ interface ITestService {
   IntEnum[]   ReverseIntEnum  (in IntEnum[]   input, out IntEnum[]   repeated);
   LongEnum[]  ReverseLongEnum (in LongEnum[]  input, out LongEnum[]  repeated);
 
+  SimpleParcelable[]  ReverseSimpleParcelables(in SimpleParcelable[] input,
+                                               out SimpleParcelable[] repeated);
+  PersistableBundle[] ReversePersistableBundles(
+      in PersistableBundle[] input, out PersistableBundle[] repeated);
+
   // Test that clients can send and receive Binders.
   INamedCallback GetOtherTestService(String name);
   boolean VerifyName(INamedCallback service, String name);
@@ -97,6 +86,12 @@ interface ITestService {
   // Test that List<T> types work correctly.
   List<String> ReverseStringList(in List<String> input,
                                  out List<String> repeated);
+  List<IBinder> ReverseNamedCallbackList(in List<IBinder> input,
+                                         out List<IBinder> repeated);
+
+  FileDescriptor RepeatFileDescriptor(in FileDescriptor read);
+  FileDescriptor[] ReverseFileDescriptorArray(in FileDescriptor[] input,
+                                              out FileDescriptor[] repeated);
 
   ParcelFileDescriptor RepeatParcelFileDescriptor(in ParcelFileDescriptor read);
   ParcelFileDescriptor[] ReverseParcelFileDescriptorArray(in ParcelFileDescriptor[] input,
@@ -112,10 +107,12 @@ interface ITestService {
   @nullable LongEnum[] RepeatNullableLongEnumArray(in @nullable LongEnum[] input);
   @nullable String RepeatNullableString(in @nullable String input);
   @nullable List<String> RepeatNullableStringList(in @nullable List<String> input);
-  @nullable StructuredParcelable RepeatNullableParcelable(in @nullable StructuredParcelable input);
+  @nullable SimpleParcelable RepeatNullableParcelable(in @nullable SimpleParcelable input);
 
   void TakesAnIBinder(in IBinder input);
+  void TakesAnIBinderList(in List<IBinder> input);
   void TakesANullableIBinder(in @nullable IBinder input);
+  void TakesANullableIBinderList(in @nullable List<IBinder> input);
 
   // Test utf8 decoding from utf16 wire format
   @utf8InCpp String RepeatUtf8CppString(@utf8InCpp String token);
@@ -139,12 +136,20 @@ interface ITestService {
   // inefficient to use an IPC to fill it out in practice.
   void FillOutStructuredParcelable(inout StructuredParcelable parcel);
 
+  // This is to emulate a method that is added after the service is implemented.
+  // So the client cannot assume that call to this method will be successful
+  // or not. However, inside the test environment, we can't build client and
+  // the server with different version of this AIDL file. So, we let the server
+  // to actually implement this, but intercept the dispatch to the method
+  // inside onTransact().
+  int UnimplementedMethod(int arg);
+
   // All these constant expressions should be equal to 1
   const int A1 = (~(-1)) == 0;
-  const int A2 = ~~(1 << 31) == (1 << 31);
+  const int A2 = -(1 << 31) == (1 << 31);
   const int A3 = -0x7fffffff < 0;
-  const int A4 = 0x80000000 < 0;
-  const int A5 = 0x7fffffff == 2147483647;
+  const int A4 = -0x80000000 < 0;
+  const int A5 = (1 + 0x7fffffff) == -2147483648;
   const int A6 = (1 << 31) == 0x80000000;
   const int A7 = (1 + 2) == 3;
   const int A8 = (8 - 9) == -1;
@@ -190,19 +195,11 @@ interface ITestService {
   const int A48 = (1 << 2) >= 0;
   const int A49 = (4 >> 1) == 2;
   const int A50 = (8 << -1) == 4;
-  const int A51 = (1 << 30 >> 30) == 1;
+  const int A51 = (1 << 31 >> 31) == -1;
   const int A52 = (1 | 16 >> 2) == 5;
   const int A53 = (0x0f ^ 0x33 & 0x99) == 0x1e; // & higher than ^
   const int A54 = (~42 & (1 << 3 | 16 >> 2) ^ 7) == 3;
   const int A55 = (2 + 3 - 4 * -7 / (10 % 3)) - 33 == 0;
   const int A56 = (2 + (-3&4 / 7)) == 2;
   const int A57 = (((((1 + 0)))));
-
-  IOldName GetOldNameInterface();
-  INewName GetNewNameInterface();
-
-  // Retrieve the ICppJavaTests if the server supports it
-  @nullable IBinder GetCppJavaTests();
-
-  BackendType getBackendType();
 }
