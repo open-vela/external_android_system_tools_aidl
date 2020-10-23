@@ -2781,7 +2781,7 @@ TEST_P(AidlTest, UnsupportedBackingAnnotationParam) {
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
-TEST_P(AidlTest, SupportJavaOnlyImmutableAnnotation) {
+TEST_F(AidlTest, SupportJavaOnlyImmutableAnnotation) {
   io_delegate_.SetFileContents("Foo.aidl",
                                "@JavaOnlyImmutable parcelable Foo { int a; Bar b; List<Bar> c; "
                                "Map<String, Baz> d; Bar[] e; }");
@@ -2792,28 +2792,28 @@ TEST_P(AidlTest, SupportJavaOnlyImmutableAnnotation) {
   EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
 }
 
-TEST_P(AidlTest, RejectMutableParcelableFromJavaOnlyImmutableParcelable) {
+TEST_F(AidlTest, RejectMutableParcelableFromJavaOnlyImmutableParcelable) {
   io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable parcelable Foo { Bar bar; }");
   io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar { String a; }");
   Options options = Options::From("aidl --lang=java Foo.aidl -I .");
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
 }
 
-TEST_P(AidlTest, ImmtuableParcelableCannotBeInOut) {
+TEST_F(AidlTest, ImmutableParcelableCannotBeInOut) {
   io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable parcelable Foo { int a; }");
   io_delegate_.SetFileContents("IBar.aidl", "interface IBar { void my(inout Foo); }");
   Options options = Options::From("aidl --lang=java IBar.aidl -I .");
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
 }
 
-TEST_P(AidlTest, ImmtuableParcelableCannotBeOut) {
+TEST_F(AidlTest, ImmutableParcelableCannotBeOut) {
   io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable parcelable Foo { int a; }");
   io_delegate_.SetFileContents("IBar.aidl", "interface IBar { void my(out Foo); }");
   Options options = Options::From("aidl --lang=java IBar.aidl -I .");
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
 }
 
-TEST_P(AidlTest, ImmtuableParcelableFieldNameRestriction) {
+TEST_F(AidlTest, ImmutableParcelableFieldNameRestriction) {
   io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable parcelable Foo { int a; int A; }");
   Options options = Options::From("aidl --lang=java Foo.aidl");
   const string expected_stderr =
