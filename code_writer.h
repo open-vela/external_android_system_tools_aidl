@@ -16,13 +16,13 @@
 
 #pragma once
 
-#include <stdio.h>
-
-#include <functional>
 #include <memory>
 #include <ostream>
 #include <string>
-#include <utility>
+
+#include <stdio.h>
+
+#include <android-base/macros.h>
 
 namespace android {
 namespace aidl {
