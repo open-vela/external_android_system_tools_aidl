@@ -897,30 +897,46 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
   if (!AidlParcelable::CheckValid(typenames)) {
     return false;
   }
-  std::set<std::string> fieldnames;
+
   for (const auto& v : GetFields()) {
     const bool field_valid = v->CheckValid(typenames);
     success = success && field_valid;
-    bool duplicated;
-    if (IsJavaOnlyImmutable()) {
-      success = success && typenames.CanBeJavaOnlyImmutable(v->GetType());
-      duplicated = !fieldnames.emplace(CapitalizeFirstLetter(*v, v->GetName())).second;
-    } else {
-      if (IsFixedSize()) {
-        if (field_valid && !typenames.CanBeFixedSize(v->GetType())) {
-          AIDL_ERROR(v) << "The @FixedSize parcelable '" << this->GetName() << "' has a "
-                        << "non-fixed size field named " << v->GetName() << ".";
-          success = false;
-        }
-      }
-      duplicated = !fieldnames.emplace(v->GetName()).second;
-    }
+  }
 
+  std::set<std::string> fieldnames;
+  for (const auto& v : GetFields()) {
+    bool duplicated = !fieldnames.emplace(v->GetName()).second;
     if (duplicated) {
       AIDL_ERROR(this) << "The parcelable '" << this->GetName() << "' has duplicate field name '"
-                       << v->GetName() << "'"
-                       << (IsJavaOnlyImmutable() ? " after capitalizing the first letter" : "");
+                       << v->GetName() << "'";
       return false;
+    }
+  }
+
+  if (IsFixedSize()) {
+    for (const auto& v : GetFields()) {
+      if (!typenames.CanBeFixedSize(v->GetType())) {
+        AIDL_ERROR(v) << "The @FixedSize parcelable '" << this->GetName() << "' has a "
+                      << "non-fixed size field named " << v->GetName() << ".";
+        success = false;
+      }
+    }
+  }
+
+  if (IsJavaOnlyImmutable()) {
+    std::set<std::string> getters;
+    for (const auto& v : GetFields()) {
+      if (!typenames.CanBeJavaOnlyImmutable(v->GetType())) {
+        AIDL_ERROR(v) << "The @JavaOnlyImmutable parcelable '" << this->GetName() << "' has a "
+                      << "non-immutable field named '" << v->GetName() << "'.";
+        success = false;
+      }
+      bool duplicated = !getters.emplace(CapitalizeFirstLetter(*v, v->GetName())).second;
+      if (duplicated) {
+        AIDL_ERROR(this) << "The parcelable '" << this->GetName() << "' has duplicate field name '"
+                         << v->GetName() << "' after capitalizing the first letter";
+        return false;
+      }
     }
   }
 
