@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 using std::cerr;
@@ -28,6 +29,8 @@ using std::endl;
 using std::string;
 using std::unique_ptr;
 using std::vector;
+using testing::internal::CaptureStderr;
+using testing::internal::GetCapturedStderr;
 
 namespace android {
 namespace aidl {
@@ -257,8 +260,10 @@ TEST(OptionsTests, ParsesCompileRust) {
   EXPECT_EQ(false, options->GenParcelableToString());
 }
 
-TEST(OptionsTests, ParsesCompileJavaInvalid) {
+TEST(OptionsTests, ParsesCompileJavaInvalid_OutRequired) {
   // -o option is required
+  string expected_error = "Output directory is not set. Set with --out.";
+  CaptureStderr();
   const char* arg_with_no_out_dir[] = {
       "aidl",
       "--lang=java",
@@ -269,7 +274,12 @@ TEST(OptionsTests, ParsesCompileJavaInvalid) {
       nullptr,
   };
   EXPECT_EQ(false, GetOptions(arg_with_no_out_dir)->Ok());
+  EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr(expected_error));
+}
 
+TEST(OptionsTests, ParsesCompileJavaInvalid_RejectHeaderOut) {
+  string expected_error = "Header output directory is set, which does not make sense for Java.";
+  CaptureStderr();
   // -h options is not for Java
   const char* arg_with_header_dir[] = {
       "aidl",          "--lang=java",           kCompileCommandIncludePath, "-o src_out",
@@ -277,6 +287,7 @@ TEST(OptionsTests, ParsesCompileJavaInvalid) {
       nullptr,
   };
   EXPECT_EQ(false, GetOptions(arg_with_header_dir)->Ok());
+  EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr(expected_error));
 }
 
 TEST(OptionsTests, ParsesCompileCppMultiInput) {
@@ -307,8 +318,10 @@ TEST(OptionsTests, ParsesCompileCppMultiInput) {
   EXPECT_EQ(string{"src_out/"}, options->OutputDir());
 }
 
-TEST(OptionsTests, ParsesCompileCppInvalid) {
+TEST(OptionsTests, ParsesCompileCppInvalid_OutRequired) {
   // -o option is required
+  string expected_error = "Output directory is not set. Set with --out.";
+  CaptureStderr();
   const char* arg_with_no_out_dir[] = {
       "aidl",
       "--lang=cpp",
@@ -319,8 +332,13 @@ TEST(OptionsTests, ParsesCompileCppInvalid) {
       nullptr,
   };
   EXPECT_EQ(false, GetOptions(arg_with_no_out_dir)->Ok());
+  EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr(expected_error));
+}
 
+TEST(OptionsTests, ParsesCompileCppInvalid_HeaderOutRequired) {
   // -h options is required as well
+  string expected_error = "Header output directory is not set. Set with --header_out";
+  CaptureStderr();
   const char* arg_with_no_header_dir[] = {
       "aidl",
       "--lang=cpp",
@@ -332,10 +350,13 @@ TEST(OptionsTests, ParsesCompileCppInvalid) {
       nullptr,
   };
   EXPECT_EQ(false, GetOptions(arg_with_no_header_dir)->Ok());
+  EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr(expected_error));
 }
 
-TEST(OptionsTests, ParsesCompileRustInvalid) {
+TEST(OptionsTests, ParsesCompileRustInvalid_OutRequired) {
   // -o option is required
+  string expected_error = "Output directory is not set. Set with --out";
+  CaptureStderr();
   const char* arg_with_no_out_dir[] = {
       "aidl",
       "--lang=rust",
@@ -346,7 +367,12 @@ TEST(OptionsTests, ParsesCompileRustInvalid) {
       nullptr,
   };
   EXPECT_EQ(false, GetOptions(arg_with_no_out_dir)->Ok());
+  EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr(expected_error));
+}
 
+TEST(OptionsTests, ParsesCompileRustInvalid_RejectHeaderOut) {
+  string expected_error = "Header output directory is set, which does not make sense for Rust.";
+  CaptureStderr();
   // -h options is not for Rust
   const char* arg_with_header_dir[] = {
       "aidl",          "--lang=rust",           kCompileCommandIncludePath, "-o src_out",
@@ -354,6 +380,7 @@ TEST(OptionsTests, ParsesCompileRustInvalid) {
       nullptr,
   };
   EXPECT_EQ(false, GetOptions(arg_with_header_dir)->Ok());
+  EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr(expected_error));
 }
 
 }  // namespace aidl
