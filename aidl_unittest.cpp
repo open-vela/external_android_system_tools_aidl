@@ -398,6 +398,16 @@ TEST_P(AidlTest, RejectsDuplicatedFieldNames) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
+TEST_P(AidlTest, RejectsRepeatedAnnotations) {
+  const string method = R"(@Hide @Hide parcelable Foo {})";
+  const string expected_stderr =
+      "ERROR: Foo.aidl:1.23-27: 'Hide' is repeated, but not allowed. Previous location: "
+      "Foo.aidl:1.1-6\n";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("Foo.aidl", method, typenames_, GetLanguage()));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
 TEST_P(AidlTest, RejectsDuplicatedAnnotationParams) {
   const string method = "package a; interface IFoo { @UnsupportedAppUsage(foo=1, foo=2)void f(); }";
   const string expected_stderr = "ERROR: a/IFoo.aidl:1.56-62: Trying to redefine parameter foo.\n";
