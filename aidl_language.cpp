@@ -117,24 +117,25 @@ std::string AidlNode::PrintLocation() const {
 
 const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
   static const std::vector<Schema> kSchemas{
-      {AidlAnnotation::Type::NULLABLE, "nullable", {}},
-      {AidlAnnotation::Type::UTF8_IN_CPP, "utf8InCpp", {}},
-      {AidlAnnotation::Type::VINTF_STABILITY, "VintfStability", {}},
+      {AidlAnnotation::Type::NULLABLE, "nullable", {}, false},
+      {AidlAnnotation::Type::UTF8_IN_CPP, "utf8InCpp", {}, false},
+      {AidlAnnotation::Type::VINTF_STABILITY, "VintfStability", {}, false},
       {AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
        "UnsupportedAppUsage",
        {{"expectedSignature", "String"},
         {"implicitMember", "String"},
         {"maxTargetSdk", "int"},
         {"publicAlternatives", "String"},
-        {"trackingBug", "long"}}},
-      {AidlAnnotation::Type::JAVA_STABLE_PARCELABLE, "JavaOnlyStableParcelable", {}},
-      {AidlAnnotation::Type::HIDE, "Hide", {}},
-      {AidlAnnotation::Type::BACKING, "Backing", {{"type", "String"}}},
-      {AidlAnnotation::Type::JAVA_PASSTHROUGH, "JavaPassthrough", {{"annotation", "String"}}},
-      {AidlAnnotation::Type::JAVA_DEBUG, "JavaDebug", {}},
-      {AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE, "JavaOnlyImmutable", {}},
-      {AidlAnnotation::Type::FIXED_SIZE, "FixedSize", {}},
-      {AidlAnnotation::Type::DESCRIPTOR, "Descriptor", {{"value", "String"}}},
+        {"trackingBug", "long"}},
+       false},
+      {AidlAnnotation::Type::JAVA_STABLE_PARCELABLE, "JavaOnlyStableParcelable", {}, false},
+      {AidlAnnotation::Type::HIDE, "Hide", {}, false},
+      {AidlAnnotation::Type::BACKING, "Backing", {{"type", "String"}}, false},
+      {AidlAnnotation::Type::JAVA_PASSTHROUGH, "JavaPassthrough", {{"annotation", "String"}}, true},
+      {AidlAnnotation::Type::JAVA_DEBUG, "JavaDebug", {}, false},
+      {AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE, "JavaOnlyImmutable", {}, false},
+      {AidlAnnotation::Type::FIXED_SIZE, "FixedSize", {}, false},
+      {AidlAnnotation::Type::DESCRIPTOR, "Descriptor", {{"value", "String"}}, false},
       {AidlAnnotation::Type::RUST_DERIVE,
        "RustDerive",
        {{"Copy", "boolean"},
@@ -143,7 +144,8 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
         {"Ord", "boolean"},
         {"PartialEq", "boolean"},
         {"Eq", "boolean"},
-        {"Hash", "boolean"}}},
+        {"Hash", "boolean"}},
+       false},
   };
   return kSchemas;
 }
@@ -268,6 +270,8 @@ static const AidlAnnotation* GetAnnotation(const vector<AidlAnnotation>& annotat
                                            AidlAnnotation::Type type) {
   for (const auto& a : annotations) {
     if (a.GetType() == type) {
+      AIDL_FATAL_IF(a.Repeatable(), a)
+          << "Trying to get a single annotation when it is repeatable.";
       return &a;
     }
   }
@@ -364,20 +368,30 @@ void AidlAnnotatable::DumpAnnotations(CodeWriter* writer) const {
 bool AidlAnnotatable::CheckValid(const AidlTypenames&) const {
   std::set<AidlAnnotation::Type> supported_annotations = GetSupportedAnnotations();
   for (const auto& annotation : GetAnnotations()) {
-    if (!annotation.CheckValid()) {
-      return false;
-    }
-
-    std::vector<std::string> supported_annot_strings;
-    for (AidlAnnotation::Type type : supported_annotations) {
-      supported_annot_strings.push_back(AidlAnnotation::TypeToString(type));
-    }
-
+    // check if it is allowed for this node
     if (supported_annotations.find(annotation.GetType()) == supported_annotations.end()) {
+      std::vector<std::string> supported_annot_strings;
+      for (AidlAnnotation::Type type : supported_annotations) {
+        supported_annot_strings.push_back(AidlAnnotation::TypeToString(type));
+      }
       AIDL_ERROR(this) << "'" << annotation.GetName()
                        << "' is not a supported annotation for this node. "
                        << "It must be one of: "
                        << android::base::Join(supported_annot_strings, ", ");
+      return false;
+    }
+    // CheckValid() only if it is okay to be here
+    if (!annotation.CheckValid()) {
+      return false;
+    }
+  }
+
+  std::map<AidlAnnotation::Type, AidlLocation> declared;
+  for (const auto& annotation : GetAnnotations()) {
+    const auto& [iter, inserted] = declared.emplace(annotation.GetType(), annotation.GetLocation());
+    if (!inserted && !annotation.Repeatable()) {
+      AIDL_ERROR(this) << "'" << annotation.GetName()
+                       << "' is repeated, but not allowed. Previous location: " << iter->second;
       return false;
     }
   }
