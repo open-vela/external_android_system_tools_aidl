@@ -16,7 +16,7 @@
 
 package android.aidl.tests;
 
-@JavaDebug
+@JavaDerive(toString=true)
 parcelable GenericStructuredParcelable<T, U, B> {
   int a;
   int b;

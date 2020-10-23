@@ -16,7 +16,7 @@
 
 package android.aidl.tests;
 
-@JavaDebug
+@JavaDerive(toString=true)
 parcelable OtherParcelableForToString {
     String field;
 }
