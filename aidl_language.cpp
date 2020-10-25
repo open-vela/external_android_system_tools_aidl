@@ -1150,7 +1150,7 @@ AidlUnionDecl::AidlUnionDecl(const AidlLocation& location, const std::string& na
 
 std::set<AidlAnnotation::Type> AidlUnionDecl::GetSupportedAnnotations() const {
   return {AidlAnnotation::Type::VINTF_STABILITY, AidlAnnotation::Type::HIDE,
-          AidlAnnotation::Type::JAVA_PASSTHROUGH};
+          AidlAnnotation::Type::JAVA_PASSTHROUGH, AidlAnnotation::Type::JAVA_DERIVE};
 }
 
 void AidlUnionDecl::Dump(CodeWriter* writer) const {
