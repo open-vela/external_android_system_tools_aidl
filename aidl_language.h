@@ -762,24 +762,7 @@ class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::s
   std::string cpp_header_;
 };
 
-class AidlWithFields {
- public:
-  AidlWithFields(std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables)
-      : variables_(std::move(*variables)) {}
-
-  const std::vector<std::unique_ptr<AidlVariableDeclaration>>& GetFields() const {
-    return variables_;
-  }
-
- protected:
-  bool CheckValid(const AidlParcelable& parcel, const AidlTypenames& typenames) const;
-  bool CheckValidForGetterNames(const AidlParcelable& parcel) const;
-
- private:
-  const std::vector<std::unique_ptr<AidlVariableDeclaration>> variables_;
-};
-
-class AidlStructuredParcelable : public AidlParcelable, public AidlWithFields {
+class AidlStructuredParcelable : public AidlParcelable {
  public:
   AidlStructuredParcelable(const AidlLocation& location, const std::string& name,
                            const std::string& package, const std::string& comments,
@@ -793,6 +776,10 @@ class AidlStructuredParcelable : public AidlParcelable, public AidlWithFields {
   AidlStructuredParcelable& operator=(const AidlStructuredParcelable&) = delete;
   AidlStructuredParcelable& operator=(AidlStructuredParcelable&&) = delete;
 
+  const std::vector<std::unique_ptr<AidlVariableDeclaration>>& GetFields() const {
+    return variables_;
+  }
+
   const AidlStructuredParcelable* AsStructuredParcelable() const override { return this; }
   std::string GetPreprocessDeclarationName() const override { return "structured_parcelable"; }
 
@@ -802,6 +789,9 @@ class AidlStructuredParcelable : public AidlParcelable, public AidlWithFields {
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                   Options::Language lang) const override;
+
+ private:
+  const std::vector<std::unique_ptr<AidlVariableDeclaration>> variables_;
 };
 
 class AidlEnumerator : public AidlNode {
@@ -868,7 +858,7 @@ class AidlEnumDeclaration : public AidlDefinedType {
   std::unique_ptr<const AidlTypeSpecifier> backing_type_;
 };
 
-class AidlUnionDecl : public AidlParcelable, public AidlWithFields {
+class AidlUnionDecl : public AidlParcelable {
  public:
   AidlUnionDecl(const AidlLocation& location, const std::string& name, const std::string& package,
                 const std::string& comments,
@@ -886,6 +876,9 @@ class AidlUnionDecl : public AidlParcelable, public AidlWithFields {
 
   const AidlNode& AsAidlNode() const override { return *this; }
 
+  const std::vector<std::unique_ptr<AidlVariableDeclaration>>& GetFields() const {
+    return variables_;
+  }
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                   Options::Language lang) const override;
@@ -893,6 +886,9 @@ class AidlUnionDecl : public AidlParcelable, public AidlWithFields {
 
   void Dump(CodeWriter* writer) const override;
   const AidlUnionDecl* AsUnionDeclaration() const override { return this; }
+
+ private:
+  const std::vector<std::unique_ptr<AidlVariableDeclaration>> variables_;
 };
 
 class AidlInterface final : public AidlDefinedType {
