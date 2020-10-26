@@ -768,6 +768,8 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
 
 void ToStringFor(const CodeGeneratorContext& c) {
   if (c.type.IsArray()) {
+    // Arrays can be null
+    c.writer << c.var << " == null ? \"null\" : ";
     c.writer << "java.util.Arrays.toString(" << c.var << ")";
     return;
   }
