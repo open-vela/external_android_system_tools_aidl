@@ -17,6 +17,7 @@
 package android.aidl.tests.immutable;
 
 import android.aidl.tests.immutable.Bar;
+import android.aidl.tests.immutable.Union;
 
 @JavaOnlyImmutable
 parcelable Foo {
@@ -25,4 +26,5 @@ parcelable Foo {
     List<Bar> c;
     Map<String, Bar> d;
     Bar[] e;
+    Union u;
 }
