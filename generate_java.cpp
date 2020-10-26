@@ -231,30 +231,6 @@ void GenerateToString(CodeWriter& out, const AidlStructuredParcelable& parcel,
   out << "}\n";
 }
 
-void GenerateToString(CodeWriter& out, const AidlUnionDecl& parcel,
-                      const AidlTypenames& typenames) {
-  out << "@Override\n";
-  out << "public String toString() {\n";
-  out.Indent();
-  out << "switch (_tag) {\n";
-  for (const auto& field : parcel.GetFields()) {
-    CodeGeneratorContext ctx{
-        .writer = out,
-        .typenames = typenames,
-        .type = field->GetType(),
-        .var = getter_name(*field) + "()",
-    };
-    out << "case " << field->GetName() << ": return \"" << parcel.GetCanonicalName() << "."
-        << field->GetName() << "(\" + (";
-    ToStringFor(ctx);
-    out << ") + \")\";\n";
-  }
-  out << "}\n";
-  out << "throw new IllegalStateException(\"unknown field: \" + _tag);\n";
-  out.Dedent();
-  out << "}\n";
-}
-
 template <typename ParcelableType>
 void GenerateDerivedMethods(CodeWriter& out, const ParcelableType& parcel,
                             const AidlTypenames& typenames) {
@@ -642,6 +618,8 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   const string tag_type = "int";
   const AidlTypeSpecifier tag_type_specifier(AIDL_LOCATION_HERE, tag_type, false /* isArray */,
                                              nullptr /* type_params */, "");
+  const string tag_name = "_tag";
+  const string value_name = "_value";
   const string clazz = decl->GetName();
 
   out << "/*\n";
@@ -667,9 +645,8 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   }
   out << "\n";
 
-  const auto final_opt = decl->IsJavaOnlyImmutable() ? "final " : "";
-  out << "private " << final_opt << tag_type + " _tag;\n";
-  out << "private " << final_opt << "Object _value;\n";
+  out << "private " + tag_type + " " + tag_name + ";\n";
+  out << "private Object " + value_name + ";\n";
   out << "\n";
 
   AIDL_FATAL_IF(decl->GetFields().empty(), *decl) << "Union '" << clazz << "' is empty.";
@@ -680,35 +657,27 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   // default ctor() inits with first member's default value
   out << "public " + clazz + "() {\n";
   out.Indent();
-  out << first_type + " _value = " << (first_value.empty() ? "null" : first_value) << ";\n";
-  out << "this._tag = " << first_field->GetName() << ";\n";
-  out << "this._value = _value;\n";
+  out << first_type + " value = " << (first_value.empty() ? "null" : first_value) << ";\n";
+  out << "_set(" + first_field->GetName() + ", value);\n";
   out.Dedent();
   out << "}\n\n";
 
-  if (!decl->IsJavaOnlyImmutable()) {
-    // private ctor(Parcel)
-    out << "private " + clazz + "(android.os.Parcel _aidl_parcel) {\n";
-    out << "  readFromParcel(_aidl_parcel);\n";
-    out << "}\n\n";
-  }
+  // ctor(Parcel)
+  out << "private " + clazz + "(android.os.Parcel _aidl_parcel) {\n";
+  out << "  readFromParcel(_aidl_parcel);\n";
+  out << "}\n\n";
 
-  // private ctor(tag, value)
-  out << "private " + clazz + "(" + tag_type + " _tag, Object _value) {\n";
-  out.Indent();
-  out << "this._tag = _tag;\n";
-  out << "this._value = _value;\n";
-  out.Dedent();
+  // ctor(tag, value)
+  out << "private " + clazz + "(" + tag_type + " tag, Object value) {\n";
+  out << "  _set(tag, value);\n";
   out << "}\n\n";
 
   // getTag()
   out << "public " + tag_type + " " + "getTag() {\n";
-  out.Indent();
-  out << "return _tag;\n";
-  out.Dedent();
+  out << "  return " + tag_name + ";\n";
   out << "}\n\n";
 
-  // value ctor, getter, setter(for mutable) for each field
+  // value ctor, getter, setter for each field
   for (const auto& variable : decl->GetFields()) {
     auto var_name = variable->GetName();
     auto var_type = JavaSignatureOf(variable->GetType(), typenames);
@@ -716,10 +685,8 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
     out << "// " + variable->Signature() + ";\n";
     // value ctor
     out << variable->GetType().GetComments() + "\n";
-    out << "public static " + clazz + " " + var_name + "(" + var_type + " _value) {\n";
-    out.Indent();
-    out << "return new " + clazz + "(" + var_name + ", _value);\n";
-    out.Dedent();
+    out << "public static " + clazz + " " + var_name + "(" + var_type + " " + value_name + ") {\n";
+    out << "  return new " + clazz + "(" + var_name + ", " + value_name + ");\n";
     out << "}\n\n";
 
     // getter
@@ -727,20 +694,14 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
       out << "@SuppressWarnings(\"unchecked\")\n";
     }
     out << "public " + var_type + " " + getter_name(*variable) + "() {\n";
-    out.Indent();
-    out << "_assertTag(" + var_name + ");\n";
-    out << "return (" + var_type + ") _value;\n";
-    out.Dedent();
+    out << "  _assertTag(" + var_name + ");\n";
+    out << "  return (" + var_type + ") " + value_name + ";\n";
     out << "}\n\n";
 
     // setter
-    if (!decl->IsJavaOnlyImmutable()) {
-      out << "public void " + setter_name(*variable) + "(" + var_type + " _value) {\n";
-      out.Indent();
-      out << "_set(" + var_name + ", _value);\n";
-      out.Dedent();
-      out << "}\n\n";
-    }
+    out << "public void " + setter_name(*variable) + "(" + var_type + " " + value_name + ") {\n";
+    out << "  _set(" + var_name + ", " + value_name + ");\n";
+    out << "}\n\n";
   }
 
   if (decl->IsVintfStability()) {
@@ -754,11 +715,7 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
       << "new android.os.Parcelable.Creator<" << clazz << ">() {\n";
   out << "  @Override\n";
   out << "  public " << clazz << " createFromParcel(android.os.Parcel _aidl_source) {\n";
-  if (decl->IsJavaOnlyImmutable()) {
-    out << "    return internalCreateFromParcel(_aidl_source);\n";
-  } else {
-    out << "    return new " + clazz + "(_aidl_source);\n";
-  }
+  out << "    return new " << clazz << "(_aidl_source);\n";
   out << "  }\n";
   out << "  @Override\n";
   out << "  public " << clazz << "[] newArray(int _aidl_size) {\n";
@@ -785,8 +742,8 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   out << "@Override\n";
   out << "public final void writeToParcel(android.os.Parcel _aidl_parcel, int _aidl_flag) {\n";
   out.Indent();
-  out << write_to_parcel(tag_type_specifier, "_tag", "_aidl_parcel");
-  out << "switch (_tag) {\n";
+  out << write_to_parcel(tag_type_specifier, tag_name, "_aidl_parcel");
+  out << "switch (" + tag_name + ") {\n";
   for (const auto& variable : decl->GetFields()) {
     out << "case " + variable->GetName() + ":\n";
     out.Indent();
@@ -817,14 +774,8 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
     return code;
   };
 
-  if (decl->IsJavaOnlyImmutable()) {
-    // When it's immutable we don't need readFromParcel, but we can use it from createFromParcel
-    out << "private static " + clazz +
-               " internalCreateFromParcel(android.os.Parcel _aidl_parcel) {\n";
-  } else {
-    // Not override, but as a user-defined parcelable, this method should be public
-    out << "public void readFromParcel(android.os.Parcel _aidl_parcel) {\n";
-  }
+  // Not override, but as a user-defined parcelable, this method should be public
+  out << "public void readFromParcel(android.os.Parcel _aidl_parcel) {\n";
   out.Indent();
   out << tag_type + " _aidl_tag;\n";
   out << read_from_parcel(tag_type_specifier, "_aidl_tag", "_aidl_parcel");
@@ -836,12 +787,8 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
     out.Indent();
     out << var_type + " _aidl_value;\n";
     out << read_from_parcel(variable->GetType(), "_aidl_value", "_aidl_parcel");
-    if (decl->IsJavaOnlyImmutable()) {
-      out << "return new " << clazz << "(_aidl_tag, _aidl_value); }\n";
-    } else {
-      out << "_set(_aidl_tag, _aidl_value);\n";
-      out << "return; }\n";
-    }
+    out << "_set(_aidl_tag, _aidl_value);\n";
+    out << "return; }\n";
     out.Dedent();
   }
   out << "}\n";
@@ -851,7 +798,6 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
 
   GenerateParcelableDescribeContents(out, *decl, typenames);
   out << "\n";
-  GenerateDerivedMethods(out, *decl, typenames);
 
   // helper: _assertTag
   out << "private void _assertTag(" + tag_type + " tag) {\n";
@@ -862,25 +808,21 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   out << "}\n\n";
 
   // helper: _tagString
-  out << "private String _tagString(" + tag_type + " _tag) {\n";
-  out << "  switch (_tag) {\n";
+  out << "private String _tagString(" + tag_type + " " + tag_name + ") {\n";
+  out << "  switch (" + tag_name + ") {\n";
   for (const auto& variable : decl->GetFields()) {
     auto var_name = variable->GetName();
     out << "  case " + var_name + ": return \"" + var_name + "\";\n";
   }
   out << "  }\n";
-  out << "  throw new IllegalStateException(\"unknown field: \" + _tag);\n";
-  out << "}\n";
+  out << "  throw new IllegalStateException(\"unknown field: \" + " + tag_name + ");\n";
+  out << "}\n\n";
 
-  if (!decl->IsJavaOnlyImmutable()) {
-    out << "\n";
-    out << "private void _set(int _tag, Object _value) {\n";
-    out.Indent();
-    out << "this._tag = _tag;\n";
-    out << "this._value = _value;\n";
-    out.Dedent();
-    out << "}\n";
-  }
+  // helper: _set
+  out << "private void _set(" + tag_type + " tag, Object value) {\n";
+  out << "  this." + tag_name + " = tag;\n";
+  out << "  this." + value_name + " = value;\n";
+  out << "}\n";
 
   out.Dedent();
   out << "}\n";
