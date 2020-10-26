@@ -860,12 +860,60 @@ void AidlParcelable::Dump(CodeWriter* writer) const {
   writer->Write("parcelable %s ;\n", GetName().c_str());
 }
 
+bool AidlWithFields::CheckValid(const AidlParcelable& parcel,
+                                const AidlTypenames& typenames) const {
+  bool success = true;
+
+  for (const auto& v : GetFields()) {
+    const bool field_valid = v->CheckValid(typenames);
+    success = success && field_valid;
+  }
+
+  // field names should be unique
+  std::set<std::string> fieldnames;
+  for (const auto& v : GetFields()) {
+    bool duplicated = !fieldnames.emplace(v->GetName()).second;
+    if (duplicated) {
+      AIDL_ERROR(v) << "'" << parcel.GetName() << "' has duplicate field name '" << v->GetName()
+                    << "'";
+      success = false;
+    }
+  }
+
+  // immutable parcelables should have immutable fields.
+  if (parcel.IsJavaOnlyImmutable()) {
+    for (const auto& v : GetFields()) {
+      if (!typenames.CanBeJavaOnlyImmutable(v->GetType())) {
+        AIDL_ERROR(v) << "The @JavaOnlyImmutable '" << parcel.GetName() << "' has a "
+                      << "non-immutable field named '" << v->GetName() << "'.";
+        success = false;
+      }
+    }
+  }
+
+  return success;
+}
+
+bool AidlWithFields::CheckValidForGetterNames(const AidlParcelable& parcel) const {
+  bool success = true;
+  std::set<std::string> getters;
+  for (const auto& v : GetFields()) {
+    bool duplicated = !getters.emplace(CapitalizeFirstLetter(*v, v->GetName())).second;
+    if (duplicated) {
+      AIDL_ERROR(v) << "'" << parcel.GetName() << "' has duplicate field name '" << v->GetName()
+                    << "' after capitalizing the first letter";
+      success = false;
+    }
+  }
+  return success;
+}
+
 AidlStructuredParcelable::AidlStructuredParcelable(
     const AidlLocation& location, const std::string& name, const std::string& package,
     const std::string& comments, std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables,
     std::vector<std::string>* type_params)
     : AidlParcelable(location, name, package, comments, "" /*cpp_header*/, type_params),
-      variables_(std::move(*variables)) {}
+      AidlWithFields(variables) {}
 
 void AidlStructuredParcelable::Dump(CodeWriter* writer) const {
   DumpHeader(writer);
@@ -893,25 +941,14 @@ std::set<AidlAnnotation::Type> AidlStructuredParcelable::GetSupportedAnnotations
 }
 
 bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const {
-  bool success = true;
   if (!AidlParcelable::CheckValid(typenames)) {
     return false;
   }
-
-  for (const auto& v : GetFields()) {
-    const bool field_valid = v->CheckValid(typenames);
-    success = success && field_valid;
+  if (!AidlWithFields::CheckValid(*this, typenames)) {
+    return false;
   }
 
-  std::set<std::string> fieldnames;
-  for (const auto& v : GetFields()) {
-    bool duplicated = !fieldnames.emplace(v->GetName()).second;
-    if (duplicated) {
-      AIDL_ERROR(this) << "The parcelable '" << this->GetName() << "' has duplicate field name '"
-                       << v->GetName() << "'";
-      return false;
-    }
-  }
+  bool success = true;
 
   if (IsFixedSize()) {
     for (const auto& v : GetFields()) {
@@ -924,19 +961,9 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
   }
 
   if (IsJavaOnlyImmutable()) {
-    std::set<std::string> getters;
-    for (const auto& v : GetFields()) {
-      if (!typenames.CanBeJavaOnlyImmutable(v->GetType())) {
-        AIDL_ERROR(v) << "The @JavaOnlyImmutable parcelable '" << this->GetName() << "' has a "
-                      << "non-immutable field named '" << v->GetName() << "'.";
-        success = false;
-      }
-      bool duplicated = !getters.emplace(CapitalizeFirstLetter(*v, v->GetName())).second;
-      if (duplicated) {
-        AIDL_ERROR(this) << "The parcelable '" << this->GetName() << "' has duplicate field name '"
-                         << v->GetName() << "' after capitalizing the first letter";
-        return false;
-      }
+    // Immutable parcelables provide getters
+    if (!CheckValidForGetterNames(*this)) {
+      success = false;
     }
   }
 
@@ -1146,11 +1173,12 @@ AidlUnionDecl::AidlUnionDecl(const AidlLocation& location, const std::string& na
                              std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables,
                              std::vector<std::string>* type_params)
     : AidlParcelable(location, name, package, comments, "" /*cpp_header*/, type_params),
-      variables_(std::move(*variables)) {}
+      AidlWithFields(variables) {}
 
 std::set<AidlAnnotation::Type> AidlUnionDecl::GetSupportedAnnotations() const {
   return {AidlAnnotation::Type::VINTF_STABILITY, AidlAnnotation::Type::HIDE,
-          AidlAnnotation::Type::JAVA_PASSTHROUGH, AidlAnnotation::Type::JAVA_DERIVE};
+          AidlAnnotation::Type::JAVA_PASSTHROUGH, AidlAnnotation::Type::JAVA_DERIVE,
+          AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE};
 }
 
 void AidlUnionDecl::Dump(CodeWriter* writer) const {
@@ -1168,15 +1196,17 @@ void AidlUnionDecl::Dump(CodeWriter* writer) const {
 }
 
 bool AidlUnionDecl::CheckValid(const AidlTypenames& typenames) const {
-  // visit parent
+  // visit parents
   if (!AidlParcelable::CheckValid(typenames)) {
     return false;
   }
-  // visit members
-  for (const auto& v : GetFields()) {
-    if (!v->CheckValid(typenames)) {
-      return false;
-    }
+  if (!AidlWithFields::CheckValid(*this, typenames)) {
+    return false;
+  }
+
+  // unions provide getters always
+  if (!CheckValidForGetterNames(*this)) {
+    return false;
   }
 
   // now, visit self!
