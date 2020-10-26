@@ -3189,16 +3189,18 @@ public final class Foo implements android.os.Parcelable {
   private Object _value;
 
   public Foo() {
-    int[] value = {42};
-    _set(ns, value);
+    int[] _value = {42};
+    this._tag = ns;
+    this._value = _value;
   }
 
   private Foo(android.os.Parcel _aidl_parcel) {
     readFromParcel(_aidl_parcel);
   }
 
-  private Foo(int tag, Object value) {
-    _set(tag, value);
+  private Foo(int _tag, Object _value) {
+    this._tag = _tag;
+    this._value = _value;
   }
 
   public int getTag() {
@@ -3344,9 +3346,9 @@ public final class Foo implements android.os.Parcelable {
     throw new IllegalStateException("unknown field: " + _tag);
   }
 
-  private void _set(int tag, Object value) {
-    this._tag = tag;
-    this._value = value;
+  private void _set(int _tag, Object _value) {
+    this._tag = _tag;
+    this._value = _value;
   }
 }
 )";
