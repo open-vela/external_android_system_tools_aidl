@@ -3394,6 +3394,21 @@ TEST_P(AidlTest, GenericStructuredParcelable) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
+TEST_F(AidlTest, NestedTypeArgs) {
+  io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar<A> { }");
+  io_delegate_.SetFileContents(
+      "a/Foo.aidl", "package a; import a.Bar; parcelable Foo { Bar<Bar<String>> barss; }");
+  Options options = Options::From("aidl a/Foo.aidl -I . -o out --lang=java");
+  const string expected_stderr = "";
+  CaptureStderr();
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/Foo.java", &code));
+  EXPECT_THAT(code, testing::HasSubstr("a.Bar<a.Bar<java.lang.String>> barss;"));
+}
+
 struct GenericAidlTest : ::testing::Test {
   FakeIoDelegate io_delegate_;
   void Compile(string cmd) {
