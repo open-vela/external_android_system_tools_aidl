@@ -392,7 +392,8 @@ TEST_P(AidlTest, RejectsDuplicatedArgumentNames) {
 
 TEST_P(AidlTest, RejectsDuplicatedFieldNames) {
   const string method = "package a; parcelable Foo { int a; String a; }";
-  const string expected_stderr = "ERROR: a/Foo.aidl:1.42-44: 'Foo' has duplicate field name 'a'\n";
+  const string expected_stderr =
+      "ERROR: a/Foo.aidl:1.22-26: The parcelable 'Foo' has duplicate field name 'a'\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, GetLanguage()));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
@@ -579,46 +580,22 @@ TEST_F(AidlTest, ParsesJavaOnlyStableParcelable) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
-TEST_F(AidlTest, ParcelableSupportJavaDeriveToString) {
-  io_delegate_.SetFileContents("a/Foo.aidl", R"(package a;
-    @JavaDerive(toString=true) parcelable Foo { int a; float b; })");
-  Options java_options = Options::From("aidl --lang=java -o out a/Foo.aidl");
+TEST_F(AidlTest, ParsesJavaDeriveAnnotation) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    @JavaDerive(toString=true) parcelable IFoo { int a; float b; })");
+  Options java_options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
 
   string java_out;
-  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/Foo.java", &java_out));
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/IFoo.java", &java_out));
   EXPECT_THAT(java_out, testing::HasSubstr("public String toString() {"));
 
   // Other backends shouldn't be bothered
-  Options cpp_options = Options::From("aidl --lang=cpp -o out -h out a/Foo.aidl");
+  Options cpp_options = Options::From("aidl --lang=cpp -o out -h out a/IFoo.aidl");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(cpp_options, io_delegate_));
 
-  Options ndk_options = Options::From("aidl --lang=ndk -o out -h out a/Foo.aidl");
+  Options ndk_options = Options::From("aidl --lang=ndk -o out -h out a/IFoo.aidl");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(ndk_options, io_delegate_));
-}
-
-TEST_F(AidlTest, UnionSupportJavaDeriveToString) {
-  io_delegate_.SetFileContents("a/Foo.aidl", R"(package a;
-    @JavaDerive(toString=true) union Foo { int a; int[] b; })");
-  CaptureStderr();
-  Options java_options = Options::From("aidl --lang=java -o out a/Foo.aidl");
-  EXPECT_EQ(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
-  EXPECT_EQ("", GetCapturedStderr());
-
-  const string expected_to_string_method = R"--(
-  @Override
-  public String toString() {
-    switch (_tag) {
-    case a: return "a.Foo.a(" + (getA()) + ")";
-    case b: return "a.Foo.b(" + (java.util.Arrays.toString(getB())) + ")";
-    }
-    throw new IllegalStateException("unknown field: " + _tag);
-  }
-)--";
-
-  string java_out;
-  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/Foo.java", &java_out));
-  EXPECT_THAT(java_out, testing::HasSubstr(expected_to_string_method));
 }
 
 TEST_F(AidlTest, RejectsJavaDeriveAnnotation) {
@@ -2841,19 +2818,7 @@ TEST_F(AidlTest, RejectMutableParcelableFromJavaOnlyImmutableParcelable) {
   io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable parcelable Foo { Bar bar; }");
   io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar { String a; }");
   string expected_error =
-      "ERROR: Foo.aidl:1.40-44: The @JavaOnlyImmutable 'Foo' has a non-immutable field "
-      "named 'bar'.\n";
-  CaptureStderr();
-  Options options = Options::From("aidl --lang=java Foo.aidl -I .");
-  EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
-  EXPECT_EQ(expected_error, GetCapturedStderr());
-}
-
-TEST_F(AidlTest, RejectMutableParcelableFromJavaOnlyImmutableUnion) {
-  io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable union Foo { Bar bar; }");
-  io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar { String a; }");
-  string expected_error =
-      "ERROR: Foo.aidl:1.35-39: The @JavaOnlyImmutable 'Foo' has a non-immutable field "
+      "ERROR: Foo.aidl:1.40-44: The @JavaOnlyImmutable parcelable 'Foo' has a non-immutable field "
       "named 'bar'.\n";
   CaptureStderr();
   Options options = Options::From("aidl --lang=java Foo.aidl -I .");
@@ -2889,8 +2854,8 @@ TEST_F(AidlTest, ImmutableParcelableFieldNameRestriction) {
   io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable parcelable Foo { int a; int A; }");
   Options options = Options::From("aidl --lang=java Foo.aidl");
   const string expected_stderr =
-      "ERROR: Foo.aidl:1.47-49: 'Foo' has duplicate field name 'A' after capitalizing the first "
-      "letter\n";
+      "ERROR: Foo.aidl:1.30-34: The parcelable 'Foo' has duplicate field name 'A' after "
+      "capitalizing the first letter\n";
   CaptureStderr();
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
@@ -3189,18 +3154,16 @@ public final class Foo implements android.os.Parcelable {
   private Object _value;
 
   public Foo() {
-    int[] _value = {42};
-    this._tag = ns;
-    this._value = _value;
+    int[] value = {42};
+    _set(ns, value);
   }
 
   private Foo(android.os.Parcel _aidl_parcel) {
     readFromParcel(_aidl_parcel);
   }
 
-  private Foo(int _tag, Object _value) {
-    this._tag = _tag;
-    this._value = _value;
+  private Foo(int tag, Object value) {
+    _set(tag, value);
   }
 
   public int getTag() {
@@ -3346,9 +3309,9 @@ public final class Foo implements android.os.Parcelable {
     throw new IllegalStateException("unknown field: " + _tag);
   }
 
-  private void _set(int _tag, Object _value) {
-    this._tag = _tag;
-    this._value = _value;
+  private void _set(int tag, Object value) {
+    this._tag = tag;
+    this._value = value;
   }
 }
 )";
