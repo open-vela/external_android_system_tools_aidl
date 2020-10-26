@@ -231,6 +231,30 @@ void GenerateToString(CodeWriter& out, const AidlStructuredParcelable& parcel,
   out << "}\n";
 }
 
+void GenerateToString(CodeWriter& out, const AidlUnionDecl& parcel,
+                      const AidlTypenames& typenames) {
+  out << "@Override\n";
+  out << "public String toString() {\n";
+  out.Indent();
+  out << "switch (_tag) {\n";
+  for (const auto& field : parcel.GetFields()) {
+    CodeGeneratorContext ctx{
+        .writer = out,
+        .typenames = typenames,
+        .type = field->GetType(),
+        .var = getter_name(*field) + "()",
+    };
+    out << "case " << field->GetName() << ": return \"" << parcel.GetCanonicalName() << "."
+        << field->GetName() << "(\" + (";
+    ToStringFor(ctx);
+    out << ") + \")\";\n";
+  }
+  out << "}\n";
+  out << "throw new IllegalStateException(\"unknown field: \" + _tag);\n";
+  out.Dedent();
+  out << "}\n";
+}
+
 template <typename ParcelableType>
 void GenerateDerivedMethods(CodeWriter& out, const ParcelableType& parcel,
                             const AidlTypenames& typenames) {
@@ -798,6 +822,7 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
 
   GenerateParcelableDescribeContents(out, *decl, typenames);
   out << "\n";
+  GenerateDerivedMethods(out, *decl, typenames);
 
   // helper: _assertTag
   out << "private void _assertTag(" + tag_type + " tag) {\n";
