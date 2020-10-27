@@ -239,6 +239,9 @@ unique_ptr<Declaration> DefineClientTransaction(const AidlTypenames& typenames,
 
   // Declare parcels to hold our query and the response.
   b->AddLiteral(StringPrintf("%s %s", kAndroidParcelLiteral, kDataVarName));
+  if (interface.IsSensitiveData()) {
+    b->AddLiteral(StringPrintf("%s.markSensitive()", kDataVarName));
+  }
   // Even if we're oneway, the transact method still takes a parcel.
   b->AddLiteral(StringPrintf("%s %s", kAndroidParcelLiteral, kReplyVarName));
 
@@ -298,9 +301,11 @@ unique_ptr<Declaration> DefineClientTransaction(const AidlTypenames& typenames,
   vector<string> args = {transaction_code, kDataVarName,
                          StringPrintf("&%s", kReplyVarName)};
 
-  if (method.IsOneway()) {
-    args.push_back("::android::IBinder::FLAG_ONEWAY");
-  }
+  std::vector<std::string> flags;
+  if (method.IsOneway()) flags.push_back("::android::IBinder::FLAG_ONEWAY");
+  if (interface.IsSensitiveData()) flags.push_back("::android::IBinder::FLAG_CLEAR_BUF");
+
+  args.push_back(flags.empty() ? "0" : Join(flags, " | "));
 
   b->AddStatement(new Assignment(
       kAndroidStatusVarName,

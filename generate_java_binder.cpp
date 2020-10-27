@@ -16,6 +16,7 @@
 
 #include "aidl.h"
 #include "aidl_to_java.h"
+#include "ast_java.h"
 #include "generate_java.h"
 #include "logging.h"
 #include "options.h"
@@ -591,6 +592,11 @@ static std::shared_ptr<Method> generate_proxy_method(
   auto _data = std::make_shared<Variable>("android.os.Parcel", "_data");
   proxy->statements->Add(std::make_shared<VariableDeclaration>(
       _data, std::make_shared<MethodCall>("android.os.Parcel", "obtain")));
+
+  if (iface.IsSensitiveData()) {
+    proxy->statements->Add(std::make_shared<LiteralStatement>("_data.markSensitive();"));
+  }
+
   std::shared_ptr<Variable> _reply = nullptr;
   if (!oneway) {
     _reply = std::make_shared<Variable>("android.os.Parcel", "_reply");
@@ -647,13 +653,17 @@ static std::shared_ptr<Method> generate_proxy_method(
     }
   }
 
+  std::vector<std::string> flags;
+  if (oneway) flags.push_back("android.os.IBinder.FLAG_ONEWAY");
+  if (iface.IsSensitiveData()) flags.push_back("android.os.IBinder.FLAG_CLEAR_BUF");
+
   // the transact call
   auto call = std::make_shared<MethodCall>(
       proxyClass->mRemote, "transact",
       std::vector<std::shared_ptr<Expression>>{
           std::make_shared<LiteralExpression>("Stub." + transactCodeName), _data,
           _reply ? _reply : NULL_VALUE,
-          std::make_shared<LiteralExpression>(oneway ? "android.os.IBinder.FLAG_ONEWAY" : "0")});
+          std::make_shared<LiteralExpression>(flags.empty() ? "0" : Join(flags, " | "))});
   auto _status = std::make_shared<Variable>("boolean", "_status");
   tryStatement->statements->Add(std::make_shared<VariableDeclaration>(_status, call));
 
