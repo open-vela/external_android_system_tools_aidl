@@ -99,6 +99,12 @@ fn test_constants() {
     assert_eq!(ITestService::A57, 1);
 }
 
+#[test]
+fn test_oneway() {
+    let result = get_test_service().TestOneway();
+    assert_eq!(result, Ok(()));
+}
+
 macro_rules! test_primitive {
     ($test:ident, $func:ident, $value:expr) => {
         #[test]

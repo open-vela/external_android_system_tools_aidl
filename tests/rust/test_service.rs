@@ -115,6 +115,11 @@ macro_rules! impl_repeat_nullable {
 impl ITestService::ITestService for TestService {
     impl_repeat! {RepeatByte, i8}
     impl_reverse! {ReverseByte, u8}
+
+    fn TestOneway(&self) -> binder::Result<()> {
+        Err(binder::StatusCode::UNKNOWN_ERROR.into())
+    }
+
     impl_repeat_reverse! {RepeatBoolean, ReverseBoolean, bool}
     impl_repeat_reverse! {RepeatChar, ReverseChar, u16}
     impl_repeat_reverse! {RepeatInt, ReverseInt, i32}
