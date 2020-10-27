@@ -170,6 +170,7 @@ class AidlAnnotation : public AidlNode {
     VINTF_STABILITY,
     NULLABLE,
     UTF8_IN_CPP,
+    SENSITIVE_DATA,
     JAVA_PASSTHROUGH,
     JAVA_DERIVE,
     JAVA_ONLY_IMMUTABLE,
@@ -241,6 +242,7 @@ class AidlAnnotatable : public AidlNode {
   }
   bool IsNullable() const;
   bool IsUtf8InCpp() const;
+  bool IsSensitiveData() const;
   bool IsVintfStability() const;
   bool IsJavaOnlyImmutable() const;
   bool IsFixedSize() const;

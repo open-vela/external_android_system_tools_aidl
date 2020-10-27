@@ -112,6 +112,7 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
   static const std::vector<Schema> kSchemas{
       {AidlAnnotation::Type::NULLABLE, "nullable", {}, false},
       {AidlAnnotation::Type::UTF8_IN_CPP, "utf8InCpp", {}, false},
+      {AidlAnnotation::Type::SENSITIVE_DATA, "SensitiveData", {}, false},
       {AidlAnnotation::Type::VINTF_STABILITY, "VintfStability", {}, false},
       {AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
        "UnsupportedAppUsage",
@@ -279,6 +280,10 @@ bool AidlAnnotatable::IsNullable() const {
 
 bool AidlAnnotatable::IsUtf8InCpp() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::UTF8_IN_CPP);
+}
+
+bool AidlAnnotatable::IsSensitiveData() const {
+  return GetAnnotation(annotations_, AidlAnnotation::Type::SENSITIVE_DATA);
 }
 
 bool AidlAnnotatable::IsVintfStability() const {
@@ -1314,9 +1319,9 @@ void AidlInterface::Dump(CodeWriter* writer) const {
 }
 
 std::set<AidlAnnotation::Type> AidlInterface::GetSupportedAnnotations() const {
-  return {AidlAnnotation::Type::VINTF_STABILITY, AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
-          AidlAnnotation::Type::HIDE, AidlAnnotation::Type::JAVA_PASSTHROUGH,
-          AidlAnnotation::Type::DESCRIPTOR};
+  return {AidlAnnotation::Type::SENSITIVE_DATA,        AidlAnnotation::Type::VINTF_STABILITY,
+          AidlAnnotation::Type::UNSUPPORTED_APP_USAGE, AidlAnnotation::Type::HIDE,
+          AidlAnnotation::Type::JAVA_PASSTHROUGH,      AidlAnnotation::Type::DESCRIPTOR};
 }
 
 bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
