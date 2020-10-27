@@ -3511,6 +3511,15 @@ TEST_P(AidlTest, RejectGenericStructuredParcelableField) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
+TEST_P(AidlTest, LongCommentWithinConstExpression) {
+  io_delegate_.SetFileContents("Foo.aidl", "enum Foo { FOO = (1 << 1) /* comment */ | 0x0 }");
+  Options options =
+      Options::From("aidl Foo.aidl --lang=" + Options::LanguageToString(GetLanguage()));
+  CaptureStderr();
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+}
+
 constexpr char kDescriptContentsWithUntypedListMapInJava[] = R"(
   @Override
   public int describeContents() {
