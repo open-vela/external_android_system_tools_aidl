@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 
 import android.aidl.tests.immutable.Bar;
 import android.aidl.tests.immutable.Foo;
+import android.aidl.tests.immutable.Union;
 import android.os.Parcel;
 import android.os.RemoteException;
 import java.lang.UnsupportedOperationException;
@@ -49,7 +50,7 @@ public class JavaOnlyImmutableAnnotationTests {
     array[1] = new Bar("one");
     array[2] = new Bar("two");
 
-    Foo foo = new Foo(7, new Bar("my"), list, map, array);
+    Foo foo = new Foo(7, new Bar("my"), list, map, array, Union.num(42));
     foo.writeToParcel(parcel, 0);
     parcel.setDataPosition(0);
     Foo foo2 = Foo.CREATOR.createFromParcel(parcel);
@@ -65,6 +66,8 @@ public class JavaOnlyImmutableAnnotationTests {
     for (int i = 0; i < foo.e.length; i++) {
       assertThat(foo.e[i].s, is(foo2.e[i].s));
     }
+
+    assertThat(foo.u.getNum(), is(foo2.u.getNum()));
   }
 
   @Test
@@ -78,8 +81,8 @@ public class JavaOnlyImmutableAnnotationTests {
 
   @Test(expected = UnsupportedOperationException.class)
   public void testListIsUnmodifiable() {
-    Foo foo =
-        new Foo(7, new Bar("my"), new ArrayList<Bar>(), new HashMap<String, Bar>(), new Bar[5]);
+    Foo foo = new Foo(7, new Bar("my"), new ArrayList<Bar>(), new HashMap<String, Bar>(),
+        new Bar[5], Union.num(42));
     foo.c.add(new Bar("hi"));
     // It is supposed to fail.
     fail("A List in an immutable parcelable isn't modifiable.");
@@ -87,8 +90,8 @@ public class JavaOnlyImmutableAnnotationTests {
 
   @Test(expected = UnsupportedOperationException.class)
   public void testMapIsUnmodifiable() {
-    Foo foo =
-        new Foo(7, new Bar("my"), new ArrayList<Bar>(), new HashMap<String, Bar>(), new Bar[5]);
+    Foo foo = new Foo(7, new Bar("my"), new ArrayList<Bar>(), new HashMap<String, Bar>(),
+        new Bar[5], Union.num(42));
     foo.d.put("key", new Bar("value"));
     // It is supposed to fail.
     fail("A Map in an immutable parcelable isn't modifiable.");
@@ -112,8 +115,15 @@ public class JavaOnlyImmutableAnnotationTests {
     array[1] = new Bar("one");
     array[2] = new Bar("two");
 
-    Foo foo = new Foo(7, b, list, map, array);
-    Foo foo2 = new Foo.Builder().setA(7).setB(b).setC(list).setD(map).setE(array).build();
+    Foo foo = new Foo(7, b, list, map, array, Union.num(42));
+    Foo foo2 = new Foo.Builder()
+                   .setA(7)
+                   .setB(b)
+                   .setC(list)
+                   .setD(map)
+                   .setE(array)
+                   .setU(Union.num(42))
+                   .build();
 
     assertThat(foo.a, is(foo2.a));
     assertThat(foo.b.s, is(foo2.b.s));
@@ -126,5 +136,7 @@ public class JavaOnlyImmutableAnnotationTests {
     for (int i = 0; i < foo.e.length; i++) {
       assertThat(foo.e[i].s, is(foo2.e[i].s));
     }
+
+    assertThat(foo.u.getNum(), is(foo2.u.getNum()));
   }
 }
