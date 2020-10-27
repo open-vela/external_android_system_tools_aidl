@@ -165,7 +165,7 @@ class AidlAnnotation : public AidlNode {
     NULLABLE,
     UTF8_IN_CPP,
     JAVA_PASSTHROUGH,
-    JAVA_DEBUG,
+    JAVA_DERIVE,
     JAVA_ONLY_IMMUTABLE,
     FIXED_SIZE,
     DESCRIPTOR,
@@ -240,7 +240,7 @@ class AidlAnnotatable : public AidlNode {
   bool IsFixedSize() const;
   bool IsStableApiParcelable(Options::Language lang) const;
   bool IsHide() const;
-  bool IsJavaDebug() const;
+  const AidlAnnotation* JavaDerive() const;
   std::string GetDescriptor() const;
 
   void DumpAnnotations(CodeWriter* writer) const;
