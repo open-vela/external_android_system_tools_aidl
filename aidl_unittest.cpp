@@ -580,22 +580,46 @@ TEST_F(AidlTest, ParsesJavaOnlyStableParcelable) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
-TEST_F(AidlTest, ParsesJavaDeriveAnnotation) {
-  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
-    @JavaDerive(toString=true) parcelable IFoo { int a; float b; })");
-  Options java_options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+TEST_F(AidlTest, ParcelableSupportJavaDeriveToString) {
+  io_delegate_.SetFileContents("a/Foo.aidl", R"(package a;
+    @JavaDerive(toString=true) parcelable Foo { int a; float b; })");
+  Options java_options = Options::From("aidl --lang=java -o out a/Foo.aidl");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
 
   string java_out;
-  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/IFoo.java", &java_out));
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/Foo.java", &java_out));
   EXPECT_THAT(java_out, testing::HasSubstr("public String toString() {"));
 
   // Other backends shouldn't be bothered
-  Options cpp_options = Options::From("aidl --lang=cpp -o out -h out a/IFoo.aidl");
+  Options cpp_options = Options::From("aidl --lang=cpp -o out -h out a/Foo.aidl");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(cpp_options, io_delegate_));
 
-  Options ndk_options = Options::From("aidl --lang=ndk -o out -h out a/IFoo.aidl");
+  Options ndk_options = Options::From("aidl --lang=ndk -o out -h out a/Foo.aidl");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(ndk_options, io_delegate_));
+}
+
+TEST_F(AidlTest, UnionSupportJavaDeriveToString) {
+  io_delegate_.SetFileContents("a/Foo.aidl", R"(package a;
+    @JavaDerive(toString=true) union Foo { int a; int[] b; })");
+  CaptureStderr();
+  Options java_options = Options::From("aidl --lang=java -o out a/Foo.aidl");
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+
+  const string expected_to_string_method = R"--(
+  @Override
+  public String toString() {
+    switch (_tag) {
+    case a: return "a.Foo.a(" + (getA()) + ")";
+    case b: return "a.Foo.b(" + (java.util.Arrays.toString(getB())) + ")";
+    }
+    throw new IllegalStateException("unknown field: " + _tag);
+  }
+)--";
+
+  string java_out;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/Foo.java", &java_out));
+  EXPECT_THAT(java_out, testing::HasSubstr(expected_to_string_method));
 }
 
 TEST_F(AidlTest, RejectsJavaDeriveAnnotation) {
