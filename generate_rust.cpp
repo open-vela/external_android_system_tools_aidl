@@ -459,6 +459,18 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
   return true;
 }
 
+void GenerateParcelBody(CodeWriter& out, const AidlStructuredParcelable* parcel,
+                        const AidlTypenames& typenames) {
+  out << "pub struct " << parcel->GetName() << " {\n";
+  out.Indent();
+  for (const auto& variable : parcel->GetFields()) {
+    auto field_type = RustNameOf(variable->GetType(), typenames, StorageMode::PARCELABLE_FIELD);
+    out << "pub " << variable->GetName() << ": " << field_type << ",\n";
+  }
+  out.Dedent();
+  out << "}\n";
+}
+
 void GenerateParcelDefault(CodeWriter& out, const AidlStructuredParcelable* parcel) {
   out << "impl Default for " << parcel->GetName() << " {\n";
   out.Indent();
@@ -481,7 +493,140 @@ void GenerateParcelDefault(CodeWriter& out, const AidlStructuredParcelable* parc
   out << "}\n";
 }
 
-void GenerateParcelSerialize(CodeWriter& out, const AidlStructuredParcelable* parcel,
+void GenerateParcelSerializeBody(CodeWriter& out, const AidlStructuredParcelable* parcel,
+                                 const AidlTypenames& typenames) {
+  out << "parcel.sized_write(|subparcel| {\n";
+  out.Indent();
+  for (const auto& variable : parcel->GetFields()) {
+    if (!TypeHasDefault(variable->GetType(), typenames)) {
+      out << "let __field_ref = this." << variable->GetName()
+          << ".as_ref().ok_or(binder::StatusCode::UNEXPECTED_NULL)?;\n";
+      out << "subparcel.write(__field_ref)?;\n";
+    } else {
+      out << "subparcel.write(&this." << variable->GetName() << ")?;\n";
+    }
+  }
+  out << "Ok(())\n";
+  out.Dedent();
+  out << "})\n";
+}
+
+void GenerateParcelDeserializeBody(CodeWriter& out, const AidlStructuredParcelable* parcel,
+                                   const AidlTypenames& typenames) {
+  out << "let start_pos = parcel.get_data_position();\n";
+  out << "let parcelable_size: i32 = parcel.read()?;\n";
+  out << "if parcelable_size < 0 { return Err(binder::StatusCode::BAD_VALUE); }\n";
+
+  // Pre-emit the common field epilogue code, shared between all fields:
+  ostringstream epilogue;
+  epilogue << "if (parcel.get_data_position() - start_pos) == parcelable_size {\n";
+  // We assume the lhs can never be > parcelable_size, because then the read
+  // immediately preceding this check would have returned NOT_ENOUGH_DATA
+  epilogue << "  return Ok(Some(result));\n";
+  epilogue << "}\n";
+  string epilogue_str = epilogue.str();
+
+  out << "let mut result = Self::default();\n";
+  for (const auto& variable : parcel->GetFields()) {
+    if (!TypeHasDefault(variable->GetType(), typenames)) {
+      out << "result." << variable->GetName() << " = Some(parcel.read()?);\n";
+    } else {
+      out << "result." << variable->GetName() << " = parcel.read()?;\n";
+    }
+    out << epilogue_str;
+  }
+
+  out << "Ok(Some(result))\n";
+}
+
+void GenerateParcelBody(CodeWriter& out, const AidlUnionDecl* parcel,
+                        const AidlTypenames& typenames) {
+  out << "pub enum " << parcel->GetName() << " {\n";
+  out.Indent();
+  for (const auto& variable : parcel->GetFields()) {
+    auto field_type = RustNameOf(variable->GetType(), typenames, StorageMode::PARCELABLE_FIELD);
+    out << variable->GetCapitalizedName() << "(" << field_type << "),\n";
+  }
+  out.Dedent();
+  out << "}\n";
+}
+
+void GenerateParcelDefault(CodeWriter& out, const AidlUnionDecl* parcel) {
+  out << "impl Default for " << parcel->GetName() << " {\n";
+  out.Indent();
+  out << "fn default() -> Self {\n";
+  out.Indent();
+
+  AIDL_FATAL_IF(parcel->GetFields().empty(), *parcel)
+      << "Union '" << parcel->GetName() << "' is empty.";
+  const auto& first_field = parcel->GetFields()[0];
+  const auto& first_value = first_field->ValueString(ConstantValueDecorator);
+
+  out << "Self::";
+  if (first_field->GetDefaultValue()) {
+    out << first_field->GetCapitalizedName() << "(" << first_value << ")\n";
+  } else {
+    out << first_field->GetCapitalizedName() << "(Default::default())\n";
+  }
+
+  out.Dedent();
+  out << "}\n";
+  out.Dedent();
+  out << "}\n";
+}
+
+void GenerateParcelSerializeBody(CodeWriter& out, const AidlUnionDecl* parcel,
+                                 const AidlTypenames& typenames) {
+  out << "match this {\n";
+  out.Indent();
+  int tag = 0;
+  for (const auto& variable : parcel->GetFields()) {
+    out << "Self::" << variable->GetCapitalizedName() << "(v) => {\n";
+    out.Indent();
+    out << "parcel.write(&" << std::to_string(tag++) << "i32)?;\n";
+    if (!TypeHasDefault(variable->GetType(), typenames)) {
+      out << "let __field_ref = v.as_ref().ok_or(binder::StatusCode::UNEXPECTED_NULL)?;\n";
+      out << "parcel.write(__field_ref)\n";
+    } else {
+      out << "parcel.write(v)\n";
+    }
+    out.Dedent();
+    out << "}\n";
+  }
+  out.Dedent();
+  out << "}\n";
+}
+
+void GenerateParcelDeserializeBody(CodeWriter& out, const AidlUnionDecl* parcel,
+                                   const AidlTypenames& typenames) {
+  out << "let tag: i32 = parcel.read()?;\n";
+  out << "match tag {\n";
+  out.Indent();
+  int tag = 0;
+  for (const auto& variable : parcel->GetFields()) {
+    auto field_type = RustNameOf(variable->GetType(), typenames, StorageMode::PARCELABLE_FIELD);
+
+    out << std::to_string(tag++) << " => {\n";
+    out.Indent();
+    out << "let value: " << field_type << " = ";
+    if (!TypeHasDefault(variable->GetType(), typenames)) {
+      out << "Some(parcel.read()?);\n";
+    } else {
+      out << "parcel.read()?;\n";
+    }
+    out << "Ok(Some(Self::" << variable->GetCapitalizedName() << "(value)))\n";
+    out.Dedent();
+    out << "}\n";
+  }
+  out << "_ => {\n";
+  out << "  Err(binder::StatusCode::BAD_VALUE)\n";
+  out << "}\n";
+  out.Dedent();
+  out << "}\n";
+}
+
+template <typename ParcelableType>
+void GenerateParcelSerialize(CodeWriter& out, const ParcelableType* parcel,
                              const AidlTypenames& typenames) {
   out << "impl binder::parcel::Serialize for " << parcel->GetName() << " {\n";
   out << "  fn serialize(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {\n";
@@ -502,27 +647,17 @@ void GenerateParcelSerialize(CodeWriter& out, const AidlStructuredParcelable* pa
   out << "} else {\n";
   out << "  return parcel.write(&0i32);\n";
   out << "};\n";
-  out << "parcel.sized_write(|subparcel| {\n";
-  out.Indent();
-  for (const auto& variable : parcel->GetFields()) {
-    if (!TypeHasDefault(variable->GetType(), typenames)) {
-      out << "let __field_ref = this." << variable->GetName()
-          << ".as_ref().ok_or(binder::StatusCode::UNEXPECTED_NULL)?;\n";
-      out << "subparcel.write(__field_ref)?;\n";
-    } else {
-      out << "subparcel.write(&this." << variable->GetName() << ")?;\n";
-    }
-  }
-  out << "Ok(())\n";
-  out.Dedent();
-  out << "})\n";
+
+  GenerateParcelSerializeBody(out, parcel, typenames);
+
   out.Dedent();
   out << "}\n";
   out.Dedent();
   out << "}\n";
 }
 
-void GenerateParcelDeserialize(CodeWriter& out, const AidlStructuredParcelable* parcel,
+template <typename ParcelableType>
+void GenerateParcelDeserialize(CodeWriter& out, const ParcelableType* parcel,
                                const AidlTypenames& typenames) {
   out << "impl binder::parcel::Deserialize for " << parcel->GetName() << " {\n";
   out << "  fn deserialize(parcel: &binder::parcel::Parcel) -> binder::Result<Self> {\n";
@@ -535,39 +670,23 @@ void GenerateParcelDeserialize(CodeWriter& out, const AidlStructuredParcelable* 
   out << "impl binder::parcel::DeserializeArray for " << parcel->GetName() << " {}\n";
 
   out << "impl binder::parcel::DeserializeOption for " << parcel->GetName() << " {\n";
-  out << "  fn deserialize_option(parcel: &binder::parcel::Parcel) -> binder::Result<Option<Self>> "
+  out.Indent();
+  out << "fn deserialize_option(parcel: &binder::parcel::Parcel) -> binder::Result<Option<Self>> "
          "{\n";
-  out << "    let status: i32 = parcel.read()?;\n";
-  out << "    if status == 0 { return Ok(None); }\n";
-  out << "    let start_pos = parcel.get_data_position();\n";
-  out << "    let parcelable_size: i32 = parcel.read()?;\n";
-  out << "    if parcelable_size < 0 { return Err(binder::StatusCode::BAD_VALUE); }\n";
+  out.Indent();
+  out << "let status: i32 = parcel.read()?;\n";
+  out << "if status == 0 { return Ok(None); }\n";
 
-  // Pre-emit the common field epilogue code, shared between all fields:
-  ostringstream epilogue;
-  epilogue << "    if (parcel.get_data_position() - start_pos) == parcelable_size {\n";
-  // We assume the lhs can never be > parcelable_size, because then the read
-  // immediately preceding this check would have returned NOT_ENOUGH_DATA
-  epilogue << "      return Ok(Some(result));\n";
-  epilogue << "    }\n";
-  string epilogue_str = epilogue.str();
+  GenerateParcelDeserializeBody(out, parcel, typenames);
 
-  out << "    let mut result = Self::default();\n";
-  for (const auto& variable : parcel->GetFields()) {
-    if (!TypeHasDefault(variable->GetType(), typenames)) {
-      out << "    result." << variable->GetName() << " = Some(parcel.read()?);\n";
-    } else {
-      out << "    result." << variable->GetName() << " = parcel.read()?;\n";
-    }
-    out << epilogue_str;
-  }
-
-  out << "    Ok(Some(result))\n";
-  out << "  }\n";
+  out.Dedent();
+  out << "}\n";
+  out.Dedent();
   out << "}\n";
 }
 
-bool GenerateRustParcel(const string& filename, const AidlStructuredParcelable* parcel,
+template <typename ParcelableType>
+bool GenerateRustParcel(const string& filename, const ParcelableType* parcel,
                         const AidlTypenames& typenames, const IoDelegate& io_delegate) {
   CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
 
@@ -585,20 +704,11 @@ bool GenerateRustParcel(const string& filename, const AidlStructuredParcelable* 
   }
 
   *code_writer << "#[derive(" << Join(derives, ", ") << ")]\n";
-  *code_writer << "pub struct " << parcel->GetName() << " {\n";
-  code_writer->Indent();
-  for (const auto& variable : parcel->GetFields()) {
-    auto field_type = RustNameOf(variable->GetType(), typenames, StorageMode::PARCELABLE_FIELD);
-    *code_writer << "pub " << variable->GetName() << ": " << field_type << ",\n";
-  }
-  code_writer->Dedent();
-  *code_writer << "}\n";
-
+  GenerateParcelBody(*code_writer, parcel, typenames);
   GenerateMangledAlias(*code_writer, parcel);
   GenerateParcelDefault(*code_writer, parcel);
   GenerateParcelSerialize(*code_writer, parcel, typenames);
   GenerateParcelDeserialize(*code_writer, parcel, typenames);
-
   return true;
 }
 
@@ -631,6 +741,10 @@ bool GenerateRust(const string& filename, const AidlDefinedType* defined_type,
                   const Options& options) {
   if (const AidlStructuredParcelable* parcelable = defined_type->AsStructuredParcelable();
       parcelable != nullptr) {
+    return GenerateRustParcel(filename, parcelable, typenames, io_delegate);
+  }
+
+  if (const AidlUnionDecl* parcelable = defined_type->AsUnionDeclaration(); parcelable != nullptr) {
     return GenerateRustParcel(filename, parcelable, typenames, io_delegate);
   }
 

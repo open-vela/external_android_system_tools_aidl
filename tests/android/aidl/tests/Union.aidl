@@ -17,6 +17,8 @@
 package android.aidl.tests;
 import android.aidl.tests.ByteEnum;
 
+@JavaDerive(toString=true)
+@RustDerive(Clone=true, PartialEq=true)
 union Union {
     int[] ns;
     int n;
