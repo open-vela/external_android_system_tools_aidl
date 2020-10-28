@@ -347,6 +347,7 @@ class AidlVariableDeclaration : public AidlNode {
   AidlVariableDeclaration& operator=(AidlVariableDeclaration&&) = delete;
 
   std::string GetName() const { return name_; }
+  std::string GetCapitalizedName() const;
   const AidlTypeSpecifier& GetType() const { return *type_; }
   // if this was constructed explicitly with a default value
   bool IsDefaultUserSpecified() const { return default_user_specified_; }
