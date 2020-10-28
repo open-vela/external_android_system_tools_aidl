@@ -69,17 +69,6 @@ const map<string, string> contents_describers {
   }
   return _mask;
 })"},
-  {"SparseArray", R"(if (_v instanceof android.util.SparseArray) {
-  android.util.SparseArray _sa = (android.util.SparseArray) _v;
-  int _mask = 0;
-  int _N = _sa.size();
-  int _i = 0;
-  while (_i < _N) {
-    _mask |= describeContents(_sa.valueAt(_i));
-    _i++;
-  }
-  return _mask;
-})"},
   {"Array", R"(Class<?> _clazz = _v.getClass();
 if (_clazz.isArray() && _clazz.getComponentType() == Object.class) {
   int _mask = 0;
@@ -107,14 +96,6 @@ void GenerateDescribeContentsHelper(CodeWriter& out, const set<string>& describe
 // e.g. FileDescriptor, Parcelables, List<Parcelables> ...
 bool CanDescribeContents(const AidlTypeSpecifier& type, const AidlTypenames& types,
                          set<string>* describers) {
-  if ((type.GetName() == "List" || type.GetName() == "Map") && !type.IsGeneric()) {
-    // needs all describers
-    for (const auto d : contents_describers) {
-      describers->insert(d.first);
-    }
-    return true;
-  }
-
   if (type.IsArray()) {
     if (CanDescribeContents(type.ArrayBase(), types, describers)) {
       describers->insert("Array");
