@@ -57,6 +57,8 @@ interface ITestService {
   // methods to be added and removed.
   int UnimplementedMethod(int arg);
 
+  oneway void TestOneway();
+
   // Test that primitives work as parameters and return types.
   boolean RepeatBoolean(boolean token);
   byte RepeatByte(byte token);
