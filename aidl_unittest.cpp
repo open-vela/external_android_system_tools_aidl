@@ -3538,64 +3538,57 @@ TEST_P(AidlTest, LongCommentWithinConstExpression) {
   EXPECT_EQ("", GetCapturedStderr());
 }
 
-constexpr char kDescriptContentsWithUntypedListMapInJava[] = R"(
-  @Override
-  public int describeContents() {
-    int _mask = 0;
-    _mask |= describeContents(l);
-    _mask |= describeContents(m);
-    return _mask;
-  }
-  private int describeContents(Object _v) {
-    if (_v == null) return 0;
-    Class<?> _clazz = _v.getClass();
-    if (_clazz.isArray() && _clazz.getComponentType() == Object.class) {
-      int _mask = 0;
-      for (Object o : (Object[]) _v) {
-        _mask |= describeContents(o);
-      }
-      return _mask;
-    }
-    if (_v instanceof java.io.FileDescriptor) {
-      return android.os.Parcelable.CONTENTS_FILE_DESCRIPTOR;
-    }
-    if (_v instanceof java.util.Collection) {
-      int _mask = 0;
-      for (Object o : (java.util.Collection) _v) {
-        _mask |= describeContents(o);
-      }
-      return _mask;
-    }
-    if (_v instanceof java.util.Map) {
-      return describeContents(((java.util.Map) _v).values());
-    }
-    if (_v instanceof android.os.Parcelable) {
-      return ((android.os.Parcelable) _v).describeContents();
-    }
-    if (_v instanceof android.util.SparseArray) {
-      android.util.SparseArray _sa = (android.util.SparseArray) _v;
-      int _mask = 0;
-      int _N = _sa.size();
-      int _i = 0;
-      while (_i < _N) {
-        _mask |= describeContents(_sa.valueAt(_i));
-        _i++;
-      }
-      return _mask;
-    }
-    return 0;
-  }
-)";
-TEST_F(AidlTest, SupportUntypeListAndMap) {
+TEST_F(AidlTest, RejectUntypdeListAndMapInUnion) {
+  io_delegate_.SetFileContents("a/Foo.aidl", "package a; union Foo { List l; Map m; }");
+  Options options = Options::From("aidl a/Foo.aidl --lang=java -o out");
+  std::string expectedErr =
+      "ERROR: a/Foo.aidl:1.28-30: "
+      "Encountered an untyped List or Map. The use of untyped List/Map is "
+      "prohibited because it is not guaranteed that the objects in the list are recognizable in "
+      "the receiving side. Consider switching to an array or a generic List/Map.\n"
+      "ERROR: a/Foo.aidl:1.35-37: "
+      "Encountered an untyped List or Map. The use of untyped List/Map is "
+      "prohibited because it is not guaranteed that the objects in the list are recognizable in "
+      "the receiving side. Consider switching to an array or a generic List/Map.\n";
+  CaptureStderr();
+  EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expectedErr, GetCapturedStderr());
+}
+
+TEST_F(AidlTest, RejectUntypdeListAndMapInUnstructuredParcelable) {
   io_delegate_.SetFileContents("a/Foo.aidl", "package a; parcelable Foo { List l; Map m; }");
   Options options = Options::From("aidl a/Foo.aidl --lang=java -o out");
+  std::string expectedErr =
+      "ERROR: a/Foo.aidl:1.33-35: "
+      "Encountered an untyped List or Map. The use of untyped List/Map is "
+      "prohibited because it is not guaranteed that the objects in the list are recognizable in "
+      "the receiving side. Consider switching to an array or a generic List/Map.\n"
+      "ERROR: a/Foo.aidl:1.40-42: "
+      "Encountered an untyped List or Map. The use of untyped List/Map is "
+      "prohibited because it is not guaranteed that the objects in the list are recognizable in "
+      "the receiving side. Consider switching to an array or a generic List/Map.\n";
   CaptureStderr();
-  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
-  EXPECT_EQ("", GetCapturedStderr());
+  EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expectedErr, GetCapturedStderr());
+}
 
-  string code;
-  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/Foo.java", &code));
-  EXPECT_THAT(code, testing::HasSubstr(kDescriptContentsWithUntypedListMapInJava));
+TEST_F(AidlTest, RejectNestedUntypedListAndMap) {
+  io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar<T>;");
+  io_delegate_.SetFileContents(
+      "a/Foo.aidl", "package a; import a.Bar; parcelable Foo { Bar<List> a; Bar<Map> b; }");
+  Options options = Options::From("aidl a/Foo.aidl -I . --lang=java -o out");
+  std::string expectedErr =
+      "ERROR: a/Foo.aidl:1.52-54: "
+      "Encountered an untyped List or Map. The use of untyped List/Map is "
+      "prohibited because it is not guaranteed that the objects in the list are recognizable in "
+      "the receiving side. Consider switching to an array or a generic List/Map.\n"
+      "ERROR: a/Foo.aidl:1.64-66: "
+      "Encountered an untyped List or Map. The use of untyped List/Map is "
+      "prohibited because it is not guaranteed that the objects in the list are recognizable in "
+      "the receiving side. Consider switching to an array or a generic List/Map.\n";
+  CaptureStderr();
+  EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expectedErr, GetCapturedStderr());
 }
 
 }  // namespace aidl
