@@ -589,7 +589,7 @@ bool GenerateRustParcel(const string& filename, const AidlStructuredParcelable* 
   code_writer->Indent();
   for (const auto& variable : parcel->GetFields()) {
     auto field_type = RustNameOf(variable->GetType(), typenames, StorageMode::PARCELABLE_FIELD);
-    *code_writer << "pub " << variable->GetName() << ": " << field_type << ", \n";
+    *code_writer << "pub " << variable->GetName() << ": " << field_type << ",\n";
   }
   code_writer->Dedent();
   *code_writer << "}\n";
