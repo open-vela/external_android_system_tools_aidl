@@ -3424,6 +3424,83 @@ public final class Foo implements android.os.Parcelable {
 }
 )";
 
+const char kUnionExampleExpectedOutputRust[] = R"(#[derive(Debug)]
+pub enum Foo {
+  Ns(Vec<i32>),
+  E(crate::mangled::_1_a_8_ByteEnum),
+  Pfd(Option<binder::parcel::ParcelFileDescriptor>),
+}
+pub(crate) mod mangled { pub use super::Foo as _1_a_3_Foo; }
+impl Default for Foo {
+  fn default() -> Self {
+    Self::Ns(vec!{42})
+  }
+}
+impl binder::parcel::Serialize for Foo {
+  fn serialize(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    <Self as binder::parcel::SerializeOption>::serialize_option(Some(self), parcel)
+  }
+}
+impl binder::parcel::SerializeArray for Foo {}
+impl binder::parcel::SerializeOption for Foo {
+  fn serialize_option(this: Option<&Self>, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    let this = if let Some(this) = this {
+      parcel.write(&1i32)?;
+      this
+    } else {
+      return parcel.write(&0i32);
+    };
+    match this {
+      Self::Ns(v) => {
+        parcel.write(&0i32)?;
+        parcel.write(v)
+      }
+      Self::E(v) => {
+        parcel.write(&1i32)?;
+        parcel.write(v)
+      }
+      Self::Pfd(v) => {
+        parcel.write(&2i32)?;
+        let __field_ref = v.as_ref().ok_or(binder::StatusCode::UNEXPECTED_NULL)?;
+        parcel.write(__field_ref)
+      }
+    }
+  }
+}
+impl binder::parcel::Deserialize for Foo {
+  fn deserialize(parcel: &binder::parcel::Parcel) -> binder::Result<Self> {
+    <Self as binder::parcel::DeserializeOption>::deserialize_option(parcel)
+       .transpose()
+       .unwrap_or(Err(binder::StatusCode::UNEXPECTED_NULL))
+  }
+}
+impl binder::parcel::DeserializeArray for Foo {}
+impl binder::parcel::DeserializeOption for Foo {
+  fn deserialize_option(parcel: &binder::parcel::Parcel) -> binder::Result<Option<Self>> {
+    let status: i32 = parcel.read()?;
+    if status == 0 { return Ok(None); }
+    let tag: i32 = parcel.read()?;
+    match tag {
+      0 => {
+        let value: Vec<i32> = parcel.read()?;
+        Ok(Some(Self::Ns(value)))
+      }
+      1 => {
+        let value: crate::mangled::_1_a_8_ByteEnum = parcel.read()?;
+        Ok(Some(Self::E(value)))
+      }
+      2 => {
+        let value: Option<binder::parcel::ParcelFileDescriptor> = Some(parcel.read()?);
+        Ok(Some(Self::Pfd(value)))
+      }
+      _ => {
+        Err(binder::StatusCode::BAD_VALUE)
+      }
+    }
+  }
+}
+)";
+
 struct AidlUnionTest : ::testing::Test {
   void SetUp() override {
     io_delegate_.SetFileContents("a/Foo.aidl", R"(
@@ -3483,7 +3560,11 @@ TEST_F(AidlUnionTest, Example_Java) {
   Compile("java");
   EXPECT_COMPILE_OUTPUTS(
       map<string, string>({{"out/a/Foo.java", kUnionExampleExpectedOutputJava}}));
-  // TODO(b/170689477) Rust
+}
+
+TEST_F(AidlUnionTest, Example_Rust) {
+  Compile("rust");
+  EXPECT_COMPILE_OUTPUTS(map<string, string>({{"out/a/Foo.rs", kUnionExampleExpectedOutputRust}}));
 }
 
 TEST_P(AidlTest, UnionRejectsEmptyDecl) {

@@ -297,6 +297,8 @@ TEST_F(AidlTest, ConfirmStructuredParcelables) {
 
   EXPECT_EQ(parcelable.addString1, "hello world!");
   EXPECT_EQ(parcelable.addString2, "The quick brown fox jumps over the lazy dog.");
+
+  EXPECT_EQ(parcelable.u->get<Union::ns>(), vector<int32_t>({1, 2, 3}));
 }
 
 TEST_F(AidlTest, EmptyParcelableHolder) {
