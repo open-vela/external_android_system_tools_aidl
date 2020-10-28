@@ -293,6 +293,8 @@ class NativeService : public BnTestService {
     ALOGI("Repeating token %s", token_str.str().c_str());
   }
 
+  Status TestOneway() override { return Status::fromStatusT(android::UNKNOWN_ERROR); }
+
   Status RepeatBoolean(bool token, bool* _aidl_return) override {
     LogRepeatedToken(token ? 1 : 0);
     *_aidl_return = token;
