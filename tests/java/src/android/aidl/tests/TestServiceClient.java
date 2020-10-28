@@ -79,6 +79,11 @@ public class TestServiceClient {
     }
 
     @Test
+    public void testOneway() throws RemoteException {
+      service.TestOneway();
+    }
+
+    @Test
     public void testBooleanRepeat() throws RemoteException {
         boolean query = true;
         assertThat(service.RepeatBoolean(query), is(query));
