@@ -44,18 +44,11 @@ namespace {
 using android::aidl::java::CodeGeneratorContext;
 using android::aidl::java::ConstantValueDecorator;
 
-// join two non-empty strings according to `camelCase` naming.
-inline string camelcase_join(const string& a, const string& b, const AidlNode& context) {
-  AIDL_FATAL_IF(b.size() <= 0 || a.size() <= 0, context) << "Name cannot be empty.";
-  std::string name = a + b;
-  name[a.size()] = static_cast<char>(toupper(name[a.size()]));
-  return name;
-}
 inline string getter_name(const AidlVariableDeclaration& variable) {
-  return camelcase_join("get", variable.GetName(), variable);
+  return "get" + variable.GetCapitalizedName();
 }
 inline string setter_name(const AidlVariableDeclaration& variable) {
-  return camelcase_join("set", variable.GetName(), variable);
+  return "set" + variable.GetCapitalizedName();
 }
 
 // clang-format off
@@ -73,6 +66,17 @@ const map<string, string> contents_describers {
   int _mask = 0;
   for (Object o : (java.util.Collection) _v) {
     _mask |= describeContents(o);
+  }
+  return _mask;
+})"},
+  {"SparseArray", R"(if (_v instanceof android.util.SparseArray) {
+  android.util.SparseArray _sa = (android.util.SparseArray) _v;
+  int _mask = 0;
+  int _N = _sa.size();
+  int _i = 0;
+  while (_i < _N) {
+    _mask |= describeContents(_sa.valueAt(_i));
+    _i++;
   }
   return _mask;
 })"},
@@ -103,6 +107,14 @@ void GenerateDescribeContentsHelper(CodeWriter& out, const set<string>& describe
 // e.g. FileDescriptor, Parcelables, List<Parcelables> ...
 bool CanDescribeContents(const AidlTypeSpecifier& type, const AidlTypenames& types,
                          set<string>* describers) {
+  if ((type.GetName() == "List" || type.GetName() == "Map") && !type.IsGeneric()) {
+    // needs all describers
+    for (const auto d : contents_describers) {
+      describers->insert(d.first);
+    }
+    return true;
+  }
+
   if (type.IsArray()) {
     if (CanDescribeContents(type.ArrayBase(), types, describers)) {
       describers->insert("Array");
