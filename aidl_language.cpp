@@ -69,13 +69,6 @@ bool IsJavaKeyword(const char* str) {
   return std::find(kJavaKeywords.begin(), kJavaKeywords.end(), str) != kJavaKeywords.end();
 }
 
-inline std::string CapitalizeFirstLetter(const AidlNode& context, const std::string& str) {
-  AIDL_FATAL_IF(str.size() <= 0, context) << "Input cannot be empty.";
-  std::ostringstream out;
-  out << static_cast<char>(toupper(str[0])) << str.substr(1);
-  return out.str();
-}
-
 void AddHideComment(CodeWriter* writer) {
   writer->Write("/* @hide */\n");
 }
@@ -616,6 +609,13 @@ bool AidlVariableDeclaration::CheckValid(const AidlTypenames& typenames) const {
   return !ValueString(AidlConstantValueDecorator).empty();
 }
 
+string AidlVariableDeclaration::GetCapitalizedName() const {
+  AIDL_FATAL_IF(name_.size() <= 0, *this) << "Name can't be empty.";
+  string str = name_;
+  str[0] = static_cast<char>(toupper(str[0]));
+  return str;
+}
+
 string AidlVariableDeclaration::ToString() const {
   string ret = type_->Signature() + " " + name_;
   if (default_value_ != nullptr && default_user_specified_) {
@@ -902,7 +902,7 @@ bool AidlWithFields::CheckValidForGetterNames(const AidlParcelable& parcel) cons
   bool success = true;
   std::set<std::string> getters;
   for (const auto& v : GetFields()) {
-    bool duplicated = !getters.emplace(CapitalizeFirstLetter(*v, v->GetName())).second;
+    bool duplicated = !getters.emplace(v->GetCapitalizedName()).second;
     if (duplicated) {
       AIDL_ERROR(v) << "'" << parcel.GetName() << "' has duplicate field name '" << v->GetName()
                     << "' after capitalizing the first letter";
