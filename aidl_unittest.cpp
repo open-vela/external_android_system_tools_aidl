@@ -2308,6 +2308,27 @@ TEST_F(AidlTestIncompatibleChanges, RemovedAnnotation) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
+TEST_F(AidlTestIncompatibleChanges, ChangedBackingTypeOfEnum) {
+  const string expected_stderr =
+      "ERROR: new/p/Foo.aidl:1.11-32: Type changed: byte to long.\n"
+      "ERROR: new/p/Foo.aidl:1.36-40: Changed backing types.\n";
+  io_delegate_.SetFileContents("old/p/Foo.aidl",
+                               "package p;"
+                               "@Backing(type=\"byte\")"
+                               "enum Foo {"
+                               " FOO, BAR,"
+                               "}");
+  io_delegate_.SetFileContents("new/p/Foo.aidl",
+                               "package p;"
+                               "@Backing(type=\"long\")"
+                               "enum Foo {"
+                               " FOO, BAR,"
+                               "}");
+  CaptureStderr();
+  EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
 TEST_F(AidlTestIncompatibleChanges, AddedParcelableAnnotation) {
   const string expected_stderr =
       "ERROR: new/p/Foo.aidl:1.47-51: Changed annotations: (empty) to @JavaOnlyStableParcelable\n";
