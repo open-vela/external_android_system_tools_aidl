@@ -314,7 +314,7 @@ const AidlTypeSpecifier* AidlAnnotatable::BackingType(const AidlTypenames& typen
       string unquoted_type = type.substr(1, type.length() - 2);
 
       AidlTypeSpecifier* type_specifier =
-          new AidlTypeSpecifier(AIDL_LOCATION_HERE, unquoted_type, false, nullptr, "");
+          new AidlTypeSpecifier(annotation->GetLocation(), unquoted_type, false, nullptr, "");
       type_specifier->Resolve(typenames);
       return type_specifier;
     }
