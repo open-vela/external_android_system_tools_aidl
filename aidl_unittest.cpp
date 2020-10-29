@@ -1934,6 +1934,20 @@ TEST_F(AidlTestCompatibleChanges, ChangedConstValueOrder) {
   EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
 }
 
+TEST_F(AidlTestCompatibleChanges, ReorderedAnnatations) {
+  io_delegate_.SetFileContents("old/p/Foo.aidl",
+                               "package p;"
+                               "@JavaPassthrough(annotation=\"Alice\")"
+                               "@JavaPassthrough(annotation=\"Bob\")"
+                               "parcelable Foo {}");
+  io_delegate_.SetFileContents("new/p/Foo.aidl",
+                               "package p;"
+                               "@JavaPassthrough(annotation=\"Bob\")"
+                               "@JavaPassthrough(annotation=\"Alice\")"
+                               "parcelable Foo {}");
+  EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
+}
+
 TEST_F(AidlTestCompatibleChanges, NewFieldOfNewType) {
   io_delegate_.SetFileContents("old/p/Data.aidl",
                                "package p;"
@@ -2324,6 +2338,24 @@ TEST_F(AidlTestIncompatibleChanges, ChangedBackingTypeOfEnum) {
                                "enum Foo {"
                                " FOO, BAR,"
                                "}");
+  CaptureStderr();
+  EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_F(AidlTestIncompatibleChanges, ChangedAnnatationParams) {
+  const string expected_stderr =
+      "ERROR: new/p/Foo.aidl:1.55-59: Changed annotations: @JavaPassthrough(annotation=\"Alice\") "
+      "to @JavaPassthrough(annotation=\"Bob\")\n";
+  io_delegate_.SetFileContents("old/p/Foo.aidl",
+                               "package p;"
+                               "@JavaPassthrough(annotation=\"Alice\")"
+                               "parcelable Foo {}");
+  io_delegate_.SetFileContents("new/p/Foo.aidl",
+                               "package p;"
+                               "@JavaPassthrough(annotation=\"Bob\")"
+                               "parcelable Foo {}");
+
   CaptureStderr();
   EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
