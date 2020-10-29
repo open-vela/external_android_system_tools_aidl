@@ -707,32 +707,41 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
                        << " does not have VINTF level stability, but this interface requires it.";
     }
 
-    // Ensure that untyped List/Map is not used in stable AIDL.
-    if (options.IsStructured()) {
-      const AidlInterface* iface = type.AsInterface();
-      const AidlStructuredParcelable* parcelable = type.AsStructuredParcelable();
+    // Ensure that untyped List/Map is not used in a parcelable, a union and a stable interface.
 
-      auto check = [&err](const AidlTypeSpecifier& type, const AidlNode* node) {
-        if (!type.IsGeneric() && (type.GetName() == "List" || type.GetName() == "Map")) {
-          err = AidlError::BAD_TYPE;
-          AIDL_ERROR(node)
-              << "Encountered an untyped List or Map. The use of untyped List/Map is prohibited "
-              << "because it is not guaranteed that the objects in the list are recognizable in "
-              << "the receiving side. Consider switching to an array or a generic List/Map.";
-        }
-      };
-
-      if (iface != nullptr) {
-        for (const auto& method : iface->GetMethods()) {
-          check(method->GetType(), method.get());
-          for (const auto& arg : method->GetArguments()) {
-            check(arg->GetType(), method.get());
+    std::function<void(const AidlTypeSpecifier&, const AidlNode*)> check_untyped_container =
+        [&err, &check_untyped_container](const AidlTypeSpecifier& type, const AidlNode* node) {
+          if (type.IsGeneric()) {
+            std::for_each(type.GetTypeParameters().begin(), type.GetTypeParameters().end(),
+                          [&node, &check_untyped_container](auto& nested) {
+                            check_untyped_container(*nested, node);
+                          });
+            return;
           }
+          if (type.GetName() == "List" || type.GetName() == "Map") {
+            err = AidlError::BAD_TYPE;
+            AIDL_ERROR(node)
+                << "Encountered an untyped List or Map. The use of untyped List/Map is prohibited "
+                << "because it is not guaranteed that the objects in the list are recognizable in "
+                << "the receiving side. Consider switching to an array or a generic List/Map.";
+          }
+        };
+    const AidlInterface* iface = type.AsInterface();
+    const AidlWithFields* data_structure = type.AsStructuredParcelable();
+    if (!data_structure) {
+      data_structure = type.AsUnionDeclaration();
+    }
+
+    if (iface != nullptr && options.IsStructured()) {
+      for (const auto& method : iface->GetMethods()) {
+        check_untyped_container(method->GetType(), method.get());
+        for (const auto& arg : method->GetArguments()) {
+          check_untyped_container(arg->GetType(), method.get());
         }
-      } else if (parcelable != nullptr) {
-        for (const auto& field : parcelable->GetFields()) {
-          check(field->GetType(), field.get());
-        }
+      }
+    } else if (data_structure != nullptr) {
+      for (const auto& field : data_structure->GetFields()) {
+        check_untyped_container(field->GetType(), field.get());
       }
     }
   });
