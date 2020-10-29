@@ -40,6 +40,7 @@ type ccProperties struct {
 	Defaults                  []string
 	Double_loadable           *bool
 	Vendor_available          *bool
+	Product_available         *bool
 	Host_supported            *bool
 	Generated_sources         []string
 	Generated_headers         []string
