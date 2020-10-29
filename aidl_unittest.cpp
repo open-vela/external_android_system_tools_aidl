@@ -3640,11 +3640,13 @@ TEST_P(AidlTest, GenericStructuredParcelable) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
-// TODO(b/171946195) fix ">>" handling
 TEST_F(AidlTest, NestedTypeArgs) {
   io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar<A> { }");
-  io_delegate_.SetFileContents(
-      "a/Foo.aidl", "package a; import a.Bar; parcelable Foo { Bar<Bar<String> > barss; }");
+  io_delegate_.SetFileContents("a/Baz.aidl", "package a; parcelable Baz<A, B> { }");
+
+  io_delegate_.SetFileContents("a/Foo.aidl",
+                               "package a; import a.Bar; import a.Baz; parcelable Foo { "
+                               "Baz<Bar<Bar<String[]>>[], Bar<String>> barss; }");
   Options options = Options::From("aidl a/Foo.aidl -I . -o out --lang=java");
   const string expected_stderr = "";
   CaptureStderr();
@@ -3653,13 +3655,49 @@ TEST_F(AidlTest, NestedTypeArgs) {
 
   string code;
   EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/Foo.java", &code));
-  EXPECT_THAT(code, testing::HasSubstr("a.Bar<a.Bar<java.lang.String>> barss;"));
+  EXPECT_THAT(code,
+              testing::HasSubstr(
+                  "a.Baz<a.Bar<a.Bar<java.lang.String[]>>[],a.Bar<java.lang.String>> barss;"));
+}
+
+TEST_F(AidlTest, DoubleArrayError) {
+  io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar { String[][] a; }");
+
+  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
+  const string expected_stderr =
+      "ERROR: a/Bar.aidl:1.28-37: Can only have one dimensional arrays.\n";
+  CaptureStderr();
+  EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_F(AidlTest, DoubleGenericError) {
+  io_delegate_.SetFileContents("a/Bar.aidl",
+                               "package a; parcelable Bar { List<String><String> a; }");
+
+  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
+  const string expected_stderr =
+      "ERROR: a/Bar.aidl:1.28-33: Can only specify one set of type parameters.\n";
+  CaptureStderr();
+  EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_F(AidlTest, ArrayBeforeGenericError) {
+  io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar { List[]<String> a; }");
+
+  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
+  const string expected_stderr =
+      "ERROR: a/Bar.aidl:1.28-33: Must specify type parameters (<>) before array ([]).\n";
+  CaptureStderr();
+  EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
 struct GenericAidlTest : ::testing::Test {
   FakeIoDelegate io_delegate_;
   void Compile(string cmd) {
-    io_delegate_.SetFileContents("Foo.aidl", "parcelable Foo { Bar<Baz<Qux> > x; }");
+    io_delegate_.SetFileContents("Foo.aidl", "parcelable Foo { Bar<Baz<Qux>> x; }");
     io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar<T> {  }");
     io_delegate_.SetFileContents("Baz.aidl", "parcelable Baz<T> {  }");
     io_delegate_.SetFileContents("Qux.aidl", "parcelable Qux {  }");
