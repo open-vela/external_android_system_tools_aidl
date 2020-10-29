@@ -37,7 +37,7 @@ using std::set;
 using std::string;
 using std::vector;
 
-static set<AidlAnnotation> get_strict_annotations(const AidlAnnotatable& node) {
+static vector<string> get_strict_annotations(const AidlAnnotatable& node) {
   // This must be symmetrical (if you can add something, you must be able to
   // remove it). The reason is that we have no way of knowing which interface a
   // server serves and which interface a client serves (e.g. a callback
@@ -51,13 +51,18 @@ static set<AidlAnnotation> get_strict_annotations(const AidlAnnotatable& node) {
   // - a new implementation might start accepting null values (add @nullable)
   static const set<AidlAnnotation::Type> kIgnoreAnnotations{
       AidlAnnotation::Type::NULLABLE,
+      // @JavaDerive doesn't affect read/write
       AidlAnnotation::Type::JAVA_DERIVE,
       AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE,
+      // @Backing for a enum type is checked by the enum checker
+      AidlAnnotation::Type::BACKING,
+      // @RustDerive doesn't affect read/write
+      AidlAnnotation::Type::RUST_DERIVE,
   };
-  set<AidlAnnotation> annotations;
+  vector<string> annotations;
   for (const AidlAnnotation& annotation : node.GetAnnotations()) {
     if (kIgnoreAnnotations.find(annotation.GetType()) == kIgnoreAnnotations.end()) {
-      annotations.insert(annotation);
+      annotations.push_back(annotation.ToString(AidlConstantValueDecorator));
     }
   }
   return annotations;
@@ -65,9 +70,10 @@ static set<AidlAnnotation> get_strict_annotations(const AidlAnnotatable& node) {
 
 static bool have_compatible_annotations(const AidlAnnotatable& older,
                                         const AidlAnnotatable& newer) {
-  set<AidlAnnotation> olderAnnotations = get_strict_annotations(older);
-  set<AidlAnnotation> newerAnnotations = get_strict_annotations(newer);
-
+  vector<string> olderAnnotations = get_strict_annotations(older);
+  vector<string> newerAnnotations = get_strict_annotations(newer);
+  sort(olderAnnotations.begin(), olderAnnotations.end());
+  sort(newerAnnotations.begin(), newerAnnotations.end());
   if (olderAnnotations != newerAnnotations) {
     const string from = older.ToString().empty() ? "(empty)" : older.ToString();
     const string to = newer.ToString().empty() ? "(empty)" : newer.ToString();
