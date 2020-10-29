@@ -780,6 +780,7 @@ func TestUnstableVndkModule(t *testing.T) {
 			name: "myiface",
 			srcs: ["IFoo.aidl"],
 			vendor_available: true,
+			product_available: true,
 			unstable: true,
 			vndk: {
 				enabled: true,
@@ -790,6 +791,7 @@ func TestUnstableVndkModule(t *testing.T) {
 		aidl_interface {
 			name: "myiface",
 			vendor_available: true,
+			product_available: true,
 			srcs: ["IFoo.aidl"],
 			vndk: {
 				enabled: true,
@@ -800,6 +802,7 @@ func TestUnstableVndkModule(t *testing.T) {
 		aidl_interface {
 			name: "myiface",
 			vendor_available: true,
+			product_available: true,
 			srcs: ["IFoo.aidl"],
 			stability: "vintf",
 			vndk: {
