@@ -44,18 +44,11 @@ namespace {
 using android::aidl::java::CodeGeneratorContext;
 using android::aidl::java::ConstantValueDecorator;
 
-// join two non-empty strings according to `camelCase` naming.
-inline string camelcase_join(const string& a, const string& b, const AidlNode& context) {
-  AIDL_FATAL_IF(b.size() <= 0 || a.size() <= 0, context) << "Name cannot be empty.";
-  std::string name = a + b;
-  name[a.size()] = static_cast<char>(toupper(name[a.size()]));
-  return name;
-}
 inline string getter_name(const AidlVariableDeclaration& variable) {
-  return camelcase_join("get", variable.GetName(), variable);
+  return "get" + variable.GetCapitalizedName();
 }
 inline string setter_name(const AidlVariableDeclaration& variable) {
-  return camelcase_join("set", variable.GetName(), variable);
+  return "set" + variable.GetCapitalizedName();
 }
 
 // clang-format off
