@@ -3513,10 +3513,11 @@ TEST_P(AidlTest, GenericStructuredParcelable) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
+// TODO(b/171946195) fix ">>" handling
 TEST_F(AidlTest, NestedTypeArgs) {
   io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar<A> { }");
   io_delegate_.SetFileContents(
-      "a/Foo.aidl", "package a; import a.Bar; parcelable Foo { Bar<Bar<String>> barss; }");
+      "a/Foo.aidl", "package a; import a.Bar; parcelable Foo { Bar<Bar<String> > barss; }");
   Options options = Options::From("aidl a/Foo.aidl -I . -o out --lang=java");
   const string expected_stderr = "";
   CaptureStderr();

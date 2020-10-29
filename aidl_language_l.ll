@@ -33,16 +33,12 @@
 %option bison-locations
 
 %x LONG_COMMENT
-%s CONST_MODE
 
 identifier  [_a-zA-Z][_a-zA-Z0-9]*
 whitespace  ([ \t\r]+)
 intvalue    [0-9]+[lL]?
 hexvalue    0[x|X][0-9a-fA-F]+[lL]?
 floatvalue  [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?f?
-
- /* LONG_COMMENT keeps the original state (INITIAL or CONST_MODE) */
- int save_state;
 
 %%
 %{
@@ -51,8 +47,8 @@ floatvalue  [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?f?
   yylloc->step();
 %}
 
-\/\*                  { extra_text += yytext; save_state = YY_START; BEGIN(LONG_COMMENT); }
-<LONG_COMMENT>\*+\/   { extra_text += yytext; yylloc->step(); BEGIN(save_state);  }
+\/\*                  { extra_text += yytext; BEGIN(LONG_COMMENT); }
+<LONG_COMMENT>\*+\/   { extra_text += yytext; yylloc->step(); BEGIN(INITIAL);  }
 <LONG_COMMENT>\*+     { extra_text += yytext; }
 <LONG_COMMENT>\n+     { extra_text += yytext; yylloc->lines(yyleng); }
 <LONG_COMMENT>[^*\n]+ { extra_text += yytext; }
@@ -76,35 +72,29 @@ floatvalue  [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?f?
 "["                   { return('['); }
 "]"                   { return(']'); }
 ":"                   { return(':'); }
-";"                   { BEGIN(INITIAL); return(';'); }
+";"                   { return(';'); }
 ","                   { return(','); }
 "."                   { return('.'); }
-"="                   { BEGIN(CONST_MODE); return('='); }
-  /*
-   Limit availability of operators for "const_expr" to avoid unintended conflicts
-   in other parts of the grammar rules.
-   e.g. ">>" bothers when parsing "type_args"("Foo<Bar<Baz>>").
-  */
-<CONST_MODE>{
-  "+"                   { return('+'); }
-  "-"                   { return('-'); }
-  "*"                   { return('*'); }
-  "/"                   { return('/'); }
-  "%"                   { return('%'); }
-  "&"                   { return('&'); }
-  "|"                   { return('|'); }
-  "^"                   { return('^'); }
-  "<<"                  { return(yy::parser::token::LSHIFT); }
-  ">>"                  { return(yy::parser::token::RSHIFT); }
-  "&&"                  { return(yy::parser::token::LOGICAL_AND); }
-  "||"                  { return(yy::parser::token::LOGICAL_OR);  }
-  "!"                   { return('!'); }
-  "~"                   { return('~'); }
-  "<="                  { return(yy::parser::token::LEQ); }
-  ">="                  { return(yy::parser::token::GEQ); }
-  "=="                  { return(yy::parser::token::EQUALITY); }
-  "!="                  { return(yy::parser::token::NEQ); }
-}
+"="                   { return('='); }
+"+"                   { return('+'); }
+"-"                   { return('-'); }
+"*"                   { return('*'); }
+"/"                   { return('/'); }
+"%"                   { return('%'); }
+"&"                   { return('&'); }
+"|"                   { return('|'); }
+"^"                   { return('^'); }
+"<<"                  { return(yy::parser::token::LSHIFT); }
+">>"                  { return(yy::parser::token::RSHIFT); }
+"&&"                  { return(yy::parser::token::LOGICAL_AND); }
+"||"                  { return(yy::parser::token::LOGICAL_OR);  }
+"!"                   { return('!'); }
+"~"                   { return('~'); }
+"<="                  { return(yy::parser::token::LEQ); }
+">="                  { return(yy::parser::token::GEQ); }
+"=="                  { return(yy::parser::token::EQUALITY); }
+"!="                  { return(yy::parser::token::NEQ); }
+
     /* annotations */
 @{identifier}         { yylval->token = new AidlToken(yytext + 1, extra_text);
                         return yy::parser::token::ANNOTATION;
