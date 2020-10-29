@@ -630,8 +630,7 @@ arg
  | type identifier {
     $$ = new AidlArgument(loc(@2), $1, $2->GetText());
     delete $2;
-  }
- ;
+  };
 
 unannotated_type
  : qualified_name {
@@ -639,15 +638,29 @@ unannotated_type
     ps->DeferResolution($$);
     delete $1;
   }
- | qualified_name '[' ']' {
-    $$ = new AidlTypeSpecifier(loc(@1), $1->GetText(), true, nullptr, $1->GetComments());
-    ps->DeferResolution($$);
-    delete $1;
+ | unannotated_type '[' ']' {
+    if (!$1->SetArray()) {
+      AIDL_ERROR(loc(@1)) << "Can only have one dimensional arrays.";
+      ps->AddError();
+    }
+    $$ = $1;
   }
- | qualified_name '<' type_args '>' {
-    $$ = new AidlTypeSpecifier(loc(@1), $1->GetText(), false, $3, $1->GetComments());
-    ps->DeferResolution($$);
-    delete $1;
+ | unannotated_type '<' type_args '>' {
+    ps->SetTypeParameters($1, $3);
+    $$ = $1;
+  }
+ | unannotated_type '<' unannotated_type '<' type_args RSHIFT {
+    ps->SetTypeParameters($3, $5);
+    auto params = new std::vector<std::unique_ptr<AidlTypeSpecifier>>();
+    params->emplace_back($3);
+    ps->SetTypeParameters($1, params);
+    $$ = $1;
+  }
+ | unannotated_type '<' type_args ',' unannotated_type '<' type_args RSHIFT {
+    ps->SetTypeParameters($5, $7);
+    $3->emplace_back($5);
+    ps->SetTypeParameters($1, $3);
+    $$ = $1;
   };
 
 type

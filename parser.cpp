@@ -48,6 +48,19 @@ std::unique_ptr<Parser> Parser::Parse(const std::string& filename,
   return parser;
 }
 
+void Parser::SetTypeParameters(AidlTypeSpecifier* type,
+                               std::vector<std::unique_ptr<AidlTypeSpecifier>>* type_args) {
+  if (type->IsArray()) {
+    AIDL_ERROR(type) << "Must specify type parameters (<>) before array ([]).";
+    AddError();
+  }
+  if (!type->SetTypeParameters(type_args)) {
+    AIDL_ERROR(type) << "Can only specify one set of type parameters.";
+    AddError();
+    delete type_args;
+  }
+}
+
 bool Parser::Resolve() {
   bool success = true;
   for (AidlTypeSpecifier* typespec : unresolved_typespecs_) {
