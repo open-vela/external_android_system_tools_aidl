@@ -245,6 +245,7 @@ cc_library_headers {
 filegroup {
     name: "libaidl-integration-test-files",
     srcs: [
+        "tests/android/aidl/tests/BackendType.aidl",
         "tests/android/aidl/tests/ByteEnum.aidl",
         "tests/android/aidl/tests/ConstantExpressionEnum.aidl",
         "tests/android/aidl/tests/GenericStructuredParcelable.aidl",
@@ -315,6 +316,7 @@ cc_test {
         "libcutils",
         // service uses the old version
         "aidl-test-versioned-interface-V1-cpp",
+        "aidl_test_loggable_interface-cpp",
     ],
     srcs: ["tests/aidl_test_service.cpp"],
 }
@@ -328,6 +330,7 @@ cc_test {
         "libgmock",
         //  client uses the latest version
         "aidl-test-versioned-interface-cpp",
+        "aidl_test_loggable_interface-cpp"
     ],
     srcs: [
         "tests/aidl_test_client.cpp",
@@ -340,6 +343,7 @@ cc_test {
         "tests/aidl_test_client_defaultimpl.cpp",
         "tests/aidl_test_client_versioned_interface.cpp",
         "tests/aidl_test_client_renamed_interface.cpp",
+        "tests/aidl_test_client_loggable_interface.cpp",
     ],
 }
 
