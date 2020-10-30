@@ -27,20 +27,26 @@
 #include <string>
 
 #include <android-base/strings.h>
+#include "aidl_language.h"
 
 using android::base::Split;
 using android::base::Trim;
 using std::endl;
 using std::string;
 
+#ifndef PLATFORM_SDK_VERSION
+#define PLATFORM_SDK_VERSION "<UNKNOWN>"
+#endif
+
 namespace android {
 namespace aidl {
 
 string Options::GetUsage() const {
   std::ostringstream sstr;
+  sstr << "AIDL Compiler: built for platform SDK version " << PLATFORM_SDK_VERSION << endl;
   sstr << "usage:" << endl
-       << myname_ << " --lang={java|cpp|ndk} [OPTION]... INPUT..." << endl
-       << "   Generate Java or C++ files for AIDL file(s)." << endl
+       << myname_ << " --lang={java|cpp|ndk|rust} [OPTION]... INPUT..." << endl
+       << "   Generate Java, C++ or Rust files for AIDL file(s)." << endl
        << endl
        << myname_ << " --preprocess OUTPUT INPUT..." << endl
        << "   Create an AIDL file having declarations of AIDL file(s)." << endl
@@ -63,6 +69,10 @@ string Options::GetUsage() const {
   } else if (language_ == Options::Language::CPP) {
     sstr << myname_ << " [OPTION]... INPUT HEADER_DIR OUTPUT" << endl
          << "   Generate C++ headers and source for an AIDL file." << endl
+         << endl;
+  } else if (language_ == Options::Language::RUST) {
+    sstr << myname_ << " [OPTION]... INPUT [OUTPUT]" << endl
+         << "   Generate Rust file for an AIDL file." << endl
          << endl;
   }
 
@@ -133,6 +143,24 @@ string Options::GetUsage() const {
        << "HEADER_DIR:" << endl
        << "  Path to where C++ headers are generated." << endl;
   return sstr.str();
+}
+
+const string Options::LanguageToString(Language language) {
+  switch (language) {
+    case Options::Language::CPP:
+      return "cpp";
+    case Options::Language::JAVA:
+      return "java";
+    case Options::Language::NDK:
+      return "ndk";
+    case Options::Language::RUST:
+      return "rust";
+    case Options::Language::UNSPECIFIED:
+      return "unspecified";
+    default:
+      AIDL_FATAL(AIDL_LOCATION_HERE)
+          << "Unexpected Options::Language enumerator: " << static_cast<size_t>(language);
+  }
 }
 
 bool Options::StabilityFromString(const std::string& stability, Stability* out_stability) {
@@ -218,6 +246,9 @@ Options::Options(int argc, const char* const argv[], Options::Language default_l
             task_ = Options::Task::COMPILE;
           } else if (lang == "ndk") {
             language_ = Options::Language::NDK;
+            task_ = Options::Task::COMPILE;
+          } else if (lang == "rust") {
+            language_ = Options::Language::RUST;
             task_ = Options::Task::COMPILE;
           } else {
             error_message_ << "Unsupported language: '" << lang << "'" << endl;
@@ -338,7 +369,7 @@ Options::Options(int argc, const char* const argv[], Options::Language default_l
       error_message_ << "No input file" << endl;
       return;
     }
-    if (language_ == Options::Language::JAVA) {
+    if (language_ == Options::Language::JAVA || language_ == Options::Language::RUST) {
       input_files_.emplace_back(argv[optind++]);
       if (argc - optind >= 1) {
         output_file_ = argv[optind++];
@@ -352,7 +383,7 @@ Options::Options(int argc, const char* const argv[], Options::Language default_l
         if (android::base::EndsWith(output_file_, ".aidl")) {
           output_file_ = output_file_.substr(0, output_file_.length() - strlen(".aidl"));
         }
-        output_file_ += ".java";
+        output_file_ += (language_ == Options::Language::JAVA) ? ".java" : ".rs";
       }
     } else if (IsCppOutput()) {
       input_files_.emplace_back(argv[optind++]);
@@ -419,6 +450,17 @@ Options::Options(int argc, const char* const argv[], Options::Language default_l
         return;
       }
     }
+    if (language_ == Options::Language::RUST && task_ == Options::Task::COMPILE) {
+      if (output_dir_.empty()) {
+        error_message_ << "Output directory is not set. Set with --out." << endl;
+        return;
+      }
+      if (!output_header_dir_.empty()) {
+        error_message_ << "Header output directory is set, which does not make "
+                       << "sense for Rust." << endl;
+        return;
+      }
+    }
   }
   if (task_ == Options::Task::COMPILE) {
     for (const string& input : input_files_) {
@@ -460,13 +502,14 @@ Options::Options(int argc, const char* const argv[], Options::Language default_l
   }
   if (task_ == Options::Task::DUMP_API) {
     if (output_dir_.empty()) {
-      error_message_ << "--dump_api requires output directory. Use --out." << endl;
+      error_message_ << "--dumpapi requires output directory. Use --out." << endl;
       return;
     }
   }
 
-  CHECK(output_dir_.empty() || output_dir_.back() == OS_PATH_SEPARATOR);
-  CHECK(output_header_dir_.empty() || output_header_dir_.back() == OS_PATH_SEPARATOR);
+  AIDL_FATAL_IF(!output_dir_.empty() && output_dir_.back() != OS_PATH_SEPARATOR, output_dir_);
+  AIDL_FATAL_IF(!output_header_dir_.empty() && output_header_dir_.back() != OS_PATH_SEPARATOR,
+                output_header_dir_);
 }
 
 }  // namespace aidl
