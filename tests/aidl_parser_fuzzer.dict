@@ -32,6 +32,7 @@
 " java.util.List "
 " java.util.Map "
 " android.os.ParcelFileDescriptor "
+" ParcelableHolder "
 
 # annotations
 " @nullable "
@@ -41,12 +42,21 @@
 " @SystemApi "
 " @JavaOnlyStableParcelable "
 " @Backing "
+" @RustDerive "
 " expectedSignature "
 " implicitMember "
 " maxTargetSdk "
 " publicAlternatives "
 " trackingBug "
 " type "
+" Copy "
+" Clone "
+" PartialOrd "
+" Ord "
+" PartialEq "
+" Eq "
+" Clone "
+" Hash "
 
 # ignorable imports
 " android.os.IInterface "

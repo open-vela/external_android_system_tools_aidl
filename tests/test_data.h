@@ -37,6 +37,12 @@ extern const char kExpectedJavaOutputWithTransactionNames[];
 extern const char kExpectedJavaOutputWithTrace[];
 extern const char kExpectedJavaOutputWithVersionAndHash[];
 
+extern const char kRustOutputDirectory[];
+extern const char kRustOutputPath[];
+extern const char kExpectedRustDepsOutput[];
+extern const char kExpectedRustOutput[];
+extern const char kExpectedRustOutputWithVersionAndHash[];
+
 }  // namespace example_interface
 
 namespace ping_responder {
@@ -66,6 +72,12 @@ extern const char kExpectedIHeaderOutputWithVersionAndHash[];
 extern const char kExpectedBpHeaderOutputWithVersionAndHash[];
 extern const char kExpectedBnHeaderOutputWithVersionAndHash[];
 
+extern const char kRustOutputDirectory[];
+extern const char kRustOutputPath[];
+extern const char kExpectedRustDepsOutput[];
+extern const char kExpectedRustOutput[];
+extern const char kExpectedRustOutputWithVersionAndHash[];
+
 }  // namespace ping_responder
 
 namespace string_constants {
@@ -86,6 +98,11 @@ extern const char kExpectedCppOutput[];
 
 extern const char kExpectedIHeaderOutputWithVersionAndHash[];
 extern const char kExpectedCppOutputWithVersionAndHash[];
+
+extern const char kRustOutputDirectory[];
+extern const char kRustOutputPath[];
+extern const char kExpectedRustOutput[];
+extern const char kExpectedRustOutputWithVersionAndHash[];
 
 }  // namespace string_constants
 
