@@ -16,6 +16,7 @@
 
 package android.aidl.tests;
 
+import android.aidl.tests.BackendType;
 import android.aidl.tests.ByteEnum;
 import android.aidl.tests.INamedCallback;
 import android.aidl.tests.IntEnum;
@@ -198,4 +199,6 @@ interface ITestService {
 
   // Retrieve the ICppJavaTests if the server supports it
   @nullable IBinder GetCppJavaTests();
+
+  BackendType getBackendType();
 }
