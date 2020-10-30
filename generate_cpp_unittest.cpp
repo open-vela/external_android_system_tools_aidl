@@ -38,6 +38,7 @@ namespace aidl {
 namespace cpp {
 namespace {
 
+// clang-format off
 const string kComplexTypeInterfaceAIDL =
 R"(package android.os;
 import foo.IFooType;
@@ -54,8 +55,7 @@ interface IComplexTypeInterface {
 })";
 
 const char kExpectedComplexTypeClientHeaderOutput[] =
-R"(#ifndef AIDL_GENERATED_ANDROID_OS_BP_COMPLEX_TYPE_INTERFACE_H_
-#define AIDL_GENERATED_ANDROID_OS_BP_COMPLEX_TYPE_INTERFACE_H_
+    R"(#pragma once
 
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
@@ -70,7 +70,7 @@ class BpComplexTypeInterface : public ::android::BpInterface<IComplexTypeInterfa
 public:
   explicit BpComplexTypeInterface(const ::android::sp<::android::IBinder>& _aidl_impl);
   virtual ~BpComplexTypeInterface() = default;
-  ::android::binder::Status Send(const ::std::unique_ptr<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) override;
+  ::android::binder::Status Send(const ::std::optional<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) override;
   ::android::binder::Status Piff(int32_t times) override;
   ::android::binder::Status TakesABinder(const ::android::sp<::foo::IFooType>& f, ::android::sp<::foo::IFooType>* _aidl_return) override;
   ::android::binder::Status NullableBinder(::android::sp<::foo::IFooType>* _aidl_return) override;
@@ -83,8 +83,6 @@ public:
 }  // namespace os
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_BP_COMPLEX_TYPE_INTERFACE_H_
 )";
 
 const char kExpectedComplexTypeClientSourceOutput[] =
@@ -100,7 +98,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
     : BpInterface<IComplexTypeInterface>(_aidl_impl){
 }
 
-::android::binder::Status BpComplexTypeInterface::Send(const ::std::unique_ptr<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) {
+::android::binder::Status BpComplexTypeInterface::Send(const ::std::optional<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) {
   ::android::Parcel _aidl_data;
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -415,12 +413,12 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
     : BpInterface<IComplexTypeInterface>(_aidl_impl){
 }
 
-::android::binder::Status BpComplexTypeInterface::Send(const ::std::unique_ptr<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) {
+::android::binder::Status BpComplexTypeInterface::Send(const ::std::optional<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) {
   ::android::Parcel _aidl_data;
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
-  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "IComplexTypeInterface::Send::cppClient");
+  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::Send::cppClient");
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -473,7 +471,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
-  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "IComplexTypeInterface::Piff::cppClient");
+  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::Piff::cppClient");
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -499,7 +497,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
-  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "IComplexTypeInterface::TakesABinder::cppClient");
+  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::TakesABinder::cppClient");
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -536,7 +534,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
-  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "IComplexTypeInterface::NullableBinder::cppClient");
+  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::NullableBinder::cppClient");
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -569,7 +567,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
-  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "IComplexTypeInterface::StringListMethod::cppClient");
+  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::StringListMethod::cppClient");
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -610,7 +608,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
-  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "IComplexTypeInterface::BinderListMethod::cppClient");
+  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::BinderListMethod::cppClient");
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -651,7 +649,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
-  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "IComplexTypeInterface::TakesAFileDescriptor::cppClient");
+  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::TakesAFileDescriptor::cppClient");
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -688,7 +686,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
-  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "IComplexTypeInterface::TakesAFileDescriptorArray::cppClient");
+  ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::TakesAFileDescriptorArray::cppClient");
   _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -726,8 +724,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 )";
 
 const char kExpectedComplexTypeServerHeaderOutput[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_BN_COMPLEX_TYPE_INTERFACE_H_
-#define AIDL_GENERATED_ANDROID_OS_BN_COMPLEX_TYPE_INTERFACE_H_
+    R"(#pragma once
 
 #include <binder/IInterface.h>
 #include <android/os/IComplexTypeInterface.h>
@@ -745,8 +742,6 @@ public:
 }  // namespace os
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_BN_COMPLEX_TYPE_INTERFACE_H_
 )";
 
 const char kExpectedComplexTypeServerSourceOutput[] =
@@ -768,7 +763,7 @@ BnComplexTypeInterface::BnComplexTypeInterface()
   switch (_aidl_code) {
   case ::android::IBinder::FIRST_CALL_TRANSACTION + 0 /* Send */:
   {
-    ::std::unique_ptr<::std::vector<int32_t>> in_goes_in;
+    ::std::optional<::std::vector<int32_t>> in_goes_in;
     ::std::vector<double> in_goes_in_and_out;
     ::std::vector<bool> out_goes_out;
     ::std::vector<int32_t> _aidl_return;
@@ -1021,7 +1016,7 @@ BnComplexTypeInterface::BnComplexTypeInterface()
   switch (_aidl_code) {
   case ::android::IBinder::FIRST_CALL_TRANSACTION + 0 /* Send */:
   {
-    ::std::unique_ptr<::std::vector<int32_t>> in_goes_in;
+    ::std::optional<::std::vector<int32_t>> in_goes_in;
     ::std::vector<double> in_goes_in_and_out;
     ::std::vector<bool> out_goes_out;
     ::std::vector<int32_t> _aidl_return;
@@ -1029,6 +1024,7 @@ BnComplexTypeInterface::BnComplexTypeInterface()
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
     }
+    ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::Send::cppServer");
     _aidl_ret_status = _aidl_data.readInt32Vector(&in_goes_in);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
@@ -1041,9 +1037,7 @@ BnComplexTypeInterface::BnComplexTypeInterface()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    atrace_begin(ATRACE_TAG_AIDL, "IComplexTypeInterface::Send::cppServer");
     ::android::binder::Status _aidl_status(Send(in_goes_in, &in_goes_in_and_out, &out_goes_out, &_aidl_return));
-    atrace_end(ATRACE_TAG_AIDL);
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
@@ -1072,13 +1066,12 @@ BnComplexTypeInterface::BnComplexTypeInterface()
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
     }
+    ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::Piff::cppServer");
     _aidl_ret_status = _aidl_data.readInt32(&in_times);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    atrace_begin(ATRACE_TAG_AIDL, "IComplexTypeInterface::Piff::cppServer");
     ::android::binder::Status _aidl_status(Piff(in_times));
-    atrace_end(ATRACE_TAG_AIDL);
   }
   break;
   case ::android::IBinder::FIRST_CALL_TRANSACTION + 2 /* TakesABinder */:
@@ -1089,13 +1082,12 @@ BnComplexTypeInterface::BnComplexTypeInterface()
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
     }
+    ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::TakesABinder::cppServer");
     _aidl_ret_status = _aidl_data.readStrongBinder(&in_f);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    atrace_begin(ATRACE_TAG_AIDL, "IComplexTypeInterface::TakesABinder::cppServer");
     ::android::binder::Status _aidl_status(TakesABinder(in_f, &_aidl_return));
-    atrace_end(ATRACE_TAG_AIDL);
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
@@ -1116,9 +1108,8 @@ BnComplexTypeInterface::BnComplexTypeInterface()
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
     }
-    atrace_begin(ATRACE_TAG_AIDL, "IComplexTypeInterface::NullableBinder::cppServer");
+    ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::NullableBinder::cppServer");
     ::android::binder::Status _aidl_status(NullableBinder(&_aidl_return));
-    atrace_end(ATRACE_TAG_AIDL);
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
@@ -1141,13 +1132,12 @@ BnComplexTypeInterface::BnComplexTypeInterface()
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
     }
+    ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::StringListMethod::cppServer");
     _aidl_ret_status = _aidl_data.readString16Vector(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    atrace_begin(ATRACE_TAG_AIDL, "IComplexTypeInterface::StringListMethod::cppServer");
     ::android::binder::Status _aidl_status(StringListMethod(in_input, &out_output, &_aidl_return));
-    atrace_end(ATRACE_TAG_AIDL);
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
@@ -1174,13 +1164,12 @@ BnComplexTypeInterface::BnComplexTypeInterface()
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
     }
+    ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::BinderListMethod::cppServer");
     _aidl_ret_status = _aidl_data.readStrongBinderVector(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    atrace_begin(ATRACE_TAG_AIDL, "IComplexTypeInterface::BinderListMethod::cppServer");
     ::android::binder::Status _aidl_status(BinderListMethod(in_input, &out_output, &_aidl_return));
-    atrace_end(ATRACE_TAG_AIDL);
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
@@ -1206,13 +1195,12 @@ BnComplexTypeInterface::BnComplexTypeInterface()
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
     }
+    ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::TakesAFileDescriptor::cppServer");
     _aidl_ret_status = _aidl_data.readUniqueFileDescriptor(&in_f);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    atrace_begin(ATRACE_TAG_AIDL, "IComplexTypeInterface::TakesAFileDescriptor::cppServer");
     ::android::binder::Status _aidl_status(TakesAFileDescriptor(std::move(in_f), &_aidl_return));
-    atrace_end(ATRACE_TAG_AIDL);
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
@@ -1234,13 +1222,12 @@ BnComplexTypeInterface::BnComplexTypeInterface()
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
     }
+    ::android::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IComplexTypeInterface::TakesAFileDescriptorArray::cppServer");
     _aidl_ret_status = _aidl_data.readUniqueFileDescriptorVector(&in_f);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    atrace_begin(ATRACE_TAG_AIDL, "IComplexTypeInterface::TakesAFileDescriptorArray::cppServer");
     ::android::binder::Status _aidl_status(TakesAFileDescriptorArray(in_f, &_aidl_return));
-    atrace_end(ATRACE_TAG_AIDL);
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
@@ -1272,8 +1259,7 @@ BnComplexTypeInterface::BnComplexTypeInterface()
 )";
 
 const char kExpectedComplexTypeInterfaceHeaderOutput[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_I_COMPLEX_TYPE_INTERFACE_H_
-#define AIDL_GENERATED_ANDROID_OS_I_COMPLEX_TYPE_INTERFACE_H_
+    R"(#pragma once
 
 #include <android-base/unique_fd.h>
 #include <binder/IBinder.h>
@@ -1281,7 +1267,7 @@ const char kExpectedComplexTypeInterfaceHeaderOutput[] =
 #include <binder/Status.h>
 #include <cstdint>
 #include <foo/IFooType.h>
-#include <memory>
+#include <optional>
 #include <utils/String16.h>
 #include <utils/StrongPointer.h>
 #include <vector>
@@ -1296,7 +1282,7 @@ public:
   enum  : int32_t {
     MY_CONSTANT = 3,
   };
-  virtual ::android::binder::Status Send(const ::std::unique_ptr<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) = 0;
+  virtual ::android::binder::Status Send(const ::std::optional<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) = 0;
   virtual ::android::binder::Status Piff(int32_t times) = 0;
   virtual ::android::binder::Status TakesABinder(const ::android::sp<::foo::IFooType>& f, ::android::sp<::foo::IFooType>* _aidl_return) = 0;
   virtual ::android::binder::Status NullableBinder(::android::sp<::foo::IFooType>* _aidl_return) = 0;
@@ -1311,7 +1297,7 @@ public:
   ::android::IBinder* onAsBinder() override {
     return nullptr;
   }
-  ::android::binder::Status Send(const ::std::unique_ptr<::std::vector<int32_t>>&, ::std::vector<double>*, ::std::vector<bool>*, ::std::vector<int32_t>*) override {
+  ::android::binder::Status Send(const ::std::optional<::std::vector<int32_t>>&, ::std::vector<double>*, ::std::vector<bool>*, ::std::vector<int32_t>*) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status Piff(int32_t) override {
@@ -1340,8 +1326,6 @@ public:
 }  // namespace os
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_I_COMPLEX_TYPE_INTERFACE_H_
 )";
 
 const char kExpectedComplexTypeInterfaceSourceOutput[] =
@@ -1373,10 +1357,8 @@ enum TestEnum {
   TEN,
 })";
 
-// clang-format off
 const char kExpectedEnumHeaderOutput[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
-#define AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
+    R"(#pragma once
 
 #include <array>
 #include <binder/Enums.h>
@@ -1454,10 +1436,7 @@ constexpr inline std::array<::android::os::TestEnum, 10> enum_values<::android::
 }  // namespace internal
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
 )";
-// clang-format on
 
 const string kEnumWithBackingTypeAIDL = R"(package android.os;
 @Backing(type="long")
@@ -1466,10 +1445,8 @@ enum TestEnum {
   BAR = 2,
 })";
 
-// clang-format off
 const char kExpectedEnumWithBackingTypeHeaderOutput[] =
-    R"(#ifndef AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
-#define AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
+    R"(#pragma once
 
 #include <array>
 #include <binder/Enums.h>
@@ -1515,8 +1492,6 @@ constexpr inline std::array<::android::os::TestEnum, 2> enum_values<::android::o
 }  // namespace internal
 
 }  // namespace android
-
-#endif  // AIDL_GENERATED_ANDROID_OS_TEST_ENUM_H_
 )";
 // clang-format on
 
@@ -1531,40 +1506,38 @@ class ASTTest : public ::testing::Test {
   AidlInterface* ParseSingleInterface() {
     io_delegate_.SetFileContents(options_.InputFiles().at(0), file_contents_);
 
-    vector<AidlDefinedType*> defined_types;
     vector<string> imported_files;
     ImportResolver import_resolver{io_delegate_, options_.InputFiles().at(0), {"."}, {}};
     AidlError err = ::android::aidl::internals::load_and_validate_aidl(
-        options_.InputFiles().front(), options_, io_delegate_, &typenames_, &defined_types,
-        &imported_files);
+        options_.InputFiles().front(), options_, io_delegate_, &typenames_, &imported_files);
 
     if (err != AidlError::OK) {
       return nullptr;
     }
 
+    const auto& defined_types = typenames_.MainDocument().DefinedTypes();
     EXPECT_EQ(1ul, defined_types.size());
-    EXPECT_NE(nullptr, defined_types.front()->AsInterface());
+    EXPECT_NE(nullptr, defined_types.front().get()->AsInterface());
 
-    return defined_types.front()->AsInterface();
+    return defined_types.front().get()->AsInterface();
   }
 
   AidlEnumDeclaration* ParseSingleEnumDeclaration() {
     io_delegate_.SetFileContents(options_.InputFiles().at(0), file_contents_);
 
-    vector<AidlDefinedType*> defined_types;
     vector<string> imported_files;
     AidlError err = ::android::aidl::internals::load_and_validate_aidl(
-        options_.InputFiles().front(), options_, io_delegate_, &typenames_, &defined_types,
-        &imported_files);
+        options_.InputFiles().front(), options_, io_delegate_, &typenames_, &imported_files);
 
     if (err != AidlError::OK) {
       return nullptr;
     }
 
+    const auto& defined_types = typenames_.MainDocument().DefinedTypes();
     EXPECT_EQ(1ul, defined_types.size());
-    EXPECT_NE(nullptr, defined_types.front()->AsEnumDeclaration());
+    EXPECT_NE(nullptr, defined_types.front().get()->AsEnumDeclaration());
 
-    return defined_types.front()->AsEnumDeclaration();
+    return defined_types.front().get()->AsEnumDeclaration();
   }
 
   void Compare(Document* doc, const char* expected) {
