@@ -21,7 +21,6 @@ namespace aidl {
 namespace test_data {
 namespace ping_responder {
 
-// clang-format off
 const char kCanonicalName[] = "android.os.IPingResponder";
 const char kInterfaceDefinition[] = R"(
 package android.os;
@@ -136,7 +135,7 @@ BpPingResponder::BpPingResponder(const ::android::sp<::android::IBinder>& _aidl_
   return _aidl_status;
 }
 
-::android::binder::Status BpPingResponder::NullablePing(const ::std::optional<::android::String16>& input, ::std::optional<::android::String16>* _aidl_return) {
+::android::binder::Status BpPingResponder::NullablePing(const ::std::unique_ptr<::android::String16>& input, ::std::unique_ptr<::android::String16>* _aidl_return) {
   ::android::Parcel _aidl_data;
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -208,7 +207,7 @@ BpPingResponder::BpPingResponder(const ::android::sp<::android::IBinder>& _aidl_
   return _aidl_status;
 }
 
-::android::binder::Status BpPingResponder::NullableUtf8Ping(const ::std::optional<::std::string>& input, ::std::optional<::std::string>* _aidl_return) {
+::android::binder::Status BpPingResponder::NullableUtf8Ping(const ::std::unique_ptr<::std::string>& input, ::std::unique_ptr<::std::string>* _aidl_return) {
   ::android::Parcel _aidl_data;
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -291,8 +290,8 @@ BnPingResponder::BnPingResponder()
   break;
   case ::android::IBinder::FIRST_CALL_TRANSACTION + 1 /* NullablePing */:
   {
-    ::std::optional<::android::String16> in_input;
-    ::std::optional<::android::String16> _aidl_return;
+    ::std::unique_ptr<::android::String16> in_input;
+    ::std::unique_ptr<::android::String16> _aidl_return;
     if (!(_aidl_data.checkInterface(this))) {
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
@@ -343,8 +342,8 @@ BnPingResponder::BnPingResponder()
   break;
   case ::android::IBinder::FIRST_CALL_TRANSACTION + 3 /* NullableUtf8Ping */:
   {
-    ::std::optional<::std::string> in_input;
-    ::std::optional<::std::string> _aidl_return;
+    ::std::unique_ptr<::std::string> in_input;
+    ::std::unique_ptr<::std::string> _aidl_return;
     if (!(_aidl_data.checkInterface(this))) {
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
@@ -385,12 +384,13 @@ BnPingResponder::BnPingResponder()
 )";
 
 const char kExpectedIHeaderOutput[] =
-    R"(#pragma once
+    R"(#ifndef AIDL_GENERATED_ANDROID_OS_I_PING_RESPONDER_H_
+#define AIDL_GENERATED_ANDROID_OS_I_PING_RESPONDER_H_
 
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
 #include <binder/Status.h>
-#include <optional>
+#include <memory>
 #include <string>
 #include <utils/String16.h>
 #include <utils/StrongPointer.h>
@@ -403,9 +403,9 @@ class IPingResponder : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(PingResponder)
   virtual ::android::binder::Status Ping(const ::android::String16& input, ::android::String16* _aidl_return) = 0;
-  virtual ::android::binder::Status NullablePing(const ::std::optional<::android::String16>& input, ::std::optional<::android::String16>* _aidl_return) = 0;
+  virtual ::android::binder::Status NullablePing(const ::std::unique_ptr<::android::String16>& input, ::std::unique_ptr<::android::String16>* _aidl_return) = 0;
   virtual ::android::binder::Status Utf8Ping(const ::std::string& input, ::std::string* _aidl_return) = 0;
-  virtual ::android::binder::Status NullableUtf8Ping(const ::std::optional<::std::string>& input, ::std::optional<::std::string>* _aidl_return) = 0;
+  virtual ::android::binder::Status NullableUtf8Ping(const ::std::unique_ptr<::std::string>& input, ::std::unique_ptr<::std::string>* _aidl_return) = 0;
 };  // class IPingResponder
 
 class IPingResponderDefault : public IPingResponder {
@@ -416,13 +416,13 @@ public:
   ::android::binder::Status Ping(const ::android::String16&, ::android::String16*) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
-  ::android::binder::Status NullablePing(const ::std::optional<::android::String16>&, ::std::optional<::android::String16>*) override {
+  ::android::binder::Status NullablePing(const ::std::unique_ptr<::android::String16>&, ::std::unique_ptr<::android::String16>*) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status Utf8Ping(const ::std::string&, ::std::string*) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
-  ::android::binder::Status NullableUtf8Ping(const ::std::optional<::std::string>&, ::std::optional<::std::string>*) override {
+  ::android::binder::Status NullableUtf8Ping(const ::std::unique_ptr<::std::string>&, ::std::unique_ptr<::std::string>*) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
 };  // class IPingResponderDefault
@@ -430,10 +430,13 @@ public:
 }  // namespace os
 
 }  // namespace android
+
+#endif  // AIDL_GENERATED_ANDROID_OS_I_PING_RESPONDER_H_
 )";
 
 const char kExpectedBpHeaderOutput[] =
-    R"(#pragma once
+R"(#ifndef AIDL_GENERATED_ANDROID_OS_BP_PING_RESPONDER_H_
+#define AIDL_GENERATED_ANDROID_OS_BP_PING_RESPONDER_H_
 
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
@@ -449,18 +452,21 @@ public:
   explicit BpPingResponder(const ::android::sp<::android::IBinder>& _aidl_impl);
   virtual ~BpPingResponder() = default;
   ::android::binder::Status Ping(const ::android::String16& input, ::android::String16* _aidl_return) override;
-  ::android::binder::Status NullablePing(const ::std::optional<::android::String16>& input, ::std::optional<::android::String16>* _aidl_return) override;
+  ::android::binder::Status NullablePing(const ::std::unique_ptr<::android::String16>& input, ::std::unique_ptr<::android::String16>* _aidl_return) override;
   ::android::binder::Status Utf8Ping(const ::std::string& input, ::std::string* _aidl_return) override;
-  ::android::binder::Status NullableUtf8Ping(const ::std::optional<::std::string>& input, ::std::optional<::std::string>* _aidl_return) override;
+  ::android::binder::Status NullableUtf8Ping(const ::std::unique_ptr<::std::string>& input, ::std::unique_ptr<::std::string>* _aidl_return) override;
 };  // class BpPingResponder
 
 }  // namespace os
 
 }  // namespace android
+
+#endif  // AIDL_GENERATED_ANDROID_OS_BP_PING_RESPONDER_H_
 )";
 
 const char kExpectedBnHeaderOutput[] =
-    R"(#pragma once
+    R"(#ifndef AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
+#define AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
 
 #include <binder/IInterface.h>
 #include <android/os/IPingResponder.h>
@@ -478,6 +484,8 @@ public:
 }  // namespace os
 
 }  // namespace android
+
+#endif  // AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
 )";
 
 const char kExpectedCppOutputWithVersionAndHash[] =
@@ -541,7 +549,7 @@ BpPingResponder::BpPingResponder(const ::android::sp<::android::IBinder>& _aidl_
   return _aidl_status;
 }
 
-::android::binder::Status BpPingResponder::NullablePing(const ::std::optional<::android::String16>& input, ::std::optional<::android::String16>* _aidl_return) {
+::android::binder::Status BpPingResponder::NullablePing(const ::std::unique_ptr<::android::String16>& input, ::std::unique_ptr<::android::String16>* _aidl_return) {
   ::android::Parcel _aidl_data;
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -613,7 +621,7 @@ BpPingResponder::BpPingResponder(const ::android::sp<::android::IBinder>& _aidl_
   return _aidl_status;
 }
 
-::android::binder::Status BpPingResponder::NullableUtf8Ping(const ::std::optional<::std::string>& input, ::std::optional<::std::string>* _aidl_return) {
+::android::binder::Status BpPingResponder::NullableUtf8Ping(const ::std::unique_ptr<::std::string>& input, ::std::unique_ptr<::std::string>* _aidl_return) {
   ::android::Parcel _aidl_data;
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
@@ -731,8 +739,8 @@ BnPingResponder::BnPingResponder()
   break;
   case ::android::IBinder::FIRST_CALL_TRANSACTION + 1 /* NullablePing */:
   {
-    ::std::optional<::android::String16> in_input;
-    ::std::optional<::android::String16> _aidl_return;
+    ::std::unique_ptr<::android::String16> in_input;
+    ::std::unique_ptr<::android::String16> _aidl_return;
     if (!(_aidl_data.checkInterface(this))) {
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
@@ -783,8 +791,8 @@ BnPingResponder::BnPingResponder()
   break;
   case ::android::IBinder::FIRST_CALL_TRANSACTION + 3 /* NullableUtf8Ping */:
   {
-    ::std::optional<::std::string> in_input;
-    ::std::optional<::std::string> _aidl_return;
+    ::std::unique_ptr<::std::string> in_input;
+    ::std::unique_ptr<::std::string> _aidl_return;
     if (!(_aidl_data.checkInterface(this))) {
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
@@ -847,13 +855,14 @@ std::string BnPingResponder::getInterfaceHash() {
 )";
 
 const char kExpectedIHeaderOutputWithVersionAndHash[] =
-    R"(#pragma once
+    R"(#ifndef AIDL_GENERATED_ANDROID_OS_I_PING_RESPONDER_H_
+#define AIDL_GENERATED_ANDROID_OS_I_PING_RESPONDER_H_
 
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
 #include <binder/Status.h>
 #include <cstdint>
-#include <optional>
+#include <memory>
 #include <string>
 #include <utils/String16.h>
 #include <utils/StrongPointer.h>
@@ -868,9 +877,9 @@ public:
   const int32_t VERSION = 10;
   const std::string HASH = "abcdefg";
   virtual ::android::binder::Status Ping(const ::android::String16& input, ::android::String16* _aidl_return) = 0;
-  virtual ::android::binder::Status NullablePing(const ::std::optional<::android::String16>& input, ::std::optional<::android::String16>* _aidl_return) = 0;
+  virtual ::android::binder::Status NullablePing(const ::std::unique_ptr<::android::String16>& input, ::std::unique_ptr<::android::String16>* _aidl_return) = 0;
   virtual ::android::binder::Status Utf8Ping(const ::std::string& input, ::std::string* _aidl_return) = 0;
-  virtual ::android::binder::Status NullableUtf8Ping(const ::std::optional<::std::string>& input, ::std::optional<::std::string>* _aidl_return) = 0;
+  virtual ::android::binder::Status NullableUtf8Ping(const ::std::unique_ptr<::std::string>& input, ::std::unique_ptr<::std::string>* _aidl_return) = 0;
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;
 };  // class IPingResponder
@@ -883,13 +892,13 @@ public:
   ::android::binder::Status Ping(const ::android::String16&, ::android::String16*) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
-  ::android::binder::Status NullablePing(const ::std::optional<::android::String16>&, ::std::optional<::android::String16>*) override {
+  ::android::binder::Status NullablePing(const ::std::unique_ptr<::android::String16>&, ::std::unique_ptr<::android::String16>*) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status Utf8Ping(const ::std::string&, ::std::string*) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
-  ::android::binder::Status NullableUtf8Ping(const ::std::optional<::std::string>&, ::std::optional<::std::string>*) override {
+  ::android::binder::Status NullableUtf8Ping(const ::std::unique_ptr<::std::string>&, ::std::unique_ptr<::std::string>*) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   int32_t getInterfaceVersion() override {
@@ -903,10 +912,13 @@ public:
 }  // namespace os
 
 }  // namespace android
+
+#endif  // AIDL_GENERATED_ANDROID_OS_I_PING_RESPONDER_H_
 )";
 
 const char kExpectedBpHeaderOutputWithVersionAndHash[] =
-R"(#pragma once
+R"(#ifndef AIDL_GENERATED_ANDROID_OS_BP_PING_RESPONDER_H_
+#define AIDL_GENERATED_ANDROID_OS_BP_PING_RESPONDER_H_
 
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
@@ -922,9 +934,9 @@ public:
   explicit BpPingResponder(const ::android::sp<::android::IBinder>& _aidl_impl);
   virtual ~BpPingResponder() = default;
   ::android::binder::Status Ping(const ::android::String16& input, ::android::String16* _aidl_return) override;
-  ::android::binder::Status NullablePing(const ::std::optional<::android::String16>& input, ::std::optional<::android::String16>* _aidl_return) override;
+  ::android::binder::Status NullablePing(const ::std::unique_ptr<::android::String16>& input, ::std::unique_ptr<::android::String16>* _aidl_return) override;
   ::android::binder::Status Utf8Ping(const ::std::string& input, ::std::string* _aidl_return) override;
-  ::android::binder::Status NullableUtf8Ping(const ::std::optional<::std::string>& input, ::std::optional<::std::string>* _aidl_return) override;
+  ::android::binder::Status NullableUtf8Ping(const ::std::unique_ptr<::std::string>& input, ::std::unique_ptr<::std::string>* _aidl_return) override;
   int32_t getInterfaceVersion() override;
   std::string getInterfaceHash() override;
 private:
@@ -936,10 +948,13 @@ private:
 }  // namespace os
 
 }  // namespace android
+
+#endif  // AIDL_GENERATED_ANDROID_OS_BP_PING_RESPONDER_H_
 )";
 
 const char kExpectedBnHeaderOutputWithVersionAndHash[] =
-    R"(#pragma once
+    R"(#ifndef AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
+#define AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
 
 #include <binder/IInterface.h>
 #include <android/os/IPingResponder.h>
@@ -959,443 +974,10 @@ public:
 }  // namespace os
 
 }  // namespace android
+
+#endif  // AIDL_GENERATED_ANDROID_OS_BN_PING_RESPONDER_H_
 )";
 
-const char kRustOutputDirectory[] = "some/path/to";
-const char kRustOutputPath[] = "some/path/to/android/os/IPingResponder.rs";
-
-const char kExpectedRustDepsOutput[] =
-R"(some/path/to/android/os/IPingResponder.rs : \
-  android/os/IPingResponder.aidl \
-  ./bar/Unused.aidl
-
-android/os/IPingResponder.aidl :
-./bar/Unused.aidl :
-)";
-
-const char kExpectedRustOutput[] =
-    R"(#![allow(non_upper_case_globals)]
-#![allow(non_snake_case)]
-#[allow(unused_imports)] use binder::IBinder;
-use binder::declare_binder_interface;
-declare_binder_interface! {
-  IPingResponder["android.os.IPingResponder"] {
-    native: BnPingResponder(on_transact),
-    proxy: BpPingResponder {
-    },
-  }
-}
-pub trait IPingResponder: binder::Interface + Send {
-  fn get_descriptor() -> &'static str where Self: Sized { "android.os.IPingResponder" }
-  fn Ping(&self, _arg_input: &str) -> binder::public_api::Result<String> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn NullablePing(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn Utf8Ping(&self, _arg_input: &str) -> binder::public_api::Result<String> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn NullableUtf8Ping(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn getDefaultImpl() -> IPingResponderDefault where Self: Sized {
-    DEFAULT_IMPL.lock().unwrap().clone()
-  }
-  fn setDefaultImpl(d: IPingResponderDefault) -> IPingResponderDefault where Self: Sized {
-    std::mem::replace(&mut *DEFAULT_IMPL.lock().unwrap(), d)
-  }
-}
-pub mod transactions {
-  #[allow(unused_imports)] use binder::IBinder;
-  pub const Ping: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 0;
-  pub const NullablePing: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 1;
-  pub const Utf8Ping: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 2;
-  pub const NullableUtf8Ping: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 3;
-}
-pub type IPingResponderDefault = Option<std::sync::Arc<dyn IPingResponder + Sync>>;
-use lazy_static::lazy_static;
-lazy_static! {
-  static ref DEFAULT_IMPL: std::sync::Mutex<IPingResponderDefault> = std::sync::Mutex::new(None);
-}
-pub(crate) mod mangled { pub use super::IPingResponder as _7_android_2_os_14_IPingResponder; }
-impl IPingResponder for BpPingResponder {
-  fn Ping(&self, _arg_input: &str) -> binder::public_api::Result<String> {
-    let _aidl_reply = self.binder.transact(transactions::Ping, 0, |_aidl_data| {
-      _aidl_data.write(_arg_input)?;
-      Ok(())
-    });
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as IPingResponder>::getDefaultImpl() {
-        return _aidl_default_impl.Ping(_arg_input);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: String = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn NullablePing(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> {
-    let _aidl_reply = self.binder.transact(transactions::NullablePing, 0, |_aidl_data| {
-      _aidl_data.write(&_arg_input)?;
-      Ok(())
-    });
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as IPingResponder>::getDefaultImpl() {
-        return _aidl_default_impl.NullablePing(_arg_input);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Option<String> = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn Utf8Ping(&self, _arg_input: &str) -> binder::public_api::Result<String> {
-    let _aidl_reply = self.binder.transact(transactions::Utf8Ping, 0, |_aidl_data| {
-      _aidl_data.write(_arg_input)?;
-      Ok(())
-    });
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as IPingResponder>::getDefaultImpl() {
-        return _aidl_default_impl.Utf8Ping(_arg_input);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: String = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn NullableUtf8Ping(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> {
-    let _aidl_reply = self.binder.transact(transactions::NullableUtf8Ping, 0, |_aidl_data| {
-      _aidl_data.write(&_arg_input)?;
-      Ok(())
-    });
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as IPingResponder>::getDefaultImpl() {
-        return _aidl_default_impl.NullableUtf8Ping(_arg_input);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Option<String> = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-}
-impl IPingResponder for binder::Binder<BnPingResponder> {
-  fn Ping(&self, _arg_input: &str) -> binder::public_api::Result<String> { self.0.Ping(_arg_input) }
-  fn NullablePing(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> { self.0.NullablePing(_arg_input) }
-  fn Utf8Ping(&self, _arg_input: &str) -> binder::public_api::Result<String> { self.0.Utf8Ping(_arg_input) }
-  fn NullableUtf8Ping(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> { self.0.NullableUtf8Ping(_arg_input) }
-}
-fn on_transact(_aidl_service: &dyn IPingResponder, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::Parcel, _aidl_reply: &mut binder::parcel::Parcel) -> binder::Result<()> {
-  match _aidl_code {
-    transactions::Ping => {
-      let _arg_input: String = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.Ping(&_arg_input);
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::NullablePing => {
-      let _arg_input: Option<String> = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.NullablePing(_arg_input.as_deref());
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::Utf8Ping => {
-      let _arg_input: String = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.Utf8Ping(&_arg_input);
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::NullableUtf8Ping => {
-      let _arg_input: Option<String> = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.NullableUtf8Ping(_arg_input.as_deref());
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    _ => Err(binder::StatusCode::UNKNOWN_TRANSACTION)
-  }
-}
-)";
-
-const char kExpectedRustOutputWithVersionAndHash[] =
-    R"(#![allow(non_upper_case_globals)]
-#![allow(non_snake_case)]
-#[allow(unused_imports)] use binder::IBinder;
-use binder::declare_binder_interface;
-declare_binder_interface! {
-  IPingResponder["android.os.IPingResponder"] {
-    native: BnPingResponder(on_transact),
-    proxy: BpPingResponder {
-      cached_version: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(-1),
-      cached_hash: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None)
-    },
-  }
-}
-pub trait IPingResponder: binder::Interface + Send {
-  fn get_descriptor() -> &'static str where Self: Sized { "android.os.IPingResponder" }
-  fn Ping(&self, _arg_input: &str) -> binder::public_api::Result<String> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn NullablePing(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn Utf8Ping(&self, _arg_input: &str) -> binder::public_api::Result<String> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn NullableUtf8Ping(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn getInterfaceVersion(&self) -> binder::public_api::Result<i32> {
-    Ok(VERSION)
-  }
-  fn getInterfaceHash(&self) -> binder::public_api::Result<String> {
-    Ok(HASH.into())
-  }
-  fn getDefaultImpl() -> IPingResponderDefault where Self: Sized {
-    DEFAULT_IMPL.lock().unwrap().clone()
-  }
-  fn setDefaultImpl(d: IPingResponderDefault) -> IPingResponderDefault where Self: Sized {
-    std::mem::replace(&mut *DEFAULT_IMPL.lock().unwrap(), d)
-  }
-}
-pub mod transactions {
-  #[allow(unused_imports)] use binder::IBinder;
-  pub const Ping: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 0;
-  pub const NullablePing: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 1;
-  pub const Utf8Ping: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 2;
-  pub const NullableUtf8Ping: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 3;
-  pub const getInterfaceVersion: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 16777214;
-  pub const getInterfaceHash: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 16777213;
-}
-pub type IPingResponderDefault = Option<std::sync::Arc<dyn IPingResponder + Sync>>;
-use lazy_static::lazy_static;
-lazy_static! {
-  static ref DEFAULT_IMPL: std::sync::Mutex<IPingResponderDefault> = std::sync::Mutex::new(None);
-}
-pub(crate) mod mangled { pub use super::IPingResponder as _7_android_2_os_14_IPingResponder; }
-pub const VERSION: i32 = 10;
-pub const HASH: &str = "abcdefg";
-impl IPingResponder for BpPingResponder {
-  fn Ping(&self, _arg_input: &str) -> binder::public_api::Result<String> {
-    let _aidl_reply = self.binder.transact(transactions::Ping, 0, |_aidl_data| {
-      _aidl_data.write(_arg_input)?;
-      Ok(())
-    });
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as IPingResponder>::getDefaultImpl() {
-        return _aidl_default_impl.Ping(_arg_input);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: String = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn NullablePing(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> {
-    let _aidl_reply = self.binder.transact(transactions::NullablePing, 0, |_aidl_data| {
-      _aidl_data.write(&_arg_input)?;
-      Ok(())
-    });
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as IPingResponder>::getDefaultImpl() {
-        return _aidl_default_impl.NullablePing(_arg_input);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Option<String> = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn Utf8Ping(&self, _arg_input: &str) -> binder::public_api::Result<String> {
-    let _aidl_reply = self.binder.transact(transactions::Utf8Ping, 0, |_aidl_data| {
-      _aidl_data.write(_arg_input)?;
-      Ok(())
-    });
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as IPingResponder>::getDefaultImpl() {
-        return _aidl_default_impl.Utf8Ping(_arg_input);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: String = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn NullableUtf8Ping(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> {
-    let _aidl_reply = self.binder.transact(transactions::NullableUtf8Ping, 0, |_aidl_data| {
-      _aidl_data.write(&_arg_input)?;
-      Ok(())
-    });
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as IPingResponder>::getDefaultImpl() {
-        return _aidl_default_impl.NullableUtf8Ping(_arg_input);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Option<String> = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn getInterfaceVersion(&self) -> binder::public_api::Result<i32> {
-    let _aidl_version = self.cached_version.load(std::sync::atomic::Ordering::Relaxed);
-    if _aidl_version != -1 { return Ok(_aidl_version); }
-    let _aidl_reply = self.binder.transact(transactions::getInterfaceVersion, 0, |_aidl_data| {
-      Ok(())
-    });
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as IPingResponder>::getDefaultImpl() {
-        return _aidl_default_impl.getInterfaceVersion();
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: i32 = _aidl_reply.read()?;
-    self.cached_version.store(_aidl_return, std::sync::atomic::Ordering::Relaxed);
-    Ok(_aidl_return)
-  }
-  fn getInterfaceHash(&self) -> binder::public_api::Result<String> {
-    {
-      let _aidl_hash_lock = self.cached_hash.lock().unwrap();
-      if let Some(ref _aidl_hash) = *_aidl_hash_lock {
-        return Ok(_aidl_hash.clone());
-      }
-    }
-    let _aidl_reply = self.binder.transact(transactions::getInterfaceHash, 0, |_aidl_data| {
-      Ok(())
-    });
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as IPingResponder>::getDefaultImpl() {
-        return _aidl_default_impl.getInterfaceHash();
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: String = _aidl_reply.read()?;
-    *self.cached_hash.lock().unwrap() = Some(_aidl_return.clone());
-    Ok(_aidl_return)
-  }
-}
-impl IPingResponder for binder::Binder<BnPingResponder> {
-  fn Ping(&self, _arg_input: &str) -> binder::public_api::Result<String> { self.0.Ping(_arg_input) }
-  fn NullablePing(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> { self.0.NullablePing(_arg_input) }
-  fn Utf8Ping(&self, _arg_input: &str) -> binder::public_api::Result<String> { self.0.Utf8Ping(_arg_input) }
-  fn NullableUtf8Ping(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> { self.0.NullableUtf8Ping(_arg_input) }
-  fn getInterfaceVersion(&self) -> binder::public_api::Result<i32> { self.0.getInterfaceVersion() }
-  fn getInterfaceHash(&self) -> binder::public_api::Result<String> { self.0.getInterfaceHash() }
-}
-fn on_transact(_aidl_service: &dyn IPingResponder, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::Parcel, _aidl_reply: &mut binder::parcel::Parcel) -> binder::Result<()> {
-  match _aidl_code {
-    transactions::Ping => {
-      let _arg_input: String = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.Ping(&_arg_input);
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::NullablePing => {
-      let _arg_input: Option<String> = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.NullablePing(_arg_input.as_deref());
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::Utf8Ping => {
-      let _arg_input: String = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.Utf8Ping(&_arg_input);
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::NullableUtf8Ping => {
-      let _arg_input: Option<String> = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.NullableUtf8Ping(_arg_input.as_deref());
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::getInterfaceVersion => {
-      let _aidl_return = _aidl_service.getInterfaceVersion();
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::getInterfaceHash => {
-      let _aidl_return = _aidl_service.getInterfaceHash();
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    _ => Err(binder::StatusCode::UNKNOWN_TRANSACTION)
-  }
-}
-)";
-
-// clang-format on
 }  // namespace ping_responder
 }  // namespace test_data
 }  // namespace aidl
