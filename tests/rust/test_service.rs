@@ -21,7 +21,7 @@ use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
 };
 use aidl_test_interface::aidl::android::aidl::tests::{
     ByteEnum::ByteEnum, ConstantExpressionEnum::ConstantExpressionEnum, INamedCallback, INewName,
-    IOldName, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable,
+    IOldName, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable, Union,
 };
 use aidl_test_interface::binder::{self, Interface, ParcelFileDescriptor, SpIBinder};
 use aidl_test_versioned_interface_V1::aidl::android::aidl::versioned::tests::IFooInterface::{
@@ -268,6 +268,8 @@ impl ITestService::ITestService for TestService {
         parcelable.const_exprs_8 = ConstantExpressionEnum::hexInt32_2;
         parcelable.const_exprs_9 = ConstantExpressionEnum::hexInt32_3;
         parcelable.const_exprs_10 = ConstantExpressionEnum::hexInt64_1;
+
+        parcelable.u = Some(Union::Union::Ns(vec![1, 2, 3]));
 
         Ok(())
     }
