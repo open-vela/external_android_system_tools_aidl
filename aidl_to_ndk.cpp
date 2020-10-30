@@ -18,7 +18,6 @@
 #include "logging.h"
 #include "os.h"
 
-#include <android-base/stringprintf.h>
 #include <android-base/strings.h>
 
 #include <functional>
@@ -88,9 +87,7 @@ static std::function<void(const CodeGeneratorContext& c)> StandardWrite(const st
   };
 }
 
-TypeInfo PrimitiveType(const std::string& cpp_name, const std::string& pretty_name,
-                       const std::optional<std::string>& cpp_name_for_array_opt = std::nullopt) {
-  std::string cpp_name_for_array = cpp_name_for_array_opt.value_or(cpp_name);
+TypeInfo PrimitiveType(const std::string& cpp_name, const std::string& pretty_name) {
   return TypeInfo{
       .raw =
           TypeInfo::Aspect{
@@ -100,14 +97,14 @@ TypeInfo PrimitiveType(const std::string& cpp_name, const std::string& pretty_na
               .write_func = StandardWrite("AParcel_write" + pretty_name),
           },
       .array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
-          .cpp_name = "std::vector<" + cpp_name_for_array + ">",
+          .cpp_name = "std::vector<" + cpp_name + ">",
           .value_is_cheap = false,
           .read_func = StandardRead("::ndk::AParcel_readVector"),
           .write_func = StandardWrite("::ndk::AParcel_writeVector"),
       }),
       .nullable = nullptr,
       .nullable_array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
-          .cpp_name = "std::optional<std::vector<" + cpp_name_for_array + ">>",
+          .cpp_name = "std::optional<std::vector<" + cpp_name + ">>",
           .value_is_cheap = false,
           .read_func = StandardRead("::ndk::AParcel_readVector"),
           .write_func = StandardWrite("::ndk::AParcel_writeVector"),
@@ -137,17 +134,9 @@ TypeInfo InterfaceTypeInfo(const AidlInterface& type) {
   };
 }
 
-TypeInfo ParcelableTypeInfo(const AidlParcelable& type, const AidlTypeSpecifier& typeSpec,
-                            const AidlTypenames& types) {
-  std::string clazz = NdkFullClassName(type, cpp::ClassNames::RAW);
-  std::string template_params = "";
-  if (typeSpec.IsGeneric()) {
-    std::vector<std::string> type_params;
-    for (const auto& parameter : typeSpec.GetTypeParameters()) {
-      type_params.push_back(NdkNameOf(types, *parameter, StorageMode::STACK));
-    }
-    clazz += base::StringPrintf("<%s>", base::Join(type_params, ", ").c_str());
-  }
+TypeInfo ParcelableTypeInfo(const AidlParcelable& type) {
+  const std::string clazz = NdkFullClassName(type, cpp::ClassNames::RAW);
+
   return TypeInfo{
       .raw =
           TypeInfo::Aspect{
@@ -181,7 +170,7 @@ TypeInfo EnumDeclarationTypeInfo(const AidlEnumDeclaration& enum_decl) {
       {"long", "Int64"},
   };
   auto aparcel_name_it = kAParcelTypeNameMap.find(enum_decl.GetBackingType().GetName());
-  AIDL_FATAL_IF(aparcel_name_it == kAParcelTypeNameMap.end(), enum_decl);
+  CHECK(aparcel_name_it != kAParcelTypeNameMap.end());
   const std::string aparcel_name = aparcel_name_it->second;
 
   const std::string backing_type_name =
@@ -246,7 +235,7 @@ TypeInfo EnumDeclarationTypeInfo(const AidlEnumDeclaration& enum_decl) {
 static map<std::string, TypeInfo> kNdkTypeInfoMap = {
     {"void", TypeInfo{{"void", true, nullptr, nullptr}, nullptr, nullptr, nullptr}},
     {"boolean", PrimitiveType("bool", "Bool")},
-    {"byte", PrimitiveType("int8_t", "Byte", "uint8_t")},
+    {"byte", PrimitiveType("int8_t", "Byte")},
     {"char", PrimitiveType("char16_t", "Char")},
     {"int", PrimitiveType("int32_t", "Int32")},
     {"long", PrimitiveType("int64_t", "Int64")},
@@ -322,23 +311,10 @@ static map<std::string, TypeInfo> kNdkTypeInfoMap = {
          }),
          .nullable_array = nullptr,
      }},
-    {"ParcelableHolder",
-     TypeInfo{
-         .raw =
-             TypeInfo::Aspect{
-                 .cpp_name = "::ndk::AParcelableHolder",
-                 .value_is_cheap = false,
-                 .read_func = StandardRead("::ndk::AParcel_readParcelable"),
-                 .write_func = StandardWrite("::ndk::AParcel_writeParcelable"),
-             },
-         .array = nullptr,
-         .nullable = nullptr,
-         .nullable_array = nullptr,
-     }},
 };
 
 static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlTypeSpecifier& aidl) {
-  AIDL_FATAL_IF(!aidl.IsResolved(), aidl) << aidl.ToString();
+  CHECK(aidl.IsResolved()) << aidl.ToString();
   auto& aidl_name = aidl.GetName();
 
   TypeInfo info;
@@ -348,7 +324,7 @@ static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlType
     AIDL_FATAL_IF(!aidl.IsGeneric(), aidl) << "List must be generic type.";
     AIDL_FATAL_IF(aidl.GetTypeParameters().size() != 1, aidl)
         << "List can accept only one type parameter.";
-    const auto& type_param = aidl.GetTypeParameters()[0];
+    auto& type_param = aidl.GetTypeParameters()[0];
     // TODO(b/136048684) AIDL doesn't support nested type parameter yet.
     AIDL_FATAL_IF(type_param->IsGeneric(), aidl) << "AIDL doesn't support nested type parameter";
 
@@ -361,9 +337,12 @@ static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlType
     return GetTypeAspect(types, array_type);
   }
 
+  // All generic types should be handled above.
+  AIDL_FATAL_IF(aidl.IsGeneric(), aidl);
+
   if (AidlTypenames::IsBuiltinTypename(aidl_name)) {
     auto it = kNdkTypeInfoMap.find(aidl_name);
-    AIDL_FATAL_IF(it == kNdkTypeInfoMap.end(), aidl_name);
+    CHECK(it != kNdkTypeInfoMap.end());
     info = it->second;
   } else {
     const AidlDefinedType* type = types.TryGetDefinedType(aidl_name);
@@ -372,7 +351,7 @@ static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlType
     if (const AidlInterface* intf = type->AsInterface(); intf != nullptr) {
       info = InterfaceTypeInfo(*intf);
     } else if (const AidlParcelable* parcelable = type->AsParcelable(); parcelable != nullptr) {
-      info = ParcelableTypeInfo(*parcelable, aidl, types);
+      info = ParcelableTypeInfo(*parcelable);
     } else if (const AidlEnumDeclaration* enum_decl = type->AsEnumDeclaration();
                enum_decl != nullptr) {
       info = EnumDeclarationTypeInfo(*enum_decl);
@@ -383,18 +362,15 @@ static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlType
 
   if (aidl.IsArray()) {
     if (aidl.IsNullable()) {
-      AIDL_FATAL_IF(info.nullable_array == nullptr, aidl)
-          << "Unsupported type in NDK Backend: " << aidl.ToString();
+      AIDL_FATAL_IF(info.nullable_array == nullptr, aidl) << "Unsupported type in NDK Backend.";
       return *info.nullable_array;
     }
-    AIDL_FATAL_IF(info.array == nullptr, aidl)
-        << "Unsupported type in NDK Backend: " << aidl.ToString();
+    AIDL_FATAL_IF(info.array == nullptr, aidl) << "Unsupported type in NDK Backend.";
     return *info.array;
   }
 
   if (aidl.IsNullable()) {
-    AIDL_FATAL_IF(info.nullable == nullptr, aidl)
-        << "Unsupported type in NDK Backend: " << aidl.ToString();
+    AIDL_FATAL_IF(info.nullable == nullptr, aidl) << "Unsupported type in NDK Backend.";
     return *info.nullable;
   }
 
@@ -427,26 +403,6 @@ std::string NdkNameOf(const AidlTypenames& types, const AidlTypeSpecifier& aidl,
     default:
       AIDL_FATAL(aidl.GetName()) << "Unrecognized mode type: " << static_cast<int>(mode);
   }
-}
-
-size_t NdkAlignmentOf(const AidlTypenames& types, const AidlTypeSpecifier& aidl) {
-  // map from NDK type name to the corresponding alignment size
-  static map<string, int> alignment = {
-      {"bool", 1},  {"int8_t", 1},  {"char16_t", 2}, {"double", 8},
-      {"float", 4}, {"int32_t", 4}, {"int64_t", 8},
-  };
-
-  const string& name = NdkNameOf(types, aidl, StorageMode::STACK);
-  if (alignment.find(name) != alignment.end()) {
-    return alignment[name];
-  } else {
-    const auto& definedType = types.TryGetDefinedType(aidl.GetName());
-    AIDL_FATAL_IF(definedType == nullptr, aidl) << "Failed to resolve type.";
-    if (const auto& enumType = definedType->AsEnumDeclaration(); enumType != nullptr) {
-      return NdkAlignmentOf(types, enumType->GetBackingType());
-    }
-  }
-  return 0;
 }
 
 void WriteToParcelFor(const CodeGeneratorContext& c) {
