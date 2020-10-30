@@ -1,0 +1,23 @@
+apex_test {
+    name: "com.android.aidltest",
+    manifest: "apex_manifest.json",
+    file_contexts: ":apex.test-file_contexts",
+    key: "com.android.aidltest.key",
+    certificate: ":com.android.aidltest.certificate",
+    installable: false,
+
+    native_shared_libs: [
+        "test-piece-1-ndk_platform",
+    ],
+}
+
+apex_key {
+    name: "com.android.aidltest.key",
+    public_key: "com.android.aidltest.pubkey",
+    private_key: "com.android.aidltest.pem",
+}
+
+android_app_certificate {
+    name: "com.android.aidltest.certificate",
+    certificate: "com.android.aidltest",
+}

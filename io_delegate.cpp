@@ -22,6 +22,8 @@
 
 #ifdef _WIN32
 #include <direct.h>
+#include <windows.h>
+#undef ERROR
 #else
 #include <dirent.h>
 #include <sys/stat.h>
@@ -49,7 +51,7 @@ bool IoDelegate::GetAbsolutePath(const string& path, string* absolute_path) {
   char buf[4096];
   DWORD path_len = GetFullPathName(path.c_str(), sizeof(buf), buf, nullptr);
   if (path_len <= 0 || path_len >= sizeof(buf)) {
-    LOG(ERROR) << "Failed to GetFullPathName(" << path << ")";
+    AIDL_ERROR(path) << "Failed to GetFullPathName";
     return false;
   }
   *absolute_path = buf;
@@ -59,8 +61,7 @@ bool IoDelegate::GetAbsolutePath(const string& path, string* absolute_path) {
 #else
 
   if (path.empty()) {
-    LOG(ERROR) << "Giving up on finding an absolute path to represent the "
-                  "empty string.";
+    AIDL_ERROR(path) << "Giving up on finding an absolute path to represent the empty string.";
     return false;
   }
   if (path[0] == OS_PATH_SEPARATOR) {
@@ -70,8 +71,8 @@ bool IoDelegate::GetAbsolutePath(const string& path, string* absolute_path) {
 
   char buf[4096];
   if (getcwd(buf, sizeof(buf)) == nullptr) {
-    LOG(ERROR) << "Path of current working directory does not fit in "
-               << sizeof(buf) << " bytes";
+    AIDL_ERROR(path) << "Path of current working directory does not fit in " << sizeof(buf)
+                     << " bytes";
     return false;
   }
 
@@ -138,8 +139,7 @@ static bool CreateNestedDirs(const string& caller_base_dir, const vector<string>
 #endif
     // On darwin when you try to mkdir("/", ...) we get EISDIR.
     if (!success && (errno != EEXIST && errno != EISDIR)) {
-      LOG(ERROR) << "Error while creating " << base_dir << ": "
-                 << strerror(errno);
+      AIDL_ERROR(caller_base_dir) << "Error while creating " << base_dir << ": " << strerror(errno);
       return false;
     }
   }
@@ -201,7 +201,7 @@ vector<string> IoDelegate::ListFiles(const string&) const {
 
 #else
 static void add_list_files(const string& dirname, vector<string>* result) {
-  CHECK(result != nullptr);
+  AIDL_FATAL_IF(result == nullptr, dirname);
   std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(dirname.c_str()), closedir);
   if (dir != nullptr) {
     while (struct dirent* ent = readdir(dir.get())) {

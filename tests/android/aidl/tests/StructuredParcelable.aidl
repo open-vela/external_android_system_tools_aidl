@@ -20,7 +20,10 @@ import android.aidl.tests.ByteEnum;
 import android.aidl.tests.IntEnum;
 import android.aidl.tests.LongEnum;
 import android.aidl.tests.ConstantExpressionEnum;
+import android.aidl.tests.Union;
 
+@JavaDerive(toString=true)
+@RustDerive(Clone=true, PartialEq=true)
 parcelable StructuredParcelable {
     int[] shouldContainThreeFs;
     int f;
@@ -40,8 +43,15 @@ parcelable StructuredParcelable {
     char charDefaultsToC = 'C';
     float floatDefaultsToPi = 3.14f;
     double doubleWithDefault = -3.14e17;
-    int[] arrayDefaultsTo123 = { 1, 2, 3 };
+    int[] arrayDefaultsTo123 = { 1, 2, 3, };
     int[] arrayDefaultsToEmpty = { };
+
+    boolean boolDefault;
+    byte byteDefault;
+    int intDefault;
+    long longDefault;
+    float floatDefault;
+    double doubleDefault;
 
     // parse checks only
     double checkDoubleFromFloat = 3.14f;
@@ -59,12 +69,11 @@ parcelable StructuredParcelable {
     // Constant expressions that evaluate to 1
     int[] int32_1 = {
       (~(-1)) == 0,
-      -(1 << 31) == (1 << 31),
+      ~~(1 << 31) == (1 << 31),
       -0x7fffffff < 0,
-      -0x80000000 < 0,
+      0x80000000 < 0,
 
-      // both treated int32_t, sum = (int32_t)0x80000000 = -2147483648
-      (1 + 0x7fffffff) == -2147483648,
+      0x7fffffff == 2147483647,
 
       // Shifting for more than 31 bits are undefined. Not tested.
       (1 << 31) == 0x80000000,
@@ -116,7 +125,7 @@ parcelable StructuredParcelable {
       (1 << 2) >= 0,
       (4 >> 1) == 2,
       (8 << -1) == 4,
-      (1 << 31 >> 31) == -1,
+      (1 << 30 >> 30) == 1,
       (1 | 16 >> 2) == 5,
       (0x0f ^ 0x33 & 0x99) == 0x1e, // & higher than ^
       (~42 & (1 << 3 | 16 >> 2) ^ 7) == 3,
@@ -129,17 +138,14 @@ parcelable StructuredParcelable {
       (~(-1)) == 0,
       (~4294967295) != 0,
       (~4294967295) != 0,
-      -(1 << 63) == (1 << 63),
+      ~~(1L << 63) == (1L << 63),
       -0x7FFFFFFFFFFFFFFF < 0,
 
-      // both treated int32_t, sum = (int64_t)(int32_t)0x80000000 = (int64_t)(-2147483648)
-      (1 + 0x7fffffff) == -2147483648,
-
-      // 0x80000000 is uint32_t, sum = (int64_t)(uint32_t)0x7fffffff = (int64_t)(2147483647)
-      (0x80000000 - 1) == 2147483647,
-      (0x80000000 + 1) == -2147483647,
-      (1L << 63)+1 == -9223372036854775807,
-      0xfffffffff == 68719476735
+      0x7fffffff == 2147483647,
+      0xfffffffff == 68719476735,
+      0xffffffffffffffff == -1,
+      (0xfL << 32L) == 0xf00000000,
+      (0xfL << 32) == 0xf00000000,
     };
     int hexInt32_pos_1 = -0xffffffff;
     int hexInt64_pos_1 = -0xfffffffffff < 0;
@@ -158,5 +164,7 @@ parcelable StructuredParcelable {
     // String expressions
     @utf8InCpp String addString1 = "hello" + " world!";
     @utf8InCpp String addString2 = "The quick brown fox jumps " + "over the lazy dog.";
+
+    @nullable Union u;
 }
 
