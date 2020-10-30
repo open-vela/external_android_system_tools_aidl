@@ -574,6 +574,7 @@ class NativeService : public BnTestService {
     parcelable->const_exprs_9 = ConstantExpressionEnum::hexInt32_3;
     parcelable->const_exprs_10 = ConstantExpressionEnum::hexInt64_1;
 
+    parcelable->u = Union::make<Union::ns>({1, 2, 3});
     return Status::ok();
   }
 

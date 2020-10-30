@@ -609,59 +609,62 @@ public class TestServiceClient {
         assertThat(p.const_exprs_9, is(1));
         assertThat(p.const_exprs_10, is(1));
 
-        final String expected = "android.aidl.tests.StructuredParcelable{" +
-            "shouldContainThreeFs: [17, 17, 17], " +
-            "f: 17, " +
-            "shouldBeJerry: Jerry, " +
-            "shouldBeByteBar: 2, " +
-            "shouldBeIntBar: 2000, " +
-            "shouldBeLongBar: 200000000000, " +
-            "shouldContainTwoByteFoos: [1, 1], " +
-            "shouldContainTwoIntFoos: [1000, 1000], " +
-            "shouldContainTwoLongFoos: [100000000000, 100000000000], " +
-            "stringDefaultsToFoo: foo, " +
-            "byteDefaultsToFour: 4, " +
-            "intDefaultsToFive: 5, " +
-            "longDefaultsToNegativeSeven: -7, " +
-            "booleanDefaultsToTrue: true, " +
-            "charDefaultsToC: C, " +
-            "floatDefaultsToPi: 3.14, " +
-            "doubleWithDefault: -3.14E17, " +
-            "arrayDefaultsTo123: [1, 2, 3], " +
-            "arrayDefaultsToEmpty: [], " +
-            "boolDefault: false, " +
-            "byteDefault: 0, " +
-            "intDefault: 0, " +
-            "longDefault: 0, " +
-            "floatDefault: 0.0, " +
-            "doubleDefault: 0.0, " +
-            "checkDoubleFromFloat: 3.14, " +
-            "checkStringArray1: [a, b], " +
-            "checkStringArray2: [a, b], " +
-            "int32_min: -2147483648, " +
-            "int32_max: 2147483647, " +
-            "int64_max: 9223372036854775807, " +
-            "hexInt32_neg_1: -1, " +
-            "ibinder: null, " +
-            "int32_1: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, " +
-            "1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, " +
-            "1, 1, 1, 1], " +
-            "int64_1: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], " +
-            "hexInt32_pos_1: 1, " +
-            "hexInt64_pos_1: 1, " +
-            "const_exprs_1: 1, " +
-            "const_exprs_2: 1, " +
-            "const_exprs_3: 1, " +
-            "const_exprs_4: 1, " +
-            "const_exprs_5: 1, " +
-            "const_exprs_6: 1, " +
-            "const_exprs_7: 1, " +
-            "const_exprs_8: 1, " +
-            "const_exprs_9: 1, " +
-            "const_exprs_10: 1, " +
-            "addString1: hello world!, " +
-            "addString2: The quick brown fox jumps over the lazy dog." +
-            "}";
+        assertThat(p.u.getNs(), is(new int[] {1, 2, 3}));
+
+        final String expected = "android.aidl.tests.StructuredParcelable{"
+            + "shouldContainThreeFs: [17, 17, 17], "
+            + "f: 17, "
+            + "shouldBeJerry: Jerry, "
+            + "shouldBeByteBar: 2, "
+            + "shouldBeIntBar: 2000, "
+            + "shouldBeLongBar: 200000000000, "
+            + "shouldContainTwoByteFoos: [1, 1], "
+            + "shouldContainTwoIntFoos: [1000, 1000], "
+            + "shouldContainTwoLongFoos: [100000000000, 100000000000], "
+            + "stringDefaultsToFoo: foo, "
+            + "byteDefaultsToFour: 4, "
+            + "intDefaultsToFive: 5, "
+            + "longDefaultsToNegativeSeven: -7, "
+            + "booleanDefaultsToTrue: true, "
+            + "charDefaultsToC: C, "
+            + "floatDefaultsToPi: 3.14, "
+            + "doubleWithDefault: -3.14E17, "
+            + "arrayDefaultsTo123: [1, 2, 3], "
+            + "arrayDefaultsToEmpty: [], "
+            + "boolDefault: false, "
+            + "byteDefault: 0, "
+            + "intDefault: 0, "
+            + "longDefault: 0, "
+            + "floatDefault: 0.0, "
+            + "doubleDefault: 0.0, "
+            + "checkDoubleFromFloat: 3.14, "
+            + "checkStringArray1: [a, b], "
+            + "checkStringArray2: [a, b], "
+            + "int32_min: -2147483648, "
+            + "int32_max: 2147483647, "
+            + "int64_max: 9223372036854775807, "
+            + "hexInt32_neg_1: -1, "
+            + "ibinder: null, "
+            + "int32_1: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, "
+            + "1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, "
+            + "1, 1, 1, 1], "
+            + "int64_1: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], "
+            + "hexInt32_pos_1: 1, "
+            + "hexInt64_pos_1: 1, "
+            + "const_exprs_1: 1, "
+            + "const_exprs_2: 1, "
+            + "const_exprs_3: 1, "
+            + "const_exprs_4: 1, "
+            + "const_exprs_5: 1, "
+            + "const_exprs_6: 1, "
+            + "const_exprs_7: 1, "
+            + "const_exprs_8: 1, "
+            + "const_exprs_9: 1, "
+            + "const_exprs_10: 1, "
+            + "addString1: hello world!, "
+            + "addString2: The quick brown fox jumps over the lazy dog., "
+            + "u: android.aidl.tests.Union.ns([1, 2, 3])"
+            + "}";
         assertThat(p.toString(), is(expected));
     }
 

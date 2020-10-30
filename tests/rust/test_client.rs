@@ -22,7 +22,7 @@ use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
     self, BpTestService, ITestServiceDefault,
 };
 use aidl_test_interface::aidl::android::aidl::tests::{
-    ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable,
+    ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable, Union,
 };
 use aidl_test_interface::binder;
 use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::IFooInterface::{
@@ -526,6 +526,8 @@ fn test_parcelable() {
         parcelable.addString2,
         "The quick brown fox jumps over the lazy dog."
     );
+
+    assert_eq!(parcelable.u, Some(Union::Union::Ns(vec![1, 2, 3])))
 }
 
 const EXPECTED_ARG_VALUE: i32 = 100;
