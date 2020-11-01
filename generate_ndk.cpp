@@ -982,7 +982,11 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
   out << "#pragma once\n";
   out << "#include <android/binder_interface_utils.h>\n";
   out << "#include <android/binder_parcelable_utils.h>\n";
-  out << "\n";
+
+  // used by toString()
+  out << "#include <codecvt>\n";
+  out << "#include <locale>\n";
+  out << "#include <sstream>\n";
 
   GenerateHeaderIncludes(out, types, defined_type);
 
@@ -1021,6 +1025,9 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
 
   out << "static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::"
       << (defined_type.IsVintfStability() ? "STABILITY_VINTF" : "STABILITY_LOCAL") << ";\n";
+
+  cpp::GenerateToString(out, defined_type);
+
   out.Dedent();
   out << "};\n";
   LeaveNdkNamespace(out, defined_type);
@@ -1112,6 +1119,12 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
   out << "#pragma once\n";
   out << "#include <android/binder_interface_utils.h>\n";
   out << "#include <android/binder_parcelable_utils.h>\n";
+
+  // used by toString()
+  out << "#include <codecvt>\n";
+  out << "#include <locale>\n";
+  out << "#include <sstream>\n";
+
   out << "\n";
 
   for (const auto& header : cpp::UnionWriter::headers) {
@@ -1138,6 +1151,7 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
 
   out << "static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::"
       << (defined_type.IsVintfStability() ? "STABILITY_VINTF" : "STABILITY_LOCAL") << ";\n";
+  cpp::GenerateToString(out, defined_type);
   out.Dedent();
   out << "private:\n";
   out.Indent();

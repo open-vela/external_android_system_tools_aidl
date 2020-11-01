@@ -77,6 +77,9 @@ std::string TemplateDecl(const AidlParcelable& defined_type);
 
 void GenerateParcelableComparisonOperators(CodeWriter& out, const AidlParcelable& parcelable);
 
+void GenerateToString(CodeWriter& out, const AidlStructuredParcelable& parcelable);
+void GenerateToString(CodeWriter& out, const AidlUnionDecl& parcelable);
+
 struct ParcelWriterContext {
   string status_type;
   string status_ok;
