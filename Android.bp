@@ -394,6 +394,9 @@ aidl_interface {
     local_include_dir: "tests",
     srcs: [
         "tests/android/aidl/loggable/ILoggableInterface.aidl",
+        "tests/android/aidl/loggable/Data.aidl",
+        "tests/android/aidl/loggable/Enum.aidl",
+        "tests/android/aidl/loggable/Union.aidl",
     ],
     gen_trace: true,
     backend: {

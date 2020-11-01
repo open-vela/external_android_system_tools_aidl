@@ -32,13 +32,16 @@ namespace android {
 namespace aidl {
 namespace cpp {
 
-namespace {
-constexpr char kToStringHelper[] =
-    R"(template <typename _T, ::std::enable_if_t<::std::is_same_v<::std::string, decltype(std::declval<_T>().toString())>, int> = 0>
-static inline ::std::string _call_toString(const _T& _t) { return _t.toString(); }
-static inline ::std::string _call_toString(...) { return "{no toString() implemented}"; }
-)";
+char kToStringHelper[] = R"(template <typename _T> class _has_toString {
+  template <typename _U> static std::true_type __has_toString(decltype(&_U::toString));
+  template <typename _U> static std::false_type __has_toString(...);
+  public: enum { value = decltype(__has_toString<_T>(nullptr))::value };
+};
+template <typename _T> inline static std::string _call_toString(const _T& t) {
+  if constexpr (_has_toString<_T>::value) return t.toString();
+  return "{no toString() implemented}";
 }
+)";
 
 string ClassName(const AidlDefinedType& defined_type, ClassNames type) {
   string base_name = defined_type.GetName();
@@ -198,7 +201,9 @@ struct TypeInfo {
 
   // function that writes an expression to convert a variable to a Json::Value
   // object
-  std::function<void(CodeWriter& w, const string& var_name, bool isNdk)> toJsonValueExpr;
+  std::function<void(CodeWriter& w, const AidlTypeSpecifier& type, const string& var_name,
+                     bool isNdk)>
+      toJsonValueExpr;
 };
 
 const static std::unordered_map<std::string, TypeInfo> kTypeInfoMap = {
@@ -206,21 +211,21 @@ const static std::unordered_map<std::string, TypeInfo> kTypeInfoMap = {
     {"boolean",
      {
          "bool",
-         [](CodeWriter& c, const string& var_name, bool) {
+         [](CodeWriter& c, const AidlTypeSpecifier&, const string& var_name, bool) {
            c << "Json::Value(" << var_name << "? \"true\" : \"false\")";
          },
      }},
     {"byte",
      {
          "int8_t",
-         [](CodeWriter& c, const string& var_name, bool) {
+         [](CodeWriter& c, const AidlTypeSpecifier&, const string& var_name, bool) {
            c << "Json::Value(" << var_name << ")";
          },
      }},
     {"char",
      {
          "char16_t",
-         [](CodeWriter& c, const string& var_name, bool isNdk) {
+         [](CodeWriter& c, const AidlTypeSpecifier&, const string& var_name, bool isNdk) {
            if (isNdk) {
              c << "Json::Value(" << var_name << ")";
            } else {
@@ -231,54 +236,68 @@ const static std::unordered_map<std::string, TypeInfo> kTypeInfoMap = {
     {"int",
      {
          "int32_t",
-         [](CodeWriter& c, const string& var_name, bool) {
+         [](CodeWriter& c, const AidlTypeSpecifier&, const string& var_name, bool) {
            c << "Json::Value(" << var_name << ")";
          },
      }},
     {"long",
      {
          "int64_t",
-         [](CodeWriter& c, const string& var_name, bool) {
+         [](CodeWriter& c, const AidlTypeSpecifier&, const string& var_name, bool) {
            c << "Json::Value(static_cast<Json::Int64>(" << var_name << "))";
          },
      }},
     {"float",
      {
          "float",
-         [](CodeWriter& c, const string& var_name, bool) {
+         [](CodeWriter& c, const AidlTypeSpecifier&, const string& var_name, bool) {
            c << "Json::Value(" << var_name << ")";
          },
      }},
     {"double",
      {
          "double",
-         [](CodeWriter& c, const string& var_name, bool) {
+         [](CodeWriter& c, const AidlTypeSpecifier&, const string& var_name, bool) {
            c << "Json::Value(" << var_name << ")";
          },
      }},
     {"String",
      {
          "std::string",
-         [](CodeWriter& c, const string& var_name, bool) {
+         [](CodeWriter& c, const AidlTypeSpecifier&, const string& var_name, bool) {
            c << "Json::Value(" << var_name << ")";
          },
      }}
     // missing List, Map, ParcelFileDescriptor, IBinder
 };
 
+const static TypeInfo kTypeInfoForDefinedType{
+    "<<parcelable>>",  // pseudo-name for parcelable types
+    [](CodeWriter& c, const AidlTypeSpecifier& type, const string& var_name, bool) {
+      c << ToString(type, var_name);
+    }};
+
 TypeInfo GetTypeInfo(const AidlTypeSpecifier& aidl) {
   AIDL_FATAL_IF(!aidl.IsResolved(), aidl) << aidl.ToString();
   const string& aidl_name = aidl.GetName();
 
-  TypeInfo info;
   if (AidlTypenames::IsBuiltinTypename(aidl_name)) {
     auto it = kTypeInfoMap.find(aidl_name);
     if (it != kTypeInfoMap.end()) {
-      info = it->second;
+      return it->second;
     }
+    return {};
   }
-  // Missing interface and parcelable type
-  return info;
+
+  const AidlDefinedType* defined_type = aidl.GetDefinedType();
+  AIDL_FATAL_IF(defined_type == NULL, aidl) << aidl.ToString();
+  if (defined_type->AsStructuredParcelable() || defined_type->AsEnumDeclaration() ||
+      defined_type->AsUnionDeclaration()) {
+    return kTypeInfoForDefinedType;
+  }
+
+  // skip interface types
+  return {};
 }
 
 inline bool CanWriteLog(const TypeInfo& t) {
@@ -298,13 +317,14 @@ void WriteLogFor(CodeWriter& writer, const AidlTypeSpecifier& type, const std::s
 
   const string var_object_expr = ((isPointer ? "*" : "")) + name;
   if (type.IsArray()) {
+    const AidlTypeSpecifier& base_type = type.ArrayBase();
     writer << log << " = Json::Value(Json::arrayValue);\n";
     writer << "for (const auto& v: " << var_object_expr << ") " << log << ".append(";
-    info.toJsonValueExpr(writer, "v", isNdk);
+    info.toJsonValueExpr(writer, base_type, "v", isNdk);
     writer << ");";
   } else {
     writer << log << " = ";
-    info.toJsonValueExpr(writer, var_object_expr, isNdk);
+    info.toJsonValueExpr(writer, type, var_object_expr, isNdk);
     writer << ";";
   }
   writer << "\n";

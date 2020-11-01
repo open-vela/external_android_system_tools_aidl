@@ -365,6 +365,9 @@ void GenerateSource(CodeWriter& out, const AidlTypenames& types, const AidlInter
   out << "\n";
 
   EnterNdkNamespace(out, defined_type);
+  if (options.GenLog()) {
+    out << cpp::kToStringHelper;
+  }
   GenerateClassSource(out, types, defined_type, options);
   GenerateClientSource(out, types, defined_type, options);
   GenerateServerSource(out, types, defined_type, options);
