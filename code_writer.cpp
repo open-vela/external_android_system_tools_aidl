@@ -15,14 +15,13 @@
  */
 #include "code_writer.h"
 
-#include "logging.h"
-
 #include <stdarg.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
 
+#include <android-base/logging.h>
 #include <android-base/stringprintf.h>
 
 namespace android {
@@ -75,7 +74,7 @@ void CodeWriter::Indent() {
   indent_level_++;
 }
 void CodeWriter::Dedent() {
-  AIDL_FATAL_IF(indent_level_ <= 0, "Mismatched dedent");
+  CHECK(indent_level_ > 0);
 
   indent_level_--;
 }
