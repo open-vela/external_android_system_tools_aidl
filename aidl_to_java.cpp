@@ -800,7 +800,7 @@ void ToStringFor(const CodeGeneratorContext& c) {
   // that they are actually user-defined types.
   AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type";
   if (t->AsInterface() != nullptr || t->AsParcelable() != nullptr) {
-    c.writer << c.var << ".toString()";
+    c.writer << "java.util.Objects.toString(" << c.var << ")";
     return;
   }
   CHECK(true) << "Unhandled typename: " << name << endl;
