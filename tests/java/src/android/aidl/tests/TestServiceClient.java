@@ -720,6 +720,7 @@ public class TestServiceClient {
         gen.a = 1;
         gen.b = 2;
         p.parcelableGeneric = gen;
+        p.unionValue = null; // for testing even though it is not @nullable in .aidl
 
         final String expected = "android.aidl.tests.ParcelableForToString{"
             + "intValue: 10, "
@@ -745,7 +746,8 @@ public class TestServiceClient {
             + "enumArray: [1000, 2000], "
             + "nullArray: null, "
             + "nullList: null, "
-            + "parcelableGeneric: android.aidl.tests.GenericStructuredParcelable{a: 1, b: 2}"
+            + "parcelableGeneric: android.aidl.tests.GenericStructuredParcelable{a: 1, b: 2}, "
+            + "unionValue: null"
             + "}";
 
         assertThat(p.toString(), is(expected));
