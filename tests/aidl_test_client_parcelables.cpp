@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
+#include <android/aidl/tests/ParcelableForToString.h>
 #include <android/aidl/tests/extension/MyExt.h>
 #include <android/aidl/tests/extension/MyExt2.h>
 #include <android/aidl/tests/extension/MyExtLike.h>
 #include "aidl_test_client.h"
 
+#include <string>
 #include <vector>
 
 using android::IInterface;
@@ -29,6 +31,8 @@ using android::aidl::tests::GenericStructuredParcelable;
 using android::aidl::tests::INamedCallback;
 using android::aidl::tests::IntEnum;
 using android::aidl::tests::ITestService;
+using android::aidl::tests::OtherParcelableForToString;
+using android::aidl::tests::ParcelableForToString;
 using android::aidl::tests::SimpleParcelable;
 using android::aidl::tests::StructuredParcelable;
 using android::aidl::tests::Union;
@@ -38,6 +42,7 @@ using android::aidl::tests::extension::MyExt2;
 using android::aidl::tests::extension::MyExtLike;
 using android::binder::Status;
 using android::os::PersistableBundle;
+using std::string;
 using std::vector;
 
 TEST_F(AidlTest, RepeatSimpleParcelable) {
@@ -377,4 +382,67 @@ TEST_F(AidlTest, NativeExtednableParcelable) {
     EXPECT_EQ(ext, *actualExt);
     EXPECT_EQ(ext2, *actualExt2);
   }
+}
+
+TEST_F(AidlTest, ParcelableToString) {
+  ParcelableForToString p;
+  p.intValue = 10;
+  p.intArray = {20, 30};
+  p.longValue = 100L;
+  p.longArray = {200L, 300L};
+  p.doubleValue = 3.14;
+  p.doubleArray = {1.1, 1.2};
+  p.floatValue = 3.14f;
+  p.floatArray = {1.1f, 1.2f};
+  p.byteValue = 3;
+  p.byteArray = {5, 6};
+  p.booleanValue = true;
+  p.booleanArray = {true, false};
+  p.stringValue = String16("this is a string");
+  p.stringArray = {String16("hello"), String16("world")};
+  p.stringList = {String16("alice"), String16("bob")};
+  OtherParcelableForToString op;
+  op.field = String16("other");
+  p.parcelableValue = op;
+  p.parcelableArray = {op, op};
+  p.enumValue = IntEnum::FOO;
+  p.enumArray = {IntEnum::FOO, IntEnum::BAR};
+  // p.nullArray = null;
+  // p.nullList = null;
+  GenericStructuredParcelable<int32_t, StructuredParcelable, IntEnum> gen;
+  gen.a = 1;
+  gen.b = 2;
+  p.parcelableGeneric = gen;
+  p.unionValue = Union(std::vector<std::string>{"union", "value"});
+
+  const string expected =
+      "ParcelableForToString{"
+      "intValue: 10, "
+      "intArray: [20, 30], "
+      "longValue: 100, "
+      "longArray: [200, 300], "
+      "doubleValue: 3.140000, "
+      "doubleArray: [1.100000, 1.200000], "
+      "floatValue: 3.140000, "
+      "floatArray: [1.100000, 1.200000], "
+      "byteValue: 3, "
+      "byteArray: [5, 6], "
+      "booleanValue: true, "
+      "booleanArray: [true, false], "
+      "stringValue: this is a string, "
+      "stringArray: [hello, world], "
+      "stringList: [alice, bob], "
+      "parcelableValue: OtherParcelableForToString{field: other}, "
+      "parcelableArray: ["
+      "OtherParcelableForToString{field: other}, "
+      "OtherParcelableForToString{field: other}], "
+      "enumValue: FOO, "
+      "enumArray: [FOO, BAR], "
+      "nullArray: [], "
+      "nullList: [], "
+      "parcelableGeneric: GenericStructuredParcelable{a: 1, b: 2}, "
+      "unionValue: Union{ss: [union, value]}"
+      "}";
+
+  EXPECT_EQ(expected, p.toString());
 }

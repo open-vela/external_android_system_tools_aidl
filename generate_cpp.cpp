@@ -1234,6 +1234,14 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames, cons
                                    "  return DESCIPTOR;\n"
                                    "}\n",
                                    parcel.GetCanonicalName().c_str()))));
+
+  // toString() method
+  includes.insert("codecvt");  // std::codecvt_utf8_utf16
+  includes.insert("locale");   // std::wstrinig_convert
+  includes.insert("sstream");  // std::ostringstream
+  const string code = CodeWriter::RunWith(&GenerateToString, parcel);
+  parcel_class->AddPublic(std::make_unique<LiteralDecl>(code));
+
   return unique_ptr<Document>{
       new CppHeader{vector<string>(includes.begin(), includes.end()),
                     NestInNamespaces(std::move(parcel_class), parcel.GetSplitPackage())}};
