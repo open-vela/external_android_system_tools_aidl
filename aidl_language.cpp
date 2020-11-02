@@ -458,8 +458,13 @@ bool AidlTypeSpecifier::Resolve(const AidlTypenames& typenames) {
   if (result.is_resolved) {
     fully_qualified_name_ = result.canonical_name;
     split_name_ = Split(fully_qualified_name_, ".");
+    defined_type_ = result.defined_type;
   }
   return result.is_resolved;
+}
+
+const AidlDefinedType* AidlTypeSpecifier::GetDefinedType() const {
+  return defined_type_;
 }
 
 std::set<AidlAnnotation::Type> AidlTypeSpecifier::GetSupportedAnnotations() const {
