@@ -69,7 +69,6 @@ class AidlTypenames final {
   struct ResolvedTypename {
     std::string canonical_name;
     bool is_resolved;
-    const AidlDefinedType* defined_type;
   };
   ResolvedTypename ResolveTypename(const string& type_name) const;
   pair<bool, string> CanBeOutParameter(const AidlTypeSpecifier& type) const;
@@ -98,7 +97,7 @@ class AidlTypenames final {
     const bool from_preprocessed;
   };
   DefinedImplResult TryGetDefinedTypeImpl(const string& type_name) const;
-  map<string, AidlDefinedType*> defined_types_;
+  map<string, const AidlDefinedType*> defined_types_;
   map<string, unique_ptr<AidlDefinedType>> preprocessed_types_;
   std::vector<std::unique_ptr<AidlDocument>> documents_;
 };
