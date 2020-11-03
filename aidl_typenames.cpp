@@ -215,15 +215,15 @@ AidlTypenames::ResolvedTypename AidlTypenames::ResolveTypename(const string& typ
   if (IsBuiltinTypename(type_name)) {
     auto found = kJavaLikeTypeToAidlType.find(type_name);
     if (found != kJavaLikeTypeToAidlType.end()) {
-      return {found->second, true};
+      return {found->second, true, nullptr};
     }
-    return {type_name, true};
+    return {type_name, true, nullptr};
   }
   const AidlDefinedType* defined_type = TryGetDefinedType(type_name);
   if (defined_type != nullptr) {
-    return {defined_type->GetCanonicalName(), true};
+    return {defined_type->GetCanonicalName(), true, defined_type};
   } else {
-    return {type_name, false};
+    return {type_name, false, nullptr};
   }
 }
 
