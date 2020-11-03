@@ -1594,6 +1594,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 		Apex_available:            commonProperties.Apex_available,
 		Min_sdk_version:           minSdkVersion,
 		UseApexNameMacro:          true,
+		Target:                    targetProperties{Darwin: perTargetProperties{Enabled: proptools.BoolPtr(false)}},
 	}, &i.properties.VndkProperties, &commonProperties.VndkProperties, &overrideVndkProperties)
 
 	return cppModuleGen
@@ -1773,6 +1774,7 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMo
 		Stem:           proptools.StringPtr("lib" + versionedRustName),
 		Defaults:       []string{"aidl-rust-module-defaults"},
 		Host_supported: i.properties.Host_supported,
+		Target:         targetProperties{Darwin: perTargetProperties{Enabled: proptools.BoolPtr(false)}},
 	}, &rust.SourceProviderProperties{
 		Source_stem: proptools.StringPtr(versionedRustName),
 	}, &aidlRustSourceProviderProperties{
