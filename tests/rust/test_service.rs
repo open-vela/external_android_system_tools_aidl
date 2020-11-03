@@ -20,6 +20,7 @@ use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
     self, BnTestService, BpTestService,
 };
 use aidl_test_interface::aidl::android::aidl::tests::{
+    BackendType::BackendType,
     ByteEnum::ByteEnum, ConstantExpressionEnum::ConstantExpressionEnum, INamedCallback, INewName,
     IOldName, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable, Union,
 };
@@ -284,6 +285,10 @@ impl ITestService::ITestService for TestService {
 
     fn GetCppJavaTests(&self) -> binder::Result<Option<SpIBinder>> {
         Ok(None)
+    }
+
+    fn getBackendType(&self) -> binder::Result<BackendType> {
+        Ok(BackendType::RUST)
     }
 }
 
