@@ -29,9 +29,6 @@ namespace android {
 namespace aidl {
 namespace cpp {
 
-// provides _call_toString(expr) which call expr.toString() if possible
-extern char kToStringHelper[];
-
 // These roughly correspond to the various class names in the C++ hierarchy:
 enum class ClassNames {
   BASE,          // Foo (not a real class, but useful in some circumstances).
