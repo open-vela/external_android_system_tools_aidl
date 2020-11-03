@@ -314,6 +314,8 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames, Options::Language lang) const;
   const AidlNode& AsAidlNode() const override { return *this; }
 
+  const AidlDefinedType* GetDefinedType() const;
+
  private:
   AidlTypeSpecifier(const AidlTypeSpecifier&) = default;
 
@@ -322,6 +324,7 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   bool is_array_;
   string comments_;
   vector<string> split_name_;
+  const AidlDefinedType* defined_type_;  // set when Resolve() for defined types
   mutable shared_ptr<AidlTypeSpecifier> array_base_;
 };
 
