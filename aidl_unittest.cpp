@@ -2973,7 +2973,10 @@ const char kUnionExampleExpectedOutputCppHeader[] = R"(#pragma once
 #include <binder/Parcel.h>
 #include <binder/ParcelFileDescriptor.h>
 #include <binder/Status.h>
+#include <codecvt>
 #include <cstdint>
+#include <locale>
+#include <sstream>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -3062,6 +3065,20 @@ public:
     static const std::string DESCIPTOR = "a.Foo";
     return DESCIPTOR;
   }
+  template <typename _T, ::std::enable_if_t<::std::is_same_v<::std::string, decltype(std::declval<_T>().toString())>, int> = 0>
+  static inline ::std::string _call_toString(const _T& _t) { return _t.toString(); }
+  static inline ::std::string _call_toString(...) { return "{no toString() implemented}"; }
+  inline std::string toString() const {
+    std::ostringstream os;
+    os << "Foo{";
+    switch (getTag()) {
+    case ns: os << "ns: " << [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: get<ns>()) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }(); break;
+    case e: os << "e: " << a::toString(get<e>()); break;
+    case pfd: os << "pfd: " << ""; break;
+    }
+    os << "}";
+    return os.str();
+  }
 private:
   std::variant<::std::vector<int32_t>, ::a::ByteEnum, ::android::os::ParcelFileDescriptor> _value;
 };  // class Foo
@@ -3114,6 +3131,9 @@ namespace a {
 const char kUnionExampleExpectedOutputNdkHeader[] = R"(#pragma once
 #include <android/binder_interface_utils.h>
 #include <android/binder_parcelable_utils.h>
+#include <codecvt>
+#include <locale>
+#include <sstream>
 
 #include <type_traits>
 #include <utility>
@@ -3191,6 +3211,20 @@ public:
   binder_status_t readFromParcel(const AParcel* _parcel);
   binder_status_t writeToParcel(AParcel* _parcel) const;
   static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::STABILITY_LOCAL;
+  template <typename _T, ::std::enable_if_t<::std::is_same_v<::std::string, decltype(std::declval<_T>().toString())>, int> = 0>
+  static inline ::std::string _call_toString(const _T& _t) { return _t.toString(); }
+  static inline ::std::string _call_toString(...) { return "{no toString() implemented}"; }
+  inline std::string toString() const {
+    std::ostringstream os;
+    os << "Foo{";
+    switch (getTag()) {
+    case ns: os << "ns: " << [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: get<ns>()) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }(); break;
+    case e: os << "e: " << a::toString(get<e>()); break;
+    case pfd: os << "pfd: " << ""; break;
+    }
+    os << "}";
+    return os.str();
+  }
 private:
   std::variant<std::vector<int32_t>, ::aidl::a::ByteEnum, ::ndk::ScopedFileDescriptor> _value;
 };
