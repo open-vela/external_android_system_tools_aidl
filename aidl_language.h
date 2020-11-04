@@ -133,13 +133,19 @@ class AidlParameterizable {
   const std::vector<T>& GetTypeParameters() const { return *type_params_; }
   bool CheckValid() const;
 
+  __attribute__((warn_unused_result)) bool SetTypeParameters(std::vector<T>* type_params) {
+    if (type_params_) return false;
+    type_params_.reset(type_params);
+    return true;
+  }
+
   virtual const AidlNode& AsAidlNode() const = 0;
 
  protected:
   AidlParameterizable(const AidlParameterizable&);
 
  private:
-  const unique_ptr<std::vector<T>> type_params_;
+  unique_ptr<std::vector<T>> type_params_;
   static_assert(std::is_same<T, unique_ptr<AidlTypeSpecifier>>::value ||
                 std::is_same<T, std::string>::value);
 };
@@ -304,6 +310,12 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   bool IsResolved() const { return fully_qualified_name_ != ""; }
 
   bool IsArray() const { return is_array_; }
+
+  __attribute__((warn_unused_result)) bool SetArray() {
+    if (is_array_) return false;
+    is_array_ = true;
+    return true;
+  }
 
   // Resolve the base type name to a fully-qualified name. Return false if the
   // resolution fails.
