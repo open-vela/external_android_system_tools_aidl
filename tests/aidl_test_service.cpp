@@ -55,6 +55,7 @@
 #include "android/aidl/tests/extension/MyExt2.h"
 
 #include "android/aidl/loggable/BnLoggableInterface.h"
+#include "android/aidl/loggable/Data.h"
 
 // Used implicitly.
 #undef LOG_TAG
@@ -636,9 +637,9 @@ class LoggableInterfaceService : public android::aidl::loggable::BnLoggableInter
   virtual Status LogThis(bool, vector<bool>*, int8_t, vector<uint8_t>*, char16_t, vector<char16_t>*,
                          int32_t, vector<int32_t>*, int64_t, vector<int64_t>*, float,
                          vector<float>*, double, vector<double>*, const String16&,
-                         vector<String16>*, vector<String16>*, const sp<IBinder>&,
-                         optional<ParcelFileDescriptor>*, vector<ParcelFileDescriptor>*,
-                         vector<String16>* _aidl_return) override {
+                         vector<String16>*, vector<String16>*, const android::aidl::loggable::Data&,
+                         const sp<IBinder>&, optional<ParcelFileDescriptor>*,
+                         vector<ParcelFileDescriptor>*, vector<String16>* _aidl_return) override {
     *_aidl_return = vector<String16>{String16("loggable")};
     return Status::ok();
   }
