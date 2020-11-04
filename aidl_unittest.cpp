@@ -3065,9 +3065,15 @@ public:
     static const std::string DESCIPTOR = "a.Foo";
     return DESCIPTOR;
   }
-  template <typename _T, ::std::enable_if_t<::std::is_same_v<::std::string, decltype(std::declval<_T>().toString())>, int> = 0>
-  static inline ::std::string _call_toString(const _T& _t) { return _t.toString(); }
-  static inline ::std::string _call_toString(...) { return "{no toString() implemented}"; }
+  template <typename _T> class _has_toString {
+    template <typename _U> static std::true_type __has_toString(decltype(&_U::toString));
+    template <typename _U> static std::false_type __has_toString(...);
+    public: enum { value = decltype(__has_toString<_T>(nullptr))::value };
+  };
+  template <typename _T> inline static std::string _call_toString(const _T& t) {
+    if constexpr (_has_toString<_T>::value) return t.toString();
+    return "{no toString() implemented}";
+  }
   inline std::string toString() const {
     std::ostringstream os;
     os << "Foo{";
@@ -3211,9 +3217,15 @@ public:
   binder_status_t readFromParcel(const AParcel* _parcel);
   binder_status_t writeToParcel(AParcel* _parcel) const;
   static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::STABILITY_LOCAL;
-  template <typename _T, ::std::enable_if_t<::std::is_same_v<::std::string, decltype(std::declval<_T>().toString())>, int> = 0>
-  static inline ::std::string _call_toString(const _T& _t) { return _t.toString(); }
-  static inline ::std::string _call_toString(...) { return "{no toString() implemented}"; }
+  template <typename _T> class _has_toString {
+    template <typename _U> static std::true_type __has_toString(decltype(&_U::toString));
+    template <typename _U> static std::false_type __has_toString(...);
+    public: enum { value = decltype(__has_toString<_T>(nullptr))::value };
+  };
+  template <typename _T> inline static std::string _call_toString(const _T& t) {
+    if constexpr (_has_toString<_T>::value) return t.toString();
+    return "{no toString() implemented}";
+  }
   inline std::string toString() const {
     std::ostringstream os;
     os << "Foo{";
