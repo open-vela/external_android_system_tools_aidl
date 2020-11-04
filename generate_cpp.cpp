@@ -469,25 +469,23 @@ unique_ptr<Document> BuildClientSource(const AidlTypenames& typenames,
   if (options.GenLog()) {
     include_list.emplace_back("chrono");
     include_list.emplace_back("functional");
-    include_list.emplace_back("json/value.h");
   }
   vector<unique_ptr<Declaration>> file_decls;
 
   // The constructor just passes the IBinder instance up to the super
   // class.
   const string i_name = ClassName(interface, ClassNames::INTERFACE);
+  const string bp_name = ClassName(interface, ClassNames::CLIENT);
   file_decls.push_back(unique_ptr<Declaration>{new ConstructorImpl{
-      ClassName(interface, ClassNames::CLIENT),
-      ArgList{StringPrintf("const ::android::sp<::android::IBinder>& %s",
-                           kImplVarName)},
-      { "BpInterface<" + i_name + ">(" + kImplVarName + ")" }}});
+      bp_name,
+      ArgList{StringPrintf("const ::android::sp<::android::IBinder>& %s", kImplVarName)},
+      {"BpInterface<" + i_name + ">(" + kImplVarName + ")"}}});
 
   if (options.GenLog()) {
     string code;
-    ClassName(interface, ClassNames::CLIENT);
     CodeWriterPtr writer = CodeWriter::ForString(&code);
-    (*writer) << "std::function<void(const Json::Value&)> "
-              << ClassName(interface, ClassNames::CLIENT) << "::logFunc;\n";
+    (*writer) << "std::function<void(const " + bp_name + "::TransactionLog&)> " << bp_name
+              << "::logFunc;\n";
     writer->Close();
     file_decls.push_back(unique_ptr<Declaration>(new LiteralDecl(code)));
   }
@@ -661,11 +659,9 @@ unique_ptr<Document> BuildServerSource(const AidlTypenames& typenames,
   if (options.GenLog()) {
     include_list.emplace_back("chrono");
     include_list.emplace_back("functional");
-    include_list.emplace_back("json/value.h");
   }
 
-  unique_ptr<ConstructorImpl> constructor{
-      new ConstructorImpl{ClassName(interface, ClassNames::SERVER), ArgList{}, {}}};
+  unique_ptr<ConstructorImpl> constructor{new ConstructorImpl{bn_name, ArgList{}, {}}};
 
   if (interface.IsVintfStability()) {
     constructor->GetStatementBlock()->AddLiteral("::android::internal::Stability::markVintf(this)");
@@ -753,10 +749,9 @@ unique_ptr<Document> BuildServerSource(const AidlTypenames& typenames,
 
   if (options.GenLog()) {
     string code;
-    ClassName(interface, ClassNames::SERVER);
     CodeWriterPtr writer = CodeWriter::ForString(&code);
-    (*writer) << "std::function<void(const Json::Value&)> "
-              << ClassName(interface, ClassNames::SERVER) << "::logFunc;\n";
+    (*writer) << "std::function<void(const " + bn_name + "::TransactionLog&)> " << bn_name
+              << "::logFunc;\n";
     writer->Close();
     decls.push_back(unique_ptr<Declaration>(new LiteralDecl(code)));
   }
@@ -834,11 +829,11 @@ unique_ptr<Document> BuildClientHeader(const AidlTypenames& typenames,
   }
 
   if (options.GenLog()) {
-    includes.emplace_back("chrono");      // for std::chrono::steady_clock
     includes.emplace_back("functional");  // for std::function
-    includes.emplace_back("json/value.h");
+
+    publics.emplace_back(new LiteralDecl{kTransactionLogStruct});
     publics.emplace_back(
-        new LiteralDecl{"static std::function<void(const Json::Value&)> logFunc;\n"});
+        new LiteralDecl{"static std::function<void(const TransactionLog&)> logFunc;\n"});
     privates.emplace_back(new LiteralDecl{kToStringHelper});
   }
 
@@ -899,11 +894,11 @@ unique_ptr<Document> BuildServerHeader(const AidlTypenames& /* typenames */,
   }
 
   if (options.GenLog()) {
-    includes.emplace_back("chrono");      // for std::chrono::steady_clock
     includes.emplace_back("functional");  // for std::function
-    includes.emplace_back("json/value.h");
+
+    publics.emplace_back(new LiteralDecl{kTransactionLogStruct});
     publics.emplace_back(
-        new LiteralDecl{"static std::function<void(const Json::Value&)> logFunc;\n"});
+        new LiteralDecl{"static std::function<void(const TransactionLog&)> logFunc;\n"});
     privates.emplace_back(new LiteralDecl{kToStringHelper});
   }
   unique_ptr<ClassDecl> bn_class{new ClassDecl{bn_name,
