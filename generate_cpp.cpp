@@ -815,6 +815,8 @@ unique_ptr<Document> BuildClientHeader(const AidlTypenames& typenames,
       ConstructorDecl::IS_VIRTUAL | ConstructorDecl::IS_DEFAULT}};
 
   vector<unique_ptr<Declaration>> publics;
+  vector<unique_ptr<Declaration>> privates;
+
   publics.push_back(std::move(constructor));
   publics.push_back(std::move(destructor));
 
@@ -832,9 +834,8 @@ unique_ptr<Document> BuildClientHeader(const AidlTypenames& typenames,
     includes.emplace_back("json/value.h");
     publics.emplace_back(
         new LiteralDecl{"static std::function<void(const Json::Value&)> logFunc;\n"});
+    privates.emplace_back(new LiteralDecl{kToStringHelper});
   }
-
-  vector<unique_ptr<Declaration>> privates;
 
   if (options.Version() > 0) {
     privates.emplace_back(new LiteralDecl("int32_t cached_version_ = -1;\n"));
@@ -876,6 +877,8 @@ unique_ptr<Document> BuildServerHeader(const AidlTypenames& /* typenames */,
   vector<string> includes = {"binder/IInterface.h", HeaderFile(interface, ClassNames::RAW, false)};
 
   vector<unique_ptr<Declaration>> publics;
+  vector<unique_ptr<Declaration>> privates;
+
   publics.push_back(std::move(constructor));
   publics.push_back(std::move(on_transact));
 
@@ -896,9 +899,13 @@ unique_ptr<Document> BuildServerHeader(const AidlTypenames& /* typenames */,
     includes.emplace_back("json/value.h");
     publics.emplace_back(
         new LiteralDecl{"static std::function<void(const Json::Value&)> logFunc;\n"});
+    privates.emplace_back(new LiteralDecl{kToStringHelper});
   }
-  unique_ptr<ClassDecl> bn_class{
-      new ClassDecl{bn_name, "::android::BnInterface<" + i_name + ">", {}, std::move(publics), {}}};
+  unique_ptr<ClassDecl> bn_class{new ClassDecl{bn_name,
+                                               "::android::BnInterface<" + i_name + ">",
+                                               {},
+                                               std::move(publics),
+                                               std::move(privates)}};
 
   return unique_ptr<Document>{
       new CppHeader{includes, NestInNamespaces(std::move(bn_class), interface.GetSplitPackage())}};

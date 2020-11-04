@@ -29,7 +29,10 @@ using android::IBinder;
 using android::sp;
 using android::String16;
 using android::aidl::loggable::BpLoggableInterface;
+using android::aidl::loggable::Data;
+using android::aidl::loggable::Enum;
 using android::aidl::loggable::ILoggableInterface;
+using android::aidl::loggable::Union;
 using android::aidl::tests::BackendType;
 using android::os::ParcelFileDescriptor;
 using std::optional;
@@ -71,6 +74,11 @@ TEST_F(AidlTest, LoggableInterface) {
   String16 stringValue("def");
   vector<String16> stringArray{String16("ghi"), String16("jkl")};
   vector<String16> listValue{String16("mno")};
+  Data dataValue;
+  dataValue.num = 42;
+  dataValue.str = "abc";
+  dataValue.nestedUnion = "def";
+  dataValue.nestedEnum = Enum::FOO;
   sp<IBinder> binderValue;
   optional<ParcelFileDescriptor> pfdValue;
   vector<ParcelFileDescriptor> pfdArray;
@@ -79,7 +87,7 @@ TEST_F(AidlTest, LoggableInterface) {
   status = loggable->LogThis(boolValue, &boolArray, byteValue, &byteArray, charValue, &charArray,
                              intValue, &intArray, longValue, &longArray, floatValue, &floatArray,
                              doubleValue, &doubleArray, stringValue, &stringArray, &listValue,
-                             binderValue, &pfdValue, &pfdArray, &_aidl_return);
+                             dataValue, binderValue, &pfdValue, &pfdArray, &_aidl_return);
   EXPECT_TRUE(status.isOk());
   EXPECT_EQ(vector<String16>{String16("loggable")}, _aidl_return);
 
@@ -155,6 +163,10 @@ TEST_F(AidlTest, LoggableInterface) {
       {
          "name" : "stringArray",
          "value" : [ true, true ]
+      },
+      {
+         "name" : "dataValue",
+         "value" : "Data{num: 42, str: abc, nestedUnion: Union{str: def}, nestedEnum: FOO}"
       }
    ],
    "interface_name" : "android.aidl.loggable.ILoggableInterface",
