@@ -22,6 +22,7 @@
 #include <android/aidl/tests/BackendType.h>
 #include <binder/IServiceManager.h>
 #include <binder/ParcelFileDescriptor.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <utils/String16.h>
 
@@ -36,8 +37,10 @@ using android::aidl::loggable::Union;
 using android::aidl::tests::BackendType;
 using android::os::ParcelFileDescriptor;
 using std::optional;
+using std::pair;
 using std::string;
 using std::vector;
+using testing::Eq;
 
 TEST_F(AidlTest, LoggableInterface) {
   BackendType backendType;
@@ -49,13 +52,8 @@ TEST_F(AidlTest, LoggableInterface) {
   EXPECT_EQ(android::OK, android::getService(ILoggableInterface::descriptor, &loggable));
   ASSERT_NE(nullptr, loggable);
 
-  string captured;
-  BpLoggableInterface::logFunc = [&](const Json::Value& tx) {
-    auto copy = tx;
-    copy.removeMember("duration_ms");
-    copy.removeMember("proxy_address");
-    captured = copy.toStyledString();
-  };
+  BpLoggableInterface::TransactionLog log;
+  BpLoggableInterface::logFunc = [&](const BpLoggableInterface::TransactionLog& tx) { log = tx; };
 
   bool boolValue = true;
   vector<bool> boolArray{false, true};
@@ -91,121 +89,49 @@ TEST_F(AidlTest, LoggableInterface) {
   EXPECT_TRUE(status.isOk());
   EXPECT_EQ(vector<String16>{String16("loggable")}, _aidl_return);
 
-  string expected = R"({
-   "_aidl_return" : [ true ],
-   "binder_status" : {
-      "exception_code" : 0,
-      "exception_message" : "",
-      "service_specific_error_code" : 0,
-      "transaction_error" : 0
-   },
-   "input_args" : [
-      {
-         "name" : "boolValue",
-         "value" : "true"
-      },
-      {
-         "name" : "boolArray",
-         "value" : [ "false", "true" ]
-      },
-      {
-         "name" : "byteValue",
-         "value" : 41
-      },
-      {
-         "name" : "byteArray",
-         "value" : [ 42, 43 ]
-      },
-      {
-         "name" : "charValue",
-         "value" : "x"
-      },
-      {
-         "name" : "charArray",
-         "value" : [ "a", "b", "c" ]
-      },
-      {
-         "name" : "intValue",
-         "value" : 44
-      },
-      {
-         "name" : "intArray",
-         "value" : [ 45, 46 ]
-      },
-      {
-         "name" : "longValue",
-         "value" : 47
-      },
-      {
-         "name" : "longArray",
-         "value" : [ 48, 49 ]
-      },
-      {
-         "name" : "floatValue",
-         "value" : 50
-      },
-      {
-         "name" : "floatArray",
-         "value" : [ 51, 52 ]
-      },
-      {
-         "name" : "doubleValue",
-         "value" : 52
-      },
-      {
-         "name" : "doubleArray",
-         "value" : [ 53, 54 ]
-      },
-      {
-         "name" : "stringValue",
-         "value" : true
-      },
-      {
-         "name" : "stringArray",
-         "value" : [ true, true ]
-      },
-      {
-         "name" : "dataValue",
-         "value" : "Data{num: 42, str: abc, nestedUnion: Union{str: def}, nestedEnum: FOO}"
-      }
-   ],
-   "interface_name" : "android.aidl.loggable.ILoggableInterface",
-   "method_name" : "LogThis",
-   "output_args" : [
-      {
-         "name" : "boolArray",
-         "value" : [ "false", "true" ]
-      },
-      {
-         "name" : "byteArray",
-         "value" : [ 42, 43 ]
-      },
-      {
-         "name" : "charArray",
-         "value" : [ "a", "b", "c" ]
-      },
-      {
-         "name" : "intArray",
-         "value" : [ 45, 46 ]
-      },
-      {
-         "name" : "longArray",
-         "value" : [ 48, 49 ]
-      },
-      {
-         "name" : "floatArray",
-         "value" : [ 51, 52 ]
-      },
-      {
-         "name" : "doubleArray",
-         "value" : [ 53, 54 ]
-      },
-      {
-         "name" : "stringArray",
-         "value" : [ true, true ]
-      }
-   ]
-}
-)";
-  EXPECT_EQ(expected, captured);
+  // check the captured log
+  EXPECT_EQ("[loggable]", log.result);
+  EXPECT_EQ("android.aidl.loggable.ILoggableInterface", log.interface_name);
+  EXPECT_EQ("LogThis", log.method_name);
+  EXPECT_EQ(0, log.exception_code);
+  EXPECT_EQ("", log.exception_message);
+  EXPECT_EQ(0, log.transaction_error);
+  EXPECT_EQ(0, log.service_specific_error_code);
+  EXPECT_THAT(
+      log.input_args,
+      Eq(vector<pair<string, string>>{
+          {"boolValue", "true"},
+          {"boolArray", "[false, true]"},
+          {"byteValue", "41"},
+          {"byteArray", "[42, 43]"},
+          {"charValue", "x"},
+          {"charArray", "[a, b, c]"},
+          {"intValue", "44"},
+          {"intArray", "[45, 46]"},
+          {"longValue", "47"},
+          {"longArray", "[48, 49]"},
+          {"floatValue", "50.000000"},
+          {"floatArray", "[51.000000, 52.000000]"},
+          {"doubleValue", "52.000000"},
+          {"doubleArray", "[53.000000, 54.000000]"},
+          {"stringValue", "def"},
+          {"stringArray", "[ghi, jkl]"},
+          {"listValue", "[mno]"},
+          {"dataValue", "Data{num: 42, str: abc, nestedUnion: Union{str: def}, nestedEnum: FOO}"},
+          {"binderValue", ""},
+          {"pfdValue", ""},
+          {"pfdArray", ""},
+      }));
+  EXPECT_THAT(log.output_args,
+              Eq(vector<pair<string, string>>{{"boolArray", "[false, true]"},
+                                              {"byteArray", "[42, 43]"},
+                                              {"charArray", "[a, b, c]"},
+                                              {"intArray", "[45, 46]"},
+                                              {"longArray", "[48, 49]"},
+                                              {"floatArray", "[51.000000, 52.000000]"},
+                                              {"doubleArray", "[53.000000, 54.000000]"},
+                                              {"stringArray", "[ghi, jkl]"},
+                                              {"listValue", "[mno]"},
+                                              {"pfdValue", ""},
+                                              {"pfdArray", ""}}));
 }

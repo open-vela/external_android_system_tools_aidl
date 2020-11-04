@@ -1534,8 +1534,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 
 	importExportDependencies := wrap("", i.properties.Imports, importPostfix)
 	var sharedLibDependency []string
-	var libJSONCppDependency []string
-	var staticLibDependency []string
 	var headerLibs []string
 	var sdkVersion *string
 	var minSdkVersion *string
@@ -1546,9 +1544,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 
 	if lang == langCpp {
 		importExportDependencies = append(importExportDependencies, "libbinder", "libutils")
-		if genLog {
-			libJSONCppDependency = []string{"libjsoncpp"}
-		}
 		if genTrace {
 			sharedLibDependency = append(sharedLibDependency, "libcutils")
 		}
@@ -1556,9 +1551,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 		minSdkVersion = i.properties.Backend.Cpp.Min_sdk_version
 	} else if lang == langNdk {
 		importExportDependencies = append(importExportDependencies, "libbinder_ndk")
-		if genLog {
-			staticLibDependency = []string{"libjsoncpp_ndk"}
-		}
 		if genTrace {
 			sharedLibDependency = append(sharedLibDependency, "libandroid")
 		}
@@ -1567,9 +1559,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 		minSdkVersion = i.properties.Backend.Ndk.Min_sdk_version
 	} else if lang == langNdkPlatform {
 		importExportDependencies = append(importExportDependencies, "libbinder_ndk")
-		if genLog {
-			libJSONCppDependency = []string{"libjsoncpp"}
-		}
 		if genTrace {
 			headerLibs = append(headerLibs, "libandroid_aidltrace")
 			sharedLibDependency = append(sharedLibDependency, "libcutils")
@@ -1617,9 +1606,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 		Generated_sources:         []string{cppSourceGen},
 		Generated_headers:         []string{cppSourceGen},
 		Export_generated_headers:  []string{cppSourceGen},
-		Static:                    staticLib{Whole_static_libs: libJSONCppDependency},
-		Shared:                    sharedLib{Shared_libs: libJSONCppDependency, Export_shared_lib_headers: libJSONCppDependency},
-		Static_libs:               staticLibDependency,
 		Shared_libs:               append(importExportDependencies, sharedLibDependency...),
 		Header_libs:               headerLibs,
 		Export_shared_lib_headers: importExportDependencies,
