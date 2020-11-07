@@ -1013,6 +1013,7 @@ type aidlInterfaceProperties struct {
 		// (for apps) and "<name>-ndk_platform" (for platform usage).
 		Ndk struct {
 			CommonNativeBackendProperties
+			Apps_enabled *bool
 		}
 		// Backend of the compiler generating code for Rust clients.
 		// When enabled, this creates a target called "<name>-rust".
@@ -1050,6 +1051,14 @@ func (i *aidlInterface) shouldGenerateCppBackend() bool {
 func (i *aidlInterface) shouldGenerateNdkBackend() bool {
 	// explicitly true if not specified to give early warning to devs
 	return i.properties.Backend.Ndk.Enabled == nil || *i.properties.Backend.Ndk.Enabled
+}
+
+func (i *aidlInterface) shouldGenerateAppNdkBackend() bool {
+	if !i.shouldGenerateNdkBackend() {
+		return false
+	}
+	// explicitly true if not specified to give early warning to devs
+	return i.properties.Backend.Ndk.Apps_enabled == nil || *i.properties.Backend.Ndk.Apps_enabled
 }
 
 func (i *aidlInterface) shouldGenerateRustBackend() bool {
@@ -1299,34 +1308,31 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 			libs = append(libs, addCppLibrary(mctx, i, version, langCpp))
 		}
 	}
-
-	if i.shouldGenerateNdkBackend() {
-		{
-			unstableLib := addCppLibrary(mctx, i, currentVersion, langNdk)
-			if !i.hasVersion() {
-				libs = append(libs, addCppLibrary(mctx, i, unstableVersion, langNdk))
-			}
-			if needToCheckUnstableVersion {
-				addUnstableModule(mctx, unstableLib)
-			}
-			libs = append(libs, unstableLib)
-			for _, version := range versionsForCpp {
-				libs = append(libs, addCppLibrary(mctx, i, version, langNdk))
-			}
+	if i.shouldGenerateAppNdkBackend() {
+		unstableLib := addCppLibrary(mctx, i, currentVersion, langNdk)
+		if !i.hasVersion() {
+			libs = append(libs, addCppLibrary(mctx, i, unstableVersion, langNdk))
 		}
-		{
-			// TODO(b/121157555): combine with '-ndk' variant
-			unstableLib := addCppLibrary(mctx, i, currentVersion, langNdkPlatform)
-			if !i.hasVersion() {
-				libs = append(libs, addCppLibrary(mctx, i, unstableVersion, langNdkPlatform))
-			}
-			if needToCheckUnstableVersion {
-				addUnstableModule(mctx, unstableLib)
-			}
-			libs = append(libs, unstableLib)
-			for _, version := range versionsForCpp {
-				libs = append(libs, addCppLibrary(mctx, i, version, langNdkPlatform))
-			}
+		if needToCheckUnstableVersion {
+			addUnstableModule(mctx, unstableLib)
+		}
+		libs = append(libs, unstableLib)
+		for _, version := range versionsForCpp {
+			libs = append(libs, addCppLibrary(mctx, i, version, langNdk))
+		}
+	}
+	if i.shouldGenerateNdkBackend() {
+		// TODO(b/121157555): combine with '-ndk' variant
+		unstableLib := addCppLibrary(mctx, i, currentVersion, langNdkPlatform)
+		if !i.hasVersion() {
+			libs = append(libs, addCppLibrary(mctx, i, unstableVersion, langNdkPlatform))
+		}
+		if needToCheckUnstableVersion {
+			addUnstableModule(mctx, unstableLib)
+		}
+		libs = append(libs, unstableLib)
+		for _, version := range versionsForCpp {
+			libs = append(libs, addCppLibrary(mctx, i, version, langNdkPlatform))
 		}
 	}
 	versionsForJava := i.properties.Versions
