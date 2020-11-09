@@ -170,7 +170,7 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 		c(tempFS, config)
 	}
 
-	ctx := android.NewTestArchContext()
+	ctx := android.NewTestArchContext(config)
 	cc.RegisterRequiredBuildComponentsForTest(ctx)
 	ctx.RegisterModuleType("aidl_interface", aidlInterfaceFactory)
 	ctx.RegisterModuleType("aidl_interfaces_metadata", aidlInterfacesMetadataSingletonFactory)
@@ -203,7 +203,7 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 		ctx.BottomUp("recordVersions", recordVersions).Parallel()
 		ctx.BottomUp("checkDuplicatedVersions", checkDuplicatedVersions).Parallel()
 	})
-	ctx.Register(config)
+	ctx.Register()
 
 	return ctx, config
 }
