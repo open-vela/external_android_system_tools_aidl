@@ -949,6 +949,9 @@ type aidlInterfaceProperties struct {
 	// Whether the library can be installed on the vendor image.
 	Vendor_available *bool
 
+	// Whether the library can be installed on the product image.
+	Product_available *bool
+
 	// Whether the library can be loaded multiple times into the same process
 	Double_loadable *bool
 
@@ -1549,24 +1552,27 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 	}
 
 	vendorAvailable := i.properties.Vendor_available
+	productAvailable := i.properties.Product_available
 	if lang == langCpp && "vintf" == proptools.String(i.properties.Stability) {
-		// Vendors cannot use the libbinder (cpp) backend of AIDL in a way that is stable.
-		// So, in order to prevent accidental usage of these library by vendor, forcibly
-		// disabling this version of the library.
+		// Vendor and product modules cannot use the libbinder (cpp) backend of AIDL in a
+		// way that is stable. So, in order to prevent accidental usage of these library by
+		// vendor and product forcibly disabling this version of the library.
 		//
 		// It may be the case in the future that we will want to enable this (if some generic
 		// helper should be used by both libbinder vendor things using /dev/vndbinder as well
 		// as those things using /dev/binder + libbinder_ndk to talk to stable interfaces).
 		vendorAvailable = proptools.BoolPtr(false)
+		productAvailable = proptools.BoolPtr(false)
 	}
 
 	if lang == langNdk {
 		// TODO(b/121157555): when the NDK variant is its own variant, these wouldn't interact,
-		// but we can't create a vendor version of an NDK variant
+		// but we can't create a vendor or product version of an NDK variant
 		//
 		// nil (unspecified) is used instead of false so that this can't conflict with
 		// 'vendor: true', for instance.
 		vendorAvailable = nil
+		productAvailable = nil
 		overrideVndkProperties.Vndk.Enabled = proptools.BoolPtr(false)
 		overrideVndkProperties.Vndk.Support_system_process = proptools.BoolPtr(false)
 	}
@@ -1574,6 +1580,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 	mctx.CreateModule(cc.LibraryFactory, &ccProperties{
 		Name:                      proptools.StringPtr(cppModuleGen),
 		Vendor_available:          vendorAvailable,
+		Product_available:         productAvailable,
 		Host_supported:            hostSupported,
 		Defaults:                  []string{"aidl-cpp-module-defaults"},
 		Double_loadable:           i.properties.Double_loadable,
