@@ -408,25 +408,18 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
 
   // Emit the interface constants
   for (const auto& constant : iface->GetConstantDeclarations()) {
+    const AidlTypeSpecifier& type = constant->GetType();
     const AidlConstantValue& value = constant->GetValue();
+
     string const_type;
-    switch (value.GetType()) {
-      case AidlConstantValue::Type::STRING: {
-        const_type = "&str";
-        break;
-      }
-      case AidlConstantValue::Type::BOOLEAN:  // fall-through
-      case AidlConstantValue::Type::INT8:     // fall-through
-      case AidlConstantValue::Type::INT32:    // fall-through
-      // Type promotion may cause this. Value should be small enough to fit in int32.
-      case AidlConstantValue::Type::INT64: {
-        const_type = "i32";
-        break;
-      }
-      default: {
-        AIDL_FATAL(value) << "Unrecognized constant type: " << static_cast<int>(value.GetType());
-      }
+    if (type.ToString() == "String") {
+      const_type = "&str";
+    } else if (type.ToString() == "byte" || type.ToString() == "int" || type.ToString() == "long") {
+      const_type = RustNameOf(type, typenames, StorageMode::VALUE);
+    } else {
+      AIDL_FATAL(value) << "Unrecognized constant type: " << type.ToString();
     }
+
     *code_writer << "pub const " << constant->GetName() << ": " << const_type << " = "
                  << constant->ValueString(ConstantValueDecoratorRef) << ";\n";
   }

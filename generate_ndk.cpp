@@ -302,48 +302,20 @@ static void GenerateSourceIncludes(CodeWriter& out, const AidlTypenames& types,
   });
 }
 
-static void GenerateConstantDeclarations(CodeWriter& out, const AidlInterface& interface) {
+static void GenerateConstantDeclarations(CodeWriter& out, const AidlTypenames& types,
+                                         const AidlInterface& interface) {
   for (const auto& constant : interface.GetConstantDeclarations()) {
-    const AidlConstantValue& value = constant->GetValue();
-    AIDL_FATAL_IF(value.GetType() == AidlConstantValue::Type::UNARY ||
-                      value.GetType() == AidlConstantValue::Type::BINARY,
-                  value);
-    if (value.GetType() == AidlConstantValue::Type::STRING) {
+    const AidlTypeSpecifier& type = constant->GetType();
+
+    if (type.ToString() == "String") {
       out << "static const char* " << constant->GetName() << ";\n";
+    } else {
+      out << "enum : " << NdkNameOf(types, type, StorageMode::STACK) << " { " << constant->GetName()
+          << " = " << constant->ValueString(ConstantValueDecorator) << " };\n";
     }
-  }
-  out << "\n";
-
-  bool hasIntegralConstant = false;
-  for (const auto& constant : interface.GetConstantDeclarations()) {
-    const AidlConstantValue& value = constant->GetValue();
-    AIDL_FATAL_IF(value.GetType() == AidlConstantValue::Type::UNARY ||
-                      value.GetType() == AidlConstantValue::Type::BINARY,
-                  value);
-    if (value.GetType() == AidlConstantValue::Type::BOOLEAN ||
-        value.GetType() == AidlConstantValue::Type::INT8 ||
-        value.GetType() == AidlConstantValue::Type::INT32) {
-      hasIntegralConstant = true;
-      break;
-    }
-  }
-
-  if (hasIntegralConstant) {
-    out << "enum : int32_t {\n";
-    out.Indent();
-    for (const auto& constant : interface.GetConstantDeclarations()) {
-      const AidlConstantValue& value = constant->GetValue();
-      if (value.GetType() == AidlConstantValue::Type::BOOLEAN ||
-          value.GetType() == AidlConstantValue::Type::INT8 ||
-          value.GetType() == AidlConstantValue::Type::INT32) {
-        out << constant->GetName() << " = " << constant->ValueString(ConstantValueDecorator)
-            << ",\n";
-      }
-    }
-    out.Dedent();
-    out << "};\n";
   }
 }
+
 static void GenerateConstantDefinitions(CodeWriter& out, const AidlInterface& interface) {
   const std::string clazz = ClassName(interface, ClassNames::INTERFACE);
 
@@ -926,7 +898,7 @@ void GenerateInterfaceHeader(CodeWriter& out, const AidlTypenames& types,
   out << clazz << "();\n";
   out << "virtual ~" << clazz << "();\n";
   out << "\n";
-  GenerateConstantDeclarations(out, defined_type);
+  GenerateConstantDeclarations(out, types, defined_type);
   if (options.Version() > 0) {
     out << "static const int32_t " << kVersion << " = " << std::to_string(options.Version())
         << ";\n";
