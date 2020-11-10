@@ -1013,6 +1013,13 @@ type aidlInterfaceProperties struct {
 		// (for apps) and "<name>-ndk_platform" (for platform usage).
 		Ndk struct {
 			CommonNativeBackendProperties
+
+			// Currently, all ndk-supported interfaces generate two variants:
+			// - ndk - for apps to use, against an NDK
+			// - ndk_platform - for the platform to use
+			//
+			// This adds an option to disable the 'ndk' variant in cases where APIs
+			// only available in the platform version work.
 			Apps_enabled *bool
 		}
 		// Backend of the compiler generating code for Rust clients.
