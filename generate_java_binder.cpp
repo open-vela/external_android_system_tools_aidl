@@ -385,15 +385,10 @@ static void generate_write_to_parcel(const AidlTypeSpecifier& type,
   addTo->Add(std::make_shared<LiteralStatement>(code));
 }
 
-static void generate_int_constant(Class* interface, const std::string& name,
-                                  const std::string& value) {
-  auto code = StringPrintf("public static final int %s = %s;\n", name.c_str(), value.c_str());
-  interface->elements.push_back(std::make_shared<LiteralClassElement>(code));
-}
-
-static void generate_string_constant(Class* interface, const std::string& name,
-                                     const std::string& value) {
-  auto code = StringPrintf("public static final String %s = %s;\n", name.c_str(), value.c_str());
+static void generate_constant(Class* interface, const std::string& type, const std::string& name,
+                              const std::string& value) {
+  auto code =
+      StringPrintf("public static final %s %s = %s;\n", type.c_str(), name.c_str(), value.c_str());
   interface->elements.push_back(std::make_shared<LiteralClassElement>(code));
 }
 
@@ -1109,7 +1104,7 @@ std::unique_ptr<Class> generate_binder_interface_class(const AidlInterface* ifac
 
   // all the declared constants of the interface
   for (const auto& constant : iface->GetConstantDeclarations()) {
-    const AidlConstantValue& value = constant->GetValue();
+    const AidlTypeSpecifier& type = constant->GetType();
     auto comment = constant->GetType().GetComments();
     if (comment.length() != 0) {
       auto code = StringPrintf("%s\n", comment.c_str());
@@ -1119,25 +1114,9 @@ std::unique_ptr<Class> generate_binder_interface_class(const AidlInterface* ifac
       auto code = StringPrintf("%s\n", annotation.c_str());
       interface->elements.push_back(std::make_shared<LiteralClassElement>(code));
     }
-    switch (value.GetType()) {
-      case AidlConstantValue::Type::STRING: {
-        generate_string_constant(interface.get(), constant->GetName(),
-                                 constant->ValueString(ConstantValueDecorator));
-        break;
-      }
-      case AidlConstantValue::Type::BOOLEAN:  // fall-through
-      case AidlConstantValue::Type::INT8:     // fall-through
-      case AidlConstantValue::Type::INT32:    // fall-through
-      // Type promotion may cause this. Value should be small enough to fit in int32.
-      case AidlConstantValue::Type::INT64: {
-        generate_int_constant(interface.get(), constant->GetName(),
-                              constant->ValueString(ConstantValueDecorator));
-        break;
-      }
-      default: {
-        AIDL_FATAL(value) << "Unrecognized constant type: " << static_cast<int>(value.GetType());
-      }
-    }
+
+    generate_constant(interface.get(), type.ToString(), constant->GetName(),
+                      constant->ValueString(ConstantValueDecorator));
   }
 
   // all the declared methods of the interface
