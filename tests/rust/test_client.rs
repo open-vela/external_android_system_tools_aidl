@@ -124,6 +124,7 @@ test_primitive! {test_primitive_int, RepeatInt, 1i32 << 30}
 test_primitive! {test_primitive_long, RepeatLong, 1i64 << 60}
 test_primitive! {test_primitive_float, RepeatFloat, 1.0f32 / 3.0f32}
 test_primitive! {test_primitive_double, RepeatDouble, 1.0f64 / 3.0f64}
+test_primitive! {test_primitive_byte_constant, RepeatByte, ITestService::BYTE_TEST_CONSTANT}
 test_primitive! {test_primitive_constant1, RepeatInt, ITestService::TEST_CONSTANT}
 test_primitive! {test_primitive_constant2, RepeatInt, ITestService::TEST_CONSTANT2}
 test_primitive! {test_primitive_constant3, RepeatInt, ITestService::TEST_CONSTANT3}
@@ -136,6 +137,7 @@ test_primitive! {test_primitive_constant9, RepeatInt, ITestService::TEST_CONSTAN
 test_primitive! {test_primitive_constant10, RepeatInt, ITestService::TEST_CONSTANT10}
 test_primitive! {test_primitive_constant11, RepeatInt, ITestService::TEST_CONSTANT11}
 test_primitive! {test_primitive_constant12, RepeatInt, ITestService::TEST_CONSTANT12}
+test_primitive! {test_primitive_long_constant, RepeatLong, ITestService::LONG_TEST_CONSTANT}
 test_primitive! {test_primitive_byte_enum, RepeatByteEnum, ByteEnum::FOO}
 test_primitive! {test_primitive_int_enum, RepeatIntEnum, IntEnum::BAR}
 test_primitive! {test_primitive_long_enum, RepeatLongEnum, LongEnum::FOO}

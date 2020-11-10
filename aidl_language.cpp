@@ -706,7 +706,7 @@ bool AidlConstantDeclaration::CheckValid(const AidlTypenames& typenames) const {
   valid &= value_->CheckValid();
   if (!valid) return false;
 
-  const static set<string> kSupportedConstTypes = {"String", "int"};
+  const static set<string> kSupportedConstTypes = {"String", "byte", "int", "long"};
   if (kSupportedConstTypes.find(type_->ToString()) == kSupportedConstTypes.end()) {
     AIDL_ERROR(this) << "Constant of type " << type_->ToString() << " is not supported.";
     return false;

@@ -94,6 +94,13 @@ TEST_F(AidlPrimitiveTest, aDouble) {
   DoTest(&ITestService::RepeatDouble, double{1.0 / 3.0});
 }
 
+TEST_F(AidlPrimitiveTest, byteConstants) {
+  constexpr int8_t consts[] = {ITestService::BYTE_TEST_CONSTANT};
+  for (auto sent : consts) {
+    DoTest(&ITestService::RepeatByte, sent);
+  }
+}
+
 TEST_F(AidlPrimitiveTest, intConstants) {
   constexpr int32_t consts[] = {
       ITestService::TEST_CONSTANT,   ITestService::TEST_CONSTANT2,  ITestService::TEST_CONSTANT3,
@@ -102,6 +109,13 @@ TEST_F(AidlPrimitiveTest, intConstants) {
       ITestService::TEST_CONSTANT10, ITestService::TEST_CONSTANT11, ITestService::TEST_CONSTANT12};
   for (auto sent : consts) {
     DoTest(&ITestService::RepeatInt, sent);
+  }
+}
+
+TEST_F(AidlPrimitiveTest, longConstants) {
+  constexpr int64_t consts[] = {ITestService::LONG_TEST_CONSTANT};
+  for (auto sent : consts) {
+    DoTest(&ITestService::RepeatLong, sent);
   }
 }
 
