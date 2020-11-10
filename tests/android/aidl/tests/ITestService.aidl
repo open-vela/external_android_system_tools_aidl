@@ -40,6 +40,9 @@ interface ITestService {
   const int TEST_CONSTANT11 = 0xFA;
   const int TEST_CONSTANT12 = 0xffffffff;
 
+  const byte BYTE_TEST_CONSTANT = 17;
+  const long LONG_TEST_CONSTANT = 1L << 40;
+
   const String STRING_TEST_CONSTANT = "foo";
   const String STRING_TEST_CONSTANT2 = "bar";
 
