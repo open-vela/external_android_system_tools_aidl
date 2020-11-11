@@ -25,6 +25,7 @@ import android.aidl.tests.StructuredParcelable;
 import android.aidl.tests.IOldName;
 import android.aidl.tests.INewName;
 
+@SensitiveData
 interface ITestService {
   // Test that constants are accessible
   const int TEST_CONSTANT = 42;
