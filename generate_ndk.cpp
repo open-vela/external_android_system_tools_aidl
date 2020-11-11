@@ -206,6 +206,11 @@ static void GenerateHeaderIncludes(CodeWriter& out, const AidlTypenames& types,
   out << "#include <android/binder_stability.h>\n";
   out << "#endif  // BINDER_STABILITY_SUPPORT\n";
 
+  if (defined_type.IsSensitiveData()) {
+    out << "#include <android/binder_parcel_platform.h>\n";
+    out << "#include <android/binder_ibinder_platform.h>\n";
+  }
+
   auto headerFilePath = [&types](const AidlTypeSpecifier& typespec) -> std::string {
     const AidlDefinedType* type = types.TryGetDefinedType(typespec.GetName());
     if (type == nullptr) {
@@ -395,6 +400,9 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
   }
 
   out << "_aidl_ret_status = AIBinder_prepareTransaction(asBinder().get(), _aidl_in.getR());\n";
+  if (defined_type.IsSensitiveData()) {
+    out << "AParcel_markSensitive(_aidl_in.get());\n";
+  }
   StatusCheckGoto(out);
 
   for (const auto& arg : method.GetArguments()) {
@@ -417,7 +425,12 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
   out << MethodId(method) << ",\n";
   out << "_aidl_in.getR(),\n";
   out << "_aidl_out.getR(),\n";
-  out << (method.IsOneway() ? "FLAG_ONEWAY" : "0") << "\n";
+
+  std::vector<std::string> flags;
+  if (method.IsOneway()) flags.push_back("FLAG_ONEWAY");
+  if (defined_type.IsSensitiveData()) flags.push_back("FLAG_CLEAR_BUF");
+  out << (flags.empty() ? "0" : base::Join(flags, " | ")) << "\n";
+
   out << "#ifdef BINDER_STABILITY_SUPPORT\n";
   out << "| FLAG_PRIVATE_LOCAL\n";
   out << "#endif  // BINDER_STABILITY_SUPPORT\n";

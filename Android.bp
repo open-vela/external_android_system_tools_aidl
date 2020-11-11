@@ -422,8 +422,14 @@ aidl_interface {
     srcs: [":libaidl-integration-test-files"],
     local_include_dir: "tests",
     backend: {
+        java: {
+            platform_apis: true,
+        },
         rust: {
             enabled: true,
+        },
+        ndk: {
+            apps_enabled: false,
         },
     },
 }

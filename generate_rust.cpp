@@ -75,8 +75,9 @@ string BuildMethod(const AidlMethod& method, const AidlTypenames& typenames) {
   return "fn " + method.GetName() + "(" + parameters + ") -> " + return_type;
 }
 
-void GenerateClientMethod(CodeWriter& out, const AidlMethod& method, const AidlTypenames& typenames,
-                          const Options& options, const std::string& trait_name) {
+void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const AidlMethod& method,
+                          const AidlTypenames& typenames, const Options& options,
+                          const std::string& trait_name) {
   // Generate the method
   out << BuildMethod(method, typenames) << " {\n";
   out.Indent();
@@ -100,10 +101,18 @@ void GenerateClientMethod(CodeWriter& out, const AidlMethod& method, const AidlT
   }
 
   // Call transact()
-  auto transact_flags = method.IsOneway() ? "binder::SpIBinder::FLAG_ONEWAY" : "0";
+  vector<string> flags;
+  if (method.IsOneway()) flags.push_back("binder::SpIBinder::FLAG_ONEWAY");
+  if (iface.IsSensitiveData()) flags.push_back("binder::SpIBinder::FLAG_CLEAR_BUF");
+
+  string transact_flags = flags.empty() ? "0" : Join(flags, " | ");
   out << "let _aidl_reply = self.binder.transact("
       << "transactions::" << method.GetName() << ", " << transact_flags << ", |_aidl_data| {\n";
   out.Indent();
+
+  if (iface.IsSensitiveData()) {
+    out << "_aidl_data.mark_sensitive();\n";
+  }
 
   // Arguments
   for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
@@ -441,7 +450,7 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
   *code_writer << "impl " << trait_name << " for " << client_name << " {\n";
   code_writer->Indent();
   for (const auto& method : iface->GetMethods()) {
-    GenerateClientMethod(*code_writer, *method, typenames, options, trait_name);
+    GenerateClientMethod(*code_writer, *iface, *method, typenames, options, trait_name);
   }
   code_writer->Dedent();
   *code_writer << "}\n";
