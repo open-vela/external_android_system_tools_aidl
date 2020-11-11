@@ -119,7 +119,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 0 /* Send */, _aidl_data, &_aidl_reply);
+  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 0 /* Send */, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IComplexTypeInterface::getDefaultImpl())) {
      return IComplexTypeInterface::getDefaultImpl()->Send(goes_in, goes_in_and_out, goes_out, _aidl_return);
   }
@@ -188,7 +188,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 2 /* TakesABinder */, _aidl_data, &_aidl_reply);
+  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 2 /* TakesABinder */, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IComplexTypeInterface::getDefaultImpl())) {
      return IComplexTypeInterface::getDefaultImpl()->TakesABinder(f, _aidl_return);
   }
@@ -220,7 +220,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 3 /* NullableBinder */, _aidl_data, &_aidl_reply);
+  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 3 /* NullableBinder */, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IComplexTypeInterface::getDefaultImpl())) {
      return IComplexTypeInterface::getDefaultImpl()->NullableBinder(_aidl_return);
   }
@@ -256,7 +256,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 4 /* StringListMethod */, _aidl_data, &_aidl_reply);
+  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 4 /* StringListMethod */, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IComplexTypeInterface::getDefaultImpl())) {
      return IComplexTypeInterface::getDefaultImpl()->StringListMethod(input, output, _aidl_return);
   }
@@ -296,7 +296,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 5 /* BinderListMethod */, _aidl_data, &_aidl_reply);
+  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 5 /* BinderListMethod */, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IComplexTypeInterface::getDefaultImpl())) {
      return IComplexTypeInterface::getDefaultImpl()->BinderListMethod(input, output, _aidl_return);
   }
@@ -336,7 +336,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 6 /* TakesAFileDescriptor */, _aidl_data, &_aidl_reply);
+  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 6 /* TakesAFileDescriptor */, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IComplexTypeInterface::getDefaultImpl())) {
      return IComplexTypeInterface::getDefaultImpl()->TakesAFileDescriptor(std::move(f), _aidl_return);
   }
@@ -372,7 +372,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 7 /* TakesAFileDescriptorArray */, _aidl_data, &_aidl_reply);
+  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 7 /* TakesAFileDescriptorArray */, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IComplexTypeInterface::getDefaultImpl())) {
      return IComplexTypeInterface::getDefaultImpl()->TakesAFileDescriptorArray(f, _aidl_return);
   }
@@ -435,7 +435,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 0 /* Send */, _aidl_data, &_aidl_reply);
+  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 0 /* Send */, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IComplexTypeInterface::getDefaultImpl())) {
      return IComplexTypeInterface::getDefaultImpl()->Send(goes_in, goes_in_and_out, goes_out, _aidl_return);
   }
@@ -506,7 +506,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 2 /* TakesABinder */, _aidl_data, &_aidl_reply);
+  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 2 /* TakesABinder */, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IComplexTypeInterface::getDefaultImpl())) {
      return IComplexTypeInterface::getDefaultImpl()->TakesABinder(f, _aidl_return);
   }
@@ -539,7 +539,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 3 /* NullableBinder */, _aidl_data, &_aidl_reply);
+  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 3 /* NullableBinder */, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IComplexTypeInterface::getDefaultImpl())) {
      return IComplexTypeInterface::getDefaultImpl()->NullableBinder(_aidl_return);
   }
@@ -576,7 +576,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 4 /* StringListMethod */, _aidl_data, &_aidl_reply);
+  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 4 /* StringListMethod */, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IComplexTypeInterface::getDefaultImpl())) {
      return IComplexTypeInterface::getDefaultImpl()->StringListMethod(input, output, _aidl_return);
   }
@@ -617,7 +617,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 5 /* BinderListMethod */, _aidl_data, &_aidl_reply);
+  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 5 /* BinderListMethod */, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IComplexTypeInterface::getDefaultImpl())) {
      return IComplexTypeInterface::getDefaultImpl()->BinderListMethod(input, output, _aidl_return);
   }
@@ -658,7 +658,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 6 /* TakesAFileDescriptor */, _aidl_data, &_aidl_reply);
+  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 6 /* TakesAFileDescriptor */, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IComplexTypeInterface::getDefaultImpl())) {
      return IComplexTypeInterface::getDefaultImpl()->TakesAFileDescriptor(std::move(f), _aidl_return);
   }
@@ -695,7 +695,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 7 /* TakesAFileDescriptorArray */, _aidl_data, &_aidl_reply);
+  _aidl_ret_status = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 7 /* TakesAFileDescriptorArray */, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IComplexTypeInterface::getDefaultImpl())) {
      return IComplexTypeInterface::getDefaultImpl()->TakesAFileDescriptorArray(f, _aidl_return);
   }
