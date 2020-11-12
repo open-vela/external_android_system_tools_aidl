@@ -59,7 +59,7 @@ class ErrorMessage {
 
 class Options final {
  public:
-  enum class Language { UNSPECIFIED, JAVA, CPP, NDK };
+  enum class Language { UNSPECIFIED, JAVA, CPP, NDK, RUST };
 
   enum class Task { UNSPECIFIED, COMPILE, PREPROCESS, DUMP_API, CHECK_API, DUMP_MAPPINGS };
 
@@ -125,8 +125,6 @@ class Options final {
 
   bool GenLog() const { return gen_log_; }
 
-  bool GenParcelableToString() const { return gen_parcelable_to_string_; }
-
   bool Ok() const { return error_message_.stream_.str().empty(); }
 
   string GetErrorMessage() const { return error_message_.stream_.str(); }
@@ -134,6 +132,8 @@ class Options final {
   string GetUsage() const;
 
   bool GenApiMapping() const { return task_ == Task::DUMP_MAPPINGS; }
+
+  static const string LanguageToString(Language language);
 
   // The following are for testability, but cannot be influenced on the command line.
   // Threshold of interface methods to enable outlining of onTransact cases.
@@ -165,7 +165,6 @@ class Options final {
   int version_ = 0;
   string hash_ = "";
   bool gen_log_ = false;
-  bool gen_parcelable_to_string_ = false;
   ErrorMessage error_message_;
 };
 
