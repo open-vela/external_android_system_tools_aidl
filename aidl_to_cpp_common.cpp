@@ -648,7 +648,8 @@ static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_r
 {name}& operator=(const {name}&) = default;
 {name}& operator=({name}&&) = default;
 
-template <typename _Tp, std::enable_if_t<_not_self<_Tp>, int> = 0>
+template <typename _Tp, typename = std::enable_if_t<_not_self<_Tp>>>
+// NOLINTNEXTLINE(google-explicit-constructor)
 constexpr {name}(_Tp&& _arg)
     : _value(std::forward<_Tp>(_arg)) {{}}
 
@@ -714,8 +715,21 @@ void UnionWriter::ReadFromParcel(CodeWriter& out, const ParcelWriterContext& ctx
   for (const auto& variable : decl.GetFields()) {
     out << fmt::format("case {}: {{\n", variable->GetName());
     out.Indent();
-    read_var(value, variable->GetType());
+    const auto& type = variable->GetType();
+    read_var(value, type);
+    out << fmt::format("if constexpr (std::is_trivially_copyable_v<{}>) {{\n",
+                       name_of(type, typenames));
+    out.Indent();
+    out << fmt::format("set<{}>({});\n", variable->GetName(), value);
+    out.Dedent();
+    out << "} else {\n";
+    out.Indent();
+    // Even when the `if constexpr` is false, the compiler runs the tidy check for the
+    // next line, which doesn't make sense. Silence the check for the unreachable code.
+    out << "// NOLINTNEXTLINE(performance-move-const-arg)\n";
     out << fmt::format("set<{}>(std::move({}));\n", variable->GetName(), value);
+    out.Dedent();
+    out << "}\n";
     out << fmt::format("return {}; }}\n", ctx.status_ok);
     out.Dedent();
   }
