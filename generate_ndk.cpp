@@ -569,7 +569,7 @@ void GenerateClassSource(CodeWriter& out, const AidlTypenames& types,
     out << "class ScopedTrace {\n";
     out.Indent();
     out << "public:\n"
-        << "inline ScopedTrace(const char* name) {\n"
+        << "inline explicit ScopedTrace(const char* name) {\n"
         << "ATrace_beginSection(name);\n"
         << "}\n"
         << "inline ~ScopedTrace() {\n"
@@ -722,7 +722,7 @@ void GenerateInterfaceSource(CodeWriter& out, const AidlTypenames& types,
   out << "}\n";
 
   // defintion for static member setDefaultImpl
-  out << "bool " << clazz << "::setDefaultImpl(std::shared_ptr<" << clazz << "> impl) {\n";
+  out << "bool " << clazz << "::setDefaultImpl(const std::shared_ptr<" << clazz << ">& impl) {\n";
   out.Indent();
   out << "// Only one user of this interface can use this function\n";
   out << "// at a time. This is a heuristic to detect if two different\n";
@@ -819,7 +819,7 @@ void GenerateClientHeader(CodeWriter& out, const AidlTypenames& types,
       << ClassName(defined_type, ClassNames::INTERFACE) << "> {\n";
   out << "public:\n";
   out.Indent();
-  out << clazz << "(const ::ndk::SpAIBinder& binder);\n";
+  out << "explicit " << clazz << "(const ::ndk::SpAIBinder& binder);\n";
   out << "virtual ~" << clazz << "();\n";
   out << "\n";
   for (const auto& method : defined_type.GetMethods()) {
@@ -927,7 +927,7 @@ void GenerateInterfaceHeader(CodeWriter& out, const AidlTypenames& types,
   out << "static binder_status_t readFromParcel(const AParcel* parcel, std::shared_ptr<" << clazz
       << ">* instance);";
   out << "\n";
-  out << "static bool setDefaultImpl(std::shared_ptr<" << clazz << "> impl);";
+  out << "static bool setDefaultImpl(const std::shared_ptr<" << clazz << ">& impl);";
   out << "\n";
   out << "static const std::shared_ptr<" << clazz << ">& getDefaultImpl();";
   out << "\n";
