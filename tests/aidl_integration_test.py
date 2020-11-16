@@ -148,8 +148,7 @@ class RustClient:
         result = self.host.run(self.binary, ignore_status=True)
         print(result.printable_string())
         if result.exit_status:
-            raise TestFail('%s returned status code %d' %
-                           (self.binary, result.exit_status))
+            raise TestFail(result.stdout)
 
 class RustServer:
     def __init__(self, host, bitness):
