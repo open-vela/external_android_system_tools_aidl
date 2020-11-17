@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import android.aidl.versioned.tests.BazUnion;
 import android.aidl.versioned.tests.IFooInterface;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -51,7 +52,7 @@ public class TestVersionedInterface {
 
     @Test
     public void testGetInterfaceHash() throws RemoteException {
-        assertThat(service.getInterfaceHash(), is("fcd4f9c806cbc8af3694d569fd1de1ecc8cf7d22"));
+      assertThat(service.getInterfaceHash(), is("796b4ab269d476662bed4ab57092ed000e48d5d7"));
     }
 
     @Rule public ExpectedException expectedException = ExpectedException.none();
@@ -59,8 +60,20 @@ public class TestVersionedInterface {
     @Test
     public void testUnimplementedMethodTriggersException() throws RemoteException {
       expectedException.expect(RemoteException.class);
-      expectedException.expectMessage("Method bar is unimplemented.");
+      expectedException.expectMessage("Method newApi is unimplemented.");
 
-      service.bar();
+      service.newApi();
+    }
+
+    @Test
+    public void testOldServerAcceptsUnionWithOldField() throws RemoteException {
+      assertThat(service.acceptUnionAndReturnString(BazUnion.intNum(42)), is("42"));
+    }
+
+    @Test
+    public void testUnknownUnionFieldTriggersException() throws RemoteException {
+      expectedException.expect(IllegalArgumentException.class);
+
+      service.acceptUnionAndReturnString(BazUnion.longNum(42L));
     }
 }
