@@ -409,7 +409,7 @@ func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	}
 
 	// This is to clean genOutDir before generating any file
-	ctx.ModuleBuild(pctx, android.ModuleBuildParams{
+	ctx.Build(pctx, android.BuildParams{
 		Rule:   aidlDirPrepareRule,
 		Inputs: srcs,
 		Output: genDirTimestamp,
@@ -475,7 +475,7 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 
 	var headers android.WritablePaths
 	if g.properties.Lang == langJava {
-		ctx.ModuleBuild(pctx, android.ModuleBuildParams{
+		ctx.Build(pctx, android.BuildParams{
 			Rule:      aidlJavaRule,
 			Input:     src,
 			Implicits: implicits,
@@ -487,7 +487,7 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 			},
 		})
 	} else if g.properties.Lang == langRust {
-		ctx.ModuleBuild(pctx, android.ModuleBuildParams{
+		ctx.Build(pctx, android.BuildParams{
 			Rule:      aidlRustRule,
 			Input:     src,
 			Implicits: implicits,
@@ -531,7 +531,7 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 			aidlLang = "ndk"
 		}
 
-		ctx.ModuleBuild(pctx, android.ModuleBuildParams{
+		ctx.Build(pctx, android.BuildParams{
 			Rule:            aidlCppRule,
 			Input:           src,
 			Implicits:       implicits,
@@ -673,7 +673,7 @@ func (m *aidlApi) createApiDumpFromSource(ctx android.ModuleContext) apiDump {
 		optionalFlags = append(optionalFlags, "--stability", *m.properties.Stability)
 	}
 
-	ctx.ModuleBuild(pctx, android.ModuleBuildParams{
+	ctx.Build(pctx, android.BuildParams{
 		Rule:    aidlDumpApiRule,
 		Outputs: append(apiFiles, hashFile),
 		Inputs:  srcs,
@@ -694,7 +694,7 @@ func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, 
 	modulePath := android.PathForModuleSrc(ctx).String()
 
 	targetDir := filepath.Join(modulePath, m.apiDir(), version)
-	rb := android.NewRuleBuilder()
+	rb := android.NewRuleBuilder(pctx, ctx)
 	// Wipe the target directory and then copy the API dump into the directory
 	rb.Command().Text("mkdir -p " + targetDir)
 	rb.Command().Text("rm -rf " + targetDir + "/*")
@@ -702,7 +702,7 @@ func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, 
 		rb.Command().Text("cp -rf " + dump.dir.String() + "/. " + targetDir).Implicits(dump.files)
 		// If this is making a new frozen (i.e. non-current) version of the interface,
 		// modify Android.bp file to add the new version to the 'versions' property.
-		rb.Command().BuiltTool(ctx, "bpmodify").
+		rb.Command().BuiltTool("bpmodify").
 			Text("-w -m " + m.properties.BaseName).
 			Text("-parameter versions -a " + version).
 			Text(android.PathForModuleSrc(ctx, "Android.bp").String())
@@ -712,7 +712,7 @@ func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, 
 	}
 	rb.Command().Text("touch").Output(timestampFile)
 
-	rb.Build(pctx, ctx, "dump_aidl_api"+m.properties.BaseName+"_"+version,
+	rb.Build("dump_aidl_api"+m.properties.BaseName+"_"+version,
 		"Making AIDL API of "+m.properties.BaseName+" as version "+version)
 	return timestampFile
 }
@@ -731,7 +731,7 @@ func (m *aidlApi) checkCompatibility(ctx android.ModuleContext, oldDump apiDump,
 	implicits = append(implicits, oldDump.files...)
 	implicits = append(implicits, newDump.files...)
 	implicits = append(implicits, messageFile)
-	ctx.ModuleBuild(pctx, android.ModuleBuildParams{
+	ctx.Build(pctx, android.BuildParams{
 		Rule:      aidlCheckApiRule,
 		Implicits: implicits,
 		Output:    timestampFile,
@@ -759,15 +759,15 @@ func (m *aidlApi) checkEquality(ctx android.ModuleContext, oldDump apiDump, newD
 		messageFile = android.PathForSource(ctx, "system/tools/aidl/build/message_check_equality_release.txt")
 	}
 	formattedMessageFile := android.PathForModuleOut(ctx, "message_check_equality.txt")
-	rb := android.NewRuleBuilder()
+	rb := android.NewRuleBuilder(pctx, ctx)
 	rb.Command().Text("sed").Flag(" s/%s/" + m.properties.BaseName + "/g ").Input(messageFile).Text(" > ").Output(formattedMessageFile)
-	rb.Build(pctx, ctx, "format_message_"+m.properties.BaseName, "")
+	rb.Build("format_message_"+m.properties.BaseName, "")
 
 	var implicits android.Paths
 	implicits = append(implicits, oldDump.files...)
 	implicits = append(implicits, newDump.files...)
 	implicits = append(implicits, formattedMessageFile)
-	ctx.ModuleBuild(pctx, android.ModuleBuildParams{
+	ctx.Build(pctx, android.BuildParams{
 		Rule:      aidlDiffApiRule,
 		Implicits: implicits,
 		Output:    timestampFile,
@@ -797,7 +797,7 @@ func (m *aidlApi) checkIntegrity(ctx android.ModuleContext, dump apiDump) androi
 	implicits = append(implicits, dump.files...)
 	implicits = append(implicits, dump.hashFile.Path())
 	implicits = append(implicits, messageFile)
-	ctx.ModuleBuild(pctx, android.ModuleBuildParams{
+	ctx.Build(pctx, android.BuildParams{
 		Rule:      aidlVerifyHashRule,
 		Implicits: implicits,
 		Output:    timestampFile,
@@ -830,7 +830,7 @@ func (m *aidlApi) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	} else {
 		// The "current" directory might not exist, in case when the interface is first created.
 		// Instruct user to create one by executing `m <name>-update-api`.
-		rb := android.NewRuleBuilder()
+		rb := android.NewRuleBuilder(pctx, ctx)
 		ifaceName := m.properties.BaseName
 		rb.Command().Text(fmt.Sprintf(`echo "API dump for the current version of AIDL interface %s does not exist."`, ifaceName))
 		rb.Command().Text(fmt.Sprintf(`echo Run "m %s-update-api", or add "unstable: true" to the build rule `+
@@ -838,7 +838,7 @@ func (m *aidlApi) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 		// This file will never be created. Otherwise, the build will pass simply by running 'm; m'.
 		alwaysChecked := android.PathForModuleOut(ctx, "checkapi_current.timestamp")
 		rb.Command().Text("false").ImplicitOutput(alwaysChecked)
-		rb.Build(pctx, ctx, "check_current_aidl_api", "")
+		rb.Build("check_current_aidl_api", "")
 		m.checkApiTimestamps = append(m.checkApiTimestamps, alwaysChecked)
 	}
 
