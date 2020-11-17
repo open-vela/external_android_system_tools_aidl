@@ -626,7 +626,17 @@ class VersionedService : public android::aidl::versioned::tests::BnFooInterface 
   VersionedService() {}
   virtual ~VersionedService() = default;
 
-  Status foo() override { return Status::ok(); }
+  Status originalApi() override { return Status::ok(); }
+  Status acceptUnionAndReturnString(const ::android::aidl::versioned::tests::BazUnion& u,
+                                    std::string* _aidl_return) override {
+    switch (u.getTag()) {
+      case ::android::aidl::versioned::tests::BazUnion::intNum:
+        *_aidl_return =
+            std::to_string(u.get<::android::aidl::versioned::tests::BazUnion::intNum>());
+        break;
+    }
+    return Status::ok();
+  }
 };
 
 class LoggableInterfaceService : public android::aidl::loggable::BnLoggableInterface {
