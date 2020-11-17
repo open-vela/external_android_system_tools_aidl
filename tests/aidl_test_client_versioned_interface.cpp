@@ -22,6 +22,7 @@
 using android::OK;
 using android::sp;
 using android::String16;
+using android::aidl::versioned::tests::BazUnion;
 using android::aidl::versioned::tests::IFooInterface;
 
 class VersionedInterfaceTest : public testing::Test {
@@ -39,5 +40,20 @@ TEST_F(VersionedInterfaceTest, getInterfaceVersion) {
 }
 
 TEST_F(VersionedInterfaceTest, getInterfaceHash) {
-  EXPECT_EQ("fcd4f9c806cbc8af3694d569fd1de1ecc8cf7d22", service->getInterfaceHash());
+  EXPECT_EQ("796b4ab269d476662bed4ab57092ed000e48d5d7", service->getInterfaceHash());
+}
+
+TEST_F(VersionedInterfaceTest, noProblemWhenPassingAUnionWithOldField) {
+  std::string result;
+  auto status = service->acceptUnionAndReturnString(BazUnion::make<BazUnion::intNum>(42), &result);
+  EXPECT_TRUE(status.isOk());
+  EXPECT_EQ("42", result);
+}
+
+TEST_F(VersionedInterfaceTest, errorWhenPassingAUnionWithNewField) {
+  std::string result;
+  auto status =
+      service->acceptUnionAndReturnString(BazUnion::make<BazUnion::longNum>(42L), &result);
+  EXPECT_FALSE(status.isOk());
+  EXPECT_EQ(::android::BAD_VALUE, status.transactionError());
 }
