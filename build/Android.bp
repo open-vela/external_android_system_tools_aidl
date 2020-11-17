@@ -18,11 +18,13 @@ bootstrap_go_package {
     deps: [
         "blueprint",
         "soong",
+        "soong-apex",
         "soong-android",
         "soong-cc",
         "soong-genrule",
         "soong-phony",
         "soong-java",
+        "soong-rust",
     ],
     srcs: [
         "aidl_interface.go",
@@ -56,6 +58,10 @@ java_defaults {
     name: "aidl-java-module-defaults",
 }
 
+rust_defaults {
+    name: "aidl-rust-module-defaults",
+}
+
 // Tests
 
 filegroup {
@@ -67,22 +73,12 @@ filegroup {
     ],
 }
 
-// Copy of test-piece-1 as test only. Creating a separate library because 'vendor_available' is
-// contagious.
-aidl_interface {
-    name: "test-variants",
-    unstable: true,
-    local_include_dir: "tests_1",
-    vendor_available: true,
-    host_supported: true,
-    srcs: [
-        ":aidl-test-filegroup",
-    ],
-}
-
 aidl_interface {
     name: "test-piece-1",
     local_include_dir: "tests_1",
+    vendor_available: true,
+    double_loadable: true,
+    host_supported: true,
     srcs: [
         "tests_1/some_package/IFoo.aidl",
         "tests_1/some_package/Thing.aidl",
@@ -105,6 +101,12 @@ aidl_interface {
     imports: [
         "test-piece-1",
     ],
+    backend: {
+        java: {
+            platform_apis: true,
+        },
+    },
+    gen_trace: true,
     versions: ["1"],
 }
 
@@ -117,6 +119,12 @@ aidl_interface {
     imports: [
         "test-piece-2",
     ],
+    backend: {
+        java: {
+            platform_apis: true,
+        },
+    },
+    gen_trace: true,
     versions: ["1"],
 }
 
@@ -129,6 +137,12 @@ aidl_interface {
     imports: [
         "test-piece-1",
     ],
+    backend: {
+        java: {
+            platform_apis: true,
+        },
+    },
+    gen_trace: true,
     versions: ["1"],
 }
 
@@ -140,8 +154,24 @@ aidl_interface {
     imports: [
         "test-piece-2",
     ],
+    backend: {
+        java: {
+            platform_apis: true,
+        },
+    },
+    gen_trace: true,
     versions: [
         "1",
         "2",
+    ],
+}
+
+aidl_interface {
+    name: "test-piece-5",
+    unstable: true,
+    local_include_dir: "tests_3",
+    srcs: [
+        "tests_3/EmptyParcelable.aidl",
+        "tests_3/EmptyInterface.aidl",
     ],
 }

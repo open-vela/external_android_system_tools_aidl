@@ -60,9 +60,9 @@ std::string ParcelWriteCastOf(const AidlTypeSpecifier& type, const AidlTypenames
                               const std::string& variable_name);
 
 void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
-                std::set<std::string>& headers);
+                std::set<std::string>* headers);
 
-void AddHeaders(const AidlDefinedType& parcelable, std::set<std::string>& headers);
+void AddHeaders(const AidlDefinedType& parcelable, std::set<std::string>* headers);
 }  // namespace cpp
 }  // namespace aidl
 }  // namespace android
