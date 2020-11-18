@@ -60,6 +60,9 @@ type ccProperties struct {
 	Min_sdk_version           *string
 	UseApexNameMacro          bool
 	Target                    targetProperties
+	Tidy                      *bool
+	Tidy_flags                []string
+	Tidy_checks_as_errors     []string
 }
 
 type javaProperties struct {
