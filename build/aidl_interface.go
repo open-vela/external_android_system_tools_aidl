@@ -1615,6 +1615,10 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 		Min_sdk_version:           minSdkVersion,
 		UseApexNameMacro:          true,
 		Target:                    targetProperties{Darwin: perTargetProperties{Enabled: proptools.BoolPtr(false)}},
+		Tidy:                      proptools.BoolPtr(true),
+		// Do the tidy check only for the generated headers
+		Tidy_flags:            []string{"--header-filter=" + android.PathForOutput(mctx).String() + ".*"},
+		Tidy_checks_as_errors: []string{"*"},
 	}, &i.properties.VndkProperties, &commonProperties.VndkProperties, &overrideVndkProperties)
 
 	return cppModuleGen
