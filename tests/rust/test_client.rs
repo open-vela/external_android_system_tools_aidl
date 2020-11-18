@@ -25,8 +25,8 @@ use aidl_test_interface::aidl::android::aidl::tests::{
     ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable, Union,
 };
 use aidl_test_interface::binder;
-use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::IFooInterface::{
-    self, BpFooInterface,
+use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::{
+    IFooInterface, IFooInterface::BpFooInterface, BazUnion::BazUnion,
 };
 use std::fs::File;
 use std::io::{Read, Write};
@@ -575,8 +575,28 @@ fn test_versioned_interface_hash() {
     let hash = service.getInterfaceHash();
     assert_eq!(
         hash.as_ref().map(String::as_str),
-        Ok("fcd4f9c806cbc8af3694d569fd1de1ecc8cf7d22")
+        Ok("796b4ab269d476662bed4ab57092ed000e48d5d7")
     );
+}
+
+#[test]
+fn test_versioned_known_union_field_is_ok() {
+    let service: Box<dyn IFooInterface::IFooInterface> =
+        binder::get_interface(<BpFooInterface as IFooInterface::IFooInterface>::get_descriptor())
+            .expect("did not get binder service");
+
+    assert_eq!(service.acceptUnionAndReturnString(&BazUnion::IntNum(42)), Ok(String::from("42")));
+}
+
+#[test]
+fn test_versioned_unknown_union_field_triggers_error() {
+    let service: Box<dyn IFooInterface::IFooInterface> =
+        binder::get_interface(<BpFooInterface as IFooInterface::IFooInterface>::get_descriptor())
+            .expect("did not get binder service");
+
+    let ret = service.acceptUnionAndReturnString(&BazUnion::LongNum(42));
+    assert!(!ret.is_ok());
+    assert_eq!(ret.unwrap_err().transaction_error(), binder::StatusCode::BAD_VALUE);
 }
 
 fn test_renamed_interface<F>(f: F)
