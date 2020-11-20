@@ -483,6 +483,70 @@ func TestCreatesModulesWithFrozenVersions(t *testing.T) {
 	assertModulesExists(t, ctx, "foo-unstable-java", "foo-unstable-rust", "foo-unstable-cpp", "foo-unstable-ndk", "foo-unstable-ndk_platform")
 }
 
+func TestErrorsWithUnsortedVersions(t *testing.T) {
+	testAidlError(t, `versions: should be sorted`, `
+		aidl_interface {
+			name: "foo",
+			srcs: [
+				"IFoo.aidl",
+			],
+			versions: [
+				"2",
+				"1",
+			],
+			backend: {
+				rust: {
+					enabled: true,
+				},
+			},
+		}
+	`)
+}
+
+func TestErrorsWithDuplicateVersions(t *testing.T) {
+	testAidlError(t, `versions: duplicate`, `
+		aidl_interface {
+			name: "foo",
+			srcs: [
+				"IFoo.aidl",
+			],
+			versions: [
+				"1",
+				"1",
+			],
+		}
+	`)
+}
+
+func TestErrorsWithNonPositiveVersions(t *testing.T) {
+	testAidlError(t, `versions: should be > 0`, `
+		aidl_interface {
+			name: "foo",
+			srcs: [
+				"IFoo.aidl",
+			],
+			versions: [
+				"-1",
+				"1",
+			],
+		}
+	`)
+}
+
+func TestErrorsWithNonIntegerVersions(t *testing.T) {
+	testAidlError(t, `versions: "first" is not an integer`, `
+		aidl_interface {
+			name: "foo",
+			srcs: [
+				"IFoo.aidl",
+			],
+			versions: [
+				"first",
+			],
+		}
+	`)
+}
+
 const (
 	androidVariant    = "android_common"
 	nativeVariant     = "android_arm_armv7-a-neon_shared"
