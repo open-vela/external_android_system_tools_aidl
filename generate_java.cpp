@@ -819,7 +819,7 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
     out.Dedent();
   }
   out << "}\n";
-  out << "throw new RuntimeException(\"union: out of range: \" + _aidl_tag);\n";
+  out << "throw new IllegalArgumentException(\"union: unknown tag: \" + _aidl_tag);\n";
   out.Dedent();
   out << "}\n\n";
 
