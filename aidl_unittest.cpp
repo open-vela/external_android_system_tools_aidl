@@ -3476,7 +3476,7 @@ public final class Foo implements android.os.Parcelable {
       _set(_aidl_tag, _aidl_value);
       return; }
     }
-    throw new RuntimeException("union: out of range: " + _aidl_tag);
+    throw new IllegalArgumentException("union: unknown tag: " + _aidl_tag);
   }
 
   @Override
