@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -1142,12 +1143,28 @@ func (i *aidlInterface) checkStability(mctx android.LoadHookContext) {
 	}
 }
 func (i *aidlInterface) checkVersions(mctx android.LoadHookContext) {
+	versions := make(map[string]bool)
+	intVersions := make([]int, 0, len(i.properties.Versions))
 	for _, ver := range i.properties.Versions {
-		_, err := strconv.Atoi(ver)
+		if _, dup := versions[ver]; dup {
+			mctx.PropertyErrorf("versions", "duplicate found", ver)
+			continue
+		}
+		versions[ver] = true
+		n, err := strconv.Atoi(ver)
 		if err != nil {
 			mctx.PropertyErrorf("versions", "%q is not an integer", ver)
 			continue
 		}
+		if n <= 0 {
+			mctx.PropertyErrorf("versions", "should be > 0, but is %v", ver)
+			continue
+		}
+		intVersions = append(intVersions, n)
+
+	}
+	if !mctx.Failed() && !sort.IntsAreSorted(intVersions) {
+		mctx.PropertyErrorf("versions", "should be sorted, but is %v", i.properties.Versions)
 	}
 }
 func (i *aidlInterface) checkVndkUseVersion(mctx android.LoadHookContext) {
