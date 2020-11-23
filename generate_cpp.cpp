@@ -1254,9 +1254,15 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames, cons
   const string code = CodeWriter::RunWith(&GenerateToString, parcel);
   parcel_class->AddPublic(std::make_unique<LiteralDecl>(code));
 
+  auto decls = NestInNamespaces(std::move(parcel_class), parcel.GetSplitPackage());
+  // TODO(b/31559095) bionic on host should define this
+  if constexpr (std::is_same_v<T, AidlUnionDecl>) {
+    decls.insert(decls.begin(),
+                 std::make_unique<LiteralDecl>(
+                     "#ifndef __BIONIC__\n#define __assert2(a,b,c,d) ((void)0)\n#endif\n\n"));
+  }
   return unique_ptr<Document>{
-      new CppHeader{vector<string>(includes.begin(), includes.end()),
-                    NestInNamespaces(std::move(parcel_class), parcel.GetSplitPackage())}};
+      new CppHeader{vector<string>(includes.begin(), includes.end()), std::move(decls)}};
 }
 
 template <typename T, typename Traits = ParcelableTraits<T>>

@@ -1120,6 +1120,13 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
   }
   GenerateHeaderIncludes(out, types, defined_type);
 
+  // TODO(b/31559095) bionic on host should define this
+  out << "\n";
+  out << "#ifndef __BIONIC__\n";
+  out << "#define __assert2(a,b,c,d) ((void)0)\n";
+  out << "#endif\n";
+  out << "\n";
+
   EnterNdkNamespace(out, defined_type);
   out << cpp::TemplateDecl(defined_type);
   out << "class " << clazz << " {\n";
