@@ -2990,6 +2990,7 @@ const char kUnionExampleExpectedOutputCppHeader[] = R"(#pragma once
 #include <binder/Parcel.h>
 #include <binder/ParcelFileDescriptor.h>
 #include <binder/Status.h>
+#include <cassert>
 #include <codecvt>
 #include <cstdint>
 #include <locale>
@@ -2998,6 +2999,10 @@ const char kUnionExampleExpectedOutputCppHeader[] = R"(#pragma once
 #include <utility>
 #include <variant>
 #include <vector>
+
+#ifndef __BIONIC__
+#define __assert2(a,b,c,d) ((void)0)
+#endif
 
 namespace a {
 
@@ -3062,13 +3067,13 @@ public:
 
   template <Tag _tag>
   const auto& get() const {
-    if (getTag() != _tag) { abort(); }
+    if (getTag() != _tag) { __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "bad access: a wrong tag"); }
     return std::get<_tag>(_value);
   }
 
   template <Tag _tag>
   auto& get() {
-    if (getTag() != _tag) { abort(); }
+    if (getTag() != _tag) { __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "bad access: a wrong tag"); }
     return std::get<_tag>(_value);
   }
 
@@ -3161,7 +3166,7 @@ namespace a {
   case e: return _aidl_parcel->writeByte(static_cast<int8_t>(get<e>()));
   case pfd: return _aidl_parcel->writeParcelable(get<pfd>());
   }
-  abort();
+  __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "can't reach here");
 }
 
 }  // namespace a
@@ -3174,6 +3179,7 @@ const char kUnionExampleExpectedOutputNdkHeader[] = R"(#pragma once
 #include <locale>
 #include <sstream>
 
+#include <cassert>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -3186,6 +3192,11 @@ const char kUnionExampleExpectedOutputNdkHeader[] = R"(#pragma once
 #include <android/binder_stability.h>
 #endif  // BINDER_STABILITY_SUPPORT
 #include <aidl/a/ByteEnum.h>
+
+#ifndef __BIONIC__
+#define __assert2(a,b,c,d) ((void)0)
+#endif
+
 namespace aidl {
 namespace a {
 class Foo {
@@ -3233,13 +3244,13 @@ public:
 
   template <Tag _tag>
   const auto& get() const {
-    if (getTag() != _tag) { abort(); }
+    if (getTag() != _tag) { __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "bad access: a wrong tag"); }
     return std::get<_tag>(_value);
   }
 
   template <Tag _tag>
   auto& get() {
-    if (getTag() != _tag) { abort(); }
+    if (getTag() != _tag) { __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "bad access: a wrong tag"); }
     return std::get<_tag>(_value);
   }
 
@@ -3332,7 +3343,7 @@ binder_status_t Foo::writeToParcel(AParcel* _parcel) const {
   case e: return AParcel_writeByte(_parcel, static_cast<int8_t>(get<e>()));
   case pfd: return ::ndk::AParcel_writeRequiredParcelFileDescriptor(_parcel, get<pfd>());
   }
-  abort();
+  __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "can't reach here");
 }
 
 }  // namespace a
