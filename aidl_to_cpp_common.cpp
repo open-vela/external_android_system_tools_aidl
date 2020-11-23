@@ -422,6 +422,7 @@ void GenerateToString(CodeWriter& out, const AidlUnionDecl& parcelable) {
 }
 
 const vector<string> UnionWriter::headers{
+    "cassert",      // __assert for logging
     "type_traits",  // std::is_same_v
     "utility",      // std::mode/forward for value
     "variant",      // std::variant for value
@@ -491,13 +492,13 @@ Tag getTag() const {{
 
 template <Tag _tag>
 const auto& get() const {{
-  if (getTag() != _tag) {{ abort(); }}
+  if (getTag() != _tag) {{ __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "bad access: a wrong tag"); }}
   return std::get<_tag>(_value);
 }}
 
 template <Tag _tag>
 auto& get() {{
-  if (getTag() != _tag) {{ abort(); }}
+  if (getTag() != _tag) {{ __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "bad access: a wrong tag"); }}
   return std::get<_tag>(_value);
 }}
 
@@ -575,7 +576,7 @@ void UnionWriter::WriteToParcel(CodeWriter& out, const ParcelWriterContext& ctx)
     out << ";\n";
   }
   out << "}\n";
-  out << "abort();\n";
+  out << "__assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, \"can't reach here\");\n";
 }
 
 }  // namespace cpp
