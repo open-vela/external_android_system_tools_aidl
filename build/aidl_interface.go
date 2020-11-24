@@ -1739,10 +1739,10 @@ func (sp *aidlRustSourceProvider) SourceProviderDeps(ctx rust.DepsContext, deps 
 	return deps
 }
 
-func (sp *aidlRustSourceProvider) AndroidMk(ctx rust.AndroidMkContext, ret *android.AndroidMkData) {
+func (sp *aidlRustSourceProvider) AndroidMk(ctx rust.AndroidMkContext, ret *android.AndroidMkEntries) {
 	ctx.SubAndroidMk(ret, sp.BaseSourceProvider)
-	ret.Extra = append(ret.Extra, func(w io.Writer, outputFile android.Path) {
-		fmt.Fprintln(w, "LOCAL_UNINSTALLABLE_MODULE := true")
+	ret.ExtraEntries = append(ret.ExtraEntries, func(entries *android.AndroidMkEntries) {
+		entries.SetBool("LOCAL_UNINSTALLABLE_MODULE", true)
 	})
 }
 
