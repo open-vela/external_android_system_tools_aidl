@@ -108,6 +108,9 @@ void StringLiteralExpression::Write(CodeWriter* to) const {
 Variable::Variable(const string& t, const string& n) : type(t), name(n) {}
 
 void Variable::WriteDeclaration(CodeWriter* to) const {
+  for (const auto& a : this->annotations) {
+    to->Write("%s ", a.c_str());
+  }
   to->Write("%s %s", this->type.c_str(), this->name.c_str());
 }
 
