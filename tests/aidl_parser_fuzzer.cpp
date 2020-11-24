@@ -47,7 +47,7 @@ void fuzz(const std::string& langOpt, const std::string& content) {
     std::cout << "lang: " << langOpt << " content: " << content << std::endl;
   }
 
-  int ret = android::aidl::compile_aidl(Options::From(args), io);
+  int ret = android::aidl::aidl_entry(Options::From(args), io);
   if (ret != 0) return;
 
   if (kFuzzLog) {
@@ -75,6 +75,7 @@ void fuzz(uint8_t options, const std::string& content) {
   fuzz("ndk", content);
   fuzz("cpp", content);
   fuzz("java", content);
+  fuzz("rust", content);
 }
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
