@@ -631,38 +631,6 @@ func TestNativeOutputIsAlwaysVersioned(t *testing.T) {
 	// skip ndk/ndk_platform since they follow the same rule with cpp
 }
 
-func TestGenLogForNativeBackendRequiresJson(t *testing.T) {
-	testAidlError(t, `"foo-cpp" depends on .*"libjsoncpp"`, `
-		aidl_interface {
-			name: "foo",
-			srcs: [
-				"IFoo.aidl",
-			],
-			backend: {
-				cpp: {
-					gen_log: true,
-				},
-			},
-		}
-	`)
-	testAidl(t, `
-		aidl_interface {
-			name: "foo",
-			srcs: [
-				"IFoo.aidl",
-			],
-			backend: {
-				cpp: {
-					gen_log: true,
-				},
-			},
-		}
-		cc_library {
-			name: "libjsoncpp",
-		}
-	`)
-}
-
 func TestImports(t *testing.T) {
 	testAidlError(t, `Import does not exist:`, `
 		aidl_interface {
