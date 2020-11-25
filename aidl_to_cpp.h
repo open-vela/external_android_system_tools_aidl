@@ -32,7 +32,6 @@ struct CodeGeneratorContext {
   const AidlTypeSpecifier& type;  // an argument or return type to generate code for
   const string name;              // name of the variable for the argument or the return value
   const bool isPointer;           // whether the variable 'name' is a pointer or not
-  const string log;               // name of the variable of type Json::Value to write the log into
 };
 
 std::string GetTransactionIdFor(const AidlMethod& method);
