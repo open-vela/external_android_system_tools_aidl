@@ -183,7 +183,7 @@ TEST_F(AidlTest, UnionUsage) {
   EXPECT_EQ(one_two, std::vector<int>({1, 2}));
 
   // abort with a bad access
-  EXPECT_DEATH(one_two.get<Union::n>(), "");
+  EXPECT_DEATH(one_two.get<Union::n>(), "bad access");
 
   // set<tag>(...) overwrites the content with a new tag
   one_two_three.set<Union::s>("123");
