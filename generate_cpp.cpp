@@ -296,7 +296,7 @@ unique_ptr<Declaration> DefineClientTransaction(const AidlTypenames& typenames,
   }
 
   // Invoke the transaction on the remote binder and confirm status.
-  string transaction_code = GetTransactionIdFor(method);
+  string transaction_code = GetTransactionIdFor(interface, method);
 
   vector<string> args = {transaction_code, kDataVarName,
                          StringPrintf("&%s", kReplyVarName)};
@@ -416,7 +416,7 @@ unique_ptr<Declaration> DefineClientMetaTransaction(const AidlTypenames& /* type
          << "    ::android::Parcel data;\n"
          << "    ::android::Parcel reply;\n"
          << "    data.writeInterfaceToken(getInterfaceDescriptor());\n"
-         << "    ::android::status_t err = remote()->transact(" << GetTransactionIdFor(method)
+         << "    ::android::status_t err = remote()->transact(" << GetTransactionIdFor(interface, method)
          << ", data, &reply);\n"
          << "    if (err == ::android::OK) {\n"
          << "      ::android::binder::Status _aidl_status;\n"
@@ -440,7 +440,7 @@ unique_ptr<Declaration> DefineClientMetaTransaction(const AidlTypenames& /* type
          << "    ::android::Parcel data;\n"
          << "    ::android::Parcel reply;\n"
          << "    data.writeInterfaceToken(getInterfaceDescriptor());\n"
-         << "    ::android::status_t err = remote()->transact(" << GetTransactionIdFor(method)
+         << "    ::android::status_t err = remote()->transact(" << GetTransactionIdFor(interface, method)
          << ", data, &reply);\n"
          << "    if (err == ::android::OK) {\n"
          << "      ::android::binder::Status _aidl_status;\n"
@@ -463,6 +463,7 @@ unique_ptr<Document> BuildClientSource(const AidlTypenames& typenames,
                                        const AidlInterface& interface, const Options& options) {
   vector<string> include_list = {
       HeaderFile(interface, ClassNames::CLIENT, false),
+      HeaderFile(interface, ClassNames::SERVER, false), // for TRANSACTION_* consts
       kParcelHeader,
       kAndroidBaseMacrosHeader
   };
@@ -691,7 +692,7 @@ unique_ptr<Document> BuildServerSource(const AidlTypenames& typenames,
 
   // The switch statement has a case statement for each transaction code.
   for (const auto& method : interface.GetMethods()) {
-    StatementBlock* b = s->AddCase(GetTransactionIdFor(*method));
+    StatementBlock* b = s->AddCase(GetTransactionIdFor(interface, *method));
     if (!b) { return nullptr; }
 
     bool success = false;
@@ -878,6 +879,13 @@ unique_ptr<Document> BuildServerHeader(const AidlTypenames& /* typenames */,
 
   vector<unique_ptr<Declaration>> publics;
   vector<unique_ptr<Declaration>> privates;
+
+  for (const auto& method : interface.GetMethods()) {
+    std::ostringstream code;
+    code << "static constexpr uint32_t TRANSACTION_" << method->GetName() << " = "
+         << "::android::IBinder::FIRST_CALL_TRANSACTION + " << method->GetId() << ";\n";
+    publics.push_back(std::make_unique<LiteralDecl>(code.str()));
+  }
 
   publics.push_back(std::move(constructor));
   publics.push_back(std::move(on_transact));

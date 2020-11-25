@@ -181,6 +181,7 @@ const ::android::String16& IStringConstants::EXAMPLE_CONSTANT() {
 
 }  // namespace android
 #include <android/os/BpStringConstants.h>
+#include <android/os/BnStringConstants.h>
 #include <binder/Parcel.h>
 #include <android-base/macros.h>
 
@@ -466,6 +467,7 @@ const ::android::String16& IStringConstants::EXAMPLE_CONSTANT() {
 
 }  // namespace android
 #include <android/os/BpStringConstants.h>
+#include <android/os/BnStringConstants.h>
 #include <binder/Parcel.h>
 #include <android-base/macros.h>
 
@@ -482,7 +484,7 @@ int32_t BpStringConstants::getInterfaceVersion() {
     ::android::Parcel data;
     ::android::Parcel reply;
     data.writeInterfaceToken(getInterfaceDescriptor());
-    ::android::status_t err = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 16777214 /* getInterfaceVersion */, data, &reply);
+    ::android::status_t err = remote()->transact(BnStringConstants::TRANSACTION_getInterfaceVersion, data, &reply);
     if (err == ::android::OK) {
       ::android::binder::Status _aidl_status;
       err = _aidl_status.readFromParcel(reply);
@@ -500,7 +502,7 @@ std::string BpStringConstants::getInterfaceHash() {
     ::android::Parcel data;
     ::android::Parcel reply;
     data.writeInterfaceToken(getInterfaceDescriptor());
-    ::android::status_t err = remote()->transact(::android::IBinder::FIRST_CALL_TRANSACTION + 16777213 /* getInterfaceHash */, data, &reply);
+    ::android::status_t err = remote()->transact(BnStringConstants::TRANSACTION_getInterfaceHash, data, &reply);
     if (err == ::android::OK) {
       ::android::binder::Status _aidl_status;
       err = _aidl_status.readFromParcel(reply);
@@ -531,14 +533,14 @@ BnStringConstants::BnStringConstants()
 ::android::status_t BnStringConstants::onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) {
   ::android::status_t _aidl_ret_status = ::android::OK;
   switch (_aidl_code) {
-  case ::android::IBinder::FIRST_CALL_TRANSACTION + 16777214 /* getInterfaceVersion */:
+  case BnStringConstants::TRANSACTION_getInterfaceVersion:
   {
     _aidl_data.checkInterface(this);
     _aidl_reply->writeNoException();
     _aidl_reply->writeInt32(IStringConstants::VERSION);
   }
   break;
-  case ::android::IBinder::FIRST_CALL_TRANSACTION + 16777213 /* getInterfaceHash */:
+  case BnStringConstants::TRANSACTION_getInterfaceHash:
   {
     _aidl_data.checkInterface(this);
     _aidl_reply->writeNoException();

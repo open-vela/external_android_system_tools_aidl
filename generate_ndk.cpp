@@ -919,6 +919,13 @@ void GenerateInterfaceHeader(CodeWriter& out, const AidlTypenames& types,
   if (!options.Hash().empty()) {
     out << "static inline const std::string " << kHash << " = \"" << options.Hash() << "\";\n";
   }
+  for (const auto& method : defined_type.GetMethods()) {
+    if (!method->IsUserDefined()) {
+      continue;
+    }
+    out << "static constexpr uint32_t TRANSACTION_" << method->GetName() << " = "
+        << "FIRST_CALL_TRANSACTION + " << std::to_string(method->GetId()) << ";\n";
+  }
   out << "\n";
   out << "static std::shared_ptr<" << clazz << "> fromBinder(const ::ndk::SpAIBinder& binder);\n";
   out << "static binder_status_t writeToParcel(AParcel* parcel, const std::shared_ptr<" << clazz
