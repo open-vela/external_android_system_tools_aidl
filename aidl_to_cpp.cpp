@@ -15,6 +15,7 @@
  */
 
 #include "aidl_to_cpp.h"
+#include "aidl_to_cpp_common.h"
 #include "aidl_language.h"
 #include "logging.h"
 
@@ -206,12 +207,8 @@ std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::str
   return raw_value;
 };
 
-std::string GetTransactionIdFor(const AidlMethod& method) {
-  ostringstream output;
-
-  output << "::android::IBinder::FIRST_CALL_TRANSACTION + ";
-  output << method.GetId() << " /* " << method.GetName() << " */";
-  return output.str();
+std::string GetTransactionIdFor(const AidlInterface& iface, const AidlMethod& method) {
+  return ClassName(iface, ClassNames::SERVER) + "::TRANSACTION_" + method.GetName();
 }
 
 std::string CppNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
