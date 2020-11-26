@@ -1572,7 +1572,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 
 	vendorAvailable := i.properties.Vendor_available
 	productAvailable := i.properties.Product_available
-	if lang == langCpp && "vintf" == proptools.String(i.properties.Stability) {
+	if lang == langCpp {
 		// Vendor and product modules cannot use the libbinder (cpp) backend of AIDL in a
 		// way that is stable. So, in order to prevent accidental usage of these library by
 		// vendor and product forcibly disabling this version of the library.
@@ -1580,8 +1580,12 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 		// It may be the case in the future that we will want to enable this (if some generic
 		// helper should be used by both libbinder vendor things using /dev/vndbinder as well
 		// as those things using /dev/binder + libbinder_ndk to talk to stable interfaces).
-		vendorAvailable = proptools.BoolPtr(false)
-		productAvailable = proptools.BoolPtr(false)
+		if "vintf" == proptools.String(i.properties.Stability) {
+			vendorAvailable = proptools.BoolPtr(false)
+		}
+		// As libbinder is not available for the product processes, we must not create
+		// product variant for the aidl_interface
+		productAvailable = nil
 	}
 
 	if lang == langNdk {
