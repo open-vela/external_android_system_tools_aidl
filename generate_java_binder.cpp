@@ -1125,7 +1125,7 @@ std::unique_ptr<Class> generate_binder_interface_class(const AidlInterface* ifac
       interface->elements.push_back(std::make_shared<LiteralClassElement>(code));
     }
 
-    generate_constant(interface.get(), type.ToString(), constant->GetName(),
+    generate_constant(interface.get(), type.Signature(), constant->GetName(),
                       constant->ValueString(ConstantValueDecorator));
   }
 

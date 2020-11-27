@@ -248,12 +248,12 @@ std::map<std::string, std::string> AidlAnnotation::AnnotationParams(
   return raw_params;
 }
 
-std::string AidlAnnotation::ToString(const ConstantValueDecorator& decorator) const {
+std::string AidlAnnotation::ToString() const {
   if (parameters_.empty()) {
     return "@" + GetName();
   } else {
     vector<string> param_strings;
-    for (const auto& [name, value] : AnnotationParams(decorator)) {
+    for (const auto& [name, value] : AnnotationParams(AidlConstantValueDecorator)) {
       param_strings.emplace_back(name + "=" + value);
     }
     return "@" + GetName() + "(" + Join(param_strings, ", ") + ")";
@@ -400,7 +400,7 @@ bool AidlAnnotatable::CheckValid(const AidlTypenames&) const {
 string AidlAnnotatable::ToString() const {
   vector<string> ret;
   for (const auto& a : annotations_) {
-    ret.emplace_back(a.ToString(AidlConstantValueDecorator));
+    ret.emplace_back(a.ToString());
   }
   std::sort(ret.begin(), ret.end());
   return Join(ret, " ");
@@ -433,12 +433,12 @@ bool AidlTypeSpecifier::IsHidden() const {
   return HasHideComment(GetComments());
 }
 
-string AidlTypeSpecifier::ToString() const {
+string AidlTypeSpecifier::Signature() const {
   string ret = GetName();
   if (IsGeneric()) {
     vector<string> arg_names;
     for (const auto& ta : GetTypeParameters()) {
-      arg_names.emplace_back(ta->ToString());
+      arg_names.emplace_back(ta->Signature());
     }
     ret += "<" + Join(arg_names, ",") + ">";
   }
@@ -448,8 +448,8 @@ string AidlTypeSpecifier::ToString() const {
   return ret;
 }
 
-string AidlTypeSpecifier::Signature() const {
-  string ret = ToString();
+string AidlTypeSpecifier::ToString() const {
+  string ret = Signature();
   string annotations = AidlAnnotatable::ToString();
   if (annotations != "") {
     ret = annotations + " " + ret;
@@ -505,14 +505,14 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
     const size_t num_params = GetTypeParameters().size();
     if (type_name == "List") {
       if (num_params > 1) {
-        AIDL_ERROR(this) << "List can only have one type parameter, but got: '" << ToString()
+        AIDL_ERROR(this) << "List can only have one type parameter, but got: '" << Signature()
                          << "'";
         return false;
       }
     } else if (type_name == "Map") {
       if (num_params != 0 && num_params != 2) {
         AIDL_ERROR(this) << "Map must have 0 or 2 type parameters, but got "
-                         << "'" << ToString() << "'";
+                         << "'" << Signature() << "'";
         return false;
       }
       if (num_params == 2) {
@@ -627,7 +627,7 @@ string AidlVariableDeclaration::GetCapitalizedName() const {
 }
 
 string AidlVariableDeclaration::ToString() const {
-  string ret = type_->Signature() + " " + name_;
+  string ret = type_->ToString() + " " + name_;
   if (default_value_ != nullptr && default_user_specified_) {
     ret += " = " + ValueString(AidlConstantValueDecorator);
   }
@@ -684,20 +684,6 @@ string AidlArgument::ToString() const {
   }
 }
 
-std::string AidlArgument::Signature() const {
-  class AidlInterface;
-  class AidlInterface;
-  class AidlParcelable;
-  class AidlStructuredParcelable;
-  class AidlParcelable;
-  class AidlStructuredParcelable;
-  if (direction_specified_) {
-    return GetDirectionSpecifier() + " " + AidlVariableDeclaration::Signature();
-  } else {
-    return AidlVariableDeclaration::Signature();
-  }
-}
-
 AidlMember::AidlMember(const AidlLocation& location) : AidlNode(location) {}
 
 AidlConstantDeclaration::AidlConstantDeclaration(const AidlLocation& location,
@@ -712,8 +698,8 @@ bool AidlConstantDeclaration::CheckValid(const AidlTypenames& typenames) const {
   if (!valid) return false;
 
   const static set<string> kSupportedConstTypes = {"String", "byte", "int", "long"};
-  if (kSupportedConstTypes.find(type_->ToString()) == kSupportedConstTypes.end()) {
-    AIDL_ERROR(this) << "Constant of type " << type_->ToString() << " is not supported.";
+  if (kSupportedConstTypes.find(type_->Signature()) == kSupportedConstTypes.end()) {
+    AIDL_ERROR(this) << "Constant of type " << type_->Signature() << " is not supported.";
     return false;
   }
 
@@ -721,8 +707,8 @@ bool AidlConstantDeclaration::CheckValid(const AidlTypenames& typenames) const {
 }
 
 string AidlConstantDeclaration::ToString() const {
-  return "const " + type_->ToString() + " " + name_ + " = " +
-         ValueString(AidlConstantValueDecorator);
+  // TODO(b/174327111) use ToString() to include annotations
+  return "const " + Signature() + " = " + ValueString(AidlConstantValueDecorator);
 }
 
 string AidlConstantDeclaration::Signature() const {
@@ -762,7 +748,7 @@ bool AidlMethod::IsHidden() const {
 string AidlMethod::Signature() const {
   vector<string> arg_signatures;
   for (const auto& arg : GetArguments()) {
-    arg_signatures.emplace_back(arg->GetType().ToString());
+    arg_signatures.emplace_back(arg->GetType().Signature());
   }
   return GetName() + "(" + Join(arg_signatures, ", ") + ")";
 }
@@ -770,9 +756,9 @@ string AidlMethod::Signature() const {
 string AidlMethod::ToString() const {
   vector<string> arg_strings;
   for (const auto& arg : GetArguments()) {
-    arg_strings.emplace_back(arg->Signature());
+    arg_strings.emplace_back(arg->ToString());
   }
-  string ret = (IsOneway() ? "oneway " : "") + GetType().Signature() + " " + GetName() + "(" +
+  string ret = (IsOneway() ? "oneway " : "") + GetType().ToString() + " " + GetName() + "(" +
                Join(arg_strings, ", ") + ")";
   if (HasId()) {
     ret += " = " + std::to_string(GetId());
@@ -1371,7 +1357,7 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
 
       const auto [can_be_out, type_aspect] = typenames.CanBeOutParameter(arg->GetType());
       if (!arg->DirectionWasSpecified() && can_be_out) {
-        AIDL_ERROR(arg) << "'" << arg->GetType().ToString()
+        AIDL_ERROR(arg) << "'" << arg->GetType().Signature()
                         << "' can be an out type, so you must declare it as in, out, or inout.";
         return false;
       }

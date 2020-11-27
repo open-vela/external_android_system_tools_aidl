@@ -950,22 +950,22 @@ unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
     const AidlTypeSpecifier& type = constant->GetType();
     const AidlConstantValue& value = constant->GetValue();
 
-    if (type.ToString() == "String") {
+    if (type.Signature() == "String") {
       std::string cppType = CppNameOf(constant->GetType(), typenames);
       unique_ptr<Declaration> getter(
           new MethodDecl("const " + cppType + "&", constant->GetName(), {}, MethodDecl::IS_STATIC));
       string_constants.push_back(std::move(getter));
-    } else if (type.ToString() == "byte") {
+    } else if (type.Signature() == "byte") {
       byte_constant_enum->AddValue(constant->GetName(),
                                    constant->ValueString(ConstantValueDecorator));
-    } else if (type.ToString() == "int") {
+    } else if (type.Signature() == "int") {
       int_constant_enum->AddValue(constant->GetName(),
                                   constant->ValueString(ConstantValueDecorator));
-    } else if (type.ToString() == "long") {
+    } else if (type.Signature() == "long") {
       long_constant_enum->AddValue(constant->GetName(),
                                    constant->ValueString(ConstantValueDecorator));
     } else {
-      AIDL_FATAL(value) << "Unrecognized constant type: " << type.ToString();
+      AIDL_FATAL(value) << "Unrecognized constant type: " << type.Signature();
     }
   }
   if (byte_constant_enum->HasValues()) {
