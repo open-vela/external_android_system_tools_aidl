@@ -707,8 +707,8 @@ bool AidlConstantDeclaration::CheckValid(const AidlTypenames& typenames) const {
 }
 
 string AidlConstantDeclaration::ToString() const {
-  // TODO(b/174327111) use ToString() to include annotations
-  return "const " + Signature() + " = " + ValueString(AidlConstantValueDecorator);
+  return "const " + type_->ToString() + " " + name_ + " = " +
+         ValueString(AidlConstantValueDecorator);
 }
 
 string AidlConstantDeclaration::Signature() const {
