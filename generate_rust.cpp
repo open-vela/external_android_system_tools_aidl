@@ -421,12 +421,13 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
     const AidlConstantValue& value = constant->GetValue();
 
     string const_type;
-    if (type.ToString() == "String") {
+    if (type.Signature() == "String") {
       const_type = "&str";
-    } else if (type.ToString() == "byte" || type.ToString() == "int" || type.ToString() == "long") {
+    } else if (type.Signature() == "byte" || type.Signature() == "int" ||
+               type.Signature() == "long") {
       const_type = RustNameOf(type, typenames, StorageMode::VALUE);
     } else {
-      AIDL_FATAL(value) << "Unrecognized constant type: " << type.ToString();
+      AIDL_FATAL(value) << "Unrecognized constant type: " << type.Signature();
     }
 
     *code_writer << "pub const " << constant->GetName() << ": " << const_type << " = "

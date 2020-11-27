@@ -312,7 +312,7 @@ static void GenerateConstantDeclarations(CodeWriter& out, const AidlTypenames& t
   for (const auto& constant : interface.GetConstantDeclarations()) {
     const AidlTypeSpecifier& type = constant->GetType();
 
-    if (type.ToString() == "String") {
+    if (type.Signature() == "String") {
       out << "static const char* " << constant->GetName() << ";\n";
     } else {
       out << "enum : " << NdkNameOf(types, type, StorageMode::STACK) << " { " << constant->GetName()
