@@ -1509,11 +1509,10 @@ TEST_F(AidlTest, ApiDumpConstWithAnnotation) {
   EXPECT_EQ("", GetCapturedStderr());
   string actual;
   EXPECT_TRUE(io_delegate_.GetWrittenContents("dump/foo/bar/IFoo.aidl", &actual));
-  // TODO(b/174327111) dump const with annotations
   EXPECT_EQ(string(kPreamble).append(R"(package foo.bar;
 interface IFoo {
   @utf8InCpp String foo();
-  const String bar = "bar";
+  const @utf8InCpp String bar = "bar";
 }
 )"),
             actual);
