@@ -1989,6 +1989,17 @@ TEST_F(AidlTestCompatibleChanges, ReorderedAnnatations) {
   EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
 }
 
+TEST_F(AidlTestCompatibleChanges, OkayToDeprecate) {
+  io_delegate_.SetFileContents("old/p/Foo.aidl",
+                               "package p;"
+                               "parcelable Foo {}");
+  io_delegate_.SetFileContents("new/p/Foo.aidl",
+                               "package p;"
+                               "@JavaPassthrough(annotation=\"@Deprecated\")"
+                               "parcelable Foo {}");
+  EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
+}
+
 TEST_F(AidlTestCompatibleChanges, NewFieldOfNewType) {
   io_delegate_.SetFileContents("old/p/Data.aidl",
                                "package p;"
