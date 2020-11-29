@@ -1509,10 +1509,11 @@ TEST_F(AidlTest, ApiDumpConstWithAnnotation) {
   EXPECT_EQ("", GetCapturedStderr());
   string actual;
   EXPECT_TRUE(io_delegate_.GetWrittenContents("dump/foo/bar/IFoo.aidl", &actual));
+  // TODO(b/174327111) dump const with annotations
   EXPECT_EQ(string(kPreamble).append(R"(package foo.bar;
 interface IFoo {
   @utf8InCpp String foo();
-  const @utf8InCpp String bar = "bar";
+  const String bar = "bar";
 }
 )"),
             actual);
@@ -1985,17 +1986,6 @@ TEST_F(AidlTestCompatibleChanges, ReorderedAnnatations) {
                                "package p;"
                                "@JavaPassthrough(annotation=\"Bob\")"
                                "@JavaPassthrough(annotation=\"Alice\")"
-                               "parcelable Foo {}");
-  EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
-}
-
-TEST_F(AidlTestCompatibleChanges, OkayToDeprecate) {
-  io_delegate_.SetFileContents("old/p/Foo.aidl",
-                               "package p;"
-                               "parcelable Foo {}");
-  io_delegate_.SetFileContents("new/p/Foo.aidl",
-                               "package p;"
-                               "@JavaPassthrough(annotation=\"@Deprecated\")"
                                "parcelable Foo {}");
   EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
 }
