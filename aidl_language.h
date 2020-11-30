@@ -192,7 +192,12 @@ class AidlAnnotation : public AidlNode {
   const string& GetName() const { return schema_.name; }
   const Type& GetType() const { return schema_.type; }
   bool Repeatable() const { return schema_.repeatable; }
-  string ToString(const ConstantValueDecorator& decorator) const;
+
+  // ToString is for dumping AIDL.
+  // Returns string representation of this annotation.
+  // e.g) "@RustDerive(Clone=true, Copy=true)"
+  string ToString() const;
+
   std::map<std::string, std::string> AnnotationParams(
       const ConstantValueDecorator& decorator) const;
   const string& GetComments() const { return comments_; }
@@ -256,6 +261,10 @@ class AidlAnnotatable : public AidlNode {
   const AidlAnnotation* UnsupportedAppUsage() const;
   const AidlAnnotation* RustDerive() const;
   const AidlTypeSpecifier* BackingType(const AidlTypenames& typenames) const;
+
+  // ToString is for dumping AIDL.
+  // Returns string representation of annotations.
+  // e.g) "@JavaDerive(toString=true) @RustDerive(Clone=true, Copy=true)"
   std::string ToString() const;
 
   const vector<AidlAnnotation>& GetAnnotations() const { return annotations_; }
@@ -293,10 +302,16 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
     }
   }
 
-  // Returns string representation of this type specifier.
-  // This is GetBaseTypeName() + array modifier or generic type parameters
-  string ToString() const;
+  // ToString is for dumping AIDL.
+  // Returns string representation of this type specifier including annotations.
+  // This is "annotations type_name type_params? array_marker?".
+  // e.g) "@utf8InCpp String[]";
+  std::string ToString() const;
 
+  // Signature is for comparing AIDL types.
+  // Returns string representation of this type specifier.
+  // This is "type_name type_params? array_marker?".
+  // e.g.) "String[]" (even if it is annotated with @utf8InCpp)
   std::string Signature() const;
 
   const string& GetUnresolvedName() const { return unresolved_name_; }
@@ -375,7 +390,17 @@ class AidlVariableDeclaration : public AidlNode {
   AidlTypeSpecifier* GetMutableType() { return type_.get(); }
 
   bool CheckValid(const AidlTypenames& typenames) const;
+
+  // ToString is for dumping AIDL.
+  // Returns string representation of this variable decl including default value.
+  // This is "annotations type name default_value?".
+  // e.g) "@utf8InCpp String[] names = {"hello"}"
   std::string ToString() const;
+
+  // Signature is for comparing AIDL types.
+  // Returns string representation of this variable decl.
+  // This is "type name".
+  // e.g) "String[] name" (even if it is annotated with @utf8InCpp and has a default value.)
   std::string Signature() const;
 
   std::string ValueString(const ConstantValueDecorator& decorator) const;
@@ -408,8 +433,11 @@ class AidlArgument : public AidlVariableDeclaration {
   bool DirectionWasSpecified() const { return direction_specified_; }
   string GetDirectionSpecifier() const;
 
+  // ToString is for dumping AIDL.
+  // Returns string representation of this argument including direction
+  // This is "direction annotations type name".
+  // e.g) "in @utf8InCpp String[] names"
   std::string ToString() const;
-  std::string Signature() const;
 
  private:
   Direction direction_;
@@ -580,8 +608,18 @@ class AidlConstantDeclaration : public AidlMember {
   const AidlConstantValue& GetValue() const { return *value_; }
   bool CheckValid(const AidlTypenames& typenames) const;
 
+  // ToString is for dumping AIDL.
+  // Returns string representation of this const decl including a const value.
+  // This is "`const` annotations type name value".
+  // e.g) "const @utf8InCpp String[] names = { "hello" }"
   string ToString() const;
+
+  // Signature is for comparing types.
+  // Returns string representation of this const decl.
+  // This is "direction annotations type name".
+  // e.g) "String[] names"
   string Signature() const;
+
   string ValueString(const ConstantValueDecorator& decorator) const {
     return value_->ValueString(GetType(), decorator);
   }
@@ -639,13 +677,16 @@ class AidlMethod : public AidlMember {
     return out_arguments_;
   }
 
-  // name + type parameter types
-  // i.e, foo(int, String)
-  std::string Signature() const;
-
-  // return type + name + type parameter types + annotations
-  // i.e, boolean foo(int, @Nullable String)
+  // ToString is for dumping AIDL.
+  // Returns string representation of this method including everything.
+  // This is "ret_type name ( arg_list ) = id".
+  // e.g) "boolean foo(int, @Nullable String) = 1"
   std::string ToString() const;
+
+  // Signature is for comparing AIDL types.
+  // Returns string representation of this method's name & type.
+  // e.g) "foo(int, String)"
+  std::string Signature() const;
 
  private:
   bool oneway_;
