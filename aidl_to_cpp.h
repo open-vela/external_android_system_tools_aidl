@@ -34,7 +34,7 @@ struct CodeGeneratorContext {
   const bool isPointer;           // whether the variable 'name' is a pointer or not
 };
 
-std::string GetTransactionIdFor(const AidlMethod& method);
+std::string GetTransactionIdFor(const AidlInterface& iface, const AidlMethod& method);
 
 std::string CppNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames);
 
