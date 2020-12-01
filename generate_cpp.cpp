@@ -509,6 +509,73 @@ unique_ptr<Document> BuildClientSource(const AidlTypenames& typenames,
 
 namespace {
 
+template <typename TypeWithConstants>
+void BuildConstantDefinitions(const TypeWithConstants& type, const AidlTypenames& typenames,
+                              const std::vector<std::string>& type_params,
+                              const std::string& class_name,
+                              vector<unique_ptr<Declaration>>& decls) {
+  for (const auto& constant : type.GetConstantDeclarations()) {
+    const AidlConstantValue& value = constant->GetValue();
+    if (value.GetType() != AidlConstantValue::Type::STRING) continue;
+
+    std::string cppType = CppNameOf(constant->GetType(), typenames);
+    unique_ptr<MethodImpl> getter(
+        new MethodImpl("const " + cppType + "&", class_name, constant->GetName(), type_params, {}));
+    getter->GetStatementBlock()->AddLiteral(
+        StringPrintf("static const %s value(%s)", cppType.c_str(),
+                     constant->ValueString(ConstantValueDecorator).c_str()));
+    getter->GetStatementBlock()->AddLiteral("return value");
+    decls.push_back(std::move(getter));
+  }
+}
+
+template <typename TypeWithConstants>
+void BuildConstantDeclarations(const TypeWithConstants& type, const AidlTypenames& typenames,
+                               unique_ptr<ClassDecl>& cls, set<string>& includes) {
+  std::vector<std::unique_ptr<Declaration>> string_constants;
+  unique_ptr<Enum> byte_constant_enum{new Enum{"", "int8_t", false}};
+  unique_ptr<Enum> int_constant_enum{new Enum{"", "int32_t", false}};
+  unique_ptr<Enum> long_constant_enum{new Enum{"", "int64_t", false}};
+  for (const auto& constant : type.GetConstantDeclarations()) {
+    const AidlTypeSpecifier& type = constant->GetType();
+    const AidlConstantValue& value = constant->GetValue();
+
+    if (type.Signature() == "String") {
+      std::string cppType = CppNameOf(constant->GetType(), typenames);
+      unique_ptr<Declaration> getter(
+          new MethodDecl("const " + cppType + "&", constant->GetName(), {}, MethodDecl::IS_STATIC));
+      string_constants.push_back(std::move(getter));
+    } else if (type.Signature() == "byte") {
+      byte_constant_enum->AddValue(constant->GetName(),
+                                   constant->ValueString(ConstantValueDecorator));
+    } else if (type.Signature() == "int") {
+      int_constant_enum->AddValue(constant->GetName(),
+                                  constant->ValueString(ConstantValueDecorator));
+    } else if (type.Signature() == "long") {
+      long_constant_enum->AddValue(constant->GetName(),
+                                   constant->ValueString(ConstantValueDecorator));
+    } else {
+      AIDL_FATAL(value) << "Unrecognized constant type: " << type.Signature();
+    }
+  }
+  if (byte_constant_enum->HasValues()) {
+    cls->AddPublic(std::move(byte_constant_enum));
+  }
+  if (int_constant_enum->HasValues()) {
+    cls->AddPublic(std::move(int_constant_enum));
+  }
+  if (long_constant_enum->HasValues()) {
+    cls->AddPublic(std::move(long_constant_enum));
+  }
+  if (!string_constants.empty()) {
+    includes.insert(kString16Header);
+
+    for (auto& string_constant : string_constants) {
+      cls->AddPublic(std::move(string_constant));
+    }
+  }
+}
+
 bool HandleServerTransaction(const AidlTypenames& typenames, const AidlInterface& interface,
                              const AidlMethod& method, const Options& options, StatementBlock* b) {
   // Declare all the parameters now.  In the common case, we expect no errors
@@ -776,20 +843,8 @@ unique_ptr<Document> BuildInterfaceSource(const AidlTypenames& typenames,
                                            '"' + interface.GetDescriptor() + '"'}}}};
   decls.push_back(std::move(meta_if));
 
-  for (const auto& constant : interface.GetConstantDeclarations()) {
-    const AidlConstantValue& value = constant->GetValue();
-    if (value.GetType() != AidlConstantValue::Type::STRING) continue;
-
-    std::string cppType = CppNameOf(constant->GetType(), typenames);
-    unique_ptr<MethodImpl> getter(new MethodImpl("const " + cppType + "&",
-                                                 ClassName(interface, ClassNames::INTERFACE),
-                                                 constant->GetName(), {}, {}));
-    getter->GetStatementBlock()->AddLiteral(
-        StringPrintf("static const %s value(%s)", cppType.c_str(),
-                     constant->ValueString(ConstantValueDecorator).c_str()));
-    getter->GetStatementBlock()->AddLiteral("return value");
-    decls.push_back(std::move(getter));
-  }
+  BuildConstantDefinitions(interface, typenames, {}, ClassName(interface, ClassNames::INTERFACE),
+                           decls);
 
   return unique_ptr<Document>{new CppSource{
       include_list,
@@ -950,48 +1005,7 @@ unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
     if_class->AddPublic(unique_ptr<Declaration>(new LiteralDecl(code.str())));
   }
 
-  std::vector<std::unique_ptr<Declaration>> string_constants;
-  unique_ptr<Enum> byte_constant_enum{new Enum{"", "int8_t", false}};
-  unique_ptr<Enum> int_constant_enum{new Enum{"", "int32_t", false}};
-  unique_ptr<Enum> long_constant_enum{new Enum{"", "int64_t", false}};
-  for (const auto& constant : interface.GetConstantDeclarations()) {
-    const AidlTypeSpecifier& type = constant->GetType();
-    const AidlConstantValue& value = constant->GetValue();
-
-    if (type.Signature() == "String") {
-      std::string cppType = CppNameOf(constant->GetType(), typenames);
-      unique_ptr<Declaration> getter(
-          new MethodDecl("const " + cppType + "&", constant->GetName(), {}, MethodDecl::IS_STATIC));
-      string_constants.push_back(std::move(getter));
-    } else if (type.Signature() == "byte") {
-      byte_constant_enum->AddValue(constant->GetName(),
-                                   constant->ValueString(ConstantValueDecorator));
-    } else if (type.Signature() == "int") {
-      int_constant_enum->AddValue(constant->GetName(),
-                                  constant->ValueString(ConstantValueDecorator));
-    } else if (type.Signature() == "long") {
-      long_constant_enum->AddValue(constant->GetName(),
-                                   constant->ValueString(ConstantValueDecorator));
-    } else {
-      AIDL_FATAL(value) << "Unrecognized constant type: " << type.Signature();
-    }
-  }
-  if (byte_constant_enum->HasValues()) {
-    if_class->AddPublic(std::move(byte_constant_enum));
-  }
-  if (int_constant_enum->HasValues()) {
-    if_class->AddPublic(std::move(int_constant_enum));
-  }
-  if (long_constant_enum->HasValues()) {
-    if_class->AddPublic(std::move(long_constant_enum));
-  }
-  if (!string_constants.empty()) {
-    includes.insert(kString16Header);
-
-    for (auto& string_constant : string_constants) {
-      if_class->AddPublic(std::move(string_constant));
-    }
-  }
+  BuildConstantDeclarations(interface, typenames, if_class, includes);
 
   if (options.GenTraces()) {
     includes.insert(kTraceHeader);
@@ -1232,6 +1246,7 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames, cons
   parcel_class->AddPublic(std::make_unique<LiteralDecl>(operator_code));
 
   Traits::AddFields(*parcel_class, parcel, typenames);
+  BuildConstantDeclarations(parcel, typenames, parcel_class, includes);
 
   if (parcel.IsVintfStability()) {
     parcel_class->AddPublic(std::unique_ptr<LiteralDecl>(
@@ -1289,6 +1304,7 @@ std::unique_ptr<Document> BuildParcelSource(const AidlTypenames& typenames, cons
   Traits::GenWriteToParcel(parcel, typenames, write->GetStatementBlock());
 
   vector<unique_ptr<Declaration>> file_decls;
+  BuildConstantDefinitions(parcel, typenames, type_params, parcel.GetName(), file_decls);
   file_decls.push_back(std::move(read));
   file_decls.push_back(std::move(write));
 

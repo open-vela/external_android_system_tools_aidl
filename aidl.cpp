@@ -389,7 +389,7 @@ bool parse_preprocessed_file(const IoDelegate& io_delegate, const string& filena
       AidlParcelable* doc = new AidlParcelable(location, class_name, package, "" /* comments */);
       typenames->AddPreprocessedType(unique_ptr<AidlParcelable>(doc));
     } else if (decl == "structured_parcelable") {
-      auto temp = new std::vector<std::unique_ptr<AidlVariableDeclaration>>();
+      auto temp = new std::vector<std::unique_ptr<AidlMember>>();
       AidlStructuredParcelable* doc = new AidlStructuredParcelable(
           location, class_name, package, "" /* comments */, temp, nullptr);
       typenames->AddPreprocessedType(unique_ptr<AidlStructuredParcelable>(doc));
@@ -647,10 +647,10 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
             new AidlTypeSpecifier(AIDL_LOCATION_HERE, "int", false, nullptr, "");
         ret->Resolve(*typenames);
         vector<unique_ptr<AidlArgument>>* args = new vector<unique_ptr<AidlArgument>>();
-        AidlMethod* method =
-            new AidlMethod(AIDL_LOCATION_HERE, false, ret, "getInterfaceVersion", args, "",
-                           kGetInterfaceVersionId, false /* is_user_defined */);
-        interface->GetMutableMethods().emplace_back(method);
+        auto method = std::make_unique<AidlMethod>(
+            AIDL_LOCATION_HERE, false, ret, "getInterfaceVersion", args, "", kGetInterfaceVersionId,
+            false /* is_user_defined */);
+        interface->AddMethod(std::move(method));
       }
       // add the meta-method 'string getInterfaceHash()' if hash is specified.
       if (!options.Hash().empty()) {
@@ -658,9 +658,10 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
             new AidlTypeSpecifier(AIDL_LOCATION_HERE, "String", false, nullptr, "");
         ret->Resolve(*typenames);
         vector<unique_ptr<AidlArgument>>* args = new vector<unique_ptr<AidlArgument>>();
-        AidlMethod* method = new AidlMethod(AIDL_LOCATION_HERE, false, ret, kGetInterfaceHash, args,
-                                            "", kGetInterfaceHashId, false /* is_user_defined */);
-        interface->GetMutableMethods().emplace_back(method);
+        auto method =
+            std::make_unique<AidlMethod>(AIDL_LOCATION_HERE, false, ret, kGetInterfaceHash, args,
+                                         "", kGetInterfaceHashId, false /* is_user_defined */);
+        interface->AddMethod(std::move(method));
       }
       if (!check_and_assign_method_ids(interface->GetMethods())) {
         return AidlError::BAD_METHOD_ID;
@@ -727,7 +728,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
           }
         };
     const AidlInterface* iface = type.AsInterface();
-    const AidlWithFields* data_structure = type.AsStructuredParcelable();
+    const AidlWithMembers* data_structure = type.AsStructuredParcelable();
     if (!data_structure) {
       data_structure = type.AsUnionDeclaration();
     }

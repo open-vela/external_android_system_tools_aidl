@@ -529,7 +529,10 @@ fn test_parcelable() {
         "The quick brown fox jumps over the lazy dog."
     );
 
-    assert_eq!(parcelable.u, Some(Union::Union::Ns(vec![1, 2, 3])))
+    assert_eq!(parcelable.shouldSetBit0AndBit2, StructuredParcelable::BIT0 | StructuredParcelable::BIT2);
+
+    assert_eq!(parcelable.u, Some(Union::Union::Ns(vec![1, 2, 3])));
+    assert_eq!(parcelable.shouldBeConstS1, Some(Union::Union::S(Union::S1.to_string())))
 }
 
 const EXPECTED_ARG_VALUE: i32 = 100;

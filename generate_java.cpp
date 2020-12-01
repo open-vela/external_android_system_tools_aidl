@@ -576,6 +576,10 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
 
   parcel_class->elements.push_back(read_or_create_method);
 
+  auto constants =
+      CodeWriter::RunWith(generate_constant_declarations, parcel->GetConstantDeclarations());
+  parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(constants));
+
   auto method = CodeWriter::RunWith(GenerateDerivedMethods, *parcel, typenames);
   parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(method));
 
@@ -822,6 +826,8 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   out << "throw new IllegalArgumentException(\"union: unknown tag: \" + _aidl_tag);\n";
   out.Dedent();
   out << "}\n\n";
+
+  generate_constant_declarations(out, decl->GetConstantDeclarations());
 
   GenerateParcelableDescribeContents(out, *decl, typenames);
   out << "\n";

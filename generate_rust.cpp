@@ -310,6 +310,28 @@ void GenerateServerItems(CodeWriter& out, const AidlInterface* iface,
   out << "}\n";
 }
 
+template <typename TypeWithConstants>
+void GenerateConstantDeclarations(CodeWriter& out, const TypeWithConstants& type,
+                                  const AidlTypenames& typenames) {
+  for (const auto& constant : type.GetConstantDeclarations()) {
+    const AidlTypeSpecifier& type = constant->GetType();
+    const AidlConstantValue& value = constant->GetValue();
+
+    string const_type;
+    if (type.Signature() == "String") {
+      const_type = "&str";
+    } else if (type.Signature() == "byte" || type.Signature() == "int" ||
+               type.Signature() == "long") {
+      const_type = RustNameOf(type, typenames, StorageMode::VALUE);
+    } else {
+      AIDL_FATAL(value) << "Unrecognized constant type: " << type.Signature();
+    }
+
+    out << "pub const " << constant->GetName() << ": " << const_type << " = "
+        << constant->ValueString(ConstantValueDecoratorRef) << ";\n";
+  }
+}
+
 bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
                            const AidlTypenames& typenames, const IoDelegate& io_delegate,
                            const Options& options) {
@@ -416,23 +438,7 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
   *code_writer << "}\n";
 
   // Emit the interface constants
-  for (const auto& constant : iface->GetConstantDeclarations()) {
-    const AidlTypeSpecifier& type = constant->GetType();
-    const AidlConstantValue& value = constant->GetValue();
-
-    string const_type;
-    if (type.Signature() == "String") {
-      const_type = "&str";
-    } else if (type.Signature() == "byte" || type.Signature() == "int" ||
-               type.Signature() == "long") {
-      const_type = RustNameOf(type, typenames, StorageMode::VALUE);
-    } else {
-      AIDL_FATAL(value) << "Unrecognized constant type: " << type.Signature();
-    }
-
-    *code_writer << "pub const " << constant->GetName() << ": " << const_type << " = "
-                 << constant->ValueString(ConstantValueDecoratorRef) << ";\n";
-  }
+  GenerateConstantDeclarations(*code_writer, *iface, typenames);
 
   GenerateMangledAlias(*code_writer, iface);
 
@@ -708,6 +714,7 @@ bool GenerateRustParcel(const string& filename, const ParcelableType* parcel,
 
   *code_writer << "#[derive(" << Join(derives, ", ") << ")]\n";
   GenerateParcelBody(*code_writer, parcel, typenames);
+  GenerateConstantDeclarations(*code_writer, *parcel, typenames);
   GenerateMangledAlias(*code_writer, parcel);
   GenerateParcelDefault(*code_writer, parcel);
   GenerateParcelSerialize(*code_writer, parcel, typenames);
