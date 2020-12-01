@@ -27,5 +27,7 @@ union Union {
     @nullable IBinder ibinder;
     @utf8InCpp List<String> ss;
     ByteEnum be;
+
+    const @utf8InCpp String S1 = "a string constant in union";
 }
 

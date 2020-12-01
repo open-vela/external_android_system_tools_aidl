@@ -307,9 +307,10 @@ static void GenerateSourceIncludes(CodeWriter& out, const AidlTypenames& types,
   });
 }
 
+template <typename TypeWithConstants>
 static void GenerateConstantDeclarations(CodeWriter& out, const AidlTypenames& types,
-                                         const AidlInterface& interface) {
-  for (const auto& constant : interface.GetConstantDeclarations()) {
+                                         const TypeWithConstants& type) {
+  for (const auto& constant : type.GetConstantDeclarations()) {
     const AidlTypeSpecifier& type = constant->GetType();
 
     if (type.Signature() == "String") {
@@ -321,15 +322,17 @@ static void GenerateConstantDeclarations(CodeWriter& out, const AidlTypenames& t
   }
 }
 
-static void GenerateConstantDefinitions(CodeWriter& out, const AidlInterface& interface) {
-  const std::string clazz = ClassName(interface, ClassNames::INTERFACE);
-
+template <typename TypeWithConstants>
+static void GenerateConstantDefinitions(CodeWriter& out, const TypeWithConstants& interface,
+                                        const std::string& clazz,
+                                        const std::string& tmpl_decl = "") {
   for (const auto& constant : interface.GetConstantDeclarations()) {
     const AidlConstantValue& value = constant->GetValue();
     AIDL_FATAL_IF(value.GetType() == AidlConstantValue::Type::UNARY ||
                       value.GetType() == AidlConstantValue::Type::BINARY,
                   value);
     if (value.GetType() == AidlConstantValue::Type::STRING) {
+      out << tmpl_decl;
       out << "const char* " << clazz << "::" << constant->GetName() << " = "
           << constant->ValueString(ConstantValueDecorator) << ";\n";
     }
@@ -684,7 +687,7 @@ void GenerateInterfaceSource(CodeWriter& out, const AidlTypenames& types,
   out << clazz << "::" << clazz << "() {}\n";
   out << clazz << "::~" << clazz << "() {}\n";
   out << "\n";
-  GenerateConstantDefinitions(out, defined_type);
+  GenerateConstantDefinitions(out, defined_type, clazz);
   out << "\n";
 
   out << "std::shared_ptr<" << clazz << "> " << clazz
@@ -1021,6 +1024,7 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
   out << "static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::"
       << (defined_type.IsVintfStability() ? "STABILITY_VINTF" : "STABILITY_LOCAL") << ";\n";
 
+  GenerateConstantDeclarations(out, types, defined_type);
   cpp::GenerateToString(out, defined_type);
 
   out.Dedent();
@@ -1049,6 +1053,8 @@ void GenerateParcelSource(CodeWriter& out, const AidlTypenames& types,
   out << "const char* " << clazz << "::" << kDescriptor << " = \""
       << defined_type.GetCanonicalName() << "\";\n";
   out << "\n";
+
+  GenerateConstantDefinitions(out, defined_type, clazz, cpp::TemplateDecl(defined_type));
 
   out << cpp::TemplateDecl(defined_type);
   out << "binder_status_t " << clazz << "::readFromParcel(const AParcel* parcel) {\n";
@@ -1153,6 +1159,7 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
 
   out << "static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::"
       << (defined_type.IsVintfStability() ? "STABILITY_VINTF" : "STABILITY_LOCAL") << ";\n";
+  GenerateConstantDeclarations(out, types, defined_type);
   cpp::GenerateToString(out, defined_type);
   out.Dedent();
   out << "private:\n";
@@ -1202,6 +1209,8 @@ void GenerateParcelSource(CodeWriter& out, const AidlTypenames& types,
   out << "const char* " << clazz << "::" << kDescriptor << " = \""
       << defined_type.GetCanonicalName() << "\";\n";
   out << "\n";
+
+  GenerateConstantDefinitions(out, defined_type, clazz, cpp::TemplateDecl(defined_type));
 
   out << cpp::TemplateDecl(defined_type);
   out << "binder_status_t " << clazz << "::readFromParcel(const AParcel* _parcel) {\n";

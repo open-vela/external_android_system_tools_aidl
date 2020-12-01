@@ -609,7 +609,11 @@ public class TestServiceClient {
         assertThat(p.const_exprs_9, is(1));
         assertThat(p.const_exprs_10, is(1));
 
+        assertThat(
+            p.shouldSetBit0AndBit2, is(StructuredParcelable.BIT0 | StructuredParcelable.BIT2));
+
         assertThat(p.u.getNs(), is(new int[] {1, 2, 3}));
+        assertThat(p.shouldBeConstS1.getS(), is(Union.S1));
 
         final String expected = "android.aidl.tests.StructuredParcelable{"
             + "shouldContainThreeFs: [17, 17, 17], "
@@ -663,7 +667,9 @@ public class TestServiceClient {
             + "const_exprs_10: 1, "
             + "addString1: hello world!, "
             + "addString2: The quick brown fox jumps over the lazy dog., "
-            + "u: android.aidl.tests.Union.ns([1, 2, 3])"
+            + "shouldSetBit0AndBit2: 5, "
+            + "u: android.aidl.tests.Union.ns([1, 2, 3]), "
+            + "shouldBeConstS1: android.aidl.tests.Union.s(a string constant in union)"
             + "}";
         assertThat(p.toString(), is(expected));
     }
