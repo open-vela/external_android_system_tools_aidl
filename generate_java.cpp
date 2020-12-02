@@ -562,18 +562,20 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
 
   parcel_class->elements.push_back(read_or_create_method);
 
-  auto constants =
-      CodeWriter::RunWith(generate_constant_declarations, parcel->GetConstantDeclarations());
+  string constants;
+  generate_constant_declarations(*CodeWriter::ForString(&constants), *parcel);
   parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(constants));
 
   if (parcel->JavaDerive("toString")) {
-    auto method = CodeWriter::RunWith(GenerateToString, *parcel, typenames);
-    parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(method));
+    string to_string;
+    GenerateToString(*CodeWriter::ForString(&to_string), *parcel, typenames);
+    parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(to_string));
   }
 
-  auto describe_contents_method =
-      CodeWriter::RunWith(GenerateParcelableDescribeContents, *parcel, typenames);
-  parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(describe_contents_method));
+  string describe_contents;
+  GenerateParcelableDescribeContents(*CodeWriter::ForString(&describe_contents), *parcel,
+                                     typenames);
+  parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(describe_contents));
 
   return parcel_class;
 }
@@ -815,7 +817,7 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   out.Dedent();
   out << "}\n\n";
 
-  generate_constant_declarations(out, decl->GetConstantDeclarations());
+  generate_constant_declarations(out, *decl);
 
   GenerateParcelableDescribeContents(out, *decl, typenames);
   out << "\n";
