@@ -300,10 +300,9 @@ parcelable_decl
     delete $2;
  }
  | PARCELABLE qualified_name optional_type_params '{' parcelable_members '}' {
-    $$ = new AidlStructuredParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), $5, $3);
+    $$ = new AidlStructuredParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), $3, $5);
     delete $1;
     delete $2;
-    delete $5;
  }
  | PARCELABLE qualified_name CPP_HEADER C_STR ';' {
     $$ = new AidlParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), $4->GetText());
@@ -349,12 +348,12 @@ variable_decl
 
 interface_decl
  : INTERFACE identifier '{' interface_members '}' {
-    $$ = new AidlInterface(loc(@1), $2->GetText(), $1->GetComments(), false, $4, ps->Package());
+    $$ = new AidlInterface(loc(@1), $2->GetText(), $1->GetComments(), false, ps->Package(), $4);
     delete $1;
     delete $2;
   }
  | ONEWAY INTERFACE identifier '{' interface_members '}' {
-    $$ = new AidlInterface(loc(@2), $3->GetText(),  $1->GetComments(), true, $5, ps->Package());
+    $$ = new AidlInterface(loc(@2), $3->GetText(),  $1->GetComments(), true, ps->Package(), $5);
     delete $1;
     delete $2;
     delete $3;
@@ -562,10 +561,9 @@ enum_decl
 
 union_decl
  : UNION qualified_name optional_type_params '{' parcelable_members '}' {
-    $$ = new AidlUnionDecl(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), $5, $3);
+    $$ = new AidlUnionDecl(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), $3, $5);
     delete $1;
     delete $2;
-    delete $5;
   }
  ;
 
