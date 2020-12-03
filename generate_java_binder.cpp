@@ -386,11 +386,20 @@ static void generate_write_to_parcel(const AidlTypeSpecifier& type,
   addTo->Add(std::make_shared<LiteralStatement>(code));
 }
 
-static void generate_constant(Class* interface, const std::string& type, const std::string& name,
-                              const std::string& value) {
-  auto code =
-      StringPrintf("public static final %s %s = %s;\n", type.c_str(), name.c_str(), value.c_str());
-  interface->elements.push_back(std::make_shared<LiteralClassElement>(code));
+void generate_constant_declarations(
+    CodeWriter& out, const std::vector<std::unique_ptr<AidlConstantDeclaration>>& constants) {
+  for (const auto& constant : constants) {
+    const AidlTypeSpecifier& type = constant->GetType();
+    auto comment = base::Trim(constant->GetType().GetComments());
+    if (comment.length() != 0) {
+      out << comment << "\n";
+    }
+    for (const auto& annotation : generate_java_annotations(constant->GetType())) {
+      out << annotation << "\n";
+    }
+    out << "public static final " << type.Signature() << " " << constant->GetName() << " = "
+        << constant->ValueString(ConstantValueDecorator) << ";\n";
+  }
 }
 
 static std::shared_ptr<Method> generate_interface_method(const AidlMethod& method,
@@ -977,7 +986,7 @@ static void compute_outline_methods(const AidlInterface* iface,
     stub->all_method_count = iface->GetMethods().size();
     std::vector<const AidlMethod*> methods;
     methods.reserve(iface->GetMethods().size());
-    for (const std::unique_ptr<AidlMethod>& ptr : iface->GetMethods()) {
+    for (const auto& ptr : iface->GetMethods()) {
       methods.push_back(ptr.get());
     }
 
@@ -1027,7 +1036,7 @@ static shared_ptr<Class> generate_default_impl_class(const AidlInterface& iface,
 
   for (const auto& m : iface.GetMethods()) {
     if (m->IsUserDefined()) {
-      default_class->elements.emplace_back(generate_default_impl_method(*m.get(), typenames));
+      default_class->elements.emplace_back(generate_default_impl_method(*m, typenames));
     } else {
       // These are called only when the remote side does not implement these
       // methods, which is normally impossible, because these methods are
@@ -1113,21 +1122,9 @@ std::unique_ptr<Class> generate_binder_interface_class(const AidlInterface* ifac
   generate_interface_descriptors(options, iface, interface.get(), stub, proxy);
 
   // all the declared constants of the interface
-  for (const auto& constant : iface->GetConstantDeclarations()) {
-    const AidlTypeSpecifier& type = constant->GetType();
-    auto comment = constant->GetType().GetComments();
-    if (comment.length() != 0) {
-      auto code = StringPrintf("%s\n", comment.c_str());
-      interface->elements.push_back(std::make_shared<LiteralClassElement>(code));
-    }
-    for (const std::string& annotation : generate_java_annotations(constant->GetType())) {
-      auto code = StringPrintf("%s\n", annotation.c_str());
-      interface->elements.push_back(std::make_shared<LiteralClassElement>(code));
-    }
-
-    generate_constant(interface.get(), type.Signature(), constant->GetName(),
-                      constant->ValueString(ConstantValueDecorator));
-  }
+  auto constants =
+      CodeWriter::RunWith(generate_constant_declarations, iface->GetConstantDeclarations());
+  interface->elements.push_back(std::make_shared<LiteralClassElement>(constants));
 
   // all the declared methods of the interface
 
