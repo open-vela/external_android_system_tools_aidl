@@ -361,10 +361,30 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
 std::string AidlConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value);
 
 class AidlConstantValue;
+class AidlMethod;
+class AidlConstantDeclaration;
+class AidlVariableDeclaration;
+
+class AidlMember : public AidlNode {
+ public:
+  AidlMember(const AidlLocation& location);
+  virtual ~AidlMember() = default;
+
+  // non-copyable, non-movable
+  AidlMember(const AidlMember&) = delete;
+  AidlMember(AidlMember&&) = delete;
+  AidlMember& operator=(const AidlMember&) = delete;
+  AidlMember& operator=(AidlMember&&) = delete;
+
+  virtual AidlMethod* AsMethod() { return nullptr; }
+  virtual AidlConstantDeclaration* AsConstantDeclaration() { return nullptr; }
+  virtual AidlVariableDeclaration* AsVariableDeclaration() { return nullptr; }
+};
+
 // TODO: This class is used for method arguments and also parcelable fields,
 // and it should be split up since default values don't apply to method
 // arguments
-class AidlVariableDeclaration : public AidlNode {
+class AidlVariableDeclaration : public AidlMember {
  public:
   AidlVariableDeclaration(const AidlLocation& location, AidlTypeSpecifier* type,
                           const std::string& name);
@@ -377,6 +397,8 @@ class AidlVariableDeclaration : public AidlNode {
   AidlVariableDeclaration(AidlVariableDeclaration&&) = delete;
   AidlVariableDeclaration& operator=(const AidlVariableDeclaration&) = delete;
   AidlVariableDeclaration& operator=(AidlVariableDeclaration&&) = delete;
+
+  AidlVariableDeclaration* AsVariableDeclaration() override { return this; }
 
   std::string GetName() const { return name_; }
   std::string GetCapitalizedName() const;
@@ -442,24 +464,6 @@ class AidlArgument : public AidlVariableDeclaration {
  private:
   Direction direction_;
   bool direction_specified_;
-};
-
-class AidlMethod;
-class AidlConstantDeclaration;
-class AidlEnumDeclaration;
-class AidlMember : public AidlNode {
- public:
-  AidlMember(const AidlLocation& location);
-  virtual ~AidlMember() = default;
-
-  // non-copyable, non-movable
-  AidlMember(const AidlMember&) = delete;
-  AidlMember(AidlMember&&) = delete;
-  AidlMember& operator=(const AidlMember&) = delete;
-  AidlMember& operator=(AidlMember&&) = delete;
-
-  virtual AidlMethod* AsMethod() { return nullptr; }
-  virtual AidlConstantDeclaration* AsConstantDeclaration() { return nullptr; }
 };
 
 class AidlUnaryConstExpression;
@@ -705,12 +709,8 @@ class AidlDefinedType;
 class AidlInterface;
 class AidlParcelable;
 class AidlStructuredParcelable;
-
-class AidlInterface;
-class AidlParcelable;
-class AidlStructuredParcelable;
-
 class AidlUnionDecl;
+
 // AidlDefinedType represents either an interface, parcelable, or enum that is
 // defined in the source file.
 class AidlDefinedType : public AidlAnnotatable {
@@ -821,13 +821,15 @@ class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::s
   std::string cpp_header_;
 };
 
-class AidlWithFields {
+class AidlWithMembers {
  public:
-  AidlWithFields(std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables)
-      : variables_(std::move(*variables)) {}
+  AidlWithMembers(std::vector<std::unique_ptr<AidlMember>>* members);
 
   const std::vector<std::unique_ptr<AidlVariableDeclaration>>& GetFields() const {
     return variables_;
+  }
+  const std::vector<std::unique_ptr<AidlConstantDeclaration>>& GetConstantDeclarations() const {
+    return constants_;
   }
 
  protected:
@@ -835,14 +837,15 @@ class AidlWithFields {
   bool CheckValidForGetterNames(const AidlParcelable& parcel) const;
 
  private:
-  const std::vector<std::unique_ptr<AidlVariableDeclaration>> variables_;
+  std::vector<std::unique_ptr<AidlVariableDeclaration>> variables_;
+  std::vector<std::unique_ptr<AidlConstantDeclaration>> constants_;
 };
 
-class AidlStructuredParcelable : public AidlParcelable, public AidlWithFields {
+class AidlStructuredParcelable : public AidlParcelable, public AidlWithMembers {
  public:
   AidlStructuredParcelable(const AidlLocation& location, const std::string& name,
                            const std::string& package, const std::string& comments,
-                           std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables,
+                           std::vector<std::unique_ptr<AidlMember>>* members,
                            std::vector<std::string>* type_params);
   virtual ~AidlStructuredParcelable() = default;
 
@@ -927,11 +930,10 @@ class AidlEnumDeclaration : public AidlDefinedType {
   std::unique_ptr<const AidlTypeSpecifier> backing_type_;
 };
 
-class AidlUnionDecl : public AidlParcelable, public AidlWithFields {
+class AidlUnionDecl : public AidlParcelable, public AidlWithMembers {
  public:
   AidlUnionDecl(const AidlLocation& location, const std::string& name, const std::string& package,
-                const std::string& comments,
-                std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables,
+                const std::string& comments, std::vector<std::unique_ptr<AidlMember>>* members,
                 std::vector<std::string>* type_params);
   virtual ~AidlUnionDecl() = default;
 
@@ -967,12 +969,12 @@ class AidlInterface final : public AidlDefinedType {
   AidlInterface& operator=(const AidlInterface&) = delete;
   AidlInterface& operator=(AidlInterface&&) = delete;
 
-  const std::vector<std::unique_ptr<AidlMethod>>& GetMethods() const
-      { return methods_; }
-  std::vector<std::unique_ptr<AidlMethod>>& GetMutableMethods() { return methods_; }
+  const std::vector<std::unique_ptr<AidlMethod>>& GetMethods() const { return methods_; }
   const std::vector<std::unique_ptr<AidlConstantDeclaration>>& GetConstantDeclarations() const {
     return constants_;
   }
+
+  void AddMethod(std::unique_ptr<AidlMethod> method) { methods_.push_back(std::move(method)); }
 
   const AidlInterface* AsInterface() const override { return this; }
   std::string GetPreprocessDeclarationName() const override { return "interface"; }

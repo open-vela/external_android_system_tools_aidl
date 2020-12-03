@@ -165,6 +165,12 @@ parcelable StructuredParcelable {
     @utf8InCpp String addString1 = "hello" + " world!";
     @utf8InCpp String addString2 = "The quick brown fox jumps " + "over the lazy dog.";
 
+    const int BIT0 = 0x1;
+    const int BIT1 = 0x1 << 1;
+    const int BIT2 = 0x1 << 2;
+    int shouldSetBit0AndBit2;
+
     @nullable Union u;
+    @nullable Union shouldBeConstS1;
 }
 

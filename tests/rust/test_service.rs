@@ -270,8 +270,10 @@ impl ITestService::ITestService for TestService {
         parcelable.const_exprs_9 = ConstantExpressionEnum::hexInt32_3;
         parcelable.const_exprs_10 = ConstantExpressionEnum::hexInt64_1;
 
-        parcelable.u = Some(Union::Union::Ns(vec![1, 2, 3]));
+        parcelable.shouldSetBit0AndBit2 = StructuredParcelable::BIT0 | StructuredParcelable::BIT2;
 
+        parcelable.u = Some(Union::Union::Ns(vec![1, 2, 3]));
+        parcelable.shouldBeConstS1 = Some(Union::Union::S(Union::S1.to_string()));
         Ok(())
     }
 
