@@ -595,7 +595,7 @@ AidlVariableDeclaration::AidlVariableDeclaration(const AidlLocation& location,
 AidlVariableDeclaration::AidlVariableDeclaration(const AidlLocation& location,
                                                  AidlTypeSpecifier* type, const std::string& name,
                                                  AidlConstantValue* default_value)
-    : AidlNode(location),
+    : AidlMember(location),
       type_(type),
       name_(name),
       default_user_specified_(true),
@@ -860,8 +860,21 @@ void AidlParcelable::Dump(CodeWriter* writer) const {
   writer->Write("parcelable %s ;\n", GetName().c_str());
 }
 
-bool AidlWithFields::CheckValid(const AidlParcelable& parcel,
-                                const AidlTypenames& typenames) const {
+AidlWithMembers::AidlWithMembers(vector<unique_ptr<AidlMember>>* members) {
+  for (auto& m : *members) {
+    if (auto constant = m->AsConstantDeclaration(); constant) {
+      constants_.emplace_back(constant);
+    } else if (auto variable = m->AsVariableDeclaration(); variable) {
+      variables_.emplace_back(variable);
+    } else {
+      AIDL_FATAL(*m);
+    }
+    m.release();
+  }
+}
+
+bool AidlWithMembers::CheckValid(const AidlParcelable& parcel,
+                                 const AidlTypenames& typenames) const {
   bool success = true;
 
   for (const auto& v : GetFields()) {
@@ -891,10 +904,20 @@ bool AidlWithFields::CheckValid(const AidlParcelable& parcel,
     }
   }
 
+  set<string> constant_names;
+  for (const auto& constant : GetConstantDeclarations()) {
+    if (constant_names.count(constant->GetName()) > 0) {
+      AIDL_ERROR(constant) << "Found duplicate constant name '" << constant->GetName() << "'";
+      success = false;
+    }
+    constant_names.insert(constant->GetName());
+    success = success && constant->CheckValid(typenames);
+  }
+
   return success;
 }
 
-bool AidlWithFields::CheckValidForGetterNames(const AidlParcelable& parcel) const {
+bool AidlWithMembers::CheckValidForGetterNames(const AidlParcelable& parcel) const {
   bool success = true;
   std::set<std::string> getters;
   for (const auto& v : GetFields()) {
@@ -910,10 +933,10 @@ bool AidlWithFields::CheckValidForGetterNames(const AidlParcelable& parcel) cons
 
 AidlStructuredParcelable::AidlStructuredParcelable(
     const AidlLocation& location, const std::string& name, const std::string& package,
-    const std::string& comments, std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables,
+    const std::string& comments, std::vector<std::unique_ptr<AidlMember>>* members,
     std::vector<std::string>* type_params)
     : AidlParcelable(location, name, package, comments, "" /*cpp_header*/, type_params),
-      AidlWithFields(variables) {}
+      AidlWithMembers(members) {}
 
 void AidlStructuredParcelable::Dump(CodeWriter* writer) const {
   DumpHeader(writer);
@@ -924,6 +947,12 @@ void AidlStructuredParcelable::Dump(CodeWriter* writer) const {
       AddHideComment(writer);
     }
     writer->Write("%s;\n", field->ToString().c_str());
+  }
+  for (const auto& constdecl : GetConstantDeclarations()) {
+    if (constdecl->GetType().IsHidden()) {
+      AddHideComment(writer);
+    }
+    writer->Write("%s;\n", constdecl->ToString().c_str());
   }
   writer->Dedent();
   writer->Write("}\n");
@@ -944,7 +973,7 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
   if (!AidlParcelable::CheckValid(typenames)) {
     return false;
   }
-  if (!AidlWithFields::CheckValid(*this, typenames)) {
+  if (!AidlWithMembers::CheckValid(*this, typenames)) {
     return false;
   }
 
@@ -1170,10 +1199,10 @@ void AidlEnumDeclaration::Dump(CodeWriter* writer) const {
 
 AidlUnionDecl::AidlUnionDecl(const AidlLocation& location, const std::string& name,
                              const std::string& package, const std::string& comments,
-                             std::vector<std::unique_ptr<AidlVariableDeclaration>>* variables,
+                             std::vector<std::unique_ptr<AidlMember>>* members,
                              std::vector<std::string>* type_params)
     : AidlParcelable(location, name, package, comments, "" /*cpp_header*/, type_params),
-      AidlWithFields(variables) {}
+      AidlWithMembers(members) {}
 
 std::set<AidlAnnotation::Type> AidlUnionDecl::GetSupportedAnnotations() const {
   return {AidlAnnotation::Type::VINTF_STABILITY,     AidlAnnotation::Type::HIDE,
@@ -1191,6 +1220,12 @@ void AidlUnionDecl::Dump(CodeWriter* writer) const {
     }
     writer->Write("%s;\n", field->ToString().c_str());
   }
+  for (const auto& constdecl : GetConstantDeclarations()) {
+    if (constdecl->GetType().IsHidden()) {
+      AddHideComment(writer);
+    }
+    writer->Write("%s;\n", constdecl->ToString().c_str());
+  }
   writer->Dedent();
   writer->Write("}\n");
 }
@@ -1200,7 +1235,7 @@ bool AidlUnionDecl::CheckValid(const AidlTypenames& typenames) const {
   if (!AidlParcelable::CheckValid(typenames)) {
     return false;
   }
-  if (!AidlWithFields::CheckValid(*this, typenames)) {
+  if (!AidlWithMembers::CheckValid(*this, typenames)) {
     return false;
   }
 
@@ -1402,7 +1437,7 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
 
   bool success = true;
   set<string> constant_names;
-  for (const std::unique_ptr<AidlConstantDeclaration>& constant : GetConstantDeclarations()) {
+  for (const auto& constant : GetConstantDeclarations()) {
     if (constant_names.count(constant->GetName()) > 0) {
       AIDL_ERROR(constant) << "Found duplicate constant name '" << constant->GetName() << "'";
       success = false;

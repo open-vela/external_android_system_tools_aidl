@@ -101,6 +101,39 @@ static bool are_compatible_types(const AidlTypeSpecifier& older, const AidlTypeS
   return compatible;
 }
 
+template <typename TypeWithConstants>
+static bool are_compatible_constants(const TypeWithConstants& older,
+                                     const TypeWithConstants& newer) {
+  bool compatible = true;
+
+  map<string, AidlConstantDeclaration*> new_constdecls;
+  for (const auto& c : newer.GetConstantDeclarations()) {
+    new_constdecls[c->GetName()] = &*c;
+  }
+
+  for (const auto& old_c : older.GetConstantDeclarations()) {
+    const auto found = new_constdecls.find(old_c->GetName());
+    if (found == new_constdecls.end()) {
+      AIDL_ERROR(old_c) << "Removed constant declaration: " << older.GetCanonicalName() << "."
+                        << old_c->GetName();
+      compatible = false;
+      continue;
+    }
+
+    const auto new_c = found->second;
+    compatible &= are_compatible_types(old_c->GetType(), new_c->GetType());
+
+    const string old_value = old_c->ValueString(AidlConstantValueDecorator);
+    const string new_value = new_c->ValueString(AidlConstantValueDecorator);
+    if (old_value != new_value) {
+      AIDL_ERROR(newer) << "Changed constant value: " << older.GetCanonicalName() << "."
+                        << old_c->GetName() << " from " << old_value << " to " << new_value << ".";
+      compatible = false;
+    }
+  }
+  return compatible;
+}
+
 static bool are_compatible_interfaces(const AidlInterface& older, const AidlInterface& newer) {
   bool compatible = true;
 
@@ -155,31 +188,8 @@ static bool are_compatible_interfaces(const AidlInterface& older, const AidlInte
     }
   }
 
-  map<string, AidlConstantDeclaration*> new_constdecls;
-  for (const auto& c : newer.AsInterface()->GetConstantDeclarations()) {
-    new_constdecls.emplace(c->GetName(), c.get());
-  }
+  compatible = are_compatible_constants(older, newer) && compatible;
 
-  for (const auto& old_c : older.AsInterface()->GetConstantDeclarations()) {
-    const auto found = new_constdecls.find(old_c->GetName());
-    if (found == new_constdecls.end()) {
-      AIDL_ERROR(old_c) << "Removed constant declaration: " << older.GetCanonicalName() << "."
-                        << old_c->GetName();
-      compatible = false;
-      continue;
-    }
-
-    const auto new_c = found->second;
-    compatible &= are_compatible_types(old_c->GetType(), new_c->GetType());
-
-    const string old_value = old_c->ValueString(AidlConstantValueDecorator);
-    const string new_value = new_c->ValueString(AidlConstantValueDecorator);
-    if (old_value != new_value) {
-      AIDL_ERROR(newer) << "Changed constant value: " << older.GetCanonicalName() << "."
-                        << old_c->GetName() << " from " << old_value << " to " << new_value << ".";
-      compatible = false;
-    }
-  }
   return compatible;
 }
 
@@ -310,6 +320,9 @@ static bool are_compatible_parcelables(const ParcelableType& older, const AidlTy
            "cause a semantic change to this parcelable.";
     compatible = false;
   }
+
+  compatible = are_compatible_constants(older, newer) && compatible;
+
   return compatible;
 }
 

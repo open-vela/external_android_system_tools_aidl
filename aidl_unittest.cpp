@@ -1378,6 +1378,24 @@ TEST_P(AidlTest, RejectNullableParcelableHolderField) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
+TEST_P(AidlTest, ParcelablesWithConstants) {
+  io_delegate_.SetFileContents("Foo.aidl", "parcelable Foo { const int BIT = 0x1 << 3; }");
+  Options options =
+      Options::From("aidl Foo.aidl --lang=" + Options::LanguageToString(GetLanguage()));
+  CaptureStderr();
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+}
+
+TEST_P(AidlTest, UnionWithConstants) {
+  io_delegate_.SetFileContents("Foo.aidl", "union Foo { const int BIT = 0x1 << 3; int n; }");
+  Options options =
+      Options::From("aidl Foo.aidl --lang=" + Options::LanguageToString(GetLanguage()));
+  CaptureStderr();
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+}
+
 TEST_F(AidlTest, ApiDump) {
   io_delegate_.SetFileContents(
       "foo/bar/IFoo.aidl",
@@ -3733,6 +3751,44 @@ TEST_P(AidlTest, GenericStructuredParcelable) {
   CaptureStderr();
   EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_F(AidlTest, GenericStructuredParcelableWithStringConstants_Cpp) {
+  io_delegate_.SetFileContents("Foo.aidl",
+                               "parcelable Foo<T, U> { int a; const String s = \"\"; }");
+  Options options =
+      Options::From("aidl Foo.aidl --lang=" + Options::LanguageToString(Options::Language::CPP) +
+                    " -o out -h out");
+  const string expected_stderr = "";
+  CaptureStderr();
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/Foo.h", &code));
+  EXPECT_THAT(code, testing::HasSubstr(R"--(template <typename T, typename U>
+const ::android::String16& Foo<T,U>::s() {
+  static const ::android::String16 value(::android::String16(""));
+  return value;
+})--"));
+}
+
+TEST_F(AidlTest, GenericStructuredParcelableWithStringConstants_Ndk) {
+  io_delegate_.SetFileContents("Foo.aidl",
+                               "parcelable Foo<T, U> { int a; const String s = \"\"; }");
+  Options options =
+      Options::From("aidl Foo.aidl --lang=" + Options::LanguageToString(Options::Language::NDK) +
+                    " -o out -h out");
+  const string expected_stderr = "";
+  CaptureStderr();
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/aidl/Foo.h", &code));
+  EXPECT_THAT(code, testing::HasSubstr(R"--(template <typename T, typename U>
+const char* Foo<T, U>::s = "";
+)--"));
 }
 
 TEST_F(AidlTest, NestedTypeArgs) {
