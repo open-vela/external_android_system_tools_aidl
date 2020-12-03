@@ -389,11 +389,13 @@ bool parse_preprocessed_file(const IoDelegate& io_delegate, const string& filena
       AidlParcelable* doc = new AidlParcelable(location, class_name, package, "" /* comments */);
       typenames->AddPreprocessedType(unique_ptr<AidlParcelable>(doc));
     } else if (decl == "structured_parcelable") {
+      auto temp = new std::vector<std::unique_ptr<AidlMember>>();
       AidlStructuredParcelable* doc = new AidlStructuredParcelable(
-          location, class_name, package, "" /* comments */, nullptr, nullptr);
+          location, class_name, package, "" /* comments */, temp, nullptr);
       typenames->AddPreprocessedType(unique_ptr<AidlStructuredParcelable>(doc));
     } else if (decl == "interface") {
-      AidlInterface* doc = new AidlInterface(location, class_name, "", false, package, nullptr);
+      auto temp = new std::vector<std::unique_ptr<AidlMember>>();
+      AidlInterface* doc = new AidlInterface(location, class_name, "", false, temp, package);
       typenames->AddPreprocessedType(unique_ptr<AidlInterface>(doc));
     } else {
       success = false;
@@ -725,17 +727,23 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
                 << "the receiving side. Consider switching to an array or a generic List/Map.";
           }
         };
+    const AidlInterface* iface = type.AsInterface();
+    const AidlWithMembers* data_structure = type.AsStructuredParcelable();
+    if (!data_structure) {
+      data_structure = type.AsUnionDeclaration();
+    }
 
-    if (type.AsInterface() && options.IsStructured()) {
-      for (const auto& method : type.GetMethods()) {
+    if (iface != nullptr && options.IsStructured()) {
+      for (const auto& method : iface->GetMethods()) {
         check_untyped_container(method->GetType(), method.get());
         for (const auto& arg : method->GetArguments()) {
           check_untyped_container(arg->GetType(), method.get());
         }
       }
-    }
-    for (const auto& field : type.GetFields()) {
-      check_untyped_container(field->GetType(), field.get());
+    } else if (data_structure != nullptr) {
+      for (const auto& field : data_structure->GetFields()) {
+        check_untyped_container(field->GetType(), field.get());
+      }
     }
   });
 
