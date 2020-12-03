@@ -44,8 +44,7 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
 
 std::vector<std::string> generate_java_annotations(const AidlAnnotatable& a);
 
-void generate_constant_declarations(
-    CodeWriter& out, const std::vector<std::unique_ptr<AidlConstantDeclaration>>& constants);
+void generate_constant_declarations(CodeWriter& out, const AidlDefinedType& type);
 
 }  // namespace java
 }  // namespace aidl
