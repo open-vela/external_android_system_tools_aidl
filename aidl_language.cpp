@@ -336,8 +336,15 @@ bool AidlAnnotatable::IsHide() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::HIDE);
 }
 
-const AidlAnnotation* AidlAnnotatable::JavaDerive() const {
-  return GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_DERIVE);
+bool AidlAnnotatable::JavaDerive(const std::string& method) const {
+  auto annotation = GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_DERIVE);
+  if (annotation != nullptr) {
+    auto params = annotation->AnnotationParams(AidlConstantValueDecorator);
+    if (auto it = params.find(method); it != params.end()) {
+      return it->second == "true";
+    }
+  }
+  return false;
 }
 
 std::string AidlAnnotatable::GetDescriptor() const {
@@ -767,19 +774,38 @@ string AidlMethod::ToString() const {
 }
 
 AidlDefinedType::AidlDefinedType(const AidlLocation& location, const std::string& name,
-                                 const std::string& comments, const std::string& package)
+                                 const std::string& comments, const std::string& package,
+                                 std::vector<std::unique_ptr<AidlMember>>* members)
     : AidlAnnotatable(location),
       name_(name),
       comments_(comments),
       package_(package),
       split_package_(package.empty() ? std::vector<std::string>()
-                                     : android::base::Split(package, ".")) {}
+                                     : android::base::Split(package, ".")) {
+  if (members) {
+    for (auto& m : *members) {
+      if (auto constant = m->AsConstantDeclaration(); constant) {
+        constants_.emplace_back(constant);
+      } else if (auto variable = m->AsVariableDeclaration(); variable) {
+        variables_.emplace_back(variable);
+      } else if (auto method = m->AsMethod(); method) {
+        methods_.emplace_back(method);
+      } else {
+        AIDL_FATAL(*m);
+      }
+      members_.push_back(m.release());
+    }
+    delete members;
+  }
+}
 
 bool AidlDefinedType::CheckValid(const AidlTypenames& typenames) const {
   if (!AidlAnnotatable::CheckValid(typenames)) {
     return false;
   }
-
+  if (!CheckValidWithMembers(typenames)) {
+    return false;
+  }
   return true;
 }
 
@@ -801,10 +827,67 @@ void AidlDefinedType::DumpHeader(CodeWriter* writer) const {
   DumpAnnotations(writer);
 }
 
+bool AidlDefinedType::CheckValidWithMembers(const AidlTypenames& typenames) const {
+  bool success = true;
+
+  for (const auto& v : GetFields()) {
+    const bool field_valid = v->CheckValid(typenames);
+    success = success && field_valid;
+  }
+
+  // field names should be unique
+  std::set<std::string> fieldnames;
+  for (const auto& v : GetFields()) {
+    bool duplicated = !fieldnames.emplace(v->GetName()).second;
+    if (duplicated) {
+      AIDL_ERROR(v) << "'" << GetName() << "' has duplicate field name '" << v->GetName() << "'";
+      success = false;
+    }
+  }
+
+  // immutable parcelables should have immutable fields.
+  if (IsJavaOnlyImmutable()) {
+    for (const auto& v : GetFields()) {
+      if (!typenames.CanBeJavaOnlyImmutable(v->GetType())) {
+        AIDL_ERROR(v) << "The @JavaOnlyImmutable '" << GetName() << "' has a "
+                      << "non-immutable field named '" << v->GetName() << "'.";
+        success = false;
+      }
+    }
+  }
+
+  set<string> constant_names;
+  for (const auto& constant : GetConstantDeclarations()) {
+    if (constant_names.count(constant->GetName()) > 0) {
+      AIDL_ERROR(constant) << "Found duplicate constant name '" << constant->GetName() << "'";
+      success = false;
+    }
+    constant_names.insert(constant->GetName());
+    success = success && constant->CheckValid(typenames);
+  }
+
+  return success;
+}
+
+bool AidlDefinedType::CheckValidForGetterNames() const {
+  bool success = true;
+  std::set<std::string> getters;
+  for (const auto& v : GetFields()) {
+    bool duplicated = !getters.emplace(v->GetCapitalizedName()).second;
+    if (duplicated) {
+      AIDL_ERROR(v) << "'" << GetName() << "' has duplicate field name '" << v->GetName()
+                    << "' after capitalizing the first letter";
+      success = false;
+    }
+  }
+  return success;
+}
+
 AidlParcelable::AidlParcelable(const AidlLocation& location, const std::string& name,
                                const std::string& package, const std::string& comments,
-                               const std::string& cpp_header, std::vector<std::string>* type_params)
-    : AidlDefinedType(location, name, comments, package),
+                               const std::string& cpp_header, std::vector<std::string>* type_params,
+                               std::vector<std::unique_ptr<AidlMember>>* members)
+    : AidlDefinedType(location, name, comments, package, members),
       AidlParameterizable<std::string>(type_params),
       cpp_header_(cpp_header) {
   // Strip off quotation marks if we actually have a cpp header.
@@ -860,83 +943,11 @@ void AidlParcelable::Dump(CodeWriter* writer) const {
   writer->Write("parcelable %s ;\n", GetName().c_str());
 }
 
-AidlWithMembers::AidlWithMembers(vector<unique_ptr<AidlMember>>* members) {
-  for (auto& m : *members) {
-    if (auto constant = m->AsConstantDeclaration(); constant) {
-      constants_.emplace_back(constant);
-    } else if (auto variable = m->AsVariableDeclaration(); variable) {
-      variables_.emplace_back(variable);
-    } else {
-      AIDL_FATAL(*m);
-    }
-    m.release();
-  }
-}
-
-bool AidlWithMembers::CheckValid(const AidlParcelable& parcel,
-                                 const AidlTypenames& typenames) const {
-  bool success = true;
-
-  for (const auto& v : GetFields()) {
-    const bool field_valid = v->CheckValid(typenames);
-    success = success && field_valid;
-  }
-
-  // field names should be unique
-  std::set<std::string> fieldnames;
-  for (const auto& v : GetFields()) {
-    bool duplicated = !fieldnames.emplace(v->GetName()).second;
-    if (duplicated) {
-      AIDL_ERROR(v) << "'" << parcel.GetName() << "' has duplicate field name '" << v->GetName()
-                    << "'";
-      success = false;
-    }
-  }
-
-  // immutable parcelables should have immutable fields.
-  if (parcel.IsJavaOnlyImmutable()) {
-    for (const auto& v : GetFields()) {
-      if (!typenames.CanBeJavaOnlyImmutable(v->GetType())) {
-        AIDL_ERROR(v) << "The @JavaOnlyImmutable '" << parcel.GetName() << "' has a "
-                      << "non-immutable field named '" << v->GetName() << "'.";
-        success = false;
-      }
-    }
-  }
-
-  set<string> constant_names;
-  for (const auto& constant : GetConstantDeclarations()) {
-    if (constant_names.count(constant->GetName()) > 0) {
-      AIDL_ERROR(constant) << "Found duplicate constant name '" << constant->GetName() << "'";
-      success = false;
-    }
-    constant_names.insert(constant->GetName());
-    success = success && constant->CheckValid(typenames);
-  }
-
-  return success;
-}
-
-bool AidlWithMembers::CheckValidForGetterNames(const AidlParcelable& parcel) const {
-  bool success = true;
-  std::set<std::string> getters;
-  for (const auto& v : GetFields()) {
-    bool duplicated = !getters.emplace(v->GetCapitalizedName()).second;
-    if (duplicated) {
-      AIDL_ERROR(v) << "'" << parcel.GetName() << "' has duplicate field name '" << v->GetName()
-                    << "' after capitalizing the first letter";
-      success = false;
-    }
-  }
-  return success;
-}
-
 AidlStructuredParcelable::AidlStructuredParcelable(
     const AidlLocation& location, const std::string& name, const std::string& package,
-    const std::string& comments, std::vector<std::unique_ptr<AidlMember>>* members,
-    std::vector<std::string>* type_params)
-    : AidlParcelable(location, name, package, comments, "" /*cpp_header*/, type_params),
-      AidlWithMembers(members) {}
+    const std::string& comments, std::vector<std::string>* type_params,
+    std::vector<std::unique_ptr<AidlMember>>* members)
+    : AidlParcelable(location, name, package, comments, "" /*cpp_header*/, type_params, members) {}
 
 void AidlStructuredParcelable::Dump(CodeWriter* writer) const {
   DumpHeader(writer);
@@ -973,9 +984,6 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
   if (!AidlParcelable::CheckValid(typenames)) {
     return false;
   }
-  if (!AidlWithMembers::CheckValid(*this, typenames)) {
-    return false;
-  }
 
   bool success = true;
 
@@ -991,7 +999,7 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
 
   if (IsJavaOnlyImmutable()) {
     // Immutable parcelables provide getters
-    if (!CheckValidForGetterNames(*this)) {
+    if (!CheckValidForGetterNames()) {
       success = false;
     }
   }
@@ -1136,7 +1144,8 @@ string AidlEnumerator::ValueString(const AidlTypeSpecifier& backing_type,
 AidlEnumDeclaration::AidlEnumDeclaration(const AidlLocation& location, const std::string& name,
                                          std::vector<std::unique_ptr<AidlEnumerator>>* enumerators,
                                          const std::string& package, const std::string& comments)
-    : AidlDefinedType(location, name, comments, package), enumerators_(std::move(*enumerators)) {}
+    : AidlDefinedType(location, name, comments, package, nullptr),
+      enumerators_(std::move(*enumerators)) {}
 
 void AidlEnumDeclaration::SetBackingType(std::unique_ptr<const AidlTypeSpecifier> type) {
   backing_type_ = std::move(type);
@@ -1174,6 +1183,10 @@ bool AidlEnumDeclaration::CheckValid(const AidlTypenames& typenames) const {
   if (!AidlDefinedType::CheckValid(typenames)) {
     return false;
   }
+  if (!GetMembers().empty()) {
+    AIDL_ERROR(this) << "Enum doesn't support fields/constants/methods.";
+    return false;
+  }
   if (backing_type_ == nullptr) {
     AIDL_ERROR(this) << "Enum declaration missing backing type.";
     return false;
@@ -1199,10 +1212,9 @@ void AidlEnumDeclaration::Dump(CodeWriter* writer) const {
 
 AidlUnionDecl::AidlUnionDecl(const AidlLocation& location, const std::string& name,
                              const std::string& package, const std::string& comments,
-                             std::vector<std::unique_ptr<AidlMember>>* members,
-                             std::vector<std::string>* type_params)
-    : AidlParcelable(location, name, package, comments, "" /*cpp_header*/, type_params),
-      AidlWithMembers(members) {}
+                             std::vector<std::string>* type_params,
+                             std::vector<std::unique_ptr<AidlMember>>* members)
+    : AidlParcelable(location, name, package, comments, "" /*cpp_header*/, type_params, members) {}
 
 std::set<AidlAnnotation::Type> AidlUnionDecl::GetSupportedAnnotations() const {
   return {AidlAnnotation::Type::VINTF_STABILITY,     AidlAnnotation::Type::HIDE,
@@ -1235,12 +1247,9 @@ bool AidlUnionDecl::CheckValid(const AidlTypenames& typenames) const {
   if (!AidlParcelable::CheckValid(typenames)) {
     return false;
   }
-  if (!AidlWithMembers::CheckValid(*this, typenames)) {
-    return false;
-  }
 
   // unions provide getters always
-  if (!CheckValidForGetterNames(*this)) {
+  if (!CheckValidForGetterNames()) {
     return false;
   }
 
@@ -1295,28 +1304,12 @@ bool AidlInterface::LanguageSpecificCheckValid(const AidlTypenames& typenames,
 }
 
 AidlInterface::AidlInterface(const AidlLocation& location, const std::string& name,
-                             const std::string& comments, bool oneway,
-                             std::vector<std::unique_ptr<AidlMember>>* members,
-                             const std::string& package)
-    : AidlDefinedType(location, name, comments, package) {
-  for (auto& member : *members) {
-    AidlMember* local = member.release();
-    AidlMethod* method = local->AsMethod();
-    AidlConstantDeclaration* constant = local->AsConstantDeclaration();
-
-    AIDL_FATAL_IF(method != nullptr && constant != nullptr, member);
-
-    if (method) {
-      method->ApplyInterfaceOneway(oneway);
-      methods_.emplace_back(method);
-    } else if (constant) {
-      constants_.emplace_back(constant);
-    } else {
-      AIDL_FATAL(this) << "Member is neither method nor constant!";
-    }
+                             const std::string& comments, bool oneway, const std::string& package,
+                             std::vector<std::unique_ptr<AidlMember>>* members)
+    : AidlDefinedType(location, name, comments, package, members) {
+  for (auto& m : GetMethods()) {
+    m.get()->ApplyInterfaceOneway(oneway);
   }
-
-  delete members;
 }
 
 void AidlInterface::Dump(CodeWriter* writer) const {
