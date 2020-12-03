@@ -509,8 +509,7 @@ unique_ptr<Document> BuildClientSource(const AidlTypenames& typenames,
 
 namespace {
 
-template <typename TypeWithConstants>
-void BuildConstantDefinitions(const TypeWithConstants& type, const AidlTypenames& typenames,
+void BuildConstantDefinitions(const AidlDefinedType& type, const AidlTypenames& typenames,
                               const std::vector<std::string>& type_params,
                               const std::string& class_name,
                               vector<unique_ptr<Declaration>>& decls) {
@@ -529,8 +528,7 @@ void BuildConstantDefinitions(const TypeWithConstants& type, const AidlTypenames
   }
 }
 
-template <typename TypeWithConstants>
-void BuildConstantDeclarations(const TypeWithConstants& type, const AidlTypenames& typenames,
+void BuildConstantDeclarations(const AidlDefinedType& type, const AidlTypenames& typenames,
                                unique_ptr<ClassDecl>& cls, set<string>& includes) {
   std::vector<std::unique_ptr<Declaration>> string_constants;
   unique_ptr<Enum> byte_constant_enum{new Enum{"", "int8_t", false}};
