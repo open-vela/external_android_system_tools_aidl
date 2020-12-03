@@ -1092,6 +1092,9 @@ func (i *aidlInterface) checkImports(mctx android.BaseModuleContext) {
 		other := lookupInterface(anImport, mctx.Config())
 
 		if other == nil {
+			if mctx.Config().AllowMissingDependencies() {
+				continue
+			}
 			mctx.PropertyErrorf("imports", "Import does not exist: "+anImport)
 		}
 
