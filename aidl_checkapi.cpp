@@ -101,7 +101,9 @@ static bool are_compatible_types(const AidlTypeSpecifier& older, const AidlTypeS
   return compatible;
 }
 
-static bool are_compatible_constants(const AidlDefinedType& older, const AidlDefinedType& newer) {
+template <typename TypeWithConstants>
+static bool are_compatible_constants(const TypeWithConstants& older,
+                                     const TypeWithConstants& newer) {
   bool compatible = true;
 
   map<string, AidlConstantDeclaration*> new_constdecls;
@@ -212,8 +214,9 @@ static bool HasZeroEnumerator(const AidlEnumDeclaration& enum_decl) {
                      });
 }
 
-static bool are_compatible_parcelables(const AidlDefinedType& older, const AidlTypenames&,
-                                       const AidlDefinedType& newer,
+template <typename ParcelableType>
+static bool are_compatible_parcelables(const ParcelableType& older, const AidlTypenames&,
+                                       const ParcelableType& newer,
                                        const AidlTypenames& new_types) {
   const auto& old_fields = older.GetFields();
   const auto& new_fields = newer.GetFields();
