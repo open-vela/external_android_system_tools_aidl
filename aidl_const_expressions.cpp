@@ -494,6 +494,23 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
     AIDL_ERROR(this) << "Invalid constant value: " + value_;
     return "";
   }
+
+  const AidlDefinedType* defined_type = type.GetDefinedType();
+  if (defined_type && !type.IsArray()) {
+    const AidlEnumDeclaration* enum_type = defined_type->AsEnumDeclaration();
+    if (!enum_type) {
+      AIDL_ERROR(this) << "Invalid type (" << defined_type->GetCanonicalName()
+                       << ") for a const value(" << value_ << ")";
+      return "";
+    }
+    if (type_ != Type::REF) {
+      AIDL_ERROR(this) << "Invalid value (" << value_ << ") for enum "
+                       << enum_type->GetCanonicalName();
+      return "";
+    }
+    return decorator(type, value_);
+  }
+
   const string& type_string = type.GetName();
   int err = 0;
 
@@ -607,6 +624,7 @@ bool AidlConstantValue::CheckValid() const {
     case Type::ARRAY:      // fall-through
     case Type::CHARACTER:  // fall-through
     case Type::STRING:     // fall-through
+    case Type::REF:        // fall-through
     case Type::FLOATING:   // fall-through
     case Type::UNARY:      // fall-through
     case Type::BINARY:
@@ -714,6 +732,8 @@ string AidlConstantValue::ToString(Type type) {
       return "a literal char";
     case Type::STRING:
       return "a literal string";
+    case Type::REF:
+      return "a reference";
     case Type::FLOATING:
       return "a literal float";
     case Type::UNARY:
@@ -728,6 +748,106 @@ string AidlConstantValue::ToString(Type type) {
           << "aidl internal error: unknown constant type: " << static_cast<int>(type);
       return "";  // not reached
   }
+}
+
+AidlConstantReference::AidlConstantReference(const AidlLocation& location, const std::string& value,
+                                             const std::string& comments)
+    : AidlConstantValue(location, Type::REF, value), comments_(comments) {
+  const auto pos = value.find_last_of('.');
+  if (pos == string::npos) {
+    field_name_ = value;
+  } else {
+    ref_type_ =
+        std::make_unique<AidlTypeSpecifier>(location, value.substr(0, pos), false, nullptr, "");
+    field_name_ = value.substr(pos + 1);
+  }
+}
+
+bool AidlConstantReference::CheckValid() const {
+  if (is_evaluated_) return is_valid_;
+
+  if (!GetRefType() || !GetRefType()->GetDefinedType()) {
+    // This can happen when "const reference" is used in an unsupported way,
+    // but missed in checks there. It works as a safety net.
+    AIDL_ERROR(*this) << "Can't resolve the reference (" << value_ << ")";
+    is_valid_ = false;
+    return false;
+  }
+
+  auto defined_type = GetRefType()->GetDefinedType();
+  if (auto enum_decl = defined_type->AsEnumDeclaration(); enum_decl) {
+    for (const auto& e : enum_decl->GetEnumerators()) {
+      if (e->GetName() == field_name_) {
+        is_valid_ = !e->GetValue() || e->GetValue()->CheckValid();
+        return is_valid_;
+      }
+    }
+  } else {
+    for (const auto& c : defined_type->GetConstantDeclarations()) {
+      if (c->GetName() == field_name_) {
+        is_valid_ = c->GetValue().CheckValid();
+        return is_valid_;
+      }
+    }
+  }
+  AIDL_ERROR(*this) << "Can't find " << field_name_ << " in " << ref_type_->GetName();
+  is_valid_ = false;
+  return false;
+}
+
+bool AidlConstantReference::evaluate(const AidlTypeSpecifier& type) const {
+  if (is_evaluated_) return is_valid_;
+  is_evaluated_ = true;
+
+  const AidlDefinedType* view_type = type.GetDefinedType();
+  if (view_type) {
+    auto enum_decl = view_type->AsEnumDeclaration();
+    if (!enum_decl) {
+      AIDL_ERROR(type) << "Can't refer to a constant expression: " << value_;
+      return false;
+    }
+  }
+
+  auto defined_type = GetRefType()->GetDefinedType();
+  if (auto enum_decl = defined_type->AsEnumDeclaration(); enum_decl) {
+    for (const auto& e : enum_decl->GetEnumerators()) {
+      if (e->GetName() == field_name_) {
+        if (e->GetValue()->evaluate(type)) {
+          is_valid_ = e->GetValue()->is_valid_;
+          if (is_valid_) {
+            final_type_ = e->GetValue()->final_type_;
+            if (final_type_ == Type::STRING) {
+              final_string_value_ = e->GetValue()->final_string_value_;
+            } else {
+              final_value_ = e->GetValue()->final_value_;
+            }
+            return true;
+          }
+        }
+        break;
+      }
+    }
+  } else {
+    for (const auto& c : defined_type->GetConstantDeclarations()) {
+      if (c->GetName() == field_name_) {
+        if (c->GetValue().evaluate(type)) {
+          is_valid_ = c->GetValue().is_valid_;
+          if (is_valid_) {
+            final_type_ = c->GetValue().final_type_;
+            if (final_type_ == Type::STRING) {
+              final_string_value_ = c->GetValue().final_string_value_;
+            } else {
+              final_value_ = c->GetValue().final_value_;
+            }
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  is_valid_ = false;
+  return false;
 }
 
 bool AidlUnaryConstExpression::CheckValid() const {

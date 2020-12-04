@@ -265,6 +265,8 @@ TEST_F(AidlTest, ConfirmStructuredParcelables) {
   EXPECT_EQ(parcelable.arrayDefaultsTo123[2], 3);
   EXPECT_TRUE(parcelable.arrayDefaultsToEmpty.empty());
 
+  EXPECT_EQ(parcelable.defaultWithFoo, IntEnum::FOO);
+
   service->FillOutStructuredParcelable(&parcelable);
 
   ASSERT_EQ(parcelable.shouldContainThreeFs.size(), 3u);

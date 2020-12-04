@@ -574,6 +574,7 @@ public class TestServiceClient {
         assertThat(p.doubleWithDefault, is(-3.14e17));
         assertThat(p.arrayDefaultsTo123, is(new int[] {1, 2, 3}));
         assertThat(p.arrayDefaultsToEmpty.length, is(0));
+        assertThat(p.defaultWithFoo, is(IntEnum.FOO));
 
         service.FillOutStructuredParcelable(p);
 
@@ -669,7 +670,8 @@ public class TestServiceClient {
             + "addString2: The quick brown fox jumps over the lazy dog., "
             + "shouldSetBit0AndBit2: 5, "
             + "u: android.aidl.tests.Union.ns([1, 2, 3]), "
-            + "shouldBeConstS1: android.aidl.tests.Union.s(a string constant in union)"
+            + "shouldBeConstS1: android.aidl.tests.Union.s(a string constant in union), "
+            + "defaultWithFoo: 1000"
             + "}";
         assertThat(p.toString(), is(expected));
     }

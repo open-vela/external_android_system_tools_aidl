@@ -172,5 +172,7 @@ parcelable StructuredParcelable {
 
     @nullable Union u;
     @nullable Union shouldBeConstS1;
+
+    IntEnum defaultWithFoo = IntEnum.FOO;
 }
 

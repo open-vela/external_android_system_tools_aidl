@@ -3961,5 +3961,194 @@ TEST_F(AidlTest, RejectNestedUntypedListAndMap) {
   EXPECT_EQ(expectedErr, GetCapturedStderr());
 }
 
+TEST_F(AidlTest, EnumWithDefaults_Java) {
+  io_delegate_.SetFileContents("a/p/Enum.aidl", "package p; enum Enum { FOO, BAR }");
+  io_delegate_.SetFileContents("a/p/Foo.aidl", R"(
+package p;
+import p.Enum;
+parcelable Foo {
+  Enum e = Enum.BAR;
+})");
+  CaptureStderr();
+  auto options = Options::From("aidl -I a --lang java -o out a/p/Foo.aidl");
+  EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
+  auto err = GetCapturedStderr();
+  EXPECT_EQ("", err);
+
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/p/Foo.java", &code));
+  EXPECT_THAT(code, testing::HasSubstr("byte e = Enum.BAR"));
+}
+
+TEST_F(AidlTest, EnumWithDefaults_Cpp) {
+  io_delegate_.SetFileContents("a/p/Enum.aidl", "package p; enum Enum { FOO, BAR }");
+  io_delegate_.SetFileContents("a/p/Foo.aidl", R"(
+package p;
+import p.Enum;
+parcelable Foo {
+  Enum e = Enum.BAR;
+})");
+  CaptureStderr();
+  auto options = Options::From("aidl -I a --lang cpp -o out -h out a/p/Foo.aidl");
+  EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
+  auto err = GetCapturedStderr();
+  EXPECT_EQ("", err);
+
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/p/Foo.h", &code));
+  EXPECT_THAT(code, testing::HasSubstr("::p::Enum e = ::p::Enum(::p::Enum::BAR);"));
+}
+
+TEST_F(AidlTest, EnumWithDefaults_Ndk) {
+  io_delegate_.SetFileContents("a/p/Enum.aidl", "package p; enum Enum { FOO, BAR }");
+  io_delegate_.SetFileContents("a/p/Foo.aidl", R"(
+package p;
+import p.Enum;
+parcelable Foo {
+  Enum e = Enum.BAR;
+})");
+  CaptureStderr();
+  auto options = Options::From("aidl -I a --lang ndk -o out -h out a/p/Foo.aidl");
+  EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
+  auto err = GetCapturedStderr();
+  EXPECT_EQ("", err);
+
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/aidl/p/Foo.h", &code));
+  EXPECT_THAT(code, testing::HasSubstr("::aidl::p::Enum e = ::aidl::p::Enum::BAR;"));
+}
+
+TEST_F(AidlTest, EnumWithDefaults_Rust) {
+  io_delegate_.SetFileContents("a/p/Enum.aidl", "package p; enum Enum { FOO, BAR }");
+  io_delegate_.SetFileContents("a/p/Foo.aidl", R"(
+package p;
+import p.Enum;
+parcelable Foo {
+  int  n = 42;
+  Enum e = Enum.BAR;
+})");
+  CaptureStderr();
+  auto options = Options::From("aidl -I a --lang rust -o out -h out a/p/Foo.aidl");
+  EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
+  auto err = GetCapturedStderr();
+  EXPECT_EQ("", err);
+
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/p/Foo.rs", &code));
+  EXPECT_THAT(code, testing::HasSubstr(R"(
+  fn default() -> Self {
+    Self {
+      n: 42,
+      e: crate::mangled::_1_p_4_Enum::BAR,
+    }
+  })"));
+}
+
+TEST_P(AidlTest, EnumeratorIsConstantValue_DefaultValue) {
+  import_paths_.insert("a");
+  io_delegate_.SetFileContents("a/p/Enum.aidl", "package p; enum Enum { FOO = 1, BAR = 2}");
+  CaptureStderr();
+  const AidlDefinedType* type = Parse("a/p/Foo.aidl", R"(
+package p;
+import p.Enum;
+parcelable Foo {
+  int e = Enum.FOO | Enum.BAR;
+})",
+                                      typenames_, GetLanguage());
+  auto err = GetCapturedStderr();
+  EXPECT_EQ("", err);
+  EXPECT_TRUE(type);
+  const auto& fields = type->AsStructuredParcelable()->GetFields();
+  EXPECT_EQ("int e = 3", fields[0]->ToString());
+}
+
+TEST_P(AidlTest, EnumeratorIsConstantValue_CanDefineOtherEnumerator) {
+  CaptureStderr();
+  const AidlDefinedType* type = Parse("a/p/Foo.aidl", R"(
+@Backing(type="int")
+enum Foo {
+      STANDARD_SHIFT = 16,
+      STANDARD_BT709 = 1 << STANDARD_SHIFT,
+      STANDARD_BT601_625 = 2 << STANDARD_SHIFT,
+}
+)",
+                                      typenames_, GetLanguage());
+  auto err = GetCapturedStderr();
+  EXPECT_EQ("", err);
+  EXPECT_TRUE(type);
+  const auto& enum_type = type->AsEnumDeclaration();
+  string code;
+  enum_type->Dump(CodeWriter::ForString(&code).get());
+  EXPECT_EQ(R"--(@Backing(type="int")
+enum Foo {
+  STANDARD_SHIFT = 16,
+  STANDARD_BT709 = 65536,
+  STANDARD_BT601_625 = 131072,
+}
+)--",
+            code);
+}
+
+TEST_F(AidlTest, EnumDefaultShouldBeEnumerators) {
+  io_delegate_.SetFileContents("a/p/Enum.aidl", "package p; enum Enum { FOO = 1, BAR = 2}");
+  io_delegate_.SetFileContents("a/p/Foo.aidl", R"(
+package p;
+import p.Enum;
+parcelable Foo {
+  Enum e = Enum.FOO | Enum.BAR;
+})");
+  CaptureStderr();
+  auto options = Options::From("aidl -I a --lang java -o out -h out a/p/Foo.aidl");
+  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
+  auto err = GetCapturedStderr();
+  EXPECT_EQ("ERROR: a/p/Foo.aidl:5.11-20: Invalid value (Enum.FOO|Enum.BAR) for enum p.Enum\n",
+            err);
+}
+
+TEST_P(AidlTest, DefaultWithEmptyArray) {
+  io_delegate_.SetFileContents("a/p/Foo.aidl", "package p; parcelable Foo { p.Bar[] bars = {}; }");
+  io_delegate_.SetFileContents("a/p/Bar.aidl", "package p; parcelable Bar { }");
+  CaptureStderr();
+  auto options = Options::From("aidl -I a --lang " + Options::LanguageToString(GetLanguage()) +
+                               " -o out -h out a/p/Foo.aidl");
+  EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
+  auto err = GetCapturedStderr();
+  EXPECT_EQ("", err);
+}
+
+TEST_P(AidlTest, RejectRefsInAnnotation) {
+  io_delegate_.SetFileContents("a/p/IFoo.aidl",
+                               "package p; interface IFoo {\n"
+                               "  const String ANNOTATION = \"@Annotation\";\n"
+                               "  @JavaPassthrough(annotation=ANNOTATION) void foo();\n"
+                               "}");
+  CaptureStderr();
+  auto options = Options::From("aidl --lang " + Options::LanguageToString(GetLanguage()) +
+                               " -o out -h out a/p/IFoo.aidl");
+  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
+  auto err = GetCapturedStderr();
+  EXPECT_EQ(
+      "ERROR: a/p/IFoo.aidl:3.31-41: Value must be a constant expression but contains reference to "
+      "ANNOTATION.\n",
+      err);
+}
+
+TEST_F(AidlTest, DefaultWithEnumValues) {
+  io_delegate_.SetFileContents(
+      "a/p/Foo.aidl",
+      "package p; import p.Bar; parcelable Foo { Bar[] bars = { Bar.FOO, Bar.FOO }; }");
+  io_delegate_.SetFileContents("a/p/Bar.aidl", "package p; enum Bar { FOO, BAR }");
+  CaptureStderr();
+  auto options = Options::From("aidl -I a --lang ndk -o out -h out a/p/Foo.aidl");
+  EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
+  auto err = GetCapturedStderr();
+  EXPECT_EQ("", err);
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/aidl/p/Foo.h", &code));
+  EXPECT_THAT(
+      code, testing::HasSubstr(
+                "std::vector<::aidl::p::Bar> bars = {::aidl::p::Bar::FOO, ::aidl::p::Bar::FOO};"));
+}
+
 }  // namespace aidl
 }  // namespace android
