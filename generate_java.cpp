@@ -229,20 +229,6 @@ void GenerateToString(CodeWriter& out, const AidlUnionDecl& parcel,
   out << "}\n";
 }
 
-template <typename ParcelableType>
-void GenerateDerivedMethods(CodeWriter& out, const ParcelableType& parcel,
-                            const AidlTypenames& typenames) {
-  if (auto java_derive = parcel.JavaDerive(); java_derive) {
-    auto synthetic_methods = java_derive->AnnotationParams(ConstantValueDecorator);
-    for (const auto& [method_name, generate] : synthetic_methods) {
-      if (generate == "true") {
-        if (method_name == "toString") {
-          GenerateToString(out, parcel, typenames);
-        }
-      }
-    }
-  }
-}
 }  // namespace
 
 namespace android {
@@ -580,8 +566,10 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
       CodeWriter::RunWith(generate_constant_declarations, parcel->GetConstantDeclarations());
   parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(constants));
 
-  auto method = CodeWriter::RunWith(GenerateDerivedMethods, *parcel, typenames);
-  parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(method));
+  if (parcel->JavaDerive("toString")) {
+    auto method = CodeWriter::RunWith(GenerateToString, *parcel, typenames);
+    parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(method));
+  }
 
   auto describe_contents_method =
       CodeWriter::RunWith(GenerateParcelableDescribeContents, *parcel, typenames);
@@ -831,7 +819,9 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
 
   GenerateParcelableDescribeContents(out, *decl, typenames);
   out << "\n";
-  GenerateDerivedMethods(out, *decl, typenames);
+  if (decl->JavaDerive("toString")) {
+    GenerateToString(out, *decl, typenames);
+  }
 
   // helper: _assertTag
   out << "private void _assertTag(" + tag_type + " tag) {\n";
