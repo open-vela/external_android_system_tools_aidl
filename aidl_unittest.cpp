@@ -622,6 +622,68 @@ TEST_F(AidlTest, UnionSupportJavaDeriveToString) {
   EXPECT_THAT(java_out, testing::HasSubstr(expected_to_string_method));
 }
 
+TEST_F(AidlTest, ParcelableSupportJavaDeriveEquals) {
+  io_delegate_.SetFileContents("a/Foo.aidl", R"(package a;
+    @JavaDerive(equals=true) parcelable Foo { int a; float b; })");
+  CaptureStderr();
+  Options java_options = Options::From("aidl --lang=java -o out a/Foo.aidl");
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+
+  const std::string expected = R"--(
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) return true;
+    if (other == null) return false;
+    if (!(other instanceof Foo)) return false;
+    Foo that = (Foo)other;
+    if (!java.util.Objects.deepEquals(a, that.a)) return false;
+    if (!java.util.Objects.deepEquals(b, that.b)) return false;
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    return java.util.Arrays.deepHashCode(java.util.Arrays.asList(a, b).toArray());
+  }
+)--";
+
+  string java_out;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/Foo.java", &java_out));
+  EXPECT_THAT(java_out, testing::HasSubstr(expected));
+}
+
+TEST_F(AidlTest, UnionSupportJavaDeriveEquals) {
+  io_delegate_.SetFileContents("a/Foo.aidl", R"(package a;
+    @JavaDerive(equals=true) union Foo { int a; int[] b; })");
+  CaptureStderr();
+  Options java_options = Options::From("aidl --lang=java -o out a/Foo.aidl");
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+
+  const std::string expected = R"--(
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) return true;
+    if (other == null) return false;
+    if (!(other instanceof Foo)) return false;
+    Foo that = (Foo)other;
+    if (_tag != that._tag) return false;
+    if (!java.util.Objects.deepEquals(_value, that._value)) return false;
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    return java.util.Arrays.deepHashCode(java.util.Arrays.asList(_tag, _value).toArray());
+  }
+)--";
+
+  string java_out;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/Foo.java", &java_out));
+  EXPECT_THAT(java_out, testing::HasSubstr(expected));
+}
+
 TEST_F(AidlTest, RejectsJavaDeriveAnnotation) {
   {
     io_delegate_.SetFileContents("a/Foo.aidl",
