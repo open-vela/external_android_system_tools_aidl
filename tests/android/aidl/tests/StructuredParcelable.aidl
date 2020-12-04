@@ -22,7 +22,7 @@ import android.aidl.tests.LongEnum;
 import android.aidl.tests.ConstantExpressionEnum;
 import android.aidl.tests.Union;
 
-@JavaDerive(toString=true)
+@JavaDerive(toString=true, equals=true)
 @RustDerive(Clone=true, PartialEq=true)
 parcelable StructuredParcelable {
     int[] shouldContainThreeFs;

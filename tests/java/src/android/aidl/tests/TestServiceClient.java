@@ -21,6 +21,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assume.assumeTrue;
 
 import android.aidl.tests.ByteEnum;
@@ -548,6 +549,42 @@ public class TestServiceClient {
             }
             assertThat(reversed[j], is(input[i]));
         }
+    }
+
+    private void shouldBeTheSame(StructuredParcelable a, StructuredParcelable b) {
+        assertTrue(a.equals(b));
+        assertTrue(b.equals(a));
+        assertTrue(a.equals(a));
+        assertTrue(b.equals(b));
+        assertTrue(a.hashCode() == b.hashCode());
+    }
+
+    private void shouldBeDifferent(StructuredParcelable a, StructuredParcelable b) {
+        assertFalse(a.equals(b));
+        assertFalse(b.equals(a));
+        assertFalse(a.hashCode() == b.hashCode());
+    }
+
+    @Test
+    public void testStructurecParcelableEquality() {
+        StructuredParcelable p = new StructuredParcelable();
+        p.shouldContainThreeFs = new int[] {1, 2, 3};
+        p.shouldBeJerry = "Jerry";
+
+        StructuredParcelable p2 = new StructuredParcelable();
+        p2.shouldContainThreeFs = new int[] {1, 2, 3};
+        p2.shouldBeJerry = "Jerry";
+        shouldBeTheSame(p, p2);
+
+        StructuredParcelable p3 = new StructuredParcelable();
+        p3.shouldContainThreeFs = new int[] {1, 2, 3, 4};
+        p3.shouldBeJerry = "Jerry";
+        shouldBeDifferent(p, p3);
+
+        StructuredParcelable p4 = new StructuredParcelable();
+        p4.shouldContainThreeFs = new int[] {1, 2, 3};
+        p4.shouldBeJerry = "Tom";
+        shouldBeDifferent(p, p4);
     }
 
     @Test
