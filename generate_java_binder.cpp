@@ -386,9 +386,8 @@ static void generate_write_to_parcel(const AidlTypeSpecifier& type,
   addTo->Add(std::make_shared<LiteralStatement>(code));
 }
 
-void generate_constant_declarations(
-    CodeWriter& out, const std::vector<std::unique_ptr<AidlConstantDeclaration>>& constants) {
-  for (const auto& constant : constants) {
+void generate_constant_declarations(CodeWriter& out, const AidlDefinedType& type) {
+  for (const auto& constant : type.GetConstantDeclarations()) {
     const AidlTypeSpecifier& type = constant->GetType();
     auto comment = base::Trim(constant->GetType().GetComments());
     if (comment.length() != 0) {
@@ -1122,8 +1121,8 @@ std::unique_ptr<Class> generate_binder_interface_class(const AidlInterface* ifac
   generate_interface_descriptors(options, iface, interface.get(), stub, proxy);
 
   // all the declared constants of the interface
-  auto constants =
-      CodeWriter::RunWith(generate_constant_declarations, iface->GetConstantDeclarations());
+  string constants;
+  generate_constant_declarations(*CodeWriter::ForString(&constants), *iface);
   interface->elements.push_back(std::make_shared<LiteralClassElement>(constants));
 
   // all the declared methods of the interface
