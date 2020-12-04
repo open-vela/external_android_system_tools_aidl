@@ -409,6 +409,14 @@ const_expr
     $$ = AidlConstantValue::String(loc(@1), $1->GetText());
     delete $1;
   }
+ | qualified_name {
+    auto ref = new AidlConstantReference(loc(@1), $1->GetText(), $1->GetComments());
+    if (ref->GetRefType()) {
+      ps->DeferResolution(ref->GetRefType().get());
+    }
+    $$ = ref;
+    delete $1;
+ }
  | '{' constant_value_list '}' {
     $$ = AidlConstantValue::Array(loc(@1), std::unique_ptr<vector<unique_ptr<AidlConstantValue>>>($2));
   }

@@ -353,7 +353,7 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   bool is_array_;
   string comments_;
   vector<string> split_name_;
-  const AidlDefinedType* defined_type_;  // set when Resolve() for defined types
+  const AidlDefinedType* defined_type_ = nullptr;  // set when Resolve() for defined types
   mutable shared_ptr<AidlTypeSpecifier> array_base_;
 };
 
@@ -480,6 +480,7 @@ class AidlArgument : public AidlVariableDeclaration {
 
 class AidlUnaryConstExpression;
 class AidlBinaryConstExpression;
+class AidlConstantReference;
 
 class AidlConstantValue : public AidlNode {
  public:
@@ -493,10 +494,19 @@ class AidlConstantValue : public AidlNode {
     ARRAY,
     CHARACTER,
     STRING,
+    REF,
     FLOATING,
     UNARY,
     BINARY,
     ERROR,
+  };
+
+  struct Visitor {
+    virtual ~Visitor() {}
+    virtual void Visit(AidlConstantValue&) = 0;
+    virtual void Visit(AidlConstantReference&) = 0;
+    virtual void Visit(AidlUnaryConstExpression&) = 0;
+    virtual void Visit(AidlBinaryConstExpression&) = 0;
   };
 
   /*
@@ -538,6 +548,7 @@ class AidlConstantValue : public AidlNode {
 
   // Raw value of type (currently valid in C++ and Java). Empty string on error.
   string ValueString(const AidlTypeSpecifier& type, const ConstantValueDecorator& decorator) const;
+  virtual void Accept(Visitor& visitor) { visitor.Visit(*this); }
 
  private:
   AidlConstantValue(const AidlLocation& location, Type parsed_type, int64_t parsed_value,
@@ -564,6 +575,32 @@ class AidlConstantValue : public AidlNode {
 
   friend AidlUnaryConstExpression;
   friend AidlBinaryConstExpression;
+  friend AidlConstantReference;
+};
+
+// Represents "<type>.<field>" which resolves to a constant which is one of
+// - constant declartion
+// - enumerator
+// When a <type> is missing, <field> is of the enclosing type.
+class AidlConstantReference : public AidlConstantValue {
+ public:
+  AidlConstantReference(const AidlLocation& location, const std::string& value,
+                        const std::string& comments);
+
+  const std::unique_ptr<AidlTypeSpecifier>& GetRefType() const { return ref_type_; }
+  void SetRefType(std::unique_ptr<AidlTypeSpecifier> type) { ref_type_ = std::move(type); }
+  const std::string& GetFieldName() const { return field_name_; }
+  const std::string& GetComments() const { return comments_; }
+
+  bool CheckValid() const override;
+  void Accept(Visitor& visitor) override { visitor.Visit(*this); }
+
+ private:
+  bool evaluate(const AidlTypeSpecifier& type) const override;
+
+  std::unique_ptr<AidlTypeSpecifier> ref_type_;
+  std::string field_name_;
+  const std::string comments_;
 };
 
 class AidlUnaryConstExpression : public AidlConstantValue {
@@ -573,6 +610,11 @@ class AidlUnaryConstExpression : public AidlConstantValue {
 
   static bool IsCompatibleType(Type type, const string& op);
   bool CheckValid() const override;
+  void Accept(Visitor& visitor) override {
+    visitor.Visit(*this);
+    unary_->Accept(visitor);
+  }
+
  private:
   bool evaluate(const AidlTypeSpecifier& type) const override;
 
@@ -592,6 +634,11 @@ class AidlBinaryConstExpression : public AidlConstantValue {
   static Type UsualArithmeticConversion(Type left, Type right);
   // Returns the promoted integral type where INT32 is the smallest type
   static Type IntegralPromotion(Type in);
+  void Accept(Visitor& visitor) override {
+    visitor.Visit(*this);
+    left_val_->Accept(visitor);
+    right_val_->Accept(visitor);
+  }
 
  private:
   bool evaluate(const AidlTypeSpecifier& type) const override;
