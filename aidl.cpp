@@ -669,6 +669,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     for (const auto& constant : defined_type->GetConstantDeclarations()) {
       switch (constant->GetValue().GetType()) {
         case AidlConstantValue::Type::STRING:    // fall-through
+        case AidlConstantValue::Type::REF:       // fall-through
         case AidlConstantValue::Type::INT8:      // fall-through
         case AidlConstantValue::Type::INT32:     // fall-through
         case AidlConstantValue::Type::INT64:     // fall-through

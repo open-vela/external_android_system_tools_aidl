@@ -204,6 +204,12 @@ std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::str
     return "::android::String16(" + raw_value + ")";
   }
 
+  if (auto defined_type = type.GetDefinedType(); defined_type) {
+    auto enum_type = defined_type->AsEnumDeclaration();
+    AIDL_FATAL_IF(!enum_type, type) << "Invalid type for \"" << raw_value << "\"";
+    return GetRawCppName(type) + "::" + raw_value.substr(raw_value.find_last_of('.') + 1);
+  }
+
   return raw_value;
 };
 

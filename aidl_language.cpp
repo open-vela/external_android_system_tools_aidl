@@ -185,15 +185,21 @@ AidlAnnotation::AidlAnnotation(
     std::map<std::string, std::shared_ptr<AidlConstantValue>>&& parameters)
     : AidlNode(location), schema_(schema), parameters_(std::move(parameters)) {}
 
+struct ConstReferenceFinder : AidlConstantValue::Visitor {
+  AidlConstantReference* found;
+  void Visit(AidlConstantValue&) override {}
+  void Visit(AidlUnaryConstExpression&) override {}
+  void Visit(AidlBinaryConstExpression&) override {}
+  void Visit(AidlConstantReference& ref) override {
+    if (!found) found = &ref;
+  }
+};
+
 bool AidlAnnotation::CheckValid() const {
   for (const auto& name_and_param : parameters_) {
     const std::string& param_name = name_and_param.first;
     const std::shared_ptr<AidlConstantValue>& param = name_and_param.second;
-    if (!param->CheckValid()) {
-      AIDL_ERROR(this) << "Invalid value for parameter " << param_name << " on annotation "
-                       << GetName() << ".";
-      return false;
-    }
+
     auto parameter_mapping_it = schema_.supported_parameters.find(param_name);
     if (parameter_mapping_it == schema_.supported_parameters.end()) {
       std::ostringstream stream;
@@ -206,6 +212,21 @@ bool AidlAnnotation::CheckValid() const {
       AIDL_ERROR(this) << stream.str();
       return false;
     }
+
+    ConstReferenceFinder finder;
+    param->Accept(finder);
+    if (finder.found) {
+      AIDL_ERROR(finder.found) << "Value must be a constant expression but contains reference to "
+                               << finder.found->GetFieldName() << ".";
+      return false;
+    }
+
+    if (!param->CheckValid()) {
+      AIDL_ERROR(this) << "Invalid value for parameter " << param_name << " on annotation "
+                       << GetName() << ".";
+      return false;
+    }
+
     AidlTypeSpecifier type{AIDL_LOCATION_HERE, parameter_mapping_it->second, false, nullptr, ""};
     const std::string param_value = param->ValueString(type, AidlConstantValueDecorator);
     // Assume error on empty string.
