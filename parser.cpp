@@ -70,6 +70,51 @@ bool Parser::Resolve() {
       // don't stop to show more errors if any
     }
   }
+
+  struct ConstantReferenceResolver : public AidlConstantValue::Visitor {
+    const std::string name_;
+    const AidlTypenames& typenames_;
+    bool* success_;
+    ConstantReferenceResolver(const std::string& name, const AidlTypenames& typenames,
+                              bool* success)
+        : name_(name), typenames_(typenames), success_(success) {}
+    void Visit(AidlConstantValue&) override {}
+    void Visit(AidlUnaryConstExpression&) override {}
+    void Visit(AidlBinaryConstExpression&) override {}
+    void Visit(AidlConstantReference& v) override {
+      // when <type> is missing, we use
+      if (!v.GetRefType()) {
+        auto type = std::make_unique<AidlTypeSpecifier>(v.GetLocation(), name_, false, nullptr, "");
+        type->Resolve(typenames_);
+        v.SetRefType(std::move(type));
+      }
+      // check if the reference points to a valid field
+      if (!v.CheckValid()) {
+        *success_ = false;
+      }
+    }
+  };
+  // resolve "field references" as well.
+  for (const auto& type : document_->DefinedTypes()) {
+    ConstantReferenceResolver resolver{type->GetCanonicalName(), typenames_, &success};
+    if (auto enum_type = type->AsEnumDeclaration(); enum_type) {
+      for (const auto& enumerator : enum_type->GetEnumerators()) {
+        if (auto value = enumerator->GetValue(); value) {
+          value->Accept(resolver);
+        }
+      }
+    } else {
+      for (const auto& constant : type->GetConstantDeclarations()) {
+        const_cast<AidlConstantValue&>(constant->GetValue()).Accept(resolver);
+      }
+      for (const auto& field : type->GetFields()) {
+        if (field->IsDefaultUserSpecified()) {
+          const_cast<AidlConstantValue*>(field->GetDefaultValue())->Accept(resolver);
+        }
+      }
+    }
+  }
+
   return success;
 }
 

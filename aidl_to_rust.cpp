@@ -37,6 +37,8 @@ namespace aidl {
 namespace rust {
 
 namespace {
+std::string GetRawRustName(const AidlTypeSpecifier& type);
+
 std::string ConstantValueDecoratorInternal(const AidlTypeSpecifier& type,
                                            const std::string& raw_value, bool by_ref) {
   if (type.IsArray()) {
@@ -62,6 +64,12 @@ std::string ConstantValueDecoratorInternal(const AidlTypeSpecifier& type,
     // The actual type might be String or &str,
     // and .into() transparently converts into either one
     return raw_value + ".into()";
+  }
+
+  if (auto defined_type = type.GetDefinedType(); defined_type) {
+    auto enum_type = defined_type->AsEnumDeclaration();
+    AIDL_FATAL_IF(!enum_type, type) << "Invalid type for \"" << raw_value << "\"";
+    return GetRawRustName(type) + "::" + raw_value.substr(raw_value.find_last_of('.') + 1);
   }
 
   return raw_value;
