@@ -2991,8 +2991,7 @@ TEST_P(AidlTest, FailOnOutOfBoundsInt64MinConstInt) {
 TEST_P(AidlTest, FailOnOutOfBoundsAutofilledEnum) {
   AidlError error;
   const string expected_stderr =
-      "ERROR: p/TestEnum.aidl:3.35-44: Invalid type specifier for an int32 "
-      "literal: byte\n"
+      "ERROR: p/TestEnum.aidl:5.1-36: Invalid type specifier for an int32 literal: byte\n"
       "ERROR: p/TestEnum.aidl:5.1-36: Enumerator type differs from enum backing type.\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("p/TestEnum.aidl",
@@ -4218,7 +4217,10 @@ TEST_F(AidlTest, RejectsCircularReferencingEnumerators) {
   auto options = Options::From("aidl -I a --lang ndk -o out -h out a/p/Foo.aidl");
   EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
   auto err = GetCapturedStderr();
-  EXPECT_EQ("ERROR: a/p/Foo.aidl:1.26-28: Failed to parse expression as integer: B\n", err);
+  EXPECT_EQ(
+      "ERROR: a/p/Foo.aidl:1.26-28: Found a circular reference: B -> A -> B\n"
+      "ERROR: a/p/Foo.aidl:1.29-31: Found a circular reference: A -> B -> A\n",
+      err);
 }
 
 TEST_F(AidlTest, RejectsCircularReferencingConsts) {
@@ -4228,10 +4230,28 @@ TEST_F(AidlTest, RejectsCircularReferencingConsts) {
   auto options = Options::From("aidl -I a --lang ndk -o out -h out a/p/Foo.aidl");
   EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
   auto err = GetCapturedStderr();
-  EXPECT_EQ(
-      "ERROR: a/p/Foo.aidl:1.42-44: Can't evaluate the circular reference (A)\n"
-      "ERROR: a/p/Foo.aidl:1.42-44: Invalid left operand in binary expression: A+1\n",
-      err);
+  EXPECT_EQ("ERROR: a/p/Foo.aidl:1.42-44: Found a circular reference: A -> A\n", err);
+}
+
+TEST_F(AidlTest, RecursiveReferences) {
+  io_delegate_.SetFileContents("a/p/Foo.aidl",
+                               "package p; parcelable Foo { const int A = p.Bar.A + 1; }");
+  io_delegate_.SetFileContents("a/p/Bar.aidl",
+                               "package p; parcelable Bar { const int A = p.Baz.A + 1; }");
+  io_delegate_.SetFileContents("a/p/Baz.aidl", "package p; parcelable Baz { const int A = 1; }");
+  CaptureStderr();
+  auto options = Options::From("aidl -I a --lang ndk -o out -h out a/p/Foo.aidl");
+  EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+}
+
+TEST_P(AidlTest, JavaCompatibleBuiltinTypes) {
+  string contents = R"(
+import android.os.IBinder;
+import android.os.IInterface;
+interface IFoo {}
+  )";
+  EXPECT_NE(nullptr, Parse("IFoo.aidl", contents, typenames_, GetLanguage()));
 }
 
 }  // namespace aidl
