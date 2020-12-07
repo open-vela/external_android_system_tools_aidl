@@ -765,11 +765,17 @@ AidlConstantReference::AidlConstantReference(const AidlLocation& location, const
 
 bool AidlConstantReference::CheckValid() const {
   if (is_evaluated_) return is_valid_;
+  if (is_validating_) {
+    AIDL_ERROR(*this) << "Can't evaluate the circular reference (" << value_ << ")";
+    return false;
+  }
+  is_validating_ = true;
 
   if (!GetRefType() || !GetRefType()->GetDefinedType()) {
     // This can happen when "const reference" is used in an unsupported way,
     // but missed in checks there. It works as a safety net.
     AIDL_ERROR(*this) << "Can't resolve the reference (" << value_ << ")";
+    is_validating_ = false;
     is_valid_ = false;
     return false;
   }
@@ -779,6 +785,7 @@ bool AidlConstantReference::CheckValid() const {
     for (const auto& e : enum_decl->GetEnumerators()) {
       if (e->GetName() == field_name_) {
         is_valid_ = !e->GetValue() || e->GetValue()->CheckValid();
+        is_validating_ = false;
         return is_valid_;
       }
     }
@@ -786,24 +793,32 @@ bool AidlConstantReference::CheckValid() const {
     for (const auto& c : defined_type->GetConstantDeclarations()) {
       if (c->GetName() == field_name_) {
         is_valid_ = c->GetValue().CheckValid();
+        is_validating_ = false;
         return is_valid_;
       }
     }
   }
   AIDL_ERROR(*this) << "Can't find " << field_name_ << " in " << ref_type_->GetName();
   is_valid_ = false;
+  is_validating_ = false;
   return false;
 }
 
 bool AidlConstantReference::evaluate(const AidlTypeSpecifier& type) const {
   if (is_evaluated_) return is_valid_;
-  is_evaluated_ = true;
+  if (is_evaluating_) {
+    AIDL_ERROR(*this) << "Can't evaluate the circular reference (" << value_ << ")";
+    return false;
+  }
+  is_evaluating_ = true;
 
   const AidlDefinedType* view_type = type.GetDefinedType();
   if (view_type) {
     auto enum_decl = view_type->AsEnumDeclaration();
     if (!enum_decl) {
       AIDL_ERROR(type) << "Can't refer to a constant expression: " << value_;
+      is_evaluating_ = false;
+      is_evaluated_ = true;
       return false;
     }
   }
@@ -812,7 +827,7 @@ bool AidlConstantReference::evaluate(const AidlTypeSpecifier& type) const {
   if (auto enum_decl = defined_type->AsEnumDeclaration(); enum_decl) {
     for (const auto& e : enum_decl->GetEnumerators()) {
       if (e->GetName() == field_name_) {
-        if (e->GetValue()->evaluate(type)) {
+        if (e->GetValue() && e->GetValue()->evaluate(type)) {
           is_valid_ = e->GetValue()->is_valid_;
           if (is_valid_) {
             final_type_ = e->GetValue()->final_type_;
@@ -821,6 +836,8 @@ bool AidlConstantReference::evaluate(const AidlTypeSpecifier& type) const {
             } else {
               final_value_ = e->GetValue()->final_value_;
             }
+            is_evaluating_ = false;
+            is_evaluated_ = true;
             return true;
           }
         }
@@ -839,13 +856,16 @@ bool AidlConstantReference::evaluate(const AidlTypeSpecifier& type) const {
             } else {
               final_value_ = c->GetValue().final_value_;
             }
+            is_evaluating_ = false;
+            is_evaluated_ = true;
             return true;
           }
         }
       }
     }
   }
-
+  is_evaluating_ = false;
+  is_evaluated_ = true;
   is_valid_ = false;
   return false;
 }
