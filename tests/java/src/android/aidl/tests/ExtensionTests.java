@@ -21,6 +21,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
+import static org.testng.Assert.assertThrows;
 
 import android.aidl.tests.extension.ExtendableParcelable;
 import android.aidl.tests.extension.MyExt;
@@ -32,6 +33,7 @@ import android.aidl.tests.unstable.UnstableExtendableParcelable;
 import android.aidl.tests.unstable.UnstableParcelable;
 import android.aidl.tests.vintf.VintfExtendableParcelable;
 import android.aidl.tests.vintf.VintfParcelable;
+import android.os.BadParcelableException;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.ParcelableHolder;
@@ -107,56 +109,56 @@ public class ExtensionTests {
 
     @Test
     public void testVintfParcelableHolderCanContainVintfParcelable() {
-        assertThat(vep.ext.setParcelable(vp), is(true));
-        assertThat(vep.ext.getParcelable(VintfParcelable.class), is(vp));
+      vep.ext.setParcelable(vp);
+      assertThat(vep.ext.getParcelable(VintfParcelable.class), is(vp));
     }
 
     @Test
     public void testVintfParcelableHolderCannotContainNonVintfParcelable() {
-        assertThat(vep.ext.setParcelable(sp), is(false));
-        assertThat(vep.ext.getParcelable(VintfParcelable.class), is(nullValue()));
+      assertThrows(BadParcelableException.class, () -> { vep.ext.setParcelable(sp); });
+      assertThat(vep.ext.getParcelable(VintfParcelable.class), is(nullValue()));
     }
 
     @Test
     public void testVintfParcelableHolderCannotContainUnstableParcelable() {
-        assertThat(vep.ext.setParcelable(up), is(false));
-        assertThat(vep.ext.getParcelable(UnstableParcelable.class), is(nullValue()));
+      assertThrows(BadParcelableException.class, () -> { vep.ext.setParcelable(up); });
+      assertThat(vep.ext.getParcelable(UnstableParcelable.class), is(nullValue()));
     }
 
     @Test
     public void testStableParcelableHolderCanContainVintfParcelable() {
-        assertThat(sep.ext.setParcelable(vp), is(true));
-        assertThat(sep.ext.getParcelable(VintfParcelable.class), is(vp));
+      sep.ext.setParcelable(vp);
+      assertThat(sep.ext.getParcelable(VintfParcelable.class), is(vp));
     }
 
     @Test
     public void testStableParcelableHolderCanContainNonVintfParcelable() {
-        assertThat(sep.ext.setParcelable(sp), is(true));
-        assertThat(sep.ext.getParcelable(NonVintfParcelable.class), is(sp));
+      sep.ext.setParcelable(sp);
+      assertThat(sep.ext.getParcelable(NonVintfParcelable.class), is(sp));
     }
 
     @Test
     public void testStableParcelableHolderCanContainUnstableParcelable() {
-        assertThat(sep.ext.setParcelable(up), is(true));
-        assertThat(sep.ext.getParcelable(UnstableParcelable.class), is(up));
+      sep.ext.setParcelable(up);
+      assertThat(sep.ext.getParcelable(UnstableParcelable.class), is(up));
     }
 
     @Test
     public void testUnstableParcelableHolderCanContainVintfParcelable() {
-        assertThat(uep.ext.setParcelable(vp), is(true));
-        assertThat(uep.ext.getParcelable(VintfParcelable.class), is(vp));
+      uep.ext.setParcelable(vp);
+      assertThat(uep.ext.getParcelable(VintfParcelable.class), is(vp));
     }
 
     @Test
     public void testUnstableParcelableHolderCanContainNonVintfParcelable() {
-        assertThat(uep.ext.setParcelable(sp), is(true));
-        assertThat(uep.ext.getParcelable(NonVintfParcelable.class), is(sp));
+      uep.ext.setParcelable(sp);
+      assertThat(uep.ext.getParcelable(NonVintfParcelable.class), is(sp));
     }
 
     @Test
     public void testUnstableParcelableHolderCanContainUnstableParcelable() {
-        assertThat(uep.ext.setParcelable(up), is(true));
-        assertThat(uep.ext.getParcelable(UnstableParcelable.class), is(up));
+      uep.ext.setParcelable(up);
+      assertThat(uep.ext.getParcelable(UnstableParcelable.class), is(up));
     }
 
     @Test
@@ -182,9 +184,10 @@ public class ExtensionTests {
             ep.ext.setParcelable(ext);
 
             ep.ext2.setParcelable(ext2);
-            MyExtLike extLike = ep.ext.<MyExtLike>getParcelable(MyExtLike.class);
-            assertThat("The extension type must be MyExt, so it has to fail even though " +
-                    "MyExtLike has the same structure as MyExt.", extLike, is(nullValue()));
+            // The extension type must be MyExt, so it has to fail
+            // even though MyExtLike has the same structure as MyExt.
+            assertThrows(BadParcelableException.class,
+                () -> { MyExtLike extLike = ep.ext.<MyExtLike>getParcelable(MyExtLike.class); });
 
             MyExt actualExt = ep.ext.getParcelable(MyExt.class);
             MyExt2 actualExt2 = ep.ext2.getParcelable(MyExt2.class);
@@ -207,9 +210,10 @@ public class ExtensionTests {
 
             ep2.readFromParcel(parcel);
 
-            MyExtLike extLike = ep2.ext.<MyExtLike>getParcelable(MyExtLike.class);
-            assertThat("The extension type must be MyExt, so it has to fail even though " +
-                "MyExtLike has the same structure as MyExt.", extLike, is(nullValue()));
+            // The extension type must be MyExt, so it has to fail
+            // even though MyExtLike has the same structure as MyExt.
+            assertThrows(BadParcelableException.class,
+                () -> { MyExtLike extLike = ep2.ext.<MyExtLike>getParcelable(MyExtLike.class); });
 
             MyExt actualExt = ep2.ext.getParcelable(MyExt.class);
 
