@@ -601,6 +601,8 @@ class AidlConstantReference : public AidlConstantValue {
   std::unique_ptr<AidlTypeSpecifier> ref_type_;
   std::string field_name_;
   const std::string comments_;
+  mutable bool is_evaluating_ = false;  // to prevent re-entrant CheckValid with circular references
+  mutable bool is_validating_ = false;  // to prevent re-entrant CheckValid with circular references
 };
 
 class AidlUnaryConstExpression : public AidlConstantValue {
