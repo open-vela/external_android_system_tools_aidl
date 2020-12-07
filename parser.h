@@ -53,6 +53,8 @@ class AidlToken {
   std::string comments_;
 };
 
+using TypeResolver = std::function<bool(const AidlDocument*, AidlTypeSpecifier*)>;
+
 class Parser {
  public:
   // non-copyable, non-assignable
@@ -90,7 +92,7 @@ class Parser {
 
   const vector<AidlTypeSpecifier*>& GetUnresolvedTypespecs() const { return unresolved_typespecs_; }
 
-  bool Resolve();
+  bool Resolve(TypeResolver& type_resolver);
   void SetDocument(std::unique_ptr<AidlDocument>&& document) {
     // The parsed document is owned by typenames_. This parser object only has
     // a reference to it.

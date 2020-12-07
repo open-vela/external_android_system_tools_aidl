@@ -447,51 +447,25 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   vector<string> import_paths;
   ImportResolver import_resolver{io_delegate, input_file_name, options.ImportDirs(),
                                  options.InputFiles()};
-
-  vector<string> type_from_import_statements;
   for (const auto& import : main_parser->ParsedDocument().Imports()) {
-    if (!AidlTypenames::IsBuiltinTypename(import->GetNeededClass())) {
-      type_from_import_statements.emplace_back(import->GetNeededClass());
+    if (AidlTypenames::IsBuiltinTypename(import->GetNeededClass())) {
+      continue;
     }
-  }
-
-  // When referencing a type using fully qualified name it should be imported
-  // without the import statement. To support that, add all unresolved
-  // typespecs encountered during the parsing to the import_candidates list.
-  // Note that there is no guarantee that the typespecs are all fully qualified.
-  // It will be determined by calling FindImportFile().
-  set<string> unresolved_types;
-  for (const auto type : main_parser->GetUnresolvedTypespecs()) {
-    if (!AidlTypenames::IsBuiltinTypename(type->GetName())) {
-      unresolved_types.emplace(type->GetName());
-    }
-  }
-  vector<string> import_candidates(type_from_import_statements);
-  import_candidates.insert(import_candidates.end(), unresolved_types.begin(),
-                           unresolved_types.end());
-  for (const auto& import : import_candidates) {
-    if (typenames->IsIgnorableImport(import)) {
+    if (typenames->IsIgnorableImport(import->GetNeededClass())) {
       // There are places in the Android tree where an import doesn't resolve,
       // but we'll pick the type up through the preprocessed types.
       // This seems like an error, but legacy support demands we support it...
       continue;
     }
-    string import_path = import_resolver.FindImportFile(import);
+    string import_path = import_resolver.FindImportFile(import->GetNeededClass());
     if (import_path.empty()) {
-      if (typenames->ResolveTypename(import).is_resolved) {
-        // Couldn't find the *.aidl file for the type from the include paths, but we
-        // have the type already resolved. This could happen when the type is
-        // from the preprocessed aidl file. In that case, use the type from the
-        // preprocessed aidl file as a last resort.
+      if (typenames->ResolveTypename(import->GetNeededClass()).is_resolved) {
+        // This could happen when the type is from the preprocessed aidl file.
+        // In that case, use the type from preprocessed aidl file
         continue;
       }
-
-      if (std::find(type_from_import_statements.begin(), type_from_import_statements.end(),
-                    import) != type_from_import_statements.end()) {
-        // Complain only when the import from the import statement has failed.
-        AIDL_ERROR(input_file_name) << "Couldn't find import for class " << import;
-        err = AidlError::BAD_IMPORT;
-      }
+      AIDL_ERROR(input_file_name) << "Couldn't find import for class " << import->GetNeededClass();
+      err = AidlError::BAD_IMPORT;
       continue;
     }
 
@@ -521,10 +495,36 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   if (err != AidlError::OK) {
     return err;
   }
+
+  TypeResolver resolver = [&](const AidlDocument* doc, AidlTypeSpecifier* type) {
+    if (type->Resolve(*typenames)) return true;
+
+    const string unresolved_name = type->GetUnresolvedName();
+    const std::optional<string> canonical_name = doc->ResolveName(unresolved_name);
+    if (!canonical_name) {
+      return false;
+    }
+    const string import_path = import_resolver.FindImportFile(*canonical_name);
+    if (import_path.empty()) {
+      return false;
+    }
+    import_paths.push_back(import_path);
+
+    std::unique_ptr<Parser> import_parser = Parser::Parse(import_path, io_delegate, *typenames);
+    if (import_parser == nullptr) {
+      AIDL_ERROR(import_path) << "error while importing " << import_path << " for " << import_path;
+      return false;
+    }
+    if (!type->Resolve(*typenames)) {
+      AIDL_ERROR(type) << "Can't resolve " << type->GetName();
+      return false;
+    }
+    return true;
+  };
   const bool is_check_api = options.GetTask() == Options::Task::CHECK_API;
 
   // Resolve the unresolved type references found from the input file
-  if (!is_check_api && !main_parser->Resolve()) {
+  if (!is_check_api && !main_parser->Resolve(resolver)) {
     // Resolution is not need for check api because all typespecs are
     // using fully qualified names.
     return AidlError::BAD_TYPE;
@@ -545,10 +545,6 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
             std::make_unique<AidlTypeSpecifier>(AIDL_LOCATION_HERE, "byte", false, nullptr, "");
         byte_type->Resolve(*typenames);
         enum_decl->SetBackingType(std::move(byte_type));
-      }
-
-      if (!enum_decl->Autofill()) {
-        err = AidlError::BAD_TYPE;
       }
     }
   });

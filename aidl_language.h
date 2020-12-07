@@ -537,25 +537,29 @@ class AidlConstantValue : public AidlNode {
   // example: "\"asdf\""
   static AidlConstantValue* String(const AidlLocation& location, const string& value);
 
-  // Construct an AidlConstantValue by evaluating the other integral constant's
-  // value string. This does not preserve the structure of the copied constant.
-  // Returns nullptr and logs if value cannot be copied.
-  static AidlConstantValue* ShallowIntegralCopy(const AidlConstantValue& other);
-
   Type GetType() const { return final_type_; }
+  const std::string& Literal() const { return value_; }
 
   virtual bool CheckValid() const;
 
   // Raw value of type (currently valid in C++ and Java). Empty string on error.
   string ValueString(const AidlTypeSpecifier& type, const ConstantValueDecorator& decorator) const;
-  virtual void Accept(Visitor& visitor) { visitor.Visit(*this); }
+  virtual void Accept(Visitor& visitor) {
+    visitor.Visit(*this);
+    if (type_ == Type::ARRAY) {
+      for (const auto& v : values_) {
+        v.get()->Accept(visitor);
+      }
+    }
+  }
 
  private:
   AidlConstantValue(const AidlLocation& location, Type parsed_type, int64_t parsed_value,
                     const string& checked_value);
   AidlConstantValue(const AidlLocation& location, Type type, const string& checked_value);
   AidlConstantValue(const AidlLocation& location, Type type,
-                    std::unique_ptr<vector<unique_ptr<AidlConstantValue>>> values);
+                    std::unique_ptr<vector<unique_ptr<AidlConstantValue>>> values,
+                    const std::string& value);
   static string ToString(Type type);
   static bool ParseIntegral(const string& value, int64_t* parsed_value, Type* parsed_type);
   static bool IsHex(const string& value);
@@ -594,6 +598,7 @@ class AidlConstantReference : public AidlConstantValue {
 
   bool CheckValid() const override;
   void Accept(Visitor& visitor) override { visitor.Visit(*this); }
+  const AidlConstantValue* Resolve();
 
  private:
   bool evaluate(const AidlTypeSpecifier& type) const override;
@@ -601,8 +606,7 @@ class AidlConstantReference : public AidlConstantValue {
   std::unique_ptr<AidlTypeSpecifier> ref_type_;
   std::string field_name_;
   const std::string comments_;
-  mutable bool is_evaluating_ = false;  // to prevent re-entrant CheckValid with circular references
-  mutable bool is_validating_ = false;  // to prevent re-entrant CheckValid with circular references
+  const AidlConstantValue* resolved_ = nullptr;
 };
 
 class AidlUnaryConstExpression : public AidlConstantValue {
@@ -950,11 +954,13 @@ class AidlEnumerator : public AidlNode {
                      const ConstantValueDecorator& decorator) const;
 
   void SetValue(std::unique_ptr<AidlConstantValue> value) { value_ = std::move(value); }
+  bool IsValueUserSpecified() const { return value_user_specified_; }
 
  private:
   const std::string name_;
   unique_ptr<AidlConstantValue> value_;
   const std::string comments_;
+  const bool value_user_specified_;
 };
 
 class AidlEnumDeclaration : public AidlDefinedType {
@@ -975,7 +981,6 @@ class AidlEnumDeclaration : public AidlDefinedType {
   const std::vector<std::unique_ptr<AidlEnumerator>>& GetEnumerators() const {
     return enumerators_;
   }
-  bool Autofill();
   std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(const AidlTypenames& /*typenames*/,
@@ -988,6 +993,8 @@ class AidlEnumDeclaration : public AidlDefinedType {
   const AidlEnumDeclaration* AsEnumDeclaration() const override { return this; }
 
  private:
+  void Autofill();
+
   const std::string name_;
   const std::vector<std::unique_ptr<AidlEnumerator>> enumerators_;
   std::unique_ptr<const AidlTypeSpecifier> backing_type_;
@@ -1078,6 +1085,7 @@ class AidlDocument : public AidlNode {
   AidlDocument& operator=(const AidlDocument&) = delete;
   AidlDocument& operator=(AidlDocument&&) = delete;
 
+  std::optional<std::string> ResolveName(const std::string& unresolved_type) const;
   const std::vector<std::unique_ptr<AidlImport>>& Imports() const { return imports_; }
   const std::vector<std::unique_ptr<AidlDefinedType>>& DefinedTypes() const {
     return defined_types_;

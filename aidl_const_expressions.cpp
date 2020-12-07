@@ -440,7 +440,11 @@ AidlConstantValue* AidlConstantValue::Integral(const AidlLocation& location, con
 AidlConstantValue* AidlConstantValue::Array(
     const AidlLocation& location, std::unique_ptr<vector<unique_ptr<AidlConstantValue>>> values) {
   AIDL_FATAL_IF(values == nullptr, location);
-  return new AidlConstantValue(location, Type::ARRAY, std::move(values));
+  std::vector<std::string> str_values;
+  for (const auto& v : *values) {
+    str_values.push_back(v->value_);
+  }
+  return new AidlConstantValue(location, Type::ARRAY, std::move(values), Join(str_values, ", "));
 }
 
 AidlConstantValue* AidlConstantValue::String(const AidlLocation& location, const string& value) {
@@ -453,26 +457,6 @@ AidlConstantValue* AidlConstantValue::String(const AidlLocation& location, const
   }
 
   return new AidlConstantValue(location, Type::STRING, value);
-}
-
-AidlConstantValue* AidlConstantValue::ShallowIntegralCopy(const AidlConstantValue& other) {
-  // TODO(b/141313220) Perform a full copy instead of parsing+unparsing
-  AidlTypeSpecifier type = AidlTypeSpecifier(AIDL_LOCATION_HERE, "long", false, nullptr, "");
-  // TODO(b/142722772) CheckValid() should be called before ValueString()
-  if (!other.CheckValid() || !other.evaluate(type)) {
-    AIDL_ERROR(other) << "Failed to parse expression as integer: " << other.value_;
-    return nullptr;
-  }
-  const std::string& value = other.ValueString(type, AidlConstantValueDecorator);
-  if (value.empty()) {
-    return nullptr;  // error already logged
-  }
-
-  AidlConstantValue* result = Integral(AIDL_LOCATION_HERE, value);
-  if (result == nullptr) {
-    AIDL_FATAL(other) << "Unable to perform ShallowIntegralCopy.";
-  }
-  return result;
 }
 
 string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
@@ -500,7 +484,7 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
     const AidlEnumDeclaration* enum_type = defined_type->AsEnumDeclaration();
     if (!enum_type) {
       AIDL_ERROR(this) << "Invalid type (" << defined_type->GetCanonicalName()
-                       << ") for a const value(" << value_ << ")";
+                       << ") for a const value (" << value_ << ")";
       return "";
     }
     if (type_ != Type::REF) {
@@ -621,7 +605,6 @@ bool AidlConstantValue::CheckValid() const {
     case Type::INT8:       // fall-through
     case Type::INT32:      // fall-through
     case Type::INT64:      // fall-through
-    case Type::ARRAY:      // fall-through
     case Type::CHARACTER:  // fall-through
     case Type::STRING:     // fall-through
     case Type::REF:        // fall-through
@@ -629,6 +612,10 @@ bool AidlConstantValue::CheckValid() const {
     case Type::UNARY:      // fall-through
     case Type::BINARY:
       is_valid_ = true;
+      break;
+    case Type::ARRAY:
+      is_valid_ = true;
+      for (const auto& v : values_) is_valid_ &= v->CheckValid();
       break;
     case Type::ERROR:
       return false;
@@ -763,111 +750,66 @@ AidlConstantReference::AidlConstantReference(const AidlLocation& location, const
   }
 }
 
-bool AidlConstantReference::CheckValid() const {
-  if (is_evaluated_) return is_valid_;
-  if (is_validating_) {
-    AIDL_ERROR(*this) << "Can't evaluate the circular reference (" << value_ << ")";
-    return false;
-  }
-  is_validating_ = true;
-
+const AidlConstantValue* AidlConstantReference::Resolve() {
+  if (resolved_) return resolved_;
   if (!GetRefType() || !GetRefType()->GetDefinedType()) {
     // This can happen when "const reference" is used in an unsupported way,
     // but missed in checks there. It works as a safety net.
     AIDL_ERROR(*this) << "Can't resolve the reference (" << value_ << ")";
-    is_validating_ = false;
-    is_valid_ = false;
-    return false;
+    return nullptr;
   }
 
   auto defined_type = GetRefType()->GetDefinedType();
   if (auto enum_decl = defined_type->AsEnumDeclaration(); enum_decl) {
     for (const auto& e : enum_decl->GetEnumerators()) {
       if (e->GetName() == field_name_) {
-        is_valid_ = !e->GetValue() || e->GetValue()->CheckValid();
-        is_validating_ = false;
-        return is_valid_;
+        resolved_ = e->GetValue();
+        return resolved_;
       }
     }
   } else {
     for (const auto& c : defined_type->GetConstantDeclarations()) {
       if (c->GetName() == field_name_) {
-        is_valid_ = c->GetValue().CheckValid();
-        is_validating_ = false;
-        return is_valid_;
+        resolved_ = &c->GetValue();
+        return resolved_;
       }
     }
   }
   AIDL_ERROR(*this) << "Can't find " << field_name_ << " in " << ref_type_->GetName();
-  is_valid_ = false;
-  is_validating_ = false;
-  return false;
+  return nullptr;
+}
+
+bool AidlConstantReference::CheckValid() const {
+  if (is_evaluated_) return is_valid_;
+  AIDL_FATAL_IF(!resolved_, this) << "Should be resolved first: " << value_;
+  is_valid_ = resolved_->CheckValid();
+  return is_valid_;
 }
 
 bool AidlConstantReference::evaluate(const AidlTypeSpecifier& type) const {
   if (is_evaluated_) return is_valid_;
-  if (is_evaluating_) {
-    AIDL_ERROR(*this) << "Can't evaluate the circular reference (" << value_ << ")";
-    return false;
-  }
-  is_evaluating_ = true;
-
+  AIDL_FATAL_IF(!resolved_, this) << "Should be resolved first: " << value_;
+  is_evaluated_ = true;
   const AidlDefinedType* view_type = type.GetDefinedType();
   if (view_type) {
     auto enum_decl = view_type->AsEnumDeclaration();
     if (!enum_decl) {
       AIDL_ERROR(type) << "Can't refer to a constant expression: " << value_;
-      is_evaluating_ = false;
-      is_evaluated_ = true;
       return false;
     }
   }
 
-  auto defined_type = GetRefType()->GetDefinedType();
-  if (auto enum_decl = defined_type->AsEnumDeclaration(); enum_decl) {
-    for (const auto& e : enum_decl->GetEnumerators()) {
-      if (e->GetName() == field_name_) {
-        if (e->GetValue() && e->GetValue()->evaluate(type)) {
-          is_valid_ = e->GetValue()->is_valid_;
-          if (is_valid_) {
-            final_type_ = e->GetValue()->final_type_;
-            if (final_type_ == Type::STRING) {
-              final_string_value_ = e->GetValue()->final_string_value_;
-            } else {
-              final_value_ = e->GetValue()->final_value_;
-            }
-            is_evaluating_ = false;
-            is_evaluated_ = true;
-            return true;
-          }
-        }
-        break;
-      }
-    }
-  } else {
-    for (const auto& c : defined_type->GetConstantDeclarations()) {
-      if (c->GetName() == field_name_) {
-        if (c->GetValue().evaluate(type)) {
-          is_valid_ = c->GetValue().is_valid_;
-          if (is_valid_) {
-            final_type_ = c->GetValue().final_type_;
-            if (final_type_ == Type::STRING) {
-              final_string_value_ = c->GetValue().final_string_value_;
-            } else {
-              final_value_ = c->GetValue().final_value_;
-            }
-            is_evaluating_ = false;
-            is_evaluated_ = true;
-            return true;
-          }
-        }
-      }
+  resolved_->evaluate(type);
+  is_valid_ = resolved_->is_valid_;
+  final_type_ = resolved_->final_type_;
+  if (is_valid_) {
+    if (final_type_ == Type::STRING) {
+      final_string_value_ = resolved_->final_string_value_;
+    } else {
+      final_value_ = resolved_->final_value_;
     }
   }
-  is_evaluating_ = false;
-  is_evaluated_ = true;
-  is_valid_ = false;
-  return false;
+  return is_valid_;
 }
 
 bool AidlUnaryConstExpression::CheckValid() const {
@@ -1102,10 +1044,12 @@ AidlConstantValue::AidlConstantValue(const AidlLocation& location, Type type,
 }
 
 AidlConstantValue::AidlConstantValue(const AidlLocation& location, Type type,
-                                     std::unique_ptr<vector<unique_ptr<AidlConstantValue>>> values)
+                                     std::unique_ptr<vector<unique_ptr<AidlConstantValue>>> values,
+                                     const std::string& value)
     : AidlNode(location),
       type_(type),
       values_(std::move(*values)),
+      value_(value),
       is_valid_(false),
       is_evaluated_(false),
       final_type_(type) {
