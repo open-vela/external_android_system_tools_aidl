@@ -1020,6 +1020,9 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
   out << "\n";
   out << "binder_status_t readFromParcel(const AParcel* parcel);\n";
   out << "binder_status_t writeToParcel(AParcel* parcel) const;\n";
+  out << "\n";
+
+  cpp::GenerateParcelableComparisonOperators(out, defined_type);
 
   out << "static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::"
       << (defined_type.IsVintfStability() ? "STABILITY_VINTF" : "STABILITY_LOCAL") << ";\n";
@@ -1156,6 +1159,9 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
 
   out << "binder_status_t readFromParcel(const AParcel* _parcel);\n";
   out << "binder_status_t writeToParcel(AParcel* _parcel) const;\n";
+  out << "\n";
+
+  cpp::GenerateParcelableComparisonOperators(out, defined_type);
 
   out << "static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::"
       << (defined_type.IsVintfStability() ? "STABILITY_VINTF" : "STABILITY_LOCAL") << ";\n";
