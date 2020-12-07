@@ -3376,6 +3376,26 @@ public:
 
   binder_status_t readFromParcel(const AParcel* _parcel);
   binder_status_t writeToParcel(AParcel* _parcel) const;
+
+  inline bool operator!=(const Foo& rhs) const {
+    return _value != rhs._value;
+  }
+  inline bool operator<(const Foo& rhs) const {
+    return _value < rhs._value;
+  }
+  inline bool operator<=(const Foo& rhs) const {
+    return _value <= rhs._value;
+  }
+  inline bool operator==(const Foo& rhs) const {
+    return _value == rhs._value;
+  }
+  inline bool operator>(const Foo& rhs) const {
+    return _value > rhs._value;
+  }
+  inline bool operator>=(const Foo& rhs) const {
+    return _value >= rhs._value;
+  }
+
   static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::STABILITY_LOCAL;
   template <typename _T> class _has_toString {
     template <typename _U> static std::true_type __has_toString(decltype(&_U::toString));
