@@ -410,11 +410,7 @@ const_expr
     delete $1;
   }
  | qualified_name {
-    auto ref = new AidlConstantReference(loc(@1), $1->GetText(), $1->GetComments());
-    if (ref->GetRefType()) {
-      ps->DeferResolution(ref->GetRefType().get());
-    }
-    $$ = ref;
+    $$ = new AidlConstantReference(loc(@1), $1->GetText(), $1->GetComments());
     delete $1;
  }
  | '{' constant_value_list '}' {

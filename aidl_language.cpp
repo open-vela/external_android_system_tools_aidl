@@ -1145,7 +1145,11 @@ bool AidlStructuredParcelable::LanguageSpecificCheckValid(const AidlTypenames& t
 
 AidlEnumerator::AidlEnumerator(const AidlLocation& location, const std::string& name,
                                AidlConstantValue* value, const std::string& comments)
-    : AidlNode(location), name_(name), value_(value), comments_(comments) {}
+    : AidlNode(location),
+      name_(name),
+      value_(value),
+      comments_(comments),
+      value_user_specified_(value != nullptr) {}
 
 bool AidlEnumerator::CheckValid(const AidlTypeSpecifier& enum_backing_type) const {
   if (GetValue() == nullptr) {
@@ -1170,33 +1174,31 @@ AidlEnumDeclaration::AidlEnumDeclaration(const AidlLocation& location, const std
                                          std::vector<std::unique_ptr<AidlEnumerator>>* enumerators,
                                          const std::string& package, const std::string& comments)
     : AidlDefinedType(location, name, comments, package, nullptr),
-      enumerators_(std::move(*enumerators)) {}
+      enumerators_(std::move(*enumerators)) {
+  Autofill();
+}
 
 void AidlEnumDeclaration::SetBackingType(std::unique_ptr<const AidlTypeSpecifier> type) {
   backing_type_ = std::move(type);
 }
 
-bool AidlEnumDeclaration::Autofill() {
+void AidlEnumDeclaration::Autofill() {
   const AidlEnumerator* previous = nullptr;
   for (const auto& enumerator : enumerators_) {
     if (enumerator->GetValue() == nullptr) {
+      auto loc = enumerator->GetLocation();
       if (previous == nullptr) {
         enumerator->SetValue(
-            std::unique_ptr<AidlConstantValue>(AidlConstantValue::Integral(GetLocation(), "0")));
+            std::unique_ptr<AidlConstantValue>(AidlConstantValue::Integral(loc, "0")));
       } else {
-        auto prev_value = std::unique_ptr<AidlConstantValue>(
-            AidlConstantValue::ShallowIntegralCopy(*previous->GetValue()));
-        if (prev_value == nullptr) {
-          return false;
-        }
+        auto prev_value = std::make_unique<AidlConstantReference>(loc, previous->GetName(), "");
         enumerator->SetValue(std::make_unique<AidlBinaryConstExpression>(
-            GetLocation(), std::move(prev_value), "+",
-            std::unique_ptr<AidlConstantValue>(AidlConstantValue::Integral(GetLocation(), "1"))));
+            loc, std::move(prev_value), "+",
+            std::unique_ptr<AidlConstantValue>(AidlConstantValue::Integral(loc, "1"))));
       }
     }
     previous = enumerator.get();
   }
-  return true;
 }
 
 std::set<AidlAnnotation::Type> AidlEnumDeclaration::GetSupportedAnnotations() const {
@@ -1477,3 +1479,32 @@ std::string AidlInterface::GetDescriptor() const {
 
 AidlImport::AidlImport(const AidlLocation& location, const std::string& needed_class)
     : AidlNode(location), needed_class_(needed_class) {}
+
+// Resolves unresolved type name to fully qualified typename to import
+// case #1: SimpleName --> import p.SimpleName
+// case #2: Outer.Inner --> import p.Outer
+// case #3: p.SimpleName --> (as is)
+std::optional<std::string> AidlDocument::ResolveName(const std::string& unresolved_name) const {
+  std::string canonical_name;
+  const auto first_dot = unresolved_name.find_first_of('.');
+  const std::string class_name =
+      (first_dot == std::string::npos) ? unresolved_name : unresolved_name.substr(0, first_dot);
+  for (const auto& import : Imports()) {
+    const auto& fq_name = import->GetNeededClass();
+    const auto last_dot = fq_name.find_last_of('.');
+    const std::string imported_type_name =
+        (last_dot == std::string::npos) ? fq_name : fq_name.substr(last_dot + 1);
+    if (imported_type_name == class_name) {
+      if (canonical_name != "" && canonical_name != fq_name) {
+        AIDL_ERROR(import) << "Ambiguous type: " << canonical_name << " vs. " << fq_name;
+        return {};
+      }
+      canonical_name = fq_name;
+    }
+  }
+  // if not found, use unresolved_name as it is
+  if (canonical_name == "") {
+    return unresolved_name;
+  }
+  return canonical_name;
+}

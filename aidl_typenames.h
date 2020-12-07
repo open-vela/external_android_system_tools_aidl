@@ -57,6 +57,7 @@ class AidlTypenames final {
  public:
   AidlTypenames() = default;
   bool AddDocument(std::unique_ptr<AidlDocument> doc);
+  const AidlDocument* GetDocumentFor(const AidlDefinedType* type) const;
   const std::vector<std::unique_ptr<AidlDocument>>& AllDocuments() const { return documents_; }
   const AidlDocument& MainDocument() const;
   bool AddPreprocessedType(unique_ptr<AidlDefinedType> type);
