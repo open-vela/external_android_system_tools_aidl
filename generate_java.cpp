@@ -229,6 +229,60 @@ void GenerateToString(CodeWriter& out, const AidlUnionDecl& parcel,
   out << "}\n";
 }
 
+void GenerateEqualsAndHashCode(CodeWriter& out, const AidlStructuredParcelable& parcel,
+                      const AidlTypenames&) {
+  out << "@Override\n";
+  out << "public boolean equals(Object other) {\n";
+  out.Indent();
+  out << "if (this == other) return true;\n";
+  out << "if (other == null) return false;\n";
+  out << "if (!(other instanceof " << parcel.GetName() << ")) return false;\n";
+  out << parcel.GetName() << " that = (" << parcel.GetName() << ")other;\n";
+  for (const auto& field : parcel.GetFields()) {
+    out << "if (!java.util.Objects.deepEquals(" << field->GetName() << ", that." << field->GetName()
+        << ")) return false;\n";
+  }
+  out << "return true;\n";
+  out.Dedent();
+  out << "}\n";
+  out << "\n";
+  out << "@Override\n";
+  out << "public int hashCode() {\n";
+  out.Indent();
+  out << "return java.util.Arrays.deepHashCode(java.util.Arrays.asList(";
+  std::vector<std::string> names;
+  for (const auto& field : parcel.GetFields()) {
+    names.push_back(field->GetName());
+  }
+  out << android::base::Join(names, ", ") << ").toArray());\n";
+  out.Dedent();
+  out << "}\n";
+}
+
+void GenerateEqualsAndHashCode(CodeWriter& out, const AidlUnionDecl& decl,
+                                 const AidlTypenames&) {
+  out << "@Override\n";
+  out << "public boolean equals(Object other) {\n";
+  out.Indent();
+  out << "if (this == other) return true;\n";
+  out << "if (other == null) return false;\n";
+  out << "if (!(other instanceof " << decl.GetName() << ")) return false;\n";
+  out << decl.GetName() << " that = (" << decl.GetName() << ")other;\n";
+  out << "if (_tag != that._tag) return false;\n";
+  out << "if (!java.util.Objects.deepEquals(_value, that._value)) return false;\n";
+  out << "return true;\n";
+  out.Dedent();
+  out << "}\n";
+  out << "\n";
+  out << "@Override\n";
+  out << "public int hashCode() {\n";
+  out.Indent();
+  out << "return java.util.Arrays.deepHashCode(java.util.Arrays.asList(_tag, _value).toArray());\n";
+  out.Dedent();
+  out << "}\n";
+  out << "\n";
+}
+
 }  // namespace
 
 namespace android {
@@ -572,6 +626,12 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
     parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(to_string));
   }
 
+  if (parcel->JavaDerive("equals")) {
+    string to_string;
+    GenerateEqualsAndHashCode(*CodeWriter::ForString(&to_string), *parcel, typenames);
+    parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(to_string));
+  }
+
   string describe_contents;
   GenerateParcelableDescribeContents(*CodeWriter::ForString(&describe_contents), *parcel,
                                      typenames);
@@ -823,6 +883,10 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   out << "\n";
   if (decl->JavaDerive("toString")) {
     GenerateToString(out, *decl, typenames);
+  }
+
+  if (decl->JavaDerive("equals")) {
+    GenerateEqualsAndHashCode(out, *decl, typenames);
   }
 
   // helper: _assertTag

@@ -366,6 +366,9 @@ java_test {
         "aidl_test_vintf_parcelable-java",
         // client uses the newest version
         "aidl-test-versioned-interface-java",
+        // TODO: remove once Android migrates to JUnit 4.12,
+        // which provides assertThrows
+        "testng",
     ],
     srcs: [
         "tests/android/aidl/tests/*.aidl",
