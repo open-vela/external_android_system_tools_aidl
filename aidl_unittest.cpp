@@ -4150,5 +4150,27 @@ TEST_F(AidlTest, DefaultWithEnumValues) {
                 "std::vector<::aidl::p::Bar> bars = {::aidl::p::Bar::FOO, ::aidl::p::Bar::FOO};"));
 }
 
+TEST_F(AidlTest, RejectsCircularReferencingEnumerators) {
+  io_delegate_.SetFileContents("a/p/Foo.aidl", "package p; enum Foo { A = B, B }");
+  CaptureStderr();
+  auto options = Options::From("aidl -I a --lang ndk -o out -h out a/p/Foo.aidl");
+  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
+  auto err = GetCapturedStderr();
+  EXPECT_EQ("ERROR: a/p/Foo.aidl:1.26-28: Failed to parse expression as integer: B\n", err);
+}
+
+TEST_F(AidlTest, RejectsCircularReferencingConsts) {
+  io_delegate_.SetFileContents("a/p/Foo.aidl",
+                               "package p; parcelable Foo { const int A = A + 1; }");
+  CaptureStderr();
+  auto options = Options::From("aidl -I a --lang ndk -o out -h out a/p/Foo.aidl");
+  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
+  auto err = GetCapturedStderr();
+  EXPECT_EQ(
+      "ERROR: a/p/Foo.aidl:1.42-44: Can't evaluate the circular reference (A)\n"
+      "ERROR: a/p/Foo.aidl:1.42-44: Invalid left operand in binary expression: A+1\n",
+      err);
+}
+
 }  // namespace aidl
 }  // namespace android
