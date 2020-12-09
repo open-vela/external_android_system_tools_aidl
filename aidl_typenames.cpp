@@ -131,6 +131,17 @@ bool AidlTypenames::AddDocument(std::unique_ptr<AidlDocument> doc) {
   return true;
 }
 
+const AidlDocument* AidlTypenames::GetDocumentFor(const AidlDefinedType* type) const {
+  for (const auto& doc : AllDocuments()) {
+    for (const auto& defined_type : doc->DefinedTypes()) {
+      if (defined_type.get() == type) {
+        return doc.get();
+      }
+    }
+  }
+  return nullptr;
+}
+
 const AidlDocument& AidlTypenames::MainDocument() const {
   AIDL_FATAL_IF(documents_.size() == 0, AIDL_LOCATION_HERE) << "Main document doesn't exist";
   return *(documents_[0]);
