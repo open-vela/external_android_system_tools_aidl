@@ -95,7 +95,7 @@ if __name__ == "__main__":
   parser.add_argument('output', help='Path to output .rs file')
   parser.add_argument('root', help='Common ancestor of all input files')
   parser.add_argument('inputs', nargs='+', help='Input .rs files')
-  parser.add_argument('-I', '--import', nargs='*', dest='imports',
+  parser.add_argument('-I', '--import', action='append', dest='imports',
                       default=[], help='Crates to import')
 
   args = parser.parse_args()
