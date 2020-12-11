@@ -386,9 +386,6 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
       *code_writer << "Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())\n";
     } else {
       // Generate default implementations for meta methods
-      // FIXME: is this fine, or do we want to leave the defaults out
-      // and force users to implement them manually (or with a helper macro we
-      // provide) on the server side?
       if (method->GetName() == kGetInterfaceVersion && options.Version() > 0) {
         *code_writer << "Ok(VERSION)\n";
       } else if (method->GetName() == kGetInterfaceHash && !options.Hash().empty()) {
