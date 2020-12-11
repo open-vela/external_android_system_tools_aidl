@@ -522,6 +522,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     return true;
   };
   const bool is_check_api = options.GetTask() == Options::Task::CHECK_API;
+  const bool is_dump_api = options.GetTask() == Options::Task::DUMP_API;
 
   // Resolve the unresolved type references found from the input file
   if (!is_check_api && !main_parser->Resolve(resolver)) {
@@ -592,8 +593,10 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
         }
       }
 
-      if (!defined_type->LanguageSpecificCheckValid(*typenames, options.TargetLanguage())) {
-        valid_type = false;
+      if (!is_dump_api && !is_check_api) {
+        if (!defined_type->LanguageSpecificCheckValid(*typenames, options.TargetLanguage())) {
+          valid_type = false;
+        }
       }
 
       if (!valid_type) {

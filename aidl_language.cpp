@@ -522,8 +522,9 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
     auto& types = GetTypeParameters();
     // TODO(b/136048684) Disallow to use primitive types only if it is List or Map.
     if (type_name == "List" || type_name == "Map") {
-      if (std::any_of(types.begin(), types.end(), [](auto& type_ptr) {
-            return AidlTypenames::IsPrimitiveTypename(type_ptr->GetName());
+      if (std::any_of(types.begin(), types.end(), [&](auto& type_ptr) {
+            return (typenames.GetEnumDeclaration(*type_ptr)) ||
+                   AidlTypenames::IsPrimitiveTypename(type_ptr->GetName());
           })) {
         AIDL_ERROR(this) << "A generic type cannot have any primitive type parameters.";
         return false;
@@ -1069,23 +1070,41 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
   }
   if (this->IsGeneric()) {
     if (this->GetName() == "List") {
+      const AidlTypeSpecifier& contained_type = *GetTypeParameters()[0];
+      const string& contained_type_name = contained_type.GetName();
       if (lang == Options::Language::CPP) {
-        const string& contained_type = this->GetTypeParameters()[0]->GetName();
-        if (!(contained_type == "String" || contained_type == "IBinder")) {
-          AIDL_ERROR(this) << "List<" << contained_type
+        if (!(contained_type_name == "String" || contained_type_name == "IBinder")) {
+          AIDL_ERROR(this) << "List<" << contained_type_name
                            << "> is not supported. List in cpp supports only String and IBinder.";
           return false;
         }
       } else if (lang == Options::Language::JAVA) {
-        const string& contained_type = this->GetTypeParameters()[0]->GetName();
-        if (AidlTypenames::IsBuiltinTypename(contained_type)) {
-          if (contained_type != "String" && contained_type != "IBinder" &&
-              contained_type != "ParcelFileDescriptor") {
-            AIDL_ERROR(this) << "List<" << contained_type
+        if (AidlTypenames::IsBuiltinTypename(contained_type_name)) {
+          if (contained_type_name != "String" && contained_type_name != "IBinder" &&
+              contained_type_name != "ParcelFileDescriptor") {
+            AIDL_ERROR(this) << "List<" << contained_type_name
                              << "> is not supported. List in Java supports only String, IBinder, "
                                 "and ParcelFileDescriptor.";
             return false;
           }
+        } else {  // Defined types
+          if (typenames.GetInterface(contained_type)) {
+            AIDL_ERROR(this) << "List<" << contained_type_name
+                             << "> is not supported. List in Java supports only String, IBinder, "
+                                "and ParcelFileDescriptor.";
+            return false;
+          }
+        }
+      } else if (lang == Options::Language::NDK) {
+        if (typenames.GetInterface(contained_type)) {
+          AIDL_ERROR(this) << "List<" << contained_type_name
+                           << "> is not supported. List in NDK doesn't support interface.";
+          return false;
+        }
+        if (contained_type_name == "IBinder") {
+          AIDL_ERROR(this) << "List<" << contained_type_name
+                           << "> is not supported. List in NDK doesn't support IBinder.";
+          return false;
         }
       }
     }
