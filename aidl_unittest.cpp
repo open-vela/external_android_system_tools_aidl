@@ -16,6 +16,7 @@
 
 #include "aidl.h"
 
+#include <android-base/format.h>
 #include <android-base/stringprintf.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -4273,6 +4274,104 @@ interface IFoo {}
   )";
   EXPECT_NE(nullptr, Parse("IFoo.aidl", contents, typenames_, GetLanguage()));
 }
+
+struct ListTypeParam {
+  string kind;
+  string literal;
+};
+
+const ListTypeParam kListTypeParams[] = {
+    {"primitive", "int"},   {"String", "String"},
+    {"IBinder", "IBinder"}, {"ParcelFileDescriptor", "ParcelFileDescriptor"},
+    {"parcelable", "Foo"},  {"enum", "a.Enum"},
+    {"union", "a.Union"},   {"interface", "a.IBar"},
+};
+
+const std::map<std::string, std::string> kListSupportExpectations = {
+    {"cpp_primitive", "A generic type cannot have any primitive type parameters."},
+    {"java_primitive", "A generic type cannot have any primitive type parameters."},
+    {"ndk_primitive", "A generic type cannot have any primitive type parameters."},
+    {"rust_primitive", "A generic type cannot have any primitive type parameters."},
+    {"cpp_String", ""},
+    {"java_String", ""},
+    {"ndk_String", ""},
+    {"rust_String", ""},
+    {"cpp_IBinder", ""},
+    {"java_IBinder", ""},
+    {"ndk_IBinder", "List<IBinder> is not supported. List in NDK doesn't support IBinder."},
+    {"rust_IBinder", ""},
+    {"cpp_ParcelFileDescriptor", "List<ParcelFileDescriptor> is not supported."},
+    {"java_ParcelFileDescriptor", ""},
+    {"ndk_ParcelFileDescriptor", ""},
+    {"rust_ParcelFileDescriptor", ""},
+    {"cpp_interface",
+     "List<a.IBar> is not supported. List in cpp supports only String and IBinder."},
+    {"java_interface",
+     "List<a.IBar> is not supported. List in Java supports only String, IBinder, and "
+     "ParcelFileDescriptor."},
+    {"ndk_interface", "List<a.IBar> is not supported. List in NDK doesn't support interface."},
+    {"rust_interface", ""},
+    {"cpp_parcelable",
+     "List<a.Foo> is not supported. List in cpp supports only String and IBinder."},
+    {"java_parcelable", ""},
+    {"ndk_parcelable", ""},
+    {"rust_parcelable", ""},
+    {"cpp_enum", "A generic type cannot have any primitive type parameters."},
+    {"java_enum", "A generic type cannot have any primitive type parameters."},
+    {"ndk_enum", "A generic type cannot have any primitive type parameters."},
+    {"rust_enum", "A generic type cannot have any primitive type parameters."},
+    {"cpp_union", "List<a.Union> is not supported. List in cpp supports only String and IBinder."},
+    {"java_union", ""},
+    {"ndk_union", ""},
+    {"rust_union", ""},
+};
+
+using AidlListTestParam = std::tuple<Options::Language, ListTypeParam>;
+
+class AidlListTest : public testing::TestWithParam<AidlListTestParam> {
+ public:
+  void SetUp() override {
+    const auto& param = GetParam();
+    const auto& lang = Options::LanguageToString(std::get<0>(param));
+    const auto& kind = std::get<1>(param).kind;
+
+    FakeIoDelegate io;
+    io.SetFileContents("a/IBar.aidl", "package a; interface IBar { }");
+    io.SetFileContents("a/Enum.aidl", "package a; enum Enum { A }");
+    io.SetFileContents("a/Union.aidl", "package a; union Union { int a; }");
+    io.SetFileContents("a/Foo.aidl", fmt::format(R"(
+      package a;
+      parcelable Foo {{
+        List<{}> list;
+      }})",
+                                                 std::get<1>(param).literal));
+
+    const auto options =
+        Options::From(fmt::format("aidl -I . --lang={} a/Foo.aidl -o out -h out", lang));
+    CaptureStderr();
+    compile_aidl(options, io);
+    auto it = kListSupportExpectations.find(lang + "_" + kind);
+    EXPECT_TRUE(it != kListSupportExpectations.end());
+    const string err = GetCapturedStderr();
+    if (it->second.empty()) {
+      EXPECT_EQ("", err);
+    } else {
+      EXPECT_THAT(err, testing::HasSubstr(it->second));
+    }
+  }
+};
+
+INSTANTIATE_TEST_SUITE_P(
+    AidlTestSuite, AidlListTest,
+    testing::Combine(testing::Values(Options::Language::CPP, Options::Language::JAVA,
+                                     Options::Language::NDK, Options::Language::RUST),
+                     testing::ValuesIn(kListTypeParams)),
+    [](const testing::TestParamInfo<AidlListTestParam>& info) {
+      return Options::LanguageToString(std::get<0>(info.param)) + "_" +
+             std::get<1>(info.param).kind;
+    });
+
+TEST_P(AidlListTest, SupportedTypes) {}
 
 }  // namespace aidl
 }  // namespace android
