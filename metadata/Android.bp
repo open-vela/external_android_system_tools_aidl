@@ -45,5 +45,8 @@ cc_test_host {
         "libgmock",
     ],
     srcs: ["test.cpp"],
+    test_options: {
+        unit_test: true,
+    },
     test_suites: ["general-tests"],
 }
