@@ -420,6 +420,7 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
     } else if (arg->IsOut() && arg->GetType().IsArray()) {
       out << "_aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *" << var_name
           << ");\n";
+      StatusCheckGoto(out);
     }
   }
   out << "_aidl_ret_status = AIBinder_transact(\n";
@@ -522,6 +523,7 @@ static void GenerateServerCaseDefinition(CodeWriter& out, const AidlTypenames& t
       StatusCheckBreak(out);
     } else if (arg->IsOut() && arg->GetType().IsArray()) {
       out << "_aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &" << var_name << ");\n";
+      StatusCheckBreak(out);
     }
   }
   if (options.GenLog()) {
