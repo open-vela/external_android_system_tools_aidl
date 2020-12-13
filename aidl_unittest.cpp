@@ -4337,12 +4337,12 @@ interface IFoo {}
   EXPECT_NE(nullptr, Parse("IFoo.aidl", contents, typenames_, GetLanguage()));
 }
 
-struct ListTypeParam {
+struct TypeParam {
   string kind;
   string literal;
 };
 
-const ListTypeParam kListTypeParams[] = {
+const TypeParam kTypeParams[] = {
     {"primitive", "int"},   {"String", "String"},
     {"IBinder", "IBinder"}, {"ParcelFileDescriptor", "ParcelFileDescriptor"},
     {"parcelable", "Foo"},  {"enum", "a.Enum"},
@@ -4388,11 +4388,10 @@ const std::map<std::string, std::string> kListSupportExpectations = {
     {"rust_union", ""},
 };
 
-using AidlListTestParam = std::tuple<Options::Language, ListTypeParam>;
-
-class AidlListTest : public testing::TestWithParam<AidlListTestParam> {
+class AidlTypeParamTest : public testing::TestWithParam<std::tuple<Options::Language, TypeParam>> {
  public:
-  void SetUp() override {
+  void Run(const std::string& generic_type_decl,
+           const std::map<std::string, std::string>& expectations) {
     const auto& param = GetParam();
     const auto& lang = Options::LanguageToString(std::get<0>(param));
     const auto& kind = std::get<1>(param).kind;
@@ -4401,19 +4400,15 @@ class AidlListTest : public testing::TestWithParam<AidlListTestParam> {
     io.SetFileContents("a/IBar.aidl", "package a; interface IBar { }");
     io.SetFileContents("a/Enum.aidl", "package a; enum Enum { A }");
     io.SetFileContents("a/Union.aidl", "package a; union Union { int a; }");
-    io.SetFileContents("a/Foo.aidl", fmt::format(R"(
-      package a;
-      parcelable Foo {{
-        List<{}> list;
-      }})",
-                                                 std::get<1>(param).literal));
+    std::string decl = fmt::format(generic_type_decl, std::get<1>(param).literal);
+    io.SetFileContents("a/Foo.aidl", "package a; parcelable Foo { " + decl + " f; }");
 
     const auto options =
         Options::From(fmt::format("aidl -I . --lang={} a/Foo.aidl -o out -h out", lang));
     CaptureStderr();
     compile_aidl(options, io);
-    auto it = kListSupportExpectations.find(lang + "_" + kind);
-    EXPECT_TRUE(it != kListSupportExpectations.end());
+    auto it = expectations.find(lang + "_" + kind);
+    EXPECT_TRUE(it != expectations.end());
     const string err = GetCapturedStderr();
     if (it->second.empty()) {
       EXPECT_EQ("", err);
@@ -4424,16 +4419,18 @@ class AidlListTest : public testing::TestWithParam<AidlListTestParam> {
 };
 
 INSTANTIATE_TEST_SUITE_P(
-    AidlTestSuite, AidlListTest,
+    AidlTestSuite, AidlTypeParamTest,
     testing::Combine(testing::Values(Options::Language::CPP, Options::Language::JAVA,
                                      Options::Language::NDK, Options::Language::RUST),
-                     testing::ValuesIn(kListTypeParams)),
-    [](const testing::TestParamInfo<AidlListTestParam>& info) {
+                     testing::ValuesIn(kTypeParams)),
+    [](const testing::TestParamInfo<std::tuple<Options::Language, TypeParam>>& info) {
       return Options::LanguageToString(std::get<0>(info.param)) + "_" +
              std::get<1>(info.param).kind;
     });
 
-TEST_P(AidlListTest, SupportedTypes) {}
+TEST_P(AidlTypeParamTest, ListSupportedTypes) {
+  Run("List<{}>", kListSupportExpectations);
+}
 
 }  // namespace aidl
 }  // namespace android
