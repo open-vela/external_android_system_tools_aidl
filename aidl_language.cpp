@@ -542,6 +542,24 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
                          << "'";
         return false;
       }
+      const AidlTypeSpecifier& contained_type = *GetTypeParameters()[0];
+      const string& contained_type_name = contained_type.GetName();
+      if (AidlTypenames::IsBuiltinTypename(contained_type_name)) {
+        if (contained_type_name != "String" && contained_type_name != "IBinder" &&
+            contained_type_name != "ParcelFileDescriptor") {
+          AIDL_ERROR(this) << "List<" << contained_type_name
+                           << "> is not supported. List<T> supports parcelable/union, String, "
+                              "IBinder, and ParcelFileDescriptor.";
+          return false;
+        }
+      } else {  // Defined types
+        if (typenames.GetInterface(contained_type)) {
+          AIDL_ERROR(this) << "List<" << contained_type_name
+                           << "> is not supported. List<T> supports parcelable/union, String, "
+                              "IBinder, and ParcelFileDescriptor.";
+          return false;
+        }
+      }
     } else if (type_name == "Map") {
       if (num_params != 0 && num_params != 2) {
         AIDL_ERROR(this) << "Map must have 0 or 2 type parameters, but got "
@@ -1079,32 +1097,9 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
   }
   if (this->IsGeneric()) {
     if (this->GetName() == "List") {
-      const AidlTypeSpecifier& contained_type = *GetTypeParameters()[0];
-      const string& contained_type_name = contained_type.GetName();
-      if (lang == Options::Language::CPP) {
-        if (!(contained_type_name == "String" || contained_type_name == "IBinder")) {
-          AIDL_ERROR(this) << "List<" << contained_type_name
-                           << "> is not supported. List in cpp supports only String and IBinder.";
-          return false;
-        }
-      } else if (lang == Options::Language::JAVA) {
-        if (AidlTypenames::IsBuiltinTypename(contained_type_name)) {
-          if (contained_type_name != "String" && contained_type_name != "IBinder" &&
-              contained_type_name != "ParcelFileDescriptor") {
-            AIDL_ERROR(this) << "List<" << contained_type_name
-                             << "> is not supported. List in Java supports only String, IBinder, "
-                                "and ParcelFileDescriptor.";
-            return false;
-          }
-        } else {  // Defined types
-          if (typenames.GetInterface(contained_type)) {
-            AIDL_ERROR(this) << "List<" << contained_type_name
-                             << "> is not supported. List in Java supports only String, IBinder, "
-                                "and ParcelFileDescriptor.";
-            return false;
-          }
-        }
-      } else if (lang == Options::Language::NDK) {
+      if (lang == Options::Language::NDK) {
+        const AidlTypeSpecifier& contained_type = *GetTypeParameters()[0];
+        const string& contained_type_name = contained_type.GetName();
         if (typenames.GetInterface(contained_type)) {
           AIDL_ERROR(this) << "List<" << contained_type_name
                            << "> is not supported. List in NDK doesn't support interface.";
