@@ -4388,6 +4388,41 @@ const std::map<std::string, std::string> kListSupportExpectations = {
     {"rust_union", ""},
 };
 
+const std::map<std::string, std::string> kArraySupportExpectations = {
+    {"cpp_primitive", ""},
+    {"java_primitive", ""},
+    {"ndk_primitive", ""},
+    {"rust_primitive", ""},
+    {"cpp_String", ""},
+    {"java_String", ""},
+    {"ndk_String", ""},
+    {"rust_String", ""},
+    {"cpp_IBinder", ""},
+    {"java_IBinder", ""},
+    {"ndk_IBinder", "The ndk backend does not support array of IBinder"},
+    {"rust_IBinder", "The rust backend does not support array of IBinder"},
+    {"cpp_ParcelFileDescriptor", ""},
+    {"java_ParcelFileDescriptor", ""},
+    {"ndk_ParcelFileDescriptor", ""},
+    {"rust_ParcelFileDescriptor", ""},
+    {"cpp_interface", "Binder type cannot be an array"},
+    {"java_interface", "Binder type cannot be an array"},
+    {"ndk_interface", "Binder type cannot be an array"},
+    {"rust_interface", "Binder type cannot be an array"},
+    {"cpp_parcelable", ""},
+    {"java_parcelable", ""},
+    {"ndk_parcelable", ""},
+    {"rust_parcelable", ""},
+    {"cpp_enum", ""},
+    {"java_enum", ""},
+    {"ndk_enum", ""},
+    {"rust_enum", ""},
+    {"cpp_union", ""},
+    {"java_union", ""},
+    {"ndk_union", ""},
+    {"rust_union", ""},
+};
+
 class AidlTypeParamTest : public testing::TestWithParam<std::tuple<Options::Language, TypeParam>> {
  public:
   void Run(const std::string& generic_type_decl,
@@ -4430,6 +4465,10 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(AidlTypeParamTest, ListSupportedTypes) {
   Run("List<{}>", kListSupportExpectations);
+}
+
+TEST_P(AidlTypeParamTest, ArraySupportedTypes) {
+  Run("{}[]", kArraySupportExpectations);
 }
 
 }  // namespace aidl
