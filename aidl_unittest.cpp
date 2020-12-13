@@ -4337,12 +4337,12 @@ interface IFoo {}
   EXPECT_NE(nullptr, Parse("IFoo.aidl", contents, typenames_, GetLanguage()));
 }
 
-struct TypeParam {
+struct ListTypeParam {
   string kind;
   string literal;
 };
 
-const TypeParam kTypeParams[] = {
+const ListTypeParam kListTypeParams[] = {
     {"primitive", "int"},   {"String", "String"},
     {"IBinder", "IBinder"}, {"ParcelFileDescriptor", "ParcelFileDescriptor"},
     {"parcelable", "Foo"},  {"enum", "a.Enum"},
@@ -4388,45 +4388,11 @@ const std::map<std::string, std::string> kListSupportExpectations = {
     {"rust_union", ""},
 };
 
-const std::map<std::string, std::string> kArraySupportExpectations = {
-    {"cpp_primitive", ""},
-    {"java_primitive", ""},
-    {"ndk_primitive", ""},
-    {"rust_primitive", ""},
-    {"cpp_String", ""},
-    {"java_String", ""},
-    {"ndk_String", ""},
-    {"rust_String", ""},
-    {"cpp_IBinder", ""},
-    {"java_IBinder", ""},
-    {"ndk_IBinder", "The ndk backend does not support array of IBinder"},
-    {"rust_IBinder", "The rust backend does not support array of IBinder"},
-    {"cpp_ParcelFileDescriptor", ""},
-    {"java_ParcelFileDescriptor", ""},
-    {"ndk_ParcelFileDescriptor", ""},
-    {"rust_ParcelFileDescriptor", ""},
-    {"cpp_interface", "Binder type cannot be an array"},
-    {"java_interface", "Binder type cannot be an array"},
-    {"ndk_interface", "Binder type cannot be an array"},
-    {"rust_interface", "Binder type cannot be an array"},
-    {"cpp_parcelable", ""},
-    {"java_parcelable", ""},
-    {"ndk_parcelable", ""},
-    {"rust_parcelable", ""},
-    {"cpp_enum", ""},
-    {"java_enum", ""},
-    {"ndk_enum", ""},
-    {"rust_enum", ""},
-    {"cpp_union", ""},
-    {"java_union", ""},
-    {"ndk_union", ""},
-    {"rust_union", ""},
-};
+using AidlListTestParam = std::tuple<Options::Language, ListTypeParam>;
 
-class AidlTypeParamTest : public testing::TestWithParam<std::tuple<Options::Language, TypeParam>> {
+class AidlListTest : public testing::TestWithParam<AidlListTestParam> {
  public:
-  void Run(const std::string& generic_type_decl,
-           const std::map<std::string, std::string>& expectations) {
+  void SetUp() override {
     const auto& param = GetParam();
     const auto& lang = Options::LanguageToString(std::get<0>(param));
     const auto& kind = std::get<1>(param).kind;
@@ -4435,15 +4401,19 @@ class AidlTypeParamTest : public testing::TestWithParam<std::tuple<Options::Lang
     io.SetFileContents("a/IBar.aidl", "package a; interface IBar { }");
     io.SetFileContents("a/Enum.aidl", "package a; enum Enum { A }");
     io.SetFileContents("a/Union.aidl", "package a; union Union { int a; }");
-    std::string decl = fmt::format(generic_type_decl, std::get<1>(param).literal);
-    io.SetFileContents("a/Foo.aidl", "package a; parcelable Foo { " + decl + " f; }");
+    io.SetFileContents("a/Foo.aidl", fmt::format(R"(
+      package a;
+      parcelable Foo {{
+        List<{}> list;
+      }})",
+                                                 std::get<1>(param).literal));
 
     const auto options =
         Options::From(fmt::format("aidl -I . --lang={} a/Foo.aidl -o out -h out", lang));
     CaptureStderr();
     compile_aidl(options, io);
-    auto it = expectations.find(lang + "_" + kind);
-    EXPECT_TRUE(it != expectations.end());
+    auto it = kListSupportExpectations.find(lang + "_" + kind);
+    EXPECT_TRUE(it != kListSupportExpectations.end());
     const string err = GetCapturedStderr();
     if (it->second.empty()) {
       EXPECT_EQ("", err);
@@ -4454,22 +4424,16 @@ class AidlTypeParamTest : public testing::TestWithParam<std::tuple<Options::Lang
 };
 
 INSTANTIATE_TEST_SUITE_P(
-    AidlTestSuite, AidlTypeParamTest,
+    AidlTestSuite, AidlListTest,
     testing::Combine(testing::Values(Options::Language::CPP, Options::Language::JAVA,
                                      Options::Language::NDK, Options::Language::RUST),
-                     testing::ValuesIn(kTypeParams)),
-    [](const testing::TestParamInfo<std::tuple<Options::Language, TypeParam>>& info) {
+                     testing::ValuesIn(kListTypeParams)),
+    [](const testing::TestParamInfo<AidlListTestParam>& info) {
       return Options::LanguageToString(std::get<0>(info.param)) + "_" +
              std::get<1>(info.param).kind;
     });
 
-TEST_P(AidlTypeParamTest, ListSupportedTypes) {
-  Run("List<{}>", kListSupportExpectations);
-}
-
-TEST_P(AidlTypeParamTest, ArraySupportedTypes) {
-  Run("{}[]", kArraySupportExpectations);
-}
+TEST_P(AidlListTest, SupportedTypes) {}
 
 }  // namespace aidl
 }  // namespace android
