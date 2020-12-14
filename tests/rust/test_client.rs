@@ -642,29 +642,28 @@ fn test_renamed_interface_new_as_new() {
     });
 }
 
-// FIXME: these tests are disabled because they currently fail; the reason
-// is that even though IOldName and INewName are identical and have the
-// same descriptors, they get different classes from `Remotable::get_class`
-// so `into_interface` fails.
-//
-// #[test]
-// fn test_renamed_interface_old_as_new() {
-//     test_renamed_interface(|old_name, _| {
-//         let new_name = old_name.as_binder().into_interface::<dyn INewName::INewName>();
-//         assert!(new_name.is_ok());
-//
-//         let real_name = new_name.unwrap().RealName();
-//         assert_eq!(real_name.as_ref().map(String::as_str), Ok("OldName"));
-//     });
-// }
-//
-// #[test]
-// fn test_renamed_interface_new_as_old() {
-//     test_renamed_interface(|_, new_name| {
-//         let old_name = new_name.as_binder().into_interface::<dyn IOldName::IOldName>();
-//         assert!(old_name.is_ok());
-//
-//         let real_name = old_name.unwrap().RealName();
-//         assert_eq!(real_name.as_ref().map(String::as_str), Ok("NewName"));
-//     });
-// }
+#[test]
+fn test_renamed_interface_old_as_new() {
+    test_renamed_interface(|old_name, _| {
+        let new_name = old_name
+            .as_binder()
+            .into_interface::<dyn INewName::INewName>();
+        assert!(new_name.is_ok());
+
+        let real_name = new_name.unwrap().RealName();
+        assert_eq!(real_name.as_ref().map(String::as_str), Ok("OldName"));
+    });
+}
+
+#[test]
+fn test_renamed_interface_new_as_old() {
+    test_renamed_interface(|_, new_name| {
+        let old_name = new_name
+            .as_binder()
+            .into_interface::<dyn IOldName::IOldName>();
+        assert!(old_name.is_ok());
+
+        let real_name = old_name.unwrap().RealName();
+        assert_eq!(real_name.as_ref().map(String::as_str), Ok("NewName"));
+    });
+}
