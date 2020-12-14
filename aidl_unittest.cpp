@@ -1038,6 +1038,17 @@ TEST_P(AidlTest, FailOnTooBigConstant) {
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
+TEST_F(AidlTest, BoolConstantsEvaluatesToIntegers) {
+  io_delegate_.SetFileContents("a/Foo.aidl", "package a; parcelable Foo { const int y = true; }");
+  CaptureStderr();
+  auto options = Options::From("aidl --lang java -o out a/Foo.aidl");
+  EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/Foo.java", &code));
+  EXPECT_THAT(code, testing::HasSubstr("public static final int y = 1;"));
+}
+
 TEST_P(AidlTest, FailOnManyDefinedTypes) {
   AidlError error;
   const string expected_stderr =
