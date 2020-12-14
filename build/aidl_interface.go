@@ -920,6 +920,11 @@ type CommonBackendProperties struct {
 	// For native modules, the property needs to be set when a module is a part of mainline modules(APEX).
 	// Forwarded to generated java/native module.
 	Min_sdk_version *string
+
+	// Determines whether the generated source files are available or not. When set to true,
+	// the source files can be added to `srcs` property via `:<ifacename>-<backend>-source`,
+	// e.g., ":myaidl-java-source"
+	Srcs_available *bool
 }
 
 type CommonNativeBackendProperties struct {
@@ -1473,11 +1478,38 @@ func (i *aidlInterface) moduleVersionForVndk() string {
 	return ""
 }
 
-func defaultVisibility(mctx android.LoadHookContext) []string {
+// srcsVisibility gives the value for the `visibility` property of the source gen module for the
+// language backend `lang`. By default, the source gen module is not visible to the clients of
+// aidl_interface (because it's an impl detail), but when `backend.<backend>.srcs_available` is set
+// to true, the source gen module follows the visibility of the aidl_interface module.
+func srcsVisibility(mctx android.LoadHookContext, lang string) []string {
+	if a, ok := mctx.Module().(*aidlInterface); !ok {
+		panic(fmt.Errorf("%q is not aidl_interface", mctx.Module().String()))
+	} else {
+		var prop *bool
+		switch lang {
+		case langCpp:
+			prop = a.properties.Backend.Cpp.Srcs_available
+		case langJava:
+			prop = a.properties.Backend.Java.Srcs_available
+		case langNdk, langNdkPlatform:
+			prop = a.properties.Backend.Ndk.Srcs_available
+		case langRust:
+			prop = a.properties.Backend.Rust.Srcs_available
+		default:
+			panic(fmt.Errorf("unsupported language backend %q\n", lang))
+		}
+		if proptools.Bool(prop) {
+			// Returning nil so that the visibility of the source module defaults to the
+			// the package-level default visibility. This way, the source module gets
+			// the same visibility as the library modules.
+			return nil
+		}
+	}
 	return []string{
 		"//" + mctx.ModuleDir(),
-		// system/tools/aidl/build is always added because aidl_metadata_json in the directory has
-		// dependencies to all aidl_interface modules.
+		// system/tools/aidl/build is always added because aidl_metadata_json in the
+		// directory has dependencies to all aidl_interface modules.
 		"//system/tools/aidl/build",
 	}
 }
@@ -1531,7 +1563,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 		Version:    version,
 		GenTrace:   genTrace,
 		Unstable:   i.properties.Unstable,
-		Visibility: defaultVisibility(mctx),
+		Visibility: srcsVisibility(mctx, lang),
 	})
 	importPostfix := i.getImportPostfix(mctx, version, lang)
 
@@ -1664,7 +1696,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMo
 		Version:    version,
 		GenTrace:   proptools.Bool(i.properties.Gen_trace),
 		Unstable:   i.properties.Unstable,
-		Visibility: defaultVisibility(mctx),
+		Visibility: srcsVisibility(mctx, langJava),
 	})
 
 	importPostfix := i.getImportPostfix(mctx, version, langJava)
@@ -1797,7 +1829,7 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMo
 		BaseName:   i.ModuleBase.Name(),
 		Version:    version,
 		Unstable:   i.properties.Unstable,
-		Visibility: defaultVisibility(mctx),
+		Visibility: srcsVisibility(mctx, langRust),
 	})
 
 	versionedRustName := fixRustName(i.versionedName(versionForModuleName))
