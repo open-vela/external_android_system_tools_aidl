@@ -664,30 +664,18 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
         return AidlError::BAD_METHOD_ID;
       }
     }
-    // Verify and resolve the constant declarations
-    for (const auto& constant : defined_type->GetConstantDeclarations()) {
-      switch (constant->GetValue().GetType()) {
-        case AidlConstantValue::Type::STRING:    // fall-through
-        case AidlConstantValue::Type::REF:       // fall-through
-        case AidlConstantValue::Type::INT8:      // fall-through
-        case AidlConstantValue::Type::INT32:     // fall-through
-        case AidlConstantValue::Type::INT64:     // fall-through
-        case AidlConstantValue::Type::FLOATING:  // fall-through
-        case AidlConstantValue::Type::UNARY:     // fall-through
-        case AidlConstantValue::Type::BINARY: {
-          bool success = constant->CheckValid(*typenames);
-          if (!success) {
-            return AidlError::BAD_TYPE;
-          }
-          if (constant->ValueString(cpp::ConstantValueDecorator).empty()) {
-            return AidlError::BAD_TYPE;
-          }
-          break;
+    // Verify the var/const declarations.
+    // const expressions should be non-empty when evaluated with the var/const type.
+    if (!is_check_api) {
+      for (const auto& constant : defined_type->GetConstantDeclarations()) {
+        if (constant->ValueString(AidlConstantValueDecorator).empty()) {
+          return AidlError::BAD_TYPE;
         }
-        default:
-          AIDL_FATAL(constant) << "Unrecognized constant type: "
-                               << static_cast<int>(constant->GetValue().GetType());
-          break;
+      }
+      for (const auto& var : defined_type->GetFields()) {
+        if (var->GetDefaultValue() && var->ValueString(AidlConstantValueDecorator).empty()) {
+          return AidlError::BAD_TYPE;
+        }
       }
     }
   }
