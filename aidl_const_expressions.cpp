@@ -468,7 +468,7 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
   if (!is_evaluated_) {
     // TODO(b/142722772) CheckValid() should be called before ValueString()
     bool success = CheckValid();
-    success &= evaluate();
+    success &= evaluate(type);
     if (!success) {
       // the detailed error message shall be printed in evaluate
       return "";
@@ -627,7 +627,7 @@ bool AidlConstantValue::CheckValid() const {
   return true;
 }
 
-bool AidlConstantValue::evaluate() const {
+bool AidlConstantValue::evaluate(const AidlTypeSpecifier& type) const {
   if (is_evaluated_) {
     return is_valid_;
   }
@@ -636,12 +636,17 @@ bool AidlConstantValue::evaluate() const {
 
   switch (type_) {
     case Type::ARRAY: {
+      if (!type.IsArray()) {
+        AIDL_ERROR(this) << "Invalid constant array type: " << type.GetName();
+        err = -1;
+        break;
+      }
       Type array_type = Type::ERROR;
       bool success = true;
       for (const auto& value : values_) {
         success = value->CheckValid();
         if (success) {
-          success = value->evaluate();
+          success = value->evaluate(type.ArrayBase());
           if (!success) {
             AIDL_ERROR(this) << "Invalid array element: " << value->value_;
             break;
@@ -781,12 +786,20 @@ bool AidlConstantReference::CheckValid() const {
   return is_valid_;
 }
 
-bool AidlConstantReference::evaluate() const {
+bool AidlConstantReference::evaluate(const AidlTypeSpecifier& type) const {
   if (is_evaluated_) return is_valid_;
   AIDL_FATAL_IF(!resolved_, this) << "Should be resolved first: " << value_;
   is_evaluated_ = true;
+  const AidlDefinedType* view_type = type.GetDefinedType();
+  if (view_type) {
+    auto enum_decl = view_type->AsEnumDeclaration();
+    if (!enum_decl) {
+      AIDL_ERROR(type) << "Can't refer to a constant expression: " << value_;
+      return false;
+    }
+  }
 
-  resolved_->evaluate();
+  resolved_->evaluate(type);
   is_valid_ = resolved_->is_valid_;
   final_type_ = resolved_->final_type_;
   if (is_valid_) {
@@ -812,7 +825,7 @@ bool AidlUnaryConstExpression::CheckValid() const {
   return AidlConstantValue::CheckValid();
 }
 
-bool AidlUnaryConstExpression::evaluate() const {
+bool AidlUnaryConstExpression::evaluate(const AidlTypeSpecifier& type) const {
   if (is_evaluated_) {
     return is_valid_;
   }
@@ -822,7 +835,7 @@ bool AidlUnaryConstExpression::evaluate() const {
   if (!unary_->is_evaluated_) {
     // TODO(b/142722772) CheckValid() should be called before ValueString()
     bool success = CheckValid();
-    success &= unary_->evaluate();
+    success &= unary_->evaluate(type);
     if (!success) {
       is_valid_ = false;
       return false;
@@ -882,20 +895,20 @@ bool AidlBinaryConstExpression::CheckValid() const {
   return AidlConstantValue::CheckValid();
 }
 
-bool AidlBinaryConstExpression::evaluate() const {
+bool AidlBinaryConstExpression::evaluate(const AidlTypeSpecifier& type) const {
   if (is_evaluated_) {
     return is_valid_;
   }
   is_evaluated_ = true;
-  AIDL_FATAL_IF(left_val_ == nullptr, this);
-  AIDL_FATAL_IF(right_val_ == nullptr, this);
+  AIDL_FATAL_IF(left_val_ == nullptr, type);
+  AIDL_FATAL_IF(right_val_ == nullptr, type);
 
   // Recursively evaluate the binary expression tree
   if (!left_val_->is_evaluated_ || !right_val_->is_evaluated_) {
     // TODO(b/142722772) CheckValid() should be called before ValueString()
     bool success = CheckValid();
-    success &= left_val_->evaluate();
-    success &= right_val_->evaluate();
+    success &= left_val_->evaluate(type);
+    success &= right_val_->evaluate(type);
     if (!success) {
       is_valid_ = false;
       return false;
