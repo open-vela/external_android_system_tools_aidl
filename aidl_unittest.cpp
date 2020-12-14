@@ -1599,6 +1599,56 @@ interface IFoo {
             actual);
 }
 
+TEST_F(AidlTest, ApiDumpWithEnums) {
+  io_delegate_.SetFileContents("foo/bar/Enum.aidl",
+                               "package foo.bar;\n"
+                               "enum Enum {\n"
+                               "    FOO,\n"
+                               "    BAR = FOO + 1,\n"
+                               "}\n");
+
+  vector<string> args = {"aidl", "--dumpapi", "-I . ", "-o dump", "foo/bar/Enum.aidl"};
+  Options options = Options::From(args);
+  CaptureStderr();
+  EXPECT_TRUE(dump_api(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+  string actual;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("dump/foo/bar/Enum.aidl", &actual));
+  EXPECT_EQ(string(kPreamble).append("package foo.bar;\n"
+                                     "enum Enum {\n"
+                                     "  FOO = 0,\n"
+                                     "  BAR = 1,\n"
+                                     "}\n"),
+            actual);
+}
+
+TEST_F(AidlTest, ApiDumpWithEnumDefaultValues) {
+  io_delegate_.SetFileContents("foo/bar/Enum.aidl",
+                               "package foo.bar;\n"
+                               "enum Enum {\n"
+                               "    FOO,\n"
+                               "}\n");
+  io_delegate_.SetFileContents("foo/bar/Foo.aidl",
+                               "package foo.bar;\n"
+                               "import foo.bar.Enum;\n"
+                               "parcelable Foo {\n"
+                               "    Enum e = Enum.FOO;\n"
+                               "}\n");
+
+  vector<string> args = {"aidl", "--dumpapi", "-I . ", "-o dump", "foo/bar/Foo.aidl"};
+  Options options = Options::From(args);
+  CaptureStderr();
+  EXPECT_TRUE(dump_api(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+  string actual;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("dump/foo/bar/Foo.aidl", &actual));
+  EXPECT_EQ(string(kPreamble).append("package foo.bar;\n"
+                                     "parcelable Foo {\n"
+                                     "  foo.bar.Enum e = foo.bar.Enum.FOO;\n"
+                                     "}\n"),
+            actual);
+}
+
 TEST_F(AidlTest, CheckNumGenericTypeSecifier) {
   const string expected_list_stderr =
       "ERROR: p/IFoo.aidl:1.37-41: List can only have one type parameter, but got: "
@@ -1882,6 +1932,18 @@ TEST_F(AidlTest, SuccessOnIdenticalApiDumps) {
   Options options = Options::From("aidl --checkapi old new");
   io_delegate_.SetFileContents("old/p/IFoo.aidl", "package p; interface IFoo{ void foo();}");
   io_delegate_.SetFileContents("new/p/IFoo.aidl", "package p; interface IFoo{ void foo();}");
+
+  EXPECT_TRUE(::android::aidl::check_api(options, io_delegate_));
+}
+
+TEST_F(AidlTest, CheckApi_EnumFieldsWithDefaultValues) {
+  Options options = Options::From("aidl --checkapi old new");
+  const string foo_definition = "package p; parcelable Foo{ p.Enum e = p.Enum.FOO; }";
+  const string enum_definition = "package p; enum Enum { FOO }";
+  io_delegate_.SetFileContents("old/p/Foo.aidl", foo_definition);
+  io_delegate_.SetFileContents("old/p/Enum.aidl", enum_definition);
+  io_delegate_.SetFileContents("new/p/Foo.aidl", foo_definition);
+  io_delegate_.SetFileContents("new/p/Enum.aidl", enum_definition);
 
   EXPECT_TRUE(::android::aidl::check_api(options, io_delegate_));
 }
