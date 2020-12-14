@@ -15,6 +15,7 @@
 package aidl
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -79,6 +80,9 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 	bp = bp + java.GatherRequiredDepsForTest()
 	bp = bp + cc.GatherRequiredDepsForTest(android.Android)
 	bp = bp + `
+		package {
+			default_visibility: ["//visibility:public"],
+		}
 		java_defaults {
 			name: "aidl-java-module-defaults",
 		}
@@ -171,6 +175,9 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 	}
 
 	ctx := android.NewTestArchContext(config)
+	android.RegisterPackageBuildComponents(ctx)
+	ctx.PreArchMutators(android.RegisterVisibilityRuleChecker)
+
 	cc.RegisterRequiredBuildComponentsForTest(ctx)
 	ctx.RegisterModuleType("aidl_interface", aidlInterfaceFactory)
 	ctx.RegisterModuleType("aidl_interfaces_metadata", aidlInterfacesMetadataSingletonFactory)
@@ -190,6 +197,9 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 	ctx.RegisterModuleType("apex_key", apex.ApexKeyFactory)
 
 	ctx.PreArchMutators(android.RegisterDefaultsPreArchMutators)
+	ctx.PreArchMutators(android.RegisterVisibilityRuleGatherer)
+	ctx.PostDepsMutators(android.RegisterVisibilityRuleEnforcer)
+
 	ctx.PreDepsMutators(func(ctx android.RegisterMutatorsContext) {
 		ctx.BottomUp("rust_libraries", rust.LibraryMutator).Parallel()
 		ctx.BottomUp("rust_stdlinkage", rust.LibstdMutator).Parallel()
@@ -211,7 +221,7 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 func testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android.TestContext, android.Config) {
 	t.Helper()
 	ctx, config := _testAidl(t, bp, customizers...)
-	_, errs := ctx.ParseFileList(".", []string{"Android.bp"})
+	_, errs := ctx.ParseBlueprintsFiles("Android.bp")
 	android.FailIfErrored(t, errs)
 	_, errs = ctx.PrepareBuildActions(config)
 	android.FailIfErrored(t, errs)
@@ -221,7 +231,7 @@ func testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android.
 func testAidlError(t *testing.T, pattern, bp string, customizers ...testCustomizer) {
 	t.Helper()
 	ctx, config := _testAidl(t, bp, customizers...)
-	_, errs := ctx.ParseFileList(".", []string{"Android.bp"})
+	_, errs := ctx.ParseBlueprintsFiles("Android.bp")
 	if len(errs) > 0 {
 		android.FailIfNoMatchingErrors(t, pattern, errs)
 		return
@@ -236,6 +246,7 @@ func testAidlError(t *testing.T, pattern, bp string, customizers ...testCustomiz
 
 // asserts that there are expected module regardless of variants
 func assertModulesExists(t *testing.T, ctx *android.TestContext, names ...string) {
+	t.Helper()
 	missing := []string{}
 	for _, name := range names {
 		variants := ctx.ModuleVariantsForTests(name)
@@ -251,6 +262,23 @@ func assertModulesExists(t *testing.T, ctx *android.TestContext, names ...string
 		})
 		t.Errorf("expected modules(%v) not found. all modules: %v", missing, android.SortedStringKeys(allModuleNames))
 	}
+}
+
+func assertContains(t *testing.T, actual, expected string) {
+	t.Helper()
+	if !strings.Contains(actual, expected) {
+		t.Errorf("%q is not found in %q.", expected, actual)
+	}
+}
+
+func assertListContains(t *testing.T, actual []string, expected string) {
+	t.Helper()
+	for _, a := range actual {
+		if strings.Contains(a, expected) {
+			return
+		}
+	}
+	t.Errorf("%q is not found in %v.", expected, actual)
 }
 
 // Vintf module must have versions in release version
@@ -869,15 +897,47 @@ func TestCcModuleWithApexNameMacro(t *testing.T) {
 		"system/sepolicy/apex/myapex-file_contexts": nil,
 	}))
 
-	assertContains := func(t *testing.T, actual, expected string) {
-		t.Helper()
-		if !strings.Contains(actual, expected) {
-			t.Errorf("%q is not found in %q.", expected, actual)
-		}
-	}
-
 	ccRule := ctx.ModuleForTests("myiface-ndk_platform", "android_arm64_armv8-a_static_myapex").Rule("cc")
 	assertContains(t, ccRule.Args["cFlags"], "-D__ANDROID_APEX__")
 	assertContains(t, ccRule.Args["cFlags"], "-D__ANDROID_APEX_NAME__='\"myapex\"'")
 	assertContains(t, ccRule.Args["cFlags"], "-D__ANDROID_APEX_MYAPEX__")
+}
+
+func TestSrcsAvailable(t *testing.T) {
+	bp := `
+		aidl_interface {
+			name: "myiface",
+			srcs: ["IFoo.aidl"],
+			backend: {
+				java: {
+					srcs_available: %s,
+				},
+				cpp: {
+					srcs_available: %s,
+				},
+			},
+		}
+	`
+	customizer := withFiles(map[string][]byte{
+		"otherpackage/Android.bp": []byte(`
+			java_library {
+				name: "javalib",
+				srcs: [":myiface-java-source"],
+			}
+			cc_library_shared {
+				name: "cclib",
+				srcs: [":myiface-cpp-source"],
+			}
+		`),
+	})
+	ctx, _ := testAidl(t, fmt.Sprintf(bp, "true", "true"), customizer)
+	javaInputs := ctx.ModuleForTests("javalib", "android_common").Rule("javac").Inputs.Strings()
+	assertListContains(t, javaInputs, "myiface-java-source/gen/IFoo.java")
+	ccInput := ctx.ModuleForTests("cclib", "android_arm64_armv8-a_shared").Rule("cc").Input.String()
+	assertContains(t, ccInput, "myiface-cpp-source/gen/IFoo.cpp")
+
+	testAidlError(t, `depends on //.:myiface-java-source which is not visible to this module`,
+		fmt.Sprintf(bp, "false", "true"), customizer)
+	testAidlError(t, `depends on //.:myiface-cpp-source which is not visible to this module`,
+		fmt.Sprintf(bp, "true", "false"), customizer)
 }
