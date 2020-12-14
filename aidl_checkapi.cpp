@@ -121,8 +121,8 @@ static bool are_compatible_constants(const AidlDefinedType& older, const AidlDef
     const auto new_c = found->second;
     compatible &= are_compatible_types(old_c->GetType(), new_c->GetType());
 
-    const string old_value = old_c->ValueString(AidlConstantValueDecorator);
-    const string new_value = new_c->ValueString(AidlConstantValueDecorator);
+    const string old_value = old_c->GetValue().Literal();
+    const string new_value = new_c->GetValue().Literal();
     if (old_value != new_value) {
       AIDL_ERROR(newer) << "Changed constant value: " << older.GetCanonicalName() << "."
                         << old_c->GetName() << " from " << old_value << " to " << new_value << ".";
@@ -207,8 +207,7 @@ static bool has_usable_nil_type(const AidlTypeSpecifier& specifier) {
 static bool HasZeroEnumerator(const AidlEnumDeclaration& enum_decl) {
   return std::any_of(enum_decl.GetEnumerators().begin(), enum_decl.GetEnumerators().end(),
                      [&](const unique_ptr<AidlEnumerator>& enumerator) {
-                       return enumerator->GetValue()->ValueString(
-                                  enum_decl.GetBackingType(), AidlConstantValueDecorator) == "0";
+                       return enumerator->GetValue()->Literal() == "0";
                      });
 }
 
@@ -236,8 +235,8 @@ static bool are_compatible_parcelables(const AidlDefinedType& older, const AidlT
     const auto& new_field = new_fields.at(i);
     compatible &= are_compatible_types(old_field->GetType(), new_field->GetType());
 
-    const string old_value = old_field->ValueString(AidlConstantValueDecorator);
-    const string new_value = new_field->ValueString(AidlConstantValueDecorator);
+    string old_value = old_field->GetDefaultValue() ? old_field->GetDefaultValue()->Literal() : "";
+    string new_value = new_field->GetDefaultValue() ? new_field->GetDefaultValue()->Literal() : "";
     if (old_value != new_value) {
       AIDL_ERROR(new_field) << "Changed default value: " << old_value << " to " << new_value << ".";
       compatible = false;
@@ -346,10 +345,8 @@ static bool are_compatible_enums(const AidlEnumDeclaration& older,
       compatible = false;
       continue;
     }
-    const string old_value =
-        old_enum_map[name]->ValueString(older.GetBackingType(), AidlConstantValueDecorator);
-    const string new_value =
-        new_enum_map[name]->ValueString(newer.GetBackingType(), AidlConstantValueDecorator);
+    const string old_value = old_enum_map[name]->Literal();
+    const string new_value = new_enum_map[name]->Literal();
     if (old_value != new_value) {
       AIDL_ERROR(newer) << "Changed enumerator value: " << older.GetCanonicalName() << "::" << name
                         << " from " << old_value << " to " << new_value << ".";
