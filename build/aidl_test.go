@@ -810,6 +810,34 @@ func TestDuplicatedVersions(t *testing.T) {
 		"aidl_api/myiface/1/myiface.1.aidl": nil,
 		"aidl_api/myiface/1/.hash":          nil,
 	}))
+	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-ndk, myiface-unstable-ndk`, `
+		aidl_interface {
+			name: "myiface",
+			srcs: ["IFoo.aidl"],
+			versions: ["1"],
+			backend: {
+				ndk: {
+					srcs_available: true,
+				},
+			},
+		}
+
+		aidl_interface {
+			name: "myiface2",
+			srcs: ["IBar.aidl"],
+			imports: ["myiface"]
+		}
+
+		cc_library {
+			name: "foobar",
+			srcs: [":myiface-ndk-source"],
+			shared_libs: ["myiface2-ndk"],
+		}
+
+	`, withFiles(map[string][]byte{
+		"aidl_api/myiface/1/myiface.1.aidl": nil,
+		"aidl_api/myiface/1/.hash":          nil,
+	}))
 	testAidl(t, `
 		aidl_interface {
 			name: "myiface",
