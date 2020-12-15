@@ -94,44 +94,43 @@ std::string RawParcelMethod(const AidlTypeSpecifier& type, const AidlTypenames& 
       }
       return kBuiltinVector[element_name];
     }
-    AIDL_FATAL_IF(typenames.IsList(type), type);
-  } else {
-    const string& type_name = type.GetName();
-    if (kBuiltin.find(type_name) != kBuiltin.end()) {
-      AIDL_FATAL_IF(!AidlTypenames::IsBuiltinTypename(type_name), type);
-      if (type_name == "IBinder" && nullable && readMethod) {
-        return "NullableStrongBinder";
-      }
-      if (type_name == "ParcelFileDescriptor" && nullable && !readMethod) {
-        return "NullableParcelable";
-      }
-      if (utf8) {
-        AIDL_FATAL_IF(type_name != "String", type);
-        return readMethod ? "Utf8FromUtf16" : "Utf8AsUtf16";
-      }
-      return kBuiltin[type_name];
-    }
-  }
-  AIDL_FATAL_IF(AidlTypenames::IsBuiltinTypename(type.GetName()), type);
-  auto definedType = typenames.TryGetDefinedType(type.GetName());
-  if (definedType != nullptr && definedType->AsInterface() != nullptr) {
-    if (isVector) {
+    auto definedType = typenames.TryGetDefinedType(element_name);
+    if (definedType != nullptr && definedType->AsInterface() != nullptr) {
       return "StrongBinderVector";
     }
+    return "ParcelableVector";
+  }
+
+  const string& type_name = type.GetName();
+  if (kBuiltin.find(type_name) != kBuiltin.end()) {
+    AIDL_FATAL_IF(!AidlTypenames::IsBuiltinTypename(type_name), type);
+    if (type_name == "IBinder" && nullable && readMethod) {
+      return "NullableStrongBinder";
+    }
+    if (type_name == "ParcelFileDescriptor" && nullable && !readMethod) {
+      return "NullableParcelable";
+    }
+    if (utf8) {
+      AIDL_FATAL_IF(type_name != "String", type);
+      return readMethod ? "Utf8FromUtf16" : "Utf8AsUtf16";
+    }
+    return kBuiltin[type_name];
+  }
+
+  AIDL_FATAL_IF(AidlTypenames::IsBuiltinTypename(type.GetName()), type);
+  auto definedType = typenames.TryGetDefinedType(type.GetName());
+  // The type must be either primitive or interface or parcelable,
+  // so it cannot be nullptr.
+  AIDL_FATAL_IF(definedType == nullptr, type) << type.GetName() << " is not found.";
+
+  if (definedType->AsInterface() != nullptr) {
     if (nullable && readMethod) {
       return "NullableStrongBinder";
     }
     return "StrongBinder";
   }
 
-  // The type must be either primitive or interface or parcelable,
-  // so it cannot be nullptr.
-  AIDL_FATAL_IF(definedType == nullptr, type) << type.GetName() << " is not found.";
-
   // Parcelable
-  if (isVector) {
-    return "ParcelableVector";
-  }
   if (nullable && !readMethod) {
     return "NullableParcelable";
   }
