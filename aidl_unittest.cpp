@@ -1290,48 +1290,6 @@ TEST_F(AidlTest, NoJavaOutputForParcelableDeclaration) {
   EXPECT_FALSE(io_delegate_.GetWrittenContents(options.OutputFile(), &output_file_contents));
 }
 
-// TODO(b/136048684)
-TEST_P(AidlTest, PrimitiveList) {
-  const string primitive_interface =
-      "package a; interface IFoo {\n"
-      "  List<int> foo(); }";
-  string expected_stderr;
-  switch (GetLanguage()) {
-    case Options::Language::CPP:
-      expected_stderr =
-          "ERROR: a/IFoo.aidl:2.1-7: A generic type cannot have any primitive type parameters.\n"
-          "ERROR: a/IFoo.aidl:2.1-7: List<int> is not supported. List in cpp supports only "
-          "String and IBinder.\n";
-      break;
-    case Options::Language::JAVA:
-      expected_stderr =
-          "ERROR: a/IFoo.aidl:2.1-7: A generic type cannot have any primitive type parameters.\n"
-          "ERROR: a/IFoo.aidl:2.1-7: List<int> is not supported. List in Java supports only "
-          "String, IBinder, and ParcelFileDescriptor.\n";
-      break;
-    case Options::Language::NDK:
-    case Options::Language::RUST:
-      expected_stderr =
-          "ERROR: a/IFoo.aidl:2.1-7: A generic type cannot have any primitive type parameters.\n";
-      break;
-    default:
-      AIDL_FATAL(AIDL_LOCATION_HERE)
-          << "Unexpected Options::Language enumerator: " << static_cast<size_t>(GetLanguage());
-  }
-  CaptureStderr();
-  AidlTypenames tn1;
-  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", primitive_interface, tn1, GetLanguage()));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
-
-  string primitive_parcelable =
-      "package a; parcelable IFoo {\n"
-      "  List<int> foo;}";
-  CaptureStderr();
-  AidlTypenames tn2;
-  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", primitive_parcelable, tn2, GetLanguage()));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
-}
-
 TEST_P(AidlTest, RejectsListArray) {
   const string expected_stderr = "ERROR: a/Foo.aidl:2.1-7: List[] is not supported.\n";
   const string list_array_parcelable =
@@ -1495,10 +1453,8 @@ TEST_F(AidlTest, ApiDump) {
                                "   int x = 10;\n"
                                "   // @hide\n"
                                "   int y;\n"
-                               "   IFoo foo;\n"
-                               "   List<IFoo> a;\n"
                                "   /*@hide2*/\n"
-                               "   List<foo.bar.IFoo> b;\n"
+                               "   IFoo foo;\n"
                                "   // It should be @hide property\n"
                                "   @nullable String[] c;\n"
                                "}\n");
@@ -1533,8 +1489,6 @@ parcelable Data {
   /* @hide */
   int y;
   foo.bar.IFoo foo;
-  List<foo.bar.IFoo> a;
-  List<foo.bar.IFoo> b;
   /* @hide */
   @nullable String[] c;
 }
@@ -4373,19 +4327,15 @@ const std::map<std::string, std::string> kListSupportExpectations = {
     {"java_IBinder", ""},
     {"ndk_IBinder", "List<IBinder> is not supported. List in NDK doesn't support IBinder."},
     {"rust_IBinder", ""},
-    {"cpp_ParcelFileDescriptor", "List<ParcelFileDescriptor> is not supported."},
+    {"cpp_ParcelFileDescriptor", ""},
     {"java_ParcelFileDescriptor", ""},
     {"ndk_ParcelFileDescriptor", ""},
     {"rust_ParcelFileDescriptor", ""},
-    {"cpp_interface",
-     "List<a.IBar> is not supported. List in cpp supports only String and IBinder."},
-    {"java_interface",
-     "List<a.IBar> is not supported. List in Java supports only String, IBinder, and "
-     "ParcelFileDescriptor."},
-    {"ndk_interface", "List<a.IBar> is not supported. List in NDK doesn't support interface."},
-    {"rust_interface", ""},
-    {"cpp_parcelable",
-     "List<a.Foo> is not supported. List in cpp supports only String and IBinder."},
+    {"cpp_interface", "List<a.IBar> is not supported."},
+    {"java_interface", "List<a.IBar> is not supported."},
+    {"ndk_interface", "List<a.IBar> is not supported."},
+    {"rust_interface", "List<a.IBar> is not supported."},
+    {"cpp_parcelable", ""},
     {"java_parcelable", ""},
     {"ndk_parcelable", ""},
     {"rust_parcelable", ""},
@@ -4393,7 +4343,7 @@ const std::map<std::string, std::string> kListSupportExpectations = {
     {"java_enum", "A generic type cannot have any primitive type parameters."},
     {"ndk_enum", "A generic type cannot have any primitive type parameters."},
     {"rust_enum", "A generic type cannot have any primitive type parameters."},
-    {"cpp_union", "List<a.Union> is not supported. List in cpp supports only String and IBinder."},
+    {"cpp_union", ""},
     {"java_union", ""},
     {"ndk_union", ""},
     {"rust_union", ""},
