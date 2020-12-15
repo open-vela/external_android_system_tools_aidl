@@ -564,7 +564,7 @@ class AidlConstantValue : public AidlNode {
   static bool ParseIntegral(const string& value, int64_t* parsed_value, Type* parsed_type);
   static bool IsHex(const string& value);
 
-  virtual bool evaluate(const AidlTypeSpecifier& type) const;
+  virtual bool evaluate() const;
 
   const Type type_ = Type::ERROR;
   const vector<unique_ptr<AidlConstantValue>> values_;  // if type_ == ARRAY
@@ -601,7 +601,7 @@ class AidlConstantReference : public AidlConstantValue {
   const AidlConstantValue* Resolve();
 
  private:
-  bool evaluate(const AidlTypeSpecifier& type) const override;
+  bool evaluate() const override;
 
   std::unique_ptr<AidlTypeSpecifier> ref_type_;
   std::string field_name_;
@@ -622,7 +622,7 @@ class AidlUnaryConstExpression : public AidlConstantValue {
   }
 
  private:
-  bool evaluate(const AidlTypeSpecifier& type) const override;
+  bool evaluate() const override;
 
   std::unique_ptr<AidlConstantValue> unary_;
   const string op_;
@@ -647,7 +647,7 @@ class AidlBinaryConstExpression : public AidlConstantValue {
   }
 
  private:
-  bool evaluate(const AidlTypeSpecifier& type) const override;
+  bool evaluate() const override;
 
   std::unique_ptr<AidlConstantValue> left_val_;
   std::unique_ptr<AidlConstantValue> right_val_;
