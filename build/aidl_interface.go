@@ -190,17 +190,8 @@ func recordVersions(mctx android.BottomUpMutatorContext) {
 	case *java.Library:
 	case *cc.Module:
 	case *rust.Module:
-	case *aidlGenRule:
 	default:
 		return
-	}
-
-	isAidlModule := false // whether this module is from an AIDL interface
-	for _, i := range *aidlInterfaces(mctx.Config()) {
-		if android.InList(mctx.ModuleName(), i.internalModuleNames) {
-			isAidlModule = true
-			break
-		}
 	}
 
 	// First, gather all the AIDL interfaces modules that are directly or indirectly
@@ -211,24 +202,16 @@ func recordVersions(mctx android.BottomUpMutatorContext) {
 		case *java.Library:
 		case *cc.Module:
 		case *rust.Module:
-		case *aidlGenRule:
-			// Dependencies to the source module is tracked only when it's from a client
-			// module, i.e. not from an AIDL-generated stub library
-			if isAidlModule {
-				return
-			}
 		default:
 			return
 		}
 		depName := mctx.OtherModuleName(dep)
-		isSource := strings.HasSuffix(depName, "-source")
-		depName = strings.TrimSuffix(depName, "-source")
 		// If this module depends on one of the aidl interface module, record it
 		for _, i := range *aidlInterfaces(mctx.Config()) {
 			if android.InList(depName, i.internalModuleNames) {
 				ifaceName := i.ModuleBase.Name()
 				verLang := depName[len(ifaceName):]
-				myAidlDeps[DepInfo{ifaceName, verLang, isSource}] = true
+				myAidlDeps[DepInfo{ifaceName, verLang}] = true
 				break
 			}
 		}
@@ -264,7 +247,6 @@ func checkDuplicatedVersions(mctx android.BottomUpMutatorContext) {
 	case *java.Library:
 	case *cc.Module:
 	case *rust.Module:
-	case *aidlGenRule:
 	default:
 		return
 	}
@@ -1927,7 +1909,6 @@ func unstableModules(config android.Config) *[]string {
 type DepInfo struct {
 	ifaceName string
 	verLang   string
-	isSource  bool
 }
 
 func aidlDeps(config android.Config) map[android.Module][]DepInfo {
