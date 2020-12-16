@@ -276,37 +276,40 @@ func checkDuplicatedVersions(mctx android.BottomUpMutatorContext) {
 		return // This should be the usual case
 	}
 
-	var violators []string
-
 	// Lastly, report an error if there is any duplicated versions of the same interface * lang
 	for _, lang := range []string{langJava, langCpp, langNdk, langNdkPlatform} {
-		// interfaceName -> list of module names for the interface
-		versionsOf := make(map[string][]string)
+		// interfaceName -> verLang -> list of module names
+		versionsOf := make(map[string]map[string][]string)
 		for _, dep := range myAidlDeps {
 			if !strings.HasSuffix(dep.verLang, lang) {
 				continue
 			}
 			versions := versionsOf[dep.ifaceName]
-			versions = append(versions, dep.ifaceName+dep.verLang)
-			if len(versions) >= 2 {
-				violators = append(violators, versions...)
+			if versions == nil {
+				versions = make(map[string][]string)
+				versionsOf[dep.ifaceName] = versions
 			}
-			versionsOf[dep.ifaceName] = versions
+			versions[dep.verLang] = append(versions[dep.verLang], dep.moduleName())
 		}
-	}
-	if violators == nil || len(violators) == 0 {
-		return
-	}
 
-	violators = android.SortedUniqueStrings(violators)
-	mctx.ModuleErrorf("depends on multiple versions of the same aidl_interface: %s", strings.Join(violators, ", "))
-	mctx.WalkDeps(func(child android.Module, parent android.Module) bool {
-		if android.InList(child.Name(), violators) {
-			mctx.ModuleErrorf("Dependency path: %s", mctx.GetPathString(true))
-			return false
+		for _, versions := range versionsOf {
+			if len(versions) >= 2 {
+				var violators []string
+				for _, modules := range versions {
+					violators = append(violators, modules...)
+				}
+				violators = android.SortedUniqueStrings(violators)
+				mctx.ModuleErrorf("depends on multiple versions of the same aidl_interface: %s", strings.Join(violators, ", "))
+				mctx.WalkDeps(func(child android.Module, parent android.Module) bool {
+					if android.InList(child.Name(), violators) {
+						mctx.ModuleErrorf("Dependency path: %s", mctx.GetPathString(true))
+						return false
+					}
+					return true
+				})
+			}
 		}
-		return true
-	})
+	}
 }
 
 // wrap(p, a, s) = [p + v + s for v in a]
@@ -1928,6 +1931,14 @@ type DepInfo struct {
 	ifaceName string
 	verLang   string
 	isSource  bool
+}
+
+func (d DepInfo) moduleName() string {
+	name := d.ifaceName + d.verLang
+	if d.isSource {
+		name += "-source"
+	}
+	return name
 }
 
 func aidlDeps(config android.Config) map[android.Module][]DepInfo {
