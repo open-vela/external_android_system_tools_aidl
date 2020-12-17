@@ -24,6 +24,9 @@ use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
 use aidl_test_interface::aidl::android::aidl::tests::{
     ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable, Union,
 };
+use aidl_test_interface::aidl::android::aidl::tests::unions::{
+    EnumUnion::EnumUnion,
+};
 use aidl_test_interface::binder;
 use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::{
     IFooInterface, IFooInterface::BpFooInterface, BazUnion::BazUnion,
@@ -533,6 +536,12 @@ fn test_parcelable() {
 
     assert_eq!(parcelable.u, Some(Union::Union::Ns(vec![1, 2, 3])));
     assert_eq!(parcelable.shouldBeConstS1, Some(Union::Union::S(Union::S1.to_string())))
+}
+
+#[test]
+fn test_unions() {
+    assert_eq!(Union::Union::default(), Union::Union::Ns(vec![]));
+    assert_eq!(EnumUnion::default(), EnumUnion::IntEnum(IntEnum::FOO));
 }
 
 const EXPECTED_ARG_VALUE: i32 = 100;

@@ -3852,6 +3852,16 @@ TEST_P(AidlTest, UnionRejectsParcelableHolder) {
   EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr(expected_stderr));
 }
 
+TEST_P(AidlTest, UnionRejectsFirstEnumWithNoDefaults) {
+  import_paths_.insert(".");
+  io_delegate_.SetFileContents("a/Enum.aidl", "package a; enum Enum { FOO, BAR }");
+  const string expected_err = "The union's first member should have a useful default value.";
+  CaptureStderr();
+  EXPECT_EQ(nullptr,
+            Parse("a/Foo.aidl", "package a; union Foo { a.Enum e; }", typenames_, GetLanguage()));
+  EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr(expected_err));
+}
+
 TEST_P(AidlTest, GenericStructuredParcelable) {
   io_delegate_.SetFileContents("Foo.aidl", "parcelable Foo<T, U> { int a; int A; }");
   Options options =

@@ -18,6 +18,7 @@
 #include <android/aidl/tests/extension/MyExt.h>
 #include <android/aidl/tests/extension/MyExt2.h>
 #include <android/aidl/tests/extension/MyExtLike.h>
+#include <android/aidl/tests/unions/EnumUnion.h>
 #include "aidl_test_client.h"
 
 #include <string>
@@ -40,6 +41,7 @@ using android::aidl::tests::extension::ExtendableParcelable;
 using android::aidl::tests::extension::MyExt;
 using android::aidl::tests::extension::MyExt2;
 using android::aidl::tests::extension::MyExtLike;
+using android::aidl::tests::unions::EnumUnion;
 using android::binder::Status;
 using android::os::PersistableBundle;
 using std::string;
@@ -193,6 +195,12 @@ TEST_F(AidlTest, UnionUsage) {
   // note that this works only if the target type is unique
   one_two_three = std::vector<std::string>{"1", "2", "3"};
   EXPECT_EQ(Union::ss, one_two_three.getTag());
+}
+
+TEST_F(AidlTest, UnionDefaultConstructorInitializeWithFirstMember) {
+  EXPECT_EQ(Union::make<Union::ns>(), Union());  // int[] ns
+  EXPECT_EQ(EnumUnion::make<EnumUnion::intEnum>(IntEnum::FOO),
+            EnumUnion());  // IntEnum intEnum = IntEnum.FOO
 }
 
 TEST_F(AidlTest, StructuredParcelableEquality) {
