@@ -4086,7 +4086,7 @@ parcelable Foo {
 
   string code;
   EXPECT_TRUE(io_delegate_.GetWrittenContents("out/p/Foo.java", &code));
-  EXPECT_THAT(code, testing::HasSubstr("byte e = Enum.BAR"));
+  EXPECT_THAT(code, testing::HasSubstr("byte e = p.Enum.BAR"));
 }
 
 TEST_F(AidlTest, EnumWithDefaults_Cpp) {
