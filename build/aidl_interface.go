@@ -2019,8 +2019,6 @@ func (m *aidlInterfacesMetadataSingleton) GenerateAndroidBuildActions(ctx androi
 				info.HashFiles = append(info.HashFiles, t.hashFile.String())
 			}
 			moduleInfos[t.properties.BaseName] = info
-		default:
-			panic(fmt.Sprintf("Unrecognized module type: %v", t))
 		}
 
 	})
