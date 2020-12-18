@@ -117,6 +117,11 @@ impl ITestService::ITestService for TestService {
     impl_repeat! {RepeatByte, i8}
     impl_reverse! {ReverseByte, u8}
 
+    fn UnimplementedMethod(&self, _: i32) -> binder::Result<i32> {
+        // Pretend this method hasn't been implemented
+        Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
+    }
+
     fn TestOneway(&self) -> binder::Result<()> {
         Err(binder::StatusCode::UNKNOWN_ERROR.into())
     }
