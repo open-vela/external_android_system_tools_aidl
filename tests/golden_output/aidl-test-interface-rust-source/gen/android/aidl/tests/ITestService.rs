@@ -35,7 +35,7 @@ pub trait ITestService: binder::Interface + Send {
   fn ReverseByteEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>;
   fn ReverseIntEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>;
   fn ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>;
-  fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>;
+  fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>;
   fn VerifyName(&self, _arg_service: &dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback, _arg_name: &str) -> binder::public_api::Result<bool>;
   fn ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>>;
   fn RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor) -> binder::public_api::Result<binder::parcel::ParcelFileDescriptor>;
@@ -55,10 +55,10 @@ pub trait ITestService: binder::Interface + Send {
   fn ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>>;
   fn ReverseNullableUtf8CppString(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>>;
   fn ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>>;
-  fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>;
+  fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>;
   fn FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<()>;
-  fn GetOldNameInterface(&self) -> binder::public_api::Result<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>>;
-  fn GetNewNameInterface(&self) -> binder::public_api::Result<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>>;
+  fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>>;
+  fn GetNewNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>>;
   fn GetCppJavaTests(&self) -> binder::public_api::Result<Option<binder::SpIBinder>>;
   fn getBackendType(&self) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType>;
   fn getDefaultImpl() -> ITestServiceDefaultRef where Self: Sized {
@@ -141,7 +141,7 @@ pub trait ITestServiceDefault: Send + Sync {
   fn ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
-  fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> {
+  fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
   fn VerifyName(&self, _arg_service: &dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback, _arg_name: &str) -> binder::public_api::Result<bool> {
@@ -201,16 +201,16 @@ pub trait ITestServiceDefault: Send + Sync {
   fn ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
-  fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
+  fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
   fn FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<()> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
-  fn GetOldNameInterface(&self) -> binder::public_api::Result<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> {
+  fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
-  fn GetNewNameInterface(&self) -> binder::public_api::Result<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> {
+  fn GetNewNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
   fn GetCppJavaTests(&self) -> binder::public_api::Result<Option<binder::SpIBinder>> {
@@ -780,7 +780,7 @@ impl ITestService for BpTestService {
     *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> {
+  fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> {
     let _aidl_reply = self.binder.transact(transactions::GetOtherTestService, binder::SpIBinder::FLAG_CLEAR_BUF, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_name)?;
@@ -794,7 +794,7 @@ impl ITestService for BpTestService {
     let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Box<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback> = _aidl_reply.read()?;
+    let _aidl_return: binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
   fn VerifyName(&self, _arg_service: &dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback, _arg_name: &str) -> binder::public_api::Result<bool> {
@@ -1126,7 +1126,7 @@ impl ITestService for BpTestService {
     *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
+  fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
     let _aidl_reply = self.binder.transact(transactions::GetCallback, binder::SpIBinder::FLAG_CLEAR_BUF, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_return_null)?;
@@ -1140,7 +1140,7 @@ impl ITestService for BpTestService {
     let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Option<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> = _aidl_reply.read()?;
+    let _aidl_return: Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
   fn FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<()> {
@@ -1160,7 +1160,7 @@ impl ITestService for BpTestService {
     *_arg_parcel = _aidl_reply.read()?;
     Ok(())
   }
-  fn GetOldNameInterface(&self) -> binder::public_api::Result<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> {
+  fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> {
     let _aidl_reply = self.binder.transact(transactions::GetOldNameInterface, binder::SpIBinder::FLAG_CLEAR_BUF, |_aidl_data| {
       _aidl_data.mark_sensitive();
       Ok(())
@@ -1173,10 +1173,10 @@ impl ITestService for BpTestService {
     let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Box<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName> = _aidl_reply.read()?;
+    let _aidl_return: binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn GetNewNameInterface(&self) -> binder::public_api::Result<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> {
+  fn GetNewNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> {
     let _aidl_reply = self.binder.transact(transactions::GetNewNameInterface, binder::SpIBinder::FLAG_CLEAR_BUF, |_aidl_data| {
       _aidl_data.mark_sensitive();
       Ok(())
@@ -1189,7 +1189,7 @@ impl ITestService for BpTestService {
     let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Box<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName> = _aidl_reply.read()?;
+    let _aidl_return: binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
   fn GetCppJavaTests(&self) -> binder::public_api::Result<Option<binder::SpIBinder>> {
@@ -1250,7 +1250,7 @@ impl ITestService for binder::Binder<BnTestService> {
   fn ReverseByteEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>> { self.0.ReverseByteEnum(_arg_input, _arg_repeated) }
   fn ReverseIntEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>> { self.0.ReverseIntEnum(_arg_input, _arg_repeated) }
   fn ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>> { self.0.ReverseLongEnum(_arg_input, _arg_repeated) }
-  fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> { self.0.GetOtherTestService(_arg_name) }
+  fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> { self.0.GetOtherTestService(_arg_name) }
   fn VerifyName(&self, _arg_service: &dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback, _arg_name: &str) -> binder::public_api::Result<bool> { self.0.VerifyName(_arg_service, _arg_name) }
   fn ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> { self.0.ReverseStringList(_arg_input, _arg_repeated) }
   fn RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor) -> binder::public_api::Result<binder::parcel::ParcelFileDescriptor> { self.0.RepeatParcelFileDescriptor(_arg_read) }
@@ -1270,10 +1270,10 @@ impl ITestService for binder::Binder<BnTestService> {
   fn ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> { self.0.ReverseUtf8CppString(_arg_input, _arg_repeated) }
   fn ReverseNullableUtf8CppString(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>> { self.0.ReverseNullableUtf8CppString(_arg_input, _arg_repeated) }
   fn ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>> { self.0.ReverseUtf8CppStringList(_arg_input, _arg_repeated) }
-  fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> { self.0.GetCallback(_arg_return_null) }
+  fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> { self.0.GetCallback(_arg_return_null) }
   fn FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<()> { self.0.FillOutStructuredParcelable(_arg_parcel) }
-  fn GetOldNameInterface(&self) -> binder::public_api::Result<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> { self.0.GetOldNameInterface() }
-  fn GetNewNameInterface(&self) -> binder::public_api::Result<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> { self.0.GetNewNameInterface() }
+  fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> { self.0.GetOldNameInterface() }
+  fn GetNewNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> { self.0.GetNewNameInterface() }
   fn GetCppJavaTests(&self) -> binder::public_api::Result<Option<binder::SpIBinder>> { self.0.GetCppJavaTests() }
   fn getBackendType(&self) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType> { self.0.getBackendType() }
 }
@@ -1605,7 +1605,7 @@ fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::Transaction
       Ok(())
     }
     transactions::VerifyName => {
-      let _arg_service: Box<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback> = _aidl_data.read()?;
+      let _arg_service: binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback> = _aidl_data.read()?;
       let _arg_name: String = _aidl_data.read()?;
       let _aidl_return = _aidl_service.VerifyName(&*_arg_service, &_arg_name);
       match &_aidl_return {

@@ -68,7 +68,7 @@ impl INewName::INewName for NewName {
 
 #[derive(Default)]
 struct TestService {
-    service_map: Mutex<HashMap<String, Box<dyn INamedCallback::INamedCallback>>>,
+    service_map: Mutex<HashMap<String, binder::Strong<dyn INamedCallback::INamedCallback>>>,
 }
 
 impl Interface for TestService {}
@@ -150,11 +150,11 @@ impl ITestService::ITestService for TestService {
     fn GetOtherTestService(
         &self,
         name: &str,
-    ) -> binder::Result<Box<dyn INamedCallback::INamedCallback>> {
+    ) -> binder::Result<binder::Strong<dyn INamedCallback::INamedCallback>> {
         let mut service_map = self.service_map.lock().unwrap();
         let other_service = service_map.entry(name.into()).or_insert_with(|| {
             let named_callback = NamedCallback(name.into());
-            Box::new(INamedCallback::BnNamedCallback::new_binder(named_callback))
+            INamedCallback::BnNamedCallback::new_binder(named_callback)
         });
         Ok(other_service.to_owned())
     }
@@ -243,7 +243,7 @@ impl ITestService::ITestService for TestService {
     fn GetCallback(
         &self,
         return_null: bool,
-    ) -> binder::Result<Option<Box<dyn INamedCallback::INamedCallback>>> {
+    ) -> binder::Result<Option<binder::Strong<dyn INamedCallback::INamedCallback>>> {
         if return_null {
             Ok(None)
         } else {
@@ -282,12 +282,12 @@ impl ITestService::ITestService for TestService {
         Ok(())
     }
 
-    fn GetOldNameInterface(&self) -> binder::Result<Box<dyn IOldName::IOldName>> {
-        Ok(Box::new(IOldName::BnOldName::new_binder(OldName)))
+    fn GetOldNameInterface(&self) -> binder::Result<binder::Strong<dyn IOldName::IOldName>> {
+        Ok(IOldName::BnOldName::new_binder(OldName))
     }
 
-    fn GetNewNameInterface(&self) -> binder::Result<Box<dyn INewName::INewName>> {
-        Ok(Box::new(INewName::BnNewName::new_binder(NewName)))
+    fn GetNewNameInterface(&self) -> binder::Result<binder::Strong<dyn INewName::INewName>> {
+        Ok(INewName::BnNewName::new_binder(NewName))
     }
 
     fn GetCppJavaTests(&self) -> binder::Result<Option<SpIBinder>> {
