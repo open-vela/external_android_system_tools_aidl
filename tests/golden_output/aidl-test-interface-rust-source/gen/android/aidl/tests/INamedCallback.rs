@@ -11,24 +11,27 @@ declare_binder_interface! {
 }
 pub trait INamedCallback: binder::Interface + Send {
   fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.INamedCallback" }
-  fn GetName(&self) -> binder::public_api::Result<String> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn getDefaultImpl() -> INamedCallbackDefault where Self: Sized {
+  fn GetName(&self) -> binder::public_api::Result<String>;
+  fn getDefaultImpl() -> INamedCallbackDefaultRef where Self: Sized {
     DEFAULT_IMPL.lock().unwrap().clone()
   }
-  fn setDefaultImpl(d: INamedCallbackDefault) -> INamedCallbackDefault where Self: Sized {
+  fn setDefaultImpl(d: INamedCallbackDefaultRef) -> INamedCallbackDefaultRef where Self: Sized {
     std::mem::replace(&mut *DEFAULT_IMPL.lock().unwrap(), d)
+  }
+}
+pub trait INamedCallbackDefault: Send + Sync {
+  fn GetName(&self) -> binder::public_api::Result<String> {
+    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
 }
 pub mod transactions {
   #[allow(unused_imports)] use binder::IBinder;
   pub const GetName: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 0;
 }
-pub type INamedCallbackDefault = Option<std::sync::Arc<dyn INamedCallback + Sync>>;
+pub type INamedCallbackDefaultRef = Option<std::sync::Arc<dyn INamedCallbackDefault>>;
 use lazy_static::lazy_static;
 lazy_static! {
-  static ref DEFAULT_IMPL: std::sync::Mutex<INamedCallbackDefault> = std::sync::Mutex::new(None);
+  static ref DEFAULT_IMPL: std::sync::Mutex<INamedCallbackDefaultRef> = std::sync::Mutex::new(None);
 }
 pub(crate) mod mangled { pub use super::INamedCallback as _7_android_4_aidl_5_tests_14_INamedCallback; }
 impl INamedCallback for BpNamedCallback {
