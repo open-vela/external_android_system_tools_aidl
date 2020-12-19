@@ -997,3 +997,17 @@ func TestSrcsAvailable(t *testing.T) {
 	testAidlError(t, `depends on //.:myiface-cpp-source which is not visible to this module`,
 		fmt.Sprintf(bp, "true", "false"), customizer)
 }
+
+func TestRustDuplicateNames(t *testing.T) {
+	testAidl(t, `
+		aidl_interface {
+			name: "myiface",
+			srcs: ["dir/a/Foo.aidl", "dir/b/Foo.aidl"],
+			backend: {
+				rust: {
+					enabled: true,
+				},
+			},
+		}
+	`)
+}

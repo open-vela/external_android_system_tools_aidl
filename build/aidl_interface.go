@@ -1747,14 +1747,18 @@ type aidlRustSourceProvider struct {
 	properties aidlRustSourceProviderProperties
 }
 
-func (sp *aidlRustSourceProvider) GenerateSource(ctx rust.ModuleContext, deps rust.PathDeps) android.Path {
+var aidlRustSourceTag = struct {
+	blueprint.DependencyTag
+}{}
+
+func (sp *aidlRustSourceProvider) GenerateSource(ctx rust.ModuleContext, _ rust.PathDeps) android.Path {
 	sourceStem := proptools.String(sp.BaseSourceProvider.Properties.Source_stem)
 	topLevelOutputFile := android.PathForModuleOut(ctx, sourceStem+".rs")
-	srcPaths := android.PathsForModuleSrc(ctx, []string{sp.properties.SourceGen})
 
+	aidlGenModule := ctx.GetDirectDepWithTag(sp.properties.SourceGen, aidlRustSourceTag)
 	// Find the gen directory for the source module
-	aidlGenModule, _ := ctx.GetDirectDep(android.SrcIsModule(sp.properties.SourceGen))
 	srcGenDir := aidlGenModule.(*aidlGenRule).genOutDir
+	srcPaths := aidlGenModule.(*aidlGenRule).genOutputs.Paths()
 
 	// In Rust, we import our dependency crates into `mangled`:
 	//   use dependency::mangled::*;
@@ -1796,6 +1800,12 @@ func (sp *aidlRustSourceProvider) SourceProviderDeps(ctx rust.DepsContext, deps 
 	deps = sp.BaseSourceProvider.SourceProviderDeps(ctx, deps)
 	deps.Rustlibs = append(deps.Rustlibs, "libbinder_rs", "liblazy_static")
 	deps.Rustlibs = append(deps.Rustlibs, wrap("", sp.properties.Imports, "-rust")...)
+
+	// Add a depencency to the source module (*-rust-source) directly via `ctx` because
+	// the source module is specific to aidlRustSourceProvider and we don't want the rust module
+	// to know about it.
+	ctx.AddDependency(ctx.Module(), aidlRustSourceTag, sp.properties.SourceGen)
+
 	return deps
 }
 
@@ -1865,7 +1875,7 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMo
 	}, &rust.SourceProviderProperties{
 		Source_stem: proptools.StringPtr(versionedRustName),
 	}, &aidlRustSourceProviderProperties{
-		SourceGen: ":" + rustSourceGen,
+		SourceGen: rustSourceGen,
 		Imports:   i.properties.Imports,
 	})
 
