@@ -137,8 +137,12 @@ cc_test {
         "generate_cpp_unittest.cpp",
         "io_delegate_unittest.cpp",
         "options_unittest.cpp",
+        "tests/end_to_end_tests.cpp",
         "tests/fake_io_delegate.cpp",
         "tests/main.cpp",
+        "tests/test_data_example_interface.cpp",
+        "tests/test_data_ping_responder.cpp",
+        "tests/test_data_string_constants.cpp",
         "tests/test_util.cpp",
     ],
 
@@ -149,8 +153,6 @@ cc_test {
         "libgmock",
         "liblog",
     ],
-
-    required: ["aidl-golden-test-build-hook"],
 }
 
 cc_fuzz {
@@ -389,39 +391,6 @@ java_test {
 }
 
 //
-// "Golden" test of compiler output
-//
-
-sh_binary_host {
-    name: "aidl-golden-test",
-    src: "tests/golden_test.sh",
-}
-
-genrule {
-    name: "aidl-golden-test-build-hook-gen",
-    tools: ["aidl-golden-test"],
-    cmd: "$(location aidl-golden-test) check && " +
-         "echo 'int main(){return 0;}' > $(genDir)/TODO_b_37575883.cpp",
-    srcs: [
-        ":aidl-test-interface-cpp-source",
-        ":aidl-test-interface-java-source",
-        ":aidl-test-interface-ndk_platform-source",
-        ":aidl-test-interface-rust-source",
-        ":aidl_test_loggable_interface-cpp-source",
-        ":aidl_test_loggable_interface-java-source",
-        ":aidl_test_loggable_interface-ndk_platform-source",
-        ":aidl_test_loggable_interface-ndk-source",
-        "tests/golden_output/**/*",
-    ],
-    out: ["TODO_b_37575883.cpp"],
-}
-
-cc_test_host {
-    name: "aidl-golden-test-build-hook",
-    generated_sources: ["aidl-golden-test-build-hook-gen"],
-}
-
-//
 // Testing generation of logs
 //
 
@@ -438,15 +407,12 @@ aidl_interface {
     gen_trace: true,
     backend: {
         cpp: {
-            srcs_available: true,
             gen_log: true,
         },
         ndk: {
-            srcs_available: true,
             gen_log: true,
         },
         java: {
-            srcs_available: true,
             platform_apis: true,
         },
     },
@@ -462,20 +428,14 @@ aidl_interface {
     srcs: [":libaidl-integration-test-files"],
     local_include_dir: "tests",
     backend: {
-        cpp: {
-            srcs_available: true,
-        },
         java: {
             platform_apis: true,
-            srcs_available: true,
         },
         rust: {
             enabled: true,
-            srcs_available: true,
         },
         ndk: {
             apps_enabled: false,
-            srcs_available: true,
         },
     },
 }
