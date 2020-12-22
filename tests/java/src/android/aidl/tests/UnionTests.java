@@ -17,13 +17,13 @@
 package android.aidl.tests;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 
 import android.aidl.tests.Union;
 import android.aidl.tests.UnionWithFd;
+import android.aidl.tests.unions.EnumUnion;
 import android.os.Parcel;
 import android.os.ParcelFileDescriptor;
 import android.os.Parcelable;
@@ -40,9 +40,9 @@ import org.junit.runners.JUnit4;
 public class UnionTests {
   @Test
   public void defaultConstructorInitsWithFirstField() {
-    Union u = new Union(); // `int[] ns`
-    assertThat(u.getTag(), is(Union.ns));
-    assertNull(u.getNs());
+    assertThat(new Union(), is(Union.ns(new int[] {}))); // int[] ns = {}
+    assertThat(
+        new EnumUnion(), is(EnumUnion.intEnum(IntEnum.FOO))); // IntEnum intEnum = IntEnum.FOO
   }
 
   @Test

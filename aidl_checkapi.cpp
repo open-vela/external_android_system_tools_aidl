@@ -191,19 +191,6 @@ static bool are_compatible_interfaces(const AidlInterface& older, const AidlInte
   return compatible;
 }
 
-// returns whether the given type when defaulted will be accepted by
-// unmarshalling code
-static bool has_usable_nil_type(const AidlTypeSpecifier& specifier) {
-  // TODO(b/155238508): fix for primitives
-
-  // This technically only applies in C++, but even if both the client and the
-  // server of an interface are in Java at a particular point in time, where
-  // null is currently always acceptable, we want to make sure that versions
-  // of this service can work in native and future backends without a problem.
-  // Also, in that case, adding nullable does not hurt.
-  return specifier.IsNullable();
-}
-
 static bool HasZeroEnumerator(const AidlEnumDeclaration& enum_decl) {
   return std::any_of(enum_decl.GetEnumerators().begin(), enum_decl.GetEnumerators().end(),
                      [&](const unique_ptr<AidlEnumerator>& enumerator) {
@@ -261,12 +248,7 @@ static bool are_compatible_parcelables(const AidlDefinedType& older, const AidlT
 
   for (size_t i = old_fields.size(); i < new_fields.size(); i++) {
     const auto& new_field = new_fields.at(i);
-    if (new_field->GetDefaultValue()) {
-      continue;
-    }
-
-    // null is accepted as a valid default value
-    if (has_usable_nil_type(new_field->GetType())) {
+    if (new_field->HasUsefulDefaultValue()) {
       continue;
     }
 

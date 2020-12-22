@@ -261,6 +261,7 @@ filegroup {
         "tests/android/aidl/tests/StructuredParcelable.aidl",
         "tests/android/aidl/tests/Union.aidl",
         "tests/android/aidl/tests/UnionWithFd.aidl",
+        "tests/android/aidl/tests/unions/*.aidl",
     ],
     path: "tests",
 }
@@ -376,6 +377,7 @@ java_test {
         "tests/android/aidl/tests/immutable/*.aidl",
         "tests/android/aidl/tests/map/*.aidl",
         "tests/android/aidl/tests/extension/*.aidl",
+        "tests/android/aidl/tests/unions/*.aidl",
         "tests/java/src/android/aidl/tests/**/*.java",
     ],
     aidl: {
