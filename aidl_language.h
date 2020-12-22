@@ -420,6 +420,7 @@ class AidlVariableDeclaration : public AidlMember {
   // will return the default value this is constructed with or a default value
   // if one is available
   const AidlConstantValue* GetDefaultValue() const { return default_value_.get(); }
+  bool HasUsefulDefaultValue() const;
 
   AidlTypeSpecifier* GetMutableType() { return type_.get(); }
 
