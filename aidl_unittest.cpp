@@ -4312,6 +4312,26 @@ interface IFoo {}
   EXPECT_NE(nullptr, Parse("IFoo.aidl", contents, typenames_, GetLanguage()));
 }
 
+TEST_P(AidlTest, WarningInterfaceName) {
+  io_delegate_.SetFileContents("p/Foo.aidl", "interface Foo {}");
+  auto options = Options::From("aidl --lang " + Options::LanguageToString(GetLanguage()) +
+                               " -Weverything -o out -h out p/Foo.aidl");
+  CaptureStderr();
+  EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ("WARNING: p/Foo.aidl:1.1-10: Interface names should start with I.\n",
+            GetCapturedStderr());
+}
+
+TEST_P(AidlTest, ErrorInterfaceName) {
+  io_delegate_.SetFileContents("p/Foo.aidl", "interface Foo {}");
+  auto options = Options::From("aidl --lang " + Options::LanguageToString(GetLanguage()) +
+                               " -Weverything -Werror -o out -h out p/Foo.aidl");
+  CaptureStderr();
+  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ("ERROR: p/Foo.aidl:1.1-10: Interface names should start with I.\n",
+            GetCapturedStderr());
+}
+
 struct TypeParam {
   string kind;
   string literal;
