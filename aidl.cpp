@@ -557,6 +557,28 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   // Validation phase
   //////////////////////////////////////////////////////////////////////////
 
+  class DiagnosticsContextImpl : public DiagnosticsContext {
+   public:
+    DiagnosticsContextImpl(const Options& options) : warning_options(options.GetWarningOptions()) {}
+    AidlErrorLog Report(const AidlLocation& loc, DiagnosticID id) override {
+      switch (warning_options.Severity(id)) {
+        case DiagnosticSeverity::DISABLED:
+          return AidlErrorLog(AidlErrorLog::NO_OP, loc);
+        case DiagnosticSeverity::WARNING:
+          return AidlErrorLog(AidlErrorLog::WARNING, loc);
+        case DiagnosticSeverity::ERROR:
+          error_count_++;
+          return AidlErrorLog(AidlErrorLog::ERROR, loc);
+      }
+    }
+    size_t ErrorCount() const { return error_count_; }
+
+   private:
+    const WarningOptions& warning_options;
+    size_t error_count_ = 0;
+  };
+  DiagnosticsContextImpl diag(options);
+
   // For legacy reasons, by default, compiling an unstructured parcelable (which contains no output)
   // is allowed. This must not be returned as an error until the very end of this procedure since
   // this may be considered a success, and we should first check that there are not other, more
@@ -588,7 +610,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
 
       if (!is_check_api) {
         // Ideally, we could do this for check api, but we can't resolve imports
-        if (!defined_type->CheckValid(*typenames)) {
+        if (!defined_type->CheckValid(*typenames, diag)) {
           valid_type = false;
         }
       }
@@ -678,6 +700,10 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
         }
       }
     }
+  }
+
+  if (diag.ErrorCount() > 0) {
+    return AidlError::BAD_TYPE;
   }
 
   typenames->IterateTypes([&](const AidlDefinedType& type) {
