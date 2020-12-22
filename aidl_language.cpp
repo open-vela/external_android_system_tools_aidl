@@ -661,6 +661,17 @@ AidlVariableDeclaration::AidlVariableDeclaration(const AidlLocation& location,
       default_user_specified_(true),
       default_value_(default_value) {}
 
+bool AidlVariableDeclaration::HasUsefulDefaultValue() const {
+  if (GetDefaultValue()) {
+    return true;
+  }
+  // null is accepted as a valid default value in all backends
+  if (GetType().IsNullable()) {
+    return true;
+  }
+  return false;
+}
+
 bool AidlVariableDeclaration::CheckValid(const AidlTypenames& typenames) const {
   bool valid = true;
   valid &= type_->CheckValid(typenames);
@@ -1314,10 +1325,32 @@ bool AidlUnionDecl::CheckValid(const AidlTypenames& typenames) const {
     }
   }
 
-  // first member should have default value (implicit or explicit)
   if (GetFields().empty()) {
     AIDL_ERROR(*this) << "The union '" << this->GetName() << "' has no fields.";
     return false;
+  }
+
+  // first member should have useful default value (implicit or explicit)
+  const auto& first = GetFields()[0];
+  if (!first->HasUsefulDefaultValue()) {
+    // Most types can be initialized without a default value. For example,
+    // interface types are inherently nullable. But, enum types should have
+    // an explicit default value.
+    if (!first->GetType().IsArray() && typenames.GetEnumDeclaration(first->GetType())) {
+      AIDL_ERROR(first)
+          << "The union's first member should have a useful default value. Enum types can be "
+             "initialized with a reference. (e.g. ... = MyEnum.FOO;)";
+      return false;
+    }
+    // In Java, array types are initialized as null without a default value. To be sure that default
+    // initialized unions are accepted by other backends we require arrays also have a default
+    // value.
+    if (first->GetType().IsArray()) {
+      AIDL_ERROR(first)
+          << "The union's first member should have a useful default value. Arrays can be "
+             "initialized with values(e.g. ... = { values... };) or marked as @nullable.";
+      return false;
+    }
   }
 
   return success;

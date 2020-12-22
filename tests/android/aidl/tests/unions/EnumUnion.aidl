@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-package android.aidl.tests;
-import android.aidl.tests.ByteEnum;
+package android.aidl.tests.unions;
+import android.aidl.tests.IntEnum;
+import android.aidl.tests.LongEnum;
 
 @JavaDerive(toString=true, equals=true)
 @RustDerive(Clone=true, PartialEq=true)
-union Union {
-    int[] ns = {};
-    int n;
-    int m;
-    @utf8InCpp String s;
-    @nullable IBinder ibinder;
-    @utf8InCpp List<String> ss;
-    ByteEnum be;
-
-    const @utf8InCpp String S1 = "a string constant in union";
+union EnumUnion {
+  IntEnum intEnum = IntEnum.FOO;
+  LongEnum longEnum;
 }
 
