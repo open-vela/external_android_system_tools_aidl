@@ -1259,6 +1259,18 @@ bool AidlEnumDeclaration::CheckValid(const AidlTypenames& typenames,
   for (const auto& enumerator : enumerators_) {
     success = success && enumerator->CheckValid(GetBackingType());
   }
+
+  AIDL_FATAL_IF(GetEnumerators().empty(), this)
+      << "The enum '" << GetName() << "' has no enumerators.";
+
+  const auto& first = GetEnumerators()[0];
+  if (auto first_value = first->ValueString(GetBackingType(), AidlConstantValueDecorator);
+      first_value != "0") {
+    diag.Report(first->GetLocation(), DiagnosticID::enum_zero)
+        << "The first enumerator '" << first->GetName() << "' should be 0, but it is "
+        << first_value << ".";
+  }
+
   return success;
 }
 
