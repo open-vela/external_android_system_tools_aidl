@@ -547,12 +547,13 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
         case DiagnosticSeverity::DISABLED:
           return AidlErrorLog(AidlErrorLog::NO_OP, loc);
         case DiagnosticSeverity::WARNING:
-          return AidlErrorLog(AidlErrorLog::WARNING, loc);
+          return AidlErrorLog(AidlErrorLog::WARNING, loc, Suffix(id));
         case DiagnosticSeverity::ERROR:
           error_count_++;
-          return AidlErrorLog(AidlErrorLog::ERROR, loc);
+          return AidlErrorLog(AidlErrorLog::ERROR, loc, Suffix(id));
       }
     }
+    std::string Suffix(DiagnosticID id) const { return "[-W" + kDiagnosticsNames.at(id) + "]"; }
     size_t ErrorCount() const { return error_count_; }
 
    private:

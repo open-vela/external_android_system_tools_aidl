@@ -1526,6 +1526,13 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames, DiagnosticsContex
         AIDL_ERROR(arg) << "Argument name cannot begin with '_aidl'";
         return false;
       }
+
+      if (arg->GetDirection() == AidlArgument::INOUT_DIR) {
+        diag.Report(arg->GetLocation(), DiagnosticID::inout_parameter)
+            << arg->GetName()
+            << " is 'inout'. Avoid inout parameters. This is somewhat confusing for clients "
+               "because although the parameters are 'in', they look out 'out' parameters.";
+      }
     }
 
     auto it = method_names.find(m->GetName());
@@ -1576,6 +1583,15 @@ std::string AidlInterface::GetDescriptor() const {
 
 AidlImport::AidlImport(const AidlLocation& location, const std::string& needed_class)
     : AidlNode(location), needed_class_(needed_class) {}
+
+bool AidlDocument::CheckValid(const AidlTypenames& typenames, DiagnosticsContext& diag) const {
+  for (const auto& t : defined_types_) {
+    if (!t->CheckValid(typenames, diag)) {
+      return false;
+    }
+  }
+  return true;
+}
 
 // Resolves unresolved type name to fully qualified typename to import
 // case #1: SimpleName --> import p.SimpleName

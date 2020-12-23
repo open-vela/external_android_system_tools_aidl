@@ -24,5 +24,11 @@ const std::map<std::string, DiagnosticOption> kAllDiagnostics = {
 #undef DIAG
 };
 
+const std::map<DiagnosticID, std::string> kDiagnosticsNames = {
+#define DIAG(ENUM, NAME, ENABLED) {DiagnosticID::ENUM, NAME},
+#include "diagnostics.inc"
+#undef DIAG
+};
+
 }  // namespace aidl
 }  // namespace android
