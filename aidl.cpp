@@ -531,26 +531,8 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     return AidlError::BAD_TYPE;
   }
 
-  typenames->IterateTypes([&](const AidlDefinedType& type) {
-    AidlEnumDeclaration* enum_decl = const_cast<AidlEnumDeclaration*>(type.AsEnumDeclaration());
-    if (enum_decl != nullptr) {
-      // BackingType is filled in for all known enums, including imported enums,
-      // because other types that may use enums, such as Interface or
-      // StructuredParcelable, need to know the enum BackingType when
-      // generating code.
-      if (auto backing_type = enum_decl->BackingType(*typenames); backing_type != nullptr) {
-        enum_decl->SetBackingType(std::unique_ptr<const AidlTypeSpecifier>(backing_type));
-      } else {
-        // Default to byte type for enums.
-        auto byte_type =
-            std::make_unique<AidlTypeSpecifier>(AIDL_LOCATION_HERE, "byte", false, nullptr, "");
-        byte_type->Resolve(*typenames);
-        enum_decl->SetBackingType(std::move(byte_type));
-      }
-    }
-  });
-  if (err != AidlError::OK) {
-    return err;
+  if (!typenames->Autofill()) {
+    return AidlError::BAD_TYPE;
   }
 
   //////////////////////////////////////////////////////////////////////////
