@@ -4332,6 +4332,16 @@ TEST_P(AidlTest, ErrorInterfaceName) {
             GetCapturedStderr());
 }
 
+TEST_P(AidlTest, ErrorEnumZero) {
+  io_delegate_.SetFileContents("p/Foo.aidl", "enum Foo { FOO = 1 }");
+  auto options = Options::From("aidl --lang " + Options::LanguageToString(GetLanguage()) +
+                               " -Weverything -Werror -o out -h out p/Foo.aidl");
+  CaptureStderr();
+  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ("ERROR: p/Foo.aidl:1.11-15: The first enumerator 'FOO' should be 0, but it is 1.\n",
+            GetCapturedStderr());
+}
+
 struct TypeParam {
   string kind;
   string literal;
