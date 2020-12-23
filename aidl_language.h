@@ -16,11 +16,6 @@
 
 #pragma once
 
-#include "aidl_typenames.h"
-#include "code_writer.h"
-#include "io_delegate.h"
-#include "options.h"
-
 #include <memory>
 #include <regex>
 #include <string>
@@ -29,8 +24,15 @@
 
 #include <android-base/strings.h>
 
+#include "aidl_typenames.h"
+#include "code_writer.h"
+#include "diagnostics.h"
+#include "io_delegate.h"
+#include "options.h"
+
 using android::aidl::AidlTypenames;
 using android::aidl::CodeWriter;
+using android::aidl::DiagnosticsContext;
 using android::aidl::Options;
 using std::shared_ptr;
 using std::string;
@@ -113,14 +115,6 @@ class AidlNode {
   std::string PrintLocation() const;
   const AidlLocation location_;
 };
-
-namespace android {
-namespace aidl {
-
-class AidlTypenames;
-
-}  // namespace aidl
-}  // namespace android
 
 // unique_ptr<AidlTypeSpecifier> for type arugment,
 // std::string for type parameter(T, U, and so on).
@@ -268,7 +262,7 @@ class AidlAnnotatable : public AidlNode {
   std::string ToString() const;
 
   const vector<AidlAnnotation>& GetAnnotations() const { return annotations_; }
-  virtual bool CheckValid(const AidlTypenames&) const;
+  bool CheckValid(const AidlTypenames&) const;
 
  protected:
   virtual std::set<AidlAnnotation::Type> GetSupportedAnnotations() const = 0;
@@ -339,7 +333,7 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   bool Resolve(const AidlTypenames& typenames);
 
   std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
-  bool CheckValid(const AidlTypenames& typenames) const override;
+  bool CheckValid(const AidlTypenames& typenames) const;
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames, Options::Language lang) const;
   const AidlNode& AsAidlNode() const override { return *this; }
 
@@ -811,7 +805,7 @@ class AidlDefinedType : public AidlAnnotatable {
   virtual const AidlUnionDecl* AsUnionDeclaration() const { return nullptr; }
   virtual const AidlInterface* AsInterface() const { return nullptr; }
   virtual const AidlParameterizable<std::string>* AsParameterizable() const { return nullptr; }
-  bool CheckValid(const AidlTypenames& typenames) const override;
+  virtual bool CheckValid(const AidlTypenames& typenames, DiagnosticsContext& context) const;
   virtual bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                           Options::Language lang) const = 0;
   AidlStructuredParcelable* AsStructuredParcelable() {
@@ -895,7 +889,7 @@ class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::s
   std::string GetCppHeader() const { return cpp_header_; }
 
   std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
-  bool CheckValid(const AidlTypenames& typenames) const override;
+  bool CheckValid(const AidlTypenames& typenames, DiagnosticsContext& context) const override;
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                   Options::Language lang) const override;
   const AidlParcelable* AsParcelable() const override { return this; }
@@ -929,7 +923,7 @@ class AidlStructuredParcelable : public AidlParcelable {
   void Dump(CodeWriter* writer) const override;
 
   std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
-  bool CheckValid(const AidlTypenames& typenames) const override;
+  bool CheckValid(const AidlTypenames& typenames, DiagnosticsContext& context) const override;
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                   Options::Language lang) const override;
 };
@@ -983,7 +977,7 @@ class AidlEnumDeclaration : public AidlDefinedType {
     return enumerators_;
   }
   std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
-  bool CheckValid(const AidlTypenames& typenames) const override;
+  bool CheckValid(const AidlTypenames& typenames, DiagnosticsContext& context) const override;
   bool LanguageSpecificCheckValid(const AidlTypenames& /*typenames*/,
                                   Options::Language) const override {
     return true;
@@ -1018,7 +1012,7 @@ class AidlUnionDecl : public AidlParcelable {
 
   const AidlNode& AsAidlNode() const override { return *this; }
 
-  bool CheckValid(const AidlTypenames& typenames) const override;
+  bool CheckValid(const AidlTypenames& typenames, DiagnosticsContext& context) const override;
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                   Options::Language lang) const override;
   std::string GetPreprocessDeclarationName() const override { return "union"; }
@@ -1046,7 +1040,7 @@ class AidlInterface final : public AidlDefinedType {
   void Dump(CodeWriter* writer) const override;
 
   std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
-  bool CheckValid(const AidlTypenames& typenames) const override;
+  bool CheckValid(const AidlTypenames& typenames, DiagnosticsContext& context) const override;
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                   Options::Language lang) const override;
 
