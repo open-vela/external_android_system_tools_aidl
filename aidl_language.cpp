@@ -1260,6 +1260,8 @@ bool AidlEnumDeclaration::CheckValid(const AidlTypenames& typenames,
     success = success && enumerator->CheckValid(GetBackingType());
   }
 
+  if (!success) return false;  // ValueString requires valid type
+
   AIDL_FATAL_IF(GetEnumerators().empty(), this)
       << "The enum '" << GetName() << "' has no enumerators.";
 
@@ -1271,7 +1273,7 @@ bool AidlEnumDeclaration::CheckValid(const AidlTypenames& typenames,
         << first_value << ".";
   }
 
-  return success;
+  return true;
 }
 
 void AidlEnumDeclaration::Dump(CodeWriter* writer) const {
