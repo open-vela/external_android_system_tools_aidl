@@ -208,6 +208,8 @@ class AidlAnnotation : public AidlNode {
     std::map<std::string, std::string> supported_parameters;
 
     bool repeatable;
+
+    std::vector<std::string> required_parameters = {};
   };
   static const std::vector<Schema>& AllSchemas();
 

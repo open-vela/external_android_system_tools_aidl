@@ -125,16 +125,19 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
        false},
       {AidlAnnotation::Type::JAVA_STABLE_PARCELABLE, "JavaOnlyStableParcelable", {}, false},
       {AidlAnnotation::Type::HIDE, "Hide", {}, false},
-      {AidlAnnotation::Type::BACKING, "Backing", {{"type", "String"}}, false},
-      {AidlAnnotation::Type::JAVA_PASSTHROUGH, "JavaPassthrough", {{"annotation", "String"}}, true},
+      {AidlAnnotation::Type::BACKING, "Backing", {{"type", "String"}}, false, {"type"}},
+      {AidlAnnotation::Type::JAVA_PASSTHROUGH,
+       "JavaPassthrough",
+       {{"annotation", "String"}},
+       true,
+       {"annotation"}},
       {AidlAnnotation::Type::JAVA_DERIVE,
-        "JavaDerive",
-        {{"toString", "boolean"},
-          {"equals", "boolean"}},
-        false},
+       "JavaDerive",
+       {{"toString", "boolean"}, {"equals", "boolean"}},
+       false},
       {AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE, "JavaOnlyImmutable", {}, false},
       {AidlAnnotation::Type::FIXED_SIZE, "FixedSize", {}, false},
-      {AidlAnnotation::Type::DESCRIPTOR, "Descriptor", {{"value", "String"}}, false},
+      {AidlAnnotation::Type::DESCRIPTOR, "Descriptor", {{"value", "String"}}, false, {"value"}},
       {AidlAnnotation::Type::RUST_DERIVE,
        "RustDerive",
        {{"Copy", "boolean"},
@@ -241,7 +244,14 @@ bool AidlAnnotation::CheckValid() const {
       return false;
     }
   }
-  return true;
+  bool success = true;
+  for (const auto& param : schema_.required_parameters) {
+    if (parameters_.count(param) == 0) {
+      AIDL_ERROR(this) << "Missing '" << param << "' on @" << GetName() << ".";
+      success = false;
+    }
+  }
+  return success;
 }
 
 std::map<std::string, std::string> AidlAnnotation::AnnotationParams(
