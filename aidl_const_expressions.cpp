@@ -849,7 +849,8 @@ bool AidlUnaryConstExpression::evaluate() const {
   }
 
 #define CASE_UNARY(__type__) \
-  return handleUnary(*this, op_, static_cast<__type__>(unary_->final_value_), &final_value_);
+  return is_valid_ =         \
+             handleUnary(*this, op_, static_cast<__type__>(unary_->final_value_), &final_value_);
 
   SWITCH_KIND(final_type_, CASE_UNARY, SHOULD_NOT_REACH(); final_type_ = Type::ERROR;
               is_valid_ = false; return false;)
@@ -957,9 +958,10 @@ bool AidlBinaryConstExpression::evaluate() const {
                       ? promoted        // arithmetic or bitflip operators generates promoted type
                       : Type::BOOLEAN;  // comparison operators generates bool
 
-#define CASE_BINARY_COMMON(__type__)                                                    \
-  return handleBinaryCommon(*this, static_cast<__type__>(left_val_->final_value_), op_, \
-                            static_cast<__type__>(right_val_->final_value_), &final_value_);
+#define CASE_BINARY_COMMON(__type__)                                                        \
+  return is_valid_ =                                                                        \
+             handleBinaryCommon(*this, static_cast<__type__>(left_val_->final_value_), op_, \
+                                static_cast<__type__>(right_val_->final_value_), &final_value_);
 
     SWITCH_KIND(promoted, CASE_BINARY_COMMON, SHOULD_NOT_REACH(); final_type_ = Type::ERROR;
                 is_valid_ = false; return false;)
@@ -979,9 +981,9 @@ bool AidlBinaryConstExpression::evaluate() const {
       numBits = -numBits;
     }
 
-#define CASE_SHIFT(__type__)                                                       \
-  return handleShift(*this, static_cast<__type__>(left_val_->final_value_), newOp, \
-                     static_cast<__type__>(numBits), &final_value_);
+#define CASE_SHIFT(__type__)                                                                   \
+  return is_valid_ = handleShift(*this, static_cast<__type__>(left_val_->final_value_), newOp, \
+                                 static_cast<__type__>(numBits), &final_value_);
 
     SWITCH_KIND(final_type_, CASE_SHIFT, SHOULD_NOT_REACH(); final_type_ = Type::ERROR;
                 is_valid_ = false; return false;)
