@@ -90,6 +90,8 @@ class AidlTypenames final {
   const AidlParcelable* GetParcelable(const AidlTypeSpecifier& type) const;
   // Iterates over all defined and then preprocessed types
   void IterateTypes(const std::function<void(const AidlDefinedType&)>& body) const;
+  // Fixes AST after type/ref resolution before validation
+  bool Autofill() const;
 
  private:
   struct DefinedImplResult {

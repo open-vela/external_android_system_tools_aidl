@@ -3039,8 +3039,6 @@ TEST_P(AidlTest, UnsupportedBackingAnnotationParam) {
   AidlError error;
   const string expected_stderr =
       "ERROR: p/TestEnum.aidl:2.1-51: Parameter foo not supported for annotation Backing. It must "
-      "be one of: type\n"
-      "ERROR: p/TestEnum.aidl:2.1-51: Parameter foo not supported for annotation Backing. It must "
       "be one of: type\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("p/TestEnum.aidl",
