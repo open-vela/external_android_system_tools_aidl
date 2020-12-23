@@ -135,6 +135,7 @@ cc_test {
         "ast_cpp_unittest.cpp",
         "ast_java_unittest.cpp",
         "code_writer_unittest.cpp",
+        "diagnostics_unittest.cpp",
         "generate_cpp_unittest.cpp",
         "io_delegate_unittest.cpp",
         "options_unittest.cpp",
