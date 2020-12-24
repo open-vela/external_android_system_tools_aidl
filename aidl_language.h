@@ -256,7 +256,7 @@ class AidlAnnotatable : public AidlNode {
 
   const AidlAnnotation* UnsupportedAppUsage() const;
   const AidlAnnotation* RustDerive() const;
-  const AidlAnnotation* BackingType() const;
+  const AidlTypeSpecifier* BackingType(const AidlTypenames& typenames) const;
 
   // ToString is for dumping AIDL.
   // Returns string representation of annotations.
@@ -973,7 +973,7 @@ class AidlEnumDeclaration : public AidlDefinedType {
   AidlEnumDeclaration& operator=(const AidlEnumDeclaration&) = delete;
   AidlEnumDeclaration& operator=(AidlEnumDeclaration&&) = delete;
 
-  bool Autofill(const AidlTypenames&);
+  void SetBackingType(std::unique_ptr<const AidlTypeSpecifier> type);
   const AidlTypeSpecifier& GetBackingType() const { return *backing_type_; }
   const std::vector<std::unique_ptr<AidlEnumerator>>& GetEnumerators() const {
     return enumerators_;
@@ -990,10 +990,11 @@ class AidlEnumDeclaration : public AidlDefinedType {
   const AidlEnumDeclaration* AsEnumDeclaration() const override { return this; }
 
  private:
+  void Autofill();
 
   const std::string name_;
   const std::vector<std::unique_ptr<AidlEnumerator>> enumerators_;
-  std::unique_ptr<AidlTypeSpecifier> backing_type_;
+  std::unique_ptr<const AidlTypeSpecifier> backing_type_;
 };
 
 class AidlUnionDecl : public AidlParcelable {
