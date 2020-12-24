@@ -352,5 +352,21 @@ void AidlTypenames::IterateTypes(const std::function<void(const AidlDefinedType&
   }
 }
 
+bool AidlTypenames::Autofill() const {
+  bool success = true;
+  IterateTypes([&](const AidlDefinedType& type) {
+    // BackingType is filled in for all known enums, including imported enums,
+    // because other types that may use enums, such as Interface or
+    // StructuredParcelable, need to know the enum BackingType when
+    // generating code.
+    if (auto enum_decl = const_cast<AidlDefinedType&>(type).AsEnumDeclaration(); enum_decl) {
+      if (!enum_decl->Autofill(*this)) {
+        success = false;
+      }
+    }
+  });
+  return success;
+}
+
 }  // namespace aidl
 }  // namespace android

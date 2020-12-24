@@ -342,25 +342,8 @@ const AidlAnnotation* AidlAnnotatable::RustDerive() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::RUST_DERIVE);
 }
 
-const AidlTypeSpecifier* AidlAnnotatable::BackingType(const AidlTypenames& typenames) const {
-  auto annotation = GetAnnotation(annotations_, AidlAnnotation::Type::BACKING);
-  if (annotation != nullptr) {
-    auto annotation_params = annotation->AnnotationParams(AidlConstantValueDecorator);
-    if (auto it = annotation_params.find("type"); it != annotation_params.end()) {
-      const string& type = it->second;
-
-      AIDL_FATAL_IF(type.size() < 2, this) << type;
-      AIDL_FATAL_IF(type[0] != '"', this) << type;
-      AIDL_FATAL_IF(type[type.length() - 1] != '"', this) << type;
-      string unquoted_type = type.substr(1, type.length() - 2);
-
-      AidlTypeSpecifier* type_specifier =
-          new AidlTypeSpecifier(annotation->GetLocation(), unquoted_type, false, nullptr, "");
-      type_specifier->Resolve(typenames);
-      return type_specifier;
-    }
-  }
-  return nullptr;
+const AidlAnnotation* AidlAnnotatable::BackingType() const {
+  return GetAnnotation(annotations_, AidlAnnotation::Type::BACKING);
 }
 
 bool AidlAnnotatable::IsStableApiParcelable(Options::Language lang) const {
@@ -1221,14 +1204,10 @@ AidlEnumDeclaration::AidlEnumDeclaration(const AidlLocation& location, const std
                                          const std::string& package, const std::string& comments)
     : AidlDefinedType(location, name, comments, package, nullptr),
       enumerators_(std::move(*enumerators)) {
-  Autofill();
-}
-
-void AidlEnumDeclaration::SetBackingType(std::unique_ptr<const AidlTypeSpecifier> type) {
-  backing_type_ = std::move(type);
-}
-
-void AidlEnumDeclaration::Autofill() {
+  // Fill missing enumerator values with <prev + 1>
+  // This can't be done in Autofill() because type/ref resolution depends on this.
+  // For example, with enum E { A, B = A }, B's value 'A' is a reference which can't be
+  // resolved if A has no value set.
   const AidlEnumerator* previous = nullptr;
   for (const auto& enumerator : enumerators_) {
     if (enumerator->GetValue() == nullptr) {
@@ -1245,6 +1224,36 @@ void AidlEnumDeclaration::Autofill() {
     }
     previous = enumerator.get();
   }
+}
+
+bool AidlEnumDeclaration::Autofill(const AidlTypenames& typenames) {
+  if (auto annot = BackingType(); annot != nullptr) {
+    // Autofill() is called before the grand CheckValid(). But AidlAnnotation::AnnotationParams()
+    // calls AidlConstantValue::ValueString() which requires CheckValid() to be called before. So we
+    // need to call CheckValid().
+    if (!annot->CheckValid()) {
+      return false;
+    }
+    auto annotation_params = annot->AnnotationParams(AidlConstantValueDecorator);
+    auto type = annotation_params.at("type");
+
+    AIDL_FATAL_IF(type.size() < 2, this) << type;
+    AIDL_FATAL_IF(type[0] != '"', this) << type;
+    AIDL_FATAL_IF(type[type.length() - 1] != '"', this) << type;
+    string unquoted_type = type.substr(1, type.length() - 2);
+
+    backing_type_ = std::make_unique<AidlTypeSpecifier>(annot->GetLocation(), unquoted_type, false,
+                                                        nullptr, "");
+  } else {
+    // Default to byte type for enums.
+    backing_type_ =
+        std::make_unique<AidlTypeSpecifier>(AIDL_LOCATION_HERE, "byte", false, nullptr, "");
+  }
+  // Autofill() is called after type resolution, we resolve the backing type manually.
+  if (!backing_type_->Resolve(typenames)) {
+    AIDL_ERROR(this) << "Invalid backing type: " << backing_type_->GetName();
+  }
+  return true;
 }
 
 std::set<AidlAnnotation::Type> AidlEnumDeclaration::GetSupportedAnnotations() const {
