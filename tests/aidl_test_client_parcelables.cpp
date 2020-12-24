@@ -338,6 +338,46 @@ TEST_F(AidlTest, EmptyParcelableHolder) {
   }
 }
 
+TEST_F(AidlTest, ParcelableHolderEqualityOperator) {
+  auto ph1 = android::os::ParcelableHolder(android::Parcelable::Stability::STABILITY_LOCAL);
+  auto ph2 = android::os::ParcelableHolder(android::Parcelable::Stability::STABILITY_LOCAL);
+  auto ph3 = android::os::ParcelableHolder(android::Parcelable::Stability::STABILITY_LOCAL);
+  auto ptr1 = std::make_shared<MyExt>();
+  auto ptr2 = std::make_shared<MyExt>();
+  ptr1->a = 1;
+  ptr1->b = "a";
+  ptr2->a = 1;
+  ptr2->b = "a";
+
+  ph1.setParcelable(ptr1);
+  ph2.setParcelable(ptr1);
+  ph3.setParcelable(ptr2);
+
+  // ParcelableHolder always uses its address as a comparison criterion.
+  EXPECT_TRUE(ph1 != ph2);
+  EXPECT_TRUE(ph2 != ph3);
+  EXPECT_TRUE(ph1 == ph1);
+  EXPECT_TRUE(ph2 == ph2);
+  EXPECT_TRUE(ph3 == ph3);
+
+  android::Parcel parcel;
+  ph1.writeToParcel(&parcel);
+  ph2.writeToParcel(&parcel);
+  ph3.writeToParcel(&parcel);
+  parcel.setDataPosition(0);
+
+  ph1.readFromParcel(&parcel);
+  ph2.readFromParcel(&parcel);
+  ph3.readFromParcel(&parcel);
+
+  // ParcelableHolder always uses its address as a comparison criterion.
+  EXPECT_TRUE(ph1 != ph2);
+  EXPECT_TRUE(ph2 != ph3);
+  EXPECT_TRUE(ph1 == ph1);
+  EXPECT_TRUE(ph2 == ph2);
+  EXPECT_TRUE(ph3 == ph3);
+}
+
 TEST_F(AidlTest, NativeExtednableParcelable) {
   using namespace android::aidl::tests::extension;
   MyExt ext;
