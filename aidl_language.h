@@ -192,6 +192,9 @@ class AidlAnnotation : public AidlNode {
   // e.g) "@RustDerive(Clone=true, Copy=true)"
   string ToString() const;
 
+  template <typename T>
+  std::optional<T> ParamValue(const std::string& param_name) const;
+
   std::map<std::string, std::string> AnnotationParams(
       const ConstantValueDecorator& decorator) const;
   const string& GetComments() const { return comments_; }
@@ -1092,3 +1095,12 @@ class AidlDocument : public AidlNode {
   const std::vector<std::unique_ptr<AidlImport>> imports_;
   const std::vector<std::unique_ptr<AidlDefinedType>> defined_types_;
 };
+
+template <typename T>
+std::optional<T> AidlAnnotation::ParamValue(const std::string& param_name) const {
+  auto it = parameters_.find(param_name);
+  if (it == parameters_.end()) {
+    return std::nullopt;
+  }
+  return it->second->Cast<T>();
+}
