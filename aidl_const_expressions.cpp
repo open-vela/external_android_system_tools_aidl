@@ -248,6 +248,33 @@ static bool isValidLiteralChar(char c) {
            c == '\\');   // Disallow backslashes for future proofing.
 }
 
+// helper to see if T is the same to one of Args types.
+template <typename T, typename... Args>
+struct is_one_of : std::false_type {};
+
+template <typename T, typename S, typename... Args>
+struct is_one_of<T, S, Args...> {
+  enum { value = std::is_same_v<T, S> || is_one_of<T, Args...>::value };
+};
+
+// helper to see if T is std::vector of something.
+template <typename>
+struct is_vector : std::false_type {};
+
+template <typename T>
+struct is_vector<std::vector<T>> : std::true_type {};
+
+template <typename T>
+static bool ParseFloating(std::string_view sv, T* parsed) {
+  static_assert(is_one_of<T, float, double>::value);
+  android::base::ConsumeSuffix(&sv, "f");
+  if constexpr (std::is_same_v<T, float>) {
+    return android::base::ParseFloat(sv.data(), parsed);
+  } else {
+    return android::base::ParseDouble(sv.data(), parsed);
+  }
+}
+
 bool AidlUnaryConstExpression::IsCompatibleType(Type type, const string& op) {
   // Verify the unary type here
   switch (type) {
@@ -313,13 +340,56 @@ AidlConstantValue::Type AidlBinaryConstExpression::IntegralPromotion(Type in) {
 }
 
 template <typename T>
-T AidlConstantValue::cast() const {
-  AIDL_FATAL_IF(!is_evaluated_, this);
+T AidlConstantValue::Cast() const {
+  static_assert(
+      is_one_of<T, bool, char, int8_t, int32_t, int64_t, std::string, float, double>::value ||
+      is_vector<T>::value);
 
-#define CASE_CAST_T(__type__) return static_cast<T>(static_cast<__type__>(final_value_));
+  is_evaluated_ || (CheckValid() && evaluate());
+  AIDL_FATAL_IF(!is_valid_, this);
 
-  SWITCH_KIND(final_type_, CASE_CAST_T, SHOULD_NOT_REACH(); return 0;);
+  if constexpr (is_vector<T>::value) {
+    AIDL_FATAL_IF(final_type_ != Type::ARRAY, this);
+    T result;
+    for (const auto& v : values_) {
+      result.push_back(v->Cast<typename T::value_type>());
+    }
+    return result;
+
+  } else if constexpr (is_one_of<T, float, double>::value) {
+    AIDL_FATAL_IF(final_type_ != Type::FLOATING, this);
+    T result;
+    AIDL_FATAL_IF(!ParseFloating(value_, &result), this);
+    return result;
+  } else if constexpr (std::is_same<T, std::string>::value) {
+    AIDL_FATAL_IF(final_type_ != Type::STRING, this);
+    return final_string_value_.substr(1, final_string_value_.size() - 2);  // unquote "
+  } else if constexpr (is_one_of<T, int8_t, int32_t, int64_t>::value) {
+    AIDL_FATAL_IF(final_type_ < Type::INT8 && final_type_ > Type::INT64, this);
+    return static_cast<T>(final_value_);
+  } else if constexpr (std::is_same<T, char>::value) {
+    AIDL_FATAL_IF(final_type_ != Type::CHARACTER, this);
+    return final_string_value_.at(1);  // unquote '
+  } else if constexpr (std::is_same<T, bool>::value) {
+    AIDL_FATAL_IF(final_type_ != Type::BOOLEAN, this);
+    return final_value_ != 0;
+  }
+  SHOULD_NOT_REACH();
 }
+
+#define INSTANTIATE_AidlConstantValue_Cast(T)    \
+  template T AidlConstantValue::Cast<T>() const; \
+  template std::vector<T> AidlConstantValue::Cast<std::vector<T>>() const
+
+INSTANTIATE_AidlConstantValue_Cast(int8_t);
+INSTANTIATE_AidlConstantValue_Cast(int32_t);
+INSTANTIATE_AidlConstantValue_Cast(int64_t);
+INSTANTIATE_AidlConstantValue_Cast(float);
+INSTANTIATE_AidlConstantValue_Cast(double);
+INSTANTIATE_AidlConstantValue_Cast(char);
+INSTANTIATE_AidlConstantValue_Cast(bool);
+INSTANTIATE_AidlConstantValue_Cast(std::string);
+#undef INSTANTIATE_AidlConstantValue_Cast
 
 AidlConstantValue* AidlConstantValue::Default(const AidlTypeSpecifier& specifier) {
   AidlLocation location = specifier.GetLocation();
