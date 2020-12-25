@@ -43,6 +43,7 @@ using std::set;
 using std::string;
 using std::unique_ptr;
 using std::vector;
+using testing::HasSubstr;
 using testing::TestParamInfo;
 using testing::internal::CaptureStderr;
 using testing::internal::GetCapturedStderr;
@@ -420,51 +421,37 @@ TEST_P(AidlTest, RejectsDuplicatedAnnotationParams) {
 TEST_P(AidlTest, RejectUnsupportedInterfaceAnnotations) {
   AidlError error;
   const string method = "package a; @nullable interface IFoo { int f(); }";
-  const string expected_stderr =
-      "ERROR: a/IFoo.aidl:1.21-31: 'nullable' is not a supported annotation for this node. "
-      "It must be one of: Hide, UnsupportedAppUsage, VintfStability, SensitiveData, "
-      "JavaPassthrough, Descriptor\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("'nullable' is not a supported annotation"));
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
 TEST_P(AidlTest, RejectUnsupportedTypeAnnotations) {
   AidlError error;
   const string method = "package a; interface IFoo { @JavaOnlyStableParcelable int f(); }";
-  const string expected_stderr =
-      "ERROR: a/IFoo.aidl:1.54-58: 'JavaOnlyStableParcelable' is not a supported annotation "
-      "for this node. It must be one of: Hide, UnsupportedAppUsage, nullable, utf8InCpp, JavaPassthrough\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  EXPECT_THAT(GetCapturedStderr(),
+              HasSubstr("'JavaOnlyStableParcelable' is not a supported annotation"));
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
 TEST_P(AidlTest, RejectUnsupportedParcelableAnnotations) {
   AidlError error;
   const string method = "package a; @nullable parcelable IFoo cpp_header \"IFoo.h\";";
-  const string expected_stderr =
-      "ERROR: a/IFoo.aidl:1.32-37: 'nullable' is not a supported annotation for this node. "
-      "It must be one of: Hide, JavaOnlyStableParcelable, UnsupportedAppUsage, VintfStability, "
-      "JavaPassthrough, JavaOnlyImmutable\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("'nullable' is not a supported annotation"));
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
 TEST_P(AidlTest, RejectUnsupportedParcelableDefineAnnotations) {
   AidlError error;
   const string method = "package a; @nullable parcelable IFoo { String a; String b; }";
-  const string expected_stderr =
-      "ERROR: a/IFoo.aidl:1.32-37: 'nullable' is not a supported annotation for this node. "
-      "It must be one of: Hide, UnsupportedAppUsage, VintfStability, JavaPassthrough, JavaDerive, "
-      "JavaOnlyImmutable, FixedSize, RustDerive\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("'nullable' is not a supported annotation"));
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
@@ -694,7 +681,8 @@ TEST_F(AidlTest, RejectsJavaDeriveAnnotation) {
     EXPECT_NE(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
     const std::string expected_stderr =
         "ERROR: a/Foo.aidl:1.11-34: Parameter blah not supported for annotation JavaDerive.";
-    EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr(expected_stderr));
+    EXPECT_THAT(GetCapturedStderr(),
+                HasSubstr("Parameter blah not supported for annotation JavaDerive."));
   }
 
   {
@@ -702,11 +690,7 @@ TEST_F(AidlTest, RejectsJavaDeriveAnnotation) {
     Options java_options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
     CaptureStderr();
     EXPECT_NE(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
-    const std::string expected_stderr =
-        "ERROR: a/IFoo.aidl:1.23-33: 'JavaDerive' is not a supported annotation for this node. "
-        "It must be one of: Hide, UnsupportedAppUsage, VintfStability, SensitiveData, "
-        "JavaPassthrough, Descriptor\n";
-    EXPECT_EQ(expected_stderr, GetCapturedStderr());
+    EXPECT_THAT(GetCapturedStderr(), HasSubstr("'JavaDerive' is not a supported annotation"));
   }
 
   {
@@ -714,10 +698,7 @@ TEST_F(AidlTest, RejectsJavaDeriveAnnotation) {
     Options java_options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
     CaptureStderr();
     EXPECT_NE(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
-    const std::string expected_stderr =
-        "ERROR: a/IFoo.aidl:1.28-33: 'JavaDerive' is not a supported annotation for this node. "
-        "It must be one of: Backing, Hide, VintfStability, JavaPassthrough\n";
-    EXPECT_EQ(expected_stderr, GetCapturedStderr());
+    EXPECT_THAT(GetCapturedStderr(), HasSubstr("'JavaDerive' is not a supported annotation"));
   }
 }
 
