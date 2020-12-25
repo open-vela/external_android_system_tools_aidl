@@ -109,6 +109,11 @@ std::string AidlNode::PrintLocation() const {
   return ss.str();
 }
 
+static const AidlTypeSpecifier kStringType{AIDL_LOCATION_HERE, "String", false, nullptr, ""};
+static const AidlTypeSpecifier kIntType{AIDL_LOCATION_HERE, "int", false, nullptr, ""};
+static const AidlTypeSpecifier kLongType{AIDL_LOCATION_HERE, "long", false, nullptr, ""};
+static const AidlTypeSpecifier kBooleanType{AIDL_LOCATION_HERE, "boolean", false, nullptr, ""};
+
 const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
   static const std::vector<Schema> kSchemas{
       {AidlAnnotation::Type::NULLABLE, "nullable", {}, false},
@@ -117,36 +122,36 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
       {AidlAnnotation::Type::VINTF_STABILITY, "VintfStability", {}, false},
       {AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
        "UnsupportedAppUsage",
-       {{"expectedSignature", "String"},
-        {"implicitMember", "String"},
-        {"maxTargetSdk", "int"},
-        {"publicAlternatives", "String"},
-        {"trackingBug", "long"}},
+       {{"expectedSignature", kStringType},
+        {"implicitMember", kStringType},
+        {"maxTargetSdk", kIntType},
+        {"publicAlternatives", kStringType},
+        {"trackingBug", kLongType}},
        false},
       {AidlAnnotation::Type::JAVA_STABLE_PARCELABLE, "JavaOnlyStableParcelable", {}, false},
       {AidlAnnotation::Type::HIDE, "Hide", {}, false},
-      {AidlAnnotation::Type::BACKING, "Backing", {{"type", "String"}}, false, {"type"}},
+      {AidlAnnotation::Type::BACKING, "Backing", {{"type", kStringType}}, false, {"type"}},
       {AidlAnnotation::Type::JAVA_PASSTHROUGH,
        "JavaPassthrough",
-       {{"annotation", "String"}},
+       {{"annotation", kStringType}},
        true,
        {"annotation"}},
       {AidlAnnotation::Type::JAVA_DERIVE,
        "JavaDerive",
-       {{"toString", "boolean"}, {"equals", "boolean"}},
+       {{"toString", kBooleanType}, {"equals", kBooleanType}},
        false},
       {AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE, "JavaOnlyImmutable", {}, false},
       {AidlAnnotation::Type::FIXED_SIZE, "FixedSize", {}, false},
-      {AidlAnnotation::Type::DESCRIPTOR, "Descriptor", {{"value", "String"}}, false, {"value"}},
+      {AidlAnnotation::Type::DESCRIPTOR, "Descriptor", {{"value", kStringType}}, false, {"value"}},
       {AidlAnnotation::Type::RUST_DERIVE,
        "RustDerive",
-       {{"Copy", "boolean"},
-        {"Clone", "boolean"},
-        {"PartialOrd", "boolean"},
-        {"Ord", "boolean"},
-        {"PartialEq", "boolean"},
-        {"Eq", "boolean"},
-        {"Hash", "boolean"}},
+       {{"Copy", kBooleanType},
+        {"Clone", kBooleanType},
+        {"PartialOrd", kBooleanType},
+        {"Ord", kBooleanType},
+        {"PartialEq", kBooleanType},
+        {"Eq", kBooleanType},
+        {"Hash", kBooleanType}},
        false},
   };
   return kSchemas;
@@ -208,8 +213,8 @@ bool AidlAnnotation::CheckValid() const {
     const std::string& param_name = name_and_param.first;
     const std::shared_ptr<AidlConstantValue>& param = name_and_param.second;
 
-    auto parameter_mapping_it = schema_.supported_parameters.find(param_name);
-    if (parameter_mapping_it == schema_.supported_parameters.end()) {
+    auto it = schema_.supported_parameters.find(param_name);
+    if (it == schema_.supported_parameters.end()) {
       std::ostringstream stream;
       stream << "Parameter " << param_name << " not supported ";
       stream << "for annotation " << GetName() << ". ";
@@ -235,8 +240,7 @@ bool AidlAnnotation::CheckValid() const {
       return false;
     }
 
-    AidlTypeSpecifier type{AIDL_LOCATION_HERE, parameter_mapping_it->second, false, nullptr, ""};
-    const std::string param_value = param->ValueString(type, AidlConstantValueDecorator);
+    const std::string param_value = param->ValueString(it->second, AidlConstantValueDecorator);
     // Assume error on empty string.
     if (param_value == "") {
       AIDL_ERROR(this) << "Invalid value for parameter " << param_name << " on annotation "
@@ -271,14 +275,12 @@ std::map<std::string, std::string> AidlAnnotation::AnnotationParams(
       AIDL_ERROR(this) << stream.str();
       continue;
     }
-    AidlTypeSpecifier type{AIDL_LOCATION_HERE, schema_.supported_parameters.at(param_name), false,
-                           nullptr, ""};
     if (!param->CheckValid()) {
       AIDL_ERROR(this) << "Invalid value for parameter " << param_name << " on annotation "
                        << GetName() << ".";
       continue;
     }
-
+    const auto& type = schema_.supported_parameters.at(param_name);
     raw_params.emplace(param_name, param->ValueString(type, decorator));
   }
   return raw_params;
