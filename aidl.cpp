@@ -688,6 +688,20 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
             << first_value << ".";
       }
     }
+    void VisitEnumerator(const AidlEnumerator& e) override {
+      super::VisitEnumerator(e);
+      if (ToUpper(e.GetName()) != e.GetName()) {
+        diag::Report(e.GetLocation(), DiagnosticID::const_name)
+            << "Enum values should be named in upper cases: " << ToUpper(e.GetName());
+      }
+    }
+    void VisitConstant(const AidlConstantDeclaration& c) override {
+      super::VisitConstant(c);
+      if (ToUpper(c.GetName()) != c.GetName()) {
+        diag::Report(c.GetLocation(), DiagnosticID::const_name)
+            << "Constants should be named in upper cases: " << ToUpper(c.GetName());
+      }
+    }
     void VisitArgument(const AidlArgument& a) override {
       super::VisitArgument(a);
       if (a.GetDirection() == AidlArgument::INOUT_DIR) {
@@ -700,7 +714,11 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     size_t ErrorCount() const { return error_count_; }
 
    private:
-    std::string Suffix(DiagnosticID id) const { return " [-W" + kDiagnosticsNames.at(id) + "]"; }
+    static std::string ToUpper(std::string name) {
+      for (auto& c : name) c = std::toupper(c);
+      return name;
+    }
+    static std::string Suffix(DiagnosticID id) { return " [-W" + to_string(id) + "]"; }
     AidlErrorLog DoReport(const AidlLocation& loc, DiagnosticID id,
                           DiagnosticSeverity severity) override {
       switch (severity) {

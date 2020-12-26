@@ -1,4 +1,5 @@
 // DIAG(enum, name, enable-by-default)
+DIAG(const_name, "const-name", false)
 DIAG(enum_zero, "enum-zero", false)
 DIAG(inout_parameter, "inout-parameter", false)
 DIAG(interface_name, "interface-name", false)
