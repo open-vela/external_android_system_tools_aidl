@@ -1030,25 +1030,26 @@ TEST_F(AidlTest, BoolConstantsEvaluatesToIntegers) {
   EXPECT_THAT(code, testing::HasSubstr("public static final int y = 1;"));
 }
 
-TEST_F(AidlTest, ConstantValueCast) {
+TEST_F(AidlTest, AidlConstantValue_EvaluatedValue) {
   using Ptr = unique_ptr<AidlConstantValue>;
   const AidlLocation& loc = AIDL_LOCATION_HERE;
 
-  EXPECT_EQ('c', Ptr(AidlConstantValue::Character(loc, 'c'))->Cast<char>());
-  EXPECT_EQ("abc", Ptr(AidlConstantValue::String(loc, "\"abc\""))->Cast<string>());
-  EXPECT_FLOAT_EQ(1.0f, Ptr(AidlConstantValue::Floating(loc, "1.0"))->Cast<float>());
-  EXPECT_EQ(true, Ptr(AidlConstantValue::Boolean(loc, true))->Cast<bool>());
+  EXPECT_EQ('c', Ptr(AidlConstantValue::Character(loc, 'c'))->EvaluatedValue<char>());
+  EXPECT_EQ("abc", Ptr(AidlConstantValue::String(loc, "\"abc\""))->EvaluatedValue<string>());
+  EXPECT_FLOAT_EQ(1.0f, Ptr(AidlConstantValue::Floating(loc, "1.0f"))->EvaluatedValue<float>());
+  EXPECT_EQ(true, Ptr(AidlConstantValue::Boolean(loc, true))->EvaluatedValue<bool>());
 
   AidlBinaryConstExpression one_plus_one(loc, Ptr(AidlConstantValue::Integral(loc, "1")), "+",
                                          Ptr(AidlConstantValue::Integral(loc, "1")));
-  EXPECT_EQ(2, one_plus_one.Cast<int32_t>());
+  EXPECT_EQ(2, one_plus_one.EvaluatedValue<int32_t>());
 
   auto values = unique_ptr<vector<Ptr>>{new vector<Ptr>};
   values->emplace_back(AidlConstantValue::String(loc, "\"hello\""));
   values->emplace_back(AidlConstantValue::String(loc, "\"world\""));
   vector<string> expected{"hello", "world"};
-  EXPECT_EQ(expected,
-            Ptr(AidlConstantValue::Array(loc, std::move(values)))->Cast<vector<string>>());
+  EXPECT_EQ(
+      expected,
+      Ptr(AidlConstantValue::Array(loc, std::move(values)))->EvaluatedValue<vector<string>>());
 }
 
 TEST_P(AidlTest, FailOnManyDefinedTypes) {

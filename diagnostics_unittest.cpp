@@ -28,7 +28,6 @@ using android::aidl::AidlError;
 using android::aidl::AidlTypenames;
 using android::aidl::DiagnosticID;
 using android::aidl::DiagnosticsContext;
-using android::aidl::kDiagnosticsNames;
 using android::aidl::Options;
 using android::aidl::internals::load_and_validate_aidl;
 using android::aidl::test::FakeIoDelegate;
@@ -52,7 +51,7 @@ struct DiagnosticsTest : testing::Test {
       EXPECT_EQ("", err);
     } else {
       for (const auto id : expect_diagnostics) {
-        EXPECT_THAT(err, testing::HasSubstr("-W" + kDiagnosticsNames.at(id)));
+        EXPECT_THAT(err, testing::HasSubstr("-W" + to_string(id)));
       }
     }
   }
@@ -61,6 +60,16 @@ struct DiagnosticsTest : testing::Test {
   FakeIoDelegate io;
   std::vector<DiagnosticID> expect_diagnostics;
 };
+
+TEST_F(DiagnosticsTest, const_name_ForEnumerator) {
+  expect_diagnostics = {DiagnosticID::const_name};
+  ParseFiles({{"Foo.aidl", "enum Foo { foo }"}});
+}
+
+TEST_F(DiagnosticsTest, const_name_ForConstants) {
+  expect_diagnostics = {DiagnosticID::const_name};
+  ParseFiles({{"IFoo.aidl", "interface IFoo { const int foo = 1; }"}});
+}
 
 TEST_F(DiagnosticsTest, interface_name) {
   expect_diagnostics = {DiagnosticID::interface_name};
