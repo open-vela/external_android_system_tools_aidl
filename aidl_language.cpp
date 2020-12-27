@@ -189,11 +189,11 @@ AidlAnnotation::AidlAnnotation(
     : AidlNode(location), schema_(schema), parameters_(std::move(parameters)) {}
 
 struct ConstReferenceFinder : AidlConstantValue::Visitor {
-  AidlConstantReference* found;
-  void Visit(AidlConstantValue&) override {}
-  void Visit(AidlUnaryConstExpression&) override {}
-  void Visit(AidlBinaryConstExpression&) override {}
-  void Visit(AidlConstantReference& ref) override {
+  const AidlConstantReference* found;
+  void Visit(const AidlConstantValue&) override {}
+  void Visit(const AidlUnaryConstExpression&) override {}
+  void Visit(const AidlBinaryConstExpression&) override {}
+  void Visit(const AidlConstantReference& ref) override {
     if (!found) found = &ref;
   }
 };
