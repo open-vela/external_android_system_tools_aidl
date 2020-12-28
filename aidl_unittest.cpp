@@ -43,7 +43,6 @@ using std::set;
 using std::string;
 using std::unique_ptr;
 using std::vector;
-using testing::HasSubstr;
 using testing::TestParamInfo;
 using testing::internal::CaptureStderr;
 using testing::internal::GetCapturedStderr;
@@ -421,37 +420,51 @@ TEST_P(AidlTest, RejectsDuplicatedAnnotationParams) {
 TEST_P(AidlTest, RejectUnsupportedInterfaceAnnotations) {
   AidlError error;
   const string method = "package a; @nullable interface IFoo { int f(); }";
+  const string expected_stderr =
+      "ERROR: a/IFoo.aidl:1.21-31: 'nullable' is not a supported annotation for this node. "
+      "It must be one of: Hide, UnsupportedAppUsage, VintfStability, SensitiveData, "
+      "JavaPassthrough, Descriptor\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("'nullable' is not a supported annotation"));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
 TEST_P(AidlTest, RejectUnsupportedTypeAnnotations) {
   AidlError error;
   const string method = "package a; interface IFoo { @JavaOnlyStableParcelable int f(); }";
+  const string expected_stderr =
+      "ERROR: a/IFoo.aidl:1.54-58: 'JavaOnlyStableParcelable' is not a supported annotation "
+      "for this node. It must be one of: Hide, UnsupportedAppUsage, nullable, utf8InCpp, JavaPassthrough\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_THAT(GetCapturedStderr(),
-              HasSubstr("'JavaOnlyStableParcelable' is not a supported annotation"));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
 TEST_P(AidlTest, RejectUnsupportedParcelableAnnotations) {
   AidlError error;
   const string method = "package a; @nullable parcelable IFoo cpp_header \"IFoo.h\";";
+  const string expected_stderr =
+      "ERROR: a/IFoo.aidl:1.32-37: 'nullable' is not a supported annotation for this node. "
+      "It must be one of: Hide, JavaOnlyStableParcelable, UnsupportedAppUsage, VintfStability, "
+      "JavaPassthrough, JavaOnlyImmutable\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("'nullable' is not a supported annotation"));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
 TEST_P(AidlTest, RejectUnsupportedParcelableDefineAnnotations) {
   AidlError error;
   const string method = "package a; @nullable parcelable IFoo { String a; String b; }";
+  const string expected_stderr =
+      "ERROR: a/IFoo.aidl:1.32-37: 'nullable' is not a supported annotation for this node. "
+      "It must be one of: Hide, UnsupportedAppUsage, VintfStability, JavaPassthrough, JavaDerive, "
+      "JavaOnlyImmutable, FixedSize, RustDerive\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("'nullable' is not a supported annotation"));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
@@ -681,8 +694,7 @@ TEST_F(AidlTest, RejectsJavaDeriveAnnotation) {
     EXPECT_NE(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
     const std::string expected_stderr =
         "ERROR: a/Foo.aidl:1.11-34: Parameter blah not supported for annotation JavaDerive.";
-    EXPECT_THAT(GetCapturedStderr(),
-                HasSubstr("Parameter blah not supported for annotation JavaDerive."));
+    EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr(expected_stderr));
   }
 
   {
@@ -690,7 +702,11 @@ TEST_F(AidlTest, RejectsJavaDeriveAnnotation) {
     Options java_options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
     CaptureStderr();
     EXPECT_NE(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
-    EXPECT_THAT(GetCapturedStderr(), HasSubstr("'JavaDerive' is not a supported annotation"));
+    const std::string expected_stderr =
+        "ERROR: a/IFoo.aidl:1.23-33: 'JavaDerive' is not a supported annotation for this node. "
+        "It must be one of: Hide, UnsupportedAppUsage, VintfStability, SensitiveData, "
+        "JavaPassthrough, Descriptor\n";
+    EXPECT_EQ(expected_stderr, GetCapturedStderr());
   }
 
   {
@@ -698,7 +714,10 @@ TEST_F(AidlTest, RejectsJavaDeriveAnnotation) {
     Options java_options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
     CaptureStderr();
     EXPECT_NE(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
-    EXPECT_THAT(GetCapturedStderr(), HasSubstr("'JavaDerive' is not a supported annotation"));
+    const std::string expected_stderr =
+        "ERROR: a/IFoo.aidl:1.28-33: 'JavaDerive' is not a supported annotation for this node. "
+        "It must be one of: Backing, Hide, VintfStability, JavaPassthrough\n";
+    EXPECT_EQ(expected_stderr, GetCapturedStderr());
   }
 }
 
@@ -1028,27 +1047,6 @@ TEST_F(AidlTest, BoolConstantsEvaluatesToIntegers) {
   string code;
   EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/Foo.java", &code));
   EXPECT_THAT(code, testing::HasSubstr("public static final int y = 1;"));
-}
-
-TEST_F(AidlTest, ConstantValueCast) {
-  using Ptr = unique_ptr<AidlConstantValue>;
-  const AidlLocation& loc = AIDL_LOCATION_HERE;
-
-  EXPECT_EQ('c', Ptr(AidlConstantValue::Character(loc, 'c'))->Cast<char>());
-  EXPECT_EQ("abc", Ptr(AidlConstantValue::String(loc, "\"abc\""))->Cast<string>());
-  EXPECT_FLOAT_EQ(1.0f, Ptr(AidlConstantValue::Floating(loc, "1.0"))->Cast<float>());
-  EXPECT_EQ(true, Ptr(AidlConstantValue::Boolean(loc, true))->Cast<bool>());
-
-  AidlBinaryConstExpression one_plus_one(loc, Ptr(AidlConstantValue::Integral(loc, "1")), "+",
-                                         Ptr(AidlConstantValue::Integral(loc, "1")));
-  EXPECT_EQ(2, one_plus_one.Cast<int32_t>());
-
-  auto values = unique_ptr<vector<Ptr>>{new vector<Ptr>};
-  values->emplace_back(AidlConstantValue::String(loc, "\"hello\""));
-  values->emplace_back(AidlConstantValue::String(loc, "\"world\""));
-  vector<string> expected{"hello", "world"};
-  EXPECT_EQ(expected,
-            Ptr(AidlConstantValue::Array(loc, std::move(values)))->Cast<vector<string>>());
 }
 
 TEST_P(AidlTest, FailOnManyDefinedTypes) {
