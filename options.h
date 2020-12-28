@@ -15,9 +15,7 @@
 
 #pragma once
 
-#include <map>
 #include <set>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -60,10 +58,11 @@ class ErrorMessage {
   }
 };
 
+// Handles warning-related options (e.g. -W, -w, ...)
 class WarningOptions {
  public:
   std::vector<const char*> Parse(int argc, const char* const argv[], ErrorMessage& error_message);
-  DiagnosticSeverity Severity(DiagnosticID id) const;
+  DiagnosticMapping GetDiagnosticMapping() const;
 
  private:
   bool as_errors_ = false;           // -Werror
@@ -72,12 +71,6 @@ class WarningOptions {
   std::set<std::string> enabled_;    // -Wfoo
   std::set<std::string> disabled_;   // -Wno-foo
   std::set<std::string> no_errors_;  // -Wno-error=foo
-
-  struct Mapping {
-    std::string name;
-    DiagnosticSeverity severity;
-  };
-  std::map<DiagnosticID, Mapping> mapping_;
 };
 
 class Options final {
@@ -158,7 +151,7 @@ class Options final {
 
   static const string LanguageToString(Language language);
 
-  const WarningOptions& GetWarningOptions() const { return warning_options_; }
+  DiagnosticMapping GetDiagnosticMapping() const { return warning_options_.GetDiagnosticMapping(); }
 
   // The following are for testability, but cannot be influenced on the command line.
   // Threshold of interface methods to enable outlining of onTransact cases.

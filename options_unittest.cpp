@@ -354,8 +354,8 @@ TEST(OptionsTests, ParsesWarningEnableAll) {
   };
   auto options = GetOptions(args);
   EXPECT_TRUE(options->Ok());
-  auto warning_options = options->GetWarningOptions();
-  EXPECT_EQ(DiagnosticSeverity::WARNING, warning_options.Severity(DiagnosticID::interface_name));
+  auto mapping = options->GetDiagnosticMapping();
+  EXPECT_EQ(DiagnosticSeverity::WARNING, mapping.Severity(DiagnosticID::interface_name));
 }
 
 TEST(OptionsTests, ParsesWarningEnableSpecificWarning) {
@@ -364,8 +364,8 @@ TEST(OptionsTests, ParsesWarningEnableSpecificWarning) {
   };
   auto options = GetOptions(args);
   EXPECT_TRUE(options->Ok());
-  auto warning_options = options->GetWarningOptions();
-  EXPECT_EQ(DiagnosticSeverity::WARNING, warning_options.Severity(DiagnosticID::interface_name));
+  auto mapping = options->GetDiagnosticMapping();
+  EXPECT_EQ(DiagnosticSeverity::WARNING, mapping.Severity(DiagnosticID::interface_name));
 }
 
 TEST(OptionsTests, ParsesWarningDisableSpecificWarning) {
@@ -375,8 +375,8 @@ TEST(OptionsTests, ParsesWarningDisableSpecificWarning) {
   };
   auto options = GetOptions(args);
   EXPECT_TRUE(options->Ok());
-  auto warning_options = options->GetWarningOptions();
-  EXPECT_EQ(DiagnosticSeverity::DISABLED, warning_options.Severity(DiagnosticID::interface_name));
+  auto mapping = options->GetDiagnosticMapping();
+  EXPECT_EQ(DiagnosticSeverity::DISABLED, mapping.Severity(DiagnosticID::interface_name));
 }
 
 TEST(OptionsTests, ParsesWarningAsErrors) {
@@ -385,8 +385,8 @@ TEST(OptionsTests, ParsesWarningAsErrors) {
   };
   auto options = GetOptions(args);
   EXPECT_TRUE(options->Ok());
-  auto warning_options = options->GetWarningOptions();
-  EXPECT_EQ(DiagnosticSeverity::ERROR, warning_options.Severity(DiagnosticID::interface_name));
+  auto mapping = options->GetDiagnosticMapping();
+  EXPECT_EQ(DiagnosticSeverity::ERROR, mapping.Severity(DiagnosticID::interface_name));
 }
 
 TEST(OptionsTests, RejectsUnknownWarning) {

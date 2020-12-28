@@ -16,8 +16,12 @@
 #pragma once
 
 #include <map>
+#include <stack>
 #include <string>
 #include <vector>
+
+#include <android-base/scopeguard.h>
+#include <android-base/strings.h>
 
 class AidlLocation;
 class AidlErrorLog;
@@ -37,11 +41,27 @@ enum class DiagnosticID {
 #undef DIAG
 };
 
+class DiagnosticMapping {
+ public:
+  DiagnosticSeverity Severity(DiagnosticID id) const;
+  void Severity(DiagnosticID id, DiagnosticSeverity severity);
+
+ private:
+  std::map<DiagnosticID, DiagnosticSeverity> mapping_;
+};
+
 class DiagnosticsContext {
  public:
-  virtual ~DiagnosticsContext() {}
-  // Returns true if it's okay to proceed after reporting diagnostics.
-  virtual AidlErrorLog Report(const AidlLocation& loc, DiagnosticID id) = 0;
+  DiagnosticsContext(DiagnosticMapping mapping) : mapping_(mapping) {}
+  virtual ~DiagnosticsContext() = default;
+  AidlErrorLog Report(const AidlLocation& loc, DiagnosticID id);
+
+ protected:
+  virtual AidlErrorLog DoReport(const AidlLocation& loc, DiagnosticID id,
+                                DiagnosticSeverity severity) = 0;
+
+ private:
+  DiagnosticMapping mapping_;
 };
 
 struct DiagnosticOption {
