@@ -950,23 +950,9 @@ std::vector<std::string> generate_java_annotations(const AidlAnnotatable& a) {
                         generate_java_unsupportedappusage_parameters(*unsupported_app_usage));
   }
 
-  auto strip_double_quote = [](const AidlTypeSpecifier& type,
-                               const std::string& raw_value) -> std::string {
-    if (!StartsWith(raw_value, "\"") || !EndsWith(raw_value, "\"")) {
-      AIDL_FATAL(type) << "Java passthrough annotation " << raw_value << " is not properly quoted";
-      return "";
-    }
-    return raw_value.substr(1, raw_value.size() - 2);
-  };
-
   for (const auto& annotation : a.GetAnnotations()) {
     if (annotation.GetType() == AidlAnnotation::Type::JAVA_PASSTHROUGH) {
-      for (const auto& name_and_param : annotation.AnnotationParams(strip_double_quote)) {
-        if (name_and_param.first == "annotation") {
-          result.emplace_back(name_and_param.second);
-          break;
-        }
-      }
+      result.emplace_back(annotation.ParamValue<std::string>("annotation").value());
     }
   }
 
