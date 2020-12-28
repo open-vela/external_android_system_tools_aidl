@@ -59,6 +59,7 @@ static vector<string> get_strict_annotations(const AidlAnnotatable& node) {
       AidlAnnotation::Type::BACKING,
       // @RustDerive doesn't affect read/write
       AidlAnnotation::Type::RUST_DERIVE,
+      AidlAnnotation::Type::SUPPRESS_WARNINGS,
   };
   vector<string> annotations;
   for (const AidlAnnotation& annotation : node.GetAnnotations()) {
