@@ -171,6 +171,7 @@ class AidlAnnotation : public AidlNode {
     FIXED_SIZE,
     DESCRIPTOR,
     RUST_DERIVE,
+    SUPPRESS_WARNINGS,
   };
   static std::string TypeToString(Type type);
 
@@ -260,6 +261,7 @@ class AidlAnnotatable : public AidlNode {
   const AidlAnnotation* UnsupportedAppUsage() const;
   const AidlAnnotation* RustDerive() const;
   const AidlAnnotation* BackingType() const;
+  std::vector<std::string> SuppressWarnings() const;
 
   // ToString is for dumping AIDL.
   // Returns string representation of annotations.
