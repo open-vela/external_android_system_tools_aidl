@@ -326,14 +326,16 @@ TEST_F(AidlTest, EmptyParcelableHolder) {
   {
     ExtendableParcelable ep;
     ep.writeToParcel(&parcel);
-    auto emptyExt = ep.ext.getParcelable<MyExt>();
+    std::shared_ptr<MyExt> emptyExt;
+    ep.ext.getParcelable(&emptyExt);
     EXPECT_FALSE(emptyExt);
   }
   {
     parcel.setDataPosition(0);
     ExtendableParcelable ep;
     ep.readFromParcel(&parcel);
-    auto emptyExt = ep.ext.getParcelable<MyExt>();
+    std::shared_ptr<MyExt> emptyExt;
+    ep.ext.getParcelable(&emptyExt);
     EXPECT_FALSE(emptyExt);
   }
 }
@@ -396,15 +398,18 @@ TEST_F(AidlTest, NativeExtednableParcelable) {
     ep.b = "a";
     ep.c = 42L;
 
-    EXPECT_TRUE(ep.ext.setParcelable(ext));
-    EXPECT_TRUE(ep.ext2.setParcelable(ext2));
+    EXPECT_TRUE(ep.ext.setParcelable(ext) == android::OK);
+    EXPECT_TRUE(ep.ext2.setParcelable(ext2) == android::OK);
 
-    auto extLike = ep.ext.getParcelable<MyExtLike>();
+    std::shared_ptr<MyExtLike> extLike;
+    ep.ext.getParcelable(&extLike);
     EXPECT_FALSE(extLike) << "The extension type must be MyExt, so it has to fail even though "
                              "MyExtLike has the same structure as MyExt.";
 
-    auto actualExt = ep.ext.getParcelable<MyExt>();
-    auto actualExt2 = ep.ext2.getParcelable<MyExt2>();
+    std::shared_ptr<MyExt> actualExt;
+    ep.ext.getParcelable(&actualExt);
+    std::shared_ptr<MyExt2> actualExt2;
+    ep.ext2.getParcelable(&actualExt2);
 
     EXPECT_TRUE(actualExt);
     EXPECT_TRUE(actualExt2);
@@ -420,14 +425,18 @@ TEST_F(AidlTest, NativeExtednableParcelable) {
     ExtendableParcelable ep;
     ep.readFromParcel(&parcel);
 
-    auto extLike = ep.ext.getParcelable<MyExtLike>();
+    std::shared_ptr<MyExtLike> extLike;
+    ep.ext.getParcelable(&extLike);
     EXPECT_FALSE(extLike) << "The extension type must be MyExt, so it has to fail even though "
                              "MyExtLike has the same structure as MyExt.";
 
-    auto actualExt = ep.ext.getParcelable<MyExt>();
-    auto actualExt2 = ep.ext2.getParcelable<MyExt2>();
+    std::shared_ptr<MyExt> actualExt;
+    ep.ext.getParcelable(&actualExt);
+    std::shared_ptr<MyExt2> actualExt2;
+    ep.ext2.getParcelable(&actualExt2);
 
-    auto emptyExt = ep.ext2.getParcelable<MyExt>();
+    std::shared_ptr<MyExt> emptyExt;
+    ep.ext2.getParcelable(&emptyExt);
     EXPECT_FALSE(emptyExt);
 
     EXPECT_TRUE(actualExt);
