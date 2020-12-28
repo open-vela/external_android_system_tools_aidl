@@ -15,6 +15,8 @@
  */
 #include "diagnostics.h"
 
+#include "logging.h"
+
 namespace android {
 namespace aidl {
 
@@ -29,6 +31,18 @@ const std::map<DiagnosticID, std::string> kDiagnosticsNames = {
 #include "diagnostics.inc"
 #undef DIAG
 };
+
+void DiagnosticMapping::Severity(DiagnosticID id, DiagnosticSeverity severity) {
+  mapping_[id] = severity;
+}
+
+DiagnosticSeverity DiagnosticMapping::Severity(DiagnosticID id) const {
+  return mapping_.at(id);
+}
+
+AidlErrorLog DiagnosticsContext::Report(const AidlLocation& loc, DiagnosticID id) {
+  return DoReport(loc, id, mapping_.Severity(id));
+}
 
 }  // namespace aidl
 }  // namespace android

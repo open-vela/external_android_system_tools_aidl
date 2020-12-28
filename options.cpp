@@ -553,6 +553,11 @@ std::vector<const char*> WarningOptions::Parse(int argc, const char* const raw_a
     }
   }
 
+  return remains;
+}
+
+DiagnosticMapping WarningOptions::GetDiagnosticMapping() const {
+  DiagnosticMapping mapping;
   for (const auto& [_, d] : kAllDiagnostics) {
     bool enabled = d.default_enabled;
     if (enable_all_ || enabled_.find(d.name) != enabled_.end()) {
@@ -569,14 +574,9 @@ std::vector<const char*> WarningOptions::Parse(int argc, const char* const raw_a
         severity = DiagnosticSeverity::ERROR;
       }
     }
-    mapping_.emplace(d.id, Mapping{d.name, severity});
+    mapping.Severity(d.id, severity);
   }
-
-  return remains;
-}
-
-DiagnosticSeverity WarningOptions::Severity(DiagnosticID id) const {
-  return mapping_.at(id).severity;
+  return mapping;
 }
 
 }  // namespace aidl

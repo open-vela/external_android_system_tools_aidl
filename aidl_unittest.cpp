@@ -4325,7 +4325,7 @@ TEST_P(AidlTest, WarningInterfaceName) {
                                " -Weverything -o out -h out p/Foo.aidl");
   CaptureStderr();
   EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
-  EXPECT_EQ("WARNING: p/Foo.aidl:1.1-10: Interface names should start with I.[-Winterface-name]\n",
+  EXPECT_EQ("WARNING: p/Foo.aidl:1.1-10: Interface names should start with I. [-Winterface-name]\n",
             GetCapturedStderr());
 }
 
@@ -4335,7 +4335,7 @@ TEST_P(AidlTest, ErrorInterfaceName) {
                                " -Weverything -Werror -o out -h out p/Foo.aidl");
   CaptureStderr();
   EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
-  EXPECT_EQ("ERROR: p/Foo.aidl:1.1-10: Interface names should start with I.[-Winterface-name]\n",
+  EXPECT_EQ("ERROR: p/Foo.aidl:1.1-10: Interface names should start with I. [-Winterface-name]\n",
             GetCapturedStderr());
 }
 

@@ -539,29 +539,6 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   // Validation phase
   //////////////////////////////////////////////////////////////////////////
 
-  class DiagnosticsContextImpl : public DiagnosticsContext {
-   public:
-    DiagnosticsContextImpl(const Options& options) : warning_options(options.GetWarningOptions()) {}
-    AidlErrorLog Report(const AidlLocation& loc, DiagnosticID id) override {
-      switch (warning_options.Severity(id)) {
-        case DiagnosticSeverity::DISABLED:
-          return AidlErrorLog(AidlErrorLog::NO_OP, loc);
-        case DiagnosticSeverity::WARNING:
-          return AidlErrorLog(AidlErrorLog::WARNING, loc, Suffix(id));
-        case DiagnosticSeverity::ERROR:
-          error_count_++;
-          return AidlErrorLog(AidlErrorLog::ERROR, loc, Suffix(id));
-      }
-    }
-    std::string Suffix(DiagnosticID id) const { return "[-W" + kDiagnosticsNames.at(id) + "]"; }
-    size_t ErrorCount() const { return error_count_; }
-
-   private:
-    const WarningOptions& warning_options;
-    size_t error_count_ = 0;
-  };
-  DiagnosticsContextImpl diag(options);
-
   // For legacy reasons, by default, compiling an unstructured parcelable (which contains no output)
   // is allowed. This must not be returned as an error until the very end of this procedure since
   // this may be considered a success, and we should first check that there are not other, more
@@ -593,7 +570,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
 
       if (!is_check_api) {
         // Ideally, we could do this for check api, but we can't resolve imports
-        if (!defined_type->CheckValid(*typenames, diag)) {
+        if (!defined_type->CheckValid(*typenames)) {
           valid_type = false;
         }
       }
@@ -685,8 +662,67 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     }
   }
 
-  if (diag.ErrorCount() > 0) {
-    return AidlError::BAD_TYPE;
+  class DiagnosticsVisitor : public DiagnosticsContext, public AidlVisitAll {
+    using super = AidlVisitAll;
+    using diag = DiagnosticsContext;
+
+   public:
+    DiagnosticsVisitor(DiagnosticMapping mapping) : DiagnosticsContext(std::move(mapping)) {}
+
+    void VisitInterface(const AidlInterface& i) override {
+      super::VisitInterface(i);
+      if (auto name = i.GetName(); name.size() < 1 || name[0] != 'I') {
+        diag::Report(i.GetLocation(), DiagnosticID::interface_name)
+            << "Interface names should start with I.";
+      }
+    }
+    void VisitEnum(const AidlEnumDeclaration& e) override {
+      super::VisitEnum(e);
+      AIDL_FATAL_IF(e.GetEnumerators().empty(), e)
+          << "The enum '" << e.GetName() << "' has no enumerators.";
+      const auto& first = e.GetEnumerators()[0];
+      if (auto first_value = first->ValueString(e.GetBackingType(), AidlConstantValueDecorator);
+          first_value != "0") {
+        diag::Report(first->GetLocation(), DiagnosticID::enum_zero)
+            << "The first enumerator '" << first->GetName() << "' should be 0, but it is "
+            << first_value << ".";
+      }
+    }
+    void VisitArgument(const AidlArgument& a) override {
+      super::VisitArgument(a);
+      if (a.GetDirection() == AidlArgument::INOUT_DIR) {
+        diag::Report(a.GetLocation(), DiagnosticID::inout_parameter)
+            << a.GetName()
+            << " is 'inout'. Avoid inout parameters. This is somewhat confusing for clients "
+               "because although the parameters are 'in', they look out 'out' parameters.";
+      }
+    }
+    size_t ErrorCount() const { return error_count_; }
+
+   private:
+    std::string Suffix(DiagnosticID id) const { return " [-W" + kDiagnosticsNames.at(id) + "]"; }
+    AidlErrorLog DoReport(const AidlLocation& loc, DiagnosticID id,
+                          DiagnosticSeverity severity) override {
+      switch (severity) {
+        case DiagnosticSeverity::DISABLED:
+          return AidlErrorLog(AidlErrorLog::NO_OP, loc);
+        case DiagnosticSeverity::WARNING:
+          return AidlErrorLog(AidlErrorLog::WARNING, loc, Suffix(id));
+        case DiagnosticSeverity::ERROR:
+          error_count_++;
+          return AidlErrorLog(AidlErrorLog::ERROR, loc, Suffix(id));
+      }
+    }
+
+    size_t error_count_ = 0;
+  };
+
+  if (!is_check_api) {
+    DiagnosticsVisitor diag(options.GetDiagnosticMapping());
+    main_parser->ParsedDocument().Accept(diag);
+    if (diag.ErrorCount() > 0) {
+      return AidlError::BAD_TYPE;
+    }
   }
 
   typenames->IterateTypes([&](const AidlDefinedType& type) {
