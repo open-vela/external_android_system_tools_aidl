@@ -510,7 +510,7 @@ class AidlConstantValue : public AidlNode {
    * Return the value casted to the given type.
    */
   template <typename T>
-  T cast() const;
+  T Cast() const;
 
   virtual ~AidlConstantValue() = default;
 
