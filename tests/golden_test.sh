@@ -55,7 +55,7 @@ function _golden_test() {
   if [ "$update" = 1 ]; then
     "$root"/build/soong/soong_ui.bash --make-mode \
       $(for i in "${modules[@]}"; do
-          echo out/soong/.intermediates/system/tools/aidl/"$i"/gen/timestamp
+          echo "$i" | sed 's/-source//'
         done)
   fi
 
@@ -78,6 +78,10 @@ function _golden_test() {
     echo "ERROR: to accept these changes, please run:"
     echo "ERROR:     \$ANDROID_BUILD_TOP/system/tools/aidl/tests/golden_test.sh update"
     exit 1
+  else
+    if [ "$update" = 1 ]; then
+      echo "UPDATE GOLDEN TEST SUCCESS"
+    fi
   fi
 }
 
