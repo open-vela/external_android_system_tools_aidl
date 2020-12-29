@@ -205,7 +205,7 @@ class AidlAnnotation : public AidlNode {
     std::string name;
 
     // map from param name -> value type
-    std::map<std::string, std::string> supported_parameters;
+    std::map<std::string, const AidlTypeSpecifier&> supported_parameters;
 
     bool repeatable;
 
