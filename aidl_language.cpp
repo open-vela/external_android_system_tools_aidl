@@ -79,21 +79,6 @@ inline bool HasHideComment(const std::string& comment) {
 }
 }  // namespace
 
-AidlLocation::AidlLocation(const std::string& file, Point begin, Point end, Source source)
-    : file_(file), begin_(begin), end_(end), source_(source) {}
-
-std::ostream& operator<<(std::ostream& os, const AidlLocation& l) {
-  os << l.file_;
-  if (l.LocationKnown()) {
-    os << ":" << l.begin_.line << "." << l.begin_.column << "-";
-    if (l.begin_.line != l.end_.line) {
-      os << l.end_.line << ".";
-    }
-    os << l.end_.column;
-  }
-  return os;
-}
-
 AidlNode::AidlNode(const AidlLocation& location) : location_(location) {}
 
 std::string AidlNode::PrintLine() const {
