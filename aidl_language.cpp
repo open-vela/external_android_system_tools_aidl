@@ -110,6 +110,7 @@ std::string AidlNode::PrintLocation() const {
 }
 
 static const AidlTypeSpecifier kStringType{AIDL_LOCATION_HERE, "String", false, nullptr, ""};
+static const AidlTypeSpecifier kStringArrayType{AIDL_LOCATION_HERE, "String", true, nullptr, ""};
 static const AidlTypeSpecifier kIntType{AIDL_LOCATION_HERE, "int", false, nullptr, ""};
 static const AidlTypeSpecifier kLongType{AIDL_LOCATION_HERE, "long", false, nullptr, ""};
 static const AidlTypeSpecifier kBooleanType{AIDL_LOCATION_HERE, "boolean", false, nullptr, ""};
@@ -153,6 +154,11 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
         {"Eq", kBooleanType},
         {"Hash", kBooleanType}},
        false},
+      {AidlAnnotation::Type::SUPPRESS_WARNINGS,
+       "SuppressWarnings",
+       {{"value", kStringArrayType}},
+       false,
+       {"value"}},
   };
   return kSchemas;
 }
@@ -348,6 +354,16 @@ const AidlAnnotation* AidlAnnotatable::BackingType() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::BACKING);
 }
 
+std::vector<std::string> AidlAnnotatable::SuppressWarnings() const {
+  auto annot = GetAnnotation(annotations_, AidlAnnotation::Type::SUPPRESS_WARNINGS);
+  if (annot) {
+    auto names = annot->ParamValue<std::vector<std::string>>("value");
+    AIDL_FATAL_IF(!names.has_value(), this);
+    return std::move(names.value());
+  }
+  return {};
+}
+
 bool AidlAnnotatable::IsStableApiParcelable(Options::Language lang) const {
   return lang == Options::Language::JAVA &&
          GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_STABLE_PARCELABLE);
@@ -489,11 +505,15 @@ const AidlDefinedType* AidlTypeSpecifier::GetDefinedType() const {
 }
 
 std::set<AidlAnnotation::Type> AidlTypeSpecifier::GetSupportedAnnotations() const {
-  // kHide and kUnsupportedAppUsage are both method return annotations
-  // which we don't distinguish from other type specifiers.
-  return {AidlAnnotation::Type::NULLABLE, AidlAnnotation::Type::UTF8_IN_CPP,
-          AidlAnnotation::Type::UNSUPPORTED_APP_USAGE, AidlAnnotation::Type::HIDE,
-          AidlAnnotation::Type::JAVA_PASSTHROUGH};
+  // TODO(b/151102494) we don't distinguish field-level annotations from other type specifiers.
+  return {
+      AidlAnnotation::Type::NULLABLE,
+      AidlAnnotation::Type::UTF8_IN_CPP,
+      AidlAnnotation::Type::JAVA_PASSTHROUGH,
+      AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,  // field-level annotation
+      AidlAnnotation::Type::HIDE,                   // field-level annotation
+      AidlAnnotation::Type::SUPPRESS_WARNINGS,      // field-level annotation
+  };
 }
 
 bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
@@ -1018,14 +1038,17 @@ void AidlStructuredParcelable::Dump(CodeWriter* writer) const {
 }
 
 std::set<AidlAnnotation::Type> AidlStructuredParcelable::GetSupportedAnnotations() const {
-  return {AidlAnnotation::Type::VINTF_STABILITY,
-          AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
-          AidlAnnotation::Type::HIDE,
-          AidlAnnotation::Type::JAVA_PASSTHROUGH,
-          AidlAnnotation::Type::JAVA_DERIVE,
-          AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE,
-          AidlAnnotation::Type::FIXED_SIZE,
-          AidlAnnotation::Type::RUST_DERIVE};
+  return {
+      AidlAnnotation::Type::VINTF_STABILITY,
+      AidlAnnotation::Type::UNSUPPORTED_APP_USAGE,
+      AidlAnnotation::Type::HIDE,
+      AidlAnnotation::Type::JAVA_PASSTHROUGH,
+      AidlAnnotation::Type::JAVA_DERIVE,
+      AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE,
+      AidlAnnotation::Type::FIXED_SIZE,
+      AidlAnnotation::Type::RUST_DERIVE,
+      AidlAnnotation::Type::SUPPRESS_WARNINGS,
+  };
 }
 
 bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames,
@@ -1240,8 +1263,13 @@ bool AidlEnumDeclaration::Autofill(const AidlTypenames& typenames) {
 }
 
 std::set<AidlAnnotation::Type> AidlEnumDeclaration::GetSupportedAnnotations() const {
-  return {AidlAnnotation::Type::VINTF_STABILITY, AidlAnnotation::Type::BACKING,
-          AidlAnnotation::Type::HIDE, AidlAnnotation::Type::JAVA_PASSTHROUGH};
+  return {
+      AidlAnnotation::Type::VINTF_STABILITY,
+      AidlAnnotation::Type::BACKING,
+      AidlAnnotation::Type::HIDE,
+      AidlAnnotation::Type::JAVA_PASSTHROUGH,
+      AidlAnnotation::Type::SUPPRESS_WARNINGS,
+  };
 }
 
 bool AidlEnumDeclaration::CheckValid(const AidlTypenames& typenames,
@@ -1297,9 +1325,12 @@ AidlUnionDecl::AidlUnionDecl(const AidlLocation& location, const std::string& na
     : AidlParcelable(location, name, package, comments, "" /*cpp_header*/, type_params, members) {}
 
 std::set<AidlAnnotation::Type> AidlUnionDecl::GetSupportedAnnotations() const {
-  return {AidlAnnotation::Type::VINTF_STABILITY,     AidlAnnotation::Type::HIDE,
-          AidlAnnotation::Type::JAVA_PASSTHROUGH,    AidlAnnotation::Type::JAVA_DERIVE,
-          AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE, AidlAnnotation::Type::RUST_DERIVE};
+  return {
+      AidlAnnotation::Type::VINTF_STABILITY,     AidlAnnotation::Type::HIDE,
+      AidlAnnotation::Type::JAVA_PASSTHROUGH,    AidlAnnotation::Type::JAVA_DERIVE,
+      AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE, AidlAnnotation::Type::RUST_DERIVE,
+      AidlAnnotation::Type::SUPPRESS_WARNINGS,
+  };
 }
 
 void AidlUnionDecl::Dump(CodeWriter* writer) const {
@@ -1435,9 +1466,12 @@ void AidlInterface::Dump(CodeWriter* writer) const {
 }
 
 std::set<AidlAnnotation::Type> AidlInterface::GetSupportedAnnotations() const {
-  return {AidlAnnotation::Type::SENSITIVE_DATA,        AidlAnnotation::Type::VINTF_STABILITY,
-          AidlAnnotation::Type::UNSUPPORTED_APP_USAGE, AidlAnnotation::Type::HIDE,
-          AidlAnnotation::Type::JAVA_PASSTHROUGH,      AidlAnnotation::Type::DESCRIPTOR};
+  return {
+      AidlAnnotation::Type::SENSITIVE_DATA,        AidlAnnotation::Type::VINTF_STABILITY,
+      AidlAnnotation::Type::UNSUPPORTED_APP_USAGE, AidlAnnotation::Type::HIDE,
+      AidlAnnotation::Type::JAVA_PASSTHROUGH,      AidlAnnotation::Type::DESCRIPTOR,
+      AidlAnnotation::Type::SUPPRESS_WARNINGS,
+  };
 }
 
 bool AidlInterface::CheckValid(const AidlTypenames& typenames, DiagnosticsContext& diag) const {
