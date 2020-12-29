@@ -360,10 +360,7 @@ bool AidlAnnotatable::IsHide() const {
 bool AidlAnnotatable::JavaDerive(const std::string& method) const {
   auto annotation = GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_DERIVE);
   if (annotation != nullptr) {
-    auto params = annotation->AnnotationParams(AidlConstantValueDecorator);
-    if (auto it = params.find(method); it != params.end()) {
-      return it->second == "true";
-    }
+    return annotation->ParamValue<bool>(method).value_or(false);
   }
   return false;
 }
@@ -371,16 +368,7 @@ bool AidlAnnotatable::JavaDerive(const std::string& method) const {
 std::string AidlAnnotatable::GetDescriptor() const {
   auto annotation = GetAnnotation(annotations_, AidlAnnotation::Type::DESCRIPTOR);
   if (annotation != nullptr) {
-    auto params = annotation->AnnotationParams(AidlConstantValueDecorator);
-    if (auto it = params.find("value"); it != params.end()) {
-      const string& value = it->second;
-
-      AIDL_FATAL_IF(value.size() < 2, this) << value;
-      AIDL_FATAL_IF(value[0] != '"', this) << value;
-      AIDL_FATAL_IF(value[value.length() - 1] != '"', this) << value;
-      std::string unquoted_value = value.substr(1, value.length() - 2);
-      return unquoted_value;
-    }
+    return annotation->ParamValue<std::string>("value").value();
   }
   return "";
 }
@@ -1230,22 +1218,15 @@ AidlEnumDeclaration::AidlEnumDeclaration(const AidlLocation& location, const std
 
 bool AidlEnumDeclaration::Autofill(const AidlTypenames& typenames) {
   if (auto annot = BackingType(); annot != nullptr) {
-    // Autofill() is called before the grand CheckValid(). But AidlAnnotation::AnnotationParams()
-    // calls AidlConstantValue::ValueString() which requires CheckValid() to be called before. So we
+    // Autofill() is called before the grand CheckValid(). But AidlAnnotation::ParamValue()
+    // calls AidlConstantValue::evaluate() which requires CheckValid() to be called before. So we
     // need to call CheckValid().
     if (!annot->CheckValid()) {
       return false;
     }
-    auto annotation_params = annot->AnnotationParams(AidlConstantValueDecorator);
-    auto type = annotation_params.at("type");
-
-    AIDL_FATAL_IF(type.size() < 2, this) << type;
-    AIDL_FATAL_IF(type[0] != '"', this) << type;
-    AIDL_FATAL_IF(type[type.length() - 1] != '"', this) << type;
-    string unquoted_type = type.substr(1, type.length() - 2);
-
-    backing_type_ = std::make_unique<AidlTypeSpecifier>(annot->GetLocation(), unquoted_type, false,
-                                                        nullptr, "");
+    auto type = annot->ParamValue<std::string>("type").value();
+    backing_type_ =
+        std::make_unique<AidlTypeSpecifier>(annot->GetLocation(), type, false, nullptr, "");
   } else {
     // Default to byte type for enums.
     backing_type_ =
