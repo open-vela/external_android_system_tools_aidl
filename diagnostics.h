@@ -33,7 +33,6 @@ enum class DiagnosticSeverity {
 
 enum class DiagnosticID {
 #define DIAG(ENUM, NAME, ENABLED) ENUM,
-
 #include "diagnostics.inc"
 #undef DIAG
 };
@@ -52,6 +51,11 @@ struct DiagnosticOption {
 };
 
 extern const std::map<std::string, DiagnosticOption> kAllDiagnostics;
+extern const std::map<DiagnosticID, std::string> kDiagnosticsNames;
+
+inline std::ostream& operator<<(std::ostream& os, DiagnosticID id) {
+  return os << kDiagnosticsNames.at(id);
+}
 
 }  // namespace aidl
 }  // namespace android
