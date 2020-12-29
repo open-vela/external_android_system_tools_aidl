@@ -18,8 +18,6 @@
 
 #include <algorithm>
 
-#include <android-base/strings.h>
-
 #include "code_writer.h"
 #include "logging.h"
 
