@@ -28,6 +28,8 @@
 #include "code_writer.h"
 #include "diagnostics.h"
 #include "io_delegate.h"
+#include "location.h"
+#include "logging.h"
 #include "options.h"
 
 using android::aidl::AidlTypenames;
@@ -40,6 +42,26 @@ using std::unique_ptr;
 using std::vector;
 class AidlNode;
 
+// helper to see if T is the same to one of Args types.
+template <typename T, typename... Args>
+struct is_one_of : std::false_type {};
+
+template <typename T, typename S, typename... Args>
+struct is_one_of<T, S, Args...> {
+  enum { value = std::is_same_v<T, S> || is_one_of<T, Args...>::value };
+};
+
+// helper to see if T is std::vector of something.
+template <typename>
+struct is_vector : std::false_type {};
+
+template <typename T>
+struct is_vector<std::vector<T>> : std::true_type {};
+
+// helper for static_assert(false)
+template <typename T>
+struct unsupported_type : std::false_type {};
+
 namespace android {
 namespace aidl {
 namespace mappings {
@@ -51,46 +73,8 @@ std::string dump_location(const AidlNode& method);
 }  // namespace aidl
 }  // namespace android
 
-class AidlLocation {
- public:
-  struct Point {
-    int line;
-    int column;
-  };
-
-  enum class Source {
-    // From internal aidl source code
-    INTERNAL = 0,
-    // From a parsed file
-    EXTERNAL = 1
-  };
-
-  AidlLocation(const std::string& file, Point begin, Point end, Source source);
-  AidlLocation(const std::string& file, Source source)
-      : AidlLocation(file, {0, 0}, {0, 0}, source) {}
-
-  bool IsInternal() const { return source_ == Source::INTERNAL; }
-
-  // The first line of a file is line 1.
-  bool LocationKnown() const { return begin_.line != 0; }
-
-  friend std::ostream& operator<<(std::ostream& os, const AidlLocation& l);
-  friend class AidlNode;
-
- private:
-  // INTENTIONALLY HIDDEN: only operator<< should access details here.
-  // Otherwise, locations should only ever be copied around to construct new
-  // objects.
-  const std::string file_;
-  Point begin_;
-  Point end_;
-  Source source_;
-};
-
-#define AIDL_LOCATION_HERE \
-  (AidlLocation{__FILE__, {__LINE__, 0}, {__LINE__, 0}, AidlLocation::Source::INTERNAL})
-
-std::ostream& operator<<(std::ostream& os, const AidlLocation& l);
+bool ParseFloating(std::string_view sv, double* parsed);
+bool ParseFloating(std::string_view sv, float* parsed);
 
 class AidlDocument;
 class AidlInterface;
@@ -561,11 +545,41 @@ class AidlConstantValue : public AidlNode {
     virtual void Visit(AidlBinaryConstExpression&) = 0;
   };
 
-  /*
-   * Return the value casted to the given type.
-   */
+  // Returns the evaluated value. T> should match to the actual type.
   template <typename T>
-  T Cast() const;
+  T EvaluatedValue() const {
+    is_evaluated_ || (CheckValid() && evaluate());
+    AIDL_FATAL_IF(!is_valid_, this);
+
+    if constexpr (is_vector<T>::value) {
+      AIDL_FATAL_IF(final_type_ != Type::ARRAY, this);
+      T result;
+      for (const auto& v : values_) {
+        result.push_back(v->EvaluatedValue<typename T::value_type>());
+      }
+      return result;
+    } else if constexpr (is_one_of<T, float, double>::value) {
+      AIDL_FATAL_IF(final_type_ != Type::FLOATING, this);
+      T result;
+      AIDL_FATAL_IF(!ParseFloating(value_, &result), this);
+      return result;
+    } else if constexpr (std::is_same<T, std::string>::value) {
+      AIDL_FATAL_IF(final_type_ != Type::STRING, this);
+      return final_string_value_.substr(1, final_string_value_.size() - 2);  // unquote "
+    } else if constexpr (is_one_of<T, int8_t, int32_t, int64_t>::value) {
+      AIDL_FATAL_IF(final_type_ < Type::INT8 && final_type_ > Type::INT64, this);
+      return static_cast<T>(final_value_);
+    } else if constexpr (std::is_same<T, char>::value) {
+      AIDL_FATAL_IF(final_type_ != Type::CHARACTER, this);
+      return final_string_value_.at(1);  // unquote '
+    } else if constexpr (std::is_same<T, bool>::value) {
+      static_assert(std::is_same<T, bool>::value, "..");
+      AIDL_FATAL_IF(final_type_ != Type::BOOLEAN, this);
+      return final_value_ != 0;
+    } else {
+      static_assert(unsupported_type<T>::value);
+    }
+  }
 
   virtual ~AidlConstantValue() = default;
 
@@ -1165,5 +1179,5 @@ std::optional<T> AidlAnnotation::ParamValue(const std::string& param_name) const
   if (it == parameters_.end()) {
     return std::nullopt;
   }
-  return it->second->Cast<T>();
+  return it->second->EvaluatedValue<T>();
 }

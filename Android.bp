@@ -81,6 +81,7 @@ cc_library_static {
         "import_resolver.cpp",
         "io_delegate.cpp",
         "line_reader.cpp",
+        "location.cpp",
         "logging.cpp",
         "options.cpp",
         "parser.cpp",
