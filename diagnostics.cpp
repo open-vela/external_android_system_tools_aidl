@@ -26,7 +26,7 @@ const std::map<std::string, DiagnosticOption> kAllDiagnostics = {
 #undef DIAG
 };
 
-static const std::map<DiagnosticID, std::string> kDiagnosticsNames = {
+const std::map<DiagnosticID, std::string> kDiagnosticsNames = {
 #define DIAG(ENUM, NAME, ENABLED) {DiagnosticID::ENUM, NAME},
 #include "diagnostics.inc"
 #undef DIAG
@@ -42,10 +42,6 @@ DiagnosticSeverity DiagnosticMapping::Severity(DiagnosticID id) const {
 
 AidlErrorLog DiagnosticsContext::Report(const AidlLocation& loc, DiagnosticID id) {
   return DoReport(loc, id, mapping_.Severity(id));
-}
-
-std::string to_string(DiagnosticID id) {
-  return kDiagnosticsNames.at(id);
 }
 
 }  // namespace aidl
