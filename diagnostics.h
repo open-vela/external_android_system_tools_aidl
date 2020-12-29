@@ -71,11 +71,9 @@ struct DiagnosticOption {
 };
 
 extern const std::map<std::string, DiagnosticOption> kAllDiagnostics;
-extern const std::map<DiagnosticID, std::string> kDiagnosticsNames;
 
-inline std::ostream& operator<<(std::ostream& os, DiagnosticID id) {
-  return os << kDiagnosticsNames.at(id);
-}
+// relying on Argument-dependent lookup
+std::string to_string(DiagnosticID id);
 
 }  // namespace aidl
 }  // namespace android

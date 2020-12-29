@@ -700,7 +700,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     size_t ErrorCount() const { return error_count_; }
 
    private:
-    std::string Suffix(DiagnosticID id) const { return " [-W" + kDiagnosticsNames.at(id) + "]"; }
+    std::string Suffix(DiagnosticID id) const { return " [-W" + to_string(id) + "]"; }
     AidlErrorLog DoReport(const AidlLocation& loc, DiagnosticID id,
                           DiagnosticSeverity severity) override {
       switch (severity) {
