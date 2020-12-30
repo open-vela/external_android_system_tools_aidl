@@ -224,6 +224,20 @@ struct DiagnoseMixedOneway : DiagnosticsVisitor {
   }
 };
 
+struct DiagnoseOutArray : DiagnosticsVisitor {
+  DiagnoseOutArray(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
+  void Visit(const AidlMethod& m) override {
+    for (const auto& a : m.GetArguments()) {
+      if (a->GetType().IsArray() && a->IsOut()) {
+        diag.Report(m.GetLocation(), DiagnosticID::out_array)
+            << "The method '" << m.GetName() << "' an array output parameter '" << a->GetName()
+            << "'. Instead prefer APIs like '" << a->GetType().Signature() << " " << m.GetName()
+            << "(...).";
+      }
+    }
+  }
+};
+
 bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnosticsContext diag(mapping);
 
@@ -233,6 +247,7 @@ bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnoseConstName{diag}.Check(doc);
   DiagnoseExplicitDefault{diag}.Check(doc);
   DiagnoseMixedOneway{diag}.Check(doc);
+  DiagnoseOutArray{diag}.Check(doc);
 
   return diag.ErrorCount() == 0;
 }
