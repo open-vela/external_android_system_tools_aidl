@@ -16,40 +16,26 @@
 
 #pragma once
 
-#include "aidl_language.h"
-
 #include <iostream>
+#include <string>
+
+#include "location.h"
+
+class AidlNode;
 
 // Generic point for printing any error in the AIDL compiler.
 class AidlErrorLog {
  public:
   enum Severity { NO_OP, WARNING, ERROR, FATAL };
 
-  AidlErrorLog(Severity severity, const AidlLocation& location, const std::string& suffix = "")
-      : os_(&std::cerr), severity_(severity), location_(location), suffix_(suffix) {
-    sHadError |= severity_ >= ERROR;
-    if (severity_ != NO_OP) {
-      (*os_) << (severity_ == WARNING ? "WARNING: " : "ERROR: ");
-      (*os_) << location << ": ";
-    }
-  }
-  AidlErrorLog(Severity severity, const std::string& filename)
-      : AidlErrorLog(severity, AidlLocation(filename, AidlLocation::Source::EXTERNAL)) {}
-  AidlErrorLog(Severity severity, const AidlNode& node) : AidlErrorLog(severity, node.location_) {}
+  AidlErrorLog(Severity severity, const AidlLocation& location, const std::string& suffix = "");
+  AidlErrorLog(Severity severity, const std::string& filename);
+  AidlErrorLog(Severity severity, const AidlNode& node);
   AidlErrorLog(Severity severity, const AidlNode* node) : AidlErrorLog(severity, *node) {}
 
   template <typename T>
   AidlErrorLog(Severity severity, const std::unique_ptr<T>& node) : AidlErrorLog(severity, *node) {}
-  ~AidlErrorLog() {
-    if (severity_ == NO_OP) return;
-    (*os_) << suffix_ << std::endl;
-    if (severity_ == FATAL) abort();
-    if (location_.IsInternal()) {
-      (*os_) << "Logging an internal location should not happen. Offending location: " << location_
-             << std::endl;
-      abort();
-    }
-  }
+  ~AidlErrorLog();
 
   // AidlErrorLog is a single use object. No need to copy
   AidlErrorLog(const AidlErrorLog&) = delete;
