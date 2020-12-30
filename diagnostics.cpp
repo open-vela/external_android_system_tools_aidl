@@ -211,33 +211,6 @@ struct DiagnoseExplicitDefault : DiagnosticsVisitor {
   }
 };
 
-struct DiagnoseMixedOneway : DiagnosticsVisitor {
-  DiagnoseMixedOneway(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
-  void Visit(const AidlInterface& i) override {
-    const auto& methods = i.GetMethods();
-    if (std::adjacent_find(begin(methods), end(methods), [](const auto& a, const auto& b) {
-          return a->IsOneway() != b->IsOneway();
-        }) != end(methods)) {
-      diag.Report(i.GetLocation(), DiagnosticID::mixed_oneway)
-          << "The interface '" << i.GetName() << "' has both one-way and two-way methods.";
-    }
-  }
-};
-
-struct DiagnoseOutArray : DiagnosticsVisitor {
-  DiagnoseOutArray(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
-  void Visit(const AidlMethod& m) override {
-    for (const auto& a : m.GetArguments()) {
-      if (a->GetType().IsArray() && a->IsOut()) {
-        diag.Report(m.GetLocation(), DiagnosticID::out_array)
-            << "The method '" << m.GetName() << "' an array output parameter '" << a->GetName()
-            << "'. Instead prefer APIs like '" << a->GetType().Signature() << " " << m.GetName()
-            << "(...).";
-      }
-    }
-  }
-};
-
 bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnosticsContext diag(mapping);
 
@@ -246,8 +219,6 @@ bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnoseInoutParameter{diag}.Check(doc);
   DiagnoseConstName{diag}.Check(doc);
   DiagnoseExplicitDefault{diag}.Check(doc);
-  DiagnoseMixedOneway{diag}.Check(doc);
-  DiagnoseOutArray{diag}.Check(doc);
 
   return diag.ErrorCount() == 0;
 }
