@@ -151,3 +151,10 @@ TEST_F(DiagnosticsTest, DontMixOnewayWithTwowayMethods) {
       {"IFoo.aidl", "interface IFoo { void foo(); oneway void bar(); }"},
   });
 }
+
+TEST_F(DiagnosticsTest, ArraysAsOutputParametersConsideredHarmful) {
+  expect_diagnostics = {DiagnosticID::out_array};
+  ParseFiles({
+      {"IFoo.aidl", "interface IFoo { void foo(out String[] ret); }"},
+  });
+}
