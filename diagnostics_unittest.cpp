@@ -61,6 +61,16 @@ struct DiagnosticsTest : testing::Test {
   std::vector<DiagnosticID> expect_diagnostics;
 };
 
+TEST_F(DiagnosticsTest, const_name_ForEnumerator) {
+  expect_diagnostics = {DiagnosticID::const_name};
+  ParseFiles({{"Foo.aidl", "enum Foo { foo }"}});
+}
+
+TEST_F(DiagnosticsTest, const_name_ForConstants) {
+  expect_diagnostics = {DiagnosticID::const_name};
+  ParseFiles({{"IFoo.aidl", "interface IFoo { const int foo = 1; }"}});
+}
+
 TEST_F(DiagnosticsTest, interface_name) {
   expect_diagnostics = {DiagnosticID::interface_name};
   ParseFiles({{"Foo.aidl", "interface Foo { }"}});
