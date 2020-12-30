@@ -25,8 +25,8 @@ class AidlErrorLog {
  public:
   enum Severity { NO_OP, WARNING, ERROR, FATAL };
 
-  AidlErrorLog(Severity severity, const AidlLocation& location)
-      : os_(&std::cerr), severity_(severity), location_(location) {
+  AidlErrorLog(Severity severity, const AidlLocation& location, const std::string& suffix = "")
+      : os_(&std::cerr), severity_(severity), location_(location), suffix_(suffix) {
     sHadError |= severity_ >= ERROR;
     if (severity_ != NO_OP) {
       (*os_) << (severity_ == WARNING ? "WARNING: " : "ERROR: ");
@@ -42,7 +42,7 @@ class AidlErrorLog {
   AidlErrorLog(Severity severity, const std::unique_ptr<T>& node) : AidlErrorLog(severity, *node) {}
   ~AidlErrorLog() {
     if (severity_ == NO_OP) return;
-    (*os_) << std::endl;
+    (*os_) << suffix_ << std::endl;
     if (severity_ == FATAL) abort();
     if (location_.IsInternal()) {
       (*os_) << "Logging an internal location should not happen. Offending location: " << location_
@@ -74,6 +74,7 @@ class AidlErrorLog {
   std::ostream* os_;
   Severity severity_;
   const AidlLocation location_;
+  const std::string suffix_;
   static bool sHadError;
 };
 

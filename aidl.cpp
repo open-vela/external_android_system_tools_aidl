@@ -531,53 +531,13 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     return AidlError::BAD_TYPE;
   }
 
-  typenames->IterateTypes([&](const AidlDefinedType& type) {
-    AidlEnumDeclaration* enum_decl = const_cast<AidlEnumDeclaration*>(type.AsEnumDeclaration());
-    if (enum_decl != nullptr) {
-      // BackingType is filled in for all known enums, including imported enums,
-      // because other types that may use enums, such as Interface or
-      // StructuredParcelable, need to know the enum BackingType when
-      // generating code.
-      if (auto backing_type = enum_decl->BackingType(*typenames); backing_type != nullptr) {
-        enum_decl->SetBackingType(std::unique_ptr<const AidlTypeSpecifier>(backing_type));
-      } else {
-        // Default to byte type for enums.
-        auto byte_type =
-            std::make_unique<AidlTypeSpecifier>(AIDL_LOCATION_HERE, "byte", false, nullptr, "");
-        byte_type->Resolve(*typenames);
-        enum_decl->SetBackingType(std::move(byte_type));
-      }
-    }
-  });
-  if (err != AidlError::OK) {
-    return err;
+  if (!typenames->Autofill()) {
+    return AidlError::BAD_TYPE;
   }
 
   //////////////////////////////////////////////////////////////////////////
   // Validation phase
   //////////////////////////////////////////////////////////////////////////
-
-  class DiagnosticsContextImpl : public DiagnosticsContext {
-   public:
-    DiagnosticsContextImpl(const Options& options) : warning_options(options.GetWarningOptions()) {}
-    AidlErrorLog Report(const AidlLocation& loc, DiagnosticID id) override {
-      switch (warning_options.Severity(id)) {
-        case DiagnosticSeverity::DISABLED:
-          return AidlErrorLog(AidlErrorLog::NO_OP, loc);
-        case DiagnosticSeverity::WARNING:
-          return AidlErrorLog(AidlErrorLog::WARNING, loc);
-        case DiagnosticSeverity::ERROR:
-          error_count_++;
-          return AidlErrorLog(AidlErrorLog::ERROR, loc);
-      }
-    }
-    size_t ErrorCount() const { return error_count_; }
-
-   private:
-    const WarningOptions& warning_options;
-    size_t error_count_ = 0;
-  };
-  DiagnosticsContextImpl diag(options);
 
   // For legacy reasons, by default, compiling an unstructured parcelable (which contains no output)
   // is allowed. This must not be returned as an error until the very end of this procedure since
@@ -610,7 +570,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
 
       if (!is_check_api) {
         // Ideally, we could do this for check api, but we can't resolve imports
-        if (!defined_type->CheckValid(*typenames, diag)) {
+        if (!defined_type->CheckValid(*typenames)) {
           valid_type = false;
         }
       }
@@ -702,8 +662,67 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     }
   }
 
-  if (diag.ErrorCount() > 0) {
-    return AidlError::BAD_TYPE;
+  class DiagnosticsVisitor : public DiagnosticsContext, public AidlVisitAll {
+    using super = AidlVisitAll;
+    using diag = DiagnosticsContext;
+
+   public:
+    DiagnosticsVisitor(DiagnosticMapping mapping) : DiagnosticsContext(std::move(mapping)) {}
+
+    void VisitInterface(const AidlInterface& i) override {
+      super::VisitInterface(i);
+      if (auto name = i.GetName(); name.size() < 1 || name[0] != 'I') {
+        diag::Report(i.GetLocation(), DiagnosticID::interface_name)
+            << "Interface names should start with I.";
+      }
+    }
+    void VisitEnum(const AidlEnumDeclaration& e) override {
+      super::VisitEnum(e);
+      AIDL_FATAL_IF(e.GetEnumerators().empty(), e)
+          << "The enum '" << e.GetName() << "' has no enumerators.";
+      const auto& first = e.GetEnumerators()[0];
+      if (auto first_value = first->ValueString(e.GetBackingType(), AidlConstantValueDecorator);
+          first_value != "0") {
+        diag::Report(first->GetLocation(), DiagnosticID::enum_zero)
+            << "The first enumerator '" << first->GetName() << "' should be 0, but it is "
+            << first_value << ".";
+      }
+    }
+    void VisitArgument(const AidlArgument& a) override {
+      super::VisitArgument(a);
+      if (a.GetDirection() == AidlArgument::INOUT_DIR) {
+        diag::Report(a.GetLocation(), DiagnosticID::inout_parameter)
+            << a.GetName()
+            << " is 'inout'. Avoid inout parameters. This is somewhat confusing for clients "
+               "because although the parameters are 'in', they look out 'out' parameters.";
+      }
+    }
+    size_t ErrorCount() const { return error_count_; }
+
+   private:
+    std::string Suffix(DiagnosticID id) const { return " [-W" + kDiagnosticsNames.at(id) + "]"; }
+    AidlErrorLog DoReport(const AidlLocation& loc, DiagnosticID id,
+                          DiagnosticSeverity severity) override {
+      switch (severity) {
+        case DiagnosticSeverity::DISABLED:
+          return AidlErrorLog(AidlErrorLog::NO_OP, loc);
+        case DiagnosticSeverity::WARNING:
+          return AidlErrorLog(AidlErrorLog::WARNING, loc, Suffix(id));
+        case DiagnosticSeverity::ERROR:
+          error_count_++;
+          return AidlErrorLog(AidlErrorLog::ERROR, loc, Suffix(id));
+      }
+    }
+
+    size_t error_count_ = 0;
+  };
+
+  if (!is_check_api) {
+    DiagnosticsVisitor diag(options.GetDiagnosticMapping());
+    main_parser->ParsedDocument().Accept(diag);
+    if (diag.ErrorCount() > 0) {
+      return AidlError::BAD_TYPE;
+    }
   }
 
   typenames->IterateTypes([&](const AidlDefinedType& type) {
@@ -889,8 +908,9 @@ bool dump_api(const Options& options, const IoDelegate& io_delegate) {
       for (const auto& type : typenames.MainDocument().DefinedTypes()) {
         unique_ptr<CodeWriter> writer =
             io_delegate.GetCodeWriter(GetApiDumpPathFor(*type, options));
+        (*writer) << kPreamble;
         if (!type->GetPackage().empty()) {
-          (*writer) << kPreamble << "package " << type->GetPackage() << ";\n";
+          (*writer) << "package " << type->GetPackage() << ";\n";
         }
         type->Dump(writer.get());
       }
