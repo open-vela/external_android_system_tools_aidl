@@ -17,6 +17,7 @@
 
 #include <functional>
 #include <stack>
+#include <unordered_set>
 
 #include "aidl_language.h"
 #include "logging.h"
@@ -178,6 +179,38 @@ struct DiagnoseConstName : DiagnosticsVisitor {
   }
 };
 
+struct DiagnoseExplicitDefault : DiagnosticsVisitor {
+  DiagnoseExplicitDefault(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
+  void Visit(const AidlStructuredParcelable& p) override {
+    for (const auto& var : p.GetFields()) {
+      CheckExplicitDefault(*var);
+    }
+  }
+  void Visit(const AidlUnionDecl& u) override {
+    AIDL_FATAL_IF(u.GetFields().empty(), u) << "The union '" << u.GetName() << "' has no fields.";
+    const auto& first = u.GetFields()[0];
+    CheckExplicitDefault(*first);
+  }
+  void CheckExplicitDefault(const AidlVariableDeclaration& v) {
+    if (ShouldHaveExplicitDefault(v) && !v.IsDefaultUserSpecified()) {
+      diag.Report(v.GetLocation(), DiagnosticID::explicit_default)
+          << "The field '" << v.GetName() << "' has no explicit value.";
+    }
+  }
+  bool ShouldHaveExplicitDefault(const AidlVariableDeclaration& v) {
+    if (v.GetType().IsNullable()) return false;
+    if (v.GetType().IsArray()) return true;
+    if (auto type_name = v.GetType().GetName(); AidlTypenames::IsBuiltinTypename(type_name)) {
+      static const std::unordered_set<std::string> default_not_available = {
+          "IBinder", "ParcelableHolder", "ParcelFileDescriptor", "FileDescriptor", "List", "Map"};
+      return default_not_available.find(type_name) == default_not_available.end();
+    }
+    const auto defined_type = v.GetType().GetDefinedType();
+    AIDL_FATAL_IF(!defined_type, v);
+    return defined_type->AsEnumDeclaration() != nullptr;
+  }
+};
+
 bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnosticsContext diag(mapping);
 
@@ -185,6 +218,7 @@ bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnoseEnumZero{diag}.Check(doc);
   DiagnoseInoutParameter{diag}.Check(doc);
   DiagnoseConstName{diag}.Check(doc);
+  DiagnoseExplicitDefault{diag}.Check(doc);
 
   return diag.ErrorCount() == 0;
 }
