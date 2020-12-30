@@ -23,7 +23,6 @@
 #include <android-base/scopeguard.h>
 #include <android-base/strings.h>
 
-class AidlDocument;
 class AidlLocation;
 class AidlErrorLog;
 
@@ -51,6 +50,20 @@ class DiagnosticMapping {
   std::map<DiagnosticID, DiagnosticSeverity> mapping_;
 };
 
+class DiagnosticsContext {
+ public:
+  DiagnosticsContext(DiagnosticMapping mapping) : mapping_(mapping) {}
+  virtual ~DiagnosticsContext() = default;
+  AidlErrorLog Report(const AidlLocation& loc, DiagnosticID id);
+
+ protected:
+  virtual AidlErrorLog DoReport(const AidlLocation& loc, DiagnosticID id,
+                                DiagnosticSeverity severity) = 0;
+
+ private:
+  DiagnosticMapping mapping_;
+};
+
 struct DiagnosticOption {
   DiagnosticID id;
   const std::string name;
@@ -61,8 +74,6 @@ extern const std::map<std::string, DiagnosticOption> kAllDiagnostics;
 
 // relying on Argument-dependent lookup
 std::string to_string(DiagnosticID id);
-
-bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping);
 
 }  // namespace aidl
 }  // namespace android
