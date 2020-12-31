@@ -1586,27 +1586,3 @@ std::optional<std::string> AidlDocument::ResolveName(const std::string& unresolv
   }
   return canonical_name;
 }
-
-void AidlVisitAll::VisitDocument(const AidlDocument& d) {
-  for (const auto& type : d.DefinedTypes()) type->Accept(*this);
-}
-void AidlVisitAll::VisitInterface(const AidlInterface& i) {
-  for (const auto& m : i.GetMembers()) m->Accept(*this);
-}
-void AidlVisitAll::VisitEnum(const AidlEnumDeclaration& e) {
-  for (const auto& v : e.GetEnumerators()) v->Accept(*this);
-}
-void AidlVisitAll::VisitUnion(const AidlUnionDecl& u) {
-  for (const auto& m : u.GetMembers()) m->Accept(*this);
-}
-void AidlVisitAll::VisitStructuredParcelable(const AidlStructuredParcelable& p) {
-  for (const auto& m : p.GetMembers()) m->Accept(*this);
-}
-void AidlVisitAll::VisitUnstructuredParcelable(const AidlParcelable&) {}
-void AidlVisitAll::VisitEnumerator(const AidlEnumerator&) {}
-void AidlVisitAll::VisitMethod(const AidlMethod& m) {
-  for (const auto& a : m.GetArguments()) a->Accept(*this);
-}
-void AidlVisitAll::VisitConstant(const AidlConstantDeclaration&) {}
-void AidlVisitAll::VisitVariable(const AidlVariableDeclaration&) {}
-void AidlVisitAll::VisitArgument(const AidlArgument&) {}
