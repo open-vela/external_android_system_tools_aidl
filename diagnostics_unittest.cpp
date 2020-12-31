@@ -144,3 +144,10 @@ TEST_F(DiagnosticsTest, CantSuppressUnknownWarning) {
        "interface IFoo { @SuppressWarnings(value={\"blah-blah\"}) void foo(); }"},
   });
 }
+
+TEST_F(DiagnosticsTest, DontMixOnewayWithTwowayMethods) {
+  expect_diagnostics = {DiagnosticID::mixed_oneway};
+  ParseFiles({
+      {"IFoo.aidl", "interface IFoo { void foo(); oneway void bar(); }"},
+  });
+}
