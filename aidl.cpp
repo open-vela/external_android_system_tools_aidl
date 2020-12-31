@@ -662,22 +662,20 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     }
   }
 
-  class DiagnosticsVisitor : public DiagnosticsContext, public AidlVisitAll {
-    using super = AidlVisitAll;
+  class DiagnosticsVisitor : public DiagnosticsContext, public AidlVisitor {
     using diag = DiagnosticsContext;
 
    public:
     DiagnosticsVisitor(DiagnosticMapping mapping) : DiagnosticsContext(std::move(mapping)) {}
 
-    void VisitInterface(const AidlInterface& i) override {
-      super::VisitInterface(i);
+    bool Visit(const AidlInterface& i) override {
       if (auto name = i.GetName(); name.size() < 1 || name[0] != 'I') {
         diag::Report(i.GetLocation(), DiagnosticID::interface_name)
             << "Interface names should start with I.";
       }
+      return true;
     }
-    void VisitEnum(const AidlEnumDeclaration& e) override {
-      super::VisitEnum(e);
+    bool Visit(const AidlEnumDeclaration& e) override {
       AIDL_FATAL_IF(e.GetEnumerators().empty(), e)
           << "The enum '" << e.GetName() << "' has no enumerators.";
       const auto& first = e.GetEnumerators()[0];
@@ -687,29 +685,30 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
             << "The first enumerator '" << first->GetName() << "' should be 0, but it is "
             << first_value << ".";
       }
+      return true;
     }
-    void VisitEnumerator(const AidlEnumerator& e) override {
-      super::VisitEnumerator(e);
+    bool Visit(const AidlEnumerator& e) override {
       if (ToUpper(e.GetName()) != e.GetName()) {
         diag::Report(e.GetLocation(), DiagnosticID::const_name)
             << "Enum values should be named in upper cases: " << ToUpper(e.GetName());
       }
+      return true;
     }
-    void VisitConstant(const AidlConstantDeclaration& c) override {
-      super::VisitConstant(c);
+    bool Visit(const AidlConstantDeclaration& c) override {
       if (ToUpper(c.GetName()) != c.GetName()) {
         diag::Report(c.GetLocation(), DiagnosticID::const_name)
             << "Constants should be named in upper cases: " << ToUpper(c.GetName());
       }
+      return true;
     }
-    void VisitArgument(const AidlArgument& a) override {
-      super::VisitArgument(a);
+    bool Visit(const AidlArgument& a) override {
       if (a.GetDirection() == AidlArgument::INOUT_DIR) {
         diag::Report(a.GetLocation(), DiagnosticID::inout_parameter)
             << a.GetName()
             << " is 'inout'. Avoid inout parameters. This is somewhat confusing for clients "
                "because although the parameters are 'in', they look out 'out' parameters.";
       }
+      return true;
     }
     size_t ErrorCount() const { return error_count_; }
 
@@ -737,7 +736,13 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
 
   if (!is_check_api) {
     DiagnosticsVisitor diag(options.GetDiagnosticMapping());
-    main_parser->ParsedDocument().Accept(diag);
+    std::function<void(const AidlTraversable&)> topDown =
+        [&diag, &topDown](const AidlTraversable& a) {
+      if (a.DispatchVisit(diag)) {
+        a.TraverseChildren(topDown);
+      }
+    };
+    topDown(main_parser->ParsedDocument());
     if (diag.ErrorCount() > 0) {
       return AidlError::BAD_TYPE;
     }
