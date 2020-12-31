@@ -34,7 +34,6 @@
 
 using android::aidl::AidlTypenames;
 using android::aidl::CodeWriter;
-using android::aidl::DiagnosticsContext;
 using android::aidl::Options;
 using std::shared_ptr;
 using std::string;
