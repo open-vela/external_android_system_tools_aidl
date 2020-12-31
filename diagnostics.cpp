@@ -17,6 +17,7 @@
 
 #include <functional>
 #include <stack>
+#include <unordered_set>
 
 #include "aidl_language.h"
 #include "logging.h"
@@ -99,21 +100,20 @@ class DiagnosticsVisitor : public AidlVisitor {
     struct Hook : public AidlVisitor {
       Fun fun;
       Hook(Fun fun) : fun(fun) {}
-      bool Visit(const AidlInterface& a) override { fun(a); return true; }
-      bool Visit(const AidlEnumDeclaration& a) override { fun(a); return true; }
-      bool Visit(const AidlStructuredParcelable& a) override { fun(a); return true; }
-      bool Visit(const AidlUnionDecl& a) override { fun(a); return true; }
-      bool Visit(const AidlParcelable& a) override { fun(a); return true; }
-      bool Visit(const AidlMethod& a) override { fun(a.GetType()); return true; }
+      void Visit(const AidlInterface& a) override { fun(a); }
+      void Visit(const AidlEnumDeclaration& a) override { fun(a); }
+      void Visit(const AidlStructuredParcelable& a) override { fun(a); }
+      void Visit(const AidlUnionDecl& a) override { fun(a); }
+      void Visit(const AidlParcelable& a) override { fun(a); }
+      void Visit(const AidlMethod& a) override { fun(a.GetType()); }
     };
     Hook suppress{std::bind(&DiagnosticsContext::Suppress, &diag, _1)};
     Hook restore{std::bind(&DiagnosticsContext::Restore, &diag, _1)};
     std::function<void(const AidlTraversable&)> topDown =
         [&topDown, &suppress, &restore, visitor](const AidlTraversable& a) {
       a.DispatchVisit(suppress);
-      if (a.DispatchVisit(*visitor)) {
-        a.TraverseChildren(topDown);
-      }
+      a.DispatchVisit(*visitor);
+      a.TraverseChildren(topDown);
       a.DispatchVisit(restore);
     };
     topDown(doc);
@@ -124,18 +124,17 @@ class DiagnosticsVisitor : public AidlVisitor {
 
 struct DiagnoseInterfaceName : DiagnosticsVisitor {
   DiagnoseInterfaceName(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
-  bool Visit(const AidlInterface& i) override {
+  void Visit(const AidlInterface& i) override {
     if (auto name = i.GetName(); name.size() < 1 || name[0] != 'I') {
       diag.Report(i.GetLocation(), DiagnosticID::interface_name)
           << "Interface names should start with I.";
     }
-    return true;
   }
 };
 
 struct DiagnoseEnumZero : DiagnosticsVisitor {
   DiagnoseEnumZero(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
-  bool Visit(const AidlEnumDeclaration& e) override {
+  void Visit(const AidlEnumDeclaration& e) override {
     AIDL_FATAL_IF(e.GetEnumerators().empty(), e)
         << "The enum '" << e.GetName() << "' has no enumerators.";
     const auto& first = e.GetEnumerators()[0];
@@ -145,42 +144,97 @@ struct DiagnoseEnumZero : DiagnosticsVisitor {
           << "The first enumerator '" << first->GetName() << "' should be 0, but it is "
           << first_value << ".";
     }
-    return true;
   }
 };
 
 struct DiagnoseInoutParameter : DiagnosticsVisitor {
   DiagnoseInoutParameter(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
-  bool Visit(const AidlArgument& a) override {
+  void Visit(const AidlArgument& a) override {
     if (a.GetDirection() == AidlArgument::INOUT_DIR) {
       diag.Report(a.GetLocation(), DiagnosticID::inout_parameter)
           << a.GetName()
           << " is 'inout'. Avoid inout parameters. This is somewhat confusing for clients "
              "because although the parameters are 'in', they look out 'out' parameters.";
     }
-    return true;
   }
 };
 
 struct DiagnoseConstName : DiagnosticsVisitor {
   DiagnoseConstName(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
-  bool Visit(const AidlEnumerator& e) override {
+  void Visit(const AidlEnumerator& e) override {
     if (ToUpper(e.GetName()) != e.GetName()) {
       diag.Report(e.GetLocation(), DiagnosticID::const_name)
           << "Enum values should be named in upper cases: " << ToUpper(e.GetName());
     }
-    return true;
   }
-  bool Visit(const AidlConstantDeclaration& c) override {
+  void Visit(const AidlConstantDeclaration& c) override {
     if (ToUpper(c.GetName()) != c.GetName()) {
       diag.Report(c.GetLocation(), DiagnosticID::const_name)
           << "Constants should be named in upper cases: " << ToUpper(c.GetName());
     }
-    return true;
   }
   static std::string ToUpper(std::string name) {
     for (auto& c : name) c = std::toupper(c);
     return name;
+  }
+};
+
+struct DiagnoseExplicitDefault : DiagnosticsVisitor {
+  DiagnoseExplicitDefault(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
+  void Visit(const AidlStructuredParcelable& p) override {
+    for (const auto& var : p.GetFields()) {
+      CheckExplicitDefault(*var);
+    }
+  }
+  void Visit(const AidlUnionDecl& u) override {
+    AIDL_FATAL_IF(u.GetFields().empty(), u) << "The union '" << u.GetName() << "' has no fields.";
+    const auto& first = u.GetFields()[0];
+    CheckExplicitDefault(*first);
+  }
+  void CheckExplicitDefault(const AidlVariableDeclaration& v) {
+    if (ShouldHaveExplicitDefault(v) && !v.IsDefaultUserSpecified()) {
+      diag.Report(v.GetLocation(), DiagnosticID::explicit_default)
+          << "The field '" << v.GetName() << "' has no explicit value.";
+    }
+  }
+  bool ShouldHaveExplicitDefault(const AidlVariableDeclaration& v) {
+    if (v.GetType().IsNullable()) return false;
+    if (v.GetType().IsArray()) return true;
+    if (auto type_name = v.GetType().GetName(); AidlTypenames::IsBuiltinTypename(type_name)) {
+      static const std::unordered_set<std::string> default_not_available = {
+          "IBinder", "ParcelableHolder", "ParcelFileDescriptor", "FileDescriptor", "List", "Map"};
+      return default_not_available.find(type_name) == default_not_available.end();
+    }
+    const auto defined_type = v.GetType().GetDefinedType();
+    AIDL_FATAL_IF(!defined_type, v);
+    return defined_type->AsEnumDeclaration() != nullptr;
+  }
+};
+
+struct DiagnoseMixedOneway : DiagnosticsVisitor {
+  DiagnoseMixedOneway(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
+  void Visit(const AidlInterface& i) override {
+    const auto& methods = i.GetMethods();
+    if (std::adjacent_find(begin(methods), end(methods), [](const auto& a, const auto& b) {
+          return a->IsOneway() != b->IsOneway();
+        }) != end(methods)) {
+      diag.Report(i.GetLocation(), DiagnosticID::mixed_oneway)
+          << "The interface '" << i.GetName() << "' has both one-way and two-way methods.";
+    }
+  }
+};
+
+struct DiagnoseOutArray : DiagnosticsVisitor {
+  DiagnoseOutArray(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
+  void Visit(const AidlMethod& m) override {
+    for (const auto& a : m.GetArguments()) {
+      if (a->GetType().IsArray() && a->IsOut()) {
+        diag.Report(m.GetLocation(), DiagnosticID::out_array)
+            << "The method '" << m.GetName() << "' an array output parameter '" << a->GetName()
+            << "'. Instead prefer APIs like '" << a->GetType().Signature() << " " << m.GetName()
+            << "(...).";
+      }
+    }
   }
 };
 
@@ -191,6 +245,9 @@ bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnoseEnumZero{diag}.Check(doc);
   DiagnoseInoutParameter{diag}.Check(doc);
   DiagnoseConstName{diag}.Check(doc);
+  DiagnoseExplicitDefault{diag}.Check(doc);
+  DiagnoseMixedOneway{diag}.Check(doc);
+  DiagnoseOutArray{diag}.Check(doc);
 
   return diag.ErrorCount() == 0;
 }
