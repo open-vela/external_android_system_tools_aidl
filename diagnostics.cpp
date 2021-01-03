@@ -238,6 +238,16 @@ struct DiagnoseOutArray : DiagnosticsVisitor {
   }
 };
 
+struct DiagnoseFileDescriptor : DiagnosticsVisitor {
+  DiagnoseFileDescriptor(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
+  void Visit(const AidlTypeSpecifier& t) override {
+    if (t.GetName() == "FileDescriptor") {
+      diag.Report(t.GetLocation(), DiagnosticID::file_descriptor)
+          << "Please use ParcelFileDescriptor instead of FileDescriptor.";
+    }
+  }
+};
+
 bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnosticsContext diag(mapping);
 
@@ -248,6 +258,7 @@ bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnoseExplicitDefault{diag}.Check(doc);
   DiagnoseMixedOneway{diag}.Check(doc);
   DiagnoseOutArray{diag}.Check(doc);
+  DiagnoseFileDescriptor{diag}.Check(doc);
 
   return diag.ErrorCount() == 0;
 }
