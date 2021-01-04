@@ -53,9 +53,6 @@ public interface INewName extends android.os.IInterface
           reply.writeString(descriptor);
           return true;
         }
-      }
-      switch (code)
-      {
         case TRANSACTION_RealName:
         {
           data.enforceInterface(descriptor);
