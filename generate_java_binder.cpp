@@ -81,8 +81,7 @@ class StubClass : public Class {
   std::shared_ptr<Variable> transact_data;
   std::shared_ptr<Variable> transact_reply;
   std::shared_ptr<Variable> transact_flags;
-  std::shared_ptr<SwitchStatement> transact_switch_meta;
-  std::shared_ptr<SwitchStatement> transact_switch_user;
+  std::shared_ptr<SwitchStatement> transact_switch;
   std::shared_ptr<StatementBlock> transact_statements;
   std::shared_ptr<SwitchStatement> code_to_method_name_switch;
 
@@ -195,8 +194,7 @@ StubClass::StubClass(const AidlInterface* interfaceType, const Options& options)
   transact_statements = onTransact->statements;
   onTransact->exceptions.push_back("android.os.RemoteException");
   this->elements.push_back(onTransact);
-  this->transact_switch_meta = std::make_shared<SwitchStatement>(this->transact_code);
-  this->transact_switch_user = std::make_shared<SwitchStatement>(this->transact_code);
+  this->transact_switch = std::make_shared<SwitchStatement>(this->transact_code);
 }
 
 void StubClass::finish() {
@@ -207,11 +205,9 @@ void StubClass::finish() {
       std::vector<std::shared_ptr<Expression>>{this->transact_code, this->transact_data,
                                                this->transact_reply, this->transact_flags});
   default_case->statements->Add(std::make_shared<ReturnStatement>(superCall));
-  transact_switch_user->cases.push_back(default_case);
+  transact_switch->cases.push_back(default_case);
 
-  // Meta transactions are looked up prior to user-defined transactions.
-  transact_statements->Add(this->transact_switch_meta);
-  transact_statements->Add(this->transact_switch_user);
+  transact_statements->Add(this->transact_switch);
 
   // getTransactionName
   if (options_.GenTransactionNames()) {
@@ -544,7 +540,7 @@ static void generate_stub_case(const AidlInterface& iface, const AidlMethod& met
   generate_stub_code(iface, method, oneway, stubClass->transact_data, stubClass->transact_reply,
                      typenames, c->statements, stubClass, options);
 
-  stubClass->transact_switch_user->cases.push_back(c);
+  stubClass->transact_switch->cases.push_back(c);
 }
 
 static void generate_stub_case_outline(const AidlInterface& iface, const AidlMethod& method,
@@ -580,7 +576,7 @@ static void generate_stub_case_outline(const AidlInterface& iface, const AidlMet
                                          stubClass->transact_data, stubClass->transact_reply});
     c->statements->Add(std::make_shared<ReturnStatement>(helper_call));
 
-    stubClass->transact_switch_user->cases.push_back(c);
+    stubClass->transact_switch->cases.push_back(c);
   }
 }
 
@@ -838,7 +834,7 @@ static void generate_methods(const AidlInterface& iface, const AidlMethod& metho
            << "reply.writeInt(" << kGetInterfaceVersion << "());\n"
            << "return true;\n";
       c->statements->Add(std::make_shared<LiteralStatement>(code.str()));
-      stubClass->transact_switch_meta->cases.push_back(c);
+      stubClass->transact_switch->cases.push_back(c);
     }
     if (method.GetName() == kGetInterfaceHash && !options.Hash().empty()) {
       auto c = std::make_shared<Case>(transactCodeName);
@@ -848,7 +844,7 @@ static void generate_methods(const AidlInterface& iface, const AidlMethod& metho
            << "reply.writeString(" << kGetInterfaceHash << "());\n"
            << "return true;\n";
       c->statements->Add(std::make_shared<LiteralStatement>(code.str()));
-      stubClass->transact_switch_meta->cases.push_back(c);
+      stubClass->transact_switch->cases.push_back(c);
     }
   }
 
@@ -932,7 +928,7 @@ static void generate_interface_descriptors(const Options& options, const AidlInt
       stub->transact_reply, "writeString",
       std::vector<std::shared_ptr<Expression>>{stub->get_transact_descriptor(nullptr)}));
   c->statements->Add(std::make_shared<ReturnStatement>(TRUE_VALUE));
-  stub->transact_switch_meta->cases.push_back(c);
+  stub->transact_switch->cases.push_back(c);
 
   // and the proxy-side method returning the descriptor directly
   auto getDesc = std::make_shared<Method>();
