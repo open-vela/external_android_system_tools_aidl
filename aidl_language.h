@@ -102,7 +102,6 @@ class AidlVisitor {
   virtual void Visit(const AidlVariableDeclaration&) {}
   virtual void Visit(const AidlConstantDeclaration&) {}
   virtual void Visit(const AidlArgument&) {}
-  virtual void Visit(const AidlTypeSpecifier&) {}
 };
 
 // Anything that is locatable in a .aidl file.
@@ -303,7 +302,6 @@ class AidlAnnotatable : public AidlNode {
 // AidlTypeSpecifier represents a reference to either a built-in type,
 // a defined type, or a variant (e.g., array of generic) of a type.
 class AidlTypeSpecifier final : public AidlAnnotatable,
-                                public AidlTraversable,
                                 public AidlParameterizable<unique_ptr<AidlTypeSpecifier>> {
  public:
   AidlTypeSpecifier(const AidlLocation& location, const string& unresolved_name, bool is_array,
@@ -368,14 +366,6 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   const AidlNode& AsAidlNode() const override { return *this; }
 
   const AidlDefinedType* GetDefinedType() const;
-  void TraverseChildren(std::function<void(const AidlTraversable&)> traverse) const override {
-    if (IsGeneric()) {
-      for (const auto& tp : GetTypeParameters()) {
-        traverse(*tp);
-      }
-    }
-  }
-  void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 
  private:
   AidlTypeSpecifier(const AidlTypeSpecifier&) = default;
@@ -475,8 +465,8 @@ class AidlVariableDeclaration : public AidlMember {
 
   std::string ValueString(const ConstantValueDecorator& decorator) const;
 
-  void TraverseChildren(std::function<void(const AidlTraversable&)> traverse) const override {
-    traverse(GetType());
+  void TraverseChildren(std::function<void(const AidlTraversable&)>) const override {
+    // no children to visit
   }
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 
@@ -514,8 +504,8 @@ class AidlArgument : public AidlVariableDeclaration {
   // e.g) "in @utf8InCpp String[] names"
   std::string ToString() const;
 
-  void TraverseChildren(std::function<void(const AidlTraversable&)> traverse) const override {
-    traverse(GetType());
+  void TraverseChildren(std::function<void(const AidlTraversable&)>) const override {
+    // no children to visit
   }
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 
@@ -771,8 +761,8 @@ class AidlConstantDeclaration : public AidlMember {
 
   const AidlConstantDeclaration* AsConstantDeclaration() const override { return this; }
 
-  void TraverseChildren(std::function<void(const AidlTraversable&)> traverse) const override {
-    traverse(GetType());
+  void TraverseChildren(std::function<void(const AidlTraversable&)>) const override {
+    // no children to traverse
   }
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 
@@ -839,7 +829,6 @@ class AidlMethod : public AidlMember {
   std::string Signature() const;
 
   void TraverseChildren(std::function<void(const AidlTraversable&)> traverse) const override {
-    traverse(GetType());
     for (const auto& a : GetArguments()) {
       traverse(*a);
     }
