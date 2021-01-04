@@ -53,6 +53,9 @@ public interface ILoggableInterface extends android.os.IInterface
           reply.writeString(descriptor);
           return true;
         }
+      }
+      switch (code)
+      {
         case TRANSACTION_LogThis:
         {
           try {
