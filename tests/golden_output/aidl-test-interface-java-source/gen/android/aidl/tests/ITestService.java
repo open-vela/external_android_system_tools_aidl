@@ -275,6 +275,9 @@ public interface ITestService extends android.os.IInterface
           reply.writeString(descriptor);
           return true;
         }
+      }
+      switch (code)
+      {
         case TRANSACTION_UnimplementedMethod:
         {
           data.enforceInterface(descriptor);
