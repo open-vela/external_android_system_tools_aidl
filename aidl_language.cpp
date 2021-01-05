@@ -188,13 +188,15 @@ AidlAnnotation::AidlAnnotation(
     std::map<std::string, std::shared_ptr<AidlConstantValue>>&& parameters)
     : AidlNode(location), schema_(schema), parameters_(std::move(parameters)) {}
 
-struct ConstReferenceFinder : AidlConstantValue::Visitor {
+struct ConstReferenceFinder : AidlVisitor {
   const AidlConstantReference* found;
-  void Visit(const AidlConstantValue&) override {}
-  void Visit(const AidlUnaryConstExpression&) override {}
-  void Visit(const AidlBinaryConstExpression&) override {}
   void Visit(const AidlConstantReference& ref) override {
     if (!found) found = &ref;
+  }
+  static const AidlConstantReference* Find(const AidlConstantValue& c) {
+    ConstReferenceFinder finder;
+    VisitTopDown(finder, c);
+    return finder.found;
   }
 };
 
@@ -216,11 +218,10 @@ bool AidlAnnotation::CheckValid() const {
       return false;
     }
 
-    ConstReferenceFinder finder;
-    param->Accept(finder);
-    if (finder.found) {
-      AIDL_ERROR(finder.found) << "Value must be a constant expression but contains reference to "
-                               << finder.found->GetFieldName() << ".";
+    const auto& found = ConstReferenceFinder::Find(*param);
+    if (found) {
+      AIDL_ERROR(found) << "Value must be a constant expression but contains reference to "
+                        << found->GetFieldName() << ".";
       return false;
     }
 
@@ -285,6 +286,13 @@ std::string AidlAnnotation::ToString() const {
       param_strings.emplace_back(name + "=" + value);
     }
     return "@" + GetName() + "(" + Join(param_strings, ", ") + ")";
+  }
+}
+
+void AidlAnnotation::TraverseChildren(std::function<void(const AidlNode&)> traverse) const {
+  for (const auto& [name, value] : parameters_) {
+    (void)name;
+    traverse(*value);
   }
 }
 
@@ -702,6 +710,14 @@ std::string AidlVariableDeclaration::ValueString(const ConstantValueDecorator& d
     return default_value_->ValueString(GetType(), decorator);
   } else {
     return "";
+  }
+}
+
+void AidlVariableDeclaration::TraverseChildren(
+    std::function<void(const AidlNode&)> traverse) const {
+  traverse(GetType());
+  if (IsDefaultUserSpecified()) {
+    traverse(*GetDefaultValue());
   }
 }
 
