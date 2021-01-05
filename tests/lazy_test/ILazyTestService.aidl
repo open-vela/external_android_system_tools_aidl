@@ -16,4 +16,11 @@
 
 interface ILazyTestService {
     void forcePersist(boolean persist);
+    /**
+     * Ask the process hosting the service (HAL) to install a callback that notifies
+     * it when the number of active (i.e. with clients) services changes.
+     * For testing purposes, this callback exercises the code to unregister/re-register
+     * the services and eventually shuts down the process.
+     */
+    void setCustomActiveServicesCountCallback();
 }
