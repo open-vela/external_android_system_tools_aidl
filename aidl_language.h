@@ -549,10 +549,10 @@ class AidlConstantValue : public AidlNode {
 
   struct Visitor {
     virtual ~Visitor() {}
-    virtual void Visit(AidlConstantValue&) = 0;
-    virtual void Visit(AidlConstantReference&) = 0;
-    virtual void Visit(AidlUnaryConstExpression&) = 0;
-    virtual void Visit(AidlBinaryConstExpression&) = 0;
+    virtual void Visit(const AidlConstantValue&) = 0;
+    virtual void Visit(const AidlConstantReference&) = 0;
+    virtual void Visit(const AidlUnaryConstExpression&) = 0;
+    virtual void Visit(const AidlBinaryConstExpression&) = 0;
   };
 
   // Returns the evaluated value. T> should match to the actual type.
@@ -668,13 +668,12 @@ class AidlConstantReference : public AidlConstantValue {
                         const std::string& comments);
 
   const std::unique_ptr<AidlTypeSpecifier>& GetRefType() const { return ref_type_; }
-  void SetRefType(std::unique_ptr<AidlTypeSpecifier> type) { ref_type_ = std::move(type); }
   const std::string& GetFieldName() const { return field_name_; }
   const std::string& GetComments() const { return comments_; }
 
   bool CheckValid() const override;
   void Accept(Visitor& visitor) override { visitor.Visit(*this); }
-  const AidlConstantValue* Resolve();
+  const AidlConstantValue* Resolve(const AidlDefinedType* scope) const;
 
  private:
   bool evaluate() const override;
@@ -682,7 +681,7 @@ class AidlConstantReference : public AidlConstantValue {
   std::unique_ptr<AidlTypeSpecifier> ref_type_;
   std::string field_name_;
   const std::string comments_;
-  const AidlConstantValue* resolved_ = nullptr;
+  mutable const AidlConstantValue* resolved_ = nullptr;
 };
 
 class AidlUnaryConstExpression : public AidlConstantValue {
