@@ -217,25 +217,24 @@ bool write_dep_file(const Options& options, const AidlDefinedType& defined_type,
   return true;
 }
 
-string generate_outputFileName(const Options& options, const AidlDefinedType& defined_type) {
-  // create the path to the destination folder based on the
-  // defined_type package name
+// Returns the path to the destination file of `defined_type`.
+string GetOutputFilePath(const Options& options, const AidlDefinedType& defined_type) {
   string result = options.OutputDir();
 
+  // add the package
   string package = defined_type.GetPackage();
-  size_t len = package.length();
-  for (size_t i = 0; i < len; i++) {
-    if (package[i] == '.') {
-      package[i] = OS_PATH_SEPARATOR;
+  if (!package.empty()) {
+    for (auto& c : package) {
+      if (c == '.') {
+        c = OS_PATH_SEPARATOR;
+      }
     }
+    result += package;
+    result += OS_PATH_SEPARATOR;
   }
 
-  result += package;
-
-  // add the filename by replacing the .aidl extension to .java
-  const string& name = defined_type.GetName();
-  result += OS_PATH_SEPARATOR;
-  result.append(name, 0, name.find('.'));
+  // add the filename
+  result += defined_type.GetName();
   if (options.TargetLanguage() == Options::Language::JAVA) {
     result += ".java";
   } else if (options.IsCppOutput()) {
@@ -751,7 +750,7 @@ int compile_aidl(const Options& options, const IoDelegate& io_delegate) {
       string output_file_name = options.OutputFile();
       // if needed, generate the output file name from the base folder
       if (output_file_name.empty() && !options.OutputDir().empty()) {
-        output_file_name = generate_outputFileName(options, *defined_type);
+        output_file_name = GetOutputFilePath(options, *defined_type);
         if (output_file_name.empty()) {
           return 1;
         }
