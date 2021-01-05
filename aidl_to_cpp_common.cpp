@@ -306,8 +306,9 @@ std::string GenerateEnumValues(const AidlEnumDeclaration& enum_decl,
   code << "#pragma clang diagnostic push\n";
   code << "#pragma clang diagnostic ignored \"-Wc++17-extensions\"\n";
   code << "template <>\n";
-  code << "constexpr inline std::array<" << fq_name << ", " << size << "> enum_values<" << fq_name
-       << "> = {\n";
+  code << "constexpr inline std::array<" << fq_name << ", " << size << ">";
+  GenerateDeprecated(code, enum_decl);
+  code << " enum_values<" << fq_name << "> = {\n";
   for (const auto& enumerator : enum_decl.GetEnumerators()) {
     code << "  " << fq_name << "::" << enumerator->GetName() << ",\n";
   }
@@ -444,7 +445,10 @@ void UnionWriter::PublicFields(CodeWriter& out) const {
   out << "enum Tag : " << name_of(tag_type, typenames) << " {\n";
   bool is_first = true;
   for (const auto& f : decl.GetFields()) {
-    out << "  " << f->GetName() << (is_first ? " = 0" : "") << ",  // " << f->Signature() << ";\n";
+    out << "  " << f->GetName();
+    GenerateDeprecated(out, *f);
+    if (is_first) out << " = 0";
+    out << ",  // " << f->Signature() << ";\n";
     is_first = false;
   }
   out << "};\n";
