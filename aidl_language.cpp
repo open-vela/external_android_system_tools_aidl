@@ -44,7 +44,6 @@ int isatty(int  fd)
 }
 #endif
 
-using android::aidl::DiagnosticID;
 using android::aidl::IoDelegate;
 using android::base::Join;
 using android::base::Split;
