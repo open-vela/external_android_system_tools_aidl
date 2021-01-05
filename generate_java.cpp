@@ -365,7 +365,7 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
   parcel_class->what = Class::CLASS;
   parcel_class->type = parcel->GetCanonicalName();
   parcel_class->interfaces.push_back("android.os.Parcelable");
-  parcel_class->annotations = generate_java_annotations(*parcel);
+  parcel_class->annotations = JavaAnnotationsFor(*parcel);
 
   if (parcel->IsGeneric()) {
     parcel_class->type += "<" + base::Join(parcel->GetTypeParameters(), ",") + ">";
@@ -374,7 +374,7 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
   for (const auto& variable : parcel->GetFields()) {
     std::ostringstream out;
     out << variable->GetType().GetComments() << "\n";
-    for (const auto& a : generate_java_annotations(variable->GetType())) {
+    for (const auto& a : JavaAnnotationsFor(*variable)) {
       out << a << "\n";
     }
     out << "public ";
@@ -649,7 +649,7 @@ void generate_enum(const CodeWriterPtr& code_writer, const AidlEnumDeclaration* 
 
   code_writer->Write("package %s;\n", enum_decl->GetPackage().c_str());
   code_writer->Write("%s\n", enum_decl->GetComments().c_str());
-  for (const std::string& annotation : generate_java_annotations(*enum_decl)) {
+  for (const std::string& annotation : JavaAnnotationsFor(*enum_decl)) {
     code_writer->Write("%s\n", annotation.c_str());
   }
   code_writer->Write("public @interface %s {\n", enum_decl->GetName().c_str());
@@ -679,7 +679,7 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   out << "package " + decl->GetPackage() + ";\n";
   out << "\n";
   out << decl->GetComments() << "\n";
-  for (const auto& annotation : generate_java_annotations(*decl)) {
+  for (const auto& annotation : JavaAnnotationsFor(*decl)) {
     out << annotation << "\n";
   }
 
@@ -689,6 +689,9 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   size_t tag_index = 0;
   out << "// tags for union fields\n";
   for (const auto& variable : decl->GetFields()) {
+    for (const auto& annotation : JavaAnnotationsFor(*variable)) {
+      out << annotation << "\n";
+    }
     auto signature = variable->Signature() + ";";
     out << "public final static " + tag_type + " " + variable->GetName() + " = " +
                std::to_string(tag_index++) + ";  // " + signature + "\n";
@@ -956,6 +959,41 @@ std::vector<std::string> generate_java_annotations(const AidlAnnotatable& a) {
     }
   }
 
+  return result;
+}
+
+struct JavaAnnotationsVisitor : AidlVisitor {
+  JavaAnnotationsVisitor(std::vector<std::string>& result) : result(result) {}
+  void Visit(const AidlTypeSpecifier& t) override { result = generate_java_annotations(t); }
+  void Visit(const AidlInterface& t) override { ForDefinedType(t); }
+  void Visit(const AidlParcelable& t) override { ForDefinedType(t); }
+  void Visit(const AidlStructuredParcelable& t) override { ForDefinedType(t); }
+  void Visit(const AidlUnionDecl& t) override { ForDefinedType(t); }
+  void Visit(const AidlEnumDeclaration& t) override { ForDefinedType(t); }
+  void Visit(const AidlMethod& m) override { ForMember(m); }
+  void Visit(const AidlConstantDeclaration& c) override { ForMember(c); }
+  void Visit(const AidlVariableDeclaration& v) override { ForMember(v); }
+  std::vector<std::string>& result;
+
+  void ForDefinedType(const AidlDefinedType& t) {
+    result = generate_java_annotations(t);
+    if (t.IsDeprecated()) {
+      result.push_back("@Deprecated");
+    }
+  }
+  template <typename Member>
+  void ForMember(const Member& t) {
+    result = generate_java_annotations(t.GetType());
+    if (t.IsDeprecated()) {
+      result.push_back("@Deprecated");
+    }
+  }
+};
+
+std::vector<std::string> JavaAnnotationsFor(const AidlNode& a) {
+  std::vector<std::string> result;
+  JavaAnnotationsVisitor visitor{result};
+  a.DispatchVisit(visitor);
   return result;
 }
 
