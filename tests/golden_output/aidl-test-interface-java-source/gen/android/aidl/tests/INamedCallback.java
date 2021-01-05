@@ -53,6 +53,9 @@ public interface INamedCallback extends android.os.IInterface
           reply.writeString(descriptor);
           return true;
         }
+      }
+      switch (code)
+      {
         case TRANSACTION_GetName:
         {
           data.enforceInterface(descriptor);
