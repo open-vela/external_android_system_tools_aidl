@@ -1642,7 +1642,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 		// helper should be used by both libbinder vendor things using /dev/vndbinder as well
 		// as those things using /dev/binder + libbinder_ndk to talk to stable interfaces).
 		if "vintf" == proptools.String(i.properties.Stability) {
-			vendorAvailable = proptools.BoolPtr(false)
+			overrideVndkProperties.Vndk.Private = proptools.BoolPtr(true)
 		}
 		// As libbinder is not available for the product processes, we must not create
 		// product variant for the aidl_interface
