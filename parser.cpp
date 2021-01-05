@@ -61,25 +61,33 @@ void Parser::SetTypeParameters(AidlTypeSpecifier* type,
   }
 }
 
-class ConstantReferenceResolver : public AidlVisitor {
+class ConstantReferenceResolver : public AidlConstantValue::Visitor {
  public:
   ConstantReferenceResolver(const AidlDefinedType* scope, const AidlTypenames& typenames,
                             TypeResolver& resolver, bool* success)
       : scope_(scope), typenames_(typenames), resolver_(resolver), success_(success) {}
-  void Visit(const AidlConstantReference& v) override {
+  void Visit(AidlConstantValue&) override {}
+  void Visit(AidlUnaryConstExpression&) override {}
+  void Visit(AidlBinaryConstExpression&) override {}
+  void Visit(AidlConstantReference& v) override {
     if (IsCircularReference(&v)) {
       *success_ = false;
       return;
     }
 
-    if (v.GetRefType() && !v.GetRefType()->IsResolved()) {
+    // when <type> is missing, we use a scope type
+    if (!v.GetRefType()) {
+      v.SetRefType(std::make_unique<AidlTypeSpecifier>(v.GetLocation(), scope_->GetCanonicalName(),
+                                                       false, nullptr, ""));
+    }
+    if (!v.GetRefType()->IsResolved()) {
       if (!resolver_(typenames_.GetDocumentFor(scope_), v.GetRefType().get())) {
         AIDL_ERROR(v.GetRefType()) << "Failed to resolve '" << v.GetRefType()->GetName() << "'";
         *success_ = false;
         return;
       }
     }
-    const AidlConstantValue* resolved = v.Resolve(scope_);
+    const AidlConstantValue* resolved = v.Resolve();
     if (!resolved) {
       AIDL_ERROR(v.GetRefType()) << "Failed to resolve '" << v.GetRefType()->GetName() << "'";
       *success_ = false;
@@ -88,7 +96,7 @@ class ConstantReferenceResolver : public AidlVisitor {
 
     // resolve recursive references
     Push(&v);
-    VisitTopDown(*this, *resolved);
+    const_cast<AidlConstantValue*>(resolved)->Accept(*this);
     Pop();
   }
 
@@ -100,9 +108,7 @@ class ConstantReferenceResolver : public AidlVisitor {
 
   void Push(const AidlConstantReference* ref) {
     stack_.push_back({scope_, ref});
-    if (ref->GetRefType()) {
-      scope_ = ref->GetRefType()->GetDefinedType();
-    }
+    scope_ = ref->GetRefType()->GetDefinedType();
   }
 
   void Pop() {
@@ -146,7 +152,22 @@ bool Parser::Resolve(TypeResolver& type_resolver) {
   // resolve "field references" as well.
   for (const auto& type : document_->DefinedTypes()) {
     ConstantReferenceResolver ref_resolver{type.get(), typenames_, type_resolver, &success};
-    VisitTopDown(ref_resolver, *type);
+    if (auto enum_type = type->AsEnumDeclaration(); enum_type) {
+      for (const auto& enumerator : enum_type->GetEnumerators()) {
+        if (auto value = enumerator->GetValue(); value) {
+          value->Accept(ref_resolver);
+        }
+      }
+    } else {
+      for (const auto& constant : type->GetConstantDeclarations()) {
+        const_cast<AidlConstantValue&>(constant->GetValue()).Accept(ref_resolver);
+      }
+      for (const auto& field : type->GetFields()) {
+        if (field->IsDefaultUserSpecified()) {
+          const_cast<AidlConstantValue*>(field->GetDefaultValue())->Accept(ref_resolver);
+        }
+      }
+    }
   }
 
   return success;
