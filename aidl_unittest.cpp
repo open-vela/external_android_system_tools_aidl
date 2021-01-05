@@ -909,6 +909,120 @@ TEST_F(AidlTest, CppHeaderIncludes) {
   EXPECT_EQ(kExpectedCppHeaderOutput, output);
 }
 
+TEST_P(AidlTest, SupportDeprecated) {
+  struct TestCase {
+    std::string output_file;
+    std::string annotation;
+  };
+
+  auto CheckDeprecated = [&](const std::string& filename, const std::string& contents,
+                             std::map<Options::Language, TestCase> expectation) {
+    io_delegate_.SetFileContents(filename, contents);
+
+    auto options = Options::From("aidl --lang=" + to_string(GetLanguage()) + " " + filename +
+                                 " --out=out --header_out=out");
+    EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+    if (auto it = expectation.find(GetLanguage()); it != expectation.end()) {
+      const auto& test_case = it->second;
+      string output;
+      EXPECT_TRUE(io_delegate_.GetWrittenContents(test_case.output_file, &output))
+          << base::Join(io_delegate_.ListOutputFiles(), ",");
+      EXPECT_THAT(output, HasSubstr(test_case.annotation));
+    }
+  };
+
+  CheckDeprecated("IFoo.aidl",
+                  "interface IFoo {\n"
+                  "  /** @deprecated use bar() */\n"
+                  "  List<String> foo();\n"
+                  "}",
+                  {
+                      {Options::Language::JAVA, {"out/IFoo.java", "@Deprecated"}},
+                      {Options::Language::CPP, {"out/IFoo.h", "__attribute__((deprecated"}},
+                      {Options::Language::NDK, {"out/aidl/IFoo.h", "__attribute__((deprecated"}},
+                      {Options::Language::RUST, {"out/IFoo.rs", "#[deprecated"}},
+                  });
+
+  CheckDeprecated("Foo.aidl",
+                  "parcelable Foo {\n"
+                  "  /** @deprecated use bar*/\n"
+                  "  int foo = 0;\n"
+                  "}",
+                  {
+                      {Options::Language::JAVA, {"out/Foo.java", "@Deprecated"}},
+                      {Options::Language::CPP, {"out/Foo.h", "__attribute__((deprecated"}},
+                      {Options::Language::NDK, {"out/aidl/Foo.h", "__attribute__((deprecated"}},
+                      {Options::Language::RUST, {"out/Foo.rs", "#[deprecated"}},
+                  });
+
+  CheckDeprecated("IFoo.aidl",
+                  "interface IFoo {\n"
+                  "  /** @deprecated use bar*/\n"
+                  "  const int FOO = 0;\n"
+                  "}",
+                  {
+                      {Options::Language::JAVA, {"out/IFoo.java", "@Deprecated"}},
+                      {Options::Language::CPP, {"out/IFoo.h", "__attribute__((deprecated"}},
+                      {Options::Language::NDK, {"out/aidl/IFoo.h", "__attribute__((deprecated"}},
+                      {Options::Language::RUST, {"out/IFoo.rs", "#[deprecated"}},
+                  });
+
+  // union fields
+  CheckDeprecated("Foo.aidl",
+                  "union Foo {\n"
+                  "  int bar = 0;\n"
+                  "  /** @deprecated use bar*/\n"
+                  "  int foo;\n"
+                  "}",
+                  {
+                      {Options::Language::JAVA, {"out/Foo.java", "@Deprecated"}},
+                      {Options::Language::CPP, {"out/Foo.h", "__attribute__((deprecated"}},
+                      {Options::Language::NDK, {"out/aidl/Foo.h", "__attribute__((deprecated"}},
+                      {Options::Language::RUST, {"out/Foo.rs", "#[deprecated"}},
+                  });
+
+  CheckDeprecated("Foo.aidl",
+                  "/** @deprecated use Bar */\n"
+                  "parcelable Foo {}",
+                  {
+                      {Options::Language::JAVA, {"out/Foo.java", "@Deprecated"}},
+                      {Options::Language::CPP, {"out/Foo.h", "__attribute__((deprecated"}},
+                      {Options::Language::NDK, {"out/aidl/Foo.h", "__attribute__((deprecated"}},
+                      {Options::Language::RUST, {"out/Foo.rs", "#[deprecated"}},
+                  });
+
+  CheckDeprecated("Foo.aidl",
+                  "/** @deprecated use Bar */\n"
+                  "union Foo { int foo = 0; }",
+                  {
+                      {Options::Language::JAVA, {"out/Foo.java", "@Deprecated"}},
+                      {Options::Language::CPP, {"out/Foo.h", "__attribute__((deprecated"}},
+                      {Options::Language::NDK, {"out/aidl/Foo.h", "__attribute__((deprecated"}},
+                      {Options::Language::RUST, {"out/Foo.rs", "#[deprecated"}},
+                  });
+
+  CheckDeprecated("IFoo.aidl",
+                  "/** @deprecated use IBar */\n"
+                  "interface IFoo {}",
+                  {
+                      {Options::Language::JAVA, {"out/IFoo.java", "@Deprecated"}},
+                      {Options::Language::CPP, {"out/IFoo.h", "__attribute__((deprecated"}},
+                      {Options::Language::NDK, {"out/aidl/IFoo.h", "__attribute__((deprecated"}},
+                      {Options::Language::RUST, {"out/IFoo.rs", "#[deprecated"}},
+                  });
+
+  CheckDeprecated("Foo.aidl",
+                  "/** @deprecated use IBar */\n"
+                  "enum Foo { FOO }",
+                  {
+                      {Options::Language::JAVA, {"out/Foo.java", "@Deprecated"}},
+                      {Options::Language::CPP, {"out/Foo.h", "__attribute__((deprecated"}},
+                      {Options::Language::NDK, {"out/aidl/Foo.h", "__attribute__((deprecated"}},
+                      // TODO(b/174514415) support "deprecated"
+                      // {Options::Language::RUST, {"out/Foo.rs", "#[deprecated"}},
+                  });
+}
+
 TEST_P(AidlTest, RequireOuterClass) {
   const string expected_stderr = "ERROR: p/IFoo.aidl:1.54-60: Failed to resolve 'Inner'\n";
   io_delegate_.SetFileContents("p/Outer.aidl",

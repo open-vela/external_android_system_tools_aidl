@@ -76,6 +76,10 @@ void AddHideComment(CodeWriter* writer) {
 inline bool HasHideComment(const std::string& comment) {
   return std::regex_search(comment, std::regex("@hide\\b"));
 }
+
+inline bool HasDeprecatedComment(const std::string& comment) {
+  return std::regex_search(comment, std::regex("@deprecated\\b"));
+}
 }  // namespace
 
 AidlNode::AidlNode(const AidlLocation& location) : location_(location) {}
@@ -453,10 +457,6 @@ const AidlTypeSpecifier& AidlTypeSpecifier::ArrayBase() const {
   return *array_base_;
 }
 
-bool AidlTypeSpecifier::IsHidden() const {
-  return HasHideComment(GetComments());
-}
-
 string AidlTypeSpecifier::Signature() const {
   string ret = GetName();
   if (IsGeneric()) {
@@ -816,8 +816,12 @@ AidlMethod::AidlMethod(const AidlLocation& location, bool oneway, AidlTypeSpecif
   }
 }
 
-bool AidlMethod::IsHidden() const {
+bool AidlMember::IsHidden() const {
   return HasHideComment(GetComments());
+}
+
+bool AidlMember::IsDeprecated() const {
+  return HasDeprecatedComment(GetComments());
 }
 
 string AidlMethod::Signature() const {
@@ -879,6 +883,10 @@ bool AidlDefinedType::CheckValid(const AidlTypenames& typenames) const {
 
 bool AidlDefinedType::IsHidden() const {
   return HasHideComment(GetComments());
+}
+
+bool AidlDefinedType::IsDeprecated() const {
+  return HasDeprecatedComment(GetComments());
 }
 
 std::string AidlDefinedType::GetCanonicalName() const {
@@ -1022,13 +1030,13 @@ void AidlStructuredParcelable::Dump(CodeWriter* writer) const {
   writer->Write("parcelable %s {\n", GetName().c_str());
   writer->Indent();
   for (const auto& field : GetFields()) {
-    if (field->GetType().IsHidden()) {
+    if (field->IsHidden()) {
       AddHideComment(writer);
     }
     writer->Write("%s;\n", field->ToString().c_str());
   }
   for (const auto& constdecl : GetConstantDeclarations()) {
-    if (constdecl->GetType().IsHidden()) {
+    if (constdecl->IsHidden()) {
       AddHideComment(writer);
     }
     writer->Write("%s;\n", constdecl->ToString().c_str());
@@ -1321,13 +1329,13 @@ void AidlUnionDecl::Dump(CodeWriter* writer) const {
   writer->Write("union %s {\n", GetName().c_str());
   writer->Indent();
   for (const auto& field : GetFields()) {
-    if (field->GetType().IsHidden()) {
+    if (field->IsHidden()) {
       AddHideComment(writer);
     }
     writer->Write("%s;\n", field->ToString().c_str());
   }
   for (const auto& constdecl : GetConstantDeclarations()) {
-    if (constdecl->GetType().IsHidden()) {
+    if (constdecl->IsHidden()) {
       AddHideComment(writer);
     }
     writer->Write("%s;\n", constdecl->ToString().c_str());
@@ -1439,7 +1447,7 @@ void AidlInterface::Dump(CodeWriter* writer) const {
     writer->Write("%s;\n", method->ToString().c_str());
   }
   for (const auto& constdecl : GetConstantDeclarations()) {
-    if (constdecl->GetType().IsHidden()) {
+    if (constdecl->IsHidden()) {
       AddHideComment(writer);
     }
     writer->Write("%s;\n", constdecl->ToString().c_str());
