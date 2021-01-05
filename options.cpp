@@ -387,7 +387,7 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         // when output is omitted and -o option isn't set, the output is by
         // default set to the input file path with .aidl is replaced to .java.
         // If -o option is set, the output path is calculated by
-        // generate_outputFileName which returns "<output_dir>/<package/name>/
+        // GetOutputFilePath which returns "<output_dir>/<package/name>/
         // <typename>.java"
         output_file_ = input_files_.front();
         if (android::base::EndsWith(output_file_, ".aidl")) {
