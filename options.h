@@ -149,8 +149,6 @@ class Options final {
 
   bool GenApiMapping() const { return task_ == Task::DUMP_MAPPINGS; }
 
-  static const string LanguageToString(Language language);
-
   DiagnosticMapping GetDiagnosticMapping() const { return warning_options_.GetDiagnosticMapping(); }
 
   // The following are for testability, but cannot be influenced on the command line.
@@ -186,6 +184,8 @@ class Options final {
   ErrorMessage error_message_;
   WarningOptions warning_options_;
 };
+
+std::string to_string(Options::Language language);
 
 }  // namespace aidl
 }  // namespace android
