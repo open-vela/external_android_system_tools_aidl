@@ -397,7 +397,7 @@ void generate_constant_declarations(CodeWriter& out, const AidlDefinedType& type
     if (comment.length() != 0) {
       out << comment << "\n";
     }
-    for (const auto& annotation : generate_java_annotations(constant->GetType())) {
+    for (const auto& annotation : JavaAnnotationsFor(*constant)) {
       out << annotation << "\n";
     }
     out << "public static final " << type.Signature() << " " << constant->GetName() << " = "
@@ -412,11 +412,11 @@ static std::shared_ptr<Method> generate_interface_method(const AidlMethod& metho
   decl->modifiers = PUBLIC;
   decl->returnType = JavaSignatureOf(method.GetType(), typenames);
   decl->name = method.GetName();
-  decl->annotations = generate_java_annotations(method.GetType());
+  decl->annotations = JavaAnnotationsFor(method);
 
   for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
     auto var = std::make_shared<Variable>(JavaSignatureOf(arg->GetType(), typenames), arg->GetName());
-    var->annotations = generate_java_annotations(arg->GetType());
+    var->annotations = JavaAnnotationsFor(arg->GetType());
     decl->parameters.push_back(var);
   }
 
@@ -1085,7 +1085,7 @@ std::unique_ptr<Class> generate_binder_interface_class(const AidlInterface* ifac
   interface->what = Class::INTERFACE;
   interface->type = iface->GetCanonicalName();
   interface->interfaces.push_back("android.os.IInterface");
-  interface->annotations = generate_java_annotations(*iface);
+  interface->annotations = JavaAnnotationsFor(*iface);
 
   if (options.Version()) {
     std::ostringstream code;

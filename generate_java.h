@@ -42,7 +42,7 @@ void generate_enum(const CodeWriterPtr& code_writer, const AidlEnumDeclaration* 
 
 void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypenames& typenames);
 
-std::vector<std::string> generate_java_annotations(const AidlAnnotatable& a);
+std::vector<std::string> JavaAnnotationsFor(const AidlNode& a);
 
 void generate_constant_declarations(CodeWriter& out, const AidlDefinedType& type);
 
