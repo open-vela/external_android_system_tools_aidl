@@ -66,28 +66,23 @@ class ConstantReferenceResolver : public AidlConstantValue::Visitor {
   ConstantReferenceResolver(const AidlDefinedType* scope, const AidlTypenames& typenames,
                             TypeResolver& resolver, bool* success)
       : scope_(scope), typenames_(typenames), resolver_(resolver), success_(success) {}
-  void Visit(AidlConstantValue&) override {}
-  void Visit(AidlUnaryConstExpression&) override {}
-  void Visit(AidlBinaryConstExpression&) override {}
-  void Visit(AidlConstantReference& v) override {
+  void Visit(const AidlConstantValue&) override {}
+  void Visit(const AidlUnaryConstExpression&) override {}
+  void Visit(const AidlBinaryConstExpression&) override {}
+  void Visit(const AidlConstantReference& v) override {
     if (IsCircularReference(&v)) {
       *success_ = false;
       return;
     }
 
-    // when <type> is missing, we use a scope type
-    if (!v.GetRefType()) {
-      v.SetRefType(std::make_unique<AidlTypeSpecifier>(v.GetLocation(), scope_->GetCanonicalName(),
-                                                       false, nullptr, ""));
-    }
-    if (!v.GetRefType()->IsResolved()) {
+    if (v.GetRefType() && !v.GetRefType()->IsResolved()) {
       if (!resolver_(typenames_.GetDocumentFor(scope_), v.GetRefType().get())) {
         AIDL_ERROR(v.GetRefType()) << "Failed to resolve '" << v.GetRefType()->GetName() << "'";
         *success_ = false;
         return;
       }
     }
-    const AidlConstantValue* resolved = v.Resolve();
+    const AidlConstantValue* resolved = v.Resolve(scope_);
     if (!resolved) {
       AIDL_ERROR(v.GetRefType()) << "Failed to resolve '" << v.GetRefType()->GetName() << "'";
       *success_ = false;
@@ -108,7 +103,9 @@ class ConstantReferenceResolver : public AidlConstantValue::Visitor {
 
   void Push(const AidlConstantReference* ref) {
     stack_.push_back({scope_, ref});
-    scope_ = ref->GetRefType()->GetDefinedType();
+    if (ref->GetRefType()) {
+      scope_ = ref->GetRefType()->GetDefinedType();
+    }
   }
 
   void Pop() {
