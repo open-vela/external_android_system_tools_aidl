@@ -271,7 +271,8 @@ class CppJavaTests : public BnCppJavaTests {
       ::android::aidl::tests::extension::ExtendableParcelable* ep2) {
     ep2->a = ep.a * 2;
     ep2->b = ep.b + "BAR";
-    auto myExt = ep.ext.getParcelable<android::aidl::tests::extension::MyExt>();
+    std::shared_ptr<android::aidl::tests::extension::MyExt> myExt;
+    ep.ext.getParcelable(&myExt);
     ::android::aidl::tests::extension::MyExt retMyExt;
     retMyExt.a = myExt->a * 2;
     retMyExt.b = myExt->b + "BAR";
