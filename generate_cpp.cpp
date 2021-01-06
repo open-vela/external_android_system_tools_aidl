@@ -168,10 +168,9 @@ unique_ptr<Declaration> BuildMethodDecl(const AidlMethod& method, const AidlType
     modifiers |= MethodDecl::IS_OVERRIDE;
   }
 
-  const string attribute = GetDeprecatedAttribute(method);
-  return unique_ptr<Declaration>{new MethodDecl{
-      kBinderStatusLiteral, method.GetName(),
-      BuildArgList(typenames, method, true /* for method decl */), modifiers, attribute}};
+  return unique_ptr<Declaration>{
+      new MethodDecl{kBinderStatusLiteral, method.GetName(),
+                     BuildArgList(typenames, method, true /* for method decl */), modifiers}};
 }
 
 unique_ptr<Declaration> BuildMetaMethodDecl(const AidlMethod& method, const AidlTypenames&,
@@ -539,21 +538,20 @@ void BuildConstantDeclarations(const AidlDefinedType& type, const AidlTypenames&
     const AidlTypeSpecifier& type = constant->GetType();
     const AidlConstantValue& value = constant->GetValue();
 
-    const string attribute = GetDeprecatedAttribute(*constant);
     if (type.Signature() == "String") {
       std::string cppType = CppNameOf(constant->GetType(), typenames);
-      unique_ptr<Declaration> getter(new MethodDecl("const " + cppType + "&", constant->GetName(),
-                                                    {}, MethodDecl::IS_STATIC, attribute));
+      unique_ptr<Declaration> getter(
+          new MethodDecl("const " + cppType + "&", constant->GetName(), {}, MethodDecl::IS_STATIC));
       string_constants.push_back(std::move(getter));
     } else if (type.Signature() == "byte") {
       byte_constant_enum->AddValue(constant->GetName(),
-                                   constant->ValueString(ConstantValueDecorator), attribute);
+                                   constant->ValueString(ConstantValueDecorator));
     } else if (type.Signature() == "int") {
       int_constant_enum->AddValue(constant->GetName(),
-                                  constant->ValueString(ConstantValueDecorator), attribute);
+                                  constant->ValueString(ConstantValueDecorator));
     } else if (type.Signature() == "long") {
       long_constant_enum->AddValue(constant->GetName(),
-                                   constant->ValueString(ConstantValueDecorator), attribute);
+                                   constant->ValueString(ConstantValueDecorator));
     } else {
       AIDL_FATAL(value) << "Unrecognized constant type: " << type.Signature();
     }
@@ -798,19 +796,7 @@ unique_ptr<Document> BuildServerSource(const AidlTypenames& typenames,
       StringPrintf("return %s", kAndroidStatusVarName));
   vector<unique_ptr<Declaration>> decls;
   decls.push_back(std::move(constructor));
-
-  bool deprecated = interface.IsDeprecated() ||
-                    std::any_of(interface.GetMethods().begin(), interface.GetMethods().end(),
-                                [](const auto& m) { return m->IsDeprecated(); });
-  if (deprecated) {
-    decls.emplace_back(
-        new LiteralDecl("#pragma clang diagnostic push\n"
-                        "#pragma clang diagnostic ignored \"-Wdeprecated\"\n"));
-  }
   decls.push_back(std::move(on_transact));
-  if (deprecated) {
-    decls.emplace_back(new LiteralDecl("#pragma clang diagnostic pop\n"));
-  }
 
   if (options.Version() > 0) {
     std::ostringstream code;
@@ -913,14 +899,12 @@ unique_ptr<Document> BuildClientHeader(const AidlTypenames& typenames,
     privates.emplace_back(new LiteralDecl("std::mutex cached_hash_mutex_;\n"));
   }
 
-  const string attribute = GetDeprecatedAttribute(interface);
   unique_ptr<ClassDecl> bp_class{new ClassDecl{
       bp_name,
       "::android::BpInterface<" + i_name + ">",
       {},
       std::move(publics),
       std::move(privates),
-      attribute,
   }};
 
   return unique_ptr<Document>{
@@ -978,15 +962,11 @@ unique_ptr<Document> BuildServerHeader(const AidlTypenames& /* typenames */,
         new LiteralDecl{"static std::function<void(const TransactionLog&)> logFunc;\n"});
     privates.emplace_back(new LiteralDecl{kToStringHelper});
   }
-  const string attribute = GetDeprecatedAttribute(interface);
-  unique_ptr<ClassDecl> bn_class{new ClassDecl{
-      bn_name,
-      "::android::BnInterface<" + i_name + ">",
-      {},
-      std::move(publics),
-      std::move(privates),
-      attribute,
-  }};
+  unique_ptr<ClassDecl> bn_class{new ClassDecl{bn_name,
+                                               "::android::BnInterface<" + i_name + ">",
+                                               {},
+                                               std::move(publics),
+                                               std::move(privates)}};
 
   return unique_ptr<Document>{
       new CppHeader{includes, NestInNamespaces(std::move(bn_class), interface.GetSplitPackage())}};
@@ -1005,8 +985,7 @@ unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
   }
 
   const string i_name = ClassName(interface, ClassNames::INTERFACE);
-  const string attribute = GetDeprecatedAttribute(interface);
-  unique_ptr<ClassDecl> if_class{new ClassDecl{i_name, "::android::IInterface", {}, attribute}};
+  unique_ptr<ClassDecl> if_class{new ClassDecl{i_name, "::android::IInterface", {}}};
   if_class->AddPublic(unique_ptr<Declaration>{new MacroDecl{
       "DECLARE_META_INTERFACE",
       ArgList{vector<string>{ClassName(interface, ClassNames::BASE)}}}});
@@ -1058,9 +1037,7 @@ unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
     if (method->IsUserDefined()) {
       std::ostringstream code;
       code << "::android::binder::Status " << method->GetName()
-           << BuildArgList(typenames, *method, true, true).ToString() << " override";
-      GenerateDeprecated(code, *method);
-      code << " {\n"
+           << BuildArgList(typenames, *method, true, true).ToString() << " override {\n"
            << "  return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);\n"
            << "}\n";
       method_decls.emplace_back(new LiteralDecl(code.str()));
@@ -1085,13 +1062,7 @@ unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
   vector<unique_ptr<Declaration>> decls;
   decls.emplace_back(std::move(if_class));
   decls.emplace_back(new ClassDecl{
-      ClassName(interface, ClassNames::DEFAULT_IMPL),
-      i_name,
-      {},
-      std::move(method_decls),
-      {},
-      attribute,  // inherits the same attributes
-  });
+      ClassName(interface, ClassNames::DEFAULT_IMPL), i_name, {}, std::move(method_decls), {}});
 
   return unique_ptr<Document>{
       new CppHeader{vector<string>(includes.begin(), includes.end()),
@@ -1207,9 +1178,7 @@ void BuildParcelFields(ClassDecl& clazz, const AidlStructuredParcelable& decl,
   for (const auto& variable : decl.GetFields()) {
     std::ostringstream out;
     std::string cppType = CppNameOf(variable->GetType(), typenames);
-    out << cppType;
-    GenerateDeprecated(out, *variable);
-    out << " " << variable->GetName().c_str();
+    out << cppType.c_str() << " " << variable->GetName().c_str();
     if (variable->GetDefaultValue()) {
       out << " = " << GetInitializer(typenames, *variable);
     } else if (variable->GetType().GetName() == "ParcelableHolder") {
@@ -1241,9 +1210,8 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
                                             const ParcelableType& parcel, const Options&) {
   const std::vector<std::string>& type_params =
       parcel.IsGeneric() ? parcel.GetTypeParameters() : std::vector<std::string>();
-  const std::string attribute = GetDeprecatedAttribute(parcel);
   unique_ptr<ClassDecl> parcel_class{
-      new ClassDecl{parcel.GetName(), "::android::Parcelable", type_params, attribute}};
+      new ClassDecl{parcel.GetName(), "::android::Parcelable", type_params}};
 
   set<string> includes = {kStatusHeader, kParcelHeader};
   AddTypeSpecificHeaders(parcel, includes);
@@ -1331,10 +1299,7 @@ std::unique_ptr<Document> BuildParcelSource(const AidlTypenames& typenames, cons
 std::string GenerateEnumToString(const AidlTypenames& typenames,
                                  const AidlEnumDeclaration& enum_decl) {
   std::ostringstream code;
-  const std::string signature =
-      "static inline std::string toString(" + enum_decl.GetName() + " val)";
-  GenerateDeprecated(code, enum_decl);
-  code << signature << " {\n";
+  code << "static inline std::string toString(" << enum_decl.GetName() << " val) {\n";
   code << "  switch(val) {\n";
   std::set<std::string> unique_cases;
   for (const auto& enumerator : enum_decl.GetEnumerators()) {
@@ -1359,9 +1324,8 @@ std::string GenerateEnumToString(const AidlTypenames& typenames,
 
 std::unique_ptr<Document> BuildEnumHeader(const AidlTypenames& typenames,
                                           const AidlEnumDeclaration& enum_decl) {
-  const std::string attribute = GetDeprecatedAttribute(enum_decl);
-  std::unique_ptr<Enum> generated_enum{new Enum{
-      enum_decl.GetName(), CppNameOf(enum_decl.GetBackingType(), typenames), true, attribute}};
+  std::unique_ptr<Enum> generated_enum{
+      new Enum{enum_decl.GetName(), CppNameOf(enum_decl.GetBackingType(), typenames), true}};
   for (const auto& enumerator : enum_decl.GetEnumerators()) {
     generated_enum->AddValue(
         enumerator->GetName(),

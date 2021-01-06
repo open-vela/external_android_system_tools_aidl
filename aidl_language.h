@@ -351,6 +351,8 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
 
   const string& GetUnresolvedName() const { return unresolved_name_; }
 
+  bool IsHidden() const;
+
   const string& GetComments() const { return comments_; }
 
   const std::vector<std::string> GetSplitName() const { return split_name_; }
@@ -428,10 +430,6 @@ class AidlMember : public AidlNode {
     return const_cast<AidlVariableDeclaration*>(
         const_cast<const AidlMember*>(this)->AsVariableDeclaration());
   }
-
-  virtual const std::string& GetComments() const = 0;
-  bool IsHidden() const;
-  bool IsDeprecated() const;
 };
 
 // TODO: This class is used for method arguments and also parcelable fields,
@@ -452,7 +450,6 @@ class AidlVariableDeclaration : public AidlMember {
   AidlVariableDeclaration& operator=(AidlVariableDeclaration&&) = delete;
 
   const AidlVariableDeclaration* AsVariableDeclaration() const override { return this; }
-  const std::string& GetComments() const override { return GetType().GetComments(); }
 
   std::string GetName() const { return name_; }
   std::string GetCapitalizedName() const;
@@ -770,7 +767,6 @@ class AidlConstantDeclaration : public AidlMember {
   }
 
   const AidlConstantDeclaration* AsConstantDeclaration() const override { return this; }
-  const std::string& GetComments() const override { return GetType().GetComments(); }
 
   void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override {
     traverse(GetType());
@@ -800,7 +796,8 @@ class AidlMethod : public AidlMember {
   AidlMethod& operator=(AidlMethod&&) = delete;
 
   const AidlMethod* AsMethod() const override { return this; }
-  const string& GetComments() const override { return comments_; }
+  bool IsHidden() const;
+  const string& GetComments() const { return comments_; }
   const AidlTypeSpecifier& GetType() const { return *type_; }
   AidlTypeSpecifier* GetMutableType() { return type_.get(); }
 
@@ -877,7 +874,6 @@ class AidlDefinedType : public AidlAnnotatable {
 
   const std::string& GetName() const { return name_; };
   bool IsHidden() const;
-  bool IsDeprecated() const;
   const std::string& GetComments() const { return comments_; }
   void SetComments(const std::string comments) { comments_ = comments; }
 
