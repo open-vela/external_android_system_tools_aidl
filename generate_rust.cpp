@@ -310,13 +310,6 @@ void GenerateServerItems(CodeWriter& out, const AidlInterface* iface,
   out << "}\n";
 }
 
-template <typename Type>
-void GenerateDeprecated(CodeWriter& out, const Type& type) {
-  if (type.IsDeprecated()) {
-    out << "#[deprecated]\n";
-  }
-}
-
 template <typename TypeWithConstants>
 void GenerateConstantDeclarations(CodeWriter& out, const TypeWithConstants& type,
                                   const AidlTypenames& typenames) {
@@ -334,7 +327,6 @@ void GenerateConstantDeclarations(CodeWriter& out, const TypeWithConstants& type
       AIDL_FATAL(value) << "Unrecognized constant type: " << type.Signature();
     }
 
-    GenerateDeprecated(out, *constant);
     out << "pub const " << constant->GetName() << ": " << const_type << " = "
         << constant->ValueString(ConstantValueDecoratorRef) << ";\n";
   }
@@ -380,7 +372,6 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
   code_writer->Dedent();
   *code_writer << "}\n";
 
-  GenerateDeprecated(*code_writer, *iface);
   *code_writer << "pub trait " << trait_name << ": binder::Interface + Send {\n";
   code_writer->Indent();
   *code_writer << "fn get_descriptor() -> &'static str where Self: Sized { \""
@@ -388,7 +379,6 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
 
   for (const auto& method : iface->GetMethods()) {
     // Generate the method
-    GenerateDeprecated(*code_writer, *method);
     *code_writer << BuildMethod(*method, typenames) << " {\n";
     code_writer->Indent();
     if (method->IsUserDefined()) {
@@ -477,11 +467,9 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
 
 void GenerateParcelBody(CodeWriter& out, const AidlStructuredParcelable* parcel,
                         const AidlTypenames& typenames) {
-  GenerateDeprecated(out, *parcel);
   out << "pub struct " << parcel->GetName() << " {\n";
   out.Indent();
   for (const auto& variable : parcel->GetFields()) {
-    GenerateDeprecated(out, *variable);
     auto field_type = RustNameOf(variable->GetType(), typenames, StorageMode::PARCELABLE_FIELD);
     out << "pub " << variable->GetName() << ": " << field_type << ",\n";
   }
@@ -559,11 +547,9 @@ void GenerateParcelDeserializeBody(CodeWriter& out, const AidlStructuredParcelab
 
 void GenerateParcelBody(CodeWriter& out, const AidlUnionDecl* parcel,
                         const AidlTypenames& typenames) {
-  GenerateDeprecated(out, *parcel);
   out << "pub enum " << parcel->GetName() << " {\n";
   out.Indent();
   for (const auto& variable : parcel->GetFields()) {
-    GenerateDeprecated(out, *variable);
     auto field_type = RustNameOf(variable->GetType(), typenames, StorageMode::PARCELABLE_FIELD);
     out << variable->GetCapitalizedName() << "(" << field_type << "),\n";
   }
@@ -740,7 +726,6 @@ bool GenerateRustEnumDeclaration(const string& filename, const AidlEnumDeclarati
   const auto& aidl_backing_type = enum_decl->GetBackingType();
   auto backing_type = RustNameOf(aidl_backing_type, typenames, StorageMode::VALUE);
 
-  // TODO(b/174514415) support "deprecated" for enum types
   *code_writer << "#![allow(non_upper_case_globals)]\n";
   *code_writer << "use binder::declare_binder_enum;\n";
   *code_writer << "declare_binder_enum! { " << enum_decl->GetName() << " : " << backing_type

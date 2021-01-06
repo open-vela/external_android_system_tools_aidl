@@ -64,12 +64,11 @@ class LiteralDecl : public Declaration {
 class ClassDecl : public Declaration {
  public:
   ClassDecl(const std::string& name, const std::string& parent,
-            const std::vector<std::string>& template_params, const std::string& attributes = "");
+            const std::vector<std::string>& template_params);
   ClassDecl(const std::string& name, const std::string& parent,
             const std::vector<std::string>& template_params,
             std::vector<std::unique_ptr<Declaration>> public_members,
-            std::vector<std::unique_ptr<Declaration>> private_members,
-            const std::string& attributes = "");
+            std::vector<std::unique_ptr<Declaration>> private_members);
   virtual ~ClassDecl() = default;
 
   void Write(CodeWriter* to) const override;
@@ -80,7 +79,6 @@ class ClassDecl : public Declaration {
  private:
   std::string name_;
   std::string parent_;
-  std::string attributes_;
   std::vector<std::string> template_params_;
   std::vector<std::unique_ptr<Declaration>> public_members_;
   std::vector<std::unique_ptr<Declaration>> private_members_;
@@ -88,27 +86,24 @@ class ClassDecl : public Declaration {
 
 class Enum : public Declaration {
  public:
-  Enum(const std::string& name, const std::string& base_type, bool is_class,
-       const std::string& attributes = "");
+  Enum(const std::string& name, const std::string& base_type, bool is_class);
   virtual ~Enum() = default;
 
   bool HasValues() const { return !fields_.empty(); }
   void Write(CodeWriter* to) const override;
 
-  void AddValue(const std::string& key, const std::string& value,
-                const std::string& attribute = "");
+  void AddValue(const std::string& key, const std::string& value, const std::string& comment = "");
 
  private:
   struct EnumField {
-    EnumField(const std::string& k, const std::string& v, const std::string& a);
+    EnumField(const std::string& k, const std::string& v, const std::string& c);
     const std::string key;
     const std::string value;
-    const std::string attribute;
+    const std::string comment;
   };
 
   std::string enum_name_;
   std::string underlying_type_;
-  std::string attributes_;
   bool is_class_;
   std::vector<EnumField> fields_;
 };  // class Enum
@@ -175,10 +170,13 @@ class MethodDecl : public Declaration {
     IS_FINAL = 1 << 5,
   };
 
-  MethodDecl(const std::string& return_type, const std::string& name, ArgList&& arg_list,
-             const std::string& attributes = "");
-  MethodDecl(const std::string& return_type, const std::string& name, ArgList&& arg_list,
-             uint32_t modifiers, const std::string& attributes = "");
+  MethodDecl(const std::string& return_type,
+             const std::string& name,
+             ArgList&& arg_list);
+  MethodDecl(const std::string& return_type,
+             const std::string& name,
+             ArgList&& arg_list,
+             uint32_t modifiers);
   virtual ~MethodDecl() = default;
 
   void Write(CodeWriter* to) const override;
@@ -186,7 +184,6 @@ class MethodDecl : public Declaration {
  private:
   const std::string return_type_;
   const std::string name_;
-  const std::string attributes_;
   const ArgList arguments_;
   bool is_const_ = false;
   bool is_virtual_ = false;
