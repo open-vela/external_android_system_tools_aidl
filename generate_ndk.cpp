@@ -397,7 +397,7 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
                                     false /* isServer */, true /* isNdk */);
   }
   if (options.GenTraces()) {
-    out << "ScopedTrace _aidl_trace(\"AIDL::" << Options::LanguageToString(options.TargetLanguage())
+    out << "ScopedTrace _aidl_trace(\"AIDL::" << to_string(options.TargetLanguage())
         << "::" << ClassName(defined_type, ClassNames::INTERFACE) << "::" << method.GetName()
         << "::client\");\n";
   }
@@ -508,7 +508,7 @@ static void GenerateServerCaseDefinition(CodeWriter& out, const AidlTypenames& t
   }
   out << "\n";
   if (options.GenTraces()) {
-    out << "ScopedTrace _aidl_trace(\"AIDL::" << Options::LanguageToString(options.TargetLanguage())
+    out << "ScopedTrace _aidl_trace(\"AIDL::" << to_string(options.TargetLanguage())
         << "::" << ClassName(defined_type, ClassNames::INTERFACE) << "::" << method.GetName()
         << "::server\");\n";
   }

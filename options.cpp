@@ -155,7 +155,7 @@ string Options::GetUsage() const {
   return sstr.str();
 }
 
-const string Options::LanguageToString(Language language) {
+string to_string(Options::Language language) {
   switch (language) {
     case Options::Language::CPP:
       return "cpp";
