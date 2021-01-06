@@ -662,12 +662,10 @@ class AidlConstantValue : public AidlNode {
 // When a <type> is missing, <field> is of the enclosing type.
 class AidlConstantReference : public AidlConstantValue {
  public:
-  AidlConstantReference(const AidlLocation& location, const std::string& value,
-                        const std::string& comments);
+  AidlConstantReference(const AidlLocation& location, const std::string& value);
 
   const std::unique_ptr<AidlTypeSpecifier>& GetRefType() const { return ref_type_; }
   const std::string& GetFieldName() const { return field_name_; }
-  const std::string& GetComments() const { return comments_; }
 
   bool CheckValid() const override;
   void TraverseChildren(std::function<void(const AidlNode&)>) const override {
@@ -681,7 +679,6 @@ class AidlConstantReference : public AidlConstantValue {
 
   std::unique_ptr<AidlTypeSpecifier> ref_type_;
   std::string field_name_;
-  const std::string comments_;
   mutable const AidlConstantValue* resolved_ = nullptr;
 };
 
