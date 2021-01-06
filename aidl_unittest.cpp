@@ -4414,6 +4414,19 @@ TEST_F(AidlTest, RecursiveReferences) {
   EXPECT_EQ("", GetCapturedStderr());
 }
 
+TEST_P(AidlTest, UnknownConstReference) {
+  io_delegate_.SetFileContents("Foo.aidl", " parcelable Foo { UnknownType field = UNKNOWN_REF; }");
+  auto options =
+      Options::From("aidl --lang " + to_string(GetLanguage()) + " -o out -h out Foo.aidl");
+  const string err =
+      "ERROR: Foo.aidl:1.18-30: Failed to resolve 'UnknownType'\n"
+      "ERROR: Foo.aidl:1.38-50: Can't find UNKNOWN_REF in Foo\n"
+      "ERROR: Foo.aidl:1.38-50: Unknown reference 'UNKNOWN_REF'\n";
+  CaptureStderr();
+  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(err, GetCapturedStderr());
+}
+
 TEST_P(AidlTest, JavaCompatibleBuiltinTypes) {
   string contents = R"(
 import android.os.IBinder;
