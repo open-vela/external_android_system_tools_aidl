@@ -410,7 +410,7 @@ const_expr
     delete $1;
   }
  | qualified_name {
-    $$ = new AidlConstantReference(loc(@1), $1->GetText(), $1->GetComments());
+    $$ = new AidlConstantReference(loc(@1), $1->GetText());
     delete $1;
  }
  | '{' constant_value_list '}' {

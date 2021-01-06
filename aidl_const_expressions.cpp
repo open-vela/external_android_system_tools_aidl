@@ -733,9 +733,8 @@ string AidlConstantValue::ToString(Type type) {
   }
 }
 
-AidlConstantReference::AidlConstantReference(const AidlLocation& location, const std::string& value,
-                                             const std::string& comments)
-    : AidlConstantValue(location, Type::REF, value), comments_(comments) {
+AidlConstantReference::AidlConstantReference(const AidlLocation& location, const std::string& value)
+    : AidlConstantValue(location, Type::REF, value) {
   const auto pos = value.find_last_of('.');
   if (pos == string::npos) {
     field_name_ = value;

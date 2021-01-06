@@ -1234,7 +1234,7 @@ AidlEnumDeclaration::AidlEnumDeclaration(const AidlLocation& location, const std
         enumerator->SetValue(
             std::unique_ptr<AidlConstantValue>(AidlConstantValue::Integral(loc, "0")));
       } else {
-        auto prev_value = std::make_unique<AidlConstantReference>(loc, previous->GetName(), "");
+        auto prev_value = std::make_unique<AidlConstantReference>(loc, previous->GetName());
         enumerator->SetValue(std::make_unique<AidlBinaryConstExpression>(
             loc, std::move(prev_value), "+",
             std::unique_ptr<AidlConstantValue>(AidlConstantValue::Integral(loc, "1"))));
