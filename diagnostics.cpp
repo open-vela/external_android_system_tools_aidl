@@ -109,14 +109,14 @@ class DiagnosticsVisitor : public AidlVisitor {
     };
     Hook suppress{std::bind(&DiagnosticsContext::Suppress, &diag, _1)};
     Hook restore{std::bind(&DiagnosticsContext::Restore, &diag, _1)};
-    std::function<void(const AidlTraversable&)> topDown =
-        [&topDown, &suppress, &restore, visitor](const AidlTraversable& a) {
+    std::function<void(const AidlNode&)> top_down = [&top_down, &suppress, &restore,
+                                                     visitor](const AidlNode& a) {
       a.DispatchVisit(suppress);
       a.DispatchVisit(*visitor);
-      a.TraverseChildren(topDown);
+      a.TraverseChildren(top_down);
       a.DispatchVisit(restore);
     };
-    topDown(doc);
+    top_down(doc);
   }
  protected:
   DiagnosticsContext& diag;
