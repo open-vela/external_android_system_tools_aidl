@@ -776,7 +776,7 @@ const AidlConstantValue* AidlConstantReference::Resolve(const AidlDefinedType* s
       }
     }
   }
-  AIDL_ERROR(*this) << "Can't find " << field_name_ << " in " << ref_type_->GetName();
+  AIDL_ERROR(*this) << "Can't find " << field_name_ << " in " << defined_type->GetName();
   return nullptr;
 }
 
