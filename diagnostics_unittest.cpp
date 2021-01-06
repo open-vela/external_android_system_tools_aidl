@@ -158,3 +158,11 @@ TEST_F(DiagnosticsTest, ArraysAsOutputParametersConsideredHarmful) {
       {"IFoo.aidl", "interface IFoo { void foo(out String[] ret); }"},
   });
 }
+
+TEST_F(DiagnosticsTest, file_descriptor) {
+  expect_diagnostics = {DiagnosticID::file_descriptor};
+  ParseFiles({{"IFoo.aidl",
+               "interface IFoo { \n"
+               "  void foo(in FileDescriptor fd);\n"
+               "}"}});
+}
