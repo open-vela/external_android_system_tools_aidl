@@ -74,14 +74,14 @@ class ConstantReferenceResolver : public AidlVisitor {
 
     if (v.GetRefType() && !v.GetRefType()->IsResolved()) {
       if (!resolver_(typenames_.GetDocumentFor(scope_), v.GetRefType().get())) {
-        AIDL_ERROR(v.GetRefType()) << "Failed to resolve '" << v.GetRefType()->GetName() << "'";
+        AIDL_ERROR(v.GetRefType()) << "Unknown type '" << v.GetRefType()->GetName() << "'";
         *success_ = false;
         return;
       }
     }
     const AidlConstantValue* resolved = v.Resolve(scope_);
     if (!resolved) {
-      AIDL_ERROR(v.GetRefType()) << "Failed to resolve '" << v.GetRefType()->GetName() << "'";
+      AIDL_ERROR(v) << "Unknown reference '" << v.Literal() << "'";
       *success_ = false;
       return;
     }
