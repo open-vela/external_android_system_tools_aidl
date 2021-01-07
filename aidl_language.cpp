@@ -44,7 +44,6 @@ int isatty(int  fd)
 }
 #endif
 
-using android::aidl::DiagnosticID;
 using android::aidl::IoDelegate;
 using android::base::Join;
 using android::base::Split;
@@ -77,22 +76,11 @@ void AddHideComment(CodeWriter* writer) {
 inline bool HasHideComment(const std::string& comment) {
   return std::regex_search(comment, std::regex("@hide\\b"));
 }
-}  // namespace
 
-AidlLocation::AidlLocation(const std::string& file, Point begin, Point end, Source source)
-    : file_(file), begin_(begin), end_(end), source_(source) {}
-
-std::ostream& operator<<(std::ostream& os, const AidlLocation& l) {
-  os << l.file_;
-  if (l.LocationKnown()) {
-    os << ":" << l.begin_.line << "." << l.begin_.column << "-";
-    if (l.begin_.line != l.end_.line) {
-      os << l.end_.line << ".";
-    }
-    os << l.end_.column;
-  }
-  return os;
+inline bool HasDeprecatedComment(const std::string& comment) {
+  return std::regex_search(comment, std::regex("@deprecated\\b"));
 }
+}  // namespace
 
 AidlNode::AidlNode(const AidlLocation& location) : location_(location) {}
 
@@ -204,13 +192,15 @@ AidlAnnotation::AidlAnnotation(
     std::map<std::string, std::shared_ptr<AidlConstantValue>>&& parameters)
     : AidlNode(location), schema_(schema), parameters_(std::move(parameters)) {}
 
-struct ConstReferenceFinder : AidlConstantValue::Visitor {
-  AidlConstantReference* found;
-  void Visit(AidlConstantValue&) override {}
-  void Visit(AidlUnaryConstExpression&) override {}
-  void Visit(AidlBinaryConstExpression&) override {}
-  void Visit(AidlConstantReference& ref) override {
+struct ConstReferenceFinder : AidlVisitor {
+  const AidlConstantReference* found;
+  void Visit(const AidlConstantReference& ref) override {
     if (!found) found = &ref;
+  }
+  static const AidlConstantReference* Find(const AidlConstantValue& c) {
+    ConstReferenceFinder finder;
+    VisitTopDown(finder, c);
+    return finder.found;
   }
 };
 
@@ -232,11 +222,10 @@ bool AidlAnnotation::CheckValid() const {
       return false;
     }
 
-    ConstReferenceFinder finder;
-    param->Accept(finder);
-    if (finder.found) {
-      AIDL_ERROR(finder.found) << "Value must be a constant expression but contains reference to "
-                               << finder.found->GetFieldName() << ".";
+    const auto& found = ConstReferenceFinder::Find(*param);
+    if (found) {
+      AIDL_ERROR(found) << "Value must be a constant expression but contains reference to "
+                        << found->GetFieldName() << ".";
       return false;
     }
 
@@ -301,6 +290,13 @@ std::string AidlAnnotation::ToString() const {
       param_strings.emplace_back(name + "=" + value);
     }
     return "@" + GetName() + "(" + Join(param_strings, ", ") + ")";
+  }
+}
+
+void AidlAnnotation::TraverseChildren(std::function<void(const AidlNode&)> traverse) const {
+  for (const auto& [name, value] : parameters_) {
+    (void)name;
+    traverse(*value);
   }
 }
 
@@ -459,10 +455,6 @@ const AidlTypeSpecifier& AidlTypeSpecifier::ArrayBase() const {
     array_base_->is_array_ = false;
   }
   return *array_base_;
-}
-
-bool AidlTypeSpecifier::IsHidden() const {
-  return HasHideComment(GetComments());
 }
 
 string AidlTypeSpecifier::Signature() const {
@@ -721,6 +713,14 @@ std::string AidlVariableDeclaration::ValueString(const ConstantValueDecorator& d
   }
 }
 
+void AidlVariableDeclaration::TraverseChildren(
+    std::function<void(const AidlNode&)> traverse) const {
+  traverse(GetType());
+  if (IsDefaultUserSpecified()) {
+    traverse(*GetDefaultValue());
+  }
+}
+
 AidlArgument::AidlArgument(const AidlLocation& location, AidlArgument::Direction direction,
                            AidlTypeSpecifier* type, const std::string& name)
     : AidlVariableDeclaration(location, type, name),
@@ -816,8 +816,12 @@ AidlMethod::AidlMethod(const AidlLocation& location, bool oneway, AidlTypeSpecif
   }
 }
 
-bool AidlMethod::IsHidden() const {
+bool AidlMember::IsHidden() const {
   return HasHideComment(GetComments());
+}
+
+bool AidlMember::IsDeprecated() const {
+  return HasDeprecatedComment(GetComments());
 }
 
 string AidlMethod::Signature() const {
@@ -879,6 +883,10 @@ bool AidlDefinedType::CheckValid(const AidlTypenames& typenames) const {
 
 bool AidlDefinedType::IsHidden() const {
   return HasHideComment(GetComments());
+}
+
+bool AidlDefinedType::IsDeprecated() const {
+  return HasDeprecatedComment(GetComments());
 }
 
 std::string AidlDefinedType::GetCanonicalName() const {
@@ -1022,13 +1030,13 @@ void AidlStructuredParcelable::Dump(CodeWriter* writer) const {
   writer->Write("parcelable %s {\n", GetName().c_str());
   writer->Indent();
   for (const auto& field : GetFields()) {
-    if (field->GetType().IsHidden()) {
+    if (field->IsHidden()) {
       AddHideComment(writer);
     }
     writer->Write("%s;\n", field->ToString().c_str());
   }
   for (const auto& constdecl : GetConstantDeclarations()) {
-    if (constdecl->GetType().IsHidden()) {
+    if (constdecl->IsHidden()) {
       AddHideComment(writer);
     }
     writer->Write("%s;\n", constdecl->ToString().c_str());
@@ -1083,8 +1091,7 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
                                                    Options::Language lang) const {
   if ((lang == Options::Language::NDK || lang == Options::Language::RUST) && IsArray() &&
       GetName() == "IBinder") {
-    AIDL_ERROR(this) << "The " << Options::LanguageToString(lang)
-                     << " backend does not support array of IBinder";
+    AIDL_ERROR(this) << "The " << to_string(lang) << " backend does not support array of IBinder";
     return false;
   }
   if (lang == Options::Language::RUST && GetName() == "ParcelableHolder") {
@@ -1095,22 +1102,21 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
   if ((lang == Options::Language::NDK || lang == Options::Language::RUST) && IsArray() &&
       IsNullable()) {
     if (GetName() == "ParcelFileDescriptor") {
-      AIDL_ERROR(this) << "The " << Options::LanguageToString(lang)
+      AIDL_ERROR(this) << "The " << to_string(lang)
                        << " backend does not support nullable array of ParcelFileDescriptor";
       return false;
     }
 
     const auto defined_type = typenames.TryGetDefinedType(GetName());
     if (defined_type != nullptr && defined_type->AsParcelable() != nullptr) {
-      AIDL_ERROR(this) << "The " << Options::LanguageToString(lang)
+      AIDL_ERROR(this) << "The " << to_string(lang)
                        << " backend does not support nullable array of parcelable";
       return false;
     }
   }
   if (this->GetName() == "FileDescriptor" &&
       (lang == Options::Language::NDK || lang == Options::Language::RUST)) {
-    AIDL_ERROR(this) << "FileDescriptor isn't supported by the " << Options::LanguageToString(lang)
-                     << " backend.";
+    AIDL_ERROR(this) << "FileDescriptor isn't supported by the " << to_string(lang) << " backend.";
     return false;
   }
   if (this->IsGeneric()) {
@@ -1323,13 +1329,13 @@ void AidlUnionDecl::Dump(CodeWriter* writer) const {
   writer->Write("union %s {\n", GetName().c_str());
   writer->Indent();
   for (const auto& field : GetFields()) {
-    if (field->GetType().IsHidden()) {
+    if (field->IsHidden()) {
       AddHideComment(writer);
     }
     writer->Write("%s;\n", field->ToString().c_str());
   }
   for (const auto& constdecl : GetConstantDeclarations()) {
-    if (constdecl->GetType().IsHidden()) {
+    if (constdecl->IsHidden()) {
       AddHideComment(writer);
     }
     writer->Write("%s;\n", constdecl->ToString().c_str());
@@ -1441,7 +1447,7 @@ void AidlInterface::Dump(CodeWriter* writer) const {
     writer->Write("%s;\n", method->ToString().c_str());
   }
   for (const auto& constdecl : GetConstantDeclarations()) {
-    if (constdecl->GetType().IsHidden()) {
+    if (constdecl->IsHidden()) {
       AddHideComment(writer);
     }
     writer->Write("%s;\n", constdecl->ToString().c_str());
@@ -1601,27 +1607,3 @@ std::optional<std::string> AidlDocument::ResolveName(const std::string& unresolv
   }
   return canonical_name;
 }
-
-void AidlVisitAll::VisitDocument(const AidlDocument& d) {
-  for (const auto& type : d.DefinedTypes()) type->Accept(*this);
-}
-void AidlVisitAll::VisitInterface(const AidlInterface& i) {
-  for (const auto& m : i.GetMembers()) m->Accept(*this);
-}
-void AidlVisitAll::VisitEnum(const AidlEnumDeclaration& e) {
-  for (const auto& v : e.GetEnumerators()) v->Accept(*this);
-}
-void AidlVisitAll::VisitUnion(const AidlUnionDecl& u) {
-  for (const auto& m : u.GetMembers()) m->Accept(*this);
-}
-void AidlVisitAll::VisitStructuredParcelable(const AidlStructuredParcelable& p) {
-  for (const auto& m : p.GetMembers()) m->Accept(*this);
-}
-void AidlVisitAll::VisitUnstructuredParcelable(const AidlParcelable&) {}
-void AidlVisitAll::VisitEnumerator(const AidlEnumerator&) {}
-void AidlVisitAll::VisitMethod(const AidlMethod& m) {
-  for (const auto& a : m.GetArguments()) a->Accept(*this);
-}
-void AidlVisitAll::VisitConstant(const AidlConstantDeclaration&) {}
-void AidlVisitAll::VisitVariable(const AidlVariableDeclaration&) {}
-void AidlVisitAll::VisitArgument(const AidlArgument&) {}

@@ -371,6 +371,7 @@ type aidlGenProperties struct {
 	GenTrace   bool
 	Unstable   *bool
 	Visibility []string
+	Flags      []string
 }
 
 type aidlGenRule struct {
@@ -471,7 +472,7 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 	outFile := android.PathForModuleGen(ctx, pathtools.ReplaceExtension(relPath, ext))
 	implicits := g.implicitInputs
 
-	var optionalFlags []string
+	optionalFlags := append([]string{}, g.properties.Flags...)
 	if g.properties.Version != "" {
 		optionalFlags = append(optionalFlags, "--version "+g.properties.Version)
 
@@ -1059,6 +1060,9 @@ type aidlInterfaceProperties struct {
 	// Marks that this interface does not need to be stable. When set to true, the build system
 	// doesn't create the API dump and require it to be updated. Default is false.
 	Unstable *bool
+
+	// Optional flags to be passed to the AIDL compiler. e.g. "-Weverything"
+	Flags []string
 }
 
 type aidlInterface struct {
@@ -1585,6 +1589,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 		GenTrace:   genTrace,
 		Unstable:   i.properties.Unstable,
 		Visibility: srcsVisibility(mctx, lang),
+		Flags:      i.properties.Flags,
 	})
 	importPostfix := i.getImportPostfix(mctx, version, lang)
 
@@ -1637,7 +1642,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMod
 		// helper should be used by both libbinder vendor things using /dev/vndbinder as well
 		// as those things using /dev/binder + libbinder_ndk to talk to stable interfaces).
 		if "vintf" == proptools.String(i.properties.Stability) {
-			vendorAvailable = proptools.BoolPtr(false)
+			overrideVndkProperties.Vndk.Private = proptools.BoolPtr(true)
 		}
 		// As libbinder is not available for the product processes, we must not create
 		// product variant for the aidl_interface
@@ -1718,6 +1723,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMo
 		GenTrace:   proptools.Bool(i.properties.Gen_trace),
 		Unstable:   i.properties.Unstable,
 		Visibility: srcsVisibility(mctx, langJava),
+		Flags:      i.properties.Flags,
 	})
 
 	importPostfix := i.getImportPostfix(mctx, version, langJava)
@@ -1861,6 +1867,7 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, versionForMo
 		Version:    version,
 		Unstable:   i.properties.Unstable,
 		Visibility: srcsVisibility(mctx, langRust),
+		Flags:      i.properties.Flags,
 	})
 
 	versionedRustName := fixRustName(i.versionedName(versionForModuleName))

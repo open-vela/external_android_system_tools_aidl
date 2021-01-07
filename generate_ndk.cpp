@@ -314,10 +314,14 @@ static void GenerateConstantDeclarations(CodeWriter& out, const AidlTypenames& t
     const AidlTypeSpecifier& type = constant->GetType();
 
     if (type.Signature() == "String") {
-      out << "static const char* " << constant->GetName() << ";\n";
+      out << "static const char*";
+      cpp::GenerateDeprecated(out, *constant);
+      out << " " << constant->GetName() << ";\n";
     } else {
-      out << "enum : " << NdkNameOf(types, type, StorageMode::STACK) << " { " << constant->GetName()
-          << " = " << constant->ValueString(ConstantValueDecorator) << " };\n";
+      out << "enum : " << NdkNameOf(types, type, StorageMode::STACK) << " { ";
+      out << constant->GetName();
+      cpp::GenerateDeprecated(out, *constant);
+      out << " = " << constant->ValueString(ConstantValueDecorator) << " };\n";
     }
   }
 }
@@ -397,7 +401,7 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
                                     false /* isServer */, true /* isNdk */);
   }
   if (options.GenTraces()) {
-    out << "ScopedTrace _aidl_trace(\"AIDL::" << Options::LanguageToString(options.TargetLanguage())
+    out << "ScopedTrace _aidl_trace(\"AIDL::" << to_string(options.TargetLanguage())
         << "::" << ClassName(defined_type, ClassNames::INTERFACE) << "::" << method.GetName()
         << "::client\");\n";
   }
@@ -508,7 +512,7 @@ static void GenerateServerCaseDefinition(CodeWriter& out, const AidlTypenames& t
   }
   out << "\n";
   if (options.GenTraces()) {
-    out << "ScopedTrace _aidl_trace(\"AIDL::" << Options::LanguageToString(options.TargetLanguage())
+    out << "ScopedTrace _aidl_trace(\"AIDL::" << to_string(options.TargetLanguage())
         << "::" << ClassName(defined_type, ClassNames::INTERFACE) << "::" << method.GetName()
         << "::server\");\n";
   }
@@ -583,6 +587,13 @@ void GenerateClassSource(CodeWriter& out, const AidlTypenames& types,
     out.Dedent();
     out << "};\n";
   }
+  bool deprecated = defined_type.IsDeprecated() ||
+                    std::any_of(defined_type.GetMethods().begin(), defined_type.GetMethods().end(),
+                                [](const auto& m) { return m->IsDeprecated(); });
+  if (deprecated) {
+    out << "#pragma clang diagnostic push\n";
+    out << "#pragma clang diagnostic ignored \"-Wdeprecated\"\n";
+  }
   out << "static binder_status_t "
       << "_aidl_onTransact"
       << "(AIBinder* _aidl_binder, transaction_code_t _aidl_code, const AParcel* _aidl_in, "
@@ -613,7 +624,11 @@ void GenerateClassSource(CodeWriter& out, const AidlTypenames& types,
 
   out << "static AIBinder_Class* " << kClazz << " = ::ndk::ICInterface::defineClass(" << clazz
       << "::" << kDescriptor << ", _aidl_onTransact);\n\n";
+  if (deprecated) {
+    out << "#pragma clang diagnostic pop\n";
+  }
 }
+
 void GenerateClientSource(CodeWriter& out, const AidlTypenames& types,
                           const AidlInterface& defined_type, const Options& options) {
   const std::string clazz = ClassName(defined_type, ClassNames::CLIENT);
@@ -819,7 +834,9 @@ void GenerateClientHeader(CodeWriter& out, const AidlTypenames& types,
   }
   out << "\n";
   EnterNdkNamespace(out, defined_type);
-  out << "class " << clazz << " : public ::ndk::BpCInterface<"
+  out << "class";
+  cpp::GenerateDeprecated(out, defined_type);
+  out << " " << clazz << " : public ::ndk::BpCInterface<"
       << ClassName(defined_type, ClassNames::INTERFACE) << "> {\n";
   out << "public:\n";
   out.Indent();
@@ -827,7 +844,9 @@ void GenerateClientHeader(CodeWriter& out, const AidlTypenames& types,
   out << "virtual ~" << clazz << "();\n";
   out << "\n";
   for (const auto& method : defined_type.GetMethods()) {
-    out << NdkMethodDecl(types, *method) << " override;\n";
+    out << NdkMethodDecl(types, *method) << " override";
+    cpp::GenerateDeprecated(out, *method);
+    out << ";\n";
   }
 
   if (options.Version() > 0) {
@@ -858,7 +877,9 @@ void GenerateServerHeader(CodeWriter& out, const AidlTypenames& types,
   out << "#include <android/binder_ibinder.h>\n";
   out << "\n";
   EnterNdkNamespace(out, defined_type);
-  out << "class " << clazz << " : public ::ndk::BnCInterface<" << iface << "> {\n";
+  out << "class";
+  cpp::GenerateDeprecated(out, defined_type);
+  out << " " << clazz << " : public ::ndk::BnCInterface<" << iface << "> {\n";
   out << "public:\n";
   out.Indent();
   out << clazz << "();\n";
@@ -909,7 +930,9 @@ void GenerateInterfaceHeader(CodeWriter& out, const AidlTypenames& types,
   out << "\n";
 
   EnterNdkNamespace(out, defined_type);
-  out << "class " << clazz << " : public ::ndk::ICInterface {\n";
+  out << "class";
+  cpp::GenerateDeprecated(out, defined_type);
+  out << " " << clazz << " : public ::ndk::ICInterface {\n";
   out << "public:\n";
   out.Indent();
   out << "static const char* " << kDescriptor << ";\n";
@@ -944,7 +967,9 @@ void GenerateInterfaceHeader(CodeWriter& out, const AidlTypenames& types,
   out << "static const std::shared_ptr<" << clazz << ">& getDefaultImpl();";
   out << "\n";
   for (const auto& method : defined_type.GetMethods()) {
-    out << "virtual " << NdkMethodDecl(types, *method) << " = 0;\n";
+    out << "virtual " << NdkMethodDecl(types, *method);
+    cpp::GenerateDeprecated(out, *method);
+    out << " = 0;\n";
   }
   out.Dedent();
   out << "private:\n";
@@ -954,13 +979,16 @@ void GenerateInterfaceHeader(CodeWriter& out, const AidlTypenames& types,
   out << "};\n";
 
   const std::string defaultClazz = clazz + "Default";
-
-  out << "class " << defaultClazz << " : public " << clazz << " {\n";
+  out << "class";
+  cpp::GenerateDeprecated(out, defined_type);
+  out << " " << defaultClazz << " : public " << clazz << " {\n";
   out << "public:\n";
   out.Indent();
   for (const auto& method : defined_type.GetMethods()) {
     if (method->IsUserDefined()) {
-      out << NdkMethodDecl(types, *method) << " override;\n";
+      out << NdkMethodDecl(types, *method) << " override";
+      cpp::GenerateDeprecated(out, *method);
+      out << ";\n";
     } else if (method->GetName() == kGetInterfaceVersion && options.Version() > 0) {
       out << NdkMethodDecl(types, *method) << " override;\n";
     } else if (method->GetName() == kGetInterfaceHash && !options.Hash().empty()) {
@@ -992,7 +1020,9 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
 
   EnterNdkNamespace(out, defined_type);
   out << cpp::TemplateDecl(defined_type);
-  out << "class " << clazz << " {\n";
+  out << "class";
+  cpp::GenerateDeprecated(out, defined_type);
+  out << " " << clazz << " {\n";
   out << "public:\n";
   out.Indent();
   if (defined_type.IsFixedSize()) {
@@ -1003,7 +1033,9 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
   out << "static const char* descriptor;\n";
   out << "\n";
   for (const auto& variable : defined_type.GetFields()) {
-    out << NdkNameOf(types, variable->GetType(), StorageMode::STACK) << " " << variable->GetName();
+    out << NdkNameOf(types, variable->GetType(), StorageMode::STACK);
+    cpp::GenerateDeprecated(out, *variable);
+    out << " " << variable->GetName();
     if (variable->GetType().GetName() == "ParcelableHolder") {
       out << "{::ndk::" << (defined_type.IsVintfStability() ? "STABILITY_VINTF" : "STABILITY_LOCAL")
           << "}";
@@ -1147,7 +1179,9 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
 
   EnterNdkNamespace(out, defined_type);
   out << cpp::TemplateDecl(defined_type);
-  out << "class " << clazz << " {\n";
+  out << "class";
+  cpp::GenerateDeprecated(out, defined_type);
+  out << " " << clazz << " {\n";
   out << "public:\n";
   out.Indent();
   if (defined_type.IsFixedSize()) {
@@ -1240,7 +1274,14 @@ void GenerateParcelSource(CodeWriter& out, const AidlTypenames& types,
 std::string GenerateEnumToString(const AidlTypenames& typenames,
                                  const AidlEnumDeclaration& enum_decl) {
   std::ostringstream code;
-  code << "static inline std::string toString(" << enum_decl.GetName() << " val) {\n";
+  const std::string signature =
+      "static inline std::string toString(" + enum_decl.GetName() + " val)";
+  if (enum_decl.IsDeprecated()) {
+    code << signature;
+    cpp::GenerateDeprecated(code, enum_decl);
+    code << ";\n";
+  }
+  code << signature << " {\n";
   code << "  switch(val) {\n";
   std::set<std::string> unique_cases;
   for (const auto& enumerator : enum_decl.GetEnumerators()) {
@@ -1274,7 +1315,9 @@ void GenerateEnumHeader(CodeWriter& out, const AidlTypenames& types,
   out << "#include <android/binder_enums.h>\n";
 
   EnterNdkNamespace(out, enum_decl);
-  out << "enum class " << enum_decl.GetName() << " : "
+  out << "enum class";
+  cpp::GenerateDeprecated(out, enum_decl);
+  out << " " << enum_decl.GetName() << " : "
       << NdkNameOf(types, enum_decl.GetBackingType(), StorageMode::STACK) << " {\n";
   out.Indent();
   for (const auto& enumerator : enum_decl.GetEnumerators()) {

@@ -248,31 +248,18 @@ static bool isValidLiteralChar(char c) {
            c == '\\');   // Disallow backslashes for future proofing.
 }
 
-// helper to see if T is the same to one of Args types.
-template <typename T, typename... Args>
-struct is_one_of : std::false_type {};
-
-template <typename T, typename S, typename... Args>
-struct is_one_of<T, S, Args...> {
-  enum { value = std::is_same_v<T, S> || is_one_of<T, Args...>::value };
-};
-
-// helper to see if T is std::vector of something.
-template <typename>
-struct is_vector : std::false_type {};
-
-template <typename T>
-struct is_vector<std::vector<T>> : std::true_type {};
-
-template <typename T>
-static bool ParseFloating(std::string_view sv, T* parsed) {
-  static_assert(is_one_of<T, float, double>::value);
+bool ParseFloating(std::string_view sv, double* parsed) {
+  // float literal should be parsed successfully.
   android::base::ConsumeSuffix(&sv, "f");
-  if constexpr (std::is_same_v<T, float>) {
-    return android::base::ParseFloat(sv.data(), parsed);
-  } else {
-    return android::base::ParseDouble(sv.data(), parsed);
+  return android::base::ParseDouble(std::string(sv).data(), parsed);
+}
+
+bool ParseFloating(std::string_view sv, float* parsed) {
+  // we only care about float literal (with suffix "f").
+  if (!android::base::ConsumeSuffix(&sv, "f")) {
+    return false;
   }
+  return android::base::ParseFloat(std::string(sv).data(), parsed);
 }
 
 bool AidlUnaryConstExpression::IsCompatibleType(Type type, const string& op) {
@@ -338,58 +325,6 @@ AidlConstantValue::Type AidlBinaryConstExpression::UsualArithmeticConversion(Typ
 AidlConstantValue::Type AidlBinaryConstExpression::IntegralPromotion(Type in) {
   return (Type::INT32 < in) ? in : Type::INT32;
 }
-
-template <typename T>
-T AidlConstantValue::Cast() const {
-  static_assert(
-      is_one_of<T, bool, char, int8_t, int32_t, int64_t, std::string, float, double>::value ||
-      is_vector<T>::value);
-
-  is_evaluated_ || (CheckValid() && evaluate());
-  AIDL_FATAL_IF(!is_valid_, this);
-
-  if constexpr (is_vector<T>::value) {
-    AIDL_FATAL_IF(final_type_ != Type::ARRAY, this);
-    T result;
-    for (const auto& v : values_) {
-      result.push_back(v->Cast<typename T::value_type>());
-    }
-    return result;
-
-  } else if constexpr (is_one_of<T, float, double>::value) {
-    AIDL_FATAL_IF(final_type_ != Type::FLOATING, this);
-    T result;
-    AIDL_FATAL_IF(!ParseFloating(value_, &result), this);
-    return result;
-  } else if constexpr (std::is_same<T, std::string>::value) {
-    AIDL_FATAL_IF(final_type_ != Type::STRING, this);
-    return final_string_value_.substr(1, final_string_value_.size() - 2);  // unquote "
-  } else if constexpr (is_one_of<T, int8_t, int32_t, int64_t>::value) {
-    AIDL_FATAL_IF(final_type_ < Type::INT8 && final_type_ > Type::INT64, this);
-    return static_cast<T>(final_value_);
-  } else if constexpr (std::is_same<T, char>::value) {
-    AIDL_FATAL_IF(final_type_ != Type::CHARACTER, this);
-    return final_string_value_.at(1);  // unquote '
-  } else if constexpr (std::is_same<T, bool>::value) {
-    AIDL_FATAL_IF(final_type_ != Type::BOOLEAN, this);
-    return final_value_ != 0;
-  }
-  SHOULD_NOT_REACH();
-}
-
-#define INSTANTIATE_AidlConstantValue_Cast(T)    \
-  template T AidlConstantValue::Cast<T>() const; \
-  template std::vector<T> AidlConstantValue::Cast<std::vector<T>>() const
-
-INSTANTIATE_AidlConstantValue_Cast(int8_t);
-INSTANTIATE_AidlConstantValue_Cast(int32_t);
-INSTANTIATE_AidlConstantValue_Cast(int64_t);
-INSTANTIATE_AidlConstantValue_Cast(float);
-INSTANTIATE_AidlConstantValue_Cast(double);
-INSTANTIATE_AidlConstantValue_Cast(char);
-INSTANTIATE_AidlConstantValue_Cast(bool);
-INSTANTIATE_AidlConstantValue_Cast(std::string);
-#undef INSTANTIATE_AidlConstantValue_Cast
 
 AidlConstantValue* AidlConstantValue::Default(const AidlTypeSpecifier& specifier) {
   AidlLocation location = specifier.GetLocation();
@@ -630,22 +565,18 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
       return decorator(type, "{" + Join(value_strings, ", ") + "}");
     }
     case Type::FLOATING: {
-      std::string_view raw_view(value_.c_str());
-      bool is_float_literal = ConsumeSuffix(&raw_view, "f");
-      std::string stripped_value = std::string(raw_view);
-
       if (type_string == "double") {
         double parsed_value;
-        if (!android::base::ParseDouble(stripped_value, &parsed_value)) {
+        if (!ParseFloating(value_, &parsed_value)) {
           AIDL_ERROR(this) << "Could not parse " << value_;
           err = -1;
           break;
         }
         return decorator(type, std::to_string(parsed_value));
       }
-      if (is_float_literal && type_string == "float") {
+      if (type_string == "float") {
         float parsed_value;
-        if (!android::base::ParseFloat(stripped_value, &parsed_value)) {
+        if (!ParseFloating(value_, &parsed_value)) {
           AIDL_ERROR(this) << "Could not parse " << value_;
           err = -1;
           break;
@@ -815,32 +746,37 @@ AidlConstantReference::AidlConstantReference(const AidlLocation& location, const
   }
 }
 
-const AidlConstantValue* AidlConstantReference::Resolve() {
+const AidlConstantValue* AidlConstantReference::Resolve(const AidlDefinedType* scope) const {
   if (resolved_) return resolved_;
-  if (!GetRefType() || !GetRefType()->GetDefinedType()) {
+
+  const AidlDefinedType* defined_type;
+  if (ref_type_) {
+    defined_type = ref_type_->GetDefinedType();
+  } else {
+    defined_type = scope;
+  }
+
+  if (!defined_type) {
     // This can happen when "const reference" is used in an unsupported way,
     // but missed in checks there. It works as a safety net.
     AIDL_ERROR(*this) << "Can't resolve the reference (" << value_ << ")";
     return nullptr;
   }
 
-  auto defined_type = GetRefType()->GetDefinedType();
   if (auto enum_decl = defined_type->AsEnumDeclaration(); enum_decl) {
     for (const auto& e : enum_decl->GetEnumerators()) {
       if (e->GetName() == field_name_) {
-        resolved_ = e->GetValue();
-        return resolved_;
+        return resolved_ = e->GetValue();
       }
     }
   } else {
     for (const auto& c : defined_type->GetConstantDeclarations()) {
       if (c->GetName() == field_name_) {
-        resolved_ = &c->GetValue();
-        return resolved_;
+        return resolved_ = &c->GetValue();
       }
     }
   }
-  AIDL_ERROR(*this) << "Can't find " << field_name_ << " in " << ref_type_->GetName();
+  AIDL_ERROR(*this) << "Can't find " << field_name_ << " in " << defined_type->GetName();
   return nullptr;
 }
 

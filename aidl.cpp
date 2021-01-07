@@ -59,6 +59,7 @@ using android::base::Split;
 using std::set;
 using std::string;
 using std::unique_ptr;
+using std::unordered_set;
 using std::vector;
 
 namespace android {
@@ -216,25 +217,24 @@ bool write_dep_file(const Options& options, const AidlDefinedType& defined_type,
   return true;
 }
 
-string generate_outputFileName(const Options& options, const AidlDefinedType& defined_type) {
-  // create the path to the destination folder based on the
-  // defined_type package name
+// Returns the path to the destination file of `defined_type`.
+string GetOutputFilePath(const Options& options, const AidlDefinedType& defined_type) {
   string result = options.OutputDir();
 
+  // add the package
   string package = defined_type.GetPackage();
-  size_t len = package.length();
-  for (size_t i = 0; i < len; i++) {
-    if (package[i] == '.') {
-      package[i] = OS_PATH_SEPARATOR;
+  if (!package.empty()) {
+    for (auto& c : package) {
+      if (c == '.') {
+        c = OS_PATH_SEPARATOR;
+      }
     }
+    result += package;
+    result += OS_PATH_SEPARATOR;
   }
 
-  result += package;
-
-  // add the filename by replacing the .aidl extension to .java
-  const string& name = defined_type.GetName();
-  result += OS_PATH_SEPARATOR;
-  result.append(name, 0, name.find('.'));
+  // add the filename
+  result += defined_type.GetName();
   if (options.TargetLanguage() == Options::Language::JAVA) {
     result += ".java";
   } else if (options.IsCppOutput()) {
@@ -662,67 +662,8 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     }
   }
 
-  class DiagnosticsVisitor : public DiagnosticsContext, public AidlVisitAll {
-    using super = AidlVisitAll;
-    using diag = DiagnosticsContext;
-
-   public:
-    DiagnosticsVisitor(DiagnosticMapping mapping) : DiagnosticsContext(std::move(mapping)) {}
-
-    void VisitInterface(const AidlInterface& i) override {
-      super::VisitInterface(i);
-      if (auto name = i.GetName(); name.size() < 1 || name[0] != 'I') {
-        diag::Report(i.GetLocation(), DiagnosticID::interface_name)
-            << "Interface names should start with I.";
-      }
-    }
-    void VisitEnum(const AidlEnumDeclaration& e) override {
-      super::VisitEnum(e);
-      AIDL_FATAL_IF(e.GetEnumerators().empty(), e)
-          << "The enum '" << e.GetName() << "' has no enumerators.";
-      const auto& first = e.GetEnumerators()[0];
-      if (auto first_value = first->ValueString(e.GetBackingType(), AidlConstantValueDecorator);
-          first_value != "0") {
-        diag::Report(first->GetLocation(), DiagnosticID::enum_zero)
-            << "The first enumerator '" << first->GetName() << "' should be 0, but it is "
-            << first_value << ".";
-      }
-    }
-    void VisitArgument(const AidlArgument& a) override {
-      super::VisitArgument(a);
-      if (a.GetDirection() == AidlArgument::INOUT_DIR) {
-        diag::Report(a.GetLocation(), DiagnosticID::inout_parameter)
-            << a.GetName()
-            << " is 'inout'. Avoid inout parameters. This is somewhat confusing for clients "
-               "because although the parameters are 'in', they look out 'out' parameters.";
-      }
-    }
-    size_t ErrorCount() const { return error_count_; }
-
-   private:
-    std::string Suffix(DiagnosticID id) const { return " [-W" + kDiagnosticsNames.at(id) + "]"; }
-    AidlErrorLog DoReport(const AidlLocation& loc, DiagnosticID id,
-                          DiagnosticSeverity severity) override {
-      switch (severity) {
-        case DiagnosticSeverity::DISABLED:
-          return AidlErrorLog(AidlErrorLog::NO_OP, loc);
-        case DiagnosticSeverity::WARNING:
-          return AidlErrorLog(AidlErrorLog::WARNING, loc, Suffix(id));
-        case DiagnosticSeverity::ERROR:
-          error_count_++;
-          return AidlErrorLog(AidlErrorLog::ERROR, loc, Suffix(id));
-      }
-    }
-
-    size_t error_count_ = 0;
-  };
-
-  if (!is_check_api) {
-    DiagnosticsVisitor diag(options.GetDiagnosticMapping());
-    main_parser->ParsedDocument().Accept(diag);
-    if (diag.ErrorCount() > 0) {
-      return AidlError::BAD_TYPE;
-    }
+  if (!is_check_api && !Diagnose(main_parser->ParsedDocument(), options.GetDiagnosticMapping())) {
+    return AidlError::BAD_TYPE;
   }
 
   typenames->IterateTypes([&](const AidlDefinedType& type) {
@@ -809,7 +750,7 @@ int compile_aidl(const Options& options, const IoDelegate& io_delegate) {
       string output_file_name = options.OutputFile();
       // if needed, generate the output file name from the base folder
       if (output_file_name.empty() && !options.OutputDir().empty()) {
-        output_file_name = generate_outputFileName(options, *defined_type);
+        output_file_name = GetOutputFilePath(options, *defined_type);
         if (output_file_name.empty()) {
           return 1;
         }

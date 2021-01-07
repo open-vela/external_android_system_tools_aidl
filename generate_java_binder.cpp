@@ -81,7 +81,8 @@ class StubClass : public Class {
   std::shared_ptr<Variable> transact_data;
   std::shared_ptr<Variable> transact_reply;
   std::shared_ptr<Variable> transact_flags;
-  std::shared_ptr<SwitchStatement> transact_switch;
+  std::shared_ptr<SwitchStatement> transact_switch_meta;
+  std::shared_ptr<SwitchStatement> transact_switch_user;
   std::shared_ptr<StatementBlock> transact_statements;
   std::shared_ptr<SwitchStatement> code_to_method_name_switch;
 
@@ -194,7 +195,8 @@ StubClass::StubClass(const AidlInterface* interfaceType, const Options& options)
   transact_statements = onTransact->statements;
   onTransact->exceptions.push_back("android.os.RemoteException");
   this->elements.push_back(onTransact);
-  this->transact_switch = std::make_shared<SwitchStatement>(this->transact_code);
+  this->transact_switch_meta = std::make_shared<SwitchStatement>(this->transact_code);
+  this->transact_switch_user = std::make_shared<SwitchStatement>(this->transact_code);
 }
 
 void StubClass::finish() {
@@ -205,9 +207,11 @@ void StubClass::finish() {
       std::vector<std::shared_ptr<Expression>>{this->transact_code, this->transact_data,
                                                this->transact_reply, this->transact_flags});
   default_case->statements->Add(std::make_shared<ReturnStatement>(superCall));
-  transact_switch->cases.push_back(default_case);
+  transact_switch_user->cases.push_back(default_case);
 
-  transact_statements->Add(this->transact_switch);
+  // Meta transactions are looked up prior to user-defined transactions.
+  transact_statements->Add(this->transact_switch_meta);
+  transact_statements->Add(this->transact_switch_user);
 
   // getTransactionName
   if (options_.GenTransactionNames()) {
@@ -393,7 +397,7 @@ void generate_constant_declarations(CodeWriter& out, const AidlDefinedType& type
     if (comment.length() != 0) {
       out << comment << "\n";
     }
-    for (const auto& annotation : generate_java_annotations(constant->GetType())) {
+    for (const auto& annotation : JavaAnnotationsFor(*constant)) {
       out << annotation << "\n";
     }
     out << "public static final " << type.Signature() << " " << constant->GetName() << " = "
@@ -408,11 +412,11 @@ static std::shared_ptr<Method> generate_interface_method(const AidlMethod& metho
   decl->modifiers = PUBLIC;
   decl->returnType = JavaSignatureOf(method.GetType(), typenames);
   decl->name = method.GetName();
-  decl->annotations = generate_java_annotations(method.GetType());
+  decl->annotations = JavaAnnotationsFor(method);
 
   for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
     auto var = std::make_shared<Variable>(JavaSignatureOf(arg->GetType(), typenames), arg->GetName());
-    var->annotations = generate_java_annotations(arg->GetType());
+    var->annotations = JavaAnnotationsFor(arg->GetType());
     decl->parameters.push_back(var);
   }
 
@@ -540,7 +544,7 @@ static void generate_stub_case(const AidlInterface& iface, const AidlMethod& met
   generate_stub_code(iface, method, oneway, stubClass->transact_data, stubClass->transact_reply,
                      typenames, c->statements, stubClass, options);
 
-  stubClass->transact_switch->cases.push_back(c);
+  stubClass->transact_switch_user->cases.push_back(c);
 }
 
 static void generate_stub_case_outline(const AidlInterface& iface, const AidlMethod& method,
@@ -576,7 +580,7 @@ static void generate_stub_case_outline(const AidlInterface& iface, const AidlMet
                                          stubClass->transact_data, stubClass->transact_reply});
     c->statements->Add(std::make_shared<ReturnStatement>(helper_call));
 
-    stubClass->transact_switch->cases.push_back(c);
+    stubClass->transact_switch_user->cases.push_back(c);
   }
 }
 
@@ -834,7 +838,7 @@ static void generate_methods(const AidlInterface& iface, const AidlMethod& metho
            << "reply.writeInt(" << kGetInterfaceVersion << "());\n"
            << "return true;\n";
       c->statements->Add(std::make_shared<LiteralStatement>(code.str()));
-      stubClass->transact_switch->cases.push_back(c);
+      stubClass->transact_switch_meta->cases.push_back(c);
     }
     if (method.GetName() == kGetInterfaceHash && !options.Hash().empty()) {
       auto c = std::make_shared<Case>(transactCodeName);
@@ -844,7 +848,7 @@ static void generate_methods(const AidlInterface& iface, const AidlMethod& metho
            << "reply.writeString(" << kGetInterfaceHash << "());\n"
            << "return true;\n";
       c->statements->Add(std::make_shared<LiteralStatement>(code.str()));
-      stubClass->transact_switch->cases.push_back(c);
+      stubClass->transact_switch_meta->cases.push_back(c);
     }
   }
 
@@ -928,7 +932,7 @@ static void generate_interface_descriptors(const Options& options, const AidlInt
       stub->transact_reply, "writeString",
       std::vector<std::shared_ptr<Expression>>{stub->get_transact_descriptor(nullptr)}));
   c->statements->Add(std::make_shared<ReturnStatement>(TRUE_VALUE));
-  stub->transact_switch->cases.push_back(c);
+  stub->transact_switch_meta->cases.push_back(c);
 
   // and the proxy-side method returning the descriptor directly
   auto getDesc = std::make_shared<Method>();
@@ -1081,7 +1085,7 @@ std::unique_ptr<Class> generate_binder_interface_class(const AidlInterface* ifac
   interface->what = Class::INTERFACE;
   interface->type = iface->GetCanonicalName();
   interface->interfaces.push_back("android.os.IInterface");
-  interface->annotations = generate_java_annotations(*iface);
+  interface->annotations = JavaAnnotationsFor(*iface);
 
   if (options.Version()) {
     std::ostringstream code;

@@ -27,8 +27,6 @@
 using android::aidl::AidlError;
 using android::aidl::AidlTypenames;
 using android::aidl::DiagnosticID;
-using android::aidl::DiagnosticsContext;
-using android::aidl::kDiagnosticsNames;
 using android::aidl::Options;
 using android::aidl::internals::load_and_validate_aidl;
 using android::aidl::test::FakeIoDelegate;
@@ -46,13 +44,13 @@ struct DiagnosticsTest : testing::Test {
     // "java" has no specific meaning here because we're testing CheckValid()
     const Options options = Options::From("aidl -I . --lang java -o out -Weverything " + main);
     CaptureStderr();
-    EXPECT_EQ(AidlError::OK, load_and_validate_aidl(main, options, io, &typenames, nullptr));
+    load_and_validate_aidl(main, options, io, &typenames, nullptr);
     const std::string err = GetCapturedStderr();
     if (expect_diagnostics.empty()) {
       EXPECT_EQ("", err);
     } else {
       for (const auto id : expect_diagnostics) {
-        EXPECT_THAT(err, testing::HasSubstr("-W" + kDiagnosticsNames.at(id)));
+        EXPECT_THAT(err, testing::HasSubstr("-W" + to_string(id)));
       }
     }
   }
@@ -61,6 +59,16 @@ struct DiagnosticsTest : testing::Test {
   FakeIoDelegate io;
   std::vector<DiagnosticID> expect_diagnostics;
 };
+
+TEST_F(DiagnosticsTest, const_name_ForEnumerator) {
+  expect_diagnostics = {DiagnosticID::const_name};
+  ParseFiles({{"Foo.aidl", "enum Foo { foo }"}});
+}
+
+TEST_F(DiagnosticsTest, const_name_ForConstants) {
+  expect_diagnostics = {DiagnosticID::const_name};
+  ParseFiles({{"IFoo.aidl", "interface IFoo { const int foo = 1; }"}});
+}
 
 TEST_F(DiagnosticsTest, interface_name) {
   expect_diagnostics = {DiagnosticID::interface_name};
@@ -72,8 +80,89 @@ TEST_F(DiagnosticsTest, enum_zero) {
   ParseFiles({{"Enum.aidl", "enum Enum { A = 1 }"}});
 }
 
+TEST_F(DiagnosticsTest, enum_zero_suppress_SuppressAtDeclLevel) {
+  expect_diagnostics = {};
+  ParseFiles({{"Enum.aidl", "@SuppressWarnings(value={\"enum-zero\"}) enum Enum { A = 1 }"}});
+}
+
+TEST_F(DiagnosticsTest, explicit_default) {
+  expect_diagnostics = {DiagnosticID::explicit_default};
+  ParseFiles({{"Foo.aidl", "parcelable Foo { int n; }"}});
+}
+
+TEST_F(DiagnosticsTest, explicit_default_OkayForSomeTypesOrDefaultIsSet) {
+  expect_diagnostics = {};
+  ParseFiles({{"Foo.aidl",
+               "parcelable Foo { \n"
+               "  Bar bar;\n"
+               "  IBinder binder;\n"
+               "  @nullable String s;\n"
+               "  int[] numbers = {};\n"
+               "  List<String> stringList;\n"
+               "  IBaz baz;\n"
+               "}"},
+              {"Bar.aidl", "parcelable Bar { }"},
+              {"IBaz.aidl", "interface IBaz { }"}});
+}
+
 TEST_F(DiagnosticsTest, inout_parameter) {
   expect_diagnostics = {DiagnosticID::inout_parameter};
   ParseFiles({{"IFoo.aidl", "interface IFoo { void foo(inout Bar bar); }"},
               {"Bar.aidl", "parcelable Bar {}"}});
+}
+
+TEST_F(DiagnosticsTest, inout_parameter_SuppressAtMethodLevel) {
+  expect_diagnostics = {};
+  ParseFiles({
+      {"IFoo.aidl",
+       "interface IFoo { @SuppressWarnings(value={\"inout-parameter\"}) void foo(inout Bar b); }"},
+      {"Bar.aidl", "parcelable Bar {}"},
+  });
+}
+
+TEST_F(DiagnosticsTest, inout_parameter_SuppressAtDeclLevel) {
+  expect_diagnostics = {};
+  ParseFiles({
+      {"IFoo.aidl",
+       "@SuppressWarnings(value={\"inout-parameter\"}) interface IFoo { void foo(inout Bar b); }"},
+      {"Bar.aidl", "parcelable Bar {}"},
+  });
+}
+
+TEST_F(DiagnosticsTest, UnknownWarning) {
+  expect_diagnostics = {DiagnosticID::unknown_warning};
+  ParseFiles({
+      {"IFoo.aidl", "@SuppressWarnings(value={\"blahblah\"}) interface IFoo { void foo(); }"},
+  });
+}
+
+TEST_F(DiagnosticsTest, CantSuppressUnknownWarning) {
+  expect_diagnostics = {DiagnosticID::unknown_warning};
+  ParseFiles({
+      {"IFoo.aidl",
+       "@SuppressWarnings(value={\"unknown-warning\"})\n"
+       "interface IFoo { @SuppressWarnings(value={\"blah-blah\"}) void foo(); }"},
+  });
+}
+
+TEST_F(DiagnosticsTest, DontMixOnewayWithTwowayMethods) {
+  expect_diagnostics = {DiagnosticID::mixed_oneway};
+  ParseFiles({
+      {"IFoo.aidl", "interface IFoo { void foo(); oneway void bar(); }"},
+  });
+}
+
+TEST_F(DiagnosticsTest, ArraysAsOutputParametersConsideredHarmful) {
+  expect_diagnostics = {DiagnosticID::out_array};
+  ParseFiles({
+      {"IFoo.aidl", "interface IFoo { void foo(out String[] ret); }"},
+  });
+}
+
+TEST_F(DiagnosticsTest, file_descriptor) {
+  expect_diagnostics = {DiagnosticID::file_descriptor};
+  ParseFiles({{"IFoo.aidl",
+               "interface IFoo { \n"
+               "  void foo(in FileDescriptor fd);\n"
+               "}"}});
 }
