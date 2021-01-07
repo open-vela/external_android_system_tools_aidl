@@ -1542,6 +1542,22 @@ TEST_P(AidlTest, UnionWithConstants) {
   EXPECT_EQ("", GetCapturedStderr());
 }
 
+TEST_F(AidlTest, ConstantsWithAnnotations) {
+  io_delegate_.SetFileContents("IFoo.aidl",
+                               "interface IFoo {\n"
+                               " @JavaPassthrough(annotation=\"@Foo\")\n"
+                               " const @JavaPassthrough(annotation=\"@Bar\") int FOO = 0;\n"
+                               "}");
+  Options options = Options::From("aidl IFoo.aidl --lang=java -o out");
+  CaptureStderr();
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/IFoo.java", &code));
+  EXPECT_THAT(code, HasSubstr("@Foo\n"));
+  EXPECT_THAT(code, HasSubstr("@Bar\n"));
+}
+
 TEST_F(AidlTest, ApiDump) {
   io_delegate_.SetFileContents(
       "foo/bar/IFoo.aidl",
