@@ -519,18 +519,11 @@ constant_value_non_empty_list
  ;
 
 constant_decl
- : annotation_list CONST type identifier '=' const_expr ';' {
-    if ($1->size() > 0) {
-      $3->SetComments($1->begin()->GetComments());
-    } else {
-      $3->SetComments($2->GetComments());
-    }
-    // TODO(b/151102494) do not merge annotations.
-    $3->Annotate(std::move(*$1));
-    $$ = new AidlConstantDeclaration(loc(@4), $3, $4->GetText(), $6);
+ : CONST type identifier '=' const_expr ';' {
+    $2->SetComments($1->GetComments());
+    $$ = new AidlConstantDeclaration(loc(@3), $2, $3->GetText(), $5);
     delete $1;
-    delete $2;
-    delete $4;
+    delete $3;
    }
  ;
 
