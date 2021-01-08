@@ -1245,7 +1245,7 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
   unique_ptr<ClassDecl> parcel_class{
       new ClassDecl{parcel.GetName(), "::android::Parcelable", type_params, attribute}};
 
-  set<string> includes = {kStatusHeader, kParcelHeader};
+  set<string> includes = {kStatusHeader, kParcelHeader, kString16Header};
   AddTypeSpecificHeaders(parcel, includes);
 
   for (const auto& variable : parcel.GetFields()) {
@@ -1275,8 +1275,8 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
   parcel_class->AddPublic(std::move(write));
 
   parcel_class->AddPublic(std::unique_ptr<LiteralDecl>(
-      new LiteralDecl(StringPrintf("static const std::string& getParcelableDescriptor() {\n"
-                                   "  static const std::string DESCIPTOR = \"%s\";\n"
+      new LiteralDecl(StringPrintf("static const ::android::String16& getParcelableDescriptor() {\n"
+                                   "  static const ::android::StaticString16 DESCIPTOR (u\"%s\");\n"
                                    "  return DESCIPTOR;\n"
                                    "}\n",
                                    parcel.GetCanonicalName().c_str()))));
