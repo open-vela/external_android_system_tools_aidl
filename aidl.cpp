@@ -346,6 +346,57 @@ bool ParsePreprocessedLine(const string& line, string* decl, std::string* packag
   return true;
 }
 
+bool ValidateAnnotationContext(const AidlDocument& doc) {
+  struct AnnotationValidator : AidlVisitor {
+    bool success = true;
+
+    void Check(const AidlAnnotatable& annotatable, AidlAnnotation::TargetContext context) {
+      for (const auto& annot : annotatable.GetAnnotations()) {
+        if (!annot.CheckContext(context)) {
+          success = false;
+        }
+      }
+    }
+    void Visit(const AidlInterface& m) override {
+      Check(m, AidlAnnotation::CONTEXT_TYPE_INTERFACE);
+    }
+    void Visit(const AidlParcelable& m) override {
+      Check(m, AidlAnnotation::CONTEXT_TYPE_UNSTRUCTURED_PARCELABLE);
+    }
+    void Visit(const AidlStructuredParcelable& m) override {
+      Check(m, AidlAnnotation::CONTEXT_TYPE_STRUCTURED_PARCELABLE);
+    }
+    void Visit(const AidlEnumDeclaration& m) override {
+      Check(m, AidlAnnotation::CONTEXT_TYPE_ENUM);
+    }
+    void Visit(const AidlUnionDecl& m) override { Check(m, AidlAnnotation::CONTEXT_TYPE_UNION); }
+    void Visit(const AidlMethod& m) override {
+      Check(m.GetType(), AidlAnnotation::CONTEXT_TYPE_SPECIFIER | AidlAnnotation::CONTEXT_METHOD);
+      for (const auto& arg : m.GetArguments()) {
+        Check(arg->GetType(), AidlAnnotation::CONTEXT_TYPE_SPECIFIER);
+      }
+    }
+    void Visit(const AidlConstantDeclaration& m) override {
+      Check(m.GetType(), AidlAnnotation::CONTEXT_TYPE_SPECIFIER | AidlAnnotation::CONTEXT_CONST);
+    }
+    void Visit(const AidlVariableDeclaration& m) override {
+      Check(m.GetType(), AidlAnnotation::CONTEXT_TYPE_SPECIFIER | AidlAnnotation::CONTEXT_FIELD);
+    }
+    void Visit(const AidlTypeSpecifier& m) override {
+      // nested generic type parameters are checked as well
+      if (m.IsGeneric()) {
+        for (const auto& tp : m.GetTypeParameters()) {
+          Check(*tp, AidlAnnotation::CONTEXT_TYPE_SPECIFIER);
+        }
+      }
+    }
+  };
+
+  AnnotationValidator validator;
+  VisitTopDown(validator, doc);
+  return validator.success;
+}
+
 }  // namespace
 
 namespace internals {
@@ -660,6 +711,10 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
         }
       }
     }
+  }
+
+  if (!ValidateAnnotationContext(main_parser->ParsedDocument())) {
+    return AidlError::BAD_TYPE;
   }
 
   if (!is_check_api && !Diagnose(main_parser->ParsedDocument(), options.GetDiagnosticMapping())) {
