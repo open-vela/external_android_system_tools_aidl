@@ -73,11 +73,6 @@ def main(output, root, inputs, imports):
   with open(output, "w") as lib_rs_file:
     lib_rs_file.write("#![allow(non_snake_case)]\n")
     lib_rs_file.write("#![allow(missing_docs)]\n")
-    # Disable clippy error for `FIRST_CALL_TRANSACTION + 0`
-    lib_rs_file.write("#![allow(clippy::identity_op)]\n")
-    # Disable clippy error for extra zeroes on floating-point numbers
-    lib_rs_file.write("#![allow(clippy::excessive_precision)]\n")
-    lib_rs_file.write("#![allow(clippy::too_many_arguments)]\n")
     lib_rs_file.write("pub use binder::public_api as binder;\n")
 
     lib_rs_file.write("pub mod aidl {\n")
