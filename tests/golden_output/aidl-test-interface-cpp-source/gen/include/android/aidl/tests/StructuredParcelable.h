@@ -105,8 +105,8 @@ public:
   };
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) override final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const override final;
-  static const std::string& getParcelableDescriptor() {
-    static const std::string DESCIPTOR = "android.aidl.tests.StructuredParcelable";
+  static const ::android::String16& getParcelableDescriptor() {
+    static const ::android::StaticString16 DESCIPTOR (u"android.aidl.tests.StructuredParcelable");
     return DESCIPTOR;
   }
   template <typename _T> class _has_toString {

@@ -10,6 +10,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <utils/String16.h>
 #include <variant>
 
 #ifndef __BIONIC__
@@ -99,8 +100,8 @@ public:
 
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) override final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const override final;
-  static const std::string& getParcelableDescriptor() {
-    static const std::string DESCIPTOR = "android.aidl.loggable.Union";
+  static const ::android::String16& getParcelableDescriptor() {
+    static const ::android::StaticString16 DESCIPTOR (u"android.aidl.loggable.Union");
     return DESCIPTOR;
   }
   template <typename _T> class _has_toString {

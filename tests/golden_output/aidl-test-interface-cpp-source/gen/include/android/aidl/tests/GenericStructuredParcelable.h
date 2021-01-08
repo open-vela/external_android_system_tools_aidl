@@ -7,6 +7,7 @@
 #include <locale>
 #include <sstream>
 #include <tuple>
+#include <utils/String16.h>
 
 namespace android {
 
@@ -40,8 +41,8 @@ public:
   int32_t b = int32_t(0);
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) override final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const override final;
-  static const std::string& getParcelableDescriptor() {
-    static const std::string DESCIPTOR = "android.aidl.tests.GenericStructuredParcelable";
+  static const ::android::String16& getParcelableDescriptor() {
+    static const ::android::StaticString16 DESCIPTOR (u"android.aidl.tests.GenericStructuredParcelable");
     return DESCIPTOR;
   }
   template <typename _T> class _has_toString {
