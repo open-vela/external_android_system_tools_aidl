@@ -435,7 +435,6 @@ class AidlCommentable {
   void SetComments(const std::string comments) { comments_ = comments; }
   bool IsHidden() const;
   bool IsDeprecated() const;
-  void Dump(CodeWriter& out) const;
 
  private:
   std::string comments_;
@@ -959,7 +958,6 @@ class AidlDefinedType : public AidlAnnotatable, public AidlCommentable {
 
   virtual void Dump(CodeWriter* writer) const = 0;
   void DumpHeader(CodeWriter* writer) const;
-  void DumpMembers(CodeWriter& out) const;
 
   const std::vector<std::unique_ptr<AidlVariableDeclaration>>& GetFields() const {
     return variables_;
