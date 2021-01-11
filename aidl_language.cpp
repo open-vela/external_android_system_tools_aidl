@@ -33,6 +33,7 @@
 #include <android-base/strings.h>
 
 #include "aidl_language_y.h"
+#include "comments.h"
 #include "logging.h"
 
 #include "aidl.h"
@@ -75,10 +76,6 @@ void AddHideComment(CodeWriter* writer) {
 
 inline bool HasHideComment(const std::string& comment) {
   return std::regex_search(comment, std::regex("@hide\\b"));
-}
-
-inline bool HasDeprecatedComment(const std::string& comment) {
-  return std::regex_search(comment, std::regex("@deprecated\\b"));
 }
 }  // namespace
 
@@ -768,7 +765,7 @@ bool AidlCommentable::IsHidden() const {
 }
 
 bool AidlCommentable::IsDeprecated() const {
-  return HasDeprecatedComment(GetComments());
+  return android::aidl::FindDeprecated(GetComments()).has_value();
 }
 
 AidlMember::AidlMember(const AidlLocation& location, const std::string& comments)
