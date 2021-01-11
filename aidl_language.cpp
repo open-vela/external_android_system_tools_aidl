@@ -655,7 +655,7 @@ AidlVariableDeclaration::AidlVariableDeclaration(const AidlLocation& location,
 AidlVariableDeclaration::AidlVariableDeclaration(const AidlLocation& location,
                                                  AidlTypeSpecifier* type, const std::string& name,
                                                  AidlConstantValue* default_value)
-    : AidlMember(location),
+    : AidlMember(location, type->GetComments()),
       type_(type),
       name_(name),
       default_user_specified_(true),
@@ -763,12 +763,21 @@ string AidlArgument::ToString() const {
   }
 }
 
-AidlMember::AidlMember(const AidlLocation& location) : AidlNode(location) {}
+bool AidlCommentable::IsHidden() const {
+  return HasHideComment(GetComments());
+}
+
+bool AidlCommentable::IsDeprecated() const {
+  return HasDeprecatedComment(GetComments());
+}
+
+AidlMember::AidlMember(const AidlLocation& location, const std::string& comments)
+    : AidlNode(location), AidlCommentable(comments) {}
 
 AidlConstantDeclaration::AidlConstantDeclaration(const AidlLocation& location,
                                                  AidlTypeSpecifier* type, const std::string& name,
                                                  AidlConstantValue* value)
-    : AidlMember(location), type_(type), name_(name), value_(value) {}
+    : AidlMember(location, type->GetComments()), type_(type), name_(name), value_(value) {}
 
 bool AidlConstantDeclaration::CheckValid(const AidlTypenames& typenames) const {
   bool valid = true;
@@ -804,9 +813,8 @@ AidlMethod::AidlMethod(const AidlLocation& location, bool oneway, AidlTypeSpecif
 AidlMethod::AidlMethod(const AidlLocation& location, bool oneway, AidlTypeSpecifier* type,
                        const std::string& name, std::vector<std::unique_ptr<AidlArgument>>* args,
                        const std::string& comments, int id, bool is_user_defined)
-    : AidlMember(location),
+    : AidlMember(location, comments),
       oneway_(oneway),
-      comments_(comments),
       type_(type),
       name_(name),
       arguments_(std::move(*args)),
@@ -818,14 +826,6 @@ AidlMethod::AidlMethod(const AidlLocation& location, bool oneway, AidlTypeSpecif
     if (a->IsIn()) { in_arguments_.push_back(a.get()); }
     if (a->IsOut()) { out_arguments_.push_back(a.get()); }
   }
-}
-
-bool AidlMember::IsHidden() const {
-  return HasHideComment(GetComments());
-}
-
-bool AidlMember::IsDeprecated() const {
-  return HasDeprecatedComment(GetComments());
 }
 
 string AidlMethod::Signature() const {
@@ -853,8 +853,8 @@ AidlDefinedType::AidlDefinedType(const AidlLocation& location, const std::string
                                  const std::string& comments, const std::string& package,
                                  std::vector<std::unique_ptr<AidlMember>>* members)
     : AidlAnnotatable(location),
+      AidlCommentable(comments),
       name_(name),
-      comments_(comments),
       package_(package),
       split_package_(package.empty() ? std::vector<std::string>()
                                      : android::base::Split(package, ".")) {
@@ -883,14 +883,6 @@ bool AidlDefinedType::CheckValid(const AidlTypenames& typenames) const {
     return false;
   }
   return true;
-}
-
-bool AidlDefinedType::IsHidden() const {
-  return HasHideComment(GetComments());
-}
-
-bool AidlDefinedType::IsDeprecated() const {
-  return HasDeprecatedComment(GetComments());
 }
 
 std::string AidlDefinedType::GetCanonicalName() const {
