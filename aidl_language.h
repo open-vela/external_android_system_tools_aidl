@@ -426,9 +426,23 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
 // Returns the universal value unaltered.
 std::string AidlConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value);
 
-class AidlMember : public AidlNode {
+class AidlCommentable {
  public:
-  AidlMember(const AidlLocation& location);
+  AidlCommentable(const std::string& comments) : comments_(comments) {}
+  virtual ~AidlCommentable() = default;
+
+  const std::string& GetComments() const { return comments_; }
+  void SetComments(const std::string comments) { comments_ = comments; }
+  bool IsHidden() const;
+  bool IsDeprecated() const;
+
+ private:
+  std::string comments_;
+};
+
+class AidlMember : public AidlNode, public AidlCommentable {
+ public:
+  AidlMember(const AidlLocation& location, const std::string& comments);
   virtual ~AidlMember() = default;
 
   // non-copyable, non-movable
@@ -452,10 +466,6 @@ class AidlMember : public AidlNode {
     return const_cast<AidlVariableDeclaration*>(
         const_cast<const AidlMember*>(this)->AsVariableDeclaration());
   }
-
-  virtual const std::string& GetComments() const = 0;
-  bool IsHidden() const;
-  bool IsDeprecated() const;
 };
 
 // TODO: This class is used for method arguments and also parcelable fields,
@@ -476,7 +486,6 @@ class AidlVariableDeclaration : public AidlMember {
   AidlVariableDeclaration& operator=(AidlVariableDeclaration&&) = delete;
 
   const AidlVariableDeclaration* AsVariableDeclaration() const override { return this; }
-  const std::string& GetComments() const override { return GetType().GetComments(); }
 
   std::string GetName() const { return name_; }
   std::string GetCapitalizedName() const;
@@ -791,7 +800,6 @@ class AidlConstantDeclaration : public AidlMember {
   }
 
   const AidlConstantDeclaration* AsConstantDeclaration() const override { return this; }
-  const std::string& GetComments() const override { return GetType().GetComments(); }
 
   void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override {
     traverse(GetType());
@@ -821,7 +829,6 @@ class AidlMethod : public AidlMember {
   AidlMethod& operator=(AidlMethod&&) = delete;
 
   const AidlMethod* AsMethod() const override { return this; }
-  const string& GetComments() const override { return comments_; }
   const AidlTypeSpecifier& GetType() const { return *type_; }
   AidlTypeSpecifier* GetMutableType() { return type_.get(); }
 
@@ -883,7 +890,7 @@ class AidlMethod : public AidlMember {
 
 // AidlDefinedType represents either an interface, parcelable, or enum that is
 // defined in the source file.
-class AidlDefinedType : public AidlAnnotatable {
+class AidlDefinedType : public AidlAnnotatable, public AidlCommentable {
  public:
   AidlDefinedType(const AidlLocation& location, const std::string& name,
                   const std::string& comments, const std::string& package,
@@ -897,10 +904,6 @@ class AidlDefinedType : public AidlAnnotatable {
   AidlDefinedType& operator=(AidlDefinedType&&) = delete;
 
   const std::string& GetName() const { return name_; };
-  bool IsHidden() const;
-  bool IsDeprecated() const;
-  const std::string& GetComments() const { return comments_; }
-  void SetComments(const std::string comments) { comments_ = comments; }
 
   /* dot joined package, example: "android.package.foo" */
   std::string GetPackage() const { return package_; }
