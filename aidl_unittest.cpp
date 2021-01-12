@@ -294,7 +294,7 @@ TEST_P(AidlTest, RejectUnsupportedInterfaceAnnotations) {
   const string method = "package a; @nullable interface IFoo { int f(); }";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("'nullable' is not a supported annotation"));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@nullable is not available."));
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
@@ -303,8 +303,7 @@ TEST_P(AidlTest, RejectUnsupportedTypeAnnotations) {
   const string method = "package a; interface IFoo { @JavaOnlyStableParcelable int f(); }";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_THAT(GetCapturedStderr(),
-              HasSubstr("'JavaOnlyStableParcelable' is not a supported annotation"));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@JavaOnlyStableParcelable is not available."));
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
@@ -313,7 +312,7 @@ TEST_P(AidlTest, RejectUnsupportedParcelableAnnotations) {
   const string method = "package a; @nullable parcelable IFoo cpp_header \"IFoo.h\";";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("'nullable' is not a supported annotation"));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@nullable is not available."));
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
@@ -322,7 +321,7 @@ TEST_P(AidlTest, RejectUnsupportedParcelableDefineAnnotations) {
   const string method = "package a; @nullable parcelable IFoo { String a; String b; }";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("'nullable' is not a supported annotation"));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@nullable is not available."));
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
@@ -561,7 +560,7 @@ TEST_F(AidlTest, RejectsJavaDeriveAnnotation) {
     Options java_options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
     CaptureStderr();
     EXPECT_NE(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
-    EXPECT_THAT(GetCapturedStderr(), HasSubstr("'JavaDerive' is not a supported annotation"));
+    EXPECT_THAT(GetCapturedStderr(), HasSubstr("@JavaDerive is not available."));
   }
 
   {
@@ -569,7 +568,7 @@ TEST_F(AidlTest, RejectsJavaDeriveAnnotation) {
     Options java_options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
     CaptureStderr();
     EXPECT_NE(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
-    EXPECT_THAT(GetCapturedStderr(), HasSubstr("'JavaDerive' is not a supported annotation"));
+    EXPECT_THAT(GetCapturedStderr(), HasSubstr("@JavaDerive is not available."));
   }
 }
 
@@ -2478,7 +2477,7 @@ TEST_F(AidlTestIncompatibleChanges, ChangedAnnatationParams) {
 
 TEST_F(AidlTestIncompatibleChanges, AddedParcelableAnnotation) {
   const string expected_stderr =
-      "ERROR: new/p/Foo.aidl:1.47-51: Changed annotations: (empty) to @JavaOnlyStableParcelable\n";
+      "ERROR: new/p/Foo.aidl:1.32-36: Changed annotations: (empty) to @FixedSize\n";
   io_delegate_.SetFileContents("old/p/Foo.aidl",
                                "package p;"
                                "parcelable Foo {"
@@ -2486,7 +2485,7 @@ TEST_F(AidlTestIncompatibleChanges, AddedParcelableAnnotation) {
                                "}");
   io_delegate_.SetFileContents("new/p/Foo.aidl",
                                "package p;"
-                               "@JavaOnlyStableParcelable parcelable Foo {"
+                               "@FixedSize parcelable Foo {"
                                "  int A;"
                                "}");
   CaptureStderr();
@@ -2496,10 +2495,10 @@ TEST_F(AidlTestIncompatibleChanges, AddedParcelableAnnotation) {
 
 TEST_F(AidlTestIncompatibleChanges, RemovedParcelableAnnotation) {
   const string expected_stderr =
-      "ERROR: new/p/Foo.aidl:1.21-25: Changed annotations: @JavaOnlyStableParcelable to (empty)\n";
+      "ERROR: new/p/Foo.aidl:1.21-25: Changed annotations: @FixedSize to (empty)\n";
   io_delegate_.SetFileContents("old/p/Foo.aidl",
                                "package p;"
-                               "@JavaOnlyStableParcelable parcelable Foo {"
+                               "@FixedSize parcelable Foo {"
                                "  int A;"
                                "}");
   io_delegate_.SetFileContents("new/p/Foo.aidl",
@@ -3586,6 +3585,29 @@ TEST_P(AidlTest, ErrorInterfaceName) {
   EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
   EXPECT_EQ("ERROR: p/Foo.aidl:1.1-10: Interface names should start with I. [-Winterface-name]\n",
             GetCapturedStderr());
+}
+
+TEST_F(AidlTest, HideIsNotForArgs) {
+  io_delegate_.SetFileContents("IFoo.aidl",
+                               "interface IFoo {\n"
+                               "  void foo(in @Hide int x);\n"
+                               "}");
+  auto options = Options::From("aidl --lang=java IFoo.aidl");
+  CaptureStderr();
+  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@Hide is not available"));
+}
+
+TEST_F(AidlTest, SuppressWarningsIsNotForArgs) {
+  io_delegate_.SetFileContents(
+      "IFoo.aidl",
+      "interface IFoo {\n"
+      "  void foo(in @SuppressWarnings(value=\"inout-parameter\") int x);\n"
+      "}");
+  auto options = Options::From("aidl --lang=java IFoo.aidl");
+  CaptureStderr();
+  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@SuppressWarnings is not available"));
 }
 
 struct TypeParam {
