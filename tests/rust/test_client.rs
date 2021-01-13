@@ -385,8 +385,10 @@ test_nullable! {
 
 #[test]
 fn test_nullable_parcelable() {
-    let mut value = StructuredParcelable::StructuredParcelable::default();
-    value.f = 42;
+    let value = StructuredParcelable::StructuredParcelable{
+        f: 42,
+        ..Default::default()
+    };
 
     let service = get_test_service();
     let value = Some(value);
