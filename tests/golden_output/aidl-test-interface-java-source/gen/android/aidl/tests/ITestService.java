@@ -18,7 +18,6 @@ public interface ITestService extends android.os.IInterface
     // the first in this interface, it can keep the
     // "::android::IBinder::FIRST_CALL_TRANSACTION + 0" value and allow
     // methods to be added and removed.
-
     @Override public int UnimplementedMethod(int arg) throws android.os.RemoteException
     {
       return 0;
@@ -27,7 +26,6 @@ public interface ITestService extends android.os.IInterface
     {
     }
     // Test that primitives work as parameters and return types.
-
     @Override public boolean RepeatBoolean(boolean token) throws android.os.RemoteException
     {
       return false;
@@ -73,7 +71,6 @@ public interface ITestService extends android.os.IInterface
       return 0L;
     }
     // Test that arrays work as parameters and return types.
-
     @Override public boolean[] ReverseBoolean(boolean[] input, boolean[] repeated) throws android.os.RemoteException
     {
       return null;
@@ -119,7 +116,6 @@ public interface ITestService extends android.os.IInterface
       return null;
     }
     // Test that clients can send and receive Binders.
-
     @Override public android.aidl.tests.INamedCallback GetOtherTestService(java.lang.String name) throws android.os.RemoteException
     {
       return null;
@@ -129,7 +125,6 @@ public interface ITestService extends android.os.IInterface
       return false;
     }
     // Test that List<T> types work correctly.
-
     @Override public java.util.List<java.lang.String> ReverseStringList(java.util.List<java.lang.String> input, java.util.List<java.lang.String> repeated) throws android.os.RemoteException
     {
       return null;
@@ -143,12 +138,10 @@ public interface ITestService extends android.os.IInterface
       return null;
     }
     // Test that service specific exceptions work correctly.
-
     @Override public void ThrowServiceException(int code) throws android.os.RemoteException
     {
     }
     // Test nullability
-
     @Override public int[] RepeatNullableIntArray(int[] input) throws android.os.RemoteException
     {
       return null;
@@ -184,7 +177,6 @@ public interface ITestService extends android.os.IInterface
     {
     }
     // Test utf8 decoding from utf16 wire format
-
     @Override public java.lang.String RepeatUtf8CppString(java.lang.String token) throws android.os.RemoteException
     {
       return null;
@@ -211,7 +203,6 @@ public interface ITestService extends android.os.IInterface
     }
     // Since this paracelable has clearly defined default values, it would be
     // inefficient to use an IPC to fill it out in practice.
-
     @Override public void FillOutStructuredParcelable(android.aidl.tests.StructuredParcelable parcel) throws android.os.RemoteException
     {
     }
@@ -224,7 +215,6 @@ public interface ITestService extends android.os.IInterface
       return null;
     }
     // Retrieve the ICppJavaTests if the server supports it
-
     @Override public android.os.IBinder GetCppJavaTests() throws android.os.RemoteException
     {
       return null;
@@ -962,7 +952,6 @@ public interface ITestService extends android.os.IInterface
       // the first in this interface, it can keep the
       // "::android::IBinder::FIRST_CALL_TRANSACTION + 0" value and allow
       // methods to be added and removed.
-
       @Override public int UnimplementedMethod(int arg) throws android.os.RemoteException
       {
         android.os.Parcel _data = android.os.Parcel.obtain();
@@ -1004,7 +993,6 @@ public interface ITestService extends android.os.IInterface
         }
       }
       // Test that primitives work as parameters and return types.
-
       @Override public boolean RepeatBoolean(boolean token) throws android.os.RemoteException
       {
         android.os.Parcel _data = android.os.Parcel.obtain();
@@ -1259,7 +1247,6 @@ public interface ITestService extends android.os.IInterface
         return _result;
       }
       // Test that arrays work as parameters and return types.
-
       @Override public boolean[] ReverseBoolean(boolean[] input, boolean[] repeated) throws android.os.RemoteException
       {
         android.os.Parcel _data = android.os.Parcel.obtain();
@@ -1591,7 +1578,6 @@ public interface ITestService extends android.os.IInterface
         return _result;
       }
       // Test that clients can send and receive Binders.
-
       @Override public android.aidl.tests.INamedCallback GetOtherTestService(java.lang.String name) throws android.os.RemoteException
       {
         android.os.Parcel _data = android.os.Parcel.obtain();
@@ -1640,7 +1626,6 @@ public interface ITestService extends android.os.IInterface
         return _result;
       }
       // Test that List<T> types work correctly.
-
       @Override public java.util.List<java.lang.String> ReverseStringList(java.util.List<java.lang.String> input, java.util.List<java.lang.String> repeated) throws android.os.RemoteException
       {
         android.os.Parcel _data = android.os.Parcel.obtain();
@@ -1730,7 +1715,6 @@ public interface ITestService extends android.os.IInterface
         return _result;
       }
       // Test that service specific exceptions work correctly.
-
       @Override public void ThrowServiceException(int code) throws android.os.RemoteException
       {
         android.os.Parcel _data = android.os.Parcel.obtain();
@@ -1753,7 +1737,6 @@ public interface ITestService extends android.os.IInterface
         }
       }
       // Test nullability
-
       @Override public int[] RepeatNullableIntArray(int[] input) throws android.os.RemoteException
       {
         android.os.Parcel _data = android.os.Parcel.obtain();
@@ -1969,7 +1952,6 @@ public interface ITestService extends android.os.IInterface
         }
       }
       // Test utf8 decoding from utf16 wire format
-
       @Override public java.lang.String RepeatUtf8CppString(java.lang.String token) throws android.os.RemoteException
       {
         android.os.Parcel _data = android.os.Parcel.obtain();
@@ -2125,7 +2107,6 @@ public interface ITestService extends android.os.IInterface
       }
       // Since this paracelable has clearly defined default values, it would be
       // inefficient to use an IPC to fill it out in practice.
-
       @Override public void FillOutStructuredParcelable(android.aidl.tests.StructuredParcelable parcel) throws android.os.RemoteException
       {
         android.os.Parcel _data = android.os.Parcel.obtain();
@@ -2201,7 +2182,6 @@ public interface ITestService extends android.os.IInterface
         return _result;
       }
       // Retrieve the ICppJavaTests if the server supports it
-
       @Override public android.os.IBinder GetCppJavaTests() throws android.os.RemoteException
       {
         android.os.Parcel _data = android.os.Parcel.obtain();
@@ -2405,11 +2385,9 @@ public interface ITestService extends android.os.IInterface
   // the first in this interface, it can keep the
   // "::android::IBinder::FIRST_CALL_TRANSACTION + 0" value and allow
   // methods to be added and removed.
-
   public int UnimplementedMethod(int arg) throws android.os.RemoteException;
   public void TestOneway() throws android.os.RemoteException;
   // Test that primitives work as parameters and return types.
-
   public boolean RepeatBoolean(boolean token) throws android.os.RemoteException;
   public byte RepeatByte(byte token) throws android.os.RemoteException;
   public char RepeatChar(char token) throws android.os.RemoteException;
@@ -2422,7 +2400,6 @@ public interface ITestService extends android.os.IInterface
   public int RepeatIntEnum(int token) throws android.os.RemoteException;
   public long RepeatLongEnum(long token) throws android.os.RemoteException;
   // Test that arrays work as parameters and return types.
-
   public boolean[] ReverseBoolean(boolean[] input, boolean[] repeated) throws android.os.RemoteException;
   public byte[] ReverseByte(byte[] input, byte[] repeated) throws android.os.RemoteException;
   public char[] ReverseChar(char[] input, char[] repeated) throws android.os.RemoteException;
@@ -2435,19 +2412,15 @@ public interface ITestService extends android.os.IInterface
   public int[] ReverseIntEnum(int[] input, int[] repeated) throws android.os.RemoteException;
   public long[] ReverseLongEnum(long[] input, long[] repeated) throws android.os.RemoteException;
   // Test that clients can send and receive Binders.
-
   public android.aidl.tests.INamedCallback GetOtherTestService(java.lang.String name) throws android.os.RemoteException;
   public boolean VerifyName(android.aidl.tests.INamedCallback service, java.lang.String name) throws android.os.RemoteException;
   // Test that List<T> types work correctly.
-
   public java.util.List<java.lang.String> ReverseStringList(java.util.List<java.lang.String> input, java.util.List<java.lang.String> repeated) throws android.os.RemoteException;
   public android.os.ParcelFileDescriptor RepeatParcelFileDescriptor(android.os.ParcelFileDescriptor read) throws android.os.RemoteException;
   public android.os.ParcelFileDescriptor[] ReverseParcelFileDescriptorArray(android.os.ParcelFileDescriptor[] input, android.os.ParcelFileDescriptor[] repeated) throws android.os.RemoteException;
   // Test that service specific exceptions work correctly.
-
   public void ThrowServiceException(int code) throws android.os.RemoteException;
   // Test nullability
-
   public int[] RepeatNullableIntArray(int[] input) throws android.os.RemoteException;
   public byte[] RepeatNullableByteEnumArray(byte[] input) throws android.os.RemoteException;
   public int[] RepeatNullableIntEnumArray(int[] input) throws android.os.RemoteException;
@@ -2458,7 +2431,6 @@ public interface ITestService extends android.os.IInterface
   public void TakesAnIBinder(android.os.IBinder input) throws android.os.RemoteException;
   public void TakesANullableIBinder(android.os.IBinder input) throws android.os.RemoteException;
   // Test utf8 decoding from utf16 wire format
-
   public java.lang.String RepeatUtf8CppString(java.lang.String token) throws android.os.RemoteException;
   public java.lang.String RepeatNullableUtf8CppString(java.lang.String token) throws android.os.RemoteException;
   public java.lang.String[] ReverseUtf8CppString(java.lang.String[] input, java.lang.String[] repeated) throws android.os.RemoteException;
@@ -2467,12 +2439,10 @@ public interface ITestService extends android.os.IInterface
   public android.aidl.tests.INamedCallback GetCallback(boolean return_null) throws android.os.RemoteException;
   // Since this paracelable has clearly defined default values, it would be
   // inefficient to use an IPC to fill it out in practice.
-
   public void FillOutStructuredParcelable(android.aidl.tests.StructuredParcelable parcel) throws android.os.RemoteException;
   public android.aidl.tests.IOldName GetOldNameInterface() throws android.os.RemoteException;
   public android.aidl.tests.INewName GetNewNameInterface() throws android.os.RemoteException;
   // Retrieve the ICppJavaTests if the server supports it
-
   public android.os.IBinder GetCppJavaTests() throws android.os.RemoteException;
   public byte getBackendType() throws android.os.RemoteException;
 }

@@ -4,115 +4,62 @@
 package android.aidl.tests;
 public class StructuredParcelable implements android.os.Parcelable
 {
-
   public int[] shouldContainThreeFs;
-
   public int f = 0;
-
   public java.lang.String shouldBeJerry;
-
   public byte shouldBeByteBar;
-
   public int shouldBeIntBar;
-
   public long shouldBeLongBar;
-
   public byte[] shouldContainTwoByteFoos;
-
   public int[] shouldContainTwoIntFoos;
-
   public long[] shouldContainTwoLongFoos;
-
   public java.lang.String stringDefaultsToFoo = "foo";
-
   public byte byteDefaultsToFour = 4;
-
   public int intDefaultsToFive = 5;
-
   public long longDefaultsToNegativeSeven = -7L;
-
   public boolean booleanDefaultsToTrue = true;
-
   public char charDefaultsToC = 'C';
-
   public float floatDefaultsToPi = 3.140000f;
-
   public double doubleWithDefault = -314000000000000000.000000;
-
   public int[] arrayDefaultsTo123 = {1, 2, 3};
-
   public int[] arrayDefaultsToEmpty = {};
-
   public boolean boolDefault = false;
-
   public byte byteDefault = 0;
-
   public int intDefault = 0;
-
   public long longDefault = 0L;
-
   public float floatDefault = 0.000000f;
-
   public double doubleDefault = 0.000000;
   // parse checks only
-
   public double checkDoubleFromFloat = 3.140000;
-
   public java.lang.String[] checkStringArray1 = {"a", "b"};
-
   public java.lang.String[] checkStringArray2 = {"a", "b"};
   // Add test to verify corner cases
-
   public int int32_min = -2147483648;
-
   public int int32_max = 2147483647;
-
   public long int64_max = 9223372036854775807L;
-
   public int hexInt32_neg_1 = -1;
-
   public android.os.IBinder ibinder;
   // Constant expressions that evaluate to 1
-
   public int[] int32_1 = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-
   public long[] int64_1 = {1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L};
-
   public int hexInt32_pos_1 = 1;
-
   public int hexInt64_pos_1 = 1;
-
   public int const_exprs_1;
-
   public int const_exprs_2;
-
   public int const_exprs_3;
-
   public int const_exprs_4;
-
   public int const_exprs_5;
-
   public int const_exprs_6;
-
   public int const_exprs_7;
-
   public int const_exprs_8;
-
   public int const_exprs_9;
-
   public int const_exprs_10;
   // String expressions
-
   public java.lang.String addString1 = "hello world!";
-
   public java.lang.String addString2 = "The quick brown fox jumps over the lazy dog.";
-
   public int shouldSetBit0AndBit2 = 0;
-
   public android.aidl.tests.Union u;
-
   public android.aidl.tests.Union shouldBeConstS1;
-
   public int defaultWithFoo = android.aidl.tests.IntEnum.FOO;
   public static final android.os.Parcelable.Creator<StructuredParcelable> CREATOR = new android.os.Parcelable.Creator<StructuredParcelable>() {
     @Override
