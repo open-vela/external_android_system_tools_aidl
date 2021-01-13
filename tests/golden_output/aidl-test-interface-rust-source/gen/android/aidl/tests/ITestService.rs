@@ -11,6 +11,64 @@ declare_binder_interface! {
 }
 pub trait ITestService: binder::Interface + Send {
   fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.ITestService" }
+  fn UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<i32>;
+  fn TestOneway(&self) -> binder::public_api::Result<()>;
+  fn RepeatBoolean(&self, _arg_token: bool) -> binder::public_api::Result<bool>;
+  fn RepeatByte(&self, _arg_token: i8) -> binder::public_api::Result<i8>;
+  fn RepeatChar(&self, _arg_token: u16) -> binder::public_api::Result<u16>;
+  fn RepeatInt(&self, _arg_token: i32) -> binder::public_api::Result<i32>;
+  fn RepeatLong(&self, _arg_token: i64) -> binder::public_api::Result<i64>;
+  fn RepeatFloat(&self, _arg_token: f32) -> binder::public_api::Result<f32>;
+  fn RepeatDouble(&self, _arg_token: f64) -> binder::public_api::Result<f64>;
+  fn RepeatString(&self, _arg_token: &str) -> binder::public_api::Result<String>;
+  fn RepeatByteEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>;
+  fn RepeatIntEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>;
+  fn RepeatLongEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>;
+  fn ReverseBoolean(&self, _arg_input: &[bool], _arg_repeated: &mut Vec<bool>) -> binder::public_api::Result<Vec<bool>>;
+  fn ReverseByte(&self, _arg_input: &[u8], _arg_repeated: &mut Vec<u8>) -> binder::public_api::Result<Vec<u8>>;
+  fn ReverseChar(&self, _arg_input: &[u16], _arg_repeated: &mut Vec<u16>) -> binder::public_api::Result<Vec<u16>>;
+  fn ReverseInt(&self, _arg_input: &[i32], _arg_repeated: &mut Vec<i32>) -> binder::public_api::Result<Vec<i32>>;
+  fn ReverseLong(&self, _arg_input: &[i64], _arg_repeated: &mut Vec<i64>) -> binder::public_api::Result<Vec<i64>>;
+  fn ReverseFloat(&self, _arg_input: &[f32], _arg_repeated: &mut Vec<f32>) -> binder::public_api::Result<Vec<f32>>;
+  fn ReverseDouble(&self, _arg_input: &[f64], _arg_repeated: &mut Vec<f64>) -> binder::public_api::Result<Vec<f64>>;
+  fn ReverseString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>>;
+  fn ReverseByteEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>;
+  fn ReverseIntEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>;
+  fn ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>;
+  fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>;
+  fn VerifyName(&self, _arg_service: &dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback, _arg_name: &str) -> binder::public_api::Result<bool>;
+  fn ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>>;
+  fn RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor) -> binder::public_api::Result<binder::parcel::ParcelFileDescriptor>;
+  fn ReverseParcelFileDescriptorArray(&self, _arg_input: &[binder::parcel::ParcelFileDescriptor], _arg_repeated: &mut Vec<Option<binder::parcel::ParcelFileDescriptor>>) -> binder::public_api::Result<Vec<binder::parcel::ParcelFileDescriptor>>;
+  fn ThrowServiceException(&self, _arg_code: i32) -> binder::public_api::Result<()>;
+  fn RepeatNullableIntArray(&self, _arg_input: Option<&[i32]>) -> binder::public_api::Result<Option<Vec<i32>>>;
+  fn RepeatNullableByteEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>>;
+  fn RepeatNullableIntEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>>;
+  fn RepeatNullableLongEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>>;
+  fn RepeatNullableString(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>>;
+  fn RepeatNullableStringList(&self, _arg_input: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<String>>>>;
+  fn RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>>;
+  fn TakesAnIBinder(&self, _arg_input: &binder::SpIBinder) -> binder::public_api::Result<()>;
+  fn TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>) -> binder::public_api::Result<()>;
+  fn RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<String>;
+  fn RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>) -> binder::public_api::Result<Option<String>>;
+  fn ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>>;
+  fn ReverseNullableUtf8CppString(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>>;
+  fn ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>>;
+  fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>;
+  fn FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<()>;
+  fn GetOldNameInterface(&self) -> binder::public_api::Result<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>>;
+  fn GetNewNameInterface(&self) -> binder::public_api::Result<Box<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>>;
+  fn GetCppJavaTests(&self) -> binder::public_api::Result<Option<binder::SpIBinder>>;
+  fn getBackendType(&self) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType>;
+  fn getDefaultImpl() -> ITestServiceDefaultRef where Self: Sized {
+    DEFAULT_IMPL.lock().unwrap().clone()
+  }
+  fn setDefaultImpl(d: ITestServiceDefaultRef) -> ITestServiceDefaultRef where Self: Sized {
+    std::mem::replace(&mut *DEFAULT_IMPL.lock().unwrap(), d)
+  }
+}
+pub trait ITestServiceDefault: Send + Sync {
   fn UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<i32> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
@@ -161,12 +219,6 @@ pub trait ITestService: binder::Interface + Send {
   fn getBackendType(&self) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
-  fn getDefaultImpl() -> ITestServiceDefault where Self: Sized {
-    DEFAULT_IMPL.lock().unwrap().clone()
-  }
-  fn setDefaultImpl(d: ITestServiceDefault) -> ITestServiceDefault where Self: Sized {
-    std::mem::replace(&mut *DEFAULT_IMPL.lock().unwrap(), d)
-  }
 }
 pub mod transactions {
   #[allow(unused_imports)] use binder::IBinder;
@@ -221,10 +273,10 @@ pub mod transactions {
   pub const GetCppJavaTests: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 48;
   pub const getBackendType: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 49;
 }
-pub type ITestServiceDefault = Option<std::sync::Arc<dyn ITestService + Sync>>;
+pub type ITestServiceDefaultRef = Option<std::sync::Arc<dyn ITestServiceDefault>>;
 use lazy_static::lazy_static;
 lazy_static! {
-  static ref DEFAULT_IMPL: std::sync::Mutex<ITestServiceDefault> = std::sync::Mutex::new(None);
+  static ref DEFAULT_IMPL: std::sync::Mutex<ITestServiceDefaultRef> = std::sync::Mutex::new(None);
 }
 pub const TEST_CONSTANT: i32 = 42;
 pub const TEST_CONSTANT2: i32 = -42;

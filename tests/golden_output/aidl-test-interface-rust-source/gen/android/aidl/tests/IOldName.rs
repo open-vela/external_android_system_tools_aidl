@@ -11,24 +11,27 @@ declare_binder_interface! {
 }
 pub trait IOldName: binder::Interface + Send {
   fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.IOldName" }
-  fn RealName(&self) -> binder::public_api::Result<String> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn getDefaultImpl() -> IOldNameDefault where Self: Sized {
+  fn RealName(&self) -> binder::public_api::Result<String>;
+  fn getDefaultImpl() -> IOldNameDefaultRef where Self: Sized {
     DEFAULT_IMPL.lock().unwrap().clone()
   }
-  fn setDefaultImpl(d: IOldNameDefault) -> IOldNameDefault where Self: Sized {
+  fn setDefaultImpl(d: IOldNameDefaultRef) -> IOldNameDefaultRef where Self: Sized {
     std::mem::replace(&mut *DEFAULT_IMPL.lock().unwrap(), d)
+  }
+}
+pub trait IOldNameDefault: Send + Sync {
+  fn RealName(&self) -> binder::public_api::Result<String> {
+    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
 }
 pub mod transactions {
   #[allow(unused_imports)] use binder::IBinder;
   pub const RealName: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 0;
 }
-pub type IOldNameDefault = Option<std::sync::Arc<dyn IOldName + Sync>>;
+pub type IOldNameDefaultRef = Option<std::sync::Arc<dyn IOldNameDefault>>;
 use lazy_static::lazy_static;
 lazy_static! {
-  static ref DEFAULT_IMPL: std::sync::Mutex<IOldNameDefault> = std::sync::Mutex::new(None);
+  static ref DEFAULT_IMPL: std::sync::Mutex<IOldNameDefaultRef> = std::sync::Mutex::new(None);
 }
 pub(crate) mod mangled { pub use super::IOldName as _7_android_4_aidl_5_tests_8_IOldName; }
 impl IOldName for BpOldName {
