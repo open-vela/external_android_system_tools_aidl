@@ -4,51 +4,28 @@
 package android.aidl.tests;
 public class ParcelableForToString implements android.os.Parcelable
 {
-
   public int intValue = 0;
-
   public int[] intArray;
-
   public long longValue = 0L;
-
   public long[] longArray;
-
   public double doubleValue = 0.000000;
-
   public double[] doubleArray;
-
   public float floatValue = 0.000000f;
-
   public float[] floatArray;
-
   public byte byteValue = 0;
-
   public byte[] byteArray;
-
   public boolean booleanValue = false;
-
   public boolean[] booleanArray;
-
   public java.lang.String stringValue;
-
   public java.lang.String[] stringArray;
-
   public java.util.List<java.lang.String> stringList;
-
   public android.aidl.tests.OtherParcelableForToString parcelableValue;
-
   public android.aidl.tests.OtherParcelableForToString[] parcelableArray;
-
   public int enumValue;
-
   public int[] enumArray;
-
   public java.lang.String[] nullArray;
-
   public java.util.List<java.lang.String> nullList;
-
   public android.aidl.tests.GenericStructuredParcelable<Integer,android.aidl.tests.StructuredParcelable,Integer> parcelableGeneric;
-
   public android.aidl.tests.Union unionValue;
   public static final android.os.Parcelable.Creator<ParcelableForToString> CREATOR = new android.os.Parcelable.Creator<ParcelableForToString>() {
     @Override

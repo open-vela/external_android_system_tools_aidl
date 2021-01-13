@@ -4,13 +4,9 @@
 package android.aidl.loggable;
 public class Data implements android.os.Parcelable
 {
-
   public int num = 0;
-
   public java.lang.String str;
-
   public android.aidl.loggable.Union nestedUnion;
-
   public byte nestedEnum;
   public static final android.os.Parcelable.Creator<Data> CREATOR = new android.os.Parcelable.Creator<Data>() {
     @Override

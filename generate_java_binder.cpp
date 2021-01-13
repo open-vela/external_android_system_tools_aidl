@@ -393,13 +393,8 @@ static void generate_write_to_parcel(const AidlTypeSpecifier& type,
 void generate_constant_declarations(CodeWriter& out, const AidlDefinedType& type) {
   for (const auto& constant : type.GetConstantDeclarations()) {
     const AidlTypeSpecifier& type = constant->GetType();
-    auto comment = base::Trim(constant->GetType().GetComments());
-    if (comment.length() != 0) {
-      out << comment << "\n";
-    }
-    for (const auto& annotation : JavaAnnotationsFor(*constant)) {
-      out << annotation << "\n";
-    }
+    out << GenerateComments(*constant);
+    out << GenerateAnnotations(*constant);
     out << "public static final " << type.Signature() << " " << constant->GetName() << " = "
         << constant->ValueString(ConstantValueDecorator) << ";\n";
   }
@@ -408,7 +403,7 @@ void generate_constant_declarations(CodeWriter& out, const AidlDefinedType& type
 static std::shared_ptr<Method> generate_interface_method(const AidlMethod& method,
                                                          const AidlTypenames& typenames) {
   auto decl = std::make_shared<Method>();
-  decl->comment = method.GetComments();
+  decl->comment = GenerateComments(method);
   decl->modifiers = PUBLIC;
   decl->returnType = JavaSignatureOf(method.GetType(), typenames);
   decl->name = method.GetName();
@@ -589,7 +584,7 @@ static std::shared_ptr<Method> generate_proxy_method(
     bool oneway, std::shared_ptr<ProxyClass> proxyClass, const AidlTypenames& typenames,
     const Options& options) {
   auto proxy = std::make_shared<Method>();
-  proxy->comment = method.GetComments();
+  proxy->comment = GenerateComments(method);
   proxy->modifiers = PUBLIC | OVERRIDE;
   proxy->returnType = JavaSignatureOf(method.GetType(), typenames);
   proxy->name = method.GetName();
@@ -1008,7 +1003,7 @@ static void compute_outline_methods(const AidlInterface* iface,
 static shared_ptr<ClassElement> generate_default_impl_method(const AidlMethod& method,
                                                              const AidlTypenames& typenames) {
   auto default_method = std::make_shared<Method>();
-  default_method->comment = method.GetComments();
+  default_method->comment = GenerateComments(method);
   default_method->modifiers = PUBLIC | OVERRIDE;
   default_method->returnType = JavaSignatureOf(method.GetType(), typenames);
   default_method->name = method.GetName();
@@ -1080,7 +1075,7 @@ std::unique_ptr<Class> generate_binder_interface_class(const AidlInterface* ifac
                                                        const Options& options) {
   // the interface class
   auto interface = std::make_unique<Class>();
-  interface->comment = iface->GetComments();
+  interface->comment = GenerateComments(*iface);
   interface->modifiers = PUBLIC;
   interface->what = Class::INTERFACE;
   interface->type = iface->GetCanonicalName();
