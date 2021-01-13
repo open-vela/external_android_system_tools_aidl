@@ -1426,7 +1426,11 @@ TEST_F(AidlTest, ApiDump) {
       "    IFoo foo3(IFoo foo);\n"
       "    Data getData();\n"
       "    // @hide\n"
+      "    /** blahblah\n"
+      "        @deprecated\n"
+      "          reason why... */\n"
       "    const int A = 1;\n"
+      "    // @deprecated do not use\n"
       "    const String STR = \"Hello\";\n"
       "}\n");
   io_delegate_.SetFileContents("foo/bar/Data.aidl",
@@ -1460,7 +1464,9 @@ interface IFoo {
   foo.bar.IFoo foo3(foo.bar.IFoo foo);
   foo.bar.Data getData();
   /* @hide */
+  /* @deprecated reason why... */
   const int A = 1;
+  /* @deprecated do not use */
   const String STR = "Hello";
 }
 )"));
