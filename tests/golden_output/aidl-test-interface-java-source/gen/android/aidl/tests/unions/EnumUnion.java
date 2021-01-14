@@ -3,6 +3,7 @@
  */
 package android.aidl.tests.unions;
 
+
 public final class EnumUnion implements android.os.Parcelable {
   // tags for union fields
   public final static int intEnum = 0;  // android.aidl.tests.IntEnum intEnum;

@@ -42,13 +42,9 @@ void generate_enum(const CodeWriterPtr& code_writer, const AidlEnumDeclaration* 
 
 void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypenames& typenames);
 
-void generate_constant_declarations(CodeWriter& out, const AidlDefinedType& type);
-
-std::string GenerateComments(const AidlCommentable& node);
-
-std::string GenerateAnnotations(const AidlNode& node);
-
 std::vector<std::string> JavaAnnotationsFor(const AidlNode& a);
+
+void generate_constant_declarations(CodeWriter& out, const AidlDefinedType& type);
 
 }  // namespace java
 }  // namespace aidl
