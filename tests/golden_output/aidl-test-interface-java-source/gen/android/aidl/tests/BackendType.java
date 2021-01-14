@@ -2,7 +2,6 @@
  * This file is auto-generated.  DO NOT MODIFY.
  */
 package android.aidl.tests;
-
 public @interface BackendType {
   public static final byte CPP = 0;
   public static final byte JAVA = 1;

@@ -4,7 +4,6 @@
 package android.aidl.tests;
 public class OtherParcelableForToString implements android.os.Parcelable
 {
-
   public java.lang.String field;
   public static final android.os.Parcelable.Creator<OtherParcelableForToString> CREATOR = new android.os.Parcelable.Creator<OtherParcelableForToString>() {
     @Override

@@ -2,7 +2,6 @@
  * This file is auto-generated.  DO NOT MODIFY.
  */
 package android.aidl.tests;
-
 public @interface ConstantExpressionEnum {
   // Should be all true / ones.
   // dec literals are either int or long

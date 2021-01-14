@@ -29,7 +29,6 @@
 #include "aidl_to_cpp_common.h"
 #include "aidl_to_rust.h"
 #include "code_writer.h"
-#include "comments.h"
 #include "logging.h"
 
 using android::base::Join;
@@ -314,13 +313,10 @@ void GenerateServerItems(CodeWriter& out, const AidlInterface* iface,
   out << "}\n";
 }
 
-void GenerateDeprecated(CodeWriter& out, const AidlCommentable& type) {
-  if (auto deprecated = FindDeprecated(type.GetComments()); deprecated.has_value()) {
-    if (deprecated->note.empty()) {
-      out << "#[deprecated]\n";
-    } else {
-      out << "#[deprecated = " << QuotedEscape(deprecated->note) << "]\n";
-    }
+template <typename Type>
+void GenerateDeprecated(CodeWriter& out, const Type& type) {
+  if (type.IsDeprecated()) {
+    out << "#[deprecated]\n";
   }
 }
 
