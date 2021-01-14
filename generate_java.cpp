@@ -289,6 +289,22 @@ namespace android {
 namespace aidl {
 namespace java {
 
+std::string GenerateComments(const AidlCommentable& node) {
+  std::string comments = node.GetComments();
+  if (!comments.empty() && comments.back() != '\n') {
+    comments += '\n';
+  }
+  return comments;
+}
+
+std::string GenerateAnnotations(const AidlNode& node) {
+  std::string result;
+  for (const auto& a : JavaAnnotationsFor(node)) {
+    result += a + "\n";
+  }
+  return result;
+}
+
 bool generate_java_interface(const string& filename, const AidlInterface* iface,
                              const AidlTypenames& typenames, const IoDelegate& io_delegate,
                              const Options& options) {
@@ -360,7 +376,7 @@ bool generate_java(const std::string& filename, const AidlDefinedType* defined_t
 std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
     const AidlStructuredParcelable* parcel, const AidlTypenames& typenames) {
   auto parcel_class = std::make_unique<Class>();
-  parcel_class->comment = parcel->GetComments();
+  parcel_class->comment = GenerateComments(*parcel);
   parcel_class->modifiers = PUBLIC;
   parcel_class->what = Class::CLASS;
   parcel_class->type = parcel->GetCanonicalName();
@@ -373,10 +389,8 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
 
   for (const auto& variable : parcel->GetFields()) {
     std::ostringstream out;
-    out << variable->GetType().GetComments() << "\n";
-    for (const auto& a : JavaAnnotationsFor(*variable)) {
-      out << a << "\n";
-    }
+    out << GenerateComments(*variable);
+    out << GenerateAnnotations(*variable);
     out << "public ";
 
     if (variable->GetType().GetName() == "ParcelableHolder" || parcel->IsJavaOnlyImmutable()) {
@@ -648,14 +662,13 @@ void generate_enum(const CodeWriterPtr& code_writer, const AidlEnumDeclaration* 
       " */\n");
 
   code_writer->Write("package %s;\n", enum_decl->GetPackage().c_str());
-  code_writer->Write("%s\n", enum_decl->GetComments().c_str());
-  for (const std::string& annotation : JavaAnnotationsFor(*enum_decl)) {
-    code_writer->Write("%s\n", annotation.c_str());
-  }
+  (*code_writer) << GenerateComments(*enum_decl);
+  (*code_writer) << GenerateAnnotations(*enum_decl);
   code_writer->Write("public @interface %s {\n", enum_decl->GetName().c_str());
   code_writer->Indent();
   for (const auto& enumerator : enum_decl->GetEnumerators()) {
-    code_writer->Write("%s", enumerator->GetComments().c_str());
+    (*code_writer) << GenerateComments(*enumerator);
+    (*code_writer) << GenerateAnnotations(*enumerator);
     code_writer->Write(
         "public static final %s %s = %s;\n",
         JavaSignatureOf(enum_decl->GetBackingType(), typenames).c_str(),
@@ -678,10 +691,8 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
 
   out << "package " + decl->GetPackage() + ";\n";
   out << "\n";
-  out << decl->GetComments() << "\n";
-  for (const auto& annotation : JavaAnnotationsFor(*decl)) {
-    out << annotation << "\n";
-  }
+  out << GenerateComments(*decl);
+  out << GenerateAnnotations(*decl);
 
   out << "public final class " + clazz + " implements android.os.Parcelable {\n";
   out.Indent();
@@ -689,9 +700,6 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   size_t tag_index = 0;
   out << "// tags for union fields\n";
   for (const auto& variable : decl->GetFields()) {
-    for (const auto& annotation : JavaAnnotationsFor(*variable)) {
-      out << annotation << "\n";
-    }
     auto signature = variable->Signature() + ";";
     out << "public final static " + tag_type + " " + variable->GetName() + " = " +
                std::to_string(tag_index++) + ";  // " + signature + "\n";
@@ -741,12 +749,14 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
 
   // value ctor, getter, setter(for mutable) for each field
   for (const auto& variable : decl->GetFields()) {
+    out << "// " + variable->Signature() + ";\n\n";
+
     auto var_name = variable->GetName();
     auto var_type = JavaSignatureOf(variable->GetType(), typenames);
 
-    out << "// " + variable->Signature() + ";\n";
     // value ctor
-    out << variable->GetType().GetComments() + "\n";
+    out << GenerateComments(*variable);
+    out << GenerateAnnotations(*variable);
     out << "public static " + clazz + " " + var_name + "(" + var_type + " _value) {\n";
     out.Indent();
     out << "return new " + clazz + "(" + var_name + ", _value);\n";
