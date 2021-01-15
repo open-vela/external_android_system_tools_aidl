@@ -23,6 +23,7 @@
 #include <unordered_map>
 
 #include "ast_cpp.h"
+#include "comments.h"
 #include "logging.h"
 #include "os.h"
 
@@ -420,6 +421,16 @@ void GenerateToString(CodeWriter& out, const AidlUnionDecl& parcelable) {
   out << "return os.str();\n";
   out.Dedent();
   out << "}\n";
+}
+
+std::string GetDeprecatedAttribute(const AidlCommentable& type) {
+  if (auto deprecated = FindDeprecated(type.GetComments()); deprecated.has_value()) {
+    if (deprecated->note.empty()) {
+      return "__attribute__((deprecated))";
+    }
+    return "__attribute__((deprecated(" + QuotedEscape(deprecated->note) + ")))";
+  }
+  return "";
 }
 
 const vector<string> UnionWriter::headers{
