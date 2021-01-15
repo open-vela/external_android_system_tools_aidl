@@ -3120,6 +3120,14 @@ TEST_F(AidlTest, ImmutableParcelableFieldNameRestriction) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
+TEST_P(AidlTest, UnionInUnion) {
+  import_paths_.insert(".");
+  io_delegate_.SetFileContents("Bar.aidl", "union Bar { int n = 42; long l; }");
+  CaptureStderr();
+  EXPECT_NE(nullptr, Parse("Foo.aidl", "union Foo { Bar b; int n; }", typenames_, GetLanguage()));
+  EXPECT_THAT("", GetCapturedStderr());
+}
+
 TEST_P(AidlTest, UnionRejectsEmptyDecl) {
   const string method = "package a; union Foo {}";
   const string expected_stderr = "ERROR: a/Foo.aidl:1.17-21: The union 'Foo' has no fields.\n";
