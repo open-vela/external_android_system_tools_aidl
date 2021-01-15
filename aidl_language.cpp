@@ -33,6 +33,7 @@
 #include <android-base/strings.h>
 
 #include "aidl_language_y.h"
+#include "comments.h"
 #include "logging.h"
 
 #include "aidl.h"
@@ -69,16 +70,8 @@ bool IsJavaKeyword(const char* str) {
   return std::find(kJavaKeywords.begin(), kJavaKeywords.end(), str) != kJavaKeywords.end();
 }
 
-void AddHideComment(CodeWriter* writer) {
-  writer->Write("/* @hide */\n");
-}
-
 inline bool HasHideComment(const std::string& comment) {
   return std::regex_search(comment, std::regex("@hide\\b"));
-}
-
-inline bool HasDeprecatedComment(const std::string& comment) {
-  return std::regex_search(comment, std::regex("@deprecated\\b"));
 }
 }  // namespace
 
@@ -768,7 +761,20 @@ bool AidlCommentable::IsHidden() const {
 }
 
 bool AidlCommentable::IsDeprecated() const {
-  return HasDeprecatedComment(GetComments());
+  return android::aidl::FindDeprecated(GetComments()).has_value();
+}
+
+// Dumps comment only if its has  meaningful tags.
+void AidlCommentable::Dump(CodeWriter& out) const {
+  using namespace android::aidl;
+  if (IsHidden()) {
+    out << "/* @hide */\n";
+  }
+  if (auto deprecated = FindDeprecated(GetComments()); deprecated) {
+    out << "/* @deprecated ";
+    if (!deprecated->note.empty()) out << deprecated->note << " ";
+    out << "*/\n";
+  }
 }
 
 AidlMember::AidlMember(const AidlLocation& location, const std::string& comments)
@@ -893,10 +899,23 @@ std::string AidlDefinedType::GetCanonicalName() const {
 }
 
 void AidlDefinedType::DumpHeader(CodeWriter* writer) const {
-  if (this->IsHidden()) {
-    AddHideComment(writer);
-  }
+  AidlCommentable::Dump(*writer);
   DumpAnnotations(writer);
+}
+
+void AidlDefinedType::DumpMembers(CodeWriter& out) const {
+  for (const auto& method : GetMethods()) {
+    method->AidlCommentable::Dump(out);
+    out << method->ToString() << ";\n";
+  }
+  for (const auto& field : GetFields()) {
+    field->AidlCommentable::Dump(out);
+    out << field->ToString() << ";\n";
+  }
+  for (const auto& constdecl : GetConstantDeclarations()) {
+    constdecl->AidlCommentable::Dump(out);
+    out << constdecl->ToString() << ";\n";
+  }
 }
 
 bool AidlDefinedType::CheckValidWithMembers(const AidlTypenames& typenames) const {
@@ -1019,18 +1038,7 @@ void AidlStructuredParcelable::Dump(CodeWriter* writer) const {
   DumpHeader(writer);
   writer->Write("parcelable %s {\n", GetName().c_str());
   writer->Indent();
-  for (const auto& field : GetFields()) {
-    if (field->IsHidden()) {
-      AddHideComment(writer);
-    }
-    writer->Write("%s;\n", field->ToString().c_str());
-  }
-  for (const auto& constdecl : GetConstantDeclarations()) {
-    if (constdecl->IsHidden()) {
-      AddHideComment(writer);
-    }
-    writer->Write("%s;\n", constdecl->ToString().c_str());
-  }
+  DumpMembers(*writer);
   writer->Dedent();
   writer->Write("}\n");
 }
@@ -1285,18 +1293,7 @@ void AidlUnionDecl::Dump(CodeWriter* writer) const {
   DumpHeader(writer);
   writer->Write("union %s {\n", GetName().c_str());
   writer->Indent();
-  for (const auto& field : GetFields()) {
-    if (field->IsHidden()) {
-      AddHideComment(writer);
-    }
-    writer->Write("%s;\n", field->ToString().c_str());
-  }
-  for (const auto& constdecl : GetConstantDeclarations()) {
-    if (constdecl->IsHidden()) {
-      AddHideComment(writer);
-    }
-    writer->Write("%s;\n", constdecl->ToString().c_str());
-  }
+  DumpMembers(*writer);
   writer->Dedent();
   writer->Write("}\n");
 }
@@ -1397,18 +1394,7 @@ void AidlInterface::Dump(CodeWriter* writer) const {
   DumpHeader(writer);
   writer->Write("interface %s {\n", GetName().c_str());
   writer->Indent();
-  for (const auto& method : GetMethods()) {
-    if (method->IsHidden()) {
-      AddHideComment(writer);
-    }
-    writer->Write("%s;\n", method->ToString().c_str());
-  }
-  for (const auto& constdecl : GetConstantDeclarations()) {
-    if (constdecl->IsHidden()) {
-      AddHideComment(writer);
-    }
-    writer->Write("%s;\n", constdecl->ToString().c_str());
-  }
+  DumpMembers(*writer);
   writer->Dedent();
   writer->Write("}\n");
 }
