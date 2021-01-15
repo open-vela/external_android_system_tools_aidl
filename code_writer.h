@@ -59,5 +59,7 @@ class CodeWriter {
   bool start_of_line_ {true};
 };
 
+std::string QuotedEscape(const std::string& str);
+
 }  // namespace aidl
 }  // namespace android

@@ -71,6 +71,7 @@ cc_library_static {
         "ast_cpp.cpp",
         "ast_java.cpp",
         "code_writer.cpp",
+        "comments.cpp",
         "diagnostics.cpp",
         "generate_aidl_mappings.cpp",
         "generate_cpp.cpp",
