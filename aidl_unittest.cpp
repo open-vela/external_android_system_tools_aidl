@@ -740,14 +740,14 @@ TEST_P(AidlTest, SupportDeprecated) {
   };
 
   auto CheckDeprecated = [&](const std::string& filename, const std::string& contents,
-                             std::map<Options::Language, TestCase> expectation) {
+                             std::vector<std::pair<Options::Language, TestCase>> expectations) {
     io_delegate_.SetFileContents(filename, contents);
 
     auto options = Options::From("aidl --lang=" + to_string(GetLanguage()) + " " + filename +
                                  " --out=out --header_out=out");
     EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
-    if (auto it = expectation.find(GetLanguage()); it != expectation.end()) {
-      const auto& test_case = it->second;
+    for (const auto& [lang, test_case] : expectations) {
+      if (lang != GetLanguage()) continue;
       string output;
       EXPECT_TRUE(io_delegate_.GetWrittenContents(test_case.output_file, &output))
           << base::Join(io_delegate_.ListOutputFiles(), ",");
@@ -755,17 +755,48 @@ TEST_P(AidlTest, SupportDeprecated) {
     }
   };
 
-  CheckDeprecated("IFoo.aidl",
-                  "interface IFoo {\n"
-                  "  /** @deprecated use bar() */\n"
-                  "  List<String> foo();\n"
-                  "}",
-                  {
-                      {Options::Language::JAVA, {"out/IFoo.java", "@Deprecated"}},
-                      {Options::Language::CPP, {"out/IFoo.h", "__attribute__((deprecated"}},
-                      {Options::Language::NDK, {"out/aidl/IFoo.h", "__attribute__((deprecated"}},
-                      {Options::Language::RUST, {"out/IFoo.rs", "#[deprecated"}},
-                  });
+  // Emit escaped string for notes
+  CheckDeprecated(
+      "IFoo.aidl",
+      R"(interface IFoo {
+           /**
+            * @note asdf
+            * @deprecated a really long deprecation message
+            *
+            *    which is really long
+            * @param foo bar
+            */
+           List<String> foo();
+        })",
+      {
+          {Options::Language::JAVA, {"out/IFoo.java", "@Deprecated"}},
+          {Options::Language::CPP,
+           {"out/IFoo.h",
+            R"(__attribute__((deprecated("a really long deprecation message which is really long"))))"}},
+          {Options::Language::NDK,
+           {"out/aidl/IFoo.h",
+            R"(__attribute__((deprecated("a really long deprecation message which is really long"))))"}},
+          {Options::Language::RUST,
+           {"out/IFoo.rs",
+            R"(#[deprecated = "a really long deprecation message which is really long"])"}},
+      });
+
+  // In AIDL @deprecated can be in any style of comments
+  CheckDeprecated(
+      "IFoo.aidl",
+      "interface IFoo {\n"
+      "  // @deprecated use bar()\n"
+      "  List<String> foo();\n"
+      "}",
+      {
+          {Options::Language::JAVA, {"out/IFoo.java", "@Deprecated"}},
+          // TODO(b/177276893) @deprecated should be in javadoc style comments
+          // {Options::Language::JAVA, {"out/IFoo.java", "/** @deprecated use bar() */"}},
+          {Options::Language::CPP, {"out/IFoo.h", "__attribute__((deprecated(\"use bar()\")))"}},
+          {Options::Language::NDK,
+           {"out/aidl/IFoo.h", "__attribute__((deprecated(\"use bar()\")))"}},
+          {Options::Language::RUST, {"out/IFoo.rs", "#[deprecated = \"use bar()\"]"}},
+      });
 
   CheckDeprecated("Foo.aidl",
                   "parcelable Foo {\n"
@@ -1395,7 +1426,11 @@ TEST_F(AidlTest, ApiDump) {
       "    IFoo foo3(IFoo foo);\n"
       "    Data getData();\n"
       "    // @hide\n"
+      "    /** blahblah\n"
+      "        @deprecated\n"
+      "          reason why... */\n"
       "    const int A = 1;\n"
+      "    // @deprecated do not use\n"
       "    const String STR = \"Hello\";\n"
       "}\n");
   io_delegate_.SetFileContents("foo/bar/Data.aidl",
@@ -1429,7 +1464,9 @@ interface IFoo {
   foo.bar.IFoo foo3(foo.bar.IFoo foo);
   foo.bar.Data getData();
   /* @hide */
+  /* @deprecated reason why... */
   const int A = 1;
+  /* @deprecated do not use */
   const String STR = "Hello";
 }
 )"));
