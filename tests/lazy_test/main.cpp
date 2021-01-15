@@ -192,6 +192,20 @@ TEST_F(AidlLazyRegistrarTest, ForcedPersistenceTest) {
   }
 }
 
+TEST_F(AidlLazyRegistrarTest, ActiveServicesCountCallbackTest) {
+  sp<ILazyTestService> service;
+  service = waitForLazyTestService(serviceName);
+  ASSERT_TRUE(service->setCustomActiveServicesCountCallback().isOk());
+  service = nullptr;
+
+  std::cout << "Waiting " << SHUTDOWN_WAIT_TIME << " seconds before checking whether the "
+            << "service is still running." << std::endl;
+  IPCThreadState::self()->flushCommands();
+  sleep(SHUTDOWN_WAIT_TIME);
+
+  ASSERT_FALSE(isServiceRunning(serviceName)) << "Service failed to shut down.";
+}
+
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
 
