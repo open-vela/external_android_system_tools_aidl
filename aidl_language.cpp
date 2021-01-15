@@ -1169,9 +1169,9 @@ bool AidlStructuredParcelable::LanguageSpecificCheckValid(const AidlTypenames& t
 AidlEnumerator::AidlEnumerator(const AidlLocation& location, const std::string& name,
                                AidlConstantValue* value, const std::string& comments)
     : AidlNode(location),
+      AidlCommentable(comments),
       name_(name),
       value_(value),
-      comments_(comments),
       value_user_specified_(value != nullptr) {}
 
 bool AidlEnumerator::CheckValid(const AidlTypeSpecifier& enum_backing_type) const {
