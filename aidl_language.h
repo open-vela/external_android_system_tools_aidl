@@ -1052,7 +1052,7 @@ class AidlStructuredParcelable : public AidlParcelable {
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 };
 
-class AidlEnumerator : public AidlNode {
+class AidlEnumerator : public AidlNode, public AidlCommentable {
  public:
   AidlEnumerator(const AidlLocation& location, const std::string& name, AidlConstantValue* value,
                  const std::string& comments);
@@ -1066,7 +1066,6 @@ class AidlEnumerator : public AidlNode {
 
   const std::string& GetName() const { return name_; }
   AidlConstantValue* GetValue() const { return value_.get(); }
-  const std::string& GetComments() const { return comments_; }
   bool CheckValid(const AidlTypeSpecifier& enum_backing_type) const;
 
   string ValueString(const AidlTypeSpecifier& backing_type,
@@ -1083,7 +1082,6 @@ class AidlEnumerator : public AidlNode {
  private:
   const std::string name_;
   unique_ptr<AidlConstantValue> value_;
-  const std::string comments_;
   const bool value_user_specified_;
 };
 
