@@ -21,6 +21,8 @@
 namespace android {
 namespace aidl {
 
+bool HasHideInComments(const std::string& comments);
+
 struct Deprecated {
   std::string note;  // can be empty("")
 };

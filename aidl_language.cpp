@@ -69,10 +69,6 @@ bool IsJavaKeyword(const char* str) {
   };
   return std::find(kJavaKeywords.begin(), kJavaKeywords.end(), str) != kJavaKeywords.end();
 }
-
-inline bool HasHideComment(const std::string& comment) {
-  return std::regex_search(comment, std::regex("@hide\\b"));
-}
 }  // namespace
 
 AidlNode::AidlNode(const AidlLocation& location) : location_(location) {}
@@ -762,7 +758,7 @@ string AidlArgument::ToString() const {
 }
 
 bool AidlCommentable::IsHidden() const {
-  return HasHideComment(GetComments());
+  return android::aidl::HasHideInComments(GetComments());
 }
 
 bool AidlCommentable::IsDeprecated() const {
