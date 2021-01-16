@@ -424,6 +424,7 @@ genrule {
 cc_test_host {
     name: "aidl-golden-test-build-hook",
     generated_sources: ["aidl-golden-test-build-hook-gen"],
+    gtest: false,
 }
 
 //
