@@ -16,19 +16,20 @@
 
 #include "generate_rust.h"
 
+#include <android-base/stringprintf.h>
+#include <android-base/strings.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <map>
 #include <memory>
 #include <sstream>
 
-#include <android-base/stringprintf.h>
-#include <android-base/strings.h>
-
 #include "aidl_to_cpp_common.h"
 #include "aidl_to_rust.h"
 #include "code_writer.h"
+#include "comments.h"
 #include "logging.h"
 
 using android::base::Join;
@@ -142,19 +143,22 @@ void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const Aid
   out << "});\n";
 
   // Check for UNKNOWN_TRANSACTION and call the default impl
-  string default_args;
-  for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
-    if (!default_args.empty()) {
-      default_args += ", ";
+  if (method.IsUserDefined()) {
+    string default_args;
+    for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
+      if (!default_args.empty()) {
+        default_args += ", ";
+      }
+      default_args += kArgumentPrefix;
+      default_args += arg->GetName();
     }
-    default_args += kArgumentPrefix;
-    default_args += arg->GetName();
+    out << "if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {\n";
+    out << "  if let Some(_aidl_default_impl) = <Self as " << trait_name
+        << ">::getDefaultImpl() {\n";
+    out << "    return _aidl_default_impl." << method.GetName() << "(" << default_args << ");\n";
+    out << "  }\n";
+    out << "}\n";
   }
-  out << "if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {\n";
-  out << "  if let Some(_aidl_default_impl) = <Self as " << trait_name << ">::getDefaultImpl() {\n";
-  out << "    return _aidl_default_impl." << method.GetName() << "(" << default_args << ");\n";
-  out << "  }\n";
-  out << "}\n";
 
   // Return all other errors
   out << "let _aidl_reply = _aidl_reply?;\n";
@@ -310,10 +314,13 @@ void GenerateServerItems(CodeWriter& out, const AidlInterface* iface,
   out << "}\n";
 }
 
-template <typename Type>
-void GenerateDeprecated(CodeWriter& out, const Type& type) {
-  if (type.IsDeprecated()) {
-    out << "#[deprecated]\n";
+void GenerateDeprecated(CodeWriter& out, const AidlCommentable& type) {
+  if (auto deprecated = FindDeprecated(type.GetComments()); deprecated.has_value()) {
+    if (deprecated->note.empty()) {
+      out << "#[deprecated]\n";
+    } else {
+      out << "#[deprecated = " << QuotedEscape(deprecated->note) << "]\n";
+    }
   }
 }
 
@@ -389,33 +396,51 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
   for (const auto& method : iface->GetMethods()) {
     // Generate the method
     GenerateDeprecated(*code_writer, *method);
-    *code_writer << BuildMethod(*method, typenames) << " {\n";
-    code_writer->Indent();
     if (method->IsUserDefined()) {
-      // Return Err(UNKNOWN_TRANSACTION) by default
-      *code_writer << "Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())\n";
+      *code_writer << BuildMethod(*method, typenames) << ";\n";
     } else {
       // Generate default implementations for meta methods
+      *code_writer << BuildMethod(*method, typenames) << " {\n";
+      code_writer->Indent();
       if (method->GetName() == kGetInterfaceVersion && options.Version() > 0) {
         *code_writer << "Ok(VERSION)\n";
       } else if (method->GetName() == kGetInterfaceHash && !options.Hash().empty()) {
         *code_writer << "Ok(HASH.into())\n";
       }
+      code_writer->Dedent();
+      *code_writer << "}\n";
     }
-    code_writer->Dedent();
-    *code_writer << "}\n";
   }
 
   // Emit the default implementation code inside the trait
-  auto default_name = ClassName(*iface, cpp::ClassNames::DEFAULT_IMPL);
+  auto default_trait_name = ClassName(*iface, cpp::ClassNames::DEFAULT_IMPL);
+  auto default_ref_name = default_trait_name + "Ref";
   *code_writer << "fn getDefaultImpl()"
-               << " -> " << default_name << " where Self: Sized {\n";
+               << " -> " << default_ref_name << " where Self: Sized {\n";
   *code_writer << "  DEFAULT_IMPL.lock().unwrap().clone()\n";
   *code_writer << "}\n";
-  *code_writer << "fn setDefaultImpl(d: " << default_name << ")"
-               << " -> " << default_name << " where Self: Sized {\n";
+  *code_writer << "fn setDefaultImpl(d: " << default_ref_name << ")"
+               << " -> " << default_ref_name << " where Self: Sized {\n";
   *code_writer << "  std::mem::replace(&mut *DEFAULT_IMPL.lock().unwrap(), d)\n";
   *code_writer << "}\n";
+  code_writer->Dedent();
+  *code_writer << "}\n";
+
+  // Emit the default trait
+  *code_writer << "pub trait " << default_trait_name << ": Send + Sync {\n";
+  code_writer->Indent();
+  for (const auto& method : iface->GetMethods()) {
+    if (!method->IsUserDefined()) {
+      continue;
+    }
+
+    // Generate the default method
+    *code_writer << BuildMethod(*method, typenames) << " {\n";
+    code_writer->Indent();
+    *code_writer << "Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())\n";
+    code_writer->Dedent();
+    *code_writer << "}\n";
+  }
   code_writer->Dedent();
   *code_writer << "}\n";
 
@@ -436,11 +461,11 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
   *code_writer << "}\n";
 
   // Emit the default implementation code outside the trait
-  *code_writer << "pub type " << default_name << " = Option<std::sync::Arc<dyn " << trait_name
-               << " + Sync>>;\n";
+  *code_writer << "pub type " << default_ref_name << " = Option<std::sync::Arc<dyn "
+               << default_trait_name << ">>;\n";
   *code_writer << "use lazy_static::lazy_static;\n";
   *code_writer << "lazy_static! {\n";
-  *code_writer << "  static ref DEFAULT_IMPL: std::sync::Mutex<" << default_name
+  *code_writer << "  static ref DEFAULT_IMPL: std::sync::Mutex<" << default_ref_name
                << "> = std::sync::Mutex::new(None);\n";
   *code_writer << "}\n";
 

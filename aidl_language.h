@@ -200,6 +200,24 @@ class AidlAnnotation : public AidlNode {
     RUST_DERIVE,
     SUPPRESS_WARNINGS,
   };
+
+  using TargetContext = uint16_t;
+  static constexpr TargetContext CONTEXT_TYPE_INTERFACE = 0x1 << 0;
+  static constexpr TargetContext CONTEXT_TYPE_ENUM = 0x1 << 1;
+  static constexpr TargetContext CONTEXT_TYPE_STRUCTURED_PARCELABLE = 0x1 << 2;
+  static constexpr TargetContext CONTEXT_TYPE_UNION = 0x1 << 3;
+  static constexpr TargetContext CONTEXT_TYPE_UNSTRUCTURED_PARCELABLE = 0x1 << 4;
+  static constexpr TargetContext CONTEXT_TYPE =
+      CONTEXT_TYPE_INTERFACE | CONTEXT_TYPE_ENUM | CONTEXT_TYPE_STRUCTURED_PARCELABLE |
+      CONTEXT_TYPE_UNION | CONTEXT_TYPE_UNSTRUCTURED_PARCELABLE;
+  static constexpr TargetContext CONTEXT_CONST = 0x1 << 5;
+  static constexpr TargetContext CONTEXT_FIELD = 0x1 << 6;
+  static constexpr TargetContext CONTEXT_METHOD = 0x1 << 7;
+  static constexpr TargetContext CONTEXT_MEMBER = CONTEXT_CONST | CONTEXT_FIELD | CONTEXT_METHOD;
+  static constexpr TargetContext CONTEXT_TYPE_SPECIFIER = 0x1 << 8;
+  static constexpr TargetContext CONTEXT_ALL =
+      CONTEXT_TYPE | CONTEXT_MEMBER | CONTEXT_TYPE_SPECIFIER;
+
   static std::string TypeToString(Type type);
 
   static AidlAnnotation* Parse(
@@ -210,7 +228,7 @@ class AidlAnnotation : public AidlNode {
   AidlAnnotation(AidlAnnotation&&) = default;
   virtual ~AidlAnnotation() = default;
   bool CheckValid() const;
-
+  bool CheckContext(TargetContext context) const;
   const string& GetName() const { return schema_.name; }
   const Type& GetType() const { return schema_.type; }
   bool Repeatable() const { return schema_.repeatable; }
@@ -231,19 +249,29 @@ class AidlAnnotation : public AidlNode {
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 
  private:
+  struct ParamType {
+    std::string name;
+    const AidlTypeSpecifier& type;
+    bool required = false;
+  };
+
   struct Schema {
     AidlAnnotation::Type type;
-
-    // text name in .aidl file, e.g. "nullable"
     std::string name;
+    TargetContext target_context;
+    std::vector<ParamType> parameters;
+    bool repeatable = false;
 
-    // map from param name -> value type
-    std::map<std::string, const AidlTypeSpecifier&> supported_parameters;
-
-    bool repeatable;
-
-    std::vector<std::string> required_parameters = {};
+    const ParamType* ParamType(const std::string& name) const {
+      for (const auto& param : parameters) {
+        if (param.name == name) {
+          return &param;
+        }
+      }
+      return nullptr;
+    }
   };
+
   static const std::vector<Schema>& AllSchemas();
 
   AidlAnnotation(const AidlLocation& location, const Schema& schema,
@@ -304,9 +332,6 @@ class AidlAnnotatable : public AidlNode {
       traverse(annot);
     }
   }
-
- protected:
-  virtual std::set<AidlAnnotation::Type> GetSupportedAnnotations() const = 0;
 
  private:
   vector<AidlAnnotation> annotations_;
@@ -371,7 +396,6 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   // resolution fails.
   bool Resolve(const AidlTypenames& typenames);
 
-  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const;
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames, Options::Language lang) const;
   const AidlNode& AsAidlNode() const override { return *this; }
@@ -402,9 +426,24 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
 // Returns the universal value unaltered.
 std::string AidlConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value);
 
-class AidlMember : public AidlNode {
+class AidlCommentable {
  public:
-  AidlMember(const AidlLocation& location);
+  AidlCommentable(const std::string& comments) : comments_(comments) {}
+  virtual ~AidlCommentable() = default;
+
+  const std::string& GetComments() const { return comments_; }
+  void SetComments(const std::string comments) { comments_ = comments; }
+  bool IsHidden() const;
+  bool IsDeprecated() const;
+  void Dump(CodeWriter& out) const;
+
+ private:
+  std::string comments_;
+};
+
+class AidlMember : public AidlNode, public AidlCommentable {
+ public:
+  AidlMember(const AidlLocation& location, const std::string& comments);
   virtual ~AidlMember() = default;
 
   // non-copyable, non-movable
@@ -428,10 +467,6 @@ class AidlMember : public AidlNode {
     return const_cast<AidlVariableDeclaration*>(
         const_cast<const AidlMember*>(this)->AsVariableDeclaration());
   }
-
-  virtual const std::string& GetComments() const = 0;
-  bool IsHidden() const;
-  bool IsDeprecated() const;
 };
 
 // TODO: This class is used for method arguments and also parcelable fields,
@@ -452,7 +487,6 @@ class AidlVariableDeclaration : public AidlMember {
   AidlVariableDeclaration& operator=(AidlVariableDeclaration&&) = delete;
 
   const AidlVariableDeclaration* AsVariableDeclaration() const override { return this; }
-  const std::string& GetComments() const override { return GetType().GetComments(); }
 
   std::string GetName() const { return name_; }
   std::string GetCapitalizedName() const;
@@ -767,7 +801,6 @@ class AidlConstantDeclaration : public AidlMember {
   }
 
   const AidlConstantDeclaration* AsConstantDeclaration() const override { return this; }
-  const std::string& GetComments() const override { return GetType().GetComments(); }
 
   void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override {
     traverse(GetType());
@@ -797,7 +830,6 @@ class AidlMethod : public AidlMember {
   AidlMethod& operator=(AidlMethod&&) = delete;
 
   const AidlMethod* AsMethod() const override { return this; }
-  const string& GetComments() const override { return comments_; }
   const AidlTypeSpecifier& GetType() const { return *type_; }
   AidlTypeSpecifier* GetMutableType() { return type_.get(); }
 
@@ -859,7 +891,7 @@ class AidlMethod : public AidlMember {
 
 // AidlDefinedType represents either an interface, parcelable, or enum that is
 // defined in the source file.
-class AidlDefinedType : public AidlAnnotatable {
+class AidlDefinedType : public AidlAnnotatable, public AidlCommentable {
  public:
   AidlDefinedType(const AidlLocation& location, const std::string& name,
                   const std::string& comments, const std::string& package,
@@ -873,10 +905,6 @@ class AidlDefinedType : public AidlAnnotatable {
   AidlDefinedType& operator=(AidlDefinedType&&) = delete;
 
   const std::string& GetName() const { return name_; };
-  bool IsHidden() const;
-  bool IsDeprecated() const;
-  const std::string& GetComments() const { return comments_; }
-  void SetComments(const std::string comments) { comments_ = comments; }
 
   /* dot joined package, example: "android.package.foo" */
   std::string GetPackage() const { return package_; }
@@ -931,6 +959,7 @@ class AidlDefinedType : public AidlAnnotatable {
 
   virtual void Dump(CodeWriter* writer) const = 0;
   void DumpHeader(CodeWriter* writer) const;
+  void DumpMembers(CodeWriter& out) const;
 
   const std::vector<std::unique_ptr<AidlVariableDeclaration>>& GetFields() const {
     return variables_;
@@ -981,7 +1010,6 @@ class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::s
 
   std::string GetCppHeader() const { return cpp_header_; }
 
-  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                   Options::Language lang) const override;
@@ -1017,7 +1045,6 @@ class AidlStructuredParcelable : public AidlParcelable {
 
   void Dump(CodeWriter* writer) const override;
 
-  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                   Options::Language lang) const override;
@@ -1025,7 +1052,7 @@ class AidlStructuredParcelable : public AidlParcelable {
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 };
 
-class AidlEnumerator : public AidlNode {
+class AidlEnumerator : public AidlNode, public AidlCommentable {
  public:
   AidlEnumerator(const AidlLocation& location, const std::string& name, AidlConstantValue* value,
                  const std::string& comments);
@@ -1039,7 +1066,6 @@ class AidlEnumerator : public AidlNode {
 
   const std::string& GetName() const { return name_; }
   AidlConstantValue* GetValue() const { return value_.get(); }
-  const std::string& GetComments() const { return comments_; }
   bool CheckValid(const AidlTypeSpecifier& enum_backing_type) const;
 
   string ValueString(const AidlTypeSpecifier& backing_type,
@@ -1056,7 +1082,6 @@ class AidlEnumerator : public AidlNode {
  private:
   const std::string name_;
   unique_ptr<AidlConstantValue> value_;
-  const std::string comments_;
   const bool value_user_specified_;
 };
 
@@ -1078,7 +1103,6 @@ class AidlEnumDeclaration : public AidlDefinedType {
   const std::vector<std::unique_ptr<AidlEnumerator>>& GetEnumerators() const {
     return enumerators_;
   }
-  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(const AidlTypenames& /*typenames*/,
                                   Options::Language) const override {
@@ -1117,7 +1141,6 @@ class AidlUnionDecl : public AidlParcelable {
   AidlUnionDecl& operator=(const AidlUnionDecl&) = delete;
   AidlUnionDecl& operator=(AidlUnionDecl&&) = delete;
 
-  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
 
   const AidlNode& AsAidlNode() const override { return *this; }
   bool CheckValid(const AidlTypenames& typenames) const override;
@@ -1148,7 +1171,6 @@ class AidlInterface final : public AidlDefinedType {
 
   void Dump(CodeWriter* writer) const override;
 
-  std::set<AidlAnnotation::Type> GetSupportedAnnotations() const override;
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                   Options::Language lang) const override;

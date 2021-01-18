@@ -294,7 +294,7 @@ TEST_P(AidlTest, RejectUnsupportedInterfaceAnnotations) {
   const string method = "package a; @nullable interface IFoo { int f(); }";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("'nullable' is not a supported annotation"));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@nullable is not available."));
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
@@ -303,8 +303,7 @@ TEST_P(AidlTest, RejectUnsupportedTypeAnnotations) {
   const string method = "package a; interface IFoo { @JavaOnlyStableParcelable int f(); }";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_THAT(GetCapturedStderr(),
-              HasSubstr("'JavaOnlyStableParcelable' is not a supported annotation"));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@JavaOnlyStableParcelable is not available."));
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
@@ -313,7 +312,7 @@ TEST_P(AidlTest, RejectUnsupportedParcelableAnnotations) {
   const string method = "package a; @nullable parcelable IFoo cpp_header \"IFoo.h\";";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("'nullable' is not a supported annotation"));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@nullable is not available."));
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
@@ -322,7 +321,7 @@ TEST_P(AidlTest, RejectUnsupportedParcelableDefineAnnotations) {
   const string method = "package a; @nullable parcelable IFoo { String a; String b; }";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("'nullable' is not a supported annotation"));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@nullable is not available."));
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
@@ -561,7 +560,7 @@ TEST_F(AidlTest, RejectsJavaDeriveAnnotation) {
     Options java_options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
     CaptureStderr();
     EXPECT_NE(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
-    EXPECT_THAT(GetCapturedStderr(), HasSubstr("'JavaDerive' is not a supported annotation"));
+    EXPECT_THAT(GetCapturedStderr(), HasSubstr("@JavaDerive is not available."));
   }
 
   {
@@ -569,7 +568,7 @@ TEST_F(AidlTest, RejectsJavaDeriveAnnotation) {
     Options java_options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
     CaptureStderr();
     EXPECT_NE(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
-    EXPECT_THAT(GetCapturedStderr(), HasSubstr("'JavaDerive' is not a supported annotation"));
+    EXPECT_THAT(GetCapturedStderr(), HasSubstr("@JavaDerive is not available."));
   }
 }
 
@@ -741,14 +740,14 @@ TEST_P(AidlTest, SupportDeprecated) {
   };
 
   auto CheckDeprecated = [&](const std::string& filename, const std::string& contents,
-                             std::map<Options::Language, TestCase> expectation) {
+                             std::vector<std::pair<Options::Language, TestCase>> expectations) {
     io_delegate_.SetFileContents(filename, contents);
 
     auto options = Options::From("aidl --lang=" + to_string(GetLanguage()) + " " + filename +
                                  " --out=out --header_out=out");
     EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
-    if (auto it = expectation.find(GetLanguage()); it != expectation.end()) {
-      const auto& test_case = it->second;
+    for (const auto& [lang, test_case] : expectations) {
+      if (lang != GetLanguage()) continue;
       string output;
       EXPECT_TRUE(io_delegate_.GetWrittenContents(test_case.output_file, &output))
           << base::Join(io_delegate_.ListOutputFiles(), ",");
@@ -756,17 +755,48 @@ TEST_P(AidlTest, SupportDeprecated) {
     }
   };
 
-  CheckDeprecated("IFoo.aidl",
-                  "interface IFoo {\n"
-                  "  /** @deprecated use bar() */\n"
-                  "  List<String> foo();\n"
-                  "}",
-                  {
-                      {Options::Language::JAVA, {"out/IFoo.java", "@Deprecated"}},
-                      {Options::Language::CPP, {"out/IFoo.h", "__attribute__((deprecated"}},
-                      {Options::Language::NDK, {"out/aidl/IFoo.h", "__attribute__((deprecated"}},
-                      {Options::Language::RUST, {"out/IFoo.rs", "#[deprecated"}},
-                  });
+  // Emit escaped string for notes
+  CheckDeprecated(
+      "IFoo.aidl",
+      R"(interface IFoo {
+           /**
+            * @note asdf
+            * @deprecated a really long deprecation message
+            *
+            *    which is really long
+            * @param foo bar
+            */
+           List<String> foo();
+        })",
+      {
+          {Options::Language::JAVA, {"out/IFoo.java", "@Deprecated"}},
+          {Options::Language::CPP,
+           {"out/IFoo.h",
+            R"(__attribute__((deprecated("a really long deprecation message which is really long"))))"}},
+          {Options::Language::NDK,
+           {"out/aidl/IFoo.h",
+            R"(__attribute__((deprecated("a really long deprecation message which is really long"))))"}},
+          {Options::Language::RUST,
+           {"out/IFoo.rs",
+            R"(#[deprecated = "a really long deprecation message which is really long"])"}},
+      });
+
+  // In AIDL @deprecated can be in any style of comments
+  CheckDeprecated(
+      "IFoo.aidl",
+      "interface IFoo {\n"
+      "  // @deprecated use bar()\n"
+      "  List<String> foo();\n"
+      "}",
+      {
+          {Options::Language::JAVA, {"out/IFoo.java", "@Deprecated"}},
+          // TODO(b/177276893) @deprecated should be in javadoc style comments
+          // {Options::Language::JAVA, {"out/IFoo.java", "/** @deprecated use bar() */"}},
+          {Options::Language::CPP, {"out/IFoo.h", "__attribute__((deprecated(\"use bar()\")))"}},
+          {Options::Language::NDK,
+           {"out/aidl/IFoo.h", "__attribute__((deprecated(\"use bar()\")))"}},
+          {Options::Language::RUST, {"out/IFoo.rs", "#[deprecated = \"use bar()\"]"}},
+      });
 
   CheckDeprecated("Foo.aidl",
                   "parcelable Foo {\n"
@@ -1396,7 +1426,11 @@ TEST_F(AidlTest, ApiDump) {
       "    IFoo foo3(IFoo foo);\n"
       "    Data getData();\n"
       "    // @hide\n"
+      "    /** blahblah\n"
+      "        @deprecated\n"
+      "          reason why... */\n"
       "    const int A = 1;\n"
+      "    // @deprecated do not use\n"
       "    const String STR = \"Hello\";\n"
       "}\n");
   io_delegate_.SetFileContents("foo/bar/Data.aidl",
@@ -1430,7 +1464,9 @@ interface IFoo {
   foo.bar.IFoo foo3(foo.bar.IFoo foo);
   foo.bar.Data getData();
   /* @hide */
+  /* @deprecated reason why... */
   const int A = 1;
+  /* @deprecated do not use */
   const String STR = "Hello";
 }
 )"));
@@ -2478,7 +2514,7 @@ TEST_F(AidlTestIncompatibleChanges, ChangedAnnatationParams) {
 
 TEST_F(AidlTestIncompatibleChanges, AddedParcelableAnnotation) {
   const string expected_stderr =
-      "ERROR: new/p/Foo.aidl:1.47-51: Changed annotations: (empty) to @JavaOnlyStableParcelable\n";
+      "ERROR: new/p/Foo.aidl:1.32-36: Changed annotations: (empty) to @FixedSize\n";
   io_delegate_.SetFileContents("old/p/Foo.aidl",
                                "package p;"
                                "parcelable Foo {"
@@ -2486,7 +2522,7 @@ TEST_F(AidlTestIncompatibleChanges, AddedParcelableAnnotation) {
                                "}");
   io_delegate_.SetFileContents("new/p/Foo.aidl",
                                "package p;"
-                               "@JavaOnlyStableParcelable parcelable Foo {"
+                               "@FixedSize parcelable Foo {"
                                "  int A;"
                                "}");
   CaptureStderr();
@@ -2496,10 +2532,10 @@ TEST_F(AidlTestIncompatibleChanges, AddedParcelableAnnotation) {
 
 TEST_F(AidlTestIncompatibleChanges, RemovedParcelableAnnotation) {
   const string expected_stderr =
-      "ERROR: new/p/Foo.aidl:1.21-25: Changed annotations: @JavaOnlyStableParcelable to (empty)\n";
+      "ERROR: new/p/Foo.aidl:1.21-25: Changed annotations: @FixedSize to (empty)\n";
   io_delegate_.SetFileContents("old/p/Foo.aidl",
                                "package p;"
-                               "@JavaOnlyStableParcelable parcelable Foo {"
+                               "@FixedSize parcelable Foo {"
                                "  int A;"
                                "}");
   io_delegate_.SetFileContents("new/p/Foo.aidl",
@@ -3084,6 +3120,14 @@ TEST_F(AidlTest, ImmutableParcelableFieldNameRestriction) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
+TEST_P(AidlTest, UnionInUnion) {
+  import_paths_.insert(".");
+  io_delegate_.SetFileContents("Bar.aidl", "union Bar { int n = 42; long l; }");
+  CaptureStderr();
+  EXPECT_NE(nullptr, Parse("Foo.aidl", "union Foo { Bar b; int n; }", typenames_, GetLanguage()));
+  EXPECT_THAT("", GetCapturedStderr());
+}
+
 TEST_P(AidlTest, UnionRejectsEmptyDecl) {
   const string method = "package a; union Foo {}";
   const string expected_stderr = "ERROR: a/Foo.aidl:1.17-21: The union 'Foo' has no fields.\n";
@@ -3586,6 +3630,29 @@ TEST_P(AidlTest, ErrorInterfaceName) {
   EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
   EXPECT_EQ("ERROR: p/Foo.aidl:1.1-10: Interface names should start with I. [-Winterface-name]\n",
             GetCapturedStderr());
+}
+
+TEST_F(AidlTest, HideIsNotForArgs) {
+  io_delegate_.SetFileContents("IFoo.aidl",
+                               "interface IFoo {\n"
+                               "  void foo(in @Hide int x);\n"
+                               "}");
+  auto options = Options::From("aidl --lang=java IFoo.aidl");
+  CaptureStderr();
+  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@Hide is not available"));
+}
+
+TEST_F(AidlTest, SuppressWarningsIsNotForArgs) {
+  io_delegate_.SetFileContents(
+      "IFoo.aidl",
+      "interface IFoo {\n"
+      "  void foo(in @SuppressWarnings(value=\"inout-parameter\") int x);\n"
+      "}");
+  auto options = Options::From("aidl --lang=java IFoo.aidl");
+  CaptureStderr();
+  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@SuppressWarnings is not available"));
 }
 
 struct TypeParam {

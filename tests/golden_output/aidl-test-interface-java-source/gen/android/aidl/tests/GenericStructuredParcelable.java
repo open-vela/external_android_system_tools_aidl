@@ -4,9 +4,7 @@
 package android.aidl.tests;
 public class GenericStructuredParcelable<T,U,B> implements android.os.Parcelable
 {
-
   public int a = 0;
-
   public int b = 0;
   public static final android.os.Parcelable.Creator<GenericStructuredParcelable> CREATOR = new android.os.Parcelable.Creator<GenericStructuredParcelable>() {
     @Override

@@ -19,7 +19,7 @@
 use aidl_test_interface::aidl::android::aidl::tests::INewName::{self, BpNewName};
 use aidl_test_interface::aidl::android::aidl::tests::IOldName::{self, BpOldName};
 use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
-    self, BpTestService, ITestServiceDefault,
+    self, BpTestService, ITestServiceDefault, ITestServiceDefaultRef,
 };
 use aidl_test_interface::aidl::android::aidl::tests::{
     ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable, Union,
@@ -385,8 +385,10 @@ test_nullable! {
 
 #[test]
 fn test_nullable_parcelable() {
-    let mut value = StructuredParcelable::StructuredParcelable::default();
-    value.f = 42;
+    let value = StructuredParcelable::StructuredParcelable{
+        f: 42,
+        ..Default::default()
+    };
 
     let service = get_test_service();
     let value = Some(value);
@@ -551,7 +553,7 @@ struct TestDefaultImpl;
 
 impl binder::Interface for TestDefaultImpl {}
 
-impl ITestService::ITestService for TestDefaultImpl {
+impl ITestServiceDefault for TestDefaultImpl {
     fn UnimplementedMethod(&self, arg: i32) -> binder::Result<i32> {
         assert_eq!(arg, EXPECTED_ARG_VALUE);
         Ok(EXPECTED_RETURN_VALUE)
@@ -561,7 +563,7 @@ impl ITestService::ITestService for TestDefaultImpl {
 #[test]
 fn test_default_impl() {
     let service = get_test_service();
-    let di: ITestServiceDefault = Some(Arc::new(TestDefaultImpl));
+    let di: ITestServiceDefaultRef = Some(Arc::new(TestDefaultImpl));
     <BpTestService as ITestService::ITestService>::setDefaultImpl(di);
 
     let result = service.UnimplementedMethod(EXPECTED_ARG_VALUE);
