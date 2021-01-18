@@ -19,6 +19,7 @@
 #include <android-base/strings.h>
 
 #include <optional>
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -40,6 +41,8 @@ namespace {
 static const std::string_view kLineCommentBegin = "//";
 static const std::string_view kBlockCommentBegin = "/*";
 static const std::string_view kBlockCommentEnd = "*/";
+static const std::string kTagDeprecated = "@deprecated";
+static const std::regex kTagHideRegex{"@hide\\b"};
 
 std::string ConsumePrefix(const std::string& s, std::string_view prefix) {
   AIDL_FATAL_IF(!StartsWith(s, prefix), AIDL_LOCATION_HERE);
@@ -56,7 +59,7 @@ struct BlockTag {
   std::string description;
 };
 
-struct Comments {
+struct Comment {
   enum class Type { LINE, BLOCK };
   Type type;
   std::string body;
@@ -65,10 +68,10 @@ struct Comments {
   std::vector<BlockTag> BlockTags() const;
 };
 
-// Removes comment markers: //, /*, /**, */, optional leading "*" in doc/block comments
+// Removes comment markers: //, /*, */, optional leading "*" in doc/block comments
 // - keeps leading spaces, but trims trailing spaces
 // - keeps empty lines
-std::vector<std::string> Comments::TrimmedLines() const {
+std::vector<std::string> Comment::TrimmedLines() const {
   if (type == Type::LINE) return std::vector{ConsumePrefix(body, kLineCommentBegin)};
 
   std::string stripped = ConsumeSuffix(ConsumePrefix(body, kBlockCommentBegin), kBlockCommentEnd);
@@ -105,7 +108,7 @@ std::vector<std::string> Comments::TrimmedLines() const {
   return lines;
 }
 
-std::vector<BlockTag> Comments::BlockTags() const {
+std::vector<BlockTag> Comment::BlockTags() const {
   std::vector<BlockTag> tags;
 
   // current tag and paragraph
@@ -158,7 +161,7 @@ std::vector<BlockTag> Comments::BlockTags() const {
 }
 
 // TODO(b/177276676) remove this when comments are kept as parsed in AST
-Result<std::vector<Comments>> ParseComments(const std::string& comments) {
+Result<std::vector<Comment>> ParseComments(const std::string& comments) {
   enum ParseState {
     INITIAL,
     SLASH,
@@ -168,7 +171,7 @@ Result<std::vector<Comments>> ParseComments(const std::string& comments) {
   };
   ParseState st = INITIAL;
   std::string body;
-  std::vector<Comments> result;
+  std::vector<Comment> result;
   for (const auto& c : comments) {
     switch (st) {
       case INITIAL:  // trim ws & newlines
@@ -195,7 +198,7 @@ Result<std::vector<Comments>> ParseComments(const std::string& comments) {
       case SLASHSLASH:
         if (c == '\n') {
           st = INITIAL;
-          result.push_back({Comments::Type::LINE, std::move(body)});
+          result.push_back({Comment::Type::LINE, std::move(body)});
           body.clear();
         } else {
           body += c;
@@ -211,7 +214,7 @@ Result<std::vector<Comments>> ParseComments(const std::string& comments) {
         body += c;
         if (c == '/') {  // close!
           st = INITIAL;
-          result.push_back({Comments::Type::BLOCK, std::move(body)});
+          result.push_back({Comment::Type::BLOCK, std::move(body)});
           body.clear();
         } else if (c == '*') {
           // about to close...
@@ -228,13 +231,26 @@ Result<std::vector<Comments>> ParseComments(const std::string& comments) {
 
 }  // namespace
 
+bool HasHideInComments(const std::string& comments) {
+  auto result = ParseComments(comments);
+  AIDL_FATAL_IF(!result.ok(), AIDL_LOCATION_HERE) << result.error();
+
+  for (const auto& c : *result) {
+    if (c.type == Comment::Type::LINE) continue;
+    if (std::regex_search(c.body, kTagHideRegex)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Finds @deprecated tag and returns it with optional note which follows the tag.
 std::optional<Deprecated> FindDeprecated(const std::string& comments) {
   auto result = ParseComments(comments);
   AIDL_FATAL_IF(!result.ok(), AIDL_LOCATION_HERE) << result.error();
 
-  const std::string kTagDeprecated = "@deprecated";
   for (const auto& c : *result) {
+    if (c.type == Comment::Type::LINE) continue;
     for (const auto& [name, description] : c.BlockTags()) {
       // take the first @deprecated
       if (kTagDeprecated == name) {
