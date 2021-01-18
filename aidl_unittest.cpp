@@ -1874,6 +1874,19 @@ TEST_F(AidlTest, ConflictWithMetaTransactionGetName) {
   EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
 }
 
+TEST_F(AidlTest, CheckApiForEquality) {
+  CaptureStderr();
+  Options options = Options::From("aidl --checkapi=equal old new");
+
+  io_delegate_.SetFileContents("old/p/IFoo.aidl",
+                               "package p; interface IFoo{ @utf8InCpp @nullable String foo();}");
+  io_delegate_.SetFileContents("new/p/IFoo.aidl",
+                               "package p; interface IFoo{ @utf8InCpp String foo();}");
+
+  EXPECT_FALSE(::android::aidl::check_api(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("+  @utf8InCpp String foo();"));
+}
+
 TEST_F(AidlTest, DifferentOrderAnnotationsInCheckAPI) {
   Options options = Options::From("aidl --checkapi old new");
   io_delegate_.SetFileContents("old/p/IFoo.aidl",
