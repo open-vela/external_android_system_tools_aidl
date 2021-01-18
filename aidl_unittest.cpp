@@ -781,11 +781,11 @@ TEST_P(AidlTest, SupportDeprecated) {
             R"(#[deprecated = "a really long deprecation message which is really long"])"}},
       });
 
-  // In AIDL @deprecated can be in any style of comments
+  // In AIDL @deprecated can be in block comments as well as javadoc style
   CheckDeprecated(
       "IFoo.aidl",
       "interface IFoo {\n"
-      "  // @deprecated use bar()\n"
+      "  /* @deprecated use bar() */\n"
       "  List<String> foo();\n"
       "}",
       {
@@ -798,6 +798,11 @@ TEST_P(AidlTest, SupportDeprecated) {
           {Options::Language::RUST, {"out/IFoo.rs", "#[deprecated = \"use bar()\"]"}},
       });
 
+  // but not in line comments
+  auto parsed = Parse("IFoo.aidl", "// @deprecated\ninterface IFoo {}", typenames_, GetLanguage());
+  EXPECT_FALSE(parsed->IsDeprecated());
+
+  // parcelable
   CheckDeprecated("Foo.aidl",
                   "parcelable Foo {\n"
                   "  /** @deprecated use bar*/\n"
@@ -810,6 +815,7 @@ TEST_P(AidlTest, SupportDeprecated) {
                       {Options::Language::RUST, {"out/Foo.rs", "#[deprecated"}},
                   });
 
+  // interface constants
   CheckDeprecated("IFoo.aidl",
                   "interface IFoo {\n"
                   "  /** @deprecated use bar*/\n"
@@ -1418,7 +1424,7 @@ TEST_F(AidlTest, ApiDump) {
       "foo/bar/IFoo.aidl",
       "package foo.bar;\n"
       "import foo.bar.Data;\n"
-      "// comment @hide\n"
+      "// commented /* @hide */\n"
       "interface IFoo {\n"
       "    /* @hide */\n"
       "    int foo(out int[] a, String b, boolean c, inout List<String>  d);\n"
@@ -1430,7 +1436,7 @@ TEST_F(AidlTest, ApiDump) {
       "        @deprecated\n"
       "          reason why... */\n"
       "    const int A = 1;\n"
-      "    // @deprecated do not use\n"
+      "    // @deprecated tags in line comments are ignored\n"
       "    const String STR = \"Hello\";\n"
       "}\n");
   io_delegate_.SetFileContents("foo/bar/Data.aidl",
@@ -1444,7 +1450,7 @@ TEST_F(AidlTest, ApiDump) {
                                "   int y;\n"
                                "   /*@hide2*/\n"
                                "   IFoo foo;\n"
-                               "   // It should be @hide property\n"
+                               "   // Ignore @hide property in line comment\n"
                                "   @nullable String[] c;\n"
                                "}\n");
   io_delegate_.SetFileContents("api.aidl", "");
@@ -1456,17 +1462,14 @@ TEST_F(AidlTest, ApiDump) {
   string actual;
   EXPECT_TRUE(io_delegate_.GetWrittenContents("dump/foo/bar/IFoo.aidl", &actual));
   EXPECT_EQ(actual, string(kPreamble).append(R"(package foo.bar;
-/* @hide */
 interface IFoo {
   /* @hide */
   int foo(out int[] a, String b, boolean c, inout List<String> d);
   int foo2(@utf8InCpp String x, inout List<String> y);
   foo.bar.IFoo foo3(foo.bar.IFoo foo);
   foo.bar.Data getData();
-  /* @hide */
   /* @deprecated reason why... */
   const int A = 1;
-  /* @deprecated do not use */
   const String STR = "Hello";
 }
 )"));
@@ -1475,12 +1478,9 @@ interface IFoo {
   EXPECT_EQ(actual, string(kPreamble).append(R"(package foo.bar;
 /* @hide */
 parcelable Data {
-  /* @hide */
   int x = 10;
-  /* @hide */
   int y;
   foo.bar.IFoo foo;
-  /* @hide */
   @nullable String[] c;
 }
 )"));
