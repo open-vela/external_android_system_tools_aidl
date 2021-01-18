@@ -42,6 +42,8 @@ class AidlLocation {
   // The first line of a file is line 1.
   bool LocationKnown() const { return begin_.line != 0; }
 
+  std::string GetFile() const { return file_; }
+
   friend std::ostream& operator<<(std::ostream& os, const AidlLocation& l);
   friend class AidlNode;
 

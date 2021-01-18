@@ -36,17 +36,11 @@ var (
 	}, "optionalFlags", "imports", "outDir", "hashFile", "latestVersion")
 
 	aidlCheckApiRule = pctx.StaticRule("aidlCheckApiRule", blueprint.RuleParams{
-		Command: `(${aidlCmd} ${optionalFlags} --checkapi ${old} ${new} && touch ${out}) || ` +
+		Command: `(${aidlCmd} ${optionalFlags} --checkapi=${checkApiLevel} ${old} ${new} && touch ${out}) || ` +
 			`(cat ${messageFile} && exit 1)`,
 		CommandDeps: []string{"${aidlCmd}"},
 		Description: "AIDL CHECK API: ${new} against ${old}",
-	}, "optionalFlags", "old", "new", "messageFile")
-
-	aidlDiffApiRule = pctx.StaticRule("aidlDiffApiRule", blueprint.RuleParams{
-		Command: `if diff -r -B -I '//.*' -x '${hashFile}' '${old}' '${new}'; then touch '${out}'; else ` +
-			`cat '${messageFile}' && exit 1; fi`,
-		Description: "Check equality of ${new} and ${old}",
-	}, "old", "new", "hashFile", "messageFile")
+	}, "optionalFlags", "old", "new", "messageFile", "checkApiLevel")
 
 	aidlVerifyHashRule = pctx.StaticRule("aidlVerifyHashRule", blueprint.RuleParams{
 		Command: `if [ $$(cd '${apiDir}' && { find ./ -name "*.aidl" -print0 | LC_ALL=C sort -z | xargs -0 sha1sum && echo ${version}; } | sha1sum | cut -d " " -f 1) = $$(read -r <'${hashFile}' hash extra; printf %s $$hash) ]; then ` +
@@ -190,10 +184,9 @@ func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, 
 	return timestampFile
 }
 
-func (m *aidlApi) checkCompatibility(ctx android.ModuleContext, oldDump apiDump, newDump apiDump) android.WritablePath {
+func (m *aidlApi) checkApi(ctx android.ModuleContext, oldDump, newDump apiDump, checkApiLevel string, messageFile android.Path) android.WritablePath {
 	newVersion := newDump.dir.Base()
 	timestampFile := android.PathForModuleOut(ctx, "checkapi_"+newVersion+".timestamp")
-	messageFile := android.PathForSource(ctx, "system/tools/aidl/build/message_check_compatibility.txt")
 
 	var optionalFlags []string
 	if m.properties.Stability != nil {
@@ -213,15 +206,18 @@ func (m *aidlApi) checkCompatibility(ctx android.ModuleContext, oldDump apiDump,
 			"old":           oldDump.dir.String(),
 			"new":           newDump.dir.String(),
 			"messageFile":   messageFile.String(),
+			"checkApiLevel": checkApiLevel,
 		},
 	})
 	return timestampFile
 }
 
-func (m *aidlApi) checkEquality(ctx android.ModuleContext, oldDump apiDump, newDump apiDump) android.WritablePath {
-	newVersion := newDump.dir.Base()
-	timestampFile := android.PathForModuleOut(ctx, "checkapi_"+newVersion+".timestamp")
+func (m *aidlApi) checkCompatibility(ctx android.ModuleContext, oldDump, newDump apiDump) android.WritablePath {
+	messageFile := android.PathForSource(ctx, "system/tools/aidl/build/message_check_compatibility.txt")
+	return m.checkApi(ctx, oldDump, newDump, "compatible", messageFile)
+}
 
+func (m *aidlApi) checkEquality(ctx android.ModuleContext, oldDump apiDump, newDump apiDump) android.WritablePath {
 	// Use different messages depending on whether platform SDK is finalized or not.
 	// In case when it is finalized, we should never allow updating the already frozen API.
 	// If it's not finalized, we let users to update the current version by invoking
@@ -240,18 +236,7 @@ func (m *aidlApi) checkEquality(ctx android.ModuleContext, oldDump apiDump, newD
 	implicits = append(implicits, oldDump.files...)
 	implicits = append(implicits, newDump.files...)
 	implicits = append(implicits, formattedMessageFile)
-	ctx.Build(pctx, android.BuildParams{
-		Rule:      aidlDiffApiRule,
-		Implicits: implicits,
-		Output:    timestampFile,
-		Args: map[string]string{
-			"old":         oldDump.dir.String(),
-			"new":         newDump.dir.String(),
-			"hashFile":    newDump.hashFile.Path().Base(),
-			"messageFile": formattedMessageFile.String(),
-		},
-	})
-	return timestampFile
+	return m.checkApi(ctx, oldDump, newDump, "equal", formattedMessageFile)
 }
 
 func (m *aidlApi) checkIntegrity(ctx android.ModuleContext, dump apiDump) android.WritablePath {

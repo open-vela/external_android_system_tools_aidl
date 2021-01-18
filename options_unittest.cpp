@@ -399,5 +399,51 @@ TEST(OptionsTests, RejectsUnknownWarning) {
   EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr("unknown warning: foobar"));
 }
 
+TEST(OptionsTests, CheckApi) {
+  const char* args[] = {
+      "aidl", "--checkapi", "old", "new", nullptr,
+  };
+  CaptureStderr();
+  auto options = GetOptions(args);
+  EXPECT_TRUE(options->Ok());
+  EXPECT_EQ("", GetCapturedStderr());
+  EXPECT_EQ(Options::Task::CHECK_API, options->GetTask());
+  EXPECT_EQ(Options::CheckApiLevel::COMPATIBLE, options->GetCheckApiLevel());
+}
+
+TEST(OptionsTests, CheckApiWithCompatible) {
+  const char* args[] = {
+      "aidl", "--checkapi=compatible", "old", "new", nullptr,
+  };
+  CaptureStderr();
+  auto options = GetOptions(args);
+  EXPECT_TRUE(options->Ok());
+  EXPECT_EQ("", GetCapturedStderr());
+  EXPECT_EQ(Options::Task::CHECK_API, options->GetTask());
+  EXPECT_EQ(Options::CheckApiLevel::COMPATIBLE, options->GetCheckApiLevel());
+}
+
+TEST(OptionsTests, CheckApiWithEqual) {
+  const char* args[] = {
+      "aidl", "--checkapi=equal", "old", "new", nullptr,
+  };
+  CaptureStderr();
+  auto options = GetOptions(args);
+  EXPECT_TRUE(options->Ok());
+  EXPECT_EQ("", GetCapturedStderr());
+  EXPECT_EQ(Options::Task::CHECK_API, options->GetTask());
+  EXPECT_EQ(Options::CheckApiLevel::EQUAL, options->GetCheckApiLevel());
+}
+
+TEST(OptionsTests, CheckApiWithUnknown) {
+  const char* args[] = {
+      "aidl", "--checkapi=unknown", "old", "new", nullptr,
+  };
+  CaptureStderr();
+  auto options = GetOptions(args);
+  EXPECT_FALSE(options->Ok());
+  EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr("Unsupported --checkapi level: 'unknown'"));
+}
+
 }  // namespace aidl
 }  // namespace android
