@@ -92,7 +92,6 @@ AidlLocation loc(const yy::parser::location_type& l) {
     std::vector<std::string>* type_params;
     std::vector<std::unique_ptr<AidlImport>>* imports;
     AidlImport* import;
-    AidlPackage* package;
     std::vector<std::unique_ptr<AidlDefinedType>>* declarations;
 }
 
@@ -100,8 +99,6 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %destructor { } <direction>
 %destructor { delete ($$); } <*>
 
-%token<token> PACKAGE "package"
-%token<token> IMPORT "import"
 %token<token> ANNOTATION "annotation"
 %token<token> C_STR "string literal"
 %token<token> IDENTIFIER "identifier"
@@ -120,9 +117,11 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %token '(' ')' ',' '=' '[' ']' '.' '{' '}' ';'
 %token UNKNOWN "unrecognized character"
 %token<token> CPP_HEADER "cpp_header (which can also be used as an identifier)"
+%token IMPORT "import"
 %token IN "in"
 %token INOUT "inout"
 %token OUT "out"
+%token PACKAGE "package"
 %token TRUE_LITERAL "true"
 %token FALSE_LITERAL "false"
 
@@ -178,23 +177,17 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %type<constant_value_list> constant_value_non_empty_list
 %type<imports> imports
 %type<import> import
-%type<package> package
 %type<declarations> decls
 %type<token> identifier error qualified_name
 
 %%
 
 document
- : package imports decls {
-    std::string comments;
-    if ($1) comments = $1->GetComments();
-    else if (!$2->empty()) comments = $2->front()->GetComments();
-    ps->SetDocument(std::make_unique<AidlDocument>(loc(@1), comments, std::move(*$2), std::move(*$3)));
-    delete $1;
+ : package imports decls
+  { ps->SetDocument(std::make_unique<AidlDocument>(loc(@1), *$2, std::move(*$3)));
     delete $2;
     delete $3;
   }
- ;
 
 /* A couple of tokens that are keywords elsewhere are identifiers when
  * occurring in the identifier position. Therefore identifier is a
@@ -207,16 +200,11 @@ identifier
  ;
 
 package
- : {
-    $$ = nullptr;
- }
- | PACKAGE qualified_name ';' {
-    $$ = new AidlPackage(loc(@1, @3), $1->GetComments());
-    ps->SetPackage($2->GetText());
-    delete $1;
+ : {}
+ | PACKAGE qualified_name ';'
+  { ps->SetPackage($2->GetText());
     delete $2;
   }
- ;
 
 imports
  : { $$ = new std::vector<std::unique_ptr<AidlImport>>(); }
@@ -234,9 +222,9 @@ imports
   }
 
 import
- : IMPORT qualified_name ';' {
-    $$ = new AidlImport(loc(@2), $2->GetText(), $1->GetComments());
-    delete $1;
+ : IMPORT qualified_name ';'
+  {
+    $$ = new AidlImport(loc(@2), $2->GetText());
     delete $2;
   };
 
