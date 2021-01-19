@@ -29,6 +29,13 @@ bootstrap_go_package {
     srcs: [
         "aidl_interface.go",
         "properties.go",
+        "aidl_api.go",
+        "aidl_gen_rule.go",
+        "aidl_interface_backends.go",
+        "aidl_interface_metadata_singleton.go",
+        "aidl_mapping.go",
+        "aidl_rust_source_provider.go",
+        "aidl_utils.go",
     ],
     testSrcs: [
         "aidl_test.go",
