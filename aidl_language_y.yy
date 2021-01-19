@@ -737,26 +737,22 @@ parameter_non_empty_list
   };
 
 annotation
- : ANNOTATION
-  {
-    $$ = AidlAnnotation::Parse(loc(@1), $1->GetText(), nullptr);
-    if ($$) {
-      $$->SetComments($1->GetComments());
-    } else {
+ : ANNOTATION {
+    $$ = AidlAnnotation::Parse(loc(@1), $1->GetText(), nullptr, $1->GetComments());
+    if (!$$) {
       ps->AddError();
     }
     delete $1;
-  };
+  }
  | ANNOTATION '(' parameter_list ')' {
-    $$ = AidlAnnotation::Parse(loc(@1, @4), $1->GetText(), $3);
-    if ($$) {
-      $$->SetComments($1->GetComments());
-    } else {
+    $$ = AidlAnnotation::Parse(loc(@1, @4), $1->GetText(), $3, $1->GetComments());
+    if (!$$) {
       ps->AddError();
     }
     delete $1;
     delete $3;
- }
+  }
+ ;
 
 direction
  : IN
