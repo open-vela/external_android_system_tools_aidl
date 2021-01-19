@@ -18,19 +18,11 @@ type nameProperties struct {
 	Name *string
 }
 
-type hostProperties struct {
-	Cflags []string
-}
 type perTargetProperties struct {
 	Enabled *bool
 }
 
-type ccTargetProperties struct {
-	Host   hostProperties
-	Darwin perTargetProperties
-}
-
-type rustTargetProperties struct {
+type targetProperties struct {
 	Darwin perTargetProperties
 }
 
@@ -56,7 +48,7 @@ type ccProperties struct {
 	Apex_available            []string
 	Min_sdk_version           *string
 	UseApexNameMacro          bool
-	Target                    ccTargetProperties
+	Target                    targetProperties
 	Tidy                      *bool
 	Tidy_flags                []string
 	Tidy_checks_as_errors     []string
@@ -84,7 +76,7 @@ type rustProperties struct {
 	Srcs           []string
 	Rustlibs       []string
 	Stem           *string
-	Target         rustTargetProperties
+	Target         targetProperties
 }
 
 type phonyProperties struct {
