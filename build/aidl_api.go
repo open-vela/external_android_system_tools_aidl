@@ -82,7 +82,18 @@ func (m *aidlApi) apiDir() string {
 
 // `m <iface>-freeze-api` will freeze ToT as this version
 func (m *aidlApi) nextVersion() string {
-	return nextVersion(m.properties.Versions)
+	if len(m.properties.Versions) == 0 {
+		return "1"
+	} else {
+		latestVersion := m.properties.Versions[len(m.properties.Versions)-1]
+
+		i, err := strconv.Atoi(latestVersion)
+		if err != nil {
+			panic(err)
+		}
+
+		return strconv.Itoa(i + 1)
+	}
 }
 
 type apiDump struct {
@@ -359,7 +370,7 @@ func aidlApiFactory() android.Module {
 
 func addApiModule(mctx android.LoadHookContext, i *aidlInterface) string {
 	apiModule := i.ModuleBase.Name() + aidlApiSuffix
-	srcs, aidlRoot := i.srcsForVersion(mctx, i.nextVersion())
+	srcs, aidlRoot := i.srcsForVersion(mctx, i.currentVersion())
 	mctx.CreateModule(aidlApiFactory, &nameProperties{
 		Name: proptools.StringPtr(apiModule),
 	}, &aidlApiProperties{

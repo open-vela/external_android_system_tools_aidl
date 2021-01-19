@@ -32,10 +32,8 @@ var (
 )
 
 type aidlRustSourceProviderProperties struct {
-	SourceGen         string `android:"path"`
-	Imports           []string
-	Version           string
-	AidlInterfaceName string
+	SourceGen string `android:"path"`
+	Imports   []string
 }
 
 type aidlRustSourceProvider struct {
@@ -96,10 +94,7 @@ func (sp *aidlRustSourceProvider) SourceProviderProps() []interface{} {
 func (sp *aidlRustSourceProvider) SourceProviderDeps(ctx rust.DepsContext, deps rust.Deps) rust.Deps {
 	deps = sp.BaseSourceProvider.SourceProviderDeps(ctx, deps)
 	deps.Rustlibs = append(deps.Rustlibs, "libbinder_rs", "liblazy_static")
-	ai := lookupInterface(sp.properties.AidlInterfaceName, ctx.Config())
-	for _, dep := range sp.properties.Imports {
-		deps.Rustlibs = append(deps.Rustlibs, ai.getImportWithVersion(sp.properties.Version, dep, ctx.Config())+"-"+langRust)
-	}
+	deps.Rustlibs = append(deps.Rustlibs, wrap("", sp.properties.Imports, "-rust")...)
 
 	// Add a depencency to the source module (*-rust-source) directly via `ctx` because
 	// the source module is specific to aidlRustSourceProvider and we don't want the rust module
