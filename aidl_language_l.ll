@@ -104,8 +104,10 @@ floatvalue  [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?f?
 parcelable            { yylval->token = new AidlToken("parcelable", extra_text);
                         return yy::parser::token::PARCELABLE;
                       }
-import                { return yy::parser::token::IMPORT; }
-package               { return yy::parser::token::PACKAGE; }
+import                { yylval->token = new AidlToken("import", extra_text);
+                        return yy::parser::token::IMPORT; }
+package               { yylval->token = new AidlToken("package", extra_text);
+                        return yy::parser::token::PACKAGE; }
 in                    { return yy::parser::token::IN; }
 out                   { return yy::parser::token::OUT; }
 inout                 { return yy::parser::token::INOUT; }
