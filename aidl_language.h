@@ -76,6 +76,7 @@ bool ParseFloating(std::string_view sv, double* parsed);
 bool ParseFloating(std::string_view sv, float* parsed);
 
 class AidlDocument;
+class AidlPackage;
 class AidlImport;
 class AidlInterface;
 class AidlParcelable;
@@ -115,6 +116,7 @@ class AidlVisitor {
   virtual void Visit(const AidlBinaryConstExpression&) {}
   virtual void Visit(const AidlAnnotation&) {}
   virtual void Visit(const AidlImport&) {}
+  virtual void Visit(const AidlPackage&) {}
 };
 
 // Anything that is locatable in a .aidl file.
@@ -1169,9 +1171,19 @@ class AidlInterface final : public AidlDefinedType {
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 };
 
-class AidlImport : public AidlNode {
+class AidlPackage : public AidlNode, public AidlCommentable {
  public:
-  AidlImport(const AidlLocation& location, const std::string& needed_class);
+  AidlPackage(const AidlLocation& location, const std::string& comments)
+      : AidlNode(location), AidlCommentable(comments) {}
+  virtual ~AidlPackage() = default;
+  void TraverseChildren(std::function<void(const AidlNode&)>) const {}
+  void DispatchVisit(AidlVisitor& v) const { v.Visit(*this); }
+};
+
+class AidlImport : public AidlNode, public AidlCommentable {
+ public:
+  AidlImport(const AidlLocation& location, const std::string& needed_class,
+             const std::string& comments);
   virtual ~AidlImport() = default;
 
   // non-copyable, non-movable
@@ -1189,11 +1201,13 @@ class AidlImport : public AidlNode {
 };
 
 // AidlDocument models an AIDL file
-class AidlDocument : public AidlNode {
+class AidlDocument : public AidlNode, public AidlCommentable {
  public:
-  AidlDocument(const AidlLocation& location, std::vector<std::unique_ptr<AidlImport>>& imports,
-               std::vector<std::unique_ptr<AidlDefinedType>>&& defined_types)
+  AidlDocument(const AidlLocation& location, const std::string& comments,
+               std::vector<std::unique_ptr<AidlImport>> imports,
+               std::vector<std::unique_ptr<AidlDefinedType>> defined_types)
       : AidlNode(location),
+        AidlCommentable(comments),
         imports_(std::move(imports)),
         defined_types_(std::move(defined_types)) {}
   ~AidlDocument() = default;
