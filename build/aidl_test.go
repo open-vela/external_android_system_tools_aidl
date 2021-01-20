@@ -179,19 +179,13 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 	ctx.PreArchMutators(android.RegisterVisibilityRuleChecker)
 
 	cc.RegisterRequiredBuildComponentsForTest(ctx)
+	java.RegisterRequiredBuildComponentsForTest(ctx)
 	ctx.RegisterModuleType("aidl_interface", aidlInterfaceFactory)
 	ctx.RegisterModuleType("aidl_interfaces_metadata", aidlInterfacesMetadataSingletonFactory)
-	ctx.RegisterModuleType("android_app", java.AndroidAppFactory)
-	ctx.RegisterModuleType("java_defaults", func() android.Module {
-		return java.DefaultsFactory()
-	})
 	ctx.RegisterModuleType("rust_defaults", func() android.Module {
 		return rust.DefaultsFactory()
 	})
 	ctx.RegisterModuleType("rust_library", rust.RustLibraryFactory)
-	ctx.RegisterModuleType("java_library_static", java.LibraryStaticFactory)
-	ctx.RegisterModuleType("java_library", java.LibraryFactory)
-	ctx.RegisterModuleType("java_system_modules", java.SystemModulesFactory)
 
 	ctx.RegisterModuleType("apex", apex.BundleFactory)
 	ctx.RegisterModuleType("apex_key", apex.ApexKeyFactory)
