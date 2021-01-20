@@ -1511,8 +1511,9 @@ std::string AidlInterface::GetDescriptor() const {
   return GetCanonicalName();
 }
 
-AidlImport::AidlImport(const AidlLocation& location, const std::string& needed_class)
-    : AidlNode(location), needed_class_(needed_class) {}
+AidlImport::AidlImport(const AidlLocation& location, const std::string& needed_class,
+                       const std::string& comments)
+    : AidlNode(location), AidlCommentable(comments), needed_class_(needed_class) {}
 
 // Resolves unresolved type name to fully qualified typename to import
 // case #1: SimpleName --> import p.SimpleName

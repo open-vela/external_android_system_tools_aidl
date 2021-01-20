@@ -901,9 +901,13 @@ bool dump_api(const Options& options, const IoDelegate& io_delegate) {
     AidlTypenames typenames;
     if (internals::load_and_validate_aidl(file, options, io_delegate, &typenames, nullptr) ==
         AidlError::OK) {
-      for (const auto& type : typenames.MainDocument().DefinedTypes()) {
+      const auto& doc = typenames.MainDocument();
+
+      for (const auto& type : doc.DefinedTypes()) {
         unique_ptr<CodeWriter> writer =
             io_delegate.GetCodeWriter(GetApiDumpPathFor(*type, options));
+        // dump doc comments (license) as well for each type
+        (*writer) << doc.GetComments();
         (*writer) << kPreamble;
         if (!type->GetPackage().empty()) {
           (*writer) << "package " << type->GetPackage() << ";\n";
