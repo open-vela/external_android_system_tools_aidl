@@ -195,7 +195,7 @@ TEST_F(AidlLazyRegistrarTest, ForcedPersistenceTest) {
 TEST_F(AidlLazyRegistrarTest, ActiveServicesCountCallbackTest) {
   sp<ILazyTestService> service;
   service = waitForLazyTestService(serviceName);
-  ASSERT_TRUE(service->setCustomActiveServicesCountCallback().isOk());
+  ASSERT_TRUE(service->setCustomActiveServicesCallback().isOk());
   service = nullptr;
 
   std::cout << "Waiting " << SHUTDOWN_WAIT_TIME << " seconds before checking whether the "
