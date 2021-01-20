@@ -21,15 +21,6 @@ set -e
 # - should we have our own formatter?
 
 function _aidl-format() (
-    if [ $# != 1 ]; then
-      echo "Usage: $0 <file/directory>"
-      exit 1
-    fi
-
-    local loc="$1"
-
-    local tmpfile="$tmpfile"
-
     # Do a "reversible" conversion of the input file so that it is more friendly
     # to clang-format. For example 'oneway interface Foo{}' is not recognized as
     # an interface. Convert it to 'interface __aidl_oneway__ Foo{}'.
@@ -104,24 +95,68 @@ function _aidl-format() (
     }
 
     function format-one() {
-        local input="$1"
-        local output="$(mktemp)"
+      local mode="$1"
+      local input="$2"
+      local output="$(mktemp)"
 
-        cp "$input" "$output"
-        prepare "$output"
-        apply-clang-format "$output"
-        fixup "$output"
+      cp "$input" "$output"
+      prepare "$output"
+      apply-clang-format "$output"
+      fixup "$output"
 
+      if [ $mode = "diff" ]; then
+        diff "$input" "$output"
+        rm "$output"
+      elif [ $mode = "write" ]; then
         if diff -q "$output" "$input" >/dev/null; then
             rm "$output"
         else
             mv "$output" "$input"
         fi
+      elif [ $mode = "print" ]; then
+        cat "$output"
+        rm "$output"
+      fi
     }
 
-    while read -d '' aidl; do
-        format-one "$aidl"
-    done < <(find "$loc" -not -path "*/aidl_api/*" -type f -name '*.aidl' -print0)
+    function show-help-and-exit() {
+      echo "Usage: $0 [options] [path...]"
+      echo "  -d: display diff instead of the formatted result"
+      echo "  -w: rewrite the result back to the source file, instead of stdout"
+      echo "  -h: show this help message"
+      echo "  [path...]: source files. if none, input is read from stdin"
+      exit 1
+    }
+
+    local mode=print
+    if [ $# -gt 0 ]; then
+      case "$1" in
+        -d) mode=diff; shift;;
+        -w) mode=write; shift;;
+        -h) show-help-and-exit;;
+        -*) echo "$1" is wrong option; show-help-and-exit;;
+      esac
+    fi
+
+    if [ $# -lt 1 ]; then
+      if [ $mode = "write" ]; then
+        echo "-w not supported when input is stdin"
+        exit 1
+      fi
+      local input="$(mktemp)"
+      cat /dev/stdin > "$input"
+      format-one $mode "$input"
+      rm "$input"
+    else
+      for file in "$@"
+      do
+        if [ ! -f "$file" ]; then
+          echo "$file": no such file
+          exit 1
+        fi
+        format-one $mode "$file"
+      done
+    fi
 )
 
 _aidl-format "$@"
