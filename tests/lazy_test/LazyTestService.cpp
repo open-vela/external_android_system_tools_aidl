@@ -27,10 +27,10 @@ Status LazyTestService::forcePersist(bool persist) {
   return Status::ok();
 }
 
-Status LazyTestService::setCustomActiveServicesCallback() {
+Status LazyTestService::setCustomActiveServicesCountCallback() {
   auto lazyRegistrar = LazyServiceRegistrar::getInstance();
-  lazyRegistrar.setActiveServicesCallback([lazyRegistrar](bool hasClients) mutable -> bool {
-    if (hasClients) {
+  lazyRegistrar.setActiveServicesCountCallback([lazyRegistrar](int count) mutable -> bool {
+    if (count != 0) {
       return false;
     }
 
