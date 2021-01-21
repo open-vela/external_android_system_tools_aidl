@@ -52,7 +52,7 @@ floatvalue  [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?f?
 
 \/\*                  { extra_text += yytext; BEGIN(LONG_COMMENT); }
 <LONG_COMMENT>\*+\/   { extra_text += yytext; yylloc->step(); BEGIN(INITIAL);
-                        comments.push_back({Comment::Type::BLOCK, extra_text});
+                        comments.push_back({extra_text});
                         extra_text.clear(); }
 <LONG_COMMENT>\*+     { extra_text += yytext; }
 <LONG_COMMENT>\n+     { extra_text += yytext; yylloc->lines(yyleng); }
@@ -62,7 +62,7 @@ floatvalue  [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?f?
                         return yy::parser::token::C_STR; }
 
 \/\/.*                { extra_text += yytext; extra_text += "\n";
-                        comments.push_back({Comment::Type::LINE, extra_text});
+                        comments.push_back({extra_text});
                         extra_text.clear(); }
 
 \n+                   { yylloc->lines(yyleng); yylloc->step(); }

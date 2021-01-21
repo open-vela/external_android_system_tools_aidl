@@ -766,16 +766,20 @@ bool AidlCommentable::IsDeprecated() const {
   return android::aidl::FindDeprecated(GetComments()).has_value();
 }
 
-// Dumps comment only if its has  meaningful tags.
+// Dumps comment only if its has meaningful tags.
 void AidlCommentable::DumpComments(CodeWriter& out) const {
   using namespace android::aidl;
-  if (IsHidden()) {
-    out << "/* @hide */\n";
-  }
-  if (auto deprecated = FindDeprecated(GetComments()); deprecated) {
-    out << "/* @deprecated ";
-    if (!deprecated->note.empty()) out << deprecated->note << " ";
-    out << "*/\n";
+  const auto hidden = IsHidden();
+  const auto deprecated = FindDeprecated(GetComments());
+  if (hidden || deprecated) {
+    out << "/**\n";
+    if (hidden) {
+      out << " * @hide\n";
+    }
+    if (deprecated) {
+      out << " * @deprecated " << deprecated->note << "\n";
+    }
+    out << " */\n";
   }
 }
 
