@@ -186,12 +186,9 @@ AidlLocation loc(const yy::parser::location_type& l) {
 
 document
  : package imports decls {
-    Comments comments;
-    if ($1) {
-      comments = $1->GetComments();
-    } else if (!$2->empty()) {
-      comments = $2->front()->GetComments();
-    }
+    std::string comments;
+    if ($1) comments = $1->GetComments();
+    else if (!$2->empty()) comments = $2->front()->GetComments();
     ps->SetDocument(std::make_unique<AidlDocument>(loc(@1), comments, std::move(*$2), std::move(*$3)));
     delete $1;
     delete $2;
@@ -599,7 +596,7 @@ method_decl
     delete $2;
   }
  | annotation_list ONEWAY type identifier '(' arg_list ')' ';' {
-    const auto& comments = ($1->size() > 0) ? $1->begin()->GetComments() : $2->GetComments();
+    const std::string& comments = ($1->size() > 0) ? $1->begin()->GetComments() : $2->GetComments();
     $$ = new AidlMethod(loc(@4), true, $3, $4->GetText(), $6, comments);
     $3->Annotate(std::move(*$1));
     delete $1;
@@ -617,7 +614,7 @@ method_decl
     delete $7;
   }
  | annotation_list ONEWAY type identifier '(' arg_list ')' '=' INTVALUE ';' {
-    const auto& comments = ($1->size() > 0) ? $1->begin()->GetComments() : $2->GetComments();
+    const std::string& comments = ($1->size() > 0) ? $1->begin()->GetComments() : $2->GetComments();
     int32_t serial = 0;
     if (!android::base::ParseInt($9->GetText(), &serial)) {
         AIDL_ERROR(loc(@9)) << "Could not parse int value: " << $9->GetText();
