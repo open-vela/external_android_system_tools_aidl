@@ -619,19 +619,31 @@ TEST_P(AidlTest, AnnotationsInMultiplePlaces) {
 
 TEST_P(AidlTest, WritesComments) {
   string foo_interface =
-      "package a; /* foo */ interface IFoo {"
-      "  /* i */ int i();"
-      "  /* j */ @nullable String j();"
-      "  /* k */ @UnsupportedAppUsage oneway void k(int a); }";
+      R"(package a;
+        /* foo */
+        interface IFoo {
+          /* i */
+          int i();
+          // j
+          @nullable String j();
+          // k1
+          /* k2 */
+          @UnsupportedAppUsage oneway void k(int a);
+        })";
 
+  CaptureStderr();
   auto parse_result = Parse("a/IFoo.aidl", foo_interface, typenames_, GetLanguage());
   EXPECT_NE(nullptr, parse_result);
-  EXPECT_EQ("/* foo */", parse_result->GetComments());
+  EXPECT_EQ("", GetCapturedStderr());
+
+  EXPECT_EQ((Comments{{Comment::Type::BLOCK, "/* foo */"}}), parse_result->GetComments());
 
   const AidlInterface* interface = parse_result->AsInterface();
-  EXPECT_EQ("/* i */", interface->GetMethods()[0]->GetComments());
-  EXPECT_EQ("/* j */", interface->GetMethods()[1]->GetComments());
-  EXPECT_EQ("/* k */", interface->GetMethods()[2]->GetComments());
+  EXPECT_EQ((Comments{{Comment::Type::BLOCK, "/* i */"}}),
+            interface->GetMethods()[0]->GetComments());
+  EXPECT_EQ((Comments{{Comment::Type::LINE, "// j\n"}}), interface->GetMethods()[1]->GetComments());
+  EXPECT_EQ((Comments{{Comment::Type::LINE, "// k1\n"}, {Comment::Type::BLOCK, "/* k2 */"}}),
+            interface->GetMethods()[2]->GetComments());
 }
 
 TEST_P(AidlTest, CppHeaderCanBeIdentifierAsWell) {
@@ -650,7 +662,8 @@ TEST_P(AidlTest, CppHeaderCanBeIdentifierAsWell) {
   auto parse_result = Parse(input_path, input, typenames_, GetLanguage());
   EXPECT_NE(nullptr, parse_result);
   const AidlInterface* interface = parse_result->AsInterface();
-  EXPECT_EQ("// get bar\n", interface->GetMethods()[0]->GetComments());
+  EXPECT_EQ((Comments{{Comment::Type::LINE, "// get bar\n"}}),
+            interface->GetMethods()[0]->GetComments());
 }
 
 TEST_F(AidlTest, ParsesPreprocessedFile) {
@@ -686,7 +699,7 @@ TEST_P(AidlTest, PreferImportToPreprocessed) {
   EXPECT_TRUE(typenames_.ResolveTypename("one.IBar").is_resolved);
   EXPECT_TRUE(typenames_.ResolveTypename("another.IBar").is_resolved);
   // But if we request just "IBar" we should get our imported one.
-  AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", false, nullptr, "");
+  AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", false, nullptr, {});
   ambiguous_type.Resolve(typenames_);
   EXPECT_EQ("one.IBar", ambiguous_type.GetName());
 }
@@ -708,7 +721,7 @@ TEST_P(AidlTest, B147918827) {
   EXPECT_TRUE(typenames_.ResolveTypename("one.IBar").is_resolved);
   EXPECT_TRUE(typenames_.ResolveTypename("another.IBar").is_resolved);
   // But if we request just "IBar" we should get our imported one.
-  AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", false, nullptr, "");
+  AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", false, nullptr, {});
   ambiguous_type.Resolve(typenames_);
   EXPECT_EQ("one.IBar", ambiguous_type.GetName());
 }
@@ -1160,7 +1173,7 @@ TEST_P(AidlTest, UnderstandsNestedParcelables) {
 
   EXPECT_TRUE(typenames_.ResolveTypename("p.Outer.Inner").is_resolved);
   // C++ uses "::" instead of "." to refer to a inner class.
-  AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.Outer.Inner", false, nullptr, "");
+  AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.Outer.Inner", false, nullptr, {});
   EXPECT_EQ("::p::Outer::Inner", cpp::CppNameOf(nested_type, typenames_));
 }
 
@@ -1174,7 +1187,7 @@ TEST_P(AidlTest, UnderstandsNativeParcelables) {
   auto parse_result = Parse(input_path, input, typenames_, GetLanguage());
   EXPECT_NE(nullptr, parse_result);
   EXPECT_TRUE(typenames_.ResolveTypename("p.Bar").is_resolved);
-  AidlTypeSpecifier native_type(AIDL_LOCATION_HERE, "p.Bar", false, nullptr, "");
+  AidlTypeSpecifier native_type(AIDL_LOCATION_HERE, "p.Bar", false, nullptr, {});
   native_type.Resolve(typenames_);
 
   EXPECT_EQ("p.Bar", java::InstantiableJavaSignatureOf(native_type, typenames_));

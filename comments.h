@@ -15,19 +15,36 @@
  */
 #pragma once
 
+#include <iostream>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace android {
 namespace aidl {
 
-bool HasHideInComments(const std::string& comments);
+// Represents a single comment
+struct Comment {
+  enum class Type { LINE, BLOCK };
+  Type type;
+  std::string body;
+
+  // for GTest assertions
+  friend inline bool operator==(const Comment& lhs, const Comment& rhs) {
+    return lhs.body == rhs.body;
+  }
+  friend std::ostream& operator<<(std::ostream& out, const Comment& c) { return out << c.body; }
+};
+
+using Comments = std::vector<Comment>;
+
+bool HasHideInComments(const Comments& comments);
 
 struct Deprecated {
   std::string note;  // can be empty("")
 };
 
-std::optional<Deprecated> FindDeprecated(const std::string& comments);
+std::optional<Deprecated> FindDeprecated(const Comments& comments);
 
 }  // namespace aidl
 }  // namespace android
