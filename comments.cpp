@@ -41,11 +41,13 @@ namespace {
 static const std::string_view kLineCommentBegin = "//";
 static const std::string_view kBlockCommentBegin = "/*";
 static const std::string_view kBlockCommentEnd = "*/";
+static const std::string_view kDocCommentBegin = "/**";
 static const std::string kTagDeprecated = "@deprecated";
 static const std::regex kTagHideRegex{"@hide\\b"};
 
 std::string ConsumePrefix(const std::string& s, std::string_view prefix) {
-  AIDL_FATAL_IF(!StartsWith(s, prefix), AIDL_LOCATION_HERE);
+  AIDL_FATAL_IF(!StartsWith(s, prefix), AIDL_LOCATION_HERE)
+      << "'" << s << "' has no prefix '" << prefix << "'";
   return s.substr(prefix.size());
 }
 
@@ -59,22 +61,15 @@ struct BlockTag {
   std::string description;
 };
 
-struct Comment {
-  enum class Type { LINE, BLOCK };
-  Type type;
-  std::string body;
-
-  std::vector<std::string> TrimmedLines() const;
-  std::vector<BlockTag> BlockTags() const;
-};
-
-// Removes comment markers: //, /*, */, optional leading "*" in doc/block comments
+// Removes comment markers: //, /*, */, optional leading "*" in block comments
 // - keeps leading spaces, but trims trailing spaces
 // - keeps empty lines
-std::vector<std::string> Comment::TrimmedLines() const {
-  if (type == Type::LINE) return std::vector{ConsumePrefix(body, kLineCommentBegin)};
+std::vector<std::string> TrimmedLines(const Comment& c) {
+  if (c.type == Comment::Type::LINE) {
+    return std::vector{ConsumePrefix(c.body, kLineCommentBegin)};
+  }
 
-  std::string stripped = ConsumeSuffix(ConsumePrefix(body, kBlockCommentBegin), kBlockCommentEnd);
+  std::string stripped = ConsumeSuffix(ConsumePrefix(c.body, kBlockCommentBegin), kBlockCommentEnd);
 
   std::vector<std::string> lines;
   bool found_first_line = false;
@@ -108,7 +103,10 @@ std::vector<std::string> Comment::TrimmedLines() const {
   return lines;
 }
 
-std::vector<BlockTag> Comment::BlockTags() const {
+// Parses a block comment and returns block tags in the comment.
+std::vector<BlockTag> BlockTags(const Comment& c) {
+  AIDL_FATAL_IF(c.type != Comment::Type::BLOCK, AIDL_LOCATION_HERE);
+
   std::vector<BlockTag> tags;
 
   // current tag and paragraph
@@ -126,7 +124,7 @@ std::vector<BlockTag> Comment::BlockTags() const {
     paragraph.clear();
   };
 
-  for (const auto& line : TrimmedLines()) {
+  for (const auto& line : TrimmedLines(c)) {
     size_t idx = 0;
     // skip leading spaces
     for (; idx < line.size() && isspace(line[idx]); idx++)
@@ -160,98 +158,54 @@ std::vector<BlockTag> Comment::BlockTags() const {
   return tags;
 }
 
-// TODO(b/177276676) remove this when comments are kept as parsed in AST
-Result<std::vector<Comment>> ParseComments(const std::string& comments) {
-  enum ParseState {
-    INITIAL,
-    SLASH,
-    SLASHSLASH,
-    SLASHSTAR,
-    STAR,
-  };
-  ParseState st = INITIAL;
-  std::string body;
-  std::vector<Comment> result;
-  for (const auto& c : comments) {
-    switch (st) {
-      case INITIAL:  // trim ws & newlines
-        if (c == '/') {
-          st = SLASH;
-          body += c;
-        } else if (std::isspace(c)) {
-          // skip whitespaces outside comments
-        } else {
-          return Error() << "expecing / or space, but got unknown: " << c;
-        }
-        break;
-      case SLASH:
-        if (c == '/') {
-          st = SLASHSLASH;
-          body += c;
-        } else if (c == '*') {
-          st = SLASHSTAR;
-          body += c;
-        } else {
-          return Error() << "expecting / or *, but got unknown: " << c;
-        }
-        break;
-      case SLASHSLASH:
-        if (c == '\n') {
-          st = INITIAL;
-          result.push_back({Comment::Type::LINE, std::move(body)});
-          body.clear();
-        } else {
-          body += c;
-        }
-        break;
-      case SLASHSTAR:
-        body += c;
-        if (c == '*') {
-          st = STAR;
-        }
-        break;
-      case STAR:  // read "*", about to close
-        body += c;
-        if (c == '/') {  // close!
-          st = INITIAL;
-          result.push_back({Comment::Type::BLOCK, std::move(body)});
-          body.clear();
-        } else if (c == '*') {
-          // about to close...
-        } else {
-          st = SLASHSTAR;
-        }
-        break;
-      default:
-        return Error() << "unexpected state: " << st;
-    }
-  }
-  return result;
-}
-
 }  // namespace
 
-bool HasHideInComments(const std::string& comments) {
-  auto result = ParseComments(comments);
-  AIDL_FATAL_IF(!result.ok(), AIDL_LOCATION_HERE) << result.error();
-
-  for (const auto& c : *result) {
-    if (c.type == Comment::Type::LINE) continue;
-    if (std::regex_search(c.body, kTagHideRegex)) {
-      return true;
-    }
+Comment::Comment(const std::string& body) : body(body) {
+  if (StartsWith(body, kLineCommentBegin)) {
+    type = Type::LINE;
+  } else if (StartsWith(body, kBlockCommentBegin) && EndsWith(body, kBlockCommentEnd)) {
+    type = Type::BLOCK;
+  } else {
+    AIDL_FATAL(AIDL_LOCATION_HERE) << "invalid comments body:" << body;
   }
-  return false;
 }
 
-// Finds @deprecated tag and returns it with optional note which follows the tag.
-std::optional<Deprecated> FindDeprecated(const std::string& comments) {
-  auto result = ParseComments(comments);
-  AIDL_FATAL_IF(!result.ok(), AIDL_LOCATION_HERE) << result.error();
+// Returns the immediate block comment from the list of comments.
+// Only the last/block comment can have the tag.
+//
+//   /* @hide */
+//   int x;
+//
+// But tags in line or distant comments don't count. In the following,
+// the variable 'x' is not hidden.
+//
+//    // @hide
+//    int x;
+//
+//    /* @hide */
+//    /* this is the immemediate comment to 'x' */
+//    int x;
+//
+static std::optional<Comment> GetValidComment(const Comments& comments) {
+  if (!comments.empty() && comments.back().type == Comment::Type::BLOCK) {
+    return comments.back();
+  }
+  return std::nullopt;
+}
 
-  for (const auto& c : *result) {
-    if (c.type == Comment::Type::LINE) continue;
-    for (const auto& [name, description] : c.BlockTags()) {
+// Sees if comments have the @hide tag.
+// Example: /** @hide */
+bool HasHideInComments(const Comments& comments) {
+  const auto valid_comment = GetValidComment(comments);
+  return valid_comment && std::regex_search(valid_comment->body, kTagHideRegex);
+}
+
+// Finds the @deprecated tag in comments and returns it with optional note which
+// follows the tag.
+// Example: /** @deprecated reason */
+std::optional<Deprecated> FindDeprecated(const Comments& comments) {
+  if (const auto valid_comment = GetValidComment(comments); valid_comment) {
+    for (const auto& [name, description] : BlockTags(comments.back())) {
       // take the first @deprecated
       if (kTagDeprecated == name) {
         return Deprecated{description};
@@ -259,6 +213,23 @@ std::optional<Deprecated> FindDeprecated(const std::string& comments) {
     }
   }
   return std::nullopt;
+}
+
+// Formats comments for the Java backend.
+// The last/block comment is transformed into javadoc(/** */)
+// and others are used as they are.
+std::string FormatCommentsForJava(const Comments& comments) {
+  std::stringstream out;
+  for (auto it = begin(comments); it != end(comments); it++) {
+    const bool last = next(it) == end(comments);
+    // We only re-format the last/block comment which is not already a doc-style comment.
+    if (last && it->type == Comment::Type::BLOCK && !StartsWith(it->body, kDocCommentBegin)) {
+      out << kDocCommentBegin << ConsumePrefix(it->body, kBlockCommentBegin);
+    } else {
+      out << it->body;
+    }
+  }
+  return out.str();
 }
 
 }  // namespace aidl

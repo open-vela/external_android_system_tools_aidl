@@ -31,6 +31,7 @@
 #include "aidl_language.h"
 #include "aidl_to_cpp.h"
 #include "aidl_to_java.h"
+#include "comments.h"
 #include "logging.h"
 #include "options.h"
 #include "tests/fake_io_delegate.h"
@@ -619,19 +620,29 @@ TEST_P(AidlTest, AnnotationsInMultiplePlaces) {
 
 TEST_P(AidlTest, WritesComments) {
   string foo_interface =
-      "package a; /* foo */ interface IFoo {"
-      "  /* i */ int i();"
-      "  /* j */ @nullable String j();"
-      "  /* k */ @UnsupportedAppUsage oneway void k(int a); }";
+      R"(package a;
+        /* foo */
+        interface IFoo {
+          /* i */
+          int i();
+          // j
+          @nullable String j();
+          // k1
+          /* k2 */
+          @UnsupportedAppUsage oneway void k(int a);
+        })";
 
+  CaptureStderr();
   auto parse_result = Parse("a/IFoo.aidl", foo_interface, typenames_, GetLanguage());
   EXPECT_NE(nullptr, parse_result);
-  EXPECT_EQ("/* foo */", parse_result->GetComments());
+  EXPECT_EQ("", GetCapturedStderr());
+
+  EXPECT_EQ((Comments{{"/* foo */"}}), parse_result->GetComments());
 
   const AidlInterface* interface = parse_result->AsInterface();
-  EXPECT_EQ("/* i */", interface->GetMethods()[0]->GetComments());
-  EXPECT_EQ("/* j */", interface->GetMethods()[1]->GetComments());
-  EXPECT_EQ("/* k */", interface->GetMethods()[2]->GetComments());
+  EXPECT_EQ((Comments{{"/* i */"}}), interface->GetMethods()[0]->GetComments());
+  EXPECT_EQ((Comments{{"// j\n"}}), interface->GetMethods()[1]->GetComments());
+  EXPECT_EQ((Comments{{"// k1\n"}, {"/* k2 */"}}), interface->GetMethods()[2]->GetComments());
 }
 
 TEST_P(AidlTest, CppHeaderCanBeIdentifierAsWell) {
@@ -650,7 +661,7 @@ TEST_P(AidlTest, CppHeaderCanBeIdentifierAsWell) {
   auto parse_result = Parse(input_path, input, typenames_, GetLanguage());
   EXPECT_NE(nullptr, parse_result);
   const AidlInterface* interface = parse_result->AsInterface();
-  EXPECT_EQ("// get bar\n", interface->GetMethods()[0]->GetComments());
+  EXPECT_EQ((Comments{{"// get bar\n"}}), interface->GetMethods()[0]->GetComments());
 }
 
 TEST_F(AidlTest, ParsesPreprocessedFile) {
@@ -686,7 +697,7 @@ TEST_P(AidlTest, PreferImportToPreprocessed) {
   EXPECT_TRUE(typenames_.ResolveTypename("one.IBar").is_resolved);
   EXPECT_TRUE(typenames_.ResolveTypename("another.IBar").is_resolved);
   // But if we request just "IBar" we should get our imported one.
-  AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", false, nullptr, "");
+  AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", false, nullptr, {});
   ambiguous_type.Resolve(typenames_);
   EXPECT_EQ("one.IBar", ambiguous_type.GetName());
 }
@@ -708,7 +719,7 @@ TEST_P(AidlTest, B147918827) {
   EXPECT_TRUE(typenames_.ResolveTypename("one.IBar").is_resolved);
   EXPECT_TRUE(typenames_.ResolveTypename("another.IBar").is_resolved);
   // But if we request just "IBar" we should get our imported one.
-  AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", false, nullptr, "");
+  AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", false, nullptr, {});
   ambiguous_type.Resolve(typenames_);
   EXPECT_EQ("one.IBar", ambiguous_type.GetName());
 }
@@ -790,8 +801,7 @@ TEST_P(AidlTest, SupportDeprecated) {
       "}",
       {
           {Options::Language::JAVA, {"out/IFoo.java", "@Deprecated"}},
-          // TODO(b/177276893) @deprecated should be in javadoc style comments
-          // {Options::Language::JAVA, {"out/IFoo.java", "/** @deprecated use bar() */"}},
+          {Options::Language::JAVA, {"out/IFoo.java", "/** @deprecated use bar() */"}},
           {Options::Language::CPP, {"out/IFoo.h", "__attribute__((deprecated(\"use bar()\")))"}},
           {Options::Language::NDK,
            {"out/aidl/IFoo.h", "__attribute__((deprecated(\"use bar()\")))"}},
@@ -879,7 +889,7 @@ TEST_P(AidlTest, SupportDeprecated) {
                       {Options::Language::JAVA, {"out/Foo.java", "@Deprecated"}},
                       {Options::Language::CPP, {"out/Foo.h", "__attribute__((deprecated"}},
                       {Options::Language::NDK, {"out/aidl/Foo.h", "__attribute__((deprecated"}},
-                      // TODO(b/174514415) support "deprecated"
+                      // TODO(b/177860423) support "deprecated" in Rust enum
                       // {Options::Language::RUST, {"out/Foo.rs", "#[deprecated"}},
                   });
 }
@@ -1160,7 +1170,7 @@ TEST_P(AidlTest, UnderstandsNestedParcelables) {
 
   EXPECT_TRUE(typenames_.ResolveTypename("p.Outer.Inner").is_resolved);
   // C++ uses "::" instead of "." to refer to a inner class.
-  AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.Outer.Inner", false, nullptr, "");
+  AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.Outer.Inner", false, nullptr, {});
   EXPECT_EQ("::p::Outer::Inner", cpp::CppNameOf(nested_type, typenames_));
 }
 
@@ -1174,7 +1184,7 @@ TEST_P(AidlTest, UnderstandsNativeParcelables) {
   auto parse_result = Parse(input_path, input, typenames_, GetLanguage());
   EXPECT_NE(nullptr, parse_result);
   EXPECT_TRUE(typenames_.ResolveTypename("p.Bar").is_resolved);
-  AidlTypeSpecifier native_type(AIDL_LOCATION_HERE, "p.Bar", false, nullptr, "");
+  AidlTypeSpecifier native_type(AIDL_LOCATION_HERE, "p.Bar", false, nullptr, {});
   native_type.Resolve(typenames_);
 
   EXPECT_EQ("p.Bar", java::InstantiableJavaSignatureOf(native_type, typenames_));
@@ -1426,12 +1436,13 @@ TEST_F(AidlTest, ApiDump) {
       "import foo.bar.Data;\n"
       "// commented /* @hide */\n"
       "interface IFoo {\n"
-      "    /* @hide */\n"
-      "    int foo(out int[] a, String b, boolean c, inout List<String>  d);\n"
-      "    int foo2(@utf8InCpp String x, inout List<String>  y);\n"
+      "    /* @hide applied \n"
+      "       @deprecated use foo2 */\n"
+      "    int foo(out int[] a, String b, boolean c, inout List<String> d);\n"
+      "    int foo2(@utf8InCpp String x, inout List<String> y);\n"
       "    IFoo foo3(IFoo foo);\n"
       "    Data getData();\n"
-      "    // @hide\n"
+      "    // @hide not applied\n"
       "    /** blahblah\n"
       "        @deprecated\n"
       "          reason why... */\n"
@@ -1461,29 +1472,38 @@ TEST_F(AidlTest, ApiDump) {
   ASSERT_TRUE(result);
   string actual;
   EXPECT_TRUE(io_delegate_.GetWrittenContents("dump/foo/bar/IFoo.aidl", &actual));
-  EXPECT_EQ(actual, string(kPreamble).append(R"(package foo.bar;
+  EXPECT_EQ(string(kPreamble).append(R"(package foo.bar;
 interface IFoo {
-  /* @hide */
+  /**
+   * @hide
+   * @deprecated use foo2
+   */
   int foo(out int[] a, String b, boolean c, inout List<String> d);
   int foo2(@utf8InCpp String x, inout List<String> y);
   foo.bar.IFoo foo3(foo.bar.IFoo foo);
   foo.bar.Data getData();
-  /* @deprecated reason why... */
+  /**
+   * @deprecated reason why...
+   */
   const int A = 1;
   const String STR = "Hello";
 }
-)"));
+)"),
+            actual);
 
   EXPECT_TRUE(io_delegate_.GetWrittenContents("dump/foo/bar/Data.aidl", &actual));
-  EXPECT_EQ(actual, string(kPreamble).append(R"(package foo.bar;
-/* @hide */
+  EXPECT_EQ(string(kPreamble).append(R"(package foo.bar;
+/**
+ * @hide
+ */
 parcelable Data {
   int x = 10;
   int y;
   foo.bar.IFoo foo;
   @nullable String[] c;
 }
-)"));
+)"),
+            actual);
 }
 
 TEST_F(AidlTest, ApiDumpWithManualIds) {
@@ -3643,6 +3663,43 @@ TEST_P(AidlTest, ErrorInterfaceName) {
   EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
   EXPECT_EQ("ERROR: p/Foo.aidl:1.1-10: Interface names should start with I. [-Winterface-name]\n",
             GetCapturedStderr());
+}
+
+TEST_F(AidlTest, FormatCommentsForJava) {
+  using android::aidl::FormatCommentsForJava;
+
+  struct TestCase {
+    vector<Comment> comments;
+    string formatted;
+  };
+  vector<TestCase> testcases = {
+      {{}, ""},
+      {{{"// line comments\n"}}, "// line comments\n"},
+      {{{"// @hide \n"}}, "// @hide \n"},
+      // Transform the last block comment as Javadoc.
+      {{{"/*\n"
+         " * Hello, world!\n"
+         " */"}},
+       "/**\n"
+       " * Hello, world!\n"
+       " */"},
+      {{{"/* @hide */"}}, "/** @hide */"},
+      {{{"/**\n"
+         "   @param foo ...\n"
+         "*/"}},
+       "/**\n"
+       "   @param foo ...\n"
+       "*/"},
+      {{{"/* @hide */"}, {"/* @hide */"}}, "/* @hide *//** @hide */"},
+      {{{"/* @deprecated first */"}, {"/* @deprecated second */"}},
+       "/* @deprecated first *//** @deprecated second */"},
+      {{{"/* @deprecated */"}, {"/** @param foo */"}}, "/* @deprecated *//** @param foo */"},
+      // Line comments are printed as they are
+      {{{"/* @deprecated */"}, {"// line comments\n"}}, "/* @deprecated */// line comments\n"},
+  };
+  for (const auto& [input, formatted] : testcases) {
+    EXPECT_EQ(formatted, FormatCommentsForJava(input));
+  }
 }
 
 TEST_F(AidlTest, HideIsNotForArgs) {
