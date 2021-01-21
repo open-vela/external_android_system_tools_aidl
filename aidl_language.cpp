@@ -69,10 +69,6 @@ bool IsJavaKeyword(const char* str) {
   };
   return std::find(kJavaKeywords.begin(), kJavaKeywords.end(), str) != kJavaKeywords.end();
 }
-
-inline bool HasHideComment(const std::string& comment) {
-  return std::regex_search(comment, std::regex("@hide\\b"));
-}
 }  // namespace
 
 AidlNode::AidlNode(const AidlLocation& location) : location_(location) {}
@@ -166,7 +162,8 @@ std::string AidlAnnotation::TypeToString(Type type) {
 
 AidlAnnotation* AidlAnnotation::Parse(
     const AidlLocation& location, const string& name,
-    std::map<std::string, std::shared_ptr<AidlConstantValue>>* parameter_list) {
+    std::map<std::string, std::shared_ptr<AidlConstantValue>>* parameter_list,
+    const std::string& comments) {
   const Schema* schema = nullptr;
   for (const Schema& a_schema : AllSchemas()) {
     if (a_schema.name == name) {
@@ -186,16 +183,20 @@ AidlAnnotation* AidlAnnotation::Parse(
     return nullptr;
   }
   if (parameter_list == nullptr) {
-    return new AidlAnnotation(location, *schema, {});
+    return new AidlAnnotation(location, *schema, {}, comments);
   }
 
-  return new AidlAnnotation(location, *schema, std::move(*parameter_list));
+  return new AidlAnnotation(location, *schema, std::move(*parameter_list), comments);
 }
 
 AidlAnnotation::AidlAnnotation(
     const AidlLocation& location, const Schema& schema,
-    std::map<std::string, std::shared_ptr<AidlConstantValue>>&& parameters)
-    : AidlNode(location), schema_(schema), parameters_(std::move(parameters)) {}
+    std::map<std::string, std::shared_ptr<AidlConstantValue>>&& parameters,
+    const std::string& comments)
+    : AidlNode(location),
+      AidlCommentable(comments),
+      schema_(schema),
+      parameters_(std::move(parameters)) {}
 
 struct ConstReferenceFinder : AidlVisitor {
   const AidlConstantReference* found;
@@ -448,10 +449,10 @@ AidlTypeSpecifier::AidlTypeSpecifier(const AidlLocation& location, const string&
                                      vector<unique_ptr<AidlTypeSpecifier>>* type_params,
                                      const string& comments)
     : AidlAnnotatable(location),
+      AidlCommentable(comments),
       AidlParameterizable<unique_ptr<AidlTypeSpecifier>>(type_params),
       unresolved_name_(unresolved_name),
       is_array_(is_array),
-      comments_(comments),
       split_name_(Split(unresolved_name, ".")) {}
 
 const AidlTypeSpecifier& AidlTypeSpecifier::ArrayBase() const {
@@ -757,7 +758,7 @@ string AidlArgument::ToString() const {
 }
 
 bool AidlCommentable::IsHidden() const {
-  return HasHideComment(GetComments());
+  return android::aidl::HasHideInComments(GetComments());
 }
 
 bool AidlCommentable::IsDeprecated() const {
@@ -1510,8 +1511,9 @@ std::string AidlInterface::GetDescriptor() const {
   return GetCanonicalName();
 }
 
-AidlImport::AidlImport(const AidlLocation& location, const std::string& needed_class)
-    : AidlNode(location), needed_class_(needed_class) {}
+AidlImport::AidlImport(const AidlLocation& location, const std::string& needed_class,
+                       const std::string& comments)
+    : AidlNode(location), AidlCommentable(comments), needed_class_(needed_class) {}
 
 // Resolves unresolved type name to fully qualified typename to import
 // case #1: SimpleName --> import p.SimpleName

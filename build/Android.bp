@@ -29,6 +29,13 @@ bootstrap_go_package {
     srcs: [
         "aidl_interface.go",
         "properties.go",
+        "aidl_api.go",
+        "aidl_gen_rule.go",
+        "aidl_interface_backends.go",
+        "aidl_interface_metadata_singleton.go",
+        "aidl_mapping.go",
+        "aidl_rust_source_provider.go",
+        "aidl_utils.go",
     ],
     testSrcs: [
         "aidl_test.go",
@@ -174,4 +181,45 @@ aidl_interface {
         "tests_3/EmptyParcelable.aidl",
         "tests_3/EmptyInterface.aidl",
     ],
+}
+
+// These test that a parcel imported from A->B->C will have the required dependencies to link in
+// all backends (C++ backends need to link direclty against the constructor of the parcelable
+// in order to work)
+aidl_interface {
+    name: "tests_transitive_parcel.a",
+    srcs: [ "tests_transitive_parcel/a/*.aidl" ],
+    imports: [
+        "tests_transitive_parcel.b",
+        "tests_transitive_parcel.c",
+    ],
+    unstable: true,
+    backend: {
+        rust: {
+            enabled: true,
+        },
+    },
+}
+
+aidl_interface {
+    name: "tests_transitive_parcel.b",
+    srcs: [ "tests_transitive_parcel/b/*.aidl" ],
+    imports: [ "tests_transitive_parcel.c" ],
+    unstable: true,
+    backend: {
+        rust: {
+            enabled: true,
+        },
+    },
+}
+
+aidl_interface {
+    name: "tests_transitive_parcel.c",
+    srcs: [ "tests_transitive_parcel/c/*.aidl" ],
+    unstable: true,
+    backend: {
+        rust: {
+            enabled: true,
+        },
+    },
 }

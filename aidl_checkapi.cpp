@@ -26,6 +26,7 @@
 
 #include <android-base/result.h>
 #include <android-base/strings.h>
+#include <gtest/gtest.h>
 
 namespace android {
 namespace aidl {
@@ -37,6 +38,24 @@ using std::map;
 using std::set;
 using std::string;
 using std::vector;
+
+static std::string Dump(const AidlDefinedType& type) {
+  std::string dump;
+  type.Dump(CodeWriter::ForString(&dump).get());
+  return dump;
+}
+
+// Uses each type's Dump() and GTest utility(EqHelper).
+static bool CheckEquality(const AidlDefinedType& older, const AidlDefinedType& newer) {
+  using testing::internal::EqHelper;
+  auto older_file = older.GetLocation().GetFile();
+  auto newer_file = newer.GetLocation().GetFile();
+  auto result = EqHelper::Compare(older_file.data(), newer_file.data(), Dump(older), Dump(newer));
+  if (!result) {
+    AIDL_ERROR(newer) << result.failure_message();
+  }
+  return result;
+}
 
 static vector<string> get_strict_annotations(const AidlAnnotatable& node) {
   // This must be symmetrical (if you can add something, you must be able to
@@ -367,15 +386,33 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
     return false;
   }
 
+  const Options::CheckApiLevel level = options.GetCheckApiLevel();
+
   std::vector<AidlDefinedType*> old_types = old_tns->AllDefinedTypes();
   std::vector<AidlDefinedType*> new_types = new_tns->AllDefinedTypes();
+
+  bool compatible = true;
+
+  if (level == Options::CheckApiLevel::EQUAL) {
+    std::set<string> old_type_names;
+    for (const auto t : old_types) {
+      old_type_names.insert(t->GetCanonicalName());
+    }
+    for (const auto new_type : new_types) {
+      const auto found = old_type_names.find(new_type->GetCanonicalName());
+      if (found == old_type_names.end()) {
+        AIDL_ERROR(new_type) << "Added type: " << new_type->GetCanonicalName();
+        compatible = false;
+        continue;
+      }
+    }
+  }
 
   map<string, AidlDefinedType*> new_map;
   for (const auto t : new_types) {
     new_map.emplace(t->GetCanonicalName(), t);
   }
 
-  bool compatible = true;
   for (const auto old_type : old_types) {
     const auto found = new_map.find(old_type->GetCanonicalName());
     if (found == new_map.end()) {
@@ -384,6 +421,13 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
       continue;
     }
     const auto new_type = found->second;
+
+    if (level == Options::CheckApiLevel::EQUAL) {
+      if (!CheckEquality(*old_type, *new_type)) {
+        compatible = false;
+      }
+      continue;
+    }
 
     if (!have_compatible_annotations(*old_type, *new_type)) {
       compatible = false;
