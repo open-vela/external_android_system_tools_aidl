@@ -122,7 +122,7 @@ class AidlVisitor {
 // Anything that is locatable in a .aidl file.
 class AidlNode {
  public:
-  AidlNode(const AidlLocation& location);
+  AidlNode(const AidlLocation& location, const std::string& comments = "");
 
   AidlNode(const AidlNode&) = default;
   virtual ~AidlNode() = default;
@@ -139,10 +139,14 @@ class AidlNode {
   virtual void TraverseChildren(std::function<void(const AidlNode&)> traverse) const = 0;
   virtual void DispatchVisit(AidlVisitor&) const = 0;
 
+  const std::string& GetComments() const { return comments_; }
+  void SetComments(const std::string comments) { comments_ = comments; }
+
  private:
   std::string PrintLine() const;
   std::string PrintLocation() const;
   const AidlLocation location_;
+  std::string comments_;
 };
 
 // unique_ptr<AidlTypeSpecifier> for type arugment,
@@ -175,19 +179,15 @@ class AidlParameterizable {
 template <>
 bool AidlParameterizable<std::string>::CheckValid() const;
 
-class AidlCommentable {
+class AidlCommentable : public AidlNode {
  public:
-  AidlCommentable(const std::string& comments) : comments_(comments) {}
+  AidlCommentable(const AidlLocation& location, const std::string& comments)
+      : AidlNode(location, comments) {}
   virtual ~AidlCommentable() = default;
 
-  const std::string& GetComments() const { return comments_; }
-  void SetComments(const std::string comments) { comments_ = comments; }
   bool IsHidden() const;
   bool IsDeprecated() const;
-  void Dump(CodeWriter& out) const;
-
- private:
-  std::string comments_;
+  void DumpComments(CodeWriter& out) const;
 };
 
 // Transforms a value string into a language specific form. Raw value as produced by
@@ -195,7 +195,7 @@ class AidlCommentable {
 using ConstantValueDecorator =
     std::function<std::string(const AidlTypeSpecifier& type, const std::string& raw_value)>;
 
-class AidlAnnotation : public AidlNode, public AidlCommentable {
+class AidlAnnotation : public AidlNode {
  public:
   enum class Type {
     BACKING = 1,
@@ -302,9 +302,9 @@ static inline bool operator==(const AidlAnnotation& lhs, const AidlAnnotation& r
   return lhs.GetName() == rhs.GetName();
 }
 
-class AidlAnnotatable : public AidlNode {
+class AidlAnnotatable : public AidlCommentable {
  public:
-  AidlAnnotatable(const AidlLocation& location);
+  AidlAnnotatable(const AidlLocation& location, const std::string& comments);
 
   AidlAnnotatable(const AidlAnnotatable&) = default;
   AidlAnnotatable(AidlAnnotatable&&) = default;
@@ -353,7 +353,6 @@ class AidlAnnotatable : public AidlNode {
 // AidlTypeSpecifier represents a reference to either a built-in type,
 // a defined type, or a variant (e.g., array of generic) of a type.
 class AidlTypeSpecifier final : public AidlAnnotatable,
-                                public AidlCommentable,
                                 public AidlParameterizable<unique_ptr<AidlTypeSpecifier>> {
  public:
   AidlTypeSpecifier(const AidlLocation& location, const string& unresolved_name, bool is_array,
@@ -435,7 +434,7 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
 // Returns the universal value unaltered.
 std::string AidlConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value);
 
-class AidlMember : public AidlNode, public AidlCommentable {
+class AidlMember : public AidlCommentable {
  public:
   AidlMember(const AidlLocation& location, const std::string& comments);
   virtual ~AidlMember() = default;
@@ -884,7 +883,7 @@ class AidlMethod : public AidlMember {
 
 // AidlDefinedType represents either an interface, parcelable, or enum that is
 // defined in the source file.
-class AidlDefinedType : public AidlAnnotatable, public AidlCommentable {
+class AidlDefinedType : public AidlAnnotatable {
  public:
   AidlDefinedType(const AidlLocation& location, const std::string& name,
                   const std::string& comments, const std::string& package,
@@ -1044,7 +1043,7 @@ class AidlStructuredParcelable : public AidlParcelable {
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 };
 
-class AidlEnumerator : public AidlNode, public AidlCommentable {
+class AidlEnumerator : public AidlCommentable {
  public:
   AidlEnumerator(const AidlLocation& location, const std::string& name, AidlConstantValue* value,
                  const std::string& comments);
@@ -1171,16 +1170,16 @@ class AidlInterface final : public AidlDefinedType {
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 };
 
-class AidlPackage : public AidlNode, public AidlCommentable {
+class AidlPackage : public AidlNode {
  public:
   AidlPackage(const AidlLocation& location, const std::string& comments)
-      : AidlNode(location), AidlCommentable(comments) {}
+      : AidlNode(location, comments) {}
   virtual ~AidlPackage() = default;
   void TraverseChildren(std::function<void(const AidlNode&)>) const {}
   void DispatchVisit(AidlVisitor& v) const { v.Visit(*this); }
 };
 
-class AidlImport : public AidlNode, public AidlCommentable {
+class AidlImport : public AidlNode {
  public:
   AidlImport(const AidlLocation& location, const std::string& needed_class,
              const std::string& comments);
@@ -1201,13 +1200,12 @@ class AidlImport : public AidlNode, public AidlCommentable {
 };
 
 // AidlDocument models an AIDL file
-class AidlDocument : public AidlNode, public AidlCommentable {
+class AidlDocument : public AidlCommentable {
  public:
   AidlDocument(const AidlLocation& location, const std::string& comments,
                std::vector<std::unique_ptr<AidlImport>> imports,
                std::vector<std::unique_ptr<AidlDefinedType>> defined_types)
-      : AidlNode(location),
-        AidlCommentable(comments),
+      : AidlCommentable(location, comments),
         imports_(std::move(imports)),
         defined_types_(std::move(defined_types)) {}
   ~AidlDocument() = default;
