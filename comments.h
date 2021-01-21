@@ -48,5 +48,7 @@ struct Deprecated {
 
 std::optional<Deprecated> FindDeprecated(const Comments& comments);
 
+std::string FormatCommentsForJava(const Comments& comments);
+
 }  // namespace aidl
 }  // namespace android

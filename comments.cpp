@@ -41,6 +41,7 @@ namespace {
 static const std::string_view kLineCommentBegin = "//";
 static const std::string_view kBlockCommentBegin = "/*";
 static const std::string_view kBlockCommentEnd = "*/";
+static const std::string_view kDocCommentBegin = "/**";
 static const std::string kTagDeprecated = "@deprecated";
 static const std::regex kTagHideRegex{"@hide\\b"};
 
@@ -212,6 +213,23 @@ std::optional<Deprecated> FindDeprecated(const Comments& comments) {
     }
   }
   return std::nullopt;
+}
+
+// Formats comments for the Java backend.
+// The last/block comment is transformed into javadoc(/** */)
+// and others are used as they are.
+std::string FormatCommentsForJava(const Comments& comments) {
+  std::stringstream out;
+  for (auto it = begin(comments); it != end(comments); it++) {
+    const bool last = next(it) == end(comments);
+    // We only re-format the last/block comment which is not already a doc-style comment.
+    if (last && it->type == Comment::Type::BLOCK && !StartsWith(it->body, kDocCommentBegin)) {
+      out << kDocCommentBegin << ConsumePrefix(it->body, kBlockCommentBegin);
+    } else {
+      out << it->body;
+    }
+  }
+  return out.str();
 }
 
 }  // namespace aidl
