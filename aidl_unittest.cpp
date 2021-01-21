@@ -801,8 +801,7 @@ TEST_P(AidlTest, SupportDeprecated) {
       "}",
       {
           {Options::Language::JAVA, {"out/IFoo.java", "@Deprecated"}},
-          // TODO(b/177276893) @deprecated should be in javadoc style comments
-          // {Options::Language::JAVA, {"out/IFoo.java", "/** @deprecated use bar() */"}},
+          {Options::Language::JAVA, {"out/IFoo.java", "/** @deprecated use bar() */"}},
           {Options::Language::CPP, {"out/IFoo.h", "__attribute__((deprecated(\"use bar()\")))"}},
           {Options::Language::NDK,
            {"out/aidl/IFoo.h", "__attribute__((deprecated(\"use bar()\")))"}},
@@ -890,7 +889,7 @@ TEST_P(AidlTest, SupportDeprecated) {
                       {Options::Language::JAVA, {"out/Foo.java", "@Deprecated"}},
                       {Options::Language::CPP, {"out/Foo.h", "__attribute__((deprecated"}},
                       {Options::Language::NDK, {"out/aidl/Foo.h", "__attribute__((deprecated"}},
-                      // TODO(b/174514415) support "deprecated"
+                      // TODO(b/177860423) support "deprecated" in Rust enum
                       // {Options::Language::RUST, {"out/Foo.rs", "#[deprecated"}},
                   });
 }
@@ -3664,6 +3663,43 @@ TEST_P(AidlTest, ErrorInterfaceName) {
   EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
   EXPECT_EQ("ERROR: p/Foo.aidl:1.1-10: Interface names should start with I. [-Winterface-name]\n",
             GetCapturedStderr());
+}
+
+TEST_F(AidlTest, FormatCommentsForJava) {
+  using android::aidl::FormatCommentsForJava;
+
+  struct TestCase {
+    vector<Comment> comments;
+    string formatted;
+  };
+  vector<TestCase> testcases = {
+      {{}, ""},
+      {{{"// line comments\n"}}, "// line comments\n"},
+      {{{"// @hide \n"}}, "// @hide \n"},
+      // Transform the last block comment as Javadoc.
+      {{{"/*\n"
+         " * Hello, world!\n"
+         " */"}},
+       "/**\n"
+       " * Hello, world!\n"
+       " */"},
+      {{{"/* @hide */"}}, "/** @hide */"},
+      {{{"/**\n"
+         "   @param foo ...\n"
+         "*/"}},
+       "/**\n"
+       "   @param foo ...\n"
+       "*/"},
+      {{{"/* @hide */"}, {"/* @hide */"}}, "/* @hide *//** @hide */"},
+      {{{"/* @deprecated first */"}, {"/* @deprecated second */"}},
+       "/* @deprecated first *//** @deprecated second */"},
+      {{{"/* @deprecated */"}, {"/** @param foo */"}}, "/* @deprecated *//** @param foo */"},
+      // Line comments are printed as they are
+      {{{"/* @deprecated */"}, {"// line comments\n"}}, "/* @deprecated */// line comments\n"},
+  };
+  for (const auto& [input, formatted] : testcases) {
+    EXPECT_EQ(formatted, FormatCommentsForJava(input));
+  }
 }
 
 TEST_F(AidlTest, HideIsNotForArgs) {
