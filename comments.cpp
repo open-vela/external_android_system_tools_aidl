@@ -59,22 +59,13 @@ struct BlockTag {
   std::string description;
 };
 
-struct Comment {
-  enum class Type { LINE, BLOCK };
-  Type type;
-  std::string body;
-
-  std::vector<std::string> TrimmedLines() const;
-  std::vector<BlockTag> BlockTags() const;
-};
-
-// Removes comment markers: //, /*, */, optional leading "*" in doc/block comments
+// Removes comment markers: //, /*, */, optional leading "*" in block comments
 // - keeps leading spaces, but trims trailing spaces
 // - keeps empty lines
-std::vector<std::string> Comment::TrimmedLines() const {
-  if (type == Type::LINE) return std::vector{ConsumePrefix(body, kLineCommentBegin)};
+std::vector<std::string> TrimmedLines(const Comment& c) {
+  if (c.type == Comment::Type::LINE) return std::vector{ConsumePrefix(c.body, kLineCommentBegin)};
 
-  std::string stripped = ConsumeSuffix(ConsumePrefix(body, kBlockCommentBegin), kBlockCommentEnd);
+  std::string stripped = ConsumeSuffix(ConsumePrefix(c.body, kBlockCommentBegin), kBlockCommentEnd);
 
   std::vector<std::string> lines;
   bool found_first_line = false;
@@ -108,7 +99,7 @@ std::vector<std::string> Comment::TrimmedLines() const {
   return lines;
 }
 
-std::vector<BlockTag> Comment::BlockTags() const {
+std::vector<BlockTag> BlockTags(const Comment& c) {
   std::vector<BlockTag> tags;
 
   // current tag and paragraph
@@ -126,7 +117,7 @@ std::vector<BlockTag> Comment::BlockTags() const {
     paragraph.clear();
   };
 
-  for (const auto& line : TrimmedLines()) {
+  for (const auto& line : TrimmedLines(c)) {
     size_t idx = 0;
     // skip leading spaces
     for (; idx < line.size() && isspace(line[idx]); idx++)
@@ -159,83 +150,10 @@ std::vector<BlockTag> Comment::BlockTags() const {
 
   return tags;
 }
-
-// TODO(b/177276676) remove this when comments are kept as parsed in AST
-Result<std::vector<Comment>> ParseComments(const std::string& comments) {
-  enum ParseState {
-    INITIAL,
-    SLASH,
-    SLASHSLASH,
-    SLASHSTAR,
-    STAR,
-  };
-  ParseState st = INITIAL;
-  std::string body;
-  std::vector<Comment> result;
-  for (const auto& c : comments) {
-    switch (st) {
-      case INITIAL:  // trim ws & newlines
-        if (c == '/') {
-          st = SLASH;
-          body += c;
-        } else if (std::isspace(c)) {
-          // skip whitespaces outside comments
-        } else {
-          return Error() << "expecing / or space, but got unknown: " << c;
-        }
-        break;
-      case SLASH:
-        if (c == '/') {
-          st = SLASHSLASH;
-          body += c;
-        } else if (c == '*') {
-          st = SLASHSTAR;
-          body += c;
-        } else {
-          return Error() << "expecting / or *, but got unknown: " << c;
-        }
-        break;
-      case SLASHSLASH:
-        if (c == '\n') {
-          st = INITIAL;
-          result.push_back({Comment::Type::LINE, std::move(body)});
-          body.clear();
-        } else {
-          body += c;
-        }
-        break;
-      case SLASHSTAR:
-        body += c;
-        if (c == '*') {
-          st = STAR;
-        }
-        break;
-      case STAR:  // read "*", about to close
-        body += c;
-        if (c == '/') {  // close!
-          st = INITIAL;
-          result.push_back({Comment::Type::BLOCK, std::move(body)});
-          body.clear();
-        } else if (c == '*') {
-          // about to close...
-        } else {
-          st = SLASHSTAR;
-        }
-        break;
-      default:
-        return Error() << "unexpected state: " << st;
-    }
-  }
-  return result;
 }
 
-}  // namespace
-
-bool HasHideInComments(const std::string& comments) {
-  auto result = ParseComments(comments);
-  AIDL_FATAL_IF(!result.ok(), AIDL_LOCATION_HERE) << result.error();
-
-  for (const auto& c : *result) {
+bool HasHideInComments(const Comments& comments) {
+  for (const auto& c : comments) {
     if (c.type == Comment::Type::LINE) continue;
     if (std::regex_search(c.body, kTagHideRegex)) {
       return true;
@@ -245,13 +163,10 @@ bool HasHideInComments(const std::string& comments) {
 }
 
 // Finds @deprecated tag and returns it with optional note which follows the tag.
-std::optional<Deprecated> FindDeprecated(const std::string& comments) {
-  auto result = ParseComments(comments);
-  AIDL_FATAL_IF(!result.ok(), AIDL_LOCATION_HERE) << result.error();
-
-  for (const auto& c : *result) {
+std::optional<Deprecated> FindDeprecated(const Comments& comments) {
+  for (const auto& c : comments) {
     if (c.type == Comment::Type::LINE) continue;
-    for (const auto& [name, description] : c.BlockTags()) {
+    for (const auto& [name, description] : BlockTags(c)) {
       // take the first @deprecated
       if (kTagDeprecated == name) {
         return Deprecated{description};
