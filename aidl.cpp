@@ -437,15 +437,14 @@ bool parse_preprocessed_file(const IoDelegate& io_delegate, const string& filena
       if (AidlTypenames::IsBuiltinTypename(class_name)) {
         continue;
       }
-      AidlParcelable* doc = new AidlParcelable(location, class_name, package, Comments{});
+      AidlParcelable* doc = new AidlParcelable(location, class_name, package, "" /* comments */);
       typenames->AddPreprocessedType(unique_ptr<AidlParcelable>(doc));
     } else if (decl == "structured_parcelable") {
-      AidlStructuredParcelable* doc =
-          new AidlStructuredParcelable(location, class_name, package, Comments{}, nullptr, nullptr);
+      AidlStructuredParcelable* doc = new AidlStructuredParcelable(
+          location, class_name, package, "" /* comments */, nullptr, nullptr);
       typenames->AddPreprocessedType(unique_ptr<AidlStructuredParcelable>(doc));
     } else if (decl == "interface") {
-      AidlInterface* doc =
-          new AidlInterface(location, class_name, Comments{}, false, package, nullptr);
+      AidlInterface* doc = new AidlInterface(location, class_name, "", false, package, nullptr);
       typenames->AddPreprocessedType(unique_ptr<AidlInterface>(doc));
     } else {
       success = false;
@@ -675,23 +674,23 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
       // add the meta-method 'int getInterfaceVersion()' if version is specified.
       if (options.Version() > 0) {
         AidlTypeSpecifier* ret =
-            new AidlTypeSpecifier(AIDL_LOCATION_HERE, "int", false, nullptr, Comments{});
+            new AidlTypeSpecifier(AIDL_LOCATION_HERE, "int", false, nullptr, "");
         ret->Resolve(*typenames);
         vector<unique_ptr<AidlArgument>>* args = new vector<unique_ptr<AidlArgument>>();
         auto method = std::make_unique<AidlMethod>(
-            AIDL_LOCATION_HERE, false, ret, "getInterfaceVersion", args, Comments{},
-            kGetInterfaceVersionId, false /* is_user_defined */);
+            AIDL_LOCATION_HERE, false, ret, "getInterfaceVersion", args, "", kGetInterfaceVersionId,
+            false /* is_user_defined */);
         interface->AddMethod(std::move(method));
       }
       // add the meta-method 'string getInterfaceHash()' if hash is specified.
       if (!options.Hash().empty()) {
         AidlTypeSpecifier* ret =
-            new AidlTypeSpecifier(AIDL_LOCATION_HERE, "String", false, nullptr, Comments{});
+            new AidlTypeSpecifier(AIDL_LOCATION_HERE, "String", false, nullptr, "");
         ret->Resolve(*typenames);
         vector<unique_ptr<AidlArgument>>* args = new vector<unique_ptr<AidlArgument>>();
-        auto method = std::make_unique<AidlMethod>(
-            AIDL_LOCATION_HERE, false, ret, kGetInterfaceHash, args, Comments{},
-            kGetInterfaceHashId, false /* is_user_defined */);
+        auto method =
+            std::make_unique<AidlMethod>(AIDL_LOCATION_HERE, false, ret, kGetInterfaceHash, args,
+                                         "", kGetInterfaceHashId, false /* is_user_defined */);
         interface->AddMethod(std::move(method));
       }
       if (!check_and_assign_method_ids(interface->GetMethods())) {
@@ -908,9 +907,7 @@ bool dump_api(const Options& options, const IoDelegate& io_delegate) {
         unique_ptr<CodeWriter> writer =
             io_delegate.GetCodeWriter(GetApiDumpPathFor(*type, options));
         // dump doc comments (license) as well for each type
-        for (const auto& c : doc.GetComments()) {
-          (*writer) << c.body;
-        }
+        (*writer) << doc.GetComments();
         (*writer) << kPreamble;
         if (!type->GetPackage().empty()) {
           (*writer) << "package " << type->GetPackage() << ";\n";
