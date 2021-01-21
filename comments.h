@@ -29,6 +29,8 @@ struct Comment {
   Type type;
   std::string body;
 
+  Comment(const std::string& body);
+
   // for GTest assertions
   friend inline bool operator==(const Comment& lhs, const Comment& rhs) {
     return lhs.body == rhs.body;

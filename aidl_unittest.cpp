@@ -31,6 +31,7 @@
 #include "aidl_language.h"
 #include "aidl_to_cpp.h"
 #include "aidl_to_java.h"
+#include "comments.h"
 #include "logging.h"
 #include "options.h"
 #include "tests/fake_io_delegate.h"
@@ -636,14 +637,12 @@ TEST_P(AidlTest, WritesComments) {
   EXPECT_NE(nullptr, parse_result);
   EXPECT_EQ("", GetCapturedStderr());
 
-  EXPECT_EQ((Comments{{Comment::Type::BLOCK, "/* foo */"}}), parse_result->GetComments());
+  EXPECT_EQ((Comments{{"/* foo */"}}), parse_result->GetComments());
 
   const AidlInterface* interface = parse_result->AsInterface();
-  EXPECT_EQ((Comments{{Comment::Type::BLOCK, "/* i */"}}),
-            interface->GetMethods()[0]->GetComments());
-  EXPECT_EQ((Comments{{Comment::Type::LINE, "// j\n"}}), interface->GetMethods()[1]->GetComments());
-  EXPECT_EQ((Comments{{Comment::Type::LINE, "// k1\n"}, {Comment::Type::BLOCK, "/* k2 */"}}),
-            interface->GetMethods()[2]->GetComments());
+  EXPECT_EQ((Comments{{"/* i */"}}), interface->GetMethods()[0]->GetComments());
+  EXPECT_EQ((Comments{{"// j\n"}}), interface->GetMethods()[1]->GetComments());
+  EXPECT_EQ((Comments{{"// k1\n"}, {"/* k2 */"}}), interface->GetMethods()[2]->GetComments());
 }
 
 TEST_P(AidlTest, CppHeaderCanBeIdentifierAsWell) {
@@ -662,8 +661,7 @@ TEST_P(AidlTest, CppHeaderCanBeIdentifierAsWell) {
   auto parse_result = Parse(input_path, input, typenames_, GetLanguage());
   EXPECT_NE(nullptr, parse_result);
   const AidlInterface* interface = parse_result->AsInterface();
-  EXPECT_EQ((Comments{{Comment::Type::LINE, "// get bar\n"}}),
-            interface->GetMethods()[0]->GetComments());
+  EXPECT_EQ((Comments{{"// get bar\n"}}), interface->GetMethods()[0]->GetComments());
 }
 
 TEST_F(AidlTest, ParsesPreprocessedFile) {
@@ -1439,12 +1437,13 @@ TEST_F(AidlTest, ApiDump) {
       "import foo.bar.Data;\n"
       "// commented /* @hide */\n"
       "interface IFoo {\n"
-      "    /* @hide */\n"
-      "    int foo(out int[] a, String b, boolean c, inout List<String>  d);\n"
-      "    int foo2(@utf8InCpp String x, inout List<String>  y);\n"
+      "    /* @hide applied \n"
+      "       @deprecated use foo2 */\n"
+      "    int foo(out int[] a, String b, boolean c, inout List<String> d);\n"
+      "    int foo2(@utf8InCpp String x, inout List<String> y);\n"
       "    IFoo foo3(IFoo foo);\n"
       "    Data getData();\n"
-      "    // @hide\n"
+      "    // @hide not applied\n"
       "    /** blahblah\n"
       "        @deprecated\n"
       "          reason why... */\n"
@@ -1474,29 +1473,38 @@ TEST_F(AidlTest, ApiDump) {
   ASSERT_TRUE(result);
   string actual;
   EXPECT_TRUE(io_delegate_.GetWrittenContents("dump/foo/bar/IFoo.aidl", &actual));
-  EXPECT_EQ(actual, string(kPreamble).append(R"(package foo.bar;
+  EXPECT_EQ(string(kPreamble).append(R"(package foo.bar;
 interface IFoo {
-  /* @hide */
+  /**
+   * @hide
+   * @deprecated use foo2
+   */
   int foo(out int[] a, String b, boolean c, inout List<String> d);
   int foo2(@utf8InCpp String x, inout List<String> y);
   foo.bar.IFoo foo3(foo.bar.IFoo foo);
   foo.bar.Data getData();
-  /* @deprecated reason why... */
+  /**
+   * @deprecated reason why...
+   */
   const int A = 1;
   const String STR = "Hello";
 }
-)"));
+)"),
+            actual);
 
   EXPECT_TRUE(io_delegate_.GetWrittenContents("dump/foo/bar/Data.aidl", &actual));
-  EXPECT_EQ(actual, string(kPreamble).append(R"(package foo.bar;
-/* @hide */
+  EXPECT_EQ(string(kPreamble).append(R"(package foo.bar;
+/**
+ * @hide
+ */
 parcelable Data {
   int x = 10;
   int y;
   foo.bar.IFoo foo;
   @nullable String[] c;
 }
-)"));
+)"),
+            actual);
 }
 
 TEST_F(AidlTest, ApiDumpWithManualIds) {

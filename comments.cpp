@@ -45,7 +45,8 @@ static const std::string kTagDeprecated = "@deprecated";
 static const std::regex kTagHideRegex{"@hide\\b"};
 
 std::string ConsumePrefix(const std::string& s, std::string_view prefix) {
-  AIDL_FATAL_IF(!StartsWith(s, prefix), AIDL_LOCATION_HERE);
+  AIDL_FATAL_IF(!StartsWith(s, prefix), AIDL_LOCATION_HERE)
+      << "'" << s << "' has no prefix '" << prefix << "'";
   return s.substr(prefix.size());
 }
 
@@ -63,7 +64,9 @@ struct BlockTag {
 // - keeps leading spaces, but trims trailing spaces
 // - keeps empty lines
 std::vector<std::string> TrimmedLines(const Comment& c) {
-  if (c.type == Comment::Type::LINE) return std::vector{ConsumePrefix(c.body, kLineCommentBegin)};
+  if (c.type == Comment::Type::LINE) {
+    return std::vector{ConsumePrefix(c.body, kLineCommentBegin)};
+  }
 
   std::string stripped = ConsumeSuffix(ConsumePrefix(c.body, kBlockCommentBegin), kBlockCommentEnd);
 
@@ -99,7 +102,10 @@ std::vector<std::string> TrimmedLines(const Comment& c) {
   return lines;
 }
 
+// Parses a block comment and returns block tags in the comment.
 std::vector<BlockTag> BlockTags(const Comment& c) {
+  AIDL_FATAL_IF(c.type != Comment::Type::BLOCK, AIDL_LOCATION_HERE);
+
   std::vector<BlockTag> tags;
 
   // current tag and paragraph
@@ -150,23 +156,55 @@ std::vector<BlockTag> BlockTags(const Comment& c) {
 
   return tags;
 }
-}
 
-bool HasHideInComments(const Comments& comments) {
-  for (const auto& c : comments) {
-    if (c.type == Comment::Type::LINE) continue;
-    if (std::regex_search(c.body, kTagHideRegex)) {
-      return true;
-    }
+}  // namespace
+
+Comment::Comment(const std::string& body) : body(body) {
+  if (StartsWith(body, kLineCommentBegin)) {
+    type = Type::LINE;
+  } else if (StartsWith(body, kBlockCommentBegin) && EndsWith(body, kBlockCommentEnd)) {
+    type = Type::BLOCK;
+  } else {
+    AIDL_FATAL(AIDL_LOCATION_HERE) << "invalid comments body:" << body;
   }
-  return false;
 }
 
-// Finds @deprecated tag and returns it with optional note which follows the tag.
+// Returns the immediate block comment from the list of comments.
+// Only the last/block comment can have the tag.
+//
+//   /* @hide */
+//   int x;
+//
+// But tags in line or distant comments don't count. In the following,
+// the variable 'x' is not hidden.
+//
+//    // @hide
+//    int x;
+//
+//    /* @hide */
+//    /* this is the immemediate comment to 'x' */
+//    int x;
+//
+static std::optional<Comment> GetValidComment(const Comments& comments) {
+  if (!comments.empty() && comments.back().type == Comment::Type::BLOCK) {
+    return comments.back();
+  }
+  return std::nullopt;
+}
+
+// Sees if comments have the @hide tag.
+// Example: /** @hide */
+bool HasHideInComments(const Comments& comments) {
+  const auto valid_comment = GetValidComment(comments);
+  return valid_comment && std::regex_search(valid_comment->body, kTagHideRegex);
+}
+
+// Finds the @deprecated tag in comments and returns it with optional note which
+// follows the tag.
+// Example: /** @deprecated reason */
 std::optional<Deprecated> FindDeprecated(const Comments& comments) {
-  for (const auto& c : comments) {
-    if (c.type == Comment::Type::LINE) continue;
-    for (const auto& [name, description] : BlockTags(c)) {
+  if (const auto valid_comment = GetValidComment(comments); valid_comment) {
+    for (const auto& [name, description] : BlockTags(comments.back())) {
       // take the first @deprecated
       if (kTagDeprecated == name) {
         return Deprecated{description};
