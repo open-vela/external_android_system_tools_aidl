@@ -192,22 +192,26 @@ struct DiagnoseExplicitDefault : DiagnosticsVisitor {
     CheckExplicitDefault(*first);
   }
   void CheckExplicitDefault(const AidlVariableDeclaration& v) {
-    if (ShouldHaveExplicitDefault(v) && !v.IsDefaultUserSpecified()) {
+    if (v.IsDefaultUserSpecified()) return;
+    if (v.GetType().IsNullable()) return;
+    if (v.GetType().IsArray()) {
       diag.Report(v.GetLocation(), DiagnosticID::explicit_default)
-          << "The field '" << v.GetName() << "' has no explicit value.";
+          << "The array field '" << v.GetName() << "' has no explicit value.";
+      return;
     }
-  }
-  bool ShouldHaveExplicitDefault(const AidlVariableDeclaration& v) {
-    if (v.GetType().IsNullable()) return false;
-    if (v.GetType().IsArray()) return true;
-    if (auto type_name = v.GetType().GetName(); AidlTypenames::IsBuiltinTypename(type_name)) {
-      static const std::unordered_set<std::string> default_not_available = {
-          "IBinder", "ParcelableHolder", "ParcelFileDescriptor", "FileDescriptor", "List", "Map"};
-      return default_not_available.find(type_name) == default_not_available.end();
+    const auto type_name = v.GetType().GetName();
+    if (AidlTypenames::IsPrimitiveTypename(type_name) || type_name == "String" ||
+        type_name == "CharSequence") {
+      diag.Report(v.GetLocation(), DiagnosticID::explicit_default)
+          << "The primitive field '" << v.GetName() << "' has no explicit value.";
+      return;
     }
     const auto defined_type = v.GetType().GetDefinedType();
-    AIDL_FATAL_IF(!defined_type, v);
-    return defined_type->AsEnumDeclaration() != nullptr;
+    if (defined_type && defined_type->AsEnumDeclaration()) {
+      diag.Report(v.GetLocation(), DiagnosticID::enum_explicit_default)
+          << "The enum field '" << v.GetName() << "' has no explicit value.";
+      return;
+    }
   }
 };
 
