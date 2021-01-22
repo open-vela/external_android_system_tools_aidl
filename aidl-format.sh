@@ -21,6 +21,19 @@ set -e
 # - should we have our own formatter?
 
 function _aidl-format() (
+    # Find .aidl-format file to use. The file is located in one of the parent
+    # directories of the source file
+    function find-aidl-format-style() {
+        local path="$1"
+        while [[ "$path" != / ]];
+        do
+            if find "$path" -maxdepth 1 -mindepth 1 -name .aidl-format | grep "."; then
+                return
+            fi
+            path="$(readlink -f "$path"/..)"
+        done
+    }
+
     # Do a "reversible" conversion of the input file so that it is more friendly
     # to clang-format. For example 'oneway interface Foo{}' is not recognized as
     # an interface. Convert it to 'interface __aidl_oneway__ Foo{}'.
@@ -58,12 +71,14 @@ function _aidl-format() (
 
     function apply-clang-format() {
       local input="$1"
+      local style="$2"
       local temp="$(mktemp)"
+      local styletext="$([ -n "$style" ] && cat "$style" | tr '\n' ',' 2> /dev/null)"
       cat "$input" | clang-format \
         --style='{BasedOnStyle: Google,
         ColumnLimit: 100,
         IndentWidth: 4,
-        ContinuationIndentWidth: 8}' \
+        ContinuationIndentWidth: 8, '"${styletext}"'}' \
         --assume-filename=${input%.*}.java \
         > "$temp"
       mv "$temp" "$input"
@@ -100,11 +115,12 @@ function _aidl-format() (
     function format-one() {
       local mode="$1"
       local input="$2"
+      local style="$3"
       local output="$(mktemp)"
 
       cp "$input" "$output"
       prepare "$output"
-      apply-clang-format "$output"
+      apply-clang-format "$output" "$style"
       fixup "$output"
 
       if [ $mode = "diff" ]; then
@@ -148,7 +164,8 @@ function _aidl-format() (
       fi
       local input="$(mktemp)"
       cat /dev/stdin > "$input"
-      format-one $mode "$input"
+      local style="$(pwd)/.aidl-format"
+      format-one $mode "$input" "$style"
       rm "$input"
     else
       for file in "$@"
@@ -157,9 +174,11 @@ function _aidl-format() (
           echo "$file": no such file
           exit 1
         fi
-        format-one $mode "$file"
+        local style="$(find-aidl-format-style $(dirname "$filename"))"
+        format-one $mode "$file" "$style"
       done
     fi
 )
+
 
 _aidl-format "$@"
