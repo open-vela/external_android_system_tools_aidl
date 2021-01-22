@@ -71,7 +71,8 @@ bool IsJavaKeyword(const char* str) {
 }
 }  // namespace
 
-AidlNode::AidlNode(const AidlLocation& location) : location_(location) {}
+AidlNode::AidlNode(const AidlLocation& location, const std::string& comments)
+    : location_(location), comments_(comments) {}
 
 std::string AidlNode::PrintLine() const {
   std::stringstream ss;
@@ -193,10 +194,7 @@ AidlAnnotation::AidlAnnotation(
     const AidlLocation& location, const Schema& schema,
     std::map<std::string, std::shared_ptr<AidlConstantValue>>&& parameters,
     const std::string& comments)
-    : AidlNode(location),
-      AidlCommentable(comments),
-      schema_(schema),
-      parameters_(std::move(parameters)) {}
+    : AidlNode(location, comments), schema_(schema), parameters_(std::move(parameters)) {}
 
 struct ConstReferenceFinder : AidlVisitor {
   const AidlConstantReference* found;
@@ -336,7 +334,8 @@ static const AidlAnnotation* GetAnnotation(const vector<AidlAnnotation>& annotat
   return nullptr;
 }
 
-AidlAnnotatable::AidlAnnotatable(const AidlLocation& location) : AidlNode(location) {}
+AidlAnnotatable::AidlAnnotatable(const AidlLocation& location, const std::string& comments)
+    : AidlCommentable(location, comments) {}
 
 bool AidlAnnotatable::IsNullable() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::NULLABLE);
@@ -448,8 +447,7 @@ AidlTypeSpecifier::AidlTypeSpecifier(const AidlLocation& location, const string&
                                      bool is_array,
                                      vector<unique_ptr<AidlTypeSpecifier>>* type_params,
                                      const string& comments)
-    : AidlAnnotatable(location),
-      AidlCommentable(comments),
+    : AidlAnnotatable(location, comments),
       AidlParameterizable<unique_ptr<AidlTypeSpecifier>>(type_params),
       unresolved_name_(unresolved_name),
       is_array_(is_array),
@@ -766,7 +764,7 @@ bool AidlCommentable::IsDeprecated() const {
 }
 
 // Dumps comment only if its has  meaningful tags.
-void AidlCommentable::Dump(CodeWriter& out) const {
+void AidlCommentable::DumpComments(CodeWriter& out) const {
   using namespace android::aidl;
   if (IsHidden()) {
     out << "/* @hide */\n";
@@ -779,7 +777,7 @@ void AidlCommentable::Dump(CodeWriter& out) const {
 }
 
 AidlMember::AidlMember(const AidlLocation& location, const std::string& comments)
-    : AidlNode(location), AidlCommentable(comments) {}
+    : AidlCommentable(location, comments) {}
 
 AidlConstantDeclaration::AidlConstantDeclaration(const AidlLocation& location,
                                                  AidlTypeSpecifier* type, const std::string& name,
@@ -859,8 +857,7 @@ string AidlMethod::ToString() const {
 AidlDefinedType::AidlDefinedType(const AidlLocation& location, const std::string& name,
                                  const std::string& comments, const std::string& package,
                                  std::vector<std::unique_ptr<AidlMember>>* members)
-    : AidlAnnotatable(location),
-      AidlCommentable(comments),
+    : AidlAnnotatable(location, comments),
       name_(name),
       package_(package),
       split_package_(package.empty() ? std::vector<std::string>()
@@ -900,21 +897,21 @@ std::string AidlDefinedType::GetCanonicalName() const {
 }
 
 void AidlDefinedType::DumpHeader(CodeWriter* writer) const {
-  AidlCommentable::Dump(*writer);
+  DumpComments(*writer);
   DumpAnnotations(writer);
 }
 
 void AidlDefinedType::DumpMembers(CodeWriter& out) const {
   for (const auto& method : GetMethods()) {
-    method->AidlCommentable::Dump(out);
+    method->DumpComments(out);
     out << method->ToString() << ";\n";
   }
   for (const auto& field : GetFields()) {
-    field->AidlCommentable::Dump(out);
+    field->DumpComments(out);
     out << field->ToString() << ";\n";
   }
   for (const auto& constdecl : GetConstantDeclarations()) {
-    constdecl->AidlCommentable::Dump(out);
+    constdecl->DumpComments(out);
     out << constdecl->ToString() << ";\n";
   }
 }
@@ -1177,8 +1174,7 @@ bool AidlStructuredParcelable::LanguageSpecificCheckValid(const AidlTypenames& t
 
 AidlEnumerator::AidlEnumerator(const AidlLocation& location, const std::string& name,
                                AidlConstantValue* value, const std::string& comments)
-    : AidlNode(location),
-      AidlCommentable(comments),
+    : AidlCommentable(location, comments),
       name_(name),
       value_(value),
       value_user_specified_(value != nullptr) {}
@@ -1513,7 +1509,7 @@ std::string AidlInterface::GetDescriptor() const {
 
 AidlImport::AidlImport(const AidlLocation& location, const std::string& needed_class,
                        const std::string& comments)
-    : AidlNode(location), AidlCommentable(comments), needed_class_(needed_class) {}
+    : AidlNode(location, comments), needed_class_(needed_class) {}
 
 // Resolves unresolved type name to fully qualified typename to import
 // case #1: SimpleName --> import p.SimpleName
