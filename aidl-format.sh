@@ -60,7 +60,10 @@ function _aidl-format() (
       local input="$1"
       local temp="$(mktemp)"
       cat "$input" | clang-format \
-        --style='{BasedOnStyle: Google, BreakAfterJavaFieldAnnotations: false, ColumnLimit: 100}' \
+        --style='{BasedOnStyle: Google,
+        ColumnLimit: 100,
+        IndentWidth: 4,
+        ContinuationIndentWidth: 8}' \
         --assume-filename=${input%.*}.java \
         > "$temp"
       mv "$temp" "$input"
