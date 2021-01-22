@@ -2,7 +2,7 @@
  * This file is auto-generated.  DO NOT MODIFY.
  */
 package android.aidl.tests;
-/*
+/**
  * Hello, world!
  */
 public @interface ByteEnum {

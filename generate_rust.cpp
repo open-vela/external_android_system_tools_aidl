@@ -765,7 +765,7 @@ bool GenerateRustEnumDeclaration(const string& filename, const AidlEnumDeclarati
   const auto& aidl_backing_type = enum_decl->GetBackingType();
   auto backing_type = RustNameOf(aidl_backing_type, typenames, StorageMode::VALUE);
 
-  // TODO(b/174514415) support "deprecated" for enum types
+  // TODO(b/177860423) support "deprecated" for enum types
   *code_writer << "#![allow(non_upper_case_globals)]\n";
   *code_writer << "use binder::declare_binder_enum;\n";
   *code_writer << "declare_binder_enum! { " << enum_decl->GetName() << " : " << backing_type
