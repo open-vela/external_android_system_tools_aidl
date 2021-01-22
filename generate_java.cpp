@@ -290,10 +290,7 @@ namespace aidl {
 namespace java {
 
 std::string GenerateComments(const AidlCommentable& node) {
-  std::string comments;
-  for (const auto& c : node.GetComments()) {
-    comments += c.body;
-  }
+  std::string comments = FormatCommentsForJava(node.GetComments());
   if (!comments.empty() && comments.back() != '\n') {
     comments += '\n';
   }
