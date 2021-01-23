@@ -90,6 +90,11 @@ TEST_F(DiagnosticsTest, explicit_default) {
   ParseFiles({{"Foo.aidl", "parcelable Foo { int n; }"}});
 }
 
+TEST_F(DiagnosticsTest, enum_explicit_default) {
+  expect_diagnostics = {DiagnosticID::enum_explicit_default};
+  ParseFiles({{"Foo.aidl", "parcelable Foo { E e; }"}, {"E.aidl", "enum E { A }"}});
+}
+
 TEST_F(DiagnosticsTest, explicit_default_OkayForSomeTypesOrDefaultIsSet) {
   expect_diagnostics = {};
   ParseFiles({{"Foo.aidl",
