@@ -126,6 +126,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 	}
 
 	vendorAvailable := i.properties.Vendor_available
+	odmAvailable := i.properties.Odm_available
 	productAvailable := i.properties.Product_available
 	if lang == langCpp {
 		// Vendor and product modules cannot use the libbinder (cpp) backend of AIDL in a
@@ -150,6 +151,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		// nil (unspecified) is used instead of false so that this can't conflict with
 		// 'vendor: true', for instance.
 		vendorAvailable = nil
+		odmAvailable = nil
 		productAvailable = nil
 		overrideVndkProperties.Vndk.Enabled = proptools.BoolPtr(false)
 		overrideVndkProperties.Vndk.Support_system_process = proptools.BoolPtr(false)
@@ -165,6 +167,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 			&ccProperties{
 				Name:                      proptools.StringPtr(cppModuleGen),
 				Vendor_available:          vendorAvailable,
+				Odm_available:             odmAvailable,
 				Product_available:         productAvailable,
 				Host_supported:            hostSupported,
 				Defaults:                  []string{"aidl-cpp-module-defaults"},
