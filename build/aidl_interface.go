@@ -306,9 +306,6 @@ type aidlInterfaceProperties struct {
 	// Whether the library can be installed on the vendor image.
 	Vendor_available *bool
 
-	// Whether the library can be installed on the odm image.
-	Odm_available *bool
-
 	// Whether the library can be installed on the product image.
 	Product_available *bool
 
