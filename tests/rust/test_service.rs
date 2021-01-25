@@ -25,7 +25,7 @@ use aidl_test_interface::aidl::android::aidl::tests::{
     IOldName, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable, Union,
 };
 use aidl_test_interface::binder::{self, Interface, ParcelFileDescriptor, SpIBinder};
-use aidl_test_versioned_interface_V1::aidl::android::aidl::versioned::tests::{
+use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::{
     IFooInterface, IFooInterface::BnFooInterface, IFooInterface::BpFooInterface, BazUnion::BazUnion,
 };
 use std::collections::HashMap;
