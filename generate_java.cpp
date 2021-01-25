@@ -290,7 +290,7 @@ namespace aidl {
 namespace java {
 
 std::string GenerateComments(const AidlCommentable& node) {
-  std::string comments = node.GetComments();
+  std::string comments = FormatCommentsForJava(node.GetComments());
   if (!comments.empty() && comments.back() != '\n') {
     comments += '\n';
   }
@@ -682,7 +682,7 @@ void generate_enum(const CodeWriterPtr& code_writer, const AidlEnumDeclaration* 
 void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypenames& typenames) {
   const string tag_type = "int";
   const AidlTypeSpecifier tag_type_specifier(AIDL_LOCATION_HERE, tag_type, false /* isArray */,
-                                             nullptr /* type_params */, "");
+                                             nullptr /* type_params */, Comments{});
   const string clazz = decl->GetName();
 
   out << "/*\n";
