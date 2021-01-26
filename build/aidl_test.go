@@ -192,6 +192,12 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 
 	ctx.PreArchMutators(android.RegisterDefaultsPreArchMutators)
 	ctx.PreArchMutators(android.RegisterVisibilityRuleGatherer)
+
+	ctx.PreArchMutators(func(ctx android.RegisterMutatorsContext) {
+		ctx.BottomUp("checkImports", checkImports)
+		ctx.TopDown("createAidlInterface", createAidlInterfaceMutator)
+	})
+
 	ctx.PostDepsMutators(android.RegisterVisibilityRuleEnforcer)
 
 	ctx.PreDepsMutators(func(ctx android.RegisterMutatorsContext) {
@@ -294,7 +300,7 @@ func TestVintfWithoutVersionInRelease(t *testing.T) {
 	testAidlError(t, expectedError, vintfWithoutVersionBp, setReleaseEnv())
 
 	ctx, _ := testAidl(t, vintfWithoutVersionBp)
-	assertModulesExists(t, ctx, "foo-java", "foo-rust", "foo-cpp", "foo-ndk", "foo-ndk_platform")
+	assertModulesExists(t, ctx, "foo-V1-java", "foo-V1-rust", "foo-V1-cpp", "foo-V1-ndk", "foo-V1-ndk_platform")
 }
 
 // Check if using unstable version in release cause an error.
@@ -311,10 +317,10 @@ func TestUnstableVersionUsageInRelease(t *testing.T) {
 	}
 	java_library {
 		name: "bar",
-		libs: ["foo-unstable-java"],
+		libs: ["foo-V2-java"],
 	}`
 
-	expectedError := `unstable-java is disallowed in release version because it is unstable.`
+	expectedError := `foo-V2-java is disallowed in release version because it is unstable.`
 	testAidlError(t, expectedError, unstableVersionUsageInJavaBp, setReleaseEnv(), withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
 	}))
@@ -336,7 +342,7 @@ func TestUnstableVersionUsageInRelease(t *testing.T) {
 	}
 	java_library {
 		name: "bar",
-		libs: ["foo-java"],
+		libs: ["foo-V1-java"],
 	}`
 
 	testAidl(t, stableVersionUsageInJavaBp, setReleaseEnv(), withFiles(map[string][]byte{
@@ -360,7 +366,7 @@ func TestNonVersionedModuleUsageInRelease(t *testing.T) {
 
 	java_library {
 		name: "bar",
-		libs: ["foo-java"],
+		libs: ["foo-V1-java"],
 	}`
 
 	expectedError := `"foo_interface": versions: must be set \(need to be frozen\) when "unstable" is false, PLATFORM_VERSION_CODENAME is REL, and "owner" property is missing.`
@@ -453,7 +459,7 @@ func TestCreatesModulesWithNoVersions(t *testing.T) {
 		}
 	`)
 
-	assertModulesExists(t, ctx, "foo-java", "foo-rust", "foo-cpp", "foo-ndk", "foo-ndk_platform")
+	assertModulesExists(t, ctx, "foo-V1-java", "foo-V1-rust", "foo-V1-cpp", "foo-V1-ndk", "foo-V1-ndk_platform")
 }
 
 func TestCreatesModulesWithFrozenVersions(t *testing.T) {
@@ -494,15 +500,11 @@ func TestCreatesModulesWithFrozenVersions(t *testing.T) {
 		"aidl_api/foo/1/foo.1.aidl": nil,
 	}))
 
-	// For alias for the latest frozen version (=1)
-	assertModulesExists(t, ctx, "foo-java", "foo-rust", "foo-cpp", "foo-ndk", "foo-ndk_platform")
-
 	// For frozen version "1"
-	// Note that it is not yet implemented to generate native modules for latest frozen version
-	assertModulesExists(t, ctx, "foo-V1-java")
+	assertModulesExists(t, ctx, "foo-V1-java", "foo-V1-rust", "foo-V1-cpp", "foo-V1-ndk", "foo-V1-ndk_platform")
 
 	// For ToT (current)
-	assertModulesExists(t, ctx, "foo-unstable-java", "foo-unstable-rust", "foo-unstable-cpp", "foo-unstable-ndk", "foo-unstable-ndk_platform")
+	assertModulesExists(t, ctx, "foo-V2-java", "foo-V2-rust", "foo-V2-cpp", "foo-V2-ndk", "foo-V2-ndk_platform")
 }
 
 func TestErrorsWithUnsortedVersions(t *testing.T) {
@@ -606,13 +608,11 @@ func TestNativeOutputIsAlwaysVersioned(t *testing.T) {
 			},
 		}
 	`)
-	// It's the only exception, <name>-<backend> generates the artifact of which name is <name>-<backend>,
-	// if it doesn't have a version.
-	assertOutput("foo-java", androidVariant, "foo-java.jar")
+	// Even though there is no version, generated modules have version(V1) unless it isn't an unstable interface.
+	assertOutput("foo-V1-java", androidVariant, "foo-V1-java.jar")
 
-	assertOutput("foo-cpp", nativeVariant, "foo-cpp.so")
-	assertOutput("foo-unstable-cpp", nativeVariant, "foo-V1-cpp.so")
-	assertOutput("foo-rust", nativeRustVariant, "libfoo.dylib.so")
+	assertOutput("foo-V1-cpp", nativeVariant, "foo-V1-cpp.so")
+	assertOutput("foo-V1-rust", nativeRustVariant, "libfoo_V1.dylib.so")
 
 	// With versions: "1", "2"
 	ctx, _ = testAidl(t, `
@@ -636,9 +636,9 @@ func TestNativeOutputIsAlwaysVersioned(t *testing.T) {
 	}))
 
 	// alias for the latest frozen version (=2)
-	assertOutput("foo-java", androidVariant, "foo-java.jar")
-	assertOutput("foo-cpp", nativeVariant, "foo-V2-cpp.so")
-	assertOutput("foo-rust", nativeRustVariant, "libfoo.dylib.so")
+	assertOutput("foo-V2-java", androidVariant, "foo-V2-java.jar")
+	assertOutput("foo-V2-cpp", nativeVariant, "foo-V2-cpp.so")
+	assertOutput("foo-V2-rust", nativeRustVariant, "libfoo_V2.dylib.so")
 
 	// frozen "1"
 	assertOutput("foo-V1-java", androidVariant, "foo-V1-java.jar")
@@ -646,9 +646,9 @@ func TestNativeOutputIsAlwaysVersioned(t *testing.T) {
 	assertOutput("foo-V1-rust", nativeRustVariant, "libfoo_V1.dylib.so")
 
 	// tot
-	assertOutput("foo-unstable-java", androidVariant, "foo-unstable-java.jar")
-	assertOutput("foo-unstable-cpp", nativeVariant, "foo-V3-cpp.so")
-	assertOutput("foo-unstable-rust", nativeRustVariant, "libfoo_unstable.dylib.so")
+	assertOutput("foo-V3-java", androidVariant, "foo-V3-java.jar")
+	assertOutput("foo-V3-cpp", nativeVariant, "foo-V3-cpp.so")
+	assertOutput("foo-V3-rust", nativeRustVariant, "libfoo_V3.dylib.so")
 
 	// skip ndk/ndk_platform since they follow the same rule with cpp
 }
@@ -740,16 +740,16 @@ func TestImports(t *testing.T) {
 		}
 	`)
 
-	ldRule := ctx.ModuleForTests("foo-cpp", nativeVariant).Rule("ld")
+	ldRule := ctx.ModuleForTests("foo-V1-cpp", nativeVariant).Rule("ld")
 	libFlags := ldRule.Args["libFlags"]
-	libBar := filepath.Join("bar.1-unstable-cpp", nativeVariant, "bar.1-V1-cpp.so")
+	libBar := filepath.Join("bar.1-V1-cpp", nativeVariant, "bar.1-V1-cpp.so")
 	if !strings.Contains(libFlags, libBar) {
 		t.Errorf("%q is not found in %q", libBar, libFlags)
 	}
 
-	rustcRule := ctx.ModuleForTests("foo-rust", nativeRustVariant).Rule("rustc")
+	rustcRule := ctx.ModuleForTests("foo-V1-rust", nativeRustVariant).Rule("rustc")
 	libFlags = rustcRule.Args["libFlags"]
-	libBar = filepath.Join(buildDir, ".intermediates", "bar.1-rust", nativeRustVariant, "libbar_1.dylib.so")
+	libBar = filepath.Join(buildDir, ".intermediates", "bar.1-V1-rust", nativeRustVariant, "libbar_1_V1.dylib.so")
 	libBarFlag := "--extern bar_1=" + libBar
 	if !strings.Contains(libFlags, libBarFlag) {
 		t.Errorf("%q is not found in %q", libBarFlag, libFlags)
@@ -757,9 +757,9 @@ func TestImports(t *testing.T) {
 }
 
 func TestDuplicatedVersions(t *testing.T) {
-	// foo depends on myiface-ndk (v2) via direct dep and also on
+	// foo depends on myiface-V2-ndk via direct dep and also on
 	// myiface-V1-ndk via indirect dep. This should be prohibited.
-	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-ndk, myiface-ndk`, `
+	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-ndk, myiface-V2-ndk`, `
 		aidl_interface {
 			name: "myiface",
 			srcs: ["IFoo.aidl"],
@@ -768,7 +768,7 @@ func TestDuplicatedVersions(t *testing.T) {
 
 		cc_library {
 			name: "foo",
-			shared_libs: ["myiface-ndk", "bar"],
+			shared_libs: ["myiface-V2-ndk", "bar"],
 		}
 
 		cc_library {
@@ -782,7 +782,7 @@ func TestDuplicatedVersions(t *testing.T) {
 		"aidl_api/myiface/2/myiface.2.aidl": nil,
 		"aidl_api/myiface/2/.hash":          nil,
 	}))
-	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-ndk, myiface-unstable-ndk`, `
+	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-ndk, myiface-V2-ndk`, `
 		aidl_interface {
 			name: "myiface",
 			srcs: ["IFoo.aidl"],
@@ -797,14 +797,14 @@ func TestDuplicatedVersions(t *testing.T) {
 
 		cc_library {
 			name: "foobar",
-			shared_libs: ["myiface-ndk", "myiface2-ndk"],
+			shared_libs: ["myiface-V1-ndk", "myiface2-V1-ndk"],
 		}
 
 	`, withFiles(map[string][]byte{
 		"aidl_api/myiface/1/myiface.1.aidl": nil,
 		"aidl_api/myiface/1/.hash":          nil,
 	}))
-	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-ndk-source, myiface-unstable-ndk`, `
+	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-ndk-source, myiface-V2-ndk`, `
 		aidl_interface {
 			name: "myiface",
 			srcs: ["IFoo.aidl"],
@@ -824,8 +824,8 @@ func TestDuplicatedVersions(t *testing.T) {
 
 		cc_library {
 			name: "foobar",
-			srcs: [":myiface-ndk-source"],
-			shared_libs: ["myiface2-ndk"],
+			srcs: [":myiface-V1-ndk-source"],
+			shared_libs: ["myiface2-V1-ndk"],
 		}
 
 	`, withFiles(map[string][]byte{
@@ -852,8 +852,8 @@ func TestDuplicatedVersions(t *testing.T) {
 
 		cc_library {
 			name: "foobar",
-			srcs: [":myiface-unstable-ndk-source"],
-			shared_libs: ["myiface2-ndk"],
+			srcs: [":myiface-V2-ndk-source"],
+			shared_libs: ["myiface2-V1-ndk"],
 		}
 
 	`, withFiles(map[string][]byte{
@@ -875,7 +875,7 @@ func TestDuplicatedVersions(t *testing.T) {
 
 		cc_library {
 			name: "foobar",
-			shared_libs: ["myiface-unstable-ndk", "myiface2-ndk"],
+			shared_libs: ["myiface-V2-ndk", "myiface2-V1-ndk"],
 		}
 
 	`, withFiles(map[string][]byte{
@@ -936,7 +936,7 @@ func TestCcModuleWithApexNameMacro(t *testing.T) {
 		apex {
 			name: "myapex",
 			key: "myapex.key",
-			native_shared_libs: ["myiface-ndk_platform"],
+			native_shared_libs: ["myiface-V1-ndk_platform"],
 		}
 		apex_key {
 			name: "myapex.key",
@@ -947,7 +947,7 @@ func TestCcModuleWithApexNameMacro(t *testing.T) {
 		"system/sepolicy/apex/myapex-file_contexts": nil,
 	}))
 
-	ccRule := ctx.ModuleForTests("myiface-ndk_platform", "android_arm64_armv8-a_static_myapex").Rule("cc")
+	ccRule := ctx.ModuleForTests("myiface-V1-ndk_platform", "android_arm64_armv8-a_static_myapex").Rule("cc")
 	assertContains(t, ccRule.Args["cFlags"], "-D__ANDROID_APEX__")
 	assertContains(t, ccRule.Args["cFlags"], "-D__ANDROID_APEX_NAME__='\"myapex\"'")
 	assertContains(t, ccRule.Args["cFlags"], "-D__ANDROID_APEX_MYAPEX__")
@@ -972,23 +972,23 @@ func TestSrcsAvailable(t *testing.T) {
 		"otherpackage/Android.bp": []byte(`
 			java_library {
 				name: "javalib",
-				srcs: [":myiface-java-source"],
+				srcs: [":myiface-V1-java-source"],
 			}
 			cc_library_shared {
 				name: "cclib",
-				srcs: [":myiface-cpp-source"],
+				srcs: [":myiface-V1-cpp-source"],
 			}
 		`),
 	})
 	ctx, _ := testAidl(t, fmt.Sprintf(bp, "true", "true"), customizer)
 	javaInputs := ctx.ModuleForTests("javalib", "android_common").Rule("javac").Inputs.Strings()
-	assertListContains(t, javaInputs, "myiface-java-source/gen/IFoo.java")
+	assertListContains(t, javaInputs, "myiface-V1-java-source/gen/IFoo.java")
 	ccInput := ctx.ModuleForTests("cclib", "android_arm64_armv8-a_shared").Rule("cc").Input.String()
-	assertContains(t, ccInput, "myiface-cpp-source/gen/IFoo.cpp")
+	assertContains(t, ccInput, "myiface-V1-cpp-source/gen/IFoo.cpp")
 
-	testAidlError(t, `depends on //.:myiface-java-source which is not visible to this module`,
+	testAidlError(t, `depends on //.:myiface-V1-java-source which is not visible to this module`,
 		fmt.Sprintf(bp, "false", "true"), customizer)
-	testAidlError(t, `depends on //.:myiface-cpp-source which is not visible to this module`,
+	testAidlError(t, `depends on //.:myiface-V1-cpp-source which is not visible to this module`,
 		fmt.Sprintf(bp, "true", "false"), customizer)
 }
 
@@ -1016,10 +1016,10 @@ func TestAidlFlags(t *testing.T) {
 		}
 	`)
 	for module, outputs := range map[string][]string{
-		"myiface-cpp-source":  {"a/Foo.h", "b/Bar.h"},
-		"myiface-java-source": {"a/Foo.java", "b/Bar.java"},
-		"myiface-ndk-source":  {"aidl/a/Foo.h", "aidl/b/Bar.h"},
-		"myiface-rust-source": {"a/Foo.rs", "b/Bar.rs"},
+		"myiface-V1-cpp-source":  {"a/Foo.h", "b/Bar.h"},
+		"myiface-V1-java-source": {"a/Foo.java", "b/Bar.java"},
+		"myiface-V1-ndk-source":  {"aidl/a/Foo.h", "aidl/b/Bar.h"},
+		"myiface-V1-rust-source": {"a/Foo.rs", "b/Bar.rs"},
 	} {
 		for _, output := range outputs {
 			t.Run(module+"/"+output, func(t *testing.T) {
