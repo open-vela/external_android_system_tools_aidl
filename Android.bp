@@ -335,7 +335,7 @@ cc_test {
         "libcutils",
         "libgmock",
         //  client uses the latest version
-        "aidl-test-versioned-interface-cpp",
+        "aidl-test-versioned-interface-V2-cpp",
         "aidl_test_loggable_interface-cpp"
     ],
     srcs: [
@@ -366,11 +366,11 @@ java_test {
     static_libs: [
         "androidx.test.core",
         "androidx.test.runner",
-        "aidl_test_nonvintf_parcelable-java",
+        "aidl_test_nonvintf_parcelable-V1-java",
         "aidl_test_unstable_parcelable-java",
-        "aidl_test_vintf_parcelable-java",
+        "aidl_test_vintf_parcelable-V1-java",
         // client uses the newest version
-        "aidl-test-versioned-interface-java",
+        "aidl-test-versioned-interface-V2-java",
         // TODO: remove once Android migrates to JUnit 4.12,
         // which provides assertThrows
         "testng",
@@ -495,7 +495,7 @@ rust_test {
     ],
     rustlibs: [
         "aidl-test-interface-rust",
-        "aidl-test-versioned-interface-rust",
+        "aidl-test-versioned-interface-V2-rust",
         "liblibc",
     ],
     prefer_rlib: true,
