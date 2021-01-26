@@ -55,11 +55,21 @@ func init() {
 	pctx.SourcePathVariable("aidlToJniCmd", "system/tools/aidl/build/aidl_to_jni.py")
 	pctx.SourcePathVariable("aidlRustGlueCmd", "system/tools/aidl/build/aidl_rust_glue.py")
 	android.RegisterModuleType("aidl_interface", aidlInterfaceFactory)
+	android.PreArchMutators(func(ctx android.RegisterMutatorsContext) {
+		ctx.BottomUp("checkImports", checkImports).Parallel()
+		ctx.TopDown("createAidlInterface", createAidlInterfaceMutator).Parallel()
+	})
 	android.PostDepsMutators(func(ctx android.RegisterMutatorsContext) {
 		ctx.BottomUp("checkUnstableModule", checkUnstableModuleMutator).Parallel()
 		ctx.BottomUp("recordVersions", recordVersions).Parallel()
 		ctx.BottomUp("checkDuplicatedVersions", checkDuplicatedVersions).Parallel()
 	})
+}
+
+func createAidlInterfaceMutator(mctx android.TopDownMutatorContext) {
+	if g, ok := mctx.Module().(*aidlImplementationGenerator); ok {
+		g.GenerateImplementation(mctx)
+	}
 }
 
 func checkUnstableModuleMutator(mctx android.BottomUpMutatorContext) {
@@ -122,6 +132,22 @@ func recordVersions(mctx android.BottomUpMutatorContext) {
 			if android.InList(depName, i.internalModuleNames) {
 				ifaceName := i.ModuleBase.Name()
 				verLang := depName[len(ifaceName):]
+
+				// TODO(b/150578172) remove those modules when every module specify its version.
+				if i.hasVersion() {
+					if strings.HasPrefix(verLang, "-unstable") {
+						verLang = "-V" + i.nextVersion() + strings.TrimPrefix(verLang, "-unstable")
+					} else if !strings.HasPrefix(verLang, "-V") {
+						verLang = "-V" + i.latestVersion() + verLang
+					}
+				} else {
+					verLang = strings.TrimPrefix(verLang, "-unstable")
+					if !proptools.Bool(i.properties.Unstable) {
+						if !strings.HasPrefix(verLang, "-V1") {
+							verLang = "-V1" + verLang
+						}
+					}
+				}
 				myAidlDeps[DepInfo{ifaceName, verLang, isSource}] = true
 				break
 			}
@@ -420,35 +446,37 @@ func addUnstableModule(mctx android.LoadHookContext, moduleName string) {
 	*unstableModules = append(*unstableModules, moduleName)
 }
 
-func (i *aidlInterface) checkImports(mctx android.BaseModuleContext) {
-	for _, anImport := range i.properties.Imports {
-		other := lookupInterface(anImport, mctx.Config())
+func checkImports(mctx android.BottomUpMutatorContext) {
+	if i, ok := mctx.Module().(*aidlInterface); ok {
+		for _, anImport := range i.properties.Imports {
+			other := lookupInterface(anImport, mctx.Config())
 
-		if other == nil {
-			if mctx.Config().AllowMissingDependencies() {
-				continue
+			if other == nil {
+				if mctx.Config().AllowMissingDependencies() {
+					continue
+				}
+				mctx.PropertyErrorf("imports", "Import does not exist: "+anImport)
 			}
-			mctx.PropertyErrorf("imports", "Import does not exist: "+anImport)
-		}
 
-		if i.shouldGenerateJavaBackend() && !other.shouldGenerateJavaBackend() {
-			mctx.PropertyErrorf("backend.java.enabled",
-				"Java backend not enabled in the imported AIDL interface %q", anImport)
-		}
+			if i.shouldGenerateJavaBackend() && !other.shouldGenerateJavaBackend() {
+				mctx.PropertyErrorf("backend.java.enabled",
+					"Java backend not enabled in the imported AIDL interface %q", anImport)
+			}
 
-		if i.shouldGenerateCppBackend() && !other.shouldGenerateCppBackend() {
-			mctx.PropertyErrorf("backend.cpp.enabled",
-				"C++ backend not enabled in the imported AIDL interface %q", anImport)
-		}
+			if i.shouldGenerateCppBackend() && !other.shouldGenerateCppBackend() {
+				mctx.PropertyErrorf("backend.cpp.enabled",
+					"C++ backend not enabled in the imported AIDL interface %q", anImport)
+			}
 
-		if i.shouldGenerateNdkBackend() && !other.shouldGenerateNdkBackend() {
-			mctx.PropertyErrorf("backend.ndk.enabled",
-				"NDK backend not enabled in the imported AIDL interface %q", anImport)
-		}
+			if i.shouldGenerateNdkBackend() && !other.shouldGenerateNdkBackend() {
+				mctx.PropertyErrorf("backend.ndk.enabled",
+					"NDK backend not enabled in the imported AIDL interface %q", anImport)
+			}
 
-		if i.shouldGenerateRustBackend() && !other.shouldGenerateRustBackend() {
-			mctx.PropertyErrorf("backend.rust.enabled",
-				"Rust backend not enabled in the imported AIDL interface %q", anImport)
+			if i.shouldGenerateRustBackend() && !other.shouldGenerateRustBackend() {
+				mctx.PropertyErrorf("backend.rust.enabled",
+					"Rust backend not enabled in the imported AIDL interface %q", anImport)
+			}
 		}
 	}
 }
@@ -511,7 +539,7 @@ func (i *aidlInterface) checkVndkUseVersion(mctx android.LoadHookContext) {
 		mctx.PropertyErrorf("vndk_use_version", "This does not make sense when no 'versions' are specified.")
 
 	}
-	if *i.properties.Vndk_use_version == i.currentVersion() {
+	if *i.properties.Vndk_use_version == i.nextVersion() {
 		return
 	}
 	for _, ver := range i.properties.Versions {
@@ -522,18 +550,23 @@ func (i *aidlInterface) checkVndkUseVersion(mctx android.LoadHookContext) {
 	mctx.PropertyErrorf("vndk_use_version", "Specified version %q does not exist", *i.properties.Vndk_use_version)
 }
 
-func (i *aidlInterface) currentVersion() string {
-	if !i.hasVersion() {
+func (i *aidlInterface) nextVersion() string {
+	if proptools.Bool(i.properties.Unstable) {
 		return ""
-	} else {
-		ver := i.latestVersion()
-		i, err := strconv.Atoi(ver)
-		if err != nil {
-			panic(err)
-		}
-
-		return strconv.Itoa(i + 1)
 	}
+	return nextVersion(i.properties.Versions)
+}
+
+func nextVersion(versions []string) string {
+	if len(versions) == 0 {
+		return "1"
+	}
+	ver := versions[len(versions)-1]
+	i, err := strconv.Atoi(ver)
+	if err != nil {
+		panic(err)
+	}
+	return strconv.Itoa(i + 1)
 }
 
 func (i *aidlInterface) latestVersion() string {
@@ -568,93 +601,46 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 	}
 
 	var libs []string
-
-	currentVersion := i.currentVersion()
-
-	versionsForCpp := make([]string, len(i.properties.Versions))
-
 	sdkIsFinal := !mctx.Config().DefaultAppTargetSdk(mctx).IsPreview()
 
-	needToCheckUnstableVersion := sdkIsFinal && i.hasVersion() && i.Owner() == ""
-	copy(versionsForCpp, i.properties.Versions)
-	if i.hasVersion() {
-		// In C++ library, AIDL doesn't create the module of which name is with latest version,
-		// instead of it, there is a module without version.
-		versionsForCpp[len(i.properties.Versions)-1] = ""
-	}
-	if i.shouldGenerateCppBackend() {
-		unstableLib := addCppLibrary(mctx, i, currentVersion, langCpp)
-		if !i.hasVersion() {
-			libs = append(libs, addCppLibrary(mctx, i, unstableVersion, langCpp))
-		}
-		if needToCheckUnstableVersion {
-			addUnstableModule(mctx, unstableLib)
-		}
-		libs = append(libs, unstableLib)
-		for _, version := range versionsForCpp {
-			libs = append(libs, addCppLibrary(mctx, i, version, langCpp))
-		}
-	}
-	if i.shouldGenerateAppNdkBackend() {
-		unstableLib := addCppLibrary(mctx, i, currentVersion, langNdk)
-		if !i.hasVersion() {
-			libs = append(libs, addCppLibrary(mctx, i, unstableVersion, langNdk))
-		}
-		if needToCheckUnstableVersion {
-			addUnstableModule(mctx, unstableLib)
-		}
-		libs = append(libs, unstableLib)
-		for _, version := range versionsForCpp {
-			libs = append(libs, addCppLibrary(mctx, i, version, langNdk))
-		}
-	}
-	if i.shouldGenerateNdkBackend() {
-		// TODO(b/121157555): combine with '-ndk' variant
-		unstableLib := addCppLibrary(mctx, i, currentVersion, langNdkPlatform)
-		if !i.hasVersion() {
-			libs = append(libs, addCppLibrary(mctx, i, unstableVersion, langNdkPlatform))
-		}
-		if needToCheckUnstableVersion {
-			addUnstableModule(mctx, unstableLib)
-		}
-		libs = append(libs, unstableLib)
-		for _, version := range versionsForCpp {
-			libs = append(libs, addCppLibrary(mctx, i, version, langNdkPlatform))
-		}
-	}
-	versionsForJava := i.properties.Versions
-	if i.hasVersion() {
-		versionsForJava = append(i.properties.Versions, "")
-	}
-	if i.shouldGenerateJavaBackend() {
-		unstableLib := addJavaLibrary(mctx, i, currentVersion)
-		if !i.hasVersion() {
-			libs = append(libs, addJavaLibrary(mctx, i, unstableVersion))
-		}
-		if needToCheckUnstableVersion {
-			addUnstableModule(mctx, unstableLib)
-		}
-		libs = append(libs, unstableLib)
-		for _, version := range versionsForJava {
-			libs = append(libs, addJavaLibrary(mctx, i, version))
-		}
-	}
+	unstable := proptools.Bool(i.properties.Unstable)
 
-	if i.shouldGenerateRustBackend() {
-		unstableLib := addRustLibrary(mctx, i, currentVersion)
-		if needToCheckUnstableVersion {
-			addUnstableModule(mctx, unstableLib)
+	if unstable {
+		if i.hasVersion() {
+			mctx.PropertyErrorf("versions", "cannot have versions for an unstable interface")
+			return
 		}
-		libs = append(libs, unstableLib)
-		for _, version := range versionsForCpp {
-			addRustLibrary(mctx, i, version)
+	}
+	needToCheckUnstableVersion := sdkIsFinal && i.hasVersion() && i.Owner() == ""
+	versions := i.properties.Versions
+	nextVersion := i.nextVersion()
+	shouldGenerateLangBackendMap := map[string]bool{
+		langCpp:         i.shouldGenerateCppBackend(),
+		langNdk:         i.shouldGenerateAppNdkBackend(),
+		langNdkPlatform: i.shouldGenerateNdkBackend(),
+		langJava:        i.shouldGenerateJavaBackend(),
+		langRust:        i.shouldGenerateRustBackend()}
+	for lang, shouldGenerate := range shouldGenerateLangBackendMap {
+		if !shouldGenerate {
+			continue
+		}
+		libs = append(libs, addLibrary(mctx, i, nextVersion, lang))
+		if !unstable && needToCheckUnstableVersion {
+			addUnstableModule(mctx, libs[len(libs)-1])
+		}
+		for _, version := range versions {
+			libs = append(libs, addLibrary(mctx, i, version, lang))
+		}
+		// TODO(b/150578172) remove those modules when every module specify its version.
+		if !sdkIsFinal {
+			if !unstable {
+				libs = append(libs, addLibrary(mctx, i, "", lang))
+			}
+			libs = append(libs, addLibrary(mctx, i, unstableVersion, lang))
 		}
 	}
 
 	if proptools.Bool(i.properties.Unstable) {
-		if i.hasVersion() {
-			mctx.PropertyErrorf("versions", "cannot have versions for an unstable interface")
-		}
 		apiDirRoot := filepath.Join(aidlApiDir, i.ModuleBase.Name())
 		aidlDumps, _ := mctx.GlobWithDeps(filepath.Join(mctx.ModuleDir(), apiDirRoot, "**/*.aidl"), nil)
 		if len(aidlDumps) != 0 {
@@ -665,7 +651,6 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 			mctx.ModuleErrorf("unstable:true and stability:%q cannot happen at the same time", i.properties.Stability)
 		}
 	} else {
-		sdkIsFinal := !mctx.Config().DefaultAppTargetSdk(mctx).IsPreview()
 		if sdkIsFinal && !i.hasVersion() && i.Owner() == "" {
 			mctx.PropertyErrorf("versions", "must be set (need to be frozen) when \"unstable\" is false, PLATFORM_VERSION_CODENAME is REL, and \"owner\" property is missing.")
 		}
@@ -684,53 +669,6 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 	})
 
 	i.internalModuleNames = libs
-}
-
-// This function returns actual version which is used by AIDL compiler from version for a module name.
-// A 'version' has to be either empty(for a non-versioned module) or a version number(for a versioned module).
-// A 'versionForModuleName' has to be either
-//  - empty: the latest version(unstable)
-//  - "unstable": the same as above, only for non-versioned module.
-//  - a version number
-func (i *aidlInterface) normalizeVersion(versionForModuleName string) string {
-	if i.hasVersion() && versionForModuleName == "" {
-		return i.latestVersion()
-	}
-	if versionForModuleName == unstableVersion {
-		if i.hasVersion() {
-			panic("An interface with versions must not have a module of which name is 'unstable'.")
-		}
-		return ""
-	}
-	return versionForModuleName
-}
-
-func (i *aidlInterface) getImportPostfix(mctx android.LoadHookContext, version string, lang string) string {
-	if version == i.currentVersion() {
-		return "-" + unstableVersion + "-" + lang
-	}
-	return "-" + lang
-}
-
-func (i *aidlInterface) moduleVersionForVndk() string {
-	if i.properties.Vndk_use_version != nil {
-		use_version := *i.properties.Vndk_use_version
-		if !i.hasVersion() {
-			panic("does not make sense, vndk_use_version specififed")
-		}
-		if use_version == i.latestVersion() {
-			// Latest version module name is empty
-			return ""
-		}
-		// Will be exactly one of the version numbers or 'unstable'
-		return use_version
-	}
-	// For an interface with no versions, this is the ToT interface.
-	if !i.hasVersion() {
-		return unstableVersion
-	}
-	// For an interface w/ versions, this is that latest stable version.
-	return ""
 }
 
 // srcsVisibility gives the value for the `visibility` property of the source gen module for the
@@ -782,8 +720,6 @@ func (i *aidlInterface) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	}
 }
 func (i *aidlInterface) DepsMutator(ctx android.BottomUpMutatorContext) {
-	i.checkImports(ctx)
-
 	ctx.AddReverseDependency(ctx.Module(), nil, aidlMetadataSingletonName)
 }
 
