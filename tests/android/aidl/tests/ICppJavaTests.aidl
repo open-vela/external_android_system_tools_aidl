@@ -26,26 +26,26 @@ import android.os.PersistableBundle;
 
 // Tests that are only supported by the C++/Java backends, not NDK/Rust
 interface ICppJavaTests {
-  SimpleParcelable RepeatSimpleParcelable(in SimpleParcelable input,
-                                          out SimpleParcelable repeat);
-  GenericStructuredParcelable<int, StructuredParcelable, IntEnum> RepeatGenericParcelable(in GenericStructuredParcelable<int, StructuredParcelable, IntEnum> input, out GenericStructuredParcelable<int, StructuredParcelable, IntEnum> repeat);
-  PersistableBundle RepeatPersistableBundle(in PersistableBundle input);
+    SimpleParcelable RepeatSimpleParcelable(in SimpleParcelable input, out SimpleParcelable repeat);
+    GenericStructuredParcelable<int, StructuredParcelable, IntEnum> RepeatGenericParcelable(
+            in GenericStructuredParcelable<int, StructuredParcelable, IntEnum> input,
+            out GenericStructuredParcelable<int, StructuredParcelable, IntEnum> repeat);
+    PersistableBundle RepeatPersistableBundle(in PersistableBundle input);
 
-  SimpleParcelable[]  ReverseSimpleParcelables(in SimpleParcelable[] input,
-                                               out SimpleParcelable[] repeated);
-  PersistableBundle[] ReversePersistableBundles(
-      in PersistableBundle[] input, out PersistableBundle[] repeated);
-  Union ReverseUnion(in Union input, out Union repeated);
-  // Test that List<T> types work correctly.
-  List<IBinder> ReverseNamedCallbackList(in List<IBinder> input,
-                                         out List<IBinder> repeated);
+    SimpleParcelable[] ReverseSimpleParcelables(
+            in SimpleParcelable[] input, out SimpleParcelable[] repeated);
+    PersistableBundle[] ReversePersistableBundles(
+            in PersistableBundle[] input, out PersistableBundle[] repeated);
+    Union ReverseUnion(in Union input, out Union repeated);
+    // Test that List<T> types work correctly.
+    List<IBinder> ReverseNamedCallbackList(in List<IBinder> input, out List<IBinder> repeated);
 
-  FileDescriptor RepeatFileDescriptor(in FileDescriptor read);
-  FileDescriptor[] ReverseFileDescriptorArray(in FileDescriptor[] input,
-                                              out FileDescriptor[] repeated);
+    FileDescriptor RepeatFileDescriptor(in FileDescriptor read);
+    FileDescriptor[] ReverseFileDescriptorArray(
+            in FileDescriptor[] input, out FileDescriptor[] repeated);
 
-  void TakesAnIBinderList(in List<IBinder> input);
-  void TakesANullableIBinderList(in @nullable List<IBinder> input);
+    void TakesAnIBinderList(in List<IBinder> input);
+    void TakesANullableIBinderList(in @nullable List<IBinder> input);
 
-  void RepeatExtendableParcelable(in ExtendableParcelable ep, out ExtendableParcelable ep2);
+    void RepeatExtendableParcelable(in ExtendableParcelable ep, out ExtendableParcelable ep2);
 }

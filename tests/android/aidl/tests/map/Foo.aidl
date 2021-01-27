@@ -20,8 +20,8 @@ import android.aidl.tests.map.Bar;
 import android.aidl.tests.map.IEmpty;
 
 parcelable Foo {
-  Map<String, Bar> barMap;
-  Map<String, String> stringMap;
-  Map<String, IEmpty> interfaceMap;
-  Map<String, IBinder> ibinderMap;
+    Map<String, Bar> barMap;
+    Map<String, String> stringMap;
+    Map<String, IEmpty> interfaceMap;
+    Map<String, IBinder> ibinderMap;
 }
