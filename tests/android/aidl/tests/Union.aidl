@@ -30,4 +30,3 @@ union Union {
 
     const @utf8InCpp String S1 = "a string constant in union";
 }
-
