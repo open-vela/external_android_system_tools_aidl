@@ -60,7 +60,9 @@ public class NullableTests {
         } catch (NullPointerException ex) {
             return;
         }
-        fail("NullPointerException was expected, but wasn't thrown");
+        if (mService.getBackendType() != BackendType.JAVA) {
+          fail("NullPointerException was expected, but wasn't thrown");
+        }
     }
 
     @Test
@@ -70,7 +72,10 @@ public class NullableTests {
         } catch (NullPointerException ex) {
             return;
         }
-        fail("NullPointerException was expected, but wasn't thrown");
+
+        if (mService.getBackendType() != BackendType.JAVA) {
+          fail("NullPointerException was expected, but wasn't thrown");
+        }
     }
 
     @Test
@@ -84,7 +89,9 @@ public class NullableTests {
         } catch (NullPointerException ex) {
             return;
         }
-        fail("NullPointerException was expected, but wasn't thrown");
+        if (mService.getBackendType() != BackendType.JAVA) {
+          fail("NullPointerException was expected, but wasn't thrown");
+        }
     }
 
     @Test

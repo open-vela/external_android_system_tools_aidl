@@ -23,6 +23,7 @@
 #include <utils/String16.h>
 
 using android::sp;
+using android::aidl::tests::BackendType;
 using android::aidl::tests::ICppJavaTests;
 using android::aidl::tests::ITestService;
 
@@ -40,8 +41,16 @@ class AidlTest : public testing::Test {
     auto status = service->GetCppJavaTests(&ibinder);
     ASSERT_TRUE(status.isOk());
     cpp_java_tests = android::interface_cast<ICppJavaTests>(ibinder);
+
+    status = service->getBackendType(&backend);
+    ASSERT_TRUE(status.isOk()) << status;
+
+    if (backend != BackendType::RUST) {
+      ASSERT_NE(cpp_java_tests, nullptr);
+    }
   }
 
+  BackendType backend;
   sp<ITestService> service;
   sp<ICppJavaTests> cpp_java_tests;
 };
