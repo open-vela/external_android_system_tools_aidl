@@ -24,12 +24,17 @@ public class SimpleParcelable implements Parcelable {
     private int mNumber;
 
     SimpleParcelable() {}
-    SimpleParcelable(String name, int number) {
-        mName = name;
-        mNumber = number;
-    }
+    SimpleParcelable(String name, int number) { set(name, number); }
 
     public int describeContents() { return 0; }
+
+    public void set(String name, int number) {
+      mName = name;
+      mNumber = number;
+    }
+
+    public String getName() { return mName; }
+    public int getNumber() { return mNumber; }
 
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(mName);
