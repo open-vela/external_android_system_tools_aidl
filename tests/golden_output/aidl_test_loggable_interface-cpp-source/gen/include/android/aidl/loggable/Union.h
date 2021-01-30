@@ -63,9 +63,9 @@ public:
   constexpr Union(_Tp&& _arg)
       : _value(std::forward<_Tp>(_arg)) {}
 
-  template <typename... _Tp>
-  constexpr explicit Union(_Tp&&... _args)
-      : _value(std::forward<_Tp>(_args)...) {}
+  template <size_t _Np, typename... _Tp>
+  constexpr explicit Union(std::in_place_index_t<_Np>, _Tp&&... _args)
+      : _value(std::in_place_index<_Np>, std::forward<_Tp>(_args)...) {}
 
   template <Tag _tag, typename... _Tp>
   static Union make(_Tp&&... _args) {
