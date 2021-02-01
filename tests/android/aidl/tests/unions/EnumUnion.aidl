@@ -21,7 +21,6 @@ import android.aidl.tests.LongEnum;
 @JavaDerive(toString=true, equals=true)
 @RustDerive(Clone=true, PartialEq=true)
 union EnumUnion {
-  IntEnum intEnum = IntEnum.FOO;
-  LongEnum longEnum;
+    IntEnum intEnum = IntEnum.FOO;
+    LongEnum longEnum;
 }
-
