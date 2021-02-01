@@ -30,6 +30,7 @@ using android::String16;
 using android::String8;
 using android::binder::Status;
 
+using android::aidl::tests::BackendType;
 using android::aidl::tests::ByteEnum;
 using android::aidl::tests::INamedCallback;
 using android::aidl::tests::IntEnum;
@@ -111,7 +112,12 @@ TEST_F(RepeatNullableTest, parcelable) {
 
 TEST_F(AidlTest, nullBinder) {
   auto status = service->TakesAnIBinder(nullptr);
-  ASSERT_THAT(status.exceptionCode(), Eq(android::binder::Status::EX_NULL_POINTER));
+
+  if (backend == BackendType::JAVA) {
+    ASSERT_TRUE(status.isOk()) << status;
+  } else {
+    ASSERT_THAT(status.exceptionCode(), Eq(android::binder::Status::EX_NULL_POINTER)) << status;
+  }
 }
 
 TEST_F(AidlTest, binderListWithNull) {
@@ -119,7 +125,12 @@ TEST_F(AidlTest, binderListWithNull) {
 
   std::vector<sp<IBinder>> input{new BBinder(), nullptr};
   auto status = cpp_java_tests->TakesAnIBinderList(input);
-  ASSERT_THAT(status.exceptionCode(), Eq(android::binder::Status::EX_NULL_POINTER));
+
+  if (backend == BackendType::JAVA) {
+    ASSERT_TRUE(status.isOk()) << status;
+  } else {
+    ASSERT_THAT(status.exceptionCode(), Eq(android::binder::Status::EX_NULL_POINTER));
+  }
 }
 
 TEST_F(AidlTest, nonNullBinder) {
