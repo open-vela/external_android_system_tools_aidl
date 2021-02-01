@@ -269,11 +269,14 @@ class CppJavaTests : public BnCppJavaTests {
   ::android::binder::Status RepeatExtendableParcelable(
       const ::android::aidl::tests::extension::ExtendableParcelable& ep,
       ::android::aidl::tests::extension::ExtendableParcelable* ep2) {
-    ep2->a = ep.a;
-    ep2->b = ep.b;
+    ep2->a = ep.a * 2;
+    ep2->b = ep.b + "BAR";
     std::shared_ptr<android::aidl::tests::extension::MyExt> myExt;
     ep.ext.getParcelable(&myExt);
-    ep2->ext.setParcelable(myExt);
+    ::android::aidl::tests::extension::MyExt retMyExt;
+    retMyExt.a = myExt->a * 2;
+    retMyExt.b = myExt->b + "BAR";
+    ep2->ext.setParcelable(retMyExt);
 
     return Status::ok();
   }

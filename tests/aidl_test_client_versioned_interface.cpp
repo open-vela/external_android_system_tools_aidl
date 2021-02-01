@@ -19,38 +19,33 @@
 #include <gtest/gtest.h>
 #include <utils/String16.h>
 
-#include "aidl_test_client.h"
-
 using android::OK;
 using android::sp;
 using android::String16;
 using android::aidl::versioned::tests::BazUnion;
 using android::aidl::versioned::tests::IFooInterface;
 
-class VersionedInterfaceTest : public AidlTest {
+class VersionedInterfaceTest : public testing::Test {
  public:
   void SetUp() override {
-    ASSERT_EQ(OK, android::getService(IFooInterface::descriptor, &versioned));
-    ASSERT_NE(nullptr, versioned);
-
-    AidlTest::SetUp();
+    ASSERT_EQ(OK, android::getService(IFooInterface::descriptor, &service));
+    ASSERT_NE(nullptr, service);
   }
 
-  sp<IFooInterface> versioned;
+  sp<IFooInterface> service;
 };
 
 TEST_F(VersionedInterfaceTest, getInterfaceVersion) {
-  EXPECT_EQ(1, versioned->getInterfaceVersion());
+  EXPECT_EQ(1, service->getInterfaceVersion());
 }
 
 TEST_F(VersionedInterfaceTest, getInterfaceHash) {
-  EXPECT_EQ("796b4ab269d476662bed4ab57092ed000e48d5d7", versioned->getInterfaceHash());
+  EXPECT_EQ("796b4ab269d476662bed4ab57092ed000e48d5d7", service->getInterfaceHash());
 }
 
 TEST_F(VersionedInterfaceTest, noProblemWhenPassingAUnionWithOldField) {
   std::string result;
-  auto status =
-      versioned->acceptUnionAndReturnString(BazUnion::make<BazUnion::intNum>(42), &result);
+  auto status = service->acceptUnionAndReturnString(BazUnion::make<BazUnion::intNum>(42), &result);
   EXPECT_TRUE(status.isOk());
   EXPECT_EQ("42", result);
 }
@@ -58,12 +53,7 @@ TEST_F(VersionedInterfaceTest, noProblemWhenPassingAUnionWithOldField) {
 TEST_F(VersionedInterfaceTest, errorWhenPassingAUnionWithNewField) {
   std::string result;
   auto status =
-      versioned->acceptUnionAndReturnString(BazUnion::make<BazUnion::longNum>(42L), &result);
+      service->acceptUnionAndReturnString(BazUnion::make<BazUnion::longNum>(42L), &result);
   EXPECT_FALSE(status.isOk());
-  // b/173458620 - Java and C++ return different errors
-  if (backend == BackendType::JAVA) {
-    EXPECT_EQ(::android::UNEXPECTED_NULL, status.transactionError()) << status;
-  } else {
-    EXPECT_EQ(::android::BAD_VALUE, status.transactionError()) << status;
-  }
+  EXPECT_EQ(::android::BAD_VALUE, status.transactionError());
 }
