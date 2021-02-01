@@ -54,8 +54,8 @@ TEST_F(AidlTest, RepeatSimpleParcelable) {
   SimpleParcelable out_param, returned;
   Status status = cpp_java_tests->RepeatSimpleParcelable(input, &out_param, &returned);
   ASSERT_TRUE(status.isOk()) << status.toString8();
-  EXPECT_EQ(input, out_param);
-  EXPECT_EQ(input, returned);
+  EXPECT_EQ(input, out_param) << input.toString() << " " << out_param.toString();
+  EXPECT_EQ(input, returned) << input.toString() << " " << returned.toString();
 }
 
 TEST_F(AidlTest, RepeatGenericStructureParcelable) {
@@ -77,6 +77,9 @@ TEST_F(AidlTest, ReverseSimpleParcelable) {
                                           SimpleParcelable("second", 1),
                                           SimpleParcelable("third", 2)};
   vector<SimpleParcelable> repeated;
+  if (backend == BackendType::JAVA) {
+    repeated = vector<SimpleParcelable>(original.size());
+  }
   vector<SimpleParcelable> reversed;
   Status status = cpp_java_tests->ReverseSimpleParcelables(original, &repeated, &reversed);
   ASSERT_TRUE(status.isOk()) << status.toString8();
@@ -84,6 +87,7 @@ TEST_F(AidlTest, ReverseSimpleParcelable) {
   EXPECT_EQ(repeated, original);
 
   std::reverse(reversed.begin(), reversed.end());
+  EXPECT_EQ(reversed, original);
 }
 
 TEST_F(AidlTest, ConfirmPersistableBundles) {
@@ -134,6 +138,9 @@ TEST_F(AidlTest, ReversePersistableBundles) {
   const vector<PersistableBundle> original{first, second, third};
 
   vector<PersistableBundle> repeated;
+  if (backend == BackendType::JAVA) {
+    repeated = vector<PersistableBundle>(original.size());
+  }
   vector<PersistableBundle> reversed;
   Status status = cpp_java_tests->ReversePersistableBundles(original, &repeated, &reversed);
   ASSERT_TRUE(status.isOk()) << status.toString8();
