@@ -487,9 +487,9 @@ template <typename _Tp, typename = std::enable_if_t<_not_self<_Tp>>>
 constexpr {name}(_Tp&& _arg)
     : _value(std::forward<_Tp>(_arg)) {{}}
 
-template <typename... _Tp>
-constexpr explicit {name}(_Tp&&... _args)
-    : _value(std::forward<_Tp>(_args)...) {{}}
+template <size_t _Np, typename... _Tp>
+constexpr explicit {name}(std::in_place_index_t<_Np>, _Tp&&... _args)
+    : _value(std::in_place_index<_Np>, std::forward<_Tp>(_args)...) {{}}
 
 template <Tag _tag, typename... _Tp>
 static {name} make(_Tp&&... _args) {{
