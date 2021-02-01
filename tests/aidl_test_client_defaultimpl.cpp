@@ -45,7 +45,7 @@ TEST_F(AidlTest, defaultImpl) {
 
   int32_t returned_value;
   auto status = service->UnimplementedMethod(kExpectedArgValue, &returned_value);
-  ASSERT_TRUE(status.isOk());
+  ASSERT_TRUE(status.isOk()) << status;
   ASSERT_THAT(numCalled, Eq(1));
   ASSERT_THAT(gotArgument, Eq(kExpectedArgValue));
   ASSERT_THAT(returned_value, Eq(kExpectedReturnValue));

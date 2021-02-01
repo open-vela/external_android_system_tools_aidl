@@ -119,13 +119,28 @@ class NativeClient:
         if result.exit_status:
             raise TestFail(result.stdout)
 
+class JavaServer:
+    def __init__(self, host, bitness):
+        self.name = "java_server_%s" % pretty_bitness(bitness)
+        self.host = host
+        self.bitness = bitness
+    def cleanup(self):
+        self.host.run('killall ' + APP_PROCESS_FOR_PRETTY_BITNESS % pretty_bitness(self.bitness),
+                      ignore_status=True)
+    def run(self):
+        return self.host.run('CLASSPATH=/data/framework/aidl_test_java.jar '
+                             + APP_PROCESS_FOR_PRETTY_BITNESS % pretty_bitness(self.bitness) +
+                             ' /data/framework android.aidl.tests.TestServiceServer',
+                             background=True)
+
 class JavaClient:
     def __init__(self, host, bitness):
         self.name = "java_client_%s" % pretty_bitness(bitness)
         self.host = host
         self.bitness = bitness
     def cleanup(self):
-        self.host.run('killall app_process', ignore_status=True)
+        self.host.run('killall ' + APP_PROCESS_FOR_PRETTY_BITNESS % pretty_bitness(self.bitness),
+                      ignore_status=True)
     def run(self):
         result = self.host.run('CLASSPATH=/data/framework/aidl_test_java.jar '
                                + APP_PROCESS_FOR_PRETTY_BITNESS % pretty_bitness(self.bitness) +
@@ -198,12 +213,9 @@ if __name__ == '__main__':
         clients += [NativeClient(host, bitness)]
         servers += [NativeServer(host, bitness)]
 
-
-    for bitness in bitnesses:
         clients += [JavaClient(host, bitness)]
-        # TODO(b/169704480): Java server
+        servers += [JavaServer(host, bitness)]
 
-    for bitness in bitnesses:
         clients += [RustClient(host, bitness)]
         servers += [RustServer(host, bitness)]
 
