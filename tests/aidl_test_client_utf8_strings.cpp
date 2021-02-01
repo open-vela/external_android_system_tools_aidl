@@ -30,6 +30,7 @@ using android::String16;
 using android::String8;
 using android::binder::Status;
 
+using android::aidl::tests::BackendType;
 using android::aidl::tests::ITestService;
 
 using testing::Eq;
@@ -68,10 +69,13 @@ TEST_F(AidlTest, repeatUtf8String) {
 TEST_F(AidlTest, reverseUtf8StringArray) {
   std::vector<std::string> input = {"a", "", "\xc3\xb8"};
   decltype(input) repeated;
+  if (backend == BackendType::JAVA) {
+    repeated = decltype(input)(input.size());
+  }
   decltype(input) reversed;
 
   auto status = service->ReverseUtf8CppString(input, &repeated, &reversed);
-  ASSERT_TRUE(status.isOk());
+  ASSERT_TRUE(status.isOk()) << status;
   ASSERT_THAT(repeated, Eq(input));
 
   decltype(input) reversed_input(input);
@@ -85,21 +89,32 @@ struct AidlStringArrayTest : public AidlTest {
                                    std::optional<std::vector<std::optional<std::string>>>*,
                                    std::optional<std::vector<std::optional<std::string>>>*)) {
     std::optional<std::vector<std::optional<std::string>>> input;
-    decltype(input) reversed;
     decltype(input) repeated;
+    decltype(input) reversed;
 
-    auto status = (*service.*func)(input, &reversed, &repeated);
-    ASSERT_TRUE(status.isOk());
+    auto status = (*service.*func)(input, &repeated, &reversed);
+    ASSERT_TRUE(status.isOk()) << status;
+
+    if (func == &ITestService::ReverseUtf8CppStringList && backend == BackendType::JAVA) {
+      // Java cannot clear the input variable to return a null value. It can
+      // only ever fill out a list.
+      ASSERT_TRUE(repeated.has_value());
+    } else {
+      ASSERT_FALSE(repeated.has_value());
+    }
+
     ASSERT_FALSE(reversed.has_value());
-    ASSERT_FALSE(repeated.has_value());
 
     input = std::vector<std::optional<std::string>>();
     input->push_back("Deliver us from evil.");
     input->push_back(std::nullopt);
     input->push_back("\xF0\x90\x90\xB7\xE2\x82\xAC");
 
-    status = service->ReverseUtf8CppStringList(input, &repeated, &reversed);
-    ASSERT_TRUE(status.isOk());
+    // usable size needs to be initialized for Java
+    repeated = std::vector<std::optional<std::string>>(input->size());
+
+    status = (*service.*func)(input, &repeated, &reversed);
+    ASSERT_TRUE(status.isOk()) << status;
     ASSERT_TRUE(reversed.has_value());
     ASSERT_TRUE(repeated.has_value());
     ASSERT_THAT(reversed->size(), Eq(input->size()));
@@ -124,10 +139,10 @@ struct AidlStringArrayTest : public AidlTest {
   }
 };
 
-TEST_F(AidlStringArrayTest, nonNullable) {
+TEST_F(AidlStringArrayTest, nullableList) {
   DoTest(&ITestService::ReverseUtf8CppStringList);
 }
 
-TEST_F(AidlStringArrayTest, nullable) {
+TEST_F(AidlStringArrayTest, nullableArray) {
   DoTest(&ITestService::ReverseNullableUtf8CppString);
 }
