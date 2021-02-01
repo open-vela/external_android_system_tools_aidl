@@ -22,7 +22,7 @@ use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
     self, BpTestService, ITestServiceDefault, ITestServiceDefaultRef,
 };
 use aidl_test_interface::aidl::android::aidl::tests::{
-    BackendType::BackendType, ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable, Union,
+    ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable, Union,
 };
 use aidl_test_interface::aidl::android::aidl::tests::unions::{
     EnumUnion::EnumUnion,
@@ -170,10 +170,7 @@ macro_rules! test_reverse_array {
         #[test]
         fn $test() {
             let mut array = $array;
-
-            // Java need initial values here (can't resize arrays)
-            let mut repeated = vec![Default::default(); array.len()];
-
+            let mut repeated = vec![];
             let result = get_test_service().$func(&array, &mut repeated);
             assert_eq!(repeated, array);
             array.reverse();
@@ -290,13 +287,6 @@ fn test_parcel_file_descriptor() {
 #[test]
 fn test_parcel_file_descriptor_array() {
     let service = get_test_service();
-
-    let backend = service.getBackendType().expect("error getting backend type");
-    if backend == BackendType::JAVA {
-        // TODO(b/178863692): returning unknown transaction
-        return;
-    }
-
     let (read_file, write_file) = build_pipe();
     let input = vec![
         binder::ParcelFileDescriptor::new(read_file),
@@ -335,13 +325,6 @@ fn test_parcel_file_descriptor_array() {
 #[test]
 fn test_service_specific_exception() {
     let service = get_test_service();
-
-    let backend = service.getBackendType().expect("error getting backend type");
-    if backend == BackendType::JAVA {
-        // TODO(b/178861468): not correctly thrown from Java
-        return;
-    }
-
     for i in -1..2 {
         let result = service.ThrowServiceException(i);
         assert!(result.is_err());
@@ -436,20 +419,14 @@ fn test_binder() {
     assert_eq!(service.TakesANullableIBinder(Some(&binder)), Ok(()));
 }
 
-macro_rules! test_reverse_null_array {
-    ($service:expr, $func:ident, $expect_repeated:expr) => {{
-        let mut repeated = None;
-        let result = $service.$func(None, &mut repeated);
-        assert_eq!(repeated, $expect_repeated);
-        assert_eq!(result, Ok(None));
-    }};
-}
-
 macro_rules! test_reverse_nullable_array {
     ($service:expr, $func:ident, $array:expr) => {{
+        let mut repeated = None;
+        let result = $service.$func(None, &mut repeated);
+        assert_eq!(repeated, None);
+        assert_eq!(result, Ok(None));
+
         let mut array = $array;
-        // Java need initial values here (can't resize arrays)
-        let mut repeated = Some(vec![Default::default(); array.len()]);
         let result = $service.$func(Some(&array[..]), &mut repeated);
         assert_eq!(repeated.as_ref(), Some(&array));
         array.reverse();
@@ -490,14 +467,6 @@ fn test_utf8_string() {
         ),
         Some(ITestService::STRING_TEST_CONSTANT_UTF8.into()),
     ];
-
-    // Java can't return a null list as a parameter
-    let backend = service.getBackendType().expect("error getting backend type");
-    let null_output = if backend == BackendType::JAVA { Some(vec![]) } else { None };
-    test_reverse_null_array!(service, ReverseUtf8CppStringList, null_output);
-
-    test_reverse_null_array!(service, ReverseNullableUtf8CppString, None);
-
     test_reverse_nullable_array!(service, ReverseUtf8CppStringList, inputs.clone());
     test_reverse_nullable_array!(service, ReverseNullableUtf8CppString, inputs);
 }
@@ -641,16 +610,7 @@ fn test_versioned_unknown_union_field_triggers_error() {
 
     let ret = service.acceptUnionAndReturnString(&BazUnion::LongNum(42));
     assert!(!ret.is_ok());
-
-    let main_service = get_test_service();
-    let backend = main_service.getBackendType().expect("error getting backend type");
-
-    // b/173458620 - for investigation of fixing difference
-    if backend == BackendType::JAVA {
-        assert_eq!(ret.unwrap_err().transaction_error(), binder::StatusCode::UNEXPECTED_NULL);
-    } else {
-        assert_eq!(ret.unwrap_err().transaction_error(), binder::StatusCode::BAD_VALUE);
-    }
+    assert_eq!(ret.unwrap_err().transaction_error(), binder::StatusCode::BAD_VALUE);
 }
 
 fn test_renamed_interface<F>(f: F)
