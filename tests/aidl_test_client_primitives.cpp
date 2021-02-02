@@ -47,17 +47,18 @@ struct AidlPrimitiveTest : public AidlTest {
   void DoTest(Status (ITestService::*func)(T, U*), V input) {
     U repeated;
     auto status = (*service.*func)(input, &repeated);
-    ASSERT_TRUE(status.isOk());
+    ASSERT_TRUE(status.isOk()) << status;
     ASSERT_THAT(repeated, Eq(input));
   }
 
   template <typename T>
   void DoTest(Status (ITestService::*func)(const std::vector<T>&, std::vector<T>*, std::vector<T>*),
               const std::vector<T>& input) {
-    std::vector<T> repeated;
+    // must be preallocated for Java servers
+    std::vector<T> repeated(input.size());
     std::vector<T> reversed;
     auto status = (*service.*func)(input, &repeated, &reversed);
-    ASSERT_TRUE(status.isOk());
+    ASSERT_TRUE(status.isOk()) << status;
     ASSERT_THAT(repeated, Eq(input));
 
     std::vector<T> reversed_input(input);
