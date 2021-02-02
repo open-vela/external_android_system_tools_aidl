@@ -55,15 +55,18 @@ func init() {
 	pctx.SourcePathVariable("aidlToJniCmd", "system/tools/aidl/build/aidl_to_jni.py")
 	pctx.SourcePathVariable("aidlRustGlueCmd", "system/tools/aidl/build/aidl_rust_glue.py")
 	android.RegisterModuleType("aidl_interface", aidlInterfaceFactory)
-	android.PreArchMutators(func(ctx android.RegisterMutatorsContext) {
-		ctx.BottomUp("checkImports", checkImports).Parallel()
-		ctx.TopDown("createAidlInterface", createAidlInterfaceMutator).Parallel()
-	})
+	android.PreArchMutators(registerPreDepsMutators)
+	android.PreArchBp2BuildMutators(registerPreDepsMutators)
 	android.PostDepsMutators(func(ctx android.RegisterMutatorsContext) {
 		ctx.BottomUp("checkUnstableModule", checkUnstableModuleMutator).Parallel()
 		ctx.BottomUp("recordVersions", recordVersions).Parallel()
 		ctx.BottomUp("checkDuplicatedVersions", checkDuplicatedVersions).Parallel()
 	})
+}
+
+func registerPreDepsMutators(ctx android.RegisterMutatorsContext) {
+	ctx.BottomUp("checkImports", checkImports).Parallel()
+	ctx.TopDown("createAidlInterface", createAidlInterfaceMutator).Parallel()
 }
 
 func createAidlInterfaceMutator(mctx android.TopDownMutatorContext) {
