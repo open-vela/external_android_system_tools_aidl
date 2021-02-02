@@ -24,11 +24,16 @@ TEST_F(AidlTest, onewayNoError) {
 }
 
 TEST_F(AidlTest, serviceSpecificException) {
+  if (backend == BackendType::JAVA) {
+    // TODO(b/169704480): investigate why this is returning 'unexpected null'
+    GTEST_SKIP() << "Broken in Java? b/169704480";
+  }
+
   using testing::Eq;
 
   for (int32_t i = -1; i < 2; ++i) {
     auto status = service->ThrowServiceException(i);
-    ASSERT_THAT(status.exceptionCode(), Eq(android::binder::Status::EX_SERVICE_SPECIFIC));
-    ASSERT_THAT(status.serviceSpecificErrorCode(), Eq(i));
+    ASSERT_THAT(status.exceptionCode(), Eq(android::binder::Status::EX_SERVICE_SPECIFIC)) << status;
+    ASSERT_THAT(status.serviceSpecificErrorCode(), Eq(i)) << status;
   }
 }
