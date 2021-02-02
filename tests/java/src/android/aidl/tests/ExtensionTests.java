@@ -99,12 +99,12 @@ public class ExtensionTests {
 
       ExtendableParcelable ep2 = new ExtendableParcelable();
       mCppJavaTests.RepeatExtendableParcelable(ep, ep2);
-      assertThat(ep2.a, is(2));
-      assertThat(ep2.b, is("aBAR"));
+      assertThat(ep2.a, is(ep.a));
+      assertThat(ep2.b, is(ep.b));
 
       MyExt retExt = ep2.ext.getParcelable(MyExt.class);
-      assertThat(retExt.a, is(84));
-      assertThat(retExt.b, is("EXTBAR"));
+      assertThat(retExt.a, is(ext.a));
+      assertThat(retExt.b, is(ext.b));
     }
 
     @Test
