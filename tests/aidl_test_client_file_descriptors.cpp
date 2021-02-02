@@ -89,9 +89,17 @@ TEST_F(FdTest, fileDescriptorArray) {
   DoPipe(&array[0], &array[1]);
 
   std::vector<unique_fd> repeated;
+
+  if (backend == BackendType::JAVA) {
+    // other backends might require these to be valid FDs (not -1), since this
+    // isn't @nullable, but they don't require this to already be the correct
+    // size
+    repeated = std::vector<unique_fd>(array.size());
+  }
+
   std::vector<unique_fd> reversed;
   auto status = cpp_java_tests->ReverseFileDescriptorArray(array, &repeated, &reversed);
-  ASSERT_TRUE(status.isOk());
+  ASSERT_TRUE(status.isOk()) << status;
 
   WriteStringToFd("First", array[1]);
   WriteStringToFd("Second", repeated[1]);
@@ -128,9 +136,15 @@ TEST_F(FdTest, parcelFileDescriptorArray) {
   }
 
   std::vector<ParcelFileDescriptor> repeated;
+
+  if (backend == BackendType::JAVA) {
+    // TODO(b/169704480) - this always returns UNKNOWN_TRANSACTION
+    GTEST_SKIP() << "Broken in Java? b/169704480";
+  }
+
   std::vector<ParcelFileDescriptor> reversed;
   auto status = service->ReverseParcelFileDescriptorArray(input, &repeated, &reversed);
-  ASSERT_TRUE(status.isOk());
+  ASSERT_TRUE(status.isOk()) << status;
 
   WriteStringToFd("First", input[1].release());
   WriteStringToFd("Second", repeated[1].release());
