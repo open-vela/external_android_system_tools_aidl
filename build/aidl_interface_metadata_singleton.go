@@ -66,7 +66,7 @@ func aidlInterfacesMetadataSingletonFactory() android.Module {
 type aidlInterfacesMetadataSingleton struct {
 	android.ModuleBase
 
-	metadataPath android.OutputPath
+	metadataPath android.WritablePath
 }
 
 var _ android.OutputFileProducer = (*aidlInterfacesMetadataSingleton)(nil)
@@ -135,7 +135,7 @@ func (m *aidlInterfacesMetadataSingleton) GenerateAndroidBuildActions(ctx androi
 		})
 	}
 
-	m.metadataPath = android.PathForModuleOut(ctx, "aidl_metadata.json").OutputPath
+	m.metadataPath = android.PathForModuleOut(ctx, "aidl_metadata.json")
 
 	ctx.Build(pctx, android.BuildParams{
 		Rule:   joinJsonObjectsToArrayRule,
