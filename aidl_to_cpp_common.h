@@ -29,6 +29,9 @@ namespace android {
 namespace aidl {
 namespace cpp {
 
+// provides _call_toString(expr) which call expr.toString() if possible
+extern char kToStringHelper[];
+
 extern char kTransactionLogStruct[];
 
 // These roughly correspond to the various class names in the C++ hierarchy:

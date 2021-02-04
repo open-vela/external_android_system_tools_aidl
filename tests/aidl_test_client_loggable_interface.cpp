@@ -118,9 +118,9 @@ TEST_F(AidlTest, LoggableInterface) {
           {"stringArray", "[ghi, jkl]"},
           {"listValue", "[mno]"},
           {"dataValue", "Data{num: 42, str: abc, nestedUnion: Union{str: def}, nestedEnum: FOO}"},
-          {"binderValue", "(null)"},
-          {"pfdValue", "(null)"},
-          {"pfdArray", "[]"},
+          {"binderValue", ""},
+          {"pfdValue", ""},
+          {"pfdArray", ""},
       }));
   EXPECT_THAT(log.output_args,
               Eq(vector<pair<string, string>>{{"boolArray", "[false, true]"},
@@ -132,6 +132,6 @@ TEST_F(AidlTest, LoggableInterface) {
                                               {"doubleArray", "[53.000000, 54.000000]"},
                                               {"stringArray", "[ghi, jkl]"},
                                               {"listValue", "[mno]"},
-                                              {"pfdValue", "(null)"},
-                                              {"pfdArray", "[]"}}));
+                                              {"pfdValue", ""},
+                                              {"pfdArray", ""}}));
 }
