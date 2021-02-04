@@ -3,6 +3,7 @@
 #include <binder/IInterface.h>
 #include <android/aidl/loggable/ILoggableInterface.h>
 #include <functional>
+#include <android/binder_to_string.h>
 
 namespace android {
 
@@ -30,16 +31,6 @@ public:
     int32_t service_specific_error_code;
   };
   static std::function<void(const TransactionLog&)> logFunc;
-private:
-  template <typename _T> class _has_toString {
-    template <typename _U> static std::true_type __has_toString(decltype(&_U::toString));
-    template <typename _U> static std::false_type __has_toString(...);
-    public: enum { value = decltype(__has_toString<_T>(nullptr))::value };
-  };
-  template <typename _T> inline static std::string _call_toString(const _T& t) {
-    if constexpr (_has_toString<_T>::value) return t.toString();
-    return "{no toString() implemented}";
-  }
 };  // class BnLoggableInterface
 
 }  // namespace loggable

@@ -2,20 +2,12 @@
 #include <aidl/android/aidl/loggable/BpLoggableInterface.h>
 #include <aidl/android/aidl/loggable/BnLoggableInterface.h>
 #include <aidl/android/aidl/loggable/ILoggableInterface.h>
+#include <android/binder_to_string.h>
 
 namespace aidl {
 namespace android {
 namespace aidl {
 namespace loggable {
-template <typename _T> class _has_toString {
-  template <typename _U> static std::true_type __has_toString(decltype(&_U::toString));
-  template <typename _U> static std::false_type __has_toString(...);
-  public: enum { value = decltype(__has_toString<_T>(nullptr))::value };
-};
-template <typename _T> inline static std::string _call_toString(const _T& t) {
-  if constexpr (_has_toString<_T>::value) return t.toString();
-  return "{no toString() implemented}";
-}
 class ScopedTrace {
   public:
   inline explicit ScopedTrace(const char* name) {
@@ -121,27 +113,27 @@ static binder_status_t _aidl_onTransact(AIBinder* _aidl_binder, transaction_code
 
       BnLoggableInterface::TransactionLog _transaction_log;
       if (BnLoggableInterface::logFunc != nullptr) {
-        _transaction_log.input_args.emplace_back("in_boolValue", (in_boolValue?"true":"false"));
-        _transaction_log.input_args.emplace_back("in_boolArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_boolArray) { (void)v; if (first) first = false; else o << ", "; o << (v?"true":"false"); }; o << "]"; return o.str(); }());
-        _transaction_log.input_args.emplace_back("in_byteValue", std::to_string(in_byteValue));
-        _transaction_log.input_args.emplace_back("in_byteArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_byteArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-        _transaction_log.input_args.emplace_back("in_charValue", std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().to_bytes(in_charValue));
-        _transaction_log.input_args.emplace_back("in_charArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_charArray) { (void)v; if (first) first = false; else o << ", "; o << std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().to_bytes(v); }; o << "]"; return o.str(); }());
-        _transaction_log.input_args.emplace_back("in_intValue", std::to_string(in_intValue));
-        _transaction_log.input_args.emplace_back("in_intArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_intArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-        _transaction_log.input_args.emplace_back("in_longValue", std::to_string(in_longValue));
-        _transaction_log.input_args.emplace_back("in_longArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_longArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-        _transaction_log.input_args.emplace_back("in_floatValue", std::to_string(in_floatValue));
-        _transaction_log.input_args.emplace_back("in_floatArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_floatArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-        _transaction_log.input_args.emplace_back("in_doubleValue", std::to_string(in_doubleValue));
-        _transaction_log.input_args.emplace_back("in_doubleArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_doubleArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-        _transaction_log.input_args.emplace_back("in_stringValue", (std::ostringstream() << in_stringValue).str());
-        _transaction_log.input_args.emplace_back("in_stringArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_stringArray) { (void)v; if (first) first = false; else o << ", "; o << (std::ostringstream() << v).str(); }; o << "]"; return o.str(); }());
-        _transaction_log.input_args.emplace_back("in_listValue", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_listValue) { (void)v; if (first) first = false; else o << ", "; o << (std::ostringstream() << v).str(); }; o << "]"; return o.str(); }());
-        _transaction_log.input_args.emplace_back("in_dataValue", _call_toString(in_dataValue));
-        _transaction_log.input_args.emplace_back("in_binderValue", "");
-        _transaction_log.input_args.emplace_back("in_pfdValue", "");
-        _transaction_log.input_args.emplace_back("in_pfdArray", "");
+        _transaction_log.input_args.emplace_back("in_boolValue", ::android::internal::ToString(in_boolValue));
+        _transaction_log.input_args.emplace_back("in_boolArray", ::android::internal::ToString(in_boolArray));
+        _transaction_log.input_args.emplace_back("in_byteValue", ::android::internal::ToString(in_byteValue));
+        _transaction_log.input_args.emplace_back("in_byteArray", ::android::internal::ToString(in_byteArray));
+        _transaction_log.input_args.emplace_back("in_charValue", ::android::internal::ToString(in_charValue));
+        _transaction_log.input_args.emplace_back("in_charArray", ::android::internal::ToString(in_charArray));
+        _transaction_log.input_args.emplace_back("in_intValue", ::android::internal::ToString(in_intValue));
+        _transaction_log.input_args.emplace_back("in_intArray", ::android::internal::ToString(in_intArray));
+        _transaction_log.input_args.emplace_back("in_longValue", ::android::internal::ToString(in_longValue));
+        _transaction_log.input_args.emplace_back("in_longArray", ::android::internal::ToString(in_longArray));
+        _transaction_log.input_args.emplace_back("in_floatValue", ::android::internal::ToString(in_floatValue));
+        _transaction_log.input_args.emplace_back("in_floatArray", ::android::internal::ToString(in_floatArray));
+        _transaction_log.input_args.emplace_back("in_doubleValue", ::android::internal::ToString(in_doubleValue));
+        _transaction_log.input_args.emplace_back("in_doubleArray", ::android::internal::ToString(in_doubleArray));
+        _transaction_log.input_args.emplace_back("in_stringValue", ::android::internal::ToString(in_stringValue));
+        _transaction_log.input_args.emplace_back("in_stringArray", ::android::internal::ToString(in_stringArray));
+        _transaction_log.input_args.emplace_back("in_listValue", ::android::internal::ToString(in_listValue));
+        _transaction_log.input_args.emplace_back("in_dataValue", ::android::internal::ToString(in_dataValue));
+        _transaction_log.input_args.emplace_back("in_binderValue", ::android::internal::ToString(in_binderValue));
+        _transaction_log.input_args.emplace_back("in_pfdValue", ::android::internal::ToString(in_pfdValue));
+        _transaction_log.input_args.emplace_back("in_pfdArray", ::android::internal::ToString(in_pfdArray));
       }
       auto _log_start = std::chrono::steady_clock::now();
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->LogThis(in_boolValue, &in_boolArray, in_byteValue, &in_byteArray, in_charValue, &in_charArray, in_intValue, &in_intArray, in_longValue, &in_longArray, in_floatValue, &in_floatArray, in_doubleValue, &in_doubleArray, in_stringValue, &in_stringArray, &in_listValue, in_dataValue, in_binderValue, &in_pfdValue, &in_pfdArray, &_aidl_return);
@@ -156,18 +148,18 @@ static binder_status_t _aidl_onTransact(AIBinder* _aidl_binder, transaction_code
         _transaction_log.exception_message = AStatus_getMessage(_aidl_status.get());
         _transaction_log.transaction_error = AStatus_getStatus(_aidl_status.get());
         _transaction_log.service_specific_error_code = AStatus_getServiceSpecificError(_aidl_status.get());
-        _transaction_log.output_args.emplace_back("in_boolArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_boolArray) { (void)v; if (first) first = false; else o << ", "; o << (v?"true":"false"); }; o << "]"; return o.str(); }());
-        _transaction_log.output_args.emplace_back("in_byteArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_byteArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-        _transaction_log.output_args.emplace_back("in_charArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_charArray) { (void)v; if (first) first = false; else o << ", "; o << std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().to_bytes(v); }; o << "]"; return o.str(); }());
-        _transaction_log.output_args.emplace_back("in_intArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_intArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-        _transaction_log.output_args.emplace_back("in_longArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_longArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-        _transaction_log.output_args.emplace_back("in_floatArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_floatArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-        _transaction_log.output_args.emplace_back("in_doubleArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_doubleArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-        _transaction_log.output_args.emplace_back("in_stringArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_stringArray) { (void)v; if (first) first = false; else o << ", "; o << (std::ostringstream() << v).str(); }; o << "]"; return o.str(); }());
-        _transaction_log.output_args.emplace_back("in_listValue", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: in_listValue) { (void)v; if (first) first = false; else o << ", "; o << (std::ostringstream() << v).str(); }; o << "]"; return o.str(); }());
-        _transaction_log.output_args.emplace_back("in_pfdValue", "");
-        _transaction_log.output_args.emplace_back("in_pfdArray", "");
-        _transaction_log.result = [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: _aidl_return) { (void)v; if (first) first = false; else o << ", "; o << (std::ostringstream() << v).str(); }; o << "]"; return o.str(); }();
+        _transaction_log.output_args.emplace_back("in_boolArray", ::android::internal::ToString(in_boolArray));
+        _transaction_log.output_args.emplace_back("in_byteArray", ::android::internal::ToString(in_byteArray));
+        _transaction_log.output_args.emplace_back("in_charArray", ::android::internal::ToString(in_charArray));
+        _transaction_log.output_args.emplace_back("in_intArray", ::android::internal::ToString(in_intArray));
+        _transaction_log.output_args.emplace_back("in_longArray", ::android::internal::ToString(in_longArray));
+        _transaction_log.output_args.emplace_back("in_floatArray", ::android::internal::ToString(in_floatArray));
+        _transaction_log.output_args.emplace_back("in_doubleArray", ::android::internal::ToString(in_doubleArray));
+        _transaction_log.output_args.emplace_back("in_stringArray", ::android::internal::ToString(in_stringArray));
+        _transaction_log.output_args.emplace_back("in_listValue", ::android::internal::ToString(in_listValue));
+        _transaction_log.output_args.emplace_back("in_pfdValue", ::android::internal::ToString(in_pfdValue));
+        _transaction_log.output_args.emplace_back("in_pfdArray", ::android::internal::ToString(in_pfdArray));
+        _transaction_log.result = ::android::internal::ToString(_aidl_return);
         BnLoggableInterface::logFunc(_transaction_log);
       }
       _aidl_ret_status = AParcel_writeStatusHeader(_aidl_out, _aidl_status.get());
@@ -231,27 +223,27 @@ std::function<void(const BpLoggableInterface::TransactionLog&)> BpLoggableInterf
 
   BpLoggableInterface::TransactionLog _transaction_log;
   if (BpLoggableInterface::logFunc != nullptr) {
-    _transaction_log.input_args.emplace_back("in_boolValue", (in_boolValue?"true":"false"));
-    _transaction_log.input_args.emplace_back("in_boolArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_boolArray) { (void)v; if (first) first = false; else o << ", "; o << (v?"true":"false"); }; o << "]"; return o.str(); }());
-    _transaction_log.input_args.emplace_back("in_byteValue", std::to_string(in_byteValue));
-    _transaction_log.input_args.emplace_back("in_byteArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_byteArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-    _transaction_log.input_args.emplace_back("in_charValue", std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().to_bytes(in_charValue));
-    _transaction_log.input_args.emplace_back("in_charArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_charArray) { (void)v; if (first) first = false; else o << ", "; o << std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().to_bytes(v); }; o << "]"; return o.str(); }());
-    _transaction_log.input_args.emplace_back("in_intValue", std::to_string(in_intValue));
-    _transaction_log.input_args.emplace_back("in_intArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_intArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-    _transaction_log.input_args.emplace_back("in_longValue", std::to_string(in_longValue));
-    _transaction_log.input_args.emplace_back("in_longArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_longArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-    _transaction_log.input_args.emplace_back("in_floatValue", std::to_string(in_floatValue));
-    _transaction_log.input_args.emplace_back("in_floatArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_floatArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-    _transaction_log.input_args.emplace_back("in_doubleValue", std::to_string(in_doubleValue));
-    _transaction_log.input_args.emplace_back("in_doubleArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_doubleArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-    _transaction_log.input_args.emplace_back("in_stringValue", (std::ostringstream() << in_stringValue).str());
-    _transaction_log.input_args.emplace_back("in_stringArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_stringArray) { (void)v; if (first) first = false; else o << ", "; o << (std::ostringstream() << v).str(); }; o << "]"; return o.str(); }());
-    _transaction_log.input_args.emplace_back("in_listValue", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_listValue) { (void)v; if (first) first = false; else o << ", "; o << (std::ostringstream() << v).str(); }; o << "]"; return o.str(); }());
-    _transaction_log.input_args.emplace_back("in_dataValue", _call_toString(in_dataValue));
-    _transaction_log.input_args.emplace_back("in_binderValue", "");
-    _transaction_log.input_args.emplace_back("in_pfdValue", "");
-    _transaction_log.input_args.emplace_back("in_pfdArray", "");
+    _transaction_log.input_args.emplace_back("in_boolValue", ::android::internal::ToString(in_boolValue));
+    _transaction_log.input_args.emplace_back("in_boolArray", ::android::internal::ToString(*in_boolArray));
+    _transaction_log.input_args.emplace_back("in_byteValue", ::android::internal::ToString(in_byteValue));
+    _transaction_log.input_args.emplace_back("in_byteArray", ::android::internal::ToString(*in_byteArray));
+    _transaction_log.input_args.emplace_back("in_charValue", ::android::internal::ToString(in_charValue));
+    _transaction_log.input_args.emplace_back("in_charArray", ::android::internal::ToString(*in_charArray));
+    _transaction_log.input_args.emplace_back("in_intValue", ::android::internal::ToString(in_intValue));
+    _transaction_log.input_args.emplace_back("in_intArray", ::android::internal::ToString(*in_intArray));
+    _transaction_log.input_args.emplace_back("in_longValue", ::android::internal::ToString(in_longValue));
+    _transaction_log.input_args.emplace_back("in_longArray", ::android::internal::ToString(*in_longArray));
+    _transaction_log.input_args.emplace_back("in_floatValue", ::android::internal::ToString(in_floatValue));
+    _transaction_log.input_args.emplace_back("in_floatArray", ::android::internal::ToString(*in_floatArray));
+    _transaction_log.input_args.emplace_back("in_doubleValue", ::android::internal::ToString(in_doubleValue));
+    _transaction_log.input_args.emplace_back("in_doubleArray", ::android::internal::ToString(*in_doubleArray));
+    _transaction_log.input_args.emplace_back("in_stringValue", ::android::internal::ToString(in_stringValue));
+    _transaction_log.input_args.emplace_back("in_stringArray", ::android::internal::ToString(*in_stringArray));
+    _transaction_log.input_args.emplace_back("in_listValue", ::android::internal::ToString(*in_listValue));
+    _transaction_log.input_args.emplace_back("in_dataValue", ::android::internal::ToString(in_dataValue));
+    _transaction_log.input_args.emplace_back("in_binderValue", ::android::internal::ToString(in_binderValue));
+    _transaction_log.input_args.emplace_back("in_pfdValue", ::android::internal::ToString(*in_pfdValue));
+    _transaction_log.input_args.emplace_back("in_pfdArray", ::android::internal::ToString(*in_pfdArray));
   }
   auto _log_start = std::chrono::steady_clock::now();
   ScopedTrace _aidl_trace("AIDL::ndk::ILoggableInterface::LogThis::client");
@@ -391,18 +383,18 @@ std::function<void(const BpLoggableInterface::TransactionLog&)> BpLoggableInterf
     _transaction_log.exception_message = AStatus_getMessage(_aidl_status.get());
     _transaction_log.transaction_error = AStatus_getStatus(_aidl_status.get());
     _transaction_log.service_specific_error_code = AStatus_getServiceSpecificError(_aidl_status.get());
-    _transaction_log.output_args.emplace_back("in_boolArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_boolArray) { (void)v; if (first) first = false; else o << ", "; o << (v?"true":"false"); }; o << "]"; return o.str(); }());
-    _transaction_log.output_args.emplace_back("in_byteArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_byteArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-    _transaction_log.output_args.emplace_back("in_charArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_charArray) { (void)v; if (first) first = false; else o << ", "; o << std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().to_bytes(v); }; o << "]"; return o.str(); }());
-    _transaction_log.output_args.emplace_back("in_intArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_intArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-    _transaction_log.output_args.emplace_back("in_longArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_longArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-    _transaction_log.output_args.emplace_back("in_floatArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_floatArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-    _transaction_log.output_args.emplace_back("in_doubleArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_doubleArray) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }());
-    _transaction_log.output_args.emplace_back("in_stringArray", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_stringArray) { (void)v; if (first) first = false; else o << ", "; o << (std::ostringstream() << v).str(); }; o << "]"; return o.str(); }());
-    _transaction_log.output_args.emplace_back("in_listValue", [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *in_listValue) { (void)v; if (first) first = false; else o << ", "; o << (std::ostringstream() << v).str(); }; o << "]"; return o.str(); }());
-    _transaction_log.output_args.emplace_back("in_pfdValue", "");
-    _transaction_log.output_args.emplace_back("in_pfdArray", "");
-    _transaction_log.result = [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: *_aidl_return) { (void)v; if (first) first = false; else o << ", "; o << (std::ostringstream() << v).str(); }; o << "]"; return o.str(); }();
+    _transaction_log.output_args.emplace_back("in_boolArray", ::android::internal::ToString(*in_boolArray));
+    _transaction_log.output_args.emplace_back("in_byteArray", ::android::internal::ToString(*in_byteArray));
+    _transaction_log.output_args.emplace_back("in_charArray", ::android::internal::ToString(*in_charArray));
+    _transaction_log.output_args.emplace_back("in_intArray", ::android::internal::ToString(*in_intArray));
+    _transaction_log.output_args.emplace_back("in_longArray", ::android::internal::ToString(*in_longArray));
+    _transaction_log.output_args.emplace_back("in_floatArray", ::android::internal::ToString(*in_floatArray));
+    _transaction_log.output_args.emplace_back("in_doubleArray", ::android::internal::ToString(*in_doubleArray));
+    _transaction_log.output_args.emplace_back("in_stringArray", ::android::internal::ToString(*in_stringArray));
+    _transaction_log.output_args.emplace_back("in_listValue", ::android::internal::ToString(*in_listValue));
+    _transaction_log.output_args.emplace_back("in_pfdValue", ::android::internal::ToString(*in_pfdValue));
+    _transaction_log.output_args.emplace_back("in_pfdArray", ::android::internal::ToString(*in_pfdArray));
+    _transaction_log.result = ::android::internal::ToString(*_aidl_return);
     BpLoggableInterface::logFunc(_transaction_log);
   }
   return _aidl_status;
