@@ -49,17 +49,6 @@ char kTransactionLogStruct[] = R"(struct TransactionLog {
 };
 )";
 
-char kToStringHelper[] = R"(template <typename _T> class _has_toString {
-  template <typename _U> static std::true_type __has_toString(decltype(&_U::toString));
-  template <typename _U> static std::false_type __has_toString(...);
-  public: enum { value = decltype(__has_toString<_T>(nullptr))::value };
-};
-template <typename _T> inline static std::string _call_toString(const _T& t) {
-  if constexpr (_has_toString<_T>::value) return t.toString();
-  return "{no toString() implemented}";
-}
-)";
-
 string ClassName(const AidlDefinedType& defined_type, ClassNames type) {
   string base_name = defined_type.GetName();
   if (base_name.length() >= 2 && base_name[0] == 'I' && isupper(base_name[1])) {
@@ -122,103 +111,13 @@ string BuildVarName(const AidlArgument& a) {
   return prefix + a.GetName();
 }
 
-string ToString(const AidlTypeSpecifier& type, const string& expr);
-string ToStringNullable(const AidlTypeSpecifier& type, const string& expr);
-string ToStringNullableVector(const AidlTypeSpecifier& element_type, const string& expr);
-string ToStringVector(const AidlTypeSpecifier& element_type, const string& expr);
-string ToStringRaw(const AidlTypeSpecifier& type, const string& expr);
-
-string ToStringNullable(const AidlTypeSpecifier& type, const string& expr) {
-  if (AidlTypenames::IsPrimitiveTypename(type.GetName())) {
-    // we don't allow @nullable for primitives
-    return ToStringRaw(type, expr);
-  }
-  return "((" + expr + ") ? " + ToStringRaw(type, "*" + expr) + ": \"(null)\")";
-}
-
-string ToStringVector(const AidlTypeSpecifier& element_type, const string& expr) {
-  return "[&](){ std::ostringstream o; o << \"[\"; bool first = true; for (const auto& v: " + expr +
-         ") { (void)v; if (first) first = false; else o << \", \"; o << " +
-         ToStringRaw(element_type, "v") + "; }; o << \"]\"; return o.str(); }()";
-}
-
-string ToStringNullableVector(const AidlTypeSpecifier& element_type, const string& expr) {
-  return "[&](){ if (!(" + expr +
-         ")) return std::string(\"(null)\"); std::ostringstream o; o << \"[\"; bool first = true; "
-         "for (const auto& v: *(" +
-         expr + ")) { (void)v; if (first) first = false; else o << \", \"; o << " +
-         ToStringNullable(element_type, "v") + "; }; o << \"]\"; return o.str(); }()";
-}
-
-string ToStringRaw(const AidlTypeSpecifier& type, const string& expr) {
-  if (AidlTypenames::IsBuiltinTypename(type.GetName())) {
-    if (AidlTypenames::IsPrimitiveTypename(type.GetName())) {
-      if (type.GetName() == "boolean") {
-        return "(" + expr + "?\"true\":\"false\")";
-      }
-      if (type.GetName() == "char") {
-        return "std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().to_bytes(" +
-               expr + ")";
-      }
-      return "std::to_string(" + expr + ")";
-    }
-    if (type.GetName() == "String") {
-      return "(std::ostringstream() << " + expr + ").str()";
-    }
-    // ""(empty string) for unsupported types
-    return "\"\"";
-  }
-
-  const AidlDefinedType* defined_type = type.GetDefinedType();
-  AIDL_FATAL_IF(defined_type == nullptr, type);
-
-  if (defined_type->AsInterface()) {
-    // ""(empty string) for unsupported types
-    return "\"\"";
-  }
-  if (defined_type->AsEnumDeclaration()) {
-    const auto ns = Join(defined_type->GetSplitPackage(), "::");
-    return ns + "::toString(" + expr + ")";
-  }
-  return "_call_toString(" + expr + ")";
-}
-
-string ToString(const AidlTypeSpecifier& type, const string& expr) {
-  static const std::set<string> kNotSupported = {"Map", "IBinder", "ParcelFileDescriptor",
-                                                 "ParcelableHolder"};
-  if (kNotSupported.find(type.GetName()) != kNotSupported.end()) {
-    // ""(empty string) for unsupported types
-    return "\"\"";
-  }
-  if (type.IsArray() && type.IsNullable()) {
-    const auto& element_type = type.ArrayBase();
-    return ToStringNullableVector(element_type, expr);
-  }
-  if (type.GetName() == "List" && type.IsNullable()) {
-    const auto& element_type = *type.GetTypeParameters()[0];
-    return ToStringNullableVector(element_type, expr);
-  }
-  if (type.IsArray()) {
-    const auto& element_type = type.ArrayBase();
-    return ToStringVector(element_type, expr);
-  }
-  if (type.GetName() == "List") {
-    const auto& element_type = *type.GetTypeParameters()[0];
-    return ToStringVector(element_type, expr);
-  }
-  if (type.IsNullable()) {
-    return ToStringNullable(type, expr);
-  }
-  return ToStringRaw(type, expr);
-}
-
 void WriteLogForArgument(CodeWriter& w, const AidlArgument& a, bool is_server,
                          const string& log_var, bool is_ndk) {
   const string var_name = is_server || is_ndk ? BuildVarName(a) : a.GetName();
   const bool is_pointer = a.IsOut() && !is_server;
   const string value_expr = (is_pointer ? "*" : "") + var_name;
   w << log_var
-    << ".emplace_back(\"" + var_name + "\", " + ToString(a.GetType(), value_expr) + ");\n";
+    << ".emplace_back(\"" + var_name + "\", ::android::internal::ToString(" + value_expr + "));\n";
 }
 
 const string GenLogBeforeExecute(const string className, const AidlMethod& method, bool isServer,
@@ -284,7 +183,7 @@ const string GenLogAfterExecute(const string className, const AidlInterface& int
 
   if (method.GetType().GetName() != "void") {
     const string expr = (isServer ? "" : "*") + returnVarName;
-    (*writer) << "_transaction_log.result = " << ToString(method.GetType(), expr) << ";\n";
+    (*writer) << "_transaction_log.result = ::android::internal::ToString(" << expr << ");\n";
   }
 
   // call the user-provided function with the transaction log object
@@ -372,7 +271,6 @@ void GenerateParcelableComparisonOperators(CodeWriter& out, const AidlParcelable
 //   return os.str();
 // }
 void GenerateToString(CodeWriter& out, const AidlStructuredParcelable& parcelable) {
-  out << kToStringHelper;
   out << "inline std::string toString() const {\n";
   out.Indent();
   out << "std::ostringstream os;\n";
@@ -385,7 +283,7 @@ void GenerateToString(CodeWriter& out, const AidlStructuredParcelable& parcelabl
     } else {
       out << "os << \", ";
     }
-    out << f->GetName() << ": \" << " << ToString(f->GetType(), f->GetName()) << ";\n";
+    out << f->GetName() << ": \" << ::android::internal::ToString(" << f->GetName() << ");\n";
   }
   out << "os << \"}\";\n";
   out << "return os.str();\n";
@@ -405,7 +303,6 @@ void GenerateToString(CodeWriter& out, const AidlStructuredParcelable& parcelabl
 //   return os.str();
 // }
 void GenerateToString(CodeWriter& out, const AidlUnionDecl& parcelable) {
-  out << kToStringHelper;
   out << "inline std::string toString() const {\n";
   out.Indent();
   out << "std::ostringstream os;\n";
@@ -414,7 +311,7 @@ void GenerateToString(CodeWriter& out, const AidlUnionDecl& parcelable) {
   for (const auto& f : parcelable.GetFields()) {
     const string tag = f->GetName();
     out << "case " << tag << ": os << \"" << tag << ": \" << "
-        << ToString(f->GetType(), "get<" + tag + ">()") << "; break;\n";
+        << "::android::internal::ToString(get<" + tag + ">()); break;\n";
   }
   out << "}\n";
   out << "os << \"}\";\n";

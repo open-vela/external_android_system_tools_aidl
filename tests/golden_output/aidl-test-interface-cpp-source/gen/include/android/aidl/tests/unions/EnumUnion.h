@@ -2,12 +2,10 @@
 
 #include <android/aidl/tests/IntEnum.h>
 #include <android/aidl/tests/LongEnum.h>
+#include <android/binder_to_string.h>
 #include <binder/Parcel.h>
 #include <binder/Status.h>
 #include <cassert>
-#include <codecvt>
-#include <locale>
-#include <sstream>
 #include <type_traits>
 #include <utility>
 #include <utils/String16.h>
@@ -106,21 +104,12 @@ public:
     static const ::android::StaticString16 DESCIPTOR (u"android.aidl.tests.unions.EnumUnion");
     return DESCIPTOR;
   }
-  template <typename _T> class _has_toString {
-    template <typename _U> static std::true_type __has_toString(decltype(&_U::toString));
-    template <typename _U> static std::false_type __has_toString(...);
-    public: enum { value = decltype(__has_toString<_T>(nullptr))::value };
-  };
-  template <typename _T> inline static std::string _call_toString(const _T& t) {
-    if constexpr (_has_toString<_T>::value) return t.toString();
-    return "{no toString() implemented}";
-  }
   inline std::string toString() const {
     std::ostringstream os;
     os << "EnumUnion{";
     switch (getTag()) {
-    case intEnum: os << "intEnum: " << android::aidl::tests::toString(get<intEnum>()); break;
-    case longEnum: os << "longEnum: " << android::aidl::tests::toString(get<longEnum>()); break;
+    case intEnum: os << "intEnum: " << ::android::internal::ToString(get<intEnum>()); break;
+    case longEnum: os << "longEnum: " << ::android::internal::ToString(get<longEnum>()); break;
     }
     os << "}";
     return os.str();

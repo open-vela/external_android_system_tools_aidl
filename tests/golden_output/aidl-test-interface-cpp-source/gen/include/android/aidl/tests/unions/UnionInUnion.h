@@ -1,13 +1,11 @@
 #pragma once
 
 #include <android/aidl/tests/unions/EnumUnion.h>
+#include <android/binder_to_string.h>
 #include <binder/Parcel.h>
 #include <binder/Status.h>
 #include <cassert>
-#include <codecvt>
 #include <cstdint>
-#include <locale>
-#include <sstream>
 #include <type_traits>
 #include <utility>
 #include <utils/String16.h>
@@ -106,21 +104,12 @@ public:
     static const ::android::StaticString16 DESCIPTOR (u"android.aidl.tests.unions.UnionInUnion");
     return DESCIPTOR;
   }
-  template <typename _T> class _has_toString {
-    template <typename _U> static std::true_type __has_toString(decltype(&_U::toString));
-    template <typename _U> static std::false_type __has_toString(...);
-    public: enum { value = decltype(__has_toString<_T>(nullptr))::value };
-  };
-  template <typename _T> inline static std::string _call_toString(const _T& t) {
-    if constexpr (_has_toString<_T>::value) return t.toString();
-    return "{no toString() implemented}";
-  }
   inline std::string toString() const {
     std::ostringstream os;
     os << "UnionInUnion{";
     switch (getTag()) {
-    case first: os << "first: " << _call_toString(get<first>()); break;
-    case second: os << "second: " << std::to_string(get<second>()); break;
+    case first: os << "first: " << ::android::internal::ToString(get<first>()); break;
+    case second: os << "second: " << ::android::internal::ToString(get<second>()); break;
     }
     os << "}";
     return os.str();

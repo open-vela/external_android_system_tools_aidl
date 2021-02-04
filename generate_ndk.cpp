@@ -346,12 +346,12 @@ static void GenerateConstantDefinitions(CodeWriter& out, const TypeWithConstants
 void GenerateSource(CodeWriter& out, const AidlTypenames& types, const AidlInterface& defined_type,
                     const Options& options) {
   GenerateSourceIncludes(out, types, defined_type);
+  if (options.GenLog()) {
+    out << "#include <android/binder_to_string.h>\n";
+  }
   out << "\n";
 
   EnterNdkNamespace(out, defined_type);
-  if (options.GenLog()) {
-    out << cpp::kToStringHelper;
-  }
   GenerateClassSource(out, types, defined_type, options);
   GenerateClientSource(out, types, defined_type, options);
   GenerateServerSource(out, types, defined_type, options);
@@ -1012,9 +1012,7 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
   out << "#include <android/binder_parcelable_utils.h>\n";
 
   // used by toString()
-  out << "#include <codecvt>\n";
-  out << "#include <locale>\n";
-  out << "#include <sstream>\n";
+  out << "#include <android/binder_to_string.h>\n";
 
   GenerateHeaderIncludes(out, types, defined_type);
 
@@ -1159,9 +1157,7 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
   out << "#include <android/binder_parcelable_utils.h>\n";
 
   // used by toString()
-  out << "#include <codecvt>\n";
-  out << "#include <locale>\n";
-  out << "#include <sstream>\n";
+  out << "#include <android/binder_to_string.h>\n";
 
   out << "\n";
 
