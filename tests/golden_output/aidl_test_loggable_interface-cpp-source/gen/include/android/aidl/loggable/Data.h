@@ -2,12 +2,10 @@
 
 #include <android/aidl/loggable/Enum.h>
 #include <android/aidl/loggable/Union.h>
+#include <android/binder_to_string.h>
 #include <binder/Parcel.h>
 #include <binder/Status.h>
-#include <codecvt>
 #include <cstdint>
-#include <locale>
-#include <sstream>
 #include <string>
 #include <tuple>
 #include <utils/String16.h>
@@ -49,22 +47,13 @@ public:
     static const ::android::StaticString16 DESCIPTOR (u"android.aidl.loggable.Data");
     return DESCIPTOR;
   }
-  template <typename _T> class _has_toString {
-    template <typename _U> static std::true_type __has_toString(decltype(&_U::toString));
-    template <typename _U> static std::false_type __has_toString(...);
-    public: enum { value = decltype(__has_toString<_T>(nullptr))::value };
-  };
-  template <typename _T> inline static std::string _call_toString(const _T& t) {
-    if constexpr (_has_toString<_T>::value) return t.toString();
-    return "{no toString() implemented}";
-  }
   inline std::string toString() const {
     std::ostringstream os;
     os << "Data{";
-    os << "num: " << std::to_string(num);
-    os << ", str: " << (std::ostringstream() << str).str();
-    os << ", nestedUnion: " << _call_toString(nestedUnion);
-    os << ", nestedEnum: " << android::aidl::loggable::toString(nestedEnum);
+    os << "num: " << ::android::internal::ToString(num);
+    os << ", str: " << ::android::internal::ToString(str);
+    os << ", nestedUnion: " << ::android::internal::ToString(nestedUnion);
+    os << ", nestedEnum: " << ::android::internal::ToString(nestedEnum);
     os << "}";
     return os.str();
   }

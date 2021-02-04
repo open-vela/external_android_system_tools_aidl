@@ -898,11 +898,11 @@ unique_ptr<Document> BuildClientHeader(const AidlTypenames& typenames,
 
   if (options.GenLog()) {
     includes.emplace_back("functional");  // for std::function
+    includes.emplace_back("android/binder_to_string.h");
 
     publics.emplace_back(new LiteralDecl{kTransactionLogStruct});
     publics.emplace_back(
         new LiteralDecl{"static std::function<void(const TransactionLog&)> logFunc;\n"});
-    privates.emplace_back(new LiteralDecl{kToStringHelper});
   }
 
   if (options.Version() > 0) {
@@ -972,11 +972,11 @@ unique_ptr<Document> BuildServerHeader(const AidlTypenames& /* typenames */,
 
   if (options.GenLog()) {
     includes.emplace_back("functional");  // for std::function
+    includes.emplace_back("android/binder_to_string.h");
 
     publics.emplace_back(new LiteralDecl{kTransactionLogStruct});
     publics.emplace_back(
         new LiteralDecl{"static std::function<void(const TransactionLog&)> logFunc;\n"});
-    privates.emplace_back(new LiteralDecl{kToStringHelper});
   }
   const string attribute = GetDeprecatedAttribute(interface);
   unique_ptr<ClassDecl> bn_class{new ClassDecl{
@@ -1282,9 +1282,7 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
                                    parcel.GetCanonicalName().c_str()))));
 
   // toString() method
-  includes.insert("codecvt");  // std::codecvt_utf8_utf16
-  includes.insert("locale");   // std::wstrinig_convert
-  includes.insert("sstream");  // std::ostringstream
+  includes.insert("android/binder_to_string.h");
   string to_string;
   GenerateToString(*CodeWriter::ForString(&to_string), parcel);
   parcel_class->AddPublic(std::make_unique<LiteralDecl>(to_string));
