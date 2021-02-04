@@ -28,7 +28,10 @@ adb root
 adb wait-for-device
 adb sync data
 adb push \
-    ${ANDROID_PRODUCT_OUT}/testcases/aidl_test_java/*/aidl_test_java.jar \
-    /data/framework/aidl_test_java.jar
+    ${ANDROID_PRODUCT_OUT}/testcases/aidl_test_java_service/*/aidl_test_java_service.jar \
+    /data/framework/aidl_test_java_service.jar
+adb push \
+    ${ANDROID_PRODUCT_OUT}/testcases/aidl_test_java_client/*/aidl_test_java_client.jar \
+    /data/framework/aidl_test_java_client.jar
 
 ${ANDROID_BUILD_TOP}/system/tools/aidl/tests/aidl_integration_test.py
