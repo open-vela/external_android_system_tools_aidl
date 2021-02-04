@@ -1,9 +1,7 @@
 #pragma once
 #include <android/binder_interface_utils.h>
 #include <android/binder_parcelable_utils.h>
-#include <codecvt>
-#include <locale>
-#include <sstream>
+#include <android/binder_to_string.h>
 
 #include <cassert>
 #include <type_traits>
@@ -115,26 +113,17 @@ public:
 
   static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::STABILITY_LOCAL;
   static const char* S1;
-  template <typename _T> class _has_toString {
-    template <typename _U> static std::true_type __has_toString(decltype(&_U::toString));
-    template <typename _U> static std::false_type __has_toString(...);
-    public: enum { value = decltype(__has_toString<_T>(nullptr))::value };
-  };
-  template <typename _T> inline static std::string _call_toString(const _T& t) {
-    if constexpr (_has_toString<_T>::value) return t.toString();
-    return "{no toString() implemented}";
-  }
   inline std::string toString() const {
     std::ostringstream os;
     os << "Union{";
     switch (getTag()) {
-    case ns: os << "ns: " << [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: get<ns>()) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }(); break;
-    case n: os << "n: " << std::to_string(get<n>()); break;
-    case m: os << "m: " << std::to_string(get<m>()); break;
-    case s: os << "s: " << (std::ostringstream() << get<s>()).str(); break;
-    case ibinder: os << "ibinder: " << ""; break;
-    case ss: os << "ss: " << [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: get<ss>()) { (void)v; if (first) first = false; else o << ", "; o << (std::ostringstream() << v).str(); }; o << "]"; return o.str(); }(); break;
-    case be: os << "be: " << android::aidl::tests::toString(get<be>()); break;
+    case ns: os << "ns: " << ::android::internal::ToString(get<ns>()); break;
+    case n: os << "n: " << ::android::internal::ToString(get<n>()); break;
+    case m: os << "m: " << ::android::internal::ToString(get<m>()); break;
+    case s: os << "s: " << ::android::internal::ToString(get<s>()); break;
+    case ibinder: os << "ibinder: " << ::android::internal::ToString(get<ibinder>()); break;
+    case ss: os << "ss: " << ::android::internal::ToString(get<ss>()); break;
+    case be: os << "be: " << ::android::internal::ToString(get<be>()); break;
     }
     os << "}";
     return os.str();

@@ -1,9 +1,7 @@
 #pragma once
 #include <android/binder_interface_utils.h>
 #include <android/binder_parcelable_utils.h>
-#include <codecvt>
-#include <locale>
-#include <sstream>
+#include <android/binder_to_string.h>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -48,20 +46,11 @@ public:
   }
 
   static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::STABILITY_LOCAL;
-  template <typename _T> class _has_toString {
-    template <typename _U> static std::true_type __has_toString(decltype(&_U::toString));
-    template <typename _U> static std::false_type __has_toString(...);
-    public: enum { value = decltype(__has_toString<_T>(nullptr))::value };
-  };
-  template <typename _T> inline static std::string _call_toString(const _T& t) {
-    if constexpr (_has_toString<_T>::value) return t.toString();
-    return "{no toString() implemented}";
-  }
   inline std::string toString() const {
     std::ostringstream os;
     os << "GenericStructuredParcelable{";
-    os << "a: " << std::to_string(a);
-    os << ", b: " << std::to_string(b);
+    os << "a: " << ::android::internal::ToString(a);
+    os << ", b: " << ::android::internal::ToString(b);
     os << "}";
     return os.str();
   }
