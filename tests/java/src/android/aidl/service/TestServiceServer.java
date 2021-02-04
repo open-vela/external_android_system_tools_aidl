@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.aidl.tests;
+package android.aidl.service;
 
 import android.aidl.tests.BackendType;
 import android.aidl.tests.ByteEnum;
@@ -22,6 +22,8 @@ import android.aidl.tests.ConstantExpressionEnum;
 import android.aidl.tests.GenericStructuredParcelable;
 import android.aidl.tests.ICppJavaTests;
 import android.aidl.tests.INamedCallback;
+import android.aidl.tests.INewName;
+import android.aidl.tests.IOldName;
 import android.aidl.tests.ITestService;
 import android.aidl.tests.IntEnum;
 import android.aidl.tests.LongEnum;
@@ -67,15 +69,6 @@ public class TestServiceServer extends ITestService.Stub {
 
   private static class FooInterface extends IFooInterface.Stub {
     @Override
-    public boolean onTransact(int code, Parcel data, Parcel reply, int flags)
-        throws RemoteException {
-      // TODO(b/178870456): split Java client/server into two binaries
-      // newApi
-      if (code == 3)
-        return false;
-      return super.onTransact(code, data, reply, flags);
-    }
-    @Override
     public void originalApi() {}
     @Override
     public String acceptUnionAndReturnString(BazUnion b) {
@@ -85,18 +78,12 @@ public class TestServiceServer extends ITestService.Stub {
       throw new IllegalArgumentException();
     }
     @Override
-    public void newApi() {}
-    @Override
     public final int getInterfaceVersion() {
-      // TODO(b/178870456): split Java client/server into two binaries
-      // DO NOT DO THIS - mocking version 1 so that Java tests can continue to test new APIs
-      return 1; // HACK
+      return IFooInterface.VERSION;
     }
     @Override
     public final String getInterfaceHash() {
-      // TODO(b/178870456): split Java client/server into two binaries
-      // DO NOT DO THIS - mocking old hash so that Java tests can continue to test new APIs
-      return "796b4ab269d476662bed4ab57092ed000e48d5d7"; // HACK
+      return IFooInterface.HASH;
     }
   }
 

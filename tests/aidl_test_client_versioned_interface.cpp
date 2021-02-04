@@ -62,7 +62,7 @@ TEST_F(VersionedInterfaceTest, errorWhenPassingAUnionWithNewField) {
   EXPECT_FALSE(status.isOk());
   // b/173458620 - Java and C++ return different errors
   if (backend == BackendType::JAVA) {
-    EXPECT_EQ(::android::UNEXPECTED_NULL, status.transactionError()) << status;
+    EXPECT_EQ(::android::binder::Status::EX_ILLEGAL_ARGUMENT, status.exceptionCode()) << status;
   } else {
     EXPECT_EQ(::android::BAD_VALUE, status.transactionError()) << status;
   }

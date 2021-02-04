@@ -203,7 +203,8 @@ python_test_host {
     target_required: [
         "aidl_test_client",
         "aidl_test_service",
-        "aidl_test_java",
+        "aidl_test_java_client",
+        "aidl_test_java_service",
         "aidl_test_rust_client",
         "aidl_test_rust_service",
     ],
@@ -353,8 +354,8 @@ cc_test {
     ],
 }
 
-java_test {
-    name: "aidl_test_java",
+java_defaults {
+    name: "aidl_test_java_defaults",
     platform_apis: true,
     // Turn off Java optimization tools to speed up our test iterations.
     optimize: {
@@ -369,8 +370,6 @@ java_test {
         "aidl_test_nonvintf_parcelable-V1-java",
         "aidl_test_unstable_parcelable-java",
         "aidl_test_vintf_parcelable-V1-java",
-        // client uses the newest version
-        "aidl-test-versioned-interface-V2-java",
         // TODO: remove once Android migrates to JUnit 4.12,
         // which provides assertThrows
         "testng",
@@ -382,7 +381,8 @@ java_test {
         "tests/android/aidl/tests/map/*.aidl",
         "tests/android/aidl/tests/extension/*.aidl",
         "tests/android/aidl/tests/unions/*.aidl",
-        "tests/java/src/android/aidl/tests/**/*.java",
+        "tests/java/src/android/aidl/tests/SimpleParcelable.java",
+        "tests/java/src/android/aidl/tests/generic/Pair.java",
     ],
     aidl: {
         include_dirs: [
@@ -392,6 +392,39 @@ java_test {
         generate_traces: true,
     },
     test_suites: ["general-tests"],
+}
+
+java_test {
+    name: "aidl_test_java_client",
+    defaults: ["aidl_test_java_defaults"],
+    static_libs: [
+        // client uses the new version
+        "aidl-test-versioned-interface-V2-java",
+    ],
+    // tests are included in defaults
+    srcs: [
+        "tests/java/src/android/aidl/tests/MapTests.java",
+        "tests/java/src/android/aidl/tests/TestServiceClient.java",
+        "tests/java/src/android/aidl/tests/JavaOnlyImmutableAnnotationTests.java",
+        "tests/java/src/android/aidl/tests/AidlJavaTests.java",
+        "tests/java/src/android/aidl/tests/GenericTests.java",
+        "tests/java/src/android/aidl/tests/TestVersionedInterface.java",
+        "tests/java/src/android/aidl/tests/UnionTests.java",
+        "tests/java/src/android/aidl/tests/ExtensionTests.java",
+        "tests/java/src/android/aidl/tests/NullableTests.java",
+    ],
+}
+
+java_test {
+    name: "aidl_test_java_service",
+    defaults: ["aidl_test_java_defaults"],
+    static_libs: [
+        // service uses the old version
+        "aidl-test-versioned-interface-V1-java",
+    ],
+    srcs: [
+        "tests/java/src/android/aidl/service/**/*.java",
+    ],
 }
 
 //
