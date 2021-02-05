@@ -647,7 +647,7 @@ fn test_versioned_unknown_union_field_triggers_error() {
 
     // b/173458620 - for investigation of fixing difference
     if backend == BackendType::JAVA {
-        assert_eq!(ret.unwrap_err().transaction_error(), binder::StatusCode::UNEXPECTED_NULL);
+        assert_eq!(ret.unwrap_err().exception_code(), binder::ExceptionCode::ILLEGAL_ARGUMENT);
     } else {
         assert_eq!(ret.unwrap_err().transaction_error(), binder::StatusCode::BAD_VALUE);
     }
