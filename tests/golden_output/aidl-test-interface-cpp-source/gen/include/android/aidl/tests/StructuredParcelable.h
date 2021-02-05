@@ -5,14 +5,12 @@
 #include <android/aidl/tests/IntEnum.h>
 #include <android/aidl/tests/LongEnum.h>
 #include <android/aidl/tests/Union.h>
+#include <android/binder_to_string.h>
 #include <binder/IBinder.h>
 #include <binder/Parcel.h>
 #include <binder/Status.h>
-#include <codecvt>
 #include <cstdint>
-#include <locale>
 #include <optional>
-#include <sstream>
 #include <string>
 #include <tuple>
 #include <utils/String16.h>
@@ -109,71 +107,62 @@ public:
     static const ::android::StaticString16 DESCIPTOR (u"android.aidl.tests.StructuredParcelable");
     return DESCIPTOR;
   }
-  template <typename _T> class _has_toString {
-    template <typename _U> static std::true_type __has_toString(decltype(&_U::toString));
-    template <typename _U> static std::false_type __has_toString(...);
-    public: enum { value = decltype(__has_toString<_T>(nullptr))::value };
-  };
-  template <typename _T> inline static std::string _call_toString(const _T& t) {
-    if constexpr (_has_toString<_T>::value) return t.toString();
-    return "{no toString() implemented}";
-  }
   inline std::string toString() const {
     std::ostringstream os;
     os << "StructuredParcelable{";
-    os << "shouldContainThreeFs: " << [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: shouldContainThreeFs) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }();
-    os << ", f: " << std::to_string(f);
-    os << ", shouldBeJerry: " << (std::ostringstream() << shouldBeJerry).str();
-    os << ", shouldBeByteBar: " << android::aidl::tests::toString(shouldBeByteBar);
-    os << ", shouldBeIntBar: " << android::aidl::tests::toString(shouldBeIntBar);
-    os << ", shouldBeLongBar: " << android::aidl::tests::toString(shouldBeLongBar);
-    os << ", shouldContainTwoByteFoos: " << [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: shouldContainTwoByteFoos) { (void)v; if (first) first = false; else o << ", "; o << android::aidl::tests::toString(v); }; o << "]"; return o.str(); }();
-    os << ", shouldContainTwoIntFoos: " << [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: shouldContainTwoIntFoos) { (void)v; if (first) first = false; else o << ", "; o << android::aidl::tests::toString(v); }; o << "]"; return o.str(); }();
-    os << ", shouldContainTwoLongFoos: " << [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: shouldContainTwoLongFoos) { (void)v; if (first) first = false; else o << ", "; o << android::aidl::tests::toString(v); }; o << "]"; return o.str(); }();
-    os << ", stringDefaultsToFoo: " << (std::ostringstream() << stringDefaultsToFoo).str();
-    os << ", byteDefaultsToFour: " << std::to_string(byteDefaultsToFour);
-    os << ", intDefaultsToFive: " << std::to_string(intDefaultsToFive);
-    os << ", longDefaultsToNegativeSeven: " << std::to_string(longDefaultsToNegativeSeven);
-    os << ", booleanDefaultsToTrue: " << (booleanDefaultsToTrue?"true":"false");
-    os << ", charDefaultsToC: " << std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().to_bytes(charDefaultsToC);
-    os << ", floatDefaultsToPi: " << std::to_string(floatDefaultsToPi);
-    os << ", doubleWithDefault: " << std::to_string(doubleWithDefault);
-    os << ", arrayDefaultsTo123: " << [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: arrayDefaultsTo123) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }();
-    os << ", arrayDefaultsToEmpty: " << [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: arrayDefaultsToEmpty) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }();
-    os << ", boolDefault: " << (boolDefault?"true":"false");
-    os << ", byteDefault: " << std::to_string(byteDefault);
-    os << ", intDefault: " << std::to_string(intDefault);
-    os << ", longDefault: " << std::to_string(longDefault);
-    os << ", floatDefault: " << std::to_string(floatDefault);
-    os << ", doubleDefault: " << std::to_string(doubleDefault);
-    os << ", checkDoubleFromFloat: " << std::to_string(checkDoubleFromFloat);
-    os << ", checkStringArray1: " << [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: checkStringArray1) { (void)v; if (first) first = false; else o << ", "; o << (std::ostringstream() << v).str(); }; o << "]"; return o.str(); }();
-    os << ", checkStringArray2: " << [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: checkStringArray2) { (void)v; if (first) first = false; else o << ", "; o << (std::ostringstream() << v).str(); }; o << "]"; return o.str(); }();
-    os << ", int32_min: " << std::to_string(int32_min);
-    os << ", int32_max: " << std::to_string(int32_max);
-    os << ", int64_max: " << std::to_string(int64_max);
-    os << ", hexInt32_neg_1: " << std::to_string(hexInt32_neg_1);
-    os << ", ibinder: " << "";
-    os << ", int32_1: " << [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: int32_1) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }();
-    os << ", int64_1: " << [&](){ std::ostringstream o; o << "["; bool first = true; for (const auto& v: int64_1) { (void)v; if (first) first = false; else o << ", "; o << std::to_string(v); }; o << "]"; return o.str(); }();
-    os << ", hexInt32_pos_1: " << std::to_string(hexInt32_pos_1);
-    os << ", hexInt64_pos_1: " << std::to_string(hexInt64_pos_1);
-    os << ", const_exprs_1: " << android::aidl::tests::toString(const_exprs_1);
-    os << ", const_exprs_2: " << android::aidl::tests::toString(const_exprs_2);
-    os << ", const_exprs_3: " << android::aidl::tests::toString(const_exprs_3);
-    os << ", const_exprs_4: " << android::aidl::tests::toString(const_exprs_4);
-    os << ", const_exprs_5: " << android::aidl::tests::toString(const_exprs_5);
-    os << ", const_exprs_6: " << android::aidl::tests::toString(const_exprs_6);
-    os << ", const_exprs_7: " << android::aidl::tests::toString(const_exprs_7);
-    os << ", const_exprs_8: " << android::aidl::tests::toString(const_exprs_8);
-    os << ", const_exprs_9: " << android::aidl::tests::toString(const_exprs_9);
-    os << ", const_exprs_10: " << android::aidl::tests::toString(const_exprs_10);
-    os << ", addString1: " << (std::ostringstream() << addString1).str();
-    os << ", addString2: " << (std::ostringstream() << addString2).str();
-    os << ", shouldSetBit0AndBit2: " << std::to_string(shouldSetBit0AndBit2);
-    os << ", u: " << ((u) ? _call_toString(*u): "(null)");
-    os << ", shouldBeConstS1: " << ((shouldBeConstS1) ? _call_toString(*shouldBeConstS1): "(null)");
-    os << ", defaultWithFoo: " << android::aidl::tests::toString(defaultWithFoo);
+    os << "shouldContainThreeFs: " << ::android::internal::ToString(shouldContainThreeFs);
+    os << ", f: " << ::android::internal::ToString(f);
+    os << ", shouldBeJerry: " << ::android::internal::ToString(shouldBeJerry);
+    os << ", shouldBeByteBar: " << ::android::internal::ToString(shouldBeByteBar);
+    os << ", shouldBeIntBar: " << ::android::internal::ToString(shouldBeIntBar);
+    os << ", shouldBeLongBar: " << ::android::internal::ToString(shouldBeLongBar);
+    os << ", shouldContainTwoByteFoos: " << ::android::internal::ToString(shouldContainTwoByteFoos);
+    os << ", shouldContainTwoIntFoos: " << ::android::internal::ToString(shouldContainTwoIntFoos);
+    os << ", shouldContainTwoLongFoos: " << ::android::internal::ToString(shouldContainTwoLongFoos);
+    os << ", stringDefaultsToFoo: " << ::android::internal::ToString(stringDefaultsToFoo);
+    os << ", byteDefaultsToFour: " << ::android::internal::ToString(byteDefaultsToFour);
+    os << ", intDefaultsToFive: " << ::android::internal::ToString(intDefaultsToFive);
+    os << ", longDefaultsToNegativeSeven: " << ::android::internal::ToString(longDefaultsToNegativeSeven);
+    os << ", booleanDefaultsToTrue: " << ::android::internal::ToString(booleanDefaultsToTrue);
+    os << ", charDefaultsToC: " << ::android::internal::ToString(charDefaultsToC);
+    os << ", floatDefaultsToPi: " << ::android::internal::ToString(floatDefaultsToPi);
+    os << ", doubleWithDefault: " << ::android::internal::ToString(doubleWithDefault);
+    os << ", arrayDefaultsTo123: " << ::android::internal::ToString(arrayDefaultsTo123);
+    os << ", arrayDefaultsToEmpty: " << ::android::internal::ToString(arrayDefaultsToEmpty);
+    os << ", boolDefault: " << ::android::internal::ToString(boolDefault);
+    os << ", byteDefault: " << ::android::internal::ToString(byteDefault);
+    os << ", intDefault: " << ::android::internal::ToString(intDefault);
+    os << ", longDefault: " << ::android::internal::ToString(longDefault);
+    os << ", floatDefault: " << ::android::internal::ToString(floatDefault);
+    os << ", doubleDefault: " << ::android::internal::ToString(doubleDefault);
+    os << ", checkDoubleFromFloat: " << ::android::internal::ToString(checkDoubleFromFloat);
+    os << ", checkStringArray1: " << ::android::internal::ToString(checkStringArray1);
+    os << ", checkStringArray2: " << ::android::internal::ToString(checkStringArray2);
+    os << ", int32_min: " << ::android::internal::ToString(int32_min);
+    os << ", int32_max: " << ::android::internal::ToString(int32_max);
+    os << ", int64_max: " << ::android::internal::ToString(int64_max);
+    os << ", hexInt32_neg_1: " << ::android::internal::ToString(hexInt32_neg_1);
+    os << ", ibinder: " << ::android::internal::ToString(ibinder);
+    os << ", int32_1: " << ::android::internal::ToString(int32_1);
+    os << ", int64_1: " << ::android::internal::ToString(int64_1);
+    os << ", hexInt32_pos_1: " << ::android::internal::ToString(hexInt32_pos_1);
+    os << ", hexInt64_pos_1: " << ::android::internal::ToString(hexInt64_pos_1);
+    os << ", const_exprs_1: " << ::android::internal::ToString(const_exprs_1);
+    os << ", const_exprs_2: " << ::android::internal::ToString(const_exprs_2);
+    os << ", const_exprs_3: " << ::android::internal::ToString(const_exprs_3);
+    os << ", const_exprs_4: " << ::android::internal::ToString(const_exprs_4);
+    os << ", const_exprs_5: " << ::android::internal::ToString(const_exprs_5);
+    os << ", const_exprs_6: " << ::android::internal::ToString(const_exprs_6);
+    os << ", const_exprs_7: " << ::android::internal::ToString(const_exprs_7);
+    os << ", const_exprs_8: " << ::android::internal::ToString(const_exprs_8);
+    os << ", const_exprs_9: " << ::android::internal::ToString(const_exprs_9);
+    os << ", const_exprs_10: " << ::android::internal::ToString(const_exprs_10);
+    os << ", addString1: " << ::android::internal::ToString(addString1);
+    os << ", addString2: " << ::android::internal::ToString(addString2);
+    os << ", shouldSetBit0AndBit2: " << ::android::internal::ToString(shouldSetBit0AndBit2);
+    os << ", u: " << ::android::internal::ToString(u);
+    os << ", shouldBeConstS1: " << ::android::internal::ToString(shouldBeConstS1);
+    os << ", defaultWithFoo: " << ::android::internal::ToString(defaultWithFoo);
     os << "}";
     return os.str();
   }
