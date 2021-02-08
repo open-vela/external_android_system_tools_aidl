@@ -194,18 +194,7 @@ struct DiagnoseExplicitDefault : DiagnosticsVisitor {
   void CheckExplicitDefault(const AidlVariableDeclaration& v) {
     if (v.IsDefaultUserSpecified()) return;
     if (v.GetType().IsNullable()) return;
-    if (v.GetType().IsArray()) {
-      diag.Report(v.GetLocation(), DiagnosticID::explicit_default)
-          << "The array field '" << v.GetName() << "' has no explicit value.";
-      return;
-    }
-    const auto type_name = v.GetType().GetName();
-    if (AidlTypenames::IsPrimitiveTypename(type_name) || type_name == "String" ||
-        type_name == "CharSequence") {
-      diag.Report(v.GetLocation(), DiagnosticID::explicit_default)
-          << "The primitive field '" << v.GetName() << "' has no explicit value.";
-      return;
-    }
+    if (v.GetType().IsArray()) return;
     const auto defined_type = v.GetType().GetDefinedType();
     if (defined_type && defined_type->AsEnumDeclaration()) {
       diag.Report(v.GetLocation(), DiagnosticID::enum_explicit_default)

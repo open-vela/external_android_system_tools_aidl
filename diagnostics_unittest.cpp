@@ -85,29 +85,9 @@ TEST_F(DiagnosticsTest, enum_zero_suppress_SuppressAtDeclLevel) {
   ParseFiles({{"Enum.aidl", "@SuppressWarnings(value={\"enum-zero\"}) enum Enum { A = 1 }"}});
 }
 
-TEST_F(DiagnosticsTest, explicit_default) {
-  expect_diagnostics = {DiagnosticID::explicit_default};
-  ParseFiles({{"Foo.aidl", "parcelable Foo { int n; }"}});
-}
-
 TEST_F(DiagnosticsTest, enum_explicit_default) {
   expect_diagnostics = {DiagnosticID::enum_explicit_default};
   ParseFiles({{"Foo.aidl", "parcelable Foo { E e; }"}, {"E.aidl", "enum E { A }"}});
-}
-
-TEST_F(DiagnosticsTest, explicit_default_OkayForSomeTypesOrDefaultIsSet) {
-  expect_diagnostics = {};
-  ParseFiles({{"Foo.aidl",
-               "parcelable Foo { \n"
-               "  Bar bar;\n"
-               "  IBinder binder;\n"
-               "  @nullable String s;\n"
-               "  int[] numbers = {};\n"
-               "  List<String> stringList;\n"
-               "  IBaz baz;\n"
-               "}"},
-              {"Bar.aidl", "parcelable Bar { }"},
-              {"IBaz.aidl", "interface IBaz { }"}});
 }
 
 TEST_F(DiagnosticsTest, inout_parameter) {
