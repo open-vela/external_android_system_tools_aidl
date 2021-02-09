@@ -688,6 +688,21 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 	i.internalModuleNames = libs
 }
 
+func (i *aidlInterface) commonBackendProperties(lang string) CommonBackendProperties {
+	switch lang {
+	case langCpp:
+		return i.properties.Backend.Cpp.CommonBackendProperties
+	case langJava:
+		return i.properties.Backend.Java.CommonBackendProperties
+	case langNdk, langNdkPlatform:
+		return i.properties.Backend.Ndk.CommonBackendProperties
+	case langRust:
+		return i.properties.Backend.Rust.CommonBackendProperties
+	default:
+		panic(fmt.Errorf("unsupported language backend %q\n", lang))
+	}
+}
+
 // srcsVisibility gives the value for the `visibility` property of the source gen module for the
 // language backend `lang`. By default, the source gen module is not visible to the clients of
 // aidl_interface (because it's an impl detail), but when `backend.<backend>.srcs_available` is set
@@ -696,20 +711,7 @@ func srcsVisibility(mctx android.LoadHookContext, lang string) []string {
 	if a, ok := mctx.Module().(*aidlInterface); !ok {
 		panic(fmt.Errorf("%q is not aidl_interface", mctx.Module().String()))
 	} else {
-		var prop *bool
-		switch lang {
-		case langCpp:
-			prop = a.properties.Backend.Cpp.Srcs_available
-		case langJava:
-			prop = a.properties.Backend.Java.Srcs_available
-		case langNdk, langNdkPlatform:
-			prop = a.properties.Backend.Ndk.Srcs_available
-		case langRust:
-			prop = a.properties.Backend.Rust.Srcs_available
-		default:
-			panic(fmt.Errorf("unsupported language backend %q\n", lang))
-		}
-		if proptools.Bool(prop) {
+		if proptools.Bool(a.commonBackendProperties(lang).Srcs_available) {
 			// Returning nil so that the visibility of the source module defaults to the
 			// the package-level default visibility. This way, the source module gets
 			// the same visibility as the library modules.
