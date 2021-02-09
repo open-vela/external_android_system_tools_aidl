@@ -391,6 +391,28 @@ func TestNonVersionedModuleUsageInRelease(t *testing.T) {
 	testAidl(t, nonVersionedUnstableModuleUsageInJavaBp)
 }
 
+func TestUnstableVersionedModuleUsageInRelease(t *testing.T) {
+	nonVersionedModuleUsageInJavaBp := `
+	aidl_interface {
+		name: "foo",
+		srcs: [
+			"IFoo.aidl",
+		],
+		versions: ["1"],
+	}
+
+	java_library {
+		name: "bar",
+		libs: ["foo-V2-java"],
+	}`
+
+	expectedError := `Android.bp:10:2: module \"bar\" variant \"android_common\": foo-V2-java is disallowed in release version because it is unstable, and its \"owner\" property is missing.`
+	testAidlError(t, expectedError, nonVersionedModuleUsageInJavaBp, setReleaseEnv())
+	testAidl(t, nonVersionedModuleUsageInJavaBp, withFiles(map[string][]byte{
+		"aidl_api/foo/1/foo.1.aidl": nil,
+	}))
+}
+
 func TestUnstableModules(t *testing.T) {
 	testAidlError(t, `module "foo_interface": stability: must be empty when "unstable" is true`, `
 		aidl_interface {
