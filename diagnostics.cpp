@@ -164,13 +164,13 @@ struct DiagnoseConstName : DiagnosticsVisitor {
   void Visit(const AidlEnumerator& e) override {
     if (ToUpper(e.GetName()) != e.GetName()) {
       diag.Report(e.GetLocation(), DiagnosticID::const_name)
-          << "Enum values should be named in upper case: " << e.GetName();
+          << "Enum values should be named in upper cases: " << ToUpper(e.GetName());
     }
   }
   void Visit(const AidlConstantDeclaration& c) override {
     if (ToUpper(c.GetName()) != c.GetName()) {
       diag.Report(c.GetLocation(), DiagnosticID::const_name)
-          << "Constants should be named in upper case: " << c.GetName();
+          << "Constants should be named in upper cases: " << ToUpper(c.GetName());
     }
   }
   static std::string ToUpper(std::string name) {
@@ -194,7 +194,18 @@ struct DiagnoseExplicitDefault : DiagnosticsVisitor {
   void CheckExplicitDefault(const AidlVariableDeclaration& v) {
     if (v.IsDefaultUserSpecified()) return;
     if (v.GetType().IsNullable()) return;
-    if (v.GetType().IsArray()) return;
+    if (v.GetType().IsArray()) {
+      diag.Report(v.GetLocation(), DiagnosticID::explicit_default)
+          << "The array field '" << v.GetName() << "' has no explicit value.";
+      return;
+    }
+    const auto type_name = v.GetType().GetName();
+    if (AidlTypenames::IsPrimitiveTypename(type_name) || type_name == "String" ||
+        type_name == "CharSequence") {
+      diag.Report(v.GetLocation(), DiagnosticID::explicit_default)
+          << "The primitive field '" << v.GetName() << "' has no explicit value.";
+      return;
+    }
     const auto defined_type = v.GetType().GetDefinedType();
     if (defined_type && defined_type->AsEnumDeclaration()) {
       diag.Report(v.GetLocation(), DiagnosticID::enum_explicit_default)
