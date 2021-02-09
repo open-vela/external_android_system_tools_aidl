@@ -84,7 +84,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		GenTrace:   genTrace,
 		Unstable:   i.properties.Unstable,
 		Visibility: srcsVisibility(mctx, lang),
-		Flags:      i.flagsForAidlGenRule(version),
+		Flags:      i.properties.Flags,
 	})
 
 	importExportDependencies := []string{}
@@ -240,7 +240,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		GenTrace:   proptools.Bool(i.properties.Gen_trace),
 		Unstable:   i.properties.Unstable,
 		Visibility: srcsVisibility(mctx, langJava),
-		Flags:      i.flagsForAidlGenRule(version),
+		Flags:      i.properties.Flags,
 	})
 
 	mctx.CreateModule(aidlImplementationGeneratorFactory, &nameProperties{
@@ -287,7 +287,7 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		Version:    i.versionForAidlGenRule(version),
 		Unstable:   i.properties.Unstable,
 		Visibility: srcsVisibility(mctx, langRust),
-		Flags:      i.flagsForAidlGenRule(version),
+		Flags:      i.properties.Flags,
 	})
 
 	versionedRustName := fixRustName(i.versionedName(version))
@@ -361,15 +361,6 @@ func (i *aidlInterface) versionForAidlGenRule(version string) string {
 		return i.nextVersion()
 	}
 	return version
-}
-
-func (i *aidlInterface) flagsForAidlGenRule(version string) (flags []string) {
-	flags = append(flags, i.properties.Flags...)
-	// For ToT, turn on "-Weverything" (enable all warnings)
-	if version == i.nextVersion() {
-		flags = append(flags, "-Weverything")
-	}
-	return
 }
 
 func (i *aidlInterface) isModuleForVndk(version string) bool {
