@@ -388,7 +388,7 @@ type aidlInterfaceProperties struct {
 		// Backend of the compiler generating code for Rust clients.
 		// When enabled, this creates a target called "<name>-rust".
 		Rust struct {
-			CommonNativeBackendProperties
+			CommonBackendProperties
 		}
 	}
 
