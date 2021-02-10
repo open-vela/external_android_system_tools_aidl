@@ -17,7 +17,6 @@
 
 #include <functional>
 #include <stack>
-#include <unordered_set>
 
 #include "aidl_language.h"
 #include "logging.h"
@@ -192,10 +191,17 @@ struct DiagnoseExplicitDefault : DiagnosticsVisitor {
 struct DiagnoseMixedOneway : DiagnosticsVisitor {
   DiagnoseMixedOneway(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
   void Visit(const AidlInterface& i) override {
-    const auto& methods = i.GetMethods();
-    if (std::adjacent_find(begin(methods), end(methods), [](const auto& a, const auto& b) {
-          return a->IsOneway() != b->IsOneway();
-        }) != end(methods)) {
+    bool has_oneway = false;
+    bool has_twoway = false;
+    for (const auto& m : i.GetMethods()) {
+      if (!m->IsUserDefined()) continue;
+      if (m->IsOneway()) {
+        has_oneway = true;
+      } else {
+        has_twoway = true;
+      }
+    }
+    if (has_oneway && has_twoway) {
       diag.Report(i.GetLocation(), DiagnosticID::mixed_oneway)
           << "The interface '" << i.GetName() << "' has both one-way and two-way methods.";
     }
