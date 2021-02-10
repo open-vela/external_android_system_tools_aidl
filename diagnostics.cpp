@@ -164,13 +164,13 @@ struct DiagnoseConstName : DiagnosticsVisitor {
   void Visit(const AidlEnumerator& e) override {
     if (ToUpper(e.GetName()) != e.GetName()) {
       diag.Report(e.GetLocation(), DiagnosticID::const_name)
-          << "Enum values should be named in upper cases: " << ToUpper(e.GetName());
+          << "Enum values should be named in upper case: " << e.GetName();
     }
   }
   void Visit(const AidlConstantDeclaration& c) override {
     if (ToUpper(c.GetName()) != c.GetName()) {
       diag.Report(c.GetLocation(), DiagnosticID::const_name)
-          << "Constants should be named in upper cases: " << ToUpper(c.GetName());
+          << "Constants should be named in upper case: " << c.GetName();
     }
   }
   static std::string ToUpper(std::string name) {
