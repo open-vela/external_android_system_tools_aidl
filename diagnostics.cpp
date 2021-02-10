@@ -132,21 +132,6 @@ struct DiagnoseInterfaceName : DiagnosticsVisitor {
   }
 };
 
-struct DiagnoseEnumZero : DiagnosticsVisitor {
-  DiagnoseEnumZero(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
-  void Visit(const AidlEnumDeclaration& e) override {
-    AIDL_FATAL_IF(e.GetEnumerators().empty(), e)
-        << "The enum '" << e.GetName() << "' has no enumerators.";
-    const auto& first = e.GetEnumerators()[0];
-    if (auto first_value = first->ValueString(e.GetBackingType(), AidlConstantValueDecorator);
-        first_value != "0") {
-      diag.Report(first->GetLocation(), DiagnosticID::enum_zero)
-          << "The first enumerator '" << first->GetName() << "' should be 0, but it is "
-          << first_value << ".";
-    }
-  }
-};
-
 struct DiagnoseInoutParameter : DiagnosticsVisitor {
   DiagnoseInoutParameter(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
   void Visit(const AidlArgument& a) override {
@@ -245,7 +230,6 @@ bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnosticsContext diag(mapping);
 
   DiagnoseInterfaceName{diag}.Check(doc);
-  DiagnoseEnumZero{diag}.Check(doc);
   DiagnoseInoutParameter{diag}.Check(doc);
   DiagnoseConstName{diag}.Check(doc);
   DiagnoseExplicitDefault{diag}.Check(doc);
