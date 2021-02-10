@@ -75,16 +75,6 @@ TEST_F(DiagnosticsTest, interface_name) {
   ParseFiles({{"Foo.aidl", "interface Foo { }"}});
 }
 
-TEST_F(DiagnosticsTest, enum_zero) {
-  expect_diagnostics = {DiagnosticID::enum_zero};
-  ParseFiles({{"Enum.aidl", "enum Enum { A = 1 }"}});
-}
-
-TEST_F(DiagnosticsTest, enum_zero_suppress_SuppressAtDeclLevel) {
-  expect_diagnostics = {};
-  ParseFiles({{"Enum.aidl", "@SuppressWarnings(value={\"enum-zero\"}) enum Enum { A = 1 }"}});
-}
-
 TEST_F(DiagnosticsTest, enum_explicit_default) {
   expect_diagnostics = {DiagnosticID::enum_explicit_default};
   ParseFiles({{"Foo.aidl", "parcelable Foo { E e; }"}, {"E.aidl", "enum E { A }"}});
