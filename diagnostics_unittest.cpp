@@ -42,7 +42,8 @@ struct DiagnosticsTest : testing::Test {
     }
     // emit diagnostics as warnings.
     // "java" has no specific meaning here because we're testing CheckValid()
-    const Options options = Options::From("aidl -I . --lang java -o out -Weverything " + main);
+    const Options options =
+        Options::From("aidl " + optional_args + " -I . --lang java -o out -Weverything " + main);
     CaptureStderr();
     load_and_validate_aidl(main, options, io, &typenames, nullptr);
     const std::string err = GetCapturedStderr();
@@ -57,6 +58,7 @@ struct DiagnosticsTest : testing::Test {
 
   AidlTypenames typenames;
   FakeIoDelegate io;
+  std::string optional_args;
   std::vector<DiagnosticID> expect_diagnostics;
 };
 
@@ -124,6 +126,14 @@ TEST_F(DiagnosticsTest, DontMixOnewayWithTwowayMethods) {
   expect_diagnostics = {DiagnosticID::mixed_oneway};
   ParseFiles({
       {"IFoo.aidl", "interface IFoo { void foo(); oneway void bar(); }"},
+  });
+}
+
+TEST_F(DiagnosticsTest, OnewayInterfaceIsOkayWithSyntheticMethods) {
+  optional_args = "--version 2";  // will add getInterfaceVersion() synthetic method
+  expect_diagnostics = {};
+  ParseFiles({
+      {"IFoo.aidl", "oneway interface IFoo { void foo(); }"},
   });
 }
 
