@@ -28,6 +28,7 @@
 #include <vector>
 
 #include "aidl_checkapi.h"
+#include "aidl_dumpapi.h"
 #include "aidl_language.h"
 #include "aidl_to_cpp.h"
 #include "aidl_to_java.h"
@@ -3517,7 +3518,10 @@ enum Foo {
   EXPECT_TRUE(type);
   const auto& enum_type = type->AsEnumDeclaration();
   string code;
-  enum_type->Dump(CodeWriter::ForString(&code).get());
+  auto writer = CodeWriter::ForString(&code);
+  DumpVisitor visitor(*writer);
+  visitor.Visit(*enum_type);
+  writer->Close();
   EXPECT_EQ(R"--(@Backing(type="int")
 enum Foo {
   STANDARD_SHIFT = 16,

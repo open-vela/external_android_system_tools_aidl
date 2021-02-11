@@ -411,12 +411,6 @@ std::string AidlAnnotatable::GetDescriptor() const {
   return "";
 }
 
-void AidlAnnotatable::DumpAnnotations(CodeWriter* writer) const {
-  if (annotations_.empty()) return;
-
-  writer->Write("%s\n", AidlAnnotatable::ToString().c_str());
-}
-
 bool AidlAnnotatable::CheckValid(const AidlTypenames&) const {
   for (const auto& annotation : GetAnnotations()) {
     if (!annotation.CheckValid()) {
@@ -766,23 +760,6 @@ bool AidlCommentable::IsDeprecated() const {
   return android::aidl::FindDeprecated(GetComments()).has_value();
 }
 
-// Dumps comment only if its has meaningful tags.
-void AidlCommentable::DumpComments(CodeWriter& out) const {
-  using namespace android::aidl;
-  const auto hidden = IsHidden();
-  const auto deprecated = FindDeprecated(GetComments());
-  if (hidden || deprecated) {
-    out << "/**\n";
-    if (hidden) {
-      out << " * @hide\n";
-    }
-    if (deprecated) {
-      out << " * @deprecated " << deprecated->note << "\n";
-    }
-    out << " */\n";
-  }
-}
-
 AidlMember::AidlMember(const AidlLocation& location, const Comments& comments)
     : AidlCommentable(location, comments) {}
 
@@ -903,26 +880,6 @@ std::string AidlDefinedType::GetCanonicalName() const {
   return GetPackage() + "." + GetName();
 }
 
-void AidlDefinedType::DumpHeader(CodeWriter* writer) const {
-  DumpComments(*writer);
-  DumpAnnotations(writer);
-}
-
-void AidlDefinedType::DumpMembers(CodeWriter& out) const {
-  for (const auto& method : GetMethods()) {
-    method->DumpComments(out);
-    out << method->ToString() << ";\n";
-  }
-  for (const auto& field : GetFields()) {
-    field->DumpComments(out);
-    out << field->ToString() << ";\n";
-  }
-  for (const auto& constdecl : GetConstantDeclarations()) {
-    constdecl->DumpComments(out);
-    out << constdecl->ToString() << ";\n";
-  }
-}
-
 bool AidlDefinedType::CheckValidWithMembers(const AidlTypenames& typenames) const {
   bool success = true;
 
@@ -1028,25 +985,11 @@ bool AidlParcelable::CheckValid(const AidlTypenames& typenames) const {
   return true;
 }
 
-void AidlParcelable::Dump(CodeWriter* writer) const {
-  DumpHeader(writer);
-  writer->Write("parcelable %s ;\n", GetName().c_str());
-}
-
 AidlStructuredParcelable::AidlStructuredParcelable(
     const AidlLocation& location, const std::string& name, const std::string& package,
     const Comments& comments, std::vector<std::string>* type_params,
     std::vector<std::unique_ptr<AidlMember>>* members)
     : AidlParcelable(location, name, package, comments, "" /*cpp_header*/, type_params, members) {}
-
-void AidlStructuredParcelable::Dump(CodeWriter* writer) const {
-  DumpHeader(writer);
-  writer->Write("parcelable %s {\n", GetName().c_str());
-  writer->Indent();
-  DumpMembers(*writer);
-  writer->Dedent();
-  writer->Write("}\n");
-}
 
 bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const {
   if (!AidlParcelable::CheckValid(typenames)) {
@@ -1275,32 +1218,11 @@ bool AidlEnumDeclaration::CheckValid(const AidlTypenames& typenames) const {
   return success;
 }
 
-void AidlEnumDeclaration::Dump(CodeWriter* writer) const {
-  DumpHeader(writer);
-  writer->Write("enum %s {\n", GetName().c_str());
-  writer->Indent();
-  for (const auto& enumerator : GetEnumerators()) {
-    writer->Write("%s = %s,\n", enumerator->GetName().c_str(),
-                  enumerator->ValueString(GetBackingType(), AidlConstantValueDecorator).c_str());
-  }
-  writer->Dedent();
-  writer->Write("}\n");
-}
-
 AidlUnionDecl::AidlUnionDecl(const AidlLocation& location, const std::string& name,
                              const std::string& package, const Comments& comments,
                              std::vector<std::string>* type_params,
                              std::vector<std::unique_ptr<AidlMember>>* members)
     : AidlParcelable(location, name, package, comments, "" /*cpp_header*/, type_params, members) {}
-
-void AidlUnionDecl::Dump(CodeWriter* writer) const {
-  DumpHeader(writer);
-  writer->Write("union %s {\n", GetName().c_str());
-  writer->Indent();
-  DumpMembers(*writer);
-  writer->Dedent();
-  writer->Write("}\n");
-}
 
 bool AidlUnionDecl::CheckValid(const AidlTypenames& typenames) const {
   // visit parents
@@ -1392,15 +1314,6 @@ AidlInterface::AidlInterface(const AidlLocation& location, const std::string& na
   for (auto& m : GetMethods()) {
     m.get()->ApplyInterfaceOneway(oneway);
   }
-}
-
-void AidlInterface::Dump(CodeWriter* writer) const {
-  DumpHeader(writer);
-  writer->Write("interface %s {\n", GetName().c_str());
-  writer->Indent();
-  DumpMembers(*writer);
-  writer->Dedent();
-  writer->Write("}\n");
 }
 
 bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
