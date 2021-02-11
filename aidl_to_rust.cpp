@@ -130,7 +130,7 @@ std::string GetRustName(const AidlTypeSpecifier& type, const AidlTypenames& type
     if (mode == StorageMode::INTERFACE_ARGUMENT) {
       return "dyn " + GetRawRustName(element_type);
     } else {
-      return "Box<dyn " + GetRawRustName(element_type) + ">";
+      return "binder::Strong<dyn " + GetRawRustName(element_type) + ">";
     }
   }
 
@@ -252,11 +252,11 @@ ReferenceMode ArgumentReferenceMode(const AidlArgument& arg, const AidlTypenames
 
     case StorageMode::INTERFACE_ARGUMENT:
       if (arg.GetType().IsNullable()) {
-        // &Option<Box<dyn IFoo>> => Option<&dyn IFoo>
+        // &Option<Strong<dyn IFoo>> => Option<&dyn IFoo>
         return ReferenceMode::AS_DEREF;
       } else {
-        // &Box<dyn IFoo> => &dyn IFoo
-        // Needs inner dereference to pierce the Box: &*arg
+        // &Strong<dyn IFoo> => &dyn IFoo
+        // Needs inner dereference to pierce the Strong: &*arg
         return ReferenceMode::REF_DEREF;
       }
 
