@@ -1938,6 +1938,19 @@ TEST_F(AidlTest, CheckApi_EnumFieldsWithDefaultValues) {
   EXPECT_TRUE(::android::aidl::check_api(options, io_delegate_));
 }
 
+TEST_F(AidlTest, CheckApiEqual_EnumFieldsWithDefaultValues) {
+  Options options = Options::From("aidl --checkapi=equal old new");
+  const string foo_definition = "package p; parcelable Foo{ p.Enum e = p.Enum.FOO; }";
+  const string enum_definition = "package p; enum Enum { FOO }";
+  io_delegate_.SetFileContents("old/p/Foo.aidl", foo_definition);
+  io_delegate_.SetFileContents("old/p/Enum.aidl", enum_definition);
+  io_delegate_.SetFileContents("new/p/Foo.aidl", foo_definition);
+  io_delegate_.SetFileContents("new/p/Enum.aidl", enum_definition);
+  CaptureStderr();
+  EXPECT_TRUE(::android::aidl::check_api(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+}
+
 class AidlTestCompatibleChanges : public AidlTest {
  protected:
   Options options_ = Options::From("aidl --checkapi old new");
