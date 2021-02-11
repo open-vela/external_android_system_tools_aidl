@@ -17,7 +17,6 @@
 
 #include <functional>
 #include <stack>
-#include <unordered_set>
 
 #include "aidl_language.h"
 #include "logging.h"
@@ -132,21 +131,6 @@ struct DiagnoseInterfaceName : DiagnosticsVisitor {
   }
 };
 
-struct DiagnoseEnumZero : DiagnosticsVisitor {
-  DiagnoseEnumZero(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
-  void Visit(const AidlEnumDeclaration& e) override {
-    AIDL_FATAL_IF(e.GetEnumerators().empty(), e)
-        << "The enum '" << e.GetName() << "' has no enumerators.";
-    const auto& first = e.GetEnumerators()[0];
-    if (auto first_value = first->ValueString(e.GetBackingType(), AidlConstantValueDecorator);
-        first_value != "0") {
-      diag.Report(first->GetLocation(), DiagnosticID::enum_zero)
-          << "The first enumerator '" << first->GetName() << "' should be 0, but it is "
-          << first_value << ".";
-    }
-  }
-};
-
 struct DiagnoseInoutParameter : DiagnosticsVisitor {
   DiagnoseInoutParameter(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
   void Visit(const AidlArgument& a) override {
@@ -164,13 +148,13 @@ struct DiagnoseConstName : DiagnosticsVisitor {
   void Visit(const AidlEnumerator& e) override {
     if (ToUpper(e.GetName()) != e.GetName()) {
       diag.Report(e.GetLocation(), DiagnosticID::const_name)
-          << "Enum values should be named in upper cases: " << ToUpper(e.GetName());
+          << "Enum values should be named in upper case: " << e.GetName();
     }
   }
   void Visit(const AidlConstantDeclaration& c) override {
     if (ToUpper(c.GetName()) != c.GetName()) {
       diag.Report(c.GetLocation(), DiagnosticID::const_name)
-          << "Constants should be named in upper cases: " << ToUpper(c.GetName());
+          << "Constants should be named in upper case: " << c.GetName();
     }
   }
   static std::string ToUpper(std::string name) {
@@ -194,18 +178,7 @@ struct DiagnoseExplicitDefault : DiagnosticsVisitor {
   void CheckExplicitDefault(const AidlVariableDeclaration& v) {
     if (v.IsDefaultUserSpecified()) return;
     if (v.GetType().IsNullable()) return;
-    if (v.GetType().IsArray()) {
-      diag.Report(v.GetLocation(), DiagnosticID::explicit_default)
-          << "The array field '" << v.GetName() << "' has no explicit value.";
-      return;
-    }
-    const auto type_name = v.GetType().GetName();
-    if (AidlTypenames::IsPrimitiveTypename(type_name) || type_name == "String" ||
-        type_name == "CharSequence") {
-      diag.Report(v.GetLocation(), DiagnosticID::explicit_default)
-          << "The primitive field '" << v.GetName() << "' has no explicit value.";
-      return;
-    }
+    if (v.GetType().IsArray()) return;
     const auto defined_type = v.GetType().GetDefinedType();
     if (defined_type && defined_type->AsEnumDeclaration()) {
       diag.Report(v.GetLocation(), DiagnosticID::enum_explicit_default)
@@ -218,10 +191,17 @@ struct DiagnoseExplicitDefault : DiagnosticsVisitor {
 struct DiagnoseMixedOneway : DiagnosticsVisitor {
   DiagnoseMixedOneway(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
   void Visit(const AidlInterface& i) override {
-    const auto& methods = i.GetMethods();
-    if (std::adjacent_find(begin(methods), end(methods), [](const auto& a, const auto& b) {
-          return a->IsOneway() != b->IsOneway();
-        }) != end(methods)) {
+    bool has_oneway = false;
+    bool has_twoway = false;
+    for (const auto& m : i.GetMethods()) {
+      if (!m->IsUserDefined()) continue;
+      if (m->IsOneway()) {
+        has_oneway = true;
+      } else {
+        has_twoway = true;
+      }
+    }
+    if (has_oneway && has_twoway) {
       diag.Report(i.GetLocation(), DiagnosticID::mixed_oneway)
           << "The interface '" << i.GetName() << "' has both one-way and two-way methods.";
     }
@@ -256,7 +236,6 @@ bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnosticsContext diag(mapping);
 
   DiagnoseInterfaceName{diag}.Check(doc);
-  DiagnoseEnumZero{diag}.Check(doc);
   DiagnoseInoutParameter{diag}.Check(doc);
   DiagnoseConstName{diag}.Check(doc);
   DiagnoseExplicitDefault{diag}.Check(doc);

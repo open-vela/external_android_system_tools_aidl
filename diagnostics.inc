@@ -1,7 +1,5 @@
 // DIAG(enum, name, enable-by-default)
 DIAG(const_name, "const-name", false)
-DIAG(enum_zero, "enum-zero", false)
-DIAG(explicit_default, "explicit-default", false)
 DIAG(enum_explicit_default, "enum-explicit-default", false)
 DIAG(file_descriptor, "file-descriptor", false)
 DIAG(inout_parameter, "inout-parameter", false)
