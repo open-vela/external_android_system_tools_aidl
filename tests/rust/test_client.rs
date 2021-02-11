@@ -36,7 +36,7 @@ use std::io::{Read, Write};
 use std::os::unix::io::FromRawFd;
 use std::sync::Arc;
 
-fn get_test_service() -> Box<dyn ITestService::ITestService> {
+fn get_test_service() -> binder::Strong<dyn ITestService::ITestService> {
     binder::get_interface(<BpTestService as ITestService::ITestService>::get_descriptor())
         .expect("did not get binder service")
 }
@@ -603,7 +603,7 @@ fn test_default_impl() {
 
 #[test]
 fn test_versioned_interface_version() {
-    let service: Box<dyn IFooInterface::IFooInterface> =
+    let service: binder::Strong<dyn IFooInterface::IFooInterface> =
         binder::get_interface(<BpFooInterface as IFooInterface::IFooInterface>::get_descriptor())
             .expect("did not get binder service");
 
@@ -613,7 +613,7 @@ fn test_versioned_interface_version() {
 
 #[test]
 fn test_versioned_interface_hash() {
-    let service: Box<dyn IFooInterface::IFooInterface> =
+    let service: binder::Strong<dyn IFooInterface::IFooInterface> =
         binder::get_interface(<BpFooInterface as IFooInterface::IFooInterface>::get_descriptor())
             .expect("did not get binder service");
 
@@ -626,7 +626,7 @@ fn test_versioned_interface_hash() {
 
 #[test]
 fn test_versioned_known_union_field_is_ok() {
-    let service: Box<dyn IFooInterface::IFooInterface> =
+    let service: binder::Strong<dyn IFooInterface::IFooInterface> =
         binder::get_interface(<BpFooInterface as IFooInterface::IFooInterface>::get_descriptor())
             .expect("did not get binder service");
 
@@ -635,7 +635,7 @@ fn test_versioned_known_union_field_is_ok() {
 
 #[test]
 fn test_versioned_unknown_union_field_triggers_error() {
-    let service: Box<dyn IFooInterface::IFooInterface> =
+    let service: binder::Strong<dyn IFooInterface::IFooInterface> =
         binder::get_interface(<BpFooInterface as IFooInterface::IFooInterface>::get_descriptor())
             .expect("did not get binder service");
 
@@ -655,7 +655,7 @@ fn test_versioned_unknown_union_field_triggers_error() {
 
 fn test_renamed_interface<F>(f: F)
 where
-    F: FnOnce(Box<dyn IOldName::IOldName>, Box<dyn INewName::INewName>),
+    F: FnOnce(binder::Strong<dyn IOldName::IOldName>, binder::Strong<dyn INewName::INewName>),
 {
     let service = get_test_service();
     let old_name = service.GetOldNameInterface();
