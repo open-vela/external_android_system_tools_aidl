@@ -203,7 +203,9 @@ struct DiagnoseMixedOneway : DiagnosticsVisitor {
     }
     if (has_oneway && has_twoway) {
       diag.Report(i.GetLocation(), DiagnosticID::mixed_oneway)
-          << "The interface '" << i.GetName() << "' has both one-way and two-way methods.";
+          << "The interface '" << i.GetName()
+          << "' has both one-way and two-way methods. This makes it hard to reason about threading "
+             "of client code.";
     }
   }
 };
