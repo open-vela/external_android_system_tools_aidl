@@ -41,18 +41,10 @@ using std::set;
 using std::string;
 using std::vector;
 
-struct DumpForEqualityVisitor : DumpVisitor {
-  DumpForEqualityVisitor(CodeWriter& out) : DumpVisitor(out) {}
-
-  void DumpConstantValue(const AidlTypeSpecifier&, const AidlConstantValue& c) {
-    out << c.Literal();
-  }
-};
-
 static std::string Dump(const AidlDefinedType& type) {
   string code;
   CodeWriterPtr out = CodeWriter::ForString(&code);
-  DumpForEqualityVisitor visitor(*out);
+  DumpVisitor visitor(*out);
   type.DispatchVisit(visitor);
   out->Close();
   return code;
