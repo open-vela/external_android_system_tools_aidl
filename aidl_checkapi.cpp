@@ -15,6 +15,10 @@
  */
 
 #include "aidl.h"
+#include "aidl_language.h"
+#include "import_resolver.h"
+#include "logging.h"
+#include "options.h"
 
 #include <map>
 #include <string>
@@ -23,12 +27,6 @@
 #include <android-base/result.h>
 #include <android-base/strings.h>
 #include <gtest/gtest.h>
-
-#include "aidl_dumpapi.h"
-#include "aidl_language.h"
-#include "import_resolver.h"
-#include "logging.h"
-#include "options.h"
 
 namespace android {
 namespace aidl {
@@ -41,21 +39,10 @@ using std::set;
 using std::string;
 using std::vector;
 
-struct DumpForEqualityVisitor : DumpVisitor {
-  DumpForEqualityVisitor(CodeWriter& out) : DumpVisitor(out) {}
-
-  void DumpConstantValue(const AidlTypeSpecifier&, const AidlConstantValue& c) {
-    out << c.Literal();
-  }
-};
-
 static std::string Dump(const AidlDefinedType& type) {
-  string code;
-  CodeWriterPtr out = CodeWriter::ForString(&code);
-  DumpForEqualityVisitor visitor(*out);
-  type.DispatchVisit(visitor);
-  out->Close();
-  return code;
+  std::string dump;
+  type.Dump(CodeWriter::ForString(&dump).get());
+  return dump;
 }
 
 // Uses each type's Dump() and GTest utility(EqHelper).
