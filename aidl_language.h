@@ -189,6 +189,7 @@ class AidlCommentable : public AidlNode {
 
   bool IsHidden() const;
   bool IsDeprecated() const;
+  void DumpComments(CodeWriter& out) const;
 };
 
 // Transforms a value string into a language specific form. Raw value as produced by
@@ -326,6 +327,8 @@ class AidlAnnotatable : public AidlCommentable {
   bool IsHide() const;
   bool JavaDerive(const std::string& method) const;
   std::string GetDescriptor() const;
+
+  void DumpAnnotations(CodeWriter* writer) const;
 
   const AidlAnnotation* UnsupportedAppUsage() const;
   const AidlAnnotation* RustDerive() const;
@@ -947,6 +950,10 @@ class AidlDefinedType : public AidlAnnotatable {
         const_cast<const AidlDefinedType*>(this)->AsUnstructuredParcelable());
   }
 
+  virtual void Dump(CodeWriter* writer) const = 0;
+  void DumpHeader(CodeWriter* writer) const;
+  void DumpMembers(CodeWriter& out) const;
+
   const std::vector<std::unique_ptr<AidlVariableDeclaration>>& GetFields() const {
     return variables_;
   }
@@ -1003,6 +1010,8 @@ class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::s
   const AidlNode& AsAidlNode() const override { return *this; }
   std::string GetPreprocessDeclarationName() const override { return "parcelable"; }
 
+  void Dump(CodeWriter* writer) const override;
+
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 
  private:
@@ -1025,6 +1034,8 @@ class AidlStructuredParcelable : public AidlParcelable {
 
   const AidlStructuredParcelable* AsStructuredParcelable() const override { return this; }
   std::string GetPreprocessDeclarationName() const override { return "structured_parcelable"; }
+
+  void Dump(CodeWriter* writer) const override;
 
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
@@ -1090,6 +1101,7 @@ class AidlEnumDeclaration : public AidlDefinedType {
     return true;
   }
   std::string GetPreprocessDeclarationName() const override { return "enum"; }
+  void Dump(CodeWriter* writer) const override;
 
   const AidlEnumDeclaration* AsEnumDeclaration() const override { return this; }
 
@@ -1128,6 +1140,7 @@ class AidlUnionDecl : public AidlParcelable {
                                   Options::Language lang) const override;
   std::string GetPreprocessDeclarationName() const override { return "union"; }
 
+  void Dump(CodeWriter* writer) const override;
   const AidlUnionDecl* AsUnionDeclaration() const override { return this; }
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 };
@@ -1147,6 +1160,8 @@ class AidlInterface final : public AidlDefinedType {
 
   const AidlInterface* AsInterface() const override { return this; }
   std::string GetPreprocessDeclarationName() const override { return "interface"; }
+
+  void Dump(CodeWriter* writer) const override;
 
   bool CheckValid(const AidlTypenames& typenames) const override;
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
