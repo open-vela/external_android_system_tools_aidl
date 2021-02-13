@@ -59,6 +59,7 @@ cc_library_static {
     srcs: [
         "aidl_checkapi.cpp",
         "aidl_const_expressions.cpp",
+        "aidl_dumpapi.cpp",
         "aidl_language_l.ll",
         "aidl_language_y.yy",
         "aidl_language.cpp",

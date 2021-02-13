@@ -37,6 +37,7 @@
 #include <android-base/strings.h>
 
 #include "aidl_checkapi.h"
+#include "aidl_dumpapi.h"
 #include "aidl_language.h"
 #include "aidl_typenames.h"
 #include "generate_aidl_mappings.h"
@@ -888,40 +889,6 @@ bool preprocess_aidl(const Options& options, const IoDelegate& io_delegate) {
   }
 
   return writer->Close();
-}
-
-static string GetApiDumpPathFor(const AidlDefinedType& defined_type, const Options& options) {
-  string package_as_path = Join(Split(defined_type.GetPackage(), "."), OS_PATH_SEPARATOR);
-  AIDL_FATAL_IF(options.OutputDir().empty() || options.OutputDir().back() != '/', defined_type);
-  return options.OutputDir() + package_as_path + OS_PATH_SEPARATOR + defined_type.GetName() +
-         ".aidl";
-}
-
-bool dump_api(const Options& options, const IoDelegate& io_delegate) {
-  for (const auto& file : options.InputFiles()) {
-    AidlTypenames typenames;
-    if (internals::load_and_validate_aidl(file, options, io_delegate, &typenames, nullptr) ==
-        AidlError::OK) {
-      const auto& doc = typenames.MainDocument();
-
-      for (const auto& type : doc.DefinedTypes()) {
-        unique_ptr<CodeWriter> writer =
-            io_delegate.GetCodeWriter(GetApiDumpPathFor(*type, options));
-        // dump doc comments (license) as well for each type
-        for (const auto& c : doc.GetComments()) {
-          (*writer) << c.body;
-        }
-        (*writer) << kPreamble;
-        if (!type->GetPackage().empty()) {
-          (*writer) << "package " << type->GetPackage() << ";\n";
-        }
-        type->Dump(writer.get());
-      }
-    } else {
-      return false;
-    }
-  }
-  return true;
 }
 
 int aidl_entry(const Options& options, const IoDelegate& io_delegate) {
