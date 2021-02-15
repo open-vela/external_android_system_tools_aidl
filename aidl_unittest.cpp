@@ -3294,11 +3294,30 @@ TEST_F(AidlTest, ArrayBeforeGenericError) {
   io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar { List[]<String> a; }");
 
   Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
-  const string expected_stderr =
-      "ERROR: a/Bar.aidl:1.28-33: Must specify type parameters (<>) before array ([]).\n";
   CaptureStderr();
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr("syntax error, unexpected '<'"));
+}
+
+TEST_F(AidlTest, NullableArraysAreNotSupported) {
+  io_delegate_.SetFileContents("a/Bar.aidl",
+                               "package a; parcelable Bar { String @nullable [] a; }");
+
+  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
+  CaptureStderr();
+  EXPECT_EQ(1, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr("Annotations for arrays are not supported."));
+}
+
+TEST_F(AidlTest, ListOfNullablesAreNotSupported) {
+  io_delegate_.SetFileContents("a/Bar.aidl",
+                               "package a; parcelable Bar { List<@nullable String> a; }");
+
+  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
+  CaptureStderr();
+  EXPECT_EQ(1, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(),
+              testing::HasSubstr("Annotations for type arguments are not supported."));
 }
 
 struct GenericAidlTest : ::testing::Test {
