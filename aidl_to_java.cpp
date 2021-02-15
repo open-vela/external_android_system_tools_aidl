@@ -523,7 +523,7 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
            c.writer << "java.util.stream.IntStream.range(0, N).forEach(i -> {\n";
            c.writer.Indent();
            c.writer << "String k = " << c.parcel << ".readString();\n";
-           c.writer << JavaNameOf(*(c.type.GetTypeParameters().at(1)), c.typenames) << " v;\n";
+           c.writer << JavaSignatureOf(*(c.type.GetTypeParameters().at(1)), c.typenames) << " v;\n";
            CodeGeneratorContext value_context{
                c.writer,
                c.typenames,
