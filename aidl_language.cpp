@@ -567,7 +567,7 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
         return false;
       }
       if (num_params == 2) {
-        const string& key_type = GetTypeParameters()[0]->GetName();
+        const string& key_type = GetTypeParameters()[0]->Signature();
         if (key_type != "String") {
           AIDL_ERROR(this) << "The type of key in map must be String, but it is "
                            << "'" << key_type << "'";
