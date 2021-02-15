@@ -167,7 +167,7 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %type<annotation> annotation
 %type<annotation_list>annotation_list
 %type<type> type
-%type<type> unannotated_type
+%type<type> non_array_type
 %type<arg_list> arg_list arg_non_empty_list
 %type<arg> arg
 %type<direction> direction
@@ -657,31 +657,29 @@ arg
     delete $2;
   };
 
-unannotated_type
- : qualified_name {
-    $$ = new AidlTypeSpecifier(loc(@1), $1->GetText(), false, nullptr, $1->GetComments());
+non_array_type
+ : annotation_list qualified_name {
+    $$ = new AidlTypeSpecifier(loc(@2), $2->GetText(), false, nullptr, $2->GetComments());
     ps->DeferResolution($$);
-    delete $1;
-  }
- | unannotated_type '[' ']' {
-    if (!$1->SetArray()) {
-      AIDL_ERROR(loc(@1)) << "Can only have one dimensional arrays.";
-      ps->AddError();
+    if (!$1->empty()) {
+      $$->SetComments($1->begin()->GetComments());
+      $$->Annotate(std::move(*$1));
     }
-    $$ = $1;
+    delete $1;
+    delete $2;
   }
- | unannotated_type '<' type_args '>' {
+ | non_array_type '<' type_args '>' {
     ps->SetTypeParameters($1, $3);
     $$ = $1;
   }
- | unannotated_type '<' unannotated_type '<' type_args RSHIFT {
+ | non_array_type '<' non_array_type '<' type_args RSHIFT {
     ps->SetTypeParameters($3, $5);
     auto params = new std::vector<std::unique_ptr<AidlTypeSpecifier>>();
     params->emplace_back($3);
     ps->SetTypeParameters($1, params);
     $$ = $1;
   }
- | unannotated_type '<' type_args ',' unannotated_type '<' type_args RSHIFT {
+ | non_array_type '<' type_args ',' non_array_type '<' type_args RSHIFT {
     ps->SetTypeParameters($5, $7);
     $3->emplace_back($5);
     ps->SetTypeParameters($1, $3);
@@ -689,22 +687,31 @@ unannotated_type
   };
 
 type
- : annotation_list unannotated_type {
-    $$ = $2;
-    if ($1->size() > 0) {
-      // copy comments from annotation to type
-      $2->SetComments($1->begin()->GetComments());
+ : non_array_type
+ | type annotation_list '[' ']' {
+    if (!$2->empty()) {
+      AIDL_ERROR(loc(@2)) << "Annotations for arrays are not supported.";
+      ps->AddError();
     }
-    $2->Annotate(std::move(*$1));
-    delete $1;
-  };
+    if (!$1->SetArray()) {
+      AIDL_ERROR(loc(@1)) << "Can only have one dimensional arrays.";
+      ps->AddError();
+    }
+    $$ = $1;
+    delete $2;
+  }
+ ;
 
 type_args
- : unannotated_type {
+ : type {
+    if (!$1->GetAnnotations().empty()) {
+      AIDL_ERROR(loc(@1)) << "Annotations for type arguments are not supported.";
+      ps->AddError();
+    }
     $$ = new std::vector<std::unique_ptr<AidlTypeSpecifier>>();
     $$->emplace_back($1);
   }
- | type_args ',' unannotated_type {
+ | type_args ',' type {
     $1->emplace_back($3);
     $$ = $1;
   };
