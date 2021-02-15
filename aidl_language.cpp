@@ -506,9 +506,14 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
     return false;
   }
   if (IsGeneric()) {
-    const string& type_name = GetName();
+    const auto& types = GetTypeParameters();
+    for (const auto& arg : types) {
+      if (!arg->CheckValid(typenames)) {
+        return false;
+      }
+    }
 
-    auto& types = GetTypeParameters();
+    const string& type_name = GetName();
     // TODO(b/136048684) Disallow to use primitive types only if it is List or Map.
     if (type_name == "List" || type_name == "Map") {
       if (std::any_of(types.begin(), types.end(), [&](auto& type_ptr) {
@@ -1027,6 +1032,15 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
 // TODO: we should treat every backend all the same in future.
 bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                                    Options::Language lang) const {
+  if (IsGeneric()) {
+    const auto& types = GetTypeParameters();
+    for (const auto& arg : types) {
+      if (!arg->LanguageSpecificCheckValid(typenames, lang)) {
+        return false;
+      }
+    }
+  }
+
   if ((lang == Options::Language::NDK || lang == Options::Language::RUST) && IsArray() &&
       GetName() == "IBinder") {
     AIDL_ERROR(this) << "The " << to_string(lang) << " backend does not support array of IBinder";
