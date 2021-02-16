@@ -517,8 +517,9 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
     // TODO(b/136048684) Disallow to use primitive types only if it is List or Map.
     if (type_name == "List" || type_name == "Map") {
       if (std::any_of(types.begin(), types.end(), [&](auto& type_ptr) {
-            return (typenames.GetEnumDeclaration(*type_ptr)) ||
-                   AidlTypenames::IsPrimitiveTypename(type_ptr->GetName());
+            return !type_ptr->IsArray() &&
+                   (typenames.GetEnumDeclaration(*type_ptr) ||
+                    AidlTypenames::IsPrimitiveTypename(type_ptr->GetName()));
           })) {
         AIDL_ERROR(this) << "A generic type cannot have any primitive type parameters.";
         return false;
