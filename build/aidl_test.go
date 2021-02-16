@@ -959,6 +959,7 @@ func TestCcModuleWithApexNameMacro(t *testing.T) {
 			name: "myapex",
 			key: "myapex.key",
 			native_shared_libs: ["myiface-V1-ndk_platform"],
+			updatable: false,
 		}
 		apex_key {
 			name: "myapex.key",
