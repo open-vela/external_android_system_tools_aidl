@@ -655,7 +655,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 			libs = append(libs, addLibrary(mctx, i, version, lang))
 		}
 		// TODO(b/150578172) remove those modules when every module specify its version.
-		if !sdkIsFinal && i.isAllowedListedModule() {
+		if !sdkIsFinal {
 			if !unstable {
 				libs = append(libs, addLibrary(mctx, i, "", lang))
 			}
@@ -798,27 +798,4 @@ func lookupInterface(name string, config android.Config) *aidlInterface {
 		}
 	}
 	return nil
-}
-
-// TODO(b/150578172) remove exception when every module specify its version.
-func (i *aidlInterface) isAllowedListedModule() bool {
-	allowlist := []string{
-		"networkstack-aidl-interfaces",
-		"netd_aidl_interface",
-		"ipmemorystore-aidl-interfaces",
-		"dnsresolver_aidl_interface",
-		"netd_event_listener_interface",
-		"android.hardware.identity",
-		"android.hardware.keymaster",
-		"android.hardware.rebootescrow",
-		"android.security.remoteprovisioning",
-		"android.system.keystore2",
-		"android.hardware.security.sharedsecret",
-		"android.hardware.security.secureclock",
-		"android.hardware.security.keymint",
-		"android.hardware.memtrack",
-		"pixel-power-ext",
-		"android.hardware.power",
-	}
-	return android.InList(i.ModuleBase.Name(), allowlist)
 }
