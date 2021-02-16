@@ -506,14 +506,20 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
     return false;
   }
   if (IsGeneric()) {
-    const string& type_name = GetName();
+    const auto& types = GetTypeParameters();
+    for (const auto& arg : types) {
+      if (!arg->CheckValid(typenames)) {
+        return false;
+      }
+    }
 
-    auto& types = GetTypeParameters();
+    const string& type_name = GetName();
     // TODO(b/136048684) Disallow to use primitive types only if it is List or Map.
     if (type_name == "List" || type_name == "Map") {
       if (std::any_of(types.begin(), types.end(), [&](auto& type_ptr) {
-            return (typenames.GetEnumDeclaration(*type_ptr)) ||
-                   AidlTypenames::IsPrimitiveTypename(type_ptr->GetName());
+            return !type_ptr->IsArray() &&
+                   (typenames.GetEnumDeclaration(*type_ptr) ||
+                    AidlTypenames::IsPrimitiveTypename(type_ptr->GetName()));
           })) {
         AIDL_ERROR(this) << "A generic type cannot have any primitive type parameters.";
         return false;
@@ -532,6 +538,12 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
         return false;
       }
       const AidlTypeSpecifier& contained_type = *GetTypeParameters()[0];
+      if (contained_type.IsArray()) {
+        AIDL_ERROR(this)
+            << "List of arrays is not supported. List<T> supports parcelable/union, String, "
+               "IBinder, and ParcelFileDescriptor.";
+        return false;
+      }
       const string& contained_type_name = contained_type.GetName();
       if (AidlTypenames::IsBuiltinTypename(contained_type_name)) {
         if (contained_type_name != "String" && contained_type_name != "IBinder" &&
@@ -556,7 +568,7 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
         return false;
       }
       if (num_params == 2) {
-        const string& key_type = GetTypeParameters()[0]->GetName();
+        const string& key_type = GetTypeParameters()[0]->Signature();
         if (key_type != "String") {
           AIDL_ERROR(this) << "The type of key in map must be String, but it is "
                            << "'" << key_type << "'";
@@ -1021,6 +1033,15 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
 // TODO: we should treat every backend all the same in future.
 bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                                    Options::Language lang) const {
+  if (IsGeneric()) {
+    const auto& types = GetTypeParameters();
+    for (const auto& arg : types) {
+      if (!arg->LanguageSpecificCheckValid(typenames, lang)) {
+        return false;
+      }
+    }
+  }
+
   if ((lang == Options::Language::NDK || lang == Options::Language::RUST) && IsArray() &&
       GetName() == "IBinder") {
     AIDL_ERROR(this) << "The " << to_string(lang) << " backend does not support array of IBinder";
