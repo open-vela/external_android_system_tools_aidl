@@ -86,6 +86,7 @@ type rustProperties struct {
 	Rustlibs       []string
 	Stem           *string
 	Target         rustTargetProperties
+	Apex_available []string
 }
 
 type phonyProperties struct {
