@@ -3,7 +3,6 @@
 import pipes
 import re
 import subprocess
-import sys
 import unittest
 
 BITNESS_32 = ("", "32")
@@ -227,4 +226,4 @@ if __name__ == '__main__':
             setattr(TestAidl, test_name, test)
 
     suite = unittest.TestLoader().loadTestsFromTestCase(TestAidl)
-    sys.exit(not unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful())
+    unittest.TextTestRunner(verbosity=2).run(suite)
