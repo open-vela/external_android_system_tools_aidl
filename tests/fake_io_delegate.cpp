@@ -140,7 +140,7 @@ void FakeIoDelegate::AddBrokenFilePath(const std::string& path) {
   broken_files_.insert(path);
 }
 
-bool FakeIoDelegate::GetWrittenContents(const string& path, string* content) {
+bool FakeIoDelegate::GetWrittenContents(const string& path, string* content) const {
   const auto it = written_file_contents_.find(path);
   if (it == written_file_contents_.end()) {
     return false;
@@ -151,7 +151,15 @@ bool FakeIoDelegate::GetWrittenContents(const string& path, string* content) {
   return true;
 }
 
-std::vector<std::string> FakeIoDelegate::ListOutputFiles() {
+std::vector<std::string> FakeIoDelegate::ListInputFiles() const {
+  std::vector<std::string> out;
+  for (const auto& [file, contents] : file_contents_) {
+    out.push_back(file);
+  }
+  return out;
+}
+
+std::vector<std::string> FakeIoDelegate::ListOutputFiles() const {
   std::vector<std::string> out;
   for (const auto& [file, contents] : written_file_contents_) {
     out.push_back(file);

@@ -63,8 +63,9 @@ class FakeIoDelegate : public IoDelegate {
   void AddBrokenFilePath(const std::string& path);
   // Returns true iff we've previously written to |path|.
   // When we return true, we'll set *contents to the written string.
-  bool GetWrittenContents(const std::string& path, std::string* content);
-  std::vector<std::string> ListOutputFiles();
+  bool GetWrittenContents(const std::string& path, std::string* content) const;
+  std::vector<std::string> ListInputFiles() const;
+  std::vector<std::string> ListOutputFiles() const;
 
   bool PathWasRemoved(const std::string& path);
 
