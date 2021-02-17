@@ -62,7 +62,7 @@ public class ExtensionTests {
 
     @Before
     public void setUp() throws RemoteException {
-      IBinder binder = ServiceManager.getService(ITestService.class.getName());
+      IBinder binder = ServiceManager.waitForService(ITestService.class.getName());
       assertNotNull(binder);
       mService = ITestService.Stub.asInterface(binder);
       assertNotNull(mService);
