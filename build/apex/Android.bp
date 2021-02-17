@@ -14,6 +14,7 @@ apex_test {
     key: "com.android.aidltest.key",
     certificate: ":com.android.aidltest.certificate",
     installable: false,
+    updatable: false,
 
     native_shared_libs: [
         "test-piece-1-V3-ndk_platform",
