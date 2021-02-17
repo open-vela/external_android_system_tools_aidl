@@ -84,5 +84,6 @@
 
 # specific to fuzzer
 " a.path "
+" b.path "
 " Foo "
 
