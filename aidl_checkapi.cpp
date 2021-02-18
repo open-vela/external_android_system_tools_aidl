@@ -373,8 +373,14 @@ static bool are_compatible_enums(const AidlEnumDeclaration& older,
 
 static Result<AidlTypenames> load_from_dir(const Options& options, const IoDelegate& io_delegate,
                                            const std::string& dir) {
+  Result<std::vector<std::string>> dir_files = io_delegate.ListFiles(dir);
+  if (!dir_files.ok()) {
+    AIDL_ERROR(dir) << dir_files.error();
+    return Error();
+  }
+
   AidlTypenames typenames;
-  for (const auto& file : io_delegate.ListFiles(dir)) {
+  for (const auto& file : *dir_files) {
     if (!android::base::EndsWith(file, ".aidl")) continue;
     if (internals::load_and_validate_aidl(file, options, io_delegate, &typenames,
                                           nullptr /* imported_files */) != AidlError::OK) {
@@ -382,6 +388,7 @@ static Result<AidlTypenames> load_from_dir(const Options& options, const IoDeleg
       return Error();
     }
   }
+
   return typenames;
 }
 

@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef AIDL_TESTS_FAKE_IO_DELEGATE_H_
-#define AIDL_TESTS_FAKE_IO_DELEGATE_H_
+#pragma once
 
 #include <map>
 #include <memory>
@@ -50,7 +48,7 @@ class FakeIoDelegate : public IoDelegate {
   std::unique_ptr<CodeWriter> GetCodeWriter(
       const std::string& file_path) const override;
   void RemovePath(const std::string& file_path) const override;
-  std::vector<std::string> ListFiles(const std::string& dir) const override;
+  android::base::Result<std::vector<std::string>> ListFiles(const std::string& dir) const override;
 
   // Methods added to facilitate testing.
   void SetFileContents(const std::string& filename,
@@ -88,5 +86,3 @@ class FakeIoDelegate : public IoDelegate {
 }  // namespace test
 }  // namespace aidl
 }  // namespace android
-
-#endif // AIDL_TESTS_FAKE_IO_DELEGATE_H_
