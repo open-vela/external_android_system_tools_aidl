@@ -23,6 +23,7 @@
 #include "os.h"
 #include "tests/test_util.h"
 
+using android::base::Result;
 using android::base::StringAppendF;
 using android::base::StringPrintf;
 using std::string;
@@ -89,7 +90,7 @@ void FakeIoDelegate::SetFileContents(const string& filename,
   file_contents_[filename] = contents;
 }
 
-vector<string> FakeIoDelegate::ListFiles(const string& dir) const {
+Result<vector<string>> FakeIoDelegate::ListFiles(const string& dir) const {
   const string dir_name = dir.back() == OS_PATH_SEPARATOR ? dir : dir + OS_PATH_SEPARATOR;
   vector<string> files;
   for (auto it = file_contents_.begin(); it != file_contents_.end(); it++) {
