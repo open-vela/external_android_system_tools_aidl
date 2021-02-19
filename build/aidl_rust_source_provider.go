@@ -111,9 +111,10 @@ func (sp *aidlRustSourceProvider) SourceProviderDeps(ctx rust.DepsContext, deps 
 
 func (sp *aidlRustSourceProvider) AndroidMk(ctx rust.AndroidMkContext, ret *android.AndroidMkEntries) {
 	ctx.SubAndroidMk(ret, sp.BaseSourceProvider)
-	ret.ExtraEntries = append(ret.ExtraEntries, func(entries *android.AndroidMkEntries) {
-		entries.SetBool("LOCAL_UNINSTALLABLE_MODULE", true)
-	})
+	ret.ExtraEntries = append(ret.ExtraEntries,
+		func(ctx android.AndroidMkExtraEntriesContext, entries *android.AndroidMkEntries) {
+			entries.SetBool("LOCAL_UNINSTALLABLE_MODULE", true)
+		})
 }
 
 func aidlRustLibraryFactory() android.Module {
