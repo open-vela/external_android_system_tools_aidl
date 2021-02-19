@@ -39,7 +39,7 @@ public class TestVersionedInterface {
 
     @Before
     public void setUp() {
-        IBinder binder = ServiceManager.getService(IFooInterface.class.getName());
+        IBinder binder = ServiceManager.waitForService(IFooInterface.class.getName());
         assertNotNull(binder);
         service = IFooInterface.Stub.asInterface(binder);
         assertNotNull(service);
