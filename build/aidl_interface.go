@@ -808,15 +808,6 @@ func (i *aidlInterface) isAllowedListedModule() bool {
 		"ipmemorystore-aidl-interfaces",
 		"dnsresolver_aidl_interface",
 		"netd_event_listener_interface",
-		"android.hardware.identity",
-		"android.hardware.keymaster",
-		"android.hardware.rebootescrow",
-		"android.security.remoteprovisioning",
-		"android.system.keystore2",
-		"android.hardware.security.sharedsecret",
-		"android.hardware.security.secureclock",
-		"android.hardware.security.keymint",
-		"android.hardware.memtrack",
 		// TODO(b/180417006) remove it after the prebuilt doesn't include it anymore
 		"android.hardware.gnss",
 	}
