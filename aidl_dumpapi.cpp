@@ -22,6 +22,7 @@
 #include "logging.h"
 #include "os.h"
 
+using android::base::EndsWith;
 using android::base::Join;
 using android::base::Split;
 using std::string;
@@ -148,6 +149,17 @@ static string GetApiDumpPathFor(const AidlDefinedType& defined_type, const Optio
          ".aidl";
 }
 
+static void DumpComments(CodeWriter& out, const Comments& comments) {
+  bool needs_newline = false;
+  for (const auto& c : comments) {
+    out << c.body;
+    needs_newline = !EndsWith(c.body, "\n");
+  }
+  if (needs_newline) {
+    out << "\n";
+  }
+}
+
 bool dump_api(const Options& options, const IoDelegate& io_delegate) {
   for (const auto& file : options.InputFiles()) {
     AidlTypenames typenames;
@@ -159,9 +171,7 @@ bool dump_api(const Options& options, const IoDelegate& io_delegate) {
         unique_ptr<CodeWriter> writer =
             io_delegate.GetCodeWriter(GetApiDumpPathFor(*type, options));
         // dump doc comments (license) as well for each type
-        for (const auto& c : doc.GetComments()) {
-          (*writer) << c.body;
-        }
+        DumpComments(*writer, doc.GetComments());
         (*writer) << kPreamble;
         if (!type->GetPackage().empty()) {
           (*writer) << "package " << type->GetPackage() << ";\n";
