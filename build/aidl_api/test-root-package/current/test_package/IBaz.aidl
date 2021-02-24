@@ -32,6 +32,7 @@
 // later when a module using the interface is updated, e.g., Mainline modules.
 
 package test_package;
+@SuppressWarnings(value={"mixed-oneway", "inout-parameter", "out-array"})
 interface IBaz {
   oneway void CanYouDealWithThisBar(in some_package.IBar bar);
   void MethodAddedInVersion2();

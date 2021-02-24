@@ -45,7 +45,7 @@ impl Default for ParcelableForToString {
       stringList: Default::default(),
       parcelableValue: Default::default(),
       parcelableArray: Default::default(),
-      enumValue: Default::default(),
+      enumValue: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum::FOO,
       enumArray: Default::default(),
       nullArray: Default::default(),
       nullList: Default::default(),
