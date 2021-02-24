@@ -41,7 +41,7 @@ public:
   std::vector<std::string> stringList;
   ::aidl::android::aidl::tests::OtherParcelableForToString parcelableValue;
   std::vector<::aidl::android::aidl::tests::OtherParcelableForToString> parcelableArray;
-  ::aidl::android::aidl::tests::IntEnum enumValue;
+  ::aidl::android::aidl::tests::IntEnum enumValue = ::aidl::android::aidl::tests::IntEnum::FOO;
   std::vector<::aidl::android::aidl::tests::IntEnum> enumArray;
   std::vector<std::string> nullArray;
   std::vector<std::string> nullList;
