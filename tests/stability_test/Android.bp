@@ -25,7 +25,6 @@ package {
 
 aidl_interface {
     name: "aidl_test_nonvintf_parcelable",
-    flags: ["-Werror"],
     srcs: [
         "android/aidl/tests/nonvintf/*.aidl",
     ],
@@ -49,7 +48,6 @@ aidl_interface {
 aidl_interface {
     name: "aidl_test_unstable_parcelable",
     unstable: true,
-    flags: ["-Werror"],
     srcs: [
         "android/aidl/tests/unstable/*.aidl",
     ],
@@ -72,7 +70,6 @@ aidl_interface {
 aidl_interface {
     name: "aidl_test_vintf_parcelable",
     stability: "vintf",
-    flags: ["-Werror"],
     srcs: [
         "android/aidl/tests/vintf/*.aidl",
     ],
