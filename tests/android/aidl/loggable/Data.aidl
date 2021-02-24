@@ -7,5 +7,5 @@ parcelable Data {
     int num;
     @utf8InCpp String str;
     Union nestedUnion;
-    Enum nestedEnum = Enum.FOO;
+    Enum nestedEnum;
 }
