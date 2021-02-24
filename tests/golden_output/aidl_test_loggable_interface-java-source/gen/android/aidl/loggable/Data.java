@@ -7,7 +7,7 @@ public class Data implements android.os.Parcelable
   public int num = 0;
   public java.lang.String str;
   public android.aidl.loggable.Union nestedUnion;
-  public byte nestedEnum;
+  public byte nestedEnum = android.aidl.loggable.Enum.FOO;
   public static final android.os.Parcelable.Creator<Data> CREATOR = new android.os.Parcelable.Creator<Data>() {
     @Override
     public Data createFromParcel(android.os.Parcel _aidl_source) {
