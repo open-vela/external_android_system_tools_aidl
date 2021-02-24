@@ -2,6 +2,7 @@ package android.aidl.loggable;
 import android.aidl.loggable.Data;
 
 interface ILoggableInterface {
+    @SuppressWarnings(value={"inout-parameter", "out-array"})
     String[] LogThis(boolean boolValue, inout boolean[] boolArray, byte byteValue,
             inout byte[] byteArray, char charValue, inout char[] charArray, int intValue,
             inout int[] intArray, long longValue, inout long[] longArray, float floatValue,

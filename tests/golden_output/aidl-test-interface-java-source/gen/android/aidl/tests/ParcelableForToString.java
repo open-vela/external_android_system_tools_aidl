@@ -21,7 +21,7 @@ public class ParcelableForToString implements android.os.Parcelable
   public java.util.List<java.lang.String> stringList;
   public android.aidl.tests.OtherParcelableForToString parcelableValue;
   public android.aidl.tests.OtherParcelableForToString[] parcelableArray;
-  public int enumValue;
+  public int enumValue = android.aidl.tests.IntEnum.FOO;
   public int[] enumArray;
   public java.lang.String[] nullArray;
   public java.util.List<java.lang.String> nullList;
