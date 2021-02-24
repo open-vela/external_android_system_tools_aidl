@@ -41,7 +41,7 @@ parcelable ParcelableForToString {
     List<String> stringList;
     OtherParcelableForToString parcelableValue;
     OtherParcelableForToString[] parcelableArray;
-    IntEnum enumValue = IntEnum.FOO;
+    IntEnum enumValue;
     IntEnum[] enumArray;
     String[] nullArray;
     List<String> nullList;

@@ -22,7 +22,6 @@ import android.aidl.tests.IntEnum;
 import android.aidl.tests.LongEnum;
 import android.aidl.tests.Union;
 
-@SuppressWarnings(value={"enum-explicit-default"})
 @JavaDerive(toString=true, equals=true)
 @RustDerive(Clone=true, PartialEq=true)
 parcelable StructuredParcelable {
