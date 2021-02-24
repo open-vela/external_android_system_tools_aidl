@@ -16,7 +16,6 @@
 
 package android.aidl.tests;
 
-@SuppressWarnings(value={"const-name"})
 @Backing(type="int")
 enum ConstantExpressionEnum {
     // Should be all true / ones.
