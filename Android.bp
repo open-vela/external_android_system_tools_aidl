@@ -302,6 +302,7 @@ filegroup {
 aidl_interface {
     name: "aidl-test-versioned-interface",
     local_include_dir: "tests/versioned",
+    flags: ["-Werror"],
     srcs: [
         "tests/versioned/**/*.aidl",
     ],
@@ -488,6 +489,7 @@ aidl_interface {
     name: "aidl_test_loggable_interface",
     unstable: true,
     local_include_dir: "tests",
+    flags: ["-Werror"],
     srcs: [
         "tests/android/aidl/loggable/ILoggableInterface.aidl",
         "tests/android/aidl/loggable/Data.aidl",
@@ -518,6 +520,7 @@ aidl_interface {
 aidl_interface {
     name: "aidl-test-interface",
     unstable: true,
+    flags: ["-Werror"],
     srcs: [":libaidl-integration-test-files"],
     local_include_dir: "tests",
     backend: {
