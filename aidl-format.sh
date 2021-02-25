@@ -124,7 +124,11 @@ function _aidl-format() (
       fixup "$output"
 
       if [ $mode = "diff" ]; then
-        diff "$input" "$output"
+        diff "$input" "$output" || (
+          echo "You can try to fix this by running:"
+          echo "$0 -w <file>"
+          echo ""
+        )
         rm "$output"
       elif [ $mode = "write" ]; then
         if diff -q "$output" "$input" >/dev/null; then
