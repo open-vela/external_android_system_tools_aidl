@@ -24,7 +24,7 @@ public:
   int32_t num = 0;
   std::string str;
   ::aidl::android::aidl::loggable::Union nestedUnion;
-  ::aidl::android::aidl::loggable::Enum nestedEnum;
+  ::aidl::android::aidl::loggable::Enum nestedEnum = ::aidl::android::aidl::loggable::Enum::FOO;
 
   binder_status_t readFromParcel(const AParcel* parcel);
   binder_status_t writeToParcel(AParcel* parcel) const;
