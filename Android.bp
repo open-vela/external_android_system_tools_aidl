@@ -302,6 +302,7 @@ filegroup {
 aidl_interface {
     name: "aidl-test-versioned-interface",
     local_include_dir: "tests/versioned",
+    flags: ["-Werror"],
     srcs: [
         "tests/versioned/**/*.aidl",
     ],
@@ -369,23 +370,6 @@ cc_test {
         "tests/aidl_test_client_versioned_interface.cpp",
         "tests/aidl_test_client_renamed_interface.cpp",
         "tests/aidl_test_client_loggable_interface.cpp",
-    ],
-}
-
-cc_test {
-    name: "aidl_test_client_ndk",
-    defaults: ["aidl_test_defaults"],
-    static_libs: [
-        "libcutils",
-        "libgmock",
-        "aidl-test-interface-ndk_platform",
-        "aidl_test_loggable_interface-ndk_platform"
-    ],
-    shared_libs: [
-        "libbinder_ndk",
-    ],
-    srcs: [
-        "tests/aidl_test_client_ndk_loggable_interface.cpp",
     ],
 }
 
@@ -505,6 +489,7 @@ aidl_interface {
     name: "aidl_test_loggable_interface",
     unstable: true,
     local_include_dir: "tests",
+    flags: ["-Werror"],
     srcs: [
         "tests/android/aidl/loggable/ILoggableInterface.aidl",
         "tests/android/aidl/loggable/Data.aidl",
@@ -535,6 +520,7 @@ aidl_interface {
 aidl_interface {
     name: "aidl-test-interface",
     unstable: true,
+    flags: ["-Werror"],
     srcs: [":libaidl-integration-test-files"],
     local_include_dir: "tests",
     backend: {

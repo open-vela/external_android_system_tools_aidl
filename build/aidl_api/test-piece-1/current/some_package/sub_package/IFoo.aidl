@@ -32,6 +32,7 @@
 // later when a module using the interface is updated, e.g., Mainline modules.
 
 package some_package.sub_package;
+@SuppressWarnings(value={"inout-parameter"})
 interface IFoo {
   void CanYouDealWithThisThing(inout some_package.Thing parcel);
   void CanYouDealWithThisSubThing(inout some_package.sub_package.SubThing parcel);
