@@ -48,6 +48,7 @@ cc_binary {
 aidl_interface {
     name: "lazy_test_service_aidl",
     unstable: true,
+    flags: ["-Werror"],
     srcs: [
         "ILazyTestService.aidl",
     ],

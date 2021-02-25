@@ -25,6 +25,7 @@ import android.aidl.tests.IntEnum;
 import android.aidl.tests.LongEnum;
 import android.aidl.tests.StructuredParcelable;
 
+@SuppressWarnings(value={"inout-parameter", "mixed-oneway", "out-array"})
 @SensitiveData
 interface ITestService {
     // Test that constants are accessible
