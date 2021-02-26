@@ -37,13 +37,8 @@ void fuzz(const FakeIoDelegate& io, const std::vector<std::string>& args) {
     }
     std::cout << std::endl;
 
-    for (const std::string& f : io.ListInputFiles()) {
-      std::unique_ptr<std::string> input = io.GetFileContents(f);
-      if (input == nullptr) {
-        std::cout << "bad io " << f << std::endl;
-        abort();
-      }
-      std::cout << "INPUT " << f << ": " << *input << std::endl;
+    for (const auto& [f, input] : io.InputFiles()) {
+      std::cout << "INPUT " << f << ": " << input << std::endl;
     }
   }
 
@@ -51,12 +46,9 @@ void fuzz(const FakeIoDelegate& io, const std::vector<std::string>& args) {
   if (ret != 0) return;
 
   if (kFuzzLog) {
-    for (const std::string& f : io.ListOutputFiles()) {
-      std::string output;
-      if (io.GetWrittenContents(f, &output)) {
-        std::cout << "OUTPUT " << f << ": " << std::endl;
-        std::cout << output << std::endl;
-      }
+    for (const auto& [f, output] : io.OutputFiles()) {
+      std::cout << "OUTPUT " << f << ": " << std::endl;
+      std::cout << output << std::endl;
     }
   }
 }
