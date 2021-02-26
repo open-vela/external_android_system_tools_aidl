@@ -373,6 +373,23 @@ cc_test {
     ],
 }
 
+cc_test {
+    name: "aidl_test_client_ndk",
+    defaults: ["aidl_test_defaults"],
+    static_libs: [
+        "libcutils",
+        "libgmock",
+        "aidl-test-interface-ndk_platform",
+        "aidl_test_loggable_interface-ndk_platform"
+    ],
+    shared_libs: [
+        "libbinder_ndk",
+    ],
+    srcs: [
+        "tests/aidl_test_client_ndk_loggable_interface.cpp",
+    ],
+}
+
 java_defaults {
     name: "aidl_test_java_defaults",
     platform_apis: true,
