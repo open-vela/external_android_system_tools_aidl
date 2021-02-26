@@ -10,8 +10,9 @@ BITNESS_32 = ("", "32")
 BITNESS_64 = ("64", "64")
 
 APP_PROCESS_FOR_PRETTY_BITNESS = 'app_process%s'
-NATIVE_TEST_CLIENT_FOR_BITNESS = ' /data/nativetest%s/aidl_test_client/aidl_test_client%s'
 NATIVE_TEST_SERVICE_FOR_BITNESS = ' /data/nativetest%s/aidl_test_service/aidl_test_service%s'
+CPP_TEST_CLIENT_FOR_BITNESS = ' /data/nativetest%s/aidl_test_client/aidl_test_client%s'
+NDK_TEST_CLIENT_FOR_BITNESS = ' /data/nativetest%s/aidl_test_client_ndk/aidl_test_client_ndk%s'
 RUST_TEST_CLIENT_FOR_BITNESS = ' /data/nativetest%s/aidl_test_rust_client/aidl_test_rust_client%s'
 RUST_TEST_SERVICE_FOR_BITNESS = ' /data/nativetest%s/aidl_test_rust_service/aidl_test_rust_service%s'
 
@@ -108,10 +109,6 @@ class NativeServer:
         return self.host.run(self.binary, background=True)
 
 class NativeClient:
-    def __init__(self, host, bitness):
-        self.name = "%s_bit_native_client" % pretty_bitness(bitness)
-        self.host = host
-        self.binary = NATIVE_TEST_CLIENT_FOR_BITNESS % bitness
     def cleanup(self):
         self.host.run('killall %s' % self.binary, ignore_status=True)
     def run(self):
@@ -119,6 +116,18 @@ class NativeClient:
         print(result.printable_string())
         if result.exit_status:
             raise TestFail(result.stdout)
+
+class CppClient(NativeClient):
+    def __init__(self, host, bitness):
+        self.name = "%s_bit_cpp_client" % pretty_bitness(bitness)
+        self.host = host
+        self.binary = CPP_TEST_CLIENT_FOR_BITNESS % bitness
+
+class NdkClient(NativeClient):
+    def __init__(self, host, bitness):
+        self.name = "%s_bit_ndk_client" % pretty_bitness(bitness)
+        self.host = host
+        self.binary = NDK_TEST_CLIENT_FOR_BITNESS % bitness
 
 class JavaServer:
     def __init__(self, host, bitness):
@@ -211,7 +220,9 @@ if __name__ == '__main__':
     servers = []
 
     for bitness in bitnesses:
-        clients += [NativeClient(host, bitness)]
+        clients += [NdkClient(host, bitness)]
+
+        clients += [CppClient(host, bitness)]
         servers += [NativeServer(host, bitness)]
 
         clients += [JavaClient(host, bitness)]
