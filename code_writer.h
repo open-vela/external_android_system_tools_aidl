@@ -16,13 +16,13 @@
 
 #pragma once
 
-#include <stdio.h>
-
-#include <functional>
 #include <memory>
 #include <ostream>
 #include <string>
-#include <utility>
+
+#include <stdio.h>
+
+#include <android-base/macros.h>
 
 namespace android {
 namespace aidl {
@@ -39,6 +39,14 @@ class CodeWriter {
   // The buffer gets updated only after Close() is called or the CodeWriter
   // is deleted -- much like a real file.
   static CodeWriterPtr ForString(std::string* buf);
+  // Run a Code Generater (which accepts CodeWriter& as a first parameter)
+  // and return a result as a string.
+  template <typename... Args>
+  static std::string RunWith(void (*gen)(CodeWriter&, Args...), Args&&... args) {
+    std::string code;
+    (*gen)(*ForString(&code), std::forward<Args>(args)...);
+    return code;
+  }
   // Write a formatted string to this writer in the usual printf sense.
   // Returns false on error.
   virtual bool Write(const char* format, ...) __attribute__((format(printf, 2, 3)));
@@ -58,8 +66,6 @@ class CodeWriter {
   int indent_level_ {0};
   bool start_of_line_ {true};
 };
-
-std::string QuotedEscape(const std::string& str);
 
 }  // namespace aidl
 }  // namespace android

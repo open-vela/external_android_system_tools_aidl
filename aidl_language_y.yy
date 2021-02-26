@@ -16,8 +16,7 @@
 
 %{
 #include "aidl_language.h"
-#include "parser.h"
-#include "aidl_language_y.h"
+#include "aidl_language_y-module.h"
 #include "logging.h"
 #include <android-base/parseint.h>
 #include <set>
@@ -29,9 +28,9 @@
 int yylex(yy::parser::semantic_type *, yy::parser::location_type *, void *);
 
 AidlLocation loc(const yy::parser::location_type& begin, const yy::parser::location_type& end) {
-  AIDL_FATAL_IF(begin.begin.filename != begin.end.filename, AIDL_LOCATION_HERE);
-  AIDL_FATAL_IF(begin.end.filename != end.begin.filename, AIDL_LOCATION_HERE);
-  AIDL_FATAL_IF(end.begin.filename != end.end.filename, AIDL_LOCATION_HERE);
+  CHECK(begin.begin.filename == begin.end.filename);
+  CHECK(begin.end.filename == end.begin.filename);
+  CHECK(end.begin.filename == end.end.filename);
   AidlLocation::Point begin_point {
     .line = begin.begin.line,
     .column = begin.begin.column,
@@ -40,7 +39,7 @@ AidlLocation loc(const yy::parser::location_type& begin, const yy::parser::locat
     .line = end.end.line,
     .column = end.end.column,
   };
-  return AidlLocation(*begin.begin.filename, begin_point, end_point, AidlLocation::Source::EXTERNAL);
+  return AidlLocation(*begin.begin.filename, begin_point, end_point);
 }
 
 AidlLocation loc(const yy::parser::location_type& l) {
@@ -81,27 +80,26 @@ AidlLocation loc(const yy::parser::location_type& l) {
     AidlConstantValue* const_expr;
     AidlEnumerator* enumerator;
     std::vector<std::unique_ptr<AidlEnumerator>>* enumerators;
+    AidlEnumDeclaration* enum_decl;
     std::vector<std::unique_ptr<AidlConstantValue>>* constant_value_list;
     std::vector<std::unique_ptr<AidlArgument>>* arg_list;
     AidlVariableDeclaration* variable;
+    std::vector<std::unique_ptr<AidlVariableDeclaration>>* variable_list;
     AidlMethod* method;
     AidlMember* constant;
-    std::vector<std::unique_ptr<AidlMember>>* members;
+    std::vector<std::unique_ptr<AidlMember>>* interface_members;
+    AidlQualifiedName* qname;
+    AidlInterface* interface;
+    AidlParcelable* parcelable;
     AidlDefinedType* declaration;
     std::vector<std::unique_ptr<AidlTypeSpecifier>>* type_args;
     std::vector<std::string>* type_params;
-    std::vector<std::unique_ptr<AidlImport>>* imports;
-    AidlImport* import;
-    AidlPackage* package;
-    std::vector<std::unique_ptr<AidlDefinedType>>* declarations;
 }
 
 %destructor { } <character>
 %destructor { } <direction>
 %destructor { delete ($$); } <*>
 
-%token<token> PACKAGE "package"
-%token<token> IMPORT "import"
 %token<token> ANNOTATION "annotation"
 %token<token> C_STR "string literal"
 %token<token> IDENTIFIER "identifier"
@@ -109,7 +107,6 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %token<token> PARCELABLE "parcelable"
 %token<token> ONEWAY "oneway"
 %token<token> ENUM "enum"
-%token<token> UNION "union"
 %token<token> CONST "const"
 
 %token<character> CHARVALUE "char literal"
@@ -119,10 +116,12 @@ AidlLocation loc(const yy::parser::location_type& l) {
 
 %token '(' ')' ',' '=' '[' ']' '.' '{' '}' ';'
 %token UNKNOWN "unrecognized character"
-%token<token> CPP_HEADER "cpp_header (which can also be used as an identifier)"
+%token CPP_HEADER "cpp_header"
+%token IMPORT "import"
 %token IN "in"
 %token INOUT "inout"
 %token OUT "out"
+%token PACKAGE "package"
 %token TRUE_LITERAL "true"
 %token FALSE_LITERAL "false"
 
@@ -149,55 +148,38 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %right UNARY_PLUS UNARY_MINUS  '!' '~'
 
 %type<declaration> decl
-%type<declaration> unannotated_decl
-%type<declaration> interface_decl
-%type<declaration> parcelable_decl
-%type<declaration> enum_decl
-%type<declaration> union_decl
-%type<members> parcelable_members interface_members
+%type<variable_list> variable_decls
 %type<variable> variable_decl
-%type<type_params> optional_type_params
+%type<interface_members> interface_members
+%type<declaration> unannotated_decl
+%type<interface> interface_decl
+%type<parcelable> parcelable_decl
 %type<method> method_decl
 %type<constant> constant_decl
 %type<enumerator> enumerator
 %type<enumerators> enumerators enum_decl_body
+%type<enum_decl> enum_decl
 %type<param> parameter
 %type<param_list> parameter_list
 %type<param_list> parameter_non_empty_list
 %type<annotation> annotation
 %type<annotation_list>annotation_list
 %type<type> type
-%type<type> non_array_type
+%type<type> unannotated_type
 %type<arg_list> arg_list arg_non_empty_list
 %type<arg> arg
 %type<direction> direction
 %type<type_args> type_args
 %type<type_params> type_params
+%type<qname> qualified_name
 %type<const_expr> const_expr
 %type<constant_value_list> constant_value_list
 %type<constant_value_list> constant_value_non_empty_list
-%type<imports> imports
-%type<import> import
-%type<package> package
-%type<declarations> decls
-%type<token> identifier error qualified_name
 
+%type<token> identifier error
 %%
-
 document
- : package imports decls {
-    Comments comments;
-    if ($1) {
-      comments = $1->GetComments();
-    } else if (!$2->empty()) {
-      comments = $2->front()->GetComments();
-    }
-    ps->SetDocument(std::make_unique<AidlDocument>(loc(@1), comments, std::move(*$2), std::move(*$3)));
-    delete $1;
-    delete $2;
-    delete $3;
-  }
- ;
+ : package imports decls {};
 
 /* A couple of tokens that are keywords elsewhere are identifiers when
  * occurring in the identifier position. Therefore identifier is a
@@ -206,67 +188,48 @@ document
  */
 identifier
  : IDENTIFIER
+  { $$ = $1; }
  | CPP_HEADER
+  { $$ = new AidlToken("cpp_header", ""); }
  ;
 
 package
- : {
-    $$ = nullptr;
- }
- | PACKAGE qualified_name ';' {
-    $$ = new AidlPackage(loc(@1, @3), $1->GetComments());
-    ps->SetPackage($2->GetText());
-    delete $1;
-    delete $2;
-  }
- ;
+ : {}
+ | PACKAGE qualified_name ';'
+  { ps->SetPackage(unique_ptr<AidlQualifiedName>($2)); };
 
 imports
- : { $$ = new std::vector<std::unique_ptr<AidlImport>>(); }
- | imports import
-  {
-    $$ = $1;
-    auto it = std::find_if($$->begin(), $$->end(), [&](const auto& i) {
-      return $2->GetNeededClass() == i->GetNeededClass();
-    });
-    if (it == $$->end()) {
-      $$->emplace_back($2);
-    } else {
-      delete $2;
-    }
-  }
+ : {}
+ | import imports {};
 
 import
- : IMPORT qualified_name ';' {
-    $$ = new AidlImport(loc(@2), $2->GetText(), $1->GetComments());
-    delete $1;
+ : IMPORT qualified_name ';'
+  { ps->AddImport(std::make_unique<AidlImport>(loc(@2), $2->GetDotName()));
     delete $2;
   };
 
 qualified_name
  : identifier {
-    $$ = $1;
+    $$ = new AidlQualifiedName(loc(@1), $1->GetText(), $1->GetComments());
+    delete $1;
   }
  | qualified_name '.' identifier
   { $$ = $1;
-    $$->Append('.');
-    $$->Append($3->GetText());
+    $$->AddTerm($3->GetText());
     delete $3;
   };
 
 decls
- : decl
-  { $$ = new std::vector<std::unique_ptr<AidlDefinedType>>();
+ : decl {
     if ($1 != nullptr) {
-      $$->emplace_back($1);
+      ps->AddDefinedType(unique_ptr<AidlDefinedType>($1));
     }
   }
- | decls decl
-  { $$ = $1;
+ | decls decl {
     if ($2 != nullptr) {
-      $$->emplace_back($2);
+      ps->AddDefinedType(unique_ptr<AidlDefinedType>($2));
     }
-  }
+  };
 
 decl
  : annotation_list unannotated_decl
@@ -285,9 +248,11 @@ decl
 
 unannotated_decl
  : parcelable_decl
+  { $$ = $1; }
  | interface_decl
+  { $$ = $1; }
  | enum_decl
- | union_decl
+  { $$ = $1; }
  ;
 
 type_params
@@ -302,52 +267,44 @@ type_params
     delete $3;
   };
 
- optional_type_params
-  : /* none */ { $$ = nullptr; }
-  | '<' type_params '>' {
-    $$ = $2;
-  };
 
 parcelable_decl
- : PARCELABLE qualified_name optional_type_params ';' {
-    $$ = new AidlParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), "", $3);
+ : PARCELABLE qualified_name ';' {
+    $$ = new AidlParcelable(loc(@2), $2, ps->Package(), $1->GetComments());
     delete $1;
-    delete $2;
- }
- | PARCELABLE qualified_name optional_type_params '{' parcelable_members '}' {
-    $$ = new AidlStructuredParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), $3, $5);
+  }
+ | PARCELABLE qualified_name '<' type_params '>' ';' {
+    $$ = new AidlParcelable(loc(@2), $2, ps->Package(), $1->GetComments(), "", $4);
     delete $1;
-    delete $2;
  }
  | PARCELABLE qualified_name CPP_HEADER C_STR ';' {
-    $$ = new AidlParcelable(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), $4->GetText());
+    $$ = new AidlParcelable(loc(@2), $2, ps->Package(), $1->GetComments(), $4->GetText());
     delete $1;
-    delete $2;
-    delete $3;
     delete $4;
   }
+ | PARCELABLE identifier '{' variable_decls '}' {
+    AidlQualifiedName* name = new AidlQualifiedName(loc(@2), $2->GetText(), $2->GetComments());
+    $$ = new AidlStructuredParcelable(loc(@2), name, ps->Package(), $1->GetComments(), $4);
+    delete $1;
+    delete $2;
+    delete $4;
+ }
  | PARCELABLE error ';' {
     ps->AddError();
     $$ = nullptr;
     delete $1;
   };
 
-parcelable_members
+variable_decls
  : /* empty */ {
-    $$ = new std::vector<std::unique_ptr<AidlMember>>();
-  }
- | parcelable_members variable_decl {
-    $1->emplace_back($2);
+    $$ = new std::vector<std::unique_ptr<AidlVariableDeclaration>>;
+ }
+ | variable_decls variable_decl {
     $$ = $1;
-  }
- | parcelable_members constant_decl {
-    $1->emplace_back($2);
-    $$ = $1;
-  }
- | parcelable_members error ';' {
-    ps->AddError();
-    $$ = $1;
-  };
+    if ($2 != nullptr) {
+      $$->push_back(std::unique_ptr<AidlVariableDeclaration>($2));
+    }
+ };
 
 variable_decl
  : type identifier ';' {
@@ -359,16 +316,19 @@ variable_decl
    $$ = new AidlVariableDeclaration(loc(@2), $1, $2->GetText(),  $4);
    delete $2;
  }
- ;
+ | error ';' {
+   ps->AddError();
+   $$ = nullptr;
+ }
 
 interface_decl
  : INTERFACE identifier '{' interface_members '}' {
-    $$ = new AidlInterface(loc(@1), $2->GetText(), $1->GetComments(), false, ps->Package(), $4);
+    $$ = new AidlInterface(loc(@1), $2->GetText(), $1->GetComments(), false, $4, ps->Package());
     delete $1;
     delete $2;
   }
  | ONEWAY INTERFACE identifier '{' interface_members '}' {
-    $$ = new AidlInterface(loc(@2), $3->GetText(),  $1->GetComments(), true, ps->Package(), $5);
+    $$ = new AidlInterface(loc(@2), $3->GetText(),  $1->GetComments(), true, $5, ps->Package());
     delete $1;
     delete $2;
     delete $3;
@@ -399,8 +359,8 @@ const_expr
  | INTVALUE {
     $$ = AidlConstantValue::Integral(loc(@1), $1->GetText());
     if ($$ == nullptr) {
-      AIDL_ERROR(loc(@1)) << "Could not parse integer: "
-                << $1->GetText();
+      std::cerr << "ERROR: Could not parse integer: "
+                << $1->GetText() << " at " << @1 << ".\n";
       ps->AddError();
       $$ = AidlConstantValue::Integral(loc(@1), "0");
     }
@@ -413,8 +373,8 @@ const_expr
  | HEXVALUE {
     $$ = AidlConstantValue::Integral(loc(@1), $1->GetText());
     if ($$ == nullptr) {
-      AIDL_ERROR(loc(@1)) << "Could not parse hexvalue: "
-                << $1->GetText();
+      std::cerr << "ERROR: Could not parse hexvalue: "
+                << $1->GetText() << " at " << @1 << ".\n";
       ps->AddError();
       $$ = AidlConstantValue::Integral(loc(@1), "0");
     }
@@ -424,10 +384,6 @@ const_expr
     $$ = AidlConstantValue::String(loc(@1), $1->GetText());
     delete $1;
   }
- | qualified_name {
-    $$ = new AidlConstantReference(loc(@1), $1->GetText());
-    delete $1;
- }
  | '{' constant_value_list '}' {
     $$ = AidlConstantValue::Array(loc(@1), std::unique_ptr<vector<unique_ptr<AidlConstantValue>>>($2));
   }
@@ -503,7 +459,7 @@ const_expr
   }
  | '(' error ')'
    {
-     AIDL_ERROR(loc(@1)) << "invalid const expression within parenthesis";
+     std::cerr << "ERROR: invalid const expression within parenthesis at " << @1 << ".\n";
      ps->AddError();
      // to avoid segfaults
      $$ = AidlConstantValue::Integral(loc(@1), "0");
@@ -515,9 +471,6 @@ constant_value_list
     $$ = new std::vector<std::unique_ptr<AidlConstantValue>>;
  }
  | constant_value_non_empty_list {
-    $$ = $1;
- }
- | constant_value_non_empty_list  ',' {
     $$ = $1;
  }
  ;
@@ -534,18 +487,11 @@ constant_value_non_empty_list
  ;
 
 constant_decl
- : annotation_list CONST type identifier '=' const_expr ';' {
-    if ($1->size() > 0) {
-      $3->SetComments($1->begin()->GetComments());
-    } else {
-      $3->SetComments($2->GetComments());
-    }
-    // TODO(b/151102494) do not merge annotations.
-    $3->Annotate(std::move(*$1));
-    $$ = new AidlConstantDeclaration(loc(@4), $3, $4->GetText(), $6);
+ : CONST type identifier '=' const_expr ';' {
+    $2->SetComments($1->GetComments());
+    $$ = new AidlConstantDeclaration(loc(@3), $2, $3->GetText(), $5);
     delete $1;
-    delete $2;
-    delete $4;
+    delete $3;
    }
  ;
 
@@ -585,21 +531,13 @@ enum_decl
    }
  ;
 
-union_decl
- : UNION qualified_name optional_type_params '{' parcelable_members '}' {
-    $$ = new AidlUnionDecl(loc(@2), $2->GetText(), ps->Package(), $1->GetComments(), $3, $5);
-    delete $1;
-    delete $2;
-  }
- ;
-
 method_decl
  : type identifier '(' arg_list ')' ';' {
     $$ = new AidlMethod(loc(@2), false, $1, $2->GetText(), $4, $1->GetComments());
     delete $2;
   }
  | annotation_list ONEWAY type identifier '(' arg_list ')' ';' {
-    const auto& comments = ($1->size() > 0) ? $1->begin()->GetComments() : $2->GetComments();
+    const std::string& comments = ($1->size() > 0) ? $1->begin()->GetComments() : $2->GetComments();
     $$ = new AidlMethod(loc(@4), true, $3, $4->GetText(), $6, comments);
     $3->Annotate(std::move(*$1));
     delete $1;
@@ -617,7 +555,7 @@ method_decl
     delete $7;
   }
  | annotation_list ONEWAY type identifier '(' arg_list ')' '=' INTVALUE ';' {
-    const auto& comments = ($1->size() > 0) ? $1->begin()->GetComments() : $2->GetComments();
+    const std::string& comments = ($1->size() > 0) ? $1->begin()->GetComments() : $2->GetComments();
     int32_t serial = 0;
     if (!android::base::ParseInt($9->GetText(), &serial)) {
         AIDL_ERROR(loc(@9)) << "Could not parse int value: " << $9->GetText();
@@ -655,63 +593,43 @@ arg
  | type identifier {
     $$ = new AidlArgument(loc(@2), $1, $2->GetText());
     delete $2;
-  };
-
-non_array_type
- : annotation_list qualified_name {
-    $$ = new AidlTypeSpecifier(loc(@2), $2->GetText(), false, nullptr, $2->GetComments());
-    ps->DeferResolution($$);
-    if (!$1->empty()) {
-      $$->SetComments($1->begin()->GetComments());
-      $$->Annotate(std::move(*$1));
-    }
-    delete $1;
-    delete $2;
-  }
- | non_array_type '<' type_args '>' {
-    ps->SetTypeParameters($1, $3);
-    $$ = $1;
-  }
- | non_array_type '<' non_array_type '<' type_args RSHIFT {
-    ps->SetTypeParameters($3, $5);
-    auto params = new std::vector<std::unique_ptr<AidlTypeSpecifier>>();
-    params->emplace_back($3);
-    ps->SetTypeParameters($1, params);
-    $$ = $1;
-  }
- | non_array_type '<' type_args ',' non_array_type '<' type_args RSHIFT {
-    ps->SetTypeParameters($5, $7);
-    $3->emplace_back($5);
-    ps->SetTypeParameters($1, $3);
-    $$ = $1;
-  };
-
-type
- : non_array_type
- | type annotation_list '[' ']' {
-    if (!$2->empty()) {
-      AIDL_ERROR(loc(@2)) << "Annotations for arrays are not supported.";
-      ps->AddError();
-    }
-    if (!$1->SetArray()) {
-      AIDL_ERROR(loc(@1)) << "Can only have one dimensional arrays.";
-      ps->AddError();
-    }
-    $$ = $1;
-    delete $2;
   }
  ;
 
-type_args
- : type {
-    if (!$1->GetAnnotations().empty()) {
-      AIDL_ERROR(loc(@1)) << "Annotations for type arguments are not supported.";
-      ps->AddError();
+unannotated_type
+ : qualified_name {
+    $$ = new AidlTypeSpecifier(loc(@1), $1->GetDotName(), false, nullptr, $1->GetComments());
+    ps->DeferResolution($$);
+    delete $1;
+  }
+ | qualified_name '[' ']' {
+    $$ = new AidlTypeSpecifier(loc(@1), $1->GetDotName(), true, nullptr, $1->GetComments());
+    ps->DeferResolution($$);
+    delete $1;
+  }
+ | qualified_name '<' type_args '>' {
+    $$ = new AidlTypeSpecifier(loc(@1), $1->GetDotName(), false, $3, $1->GetComments());
+    ps->DeferResolution($$);
+    delete $1;
+  };
+
+type
+ : annotation_list unannotated_type {
+    $$ = $2;
+    if ($1->size() > 0) {
+      // copy comments from annotation to type
+      $2->SetComments($1->begin()->GetComments());
     }
+    $2->Annotate(std::move(*$1));
+    delete $1;
+  };
+
+type_args
+ : unannotated_type {
     $$ = new std::vector<std::unique_ptr<AidlTypeSpecifier>>();
     $$->emplace_back($1);
   }
- | type_args ',' type {
+ | type_args ',' unannotated_type {
     $1->emplace_back($3);
     $$ = $1;
   };
@@ -759,22 +677,26 @@ parameter_non_empty_list
   };
 
 annotation
- : ANNOTATION {
-    $$ = AidlAnnotation::Parse(loc(@1), $1->GetText(), nullptr, $1->GetComments());
-    if (!$$) {
+ : ANNOTATION
+  {
+    $$ = AidlAnnotation::Parse(loc(@1), $1->GetText(), nullptr);
+    if ($$) {
+      $$->SetComments($1->GetComments());
+    } else {
       ps->AddError();
     }
     delete $1;
-  }
+  };
  | ANNOTATION '(' parameter_list ')' {
-    $$ = AidlAnnotation::Parse(loc(@1, @4), $1->GetText(), $3, $1->GetComments());
-    if (!$$) {
+    $$ = AidlAnnotation::Parse(loc(@1, @4), $1->GetText(), $3);
+    if ($$) {
+      $$->SetComments($1->GetComments());
+    } else {
       ps->AddError();
     }
     delete $1;
     delete $3;
-  }
- ;
+ }
 
 direction
  : IN
