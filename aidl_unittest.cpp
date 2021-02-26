@@ -761,8 +761,7 @@ TEST_P(AidlTest, SupportDeprecated) {
     for (const auto& [lang, test_case] : expectations) {
       if (lang != GetLanguage()) continue;
       string output;
-      EXPECT_TRUE(io_delegate_.GetWrittenContents(test_case.output_file, &output))
-          << base::Join(io_delegate_.ListOutputFiles(), ",");
+      EXPECT_TRUE(io_delegate_.GetWrittenContents(test_case.output_file, &output));
       EXPECT_THAT(output, HasSubstr(test_case.annotation));
     }
   };
@@ -2739,25 +2738,25 @@ TEST_F(AidlTest, HandleManualIdAssignments) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
-TEST_F(AidlTest, ParcelFileDescriptorIsBuiltinType) {
-  Options javaOptions = Options::From("aidl --lang=java -o out p/IFoo.aidl");
-  Options cppOptions = Options::From("aidl --lang=cpp -h out -o out p/IFoo.aidl");
-  Options rustOptions = Options::From("aidl --lang=rust -o out p/IFoo.aidl");
+TEST_P(AidlTest, ParcelFileDescriptorIsBuiltinType) {
+  Options options =
+      Options::From("aidl --lang=" + to_string(GetLanguage()) + " -h out -o out p/IFoo.aidl");
 
   // use without import
   io_delegate_.SetFileContents("p/IFoo.aidl",
                                "package p; interface IFoo{ void foo(in ParcelFileDescriptor fd);}");
-  EXPECT_EQ(0, ::android::aidl::compile_aidl(javaOptions, io_delegate_));
-  EXPECT_EQ(0, ::android::aidl::compile_aidl(cppOptions, io_delegate_));
-  EXPECT_EQ(0, ::android::aidl::compile_aidl(rustOptions, io_delegate_));
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+
+  // capture output files
+  map<string, string> outputs = io_delegate_.OutputFiles();
 
   // use without import but with full name
   io_delegate_.SetFileContents(
       "p/IFoo.aidl",
       "package p; interface IFoo{ void foo(in android.os.ParcelFileDescriptor fd);}");
-  EXPECT_EQ(0, ::android::aidl::compile_aidl(javaOptions, io_delegate_));
-  EXPECT_EQ(0, ::android::aidl::compile_aidl(cppOptions, io_delegate_));
-  EXPECT_EQ(0, ::android::aidl::compile_aidl(rustOptions, io_delegate_));
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  // output files should be the same
+  EXPECT_EQ(outputs, io_delegate_.OutputFiles());
 
   // use with import (as before)
   io_delegate_.SetFileContents("p/IFoo.aidl",
@@ -2766,9 +2765,9 @@ TEST_F(AidlTest, ParcelFileDescriptorIsBuiltinType) {
                                "interface IFoo{"
                                "  void foo(in ParcelFileDescriptor fd);"
                                "}");
-  EXPECT_EQ(0, ::android::aidl::compile_aidl(javaOptions, io_delegate_));
-  EXPECT_EQ(0, ::android::aidl::compile_aidl(cppOptions, io_delegate_));
-  EXPECT_EQ(0, ::android::aidl::compile_aidl(rustOptions, io_delegate_));
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  // output files should be the same
+  EXPECT_EQ(outputs, io_delegate_.OutputFiles());
 }
 
 TEST_F(AidlTest, ManualIds) {
