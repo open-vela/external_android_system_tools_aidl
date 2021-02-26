@@ -791,6 +791,11 @@ type CommonNativeBackendProperties struct {
 	cc.VndkProperties
 }
 
+type DumpApiProperties struct {
+	// Dumps without license header (assuming it is the first comment in .aidl file). Default: false
+	No_license *bool
+}
+
 type aidlInterfaceProperties struct {
 	// Vndk properties for C++/NDK libraries only (preferred to use backend-specific settings)
 	cc.VndkProperties
@@ -858,6 +863,9 @@ type aidlInterfaceProperties struct {
 	// Marks that this interface does not need to be stable. When set to true, the build system
 	// doesn't create the API dump and require it to be updated. Default is false.
 	Unstable *bool
+
+	// --dumpapi options
+	Dumpapi DumpApiProperties
 }
 
 type aidlInterface struct {
