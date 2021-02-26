@@ -738,20 +738,21 @@ AidlArgument::AidlArgument(const AidlLocation& location, AidlTypeSpecifier* type
       direction_(AidlArgument::IN_DIR),
       direction_specified_(false) {}
 
+static std::string to_string(AidlArgument::Direction direction) {
+  switch (direction) {
+    case AidlArgument::IN_DIR:
+      return "in";
+    case AidlArgument::OUT_DIR:
+      return "out";
+    case AidlArgument::INOUT_DIR:
+      return "inout";
+  }
+}
+
 string AidlArgument::GetDirectionSpecifier() const {
   string ret;
   if (direction_specified_) {
-    switch(direction_) {
-    case AidlArgument::IN_DIR:
-      ret += "in";
-      break;
-    case AidlArgument::OUT_DIR:
-      ret += "out";
-      break;
-    case AidlArgument::INOUT_DIR:
-      ret += "inout";
-      break;
-    }
+    ret = to_string(direction_);
   }
   return ret;
 }
@@ -762,6 +763,52 @@ string AidlArgument::ToString() const {
   } else {
     return AidlVariableDeclaration::ToString();
   }
+}
+
+static std::string FormatDirections(const std::set<AidlArgument::Direction>& directions) {
+  std::vector<std::string> out;
+  for (const auto& d : directions) {
+    out.push_back(to_string(d));
+  }
+
+  if (out.size() <= 1) {  // [] => "" or [A] => "A"
+    return Join(out, "");
+  } else if (out.size() == 2) {  // [A,B] => "A or B"
+    return Join(out, " or ");
+  } else {  // [A,B,C] => "A, B, or C"
+    out.back() = "or " + out.back();
+    return Join(out, ", ");
+  }
+}
+
+bool AidlArgument::CheckValid(const AidlTypenames& typenames) const {
+  if (!GetType().CheckValid(typenames)) {
+    return false;
+  }
+
+  const auto& aspect = typenames.GetArgumentAspect(GetType());
+
+  if (aspect.possible_directions.size() == 0) {
+    AIDL_ERROR(this) << aspect.name << " cannot be an argument type";
+    return false;
+  }
+
+  // when direction is not specified, "in" is assumed and should be the only possible direction
+  if (!DirectionWasSpecified() && aspect.possible_directions != std::set{AidlArgument::IN_DIR}) {
+    AIDL_ERROR(this) << "The direction of '" << GetName() << "' is not specified. " << aspect.name
+                     << " can be an " << FormatDirections(aspect.possible_directions)
+                     << " parameter.";
+    return false;
+  }
+
+  if (aspect.possible_directions.count(GetDirection()) == 0) {
+    AIDL_ERROR(this) << "'" << GetName() << "' can't be an " << GetDirectionSpecifier()
+                     << " parameter because " << aspect.name << " can only be an "
+                     << FormatDirections(aspect.possible_directions) << " parameter.";
+    return false;
+  }
+
+  return true;
 }
 
 bool AidlCommentable::IsHidden() const {
@@ -1368,30 +1415,12 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
       }
       argument_names.insert(arg->GetName());
 
-      if (!arg->GetType().CheckValid(typenames)) {
+      if (!arg->CheckValid(typenames)) {
         return false;
       }
 
-      // TODO(b/156872582): Support it when ParcelableHolder supports every backend.
-      if (arg->GetType().GetName() == "ParcelableHolder") {
-        AIDL_ERROR(arg) << "ParcelableHolder cannot be an argument type";
-        return false;
-      }
       if (m->IsOneway() && arg->IsOut()) {
         AIDL_ERROR(m) << "oneway method '" << m->GetName() << "' cannot have out parameters";
-        return false;
-      }
-
-      const auto [can_be_out, type_aspect] = typenames.CanBeOutParameter(arg->GetType());
-      if (!arg->DirectionWasSpecified() && can_be_out) {
-        AIDL_ERROR(arg) << "'" << arg->GetType().Signature()
-                        << "' can be an out type, so you must declare it as in, out, or inout.";
-        return false;
-      }
-
-      if (arg->GetDirection() != AidlArgument::IN_DIR && !can_be_out) {
-        AIDL_ERROR(arg) << "'" << arg->GetName() << "' can't be an " << arg->GetDirectionSpecifier()
-                        << " parameter because " << type_aspect << " can only be an in parameter.";
         return false;
       }
 
