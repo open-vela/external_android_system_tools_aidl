@@ -354,7 +354,7 @@ pub const A57: i32 = 1;
 pub(crate) mod mangled { pub use super::ITestService as _7_android_4_aidl_5_tests_12_ITestService; }
 impl ITestService for BpTestService {
   fn UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<i32> {
-    let _aidl_reply = self.binder.transact(transactions::UnimplementedMethod, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::UnimplementedMethod, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_arg)?;
       Ok(())
@@ -371,7 +371,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn TestOneway(&self) -> binder::public_api::Result<()> {
-    let _aidl_reply = self.binder.transact(transactions::TestOneway, binder::FLAG_ONEWAY | binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::TestOneway, binder::FLAG_ONEWAY | binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       Ok(())
     });
@@ -384,7 +384,7 @@ impl ITestService for BpTestService {
     Ok(())
   }
   fn RepeatBoolean(&self, _arg_token: bool) -> binder::public_api::Result<bool> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatBoolean, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatBoolean, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_token)?;
       Ok(())
@@ -401,7 +401,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatByte(&self, _arg_token: i8) -> binder::public_api::Result<i8> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatByte, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatByte, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_token)?;
       Ok(())
@@ -418,7 +418,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatChar(&self, _arg_token: u16) -> binder::public_api::Result<u16> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatChar, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatChar, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_token)?;
       Ok(())
@@ -435,7 +435,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatInt(&self, _arg_token: i32) -> binder::public_api::Result<i32> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatInt, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatInt, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_token)?;
       Ok(())
@@ -452,7 +452,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatLong(&self, _arg_token: i64) -> binder::public_api::Result<i64> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatLong, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatLong, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_token)?;
       Ok(())
@@ -469,7 +469,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatFloat(&self, _arg_token: f32) -> binder::public_api::Result<f32> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatFloat, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatFloat, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_token)?;
       Ok(())
@@ -486,7 +486,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatDouble(&self, _arg_token: f64) -> binder::public_api::Result<f64> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatDouble, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatDouble, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_token)?;
       Ok(())
@@ -503,7 +503,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatString(&self, _arg_token: &str) -> binder::public_api::Result<String> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatString, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatString, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_token)?;
       Ok(())
@@ -520,7 +520,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatByteEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatByteEnum, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatByteEnum, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_token)?;
       Ok(())
@@ -537,7 +537,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatIntEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatIntEnum, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatIntEnum, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_token)?;
       Ok(())
@@ -554,7 +554,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatLongEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatLongEnum, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatLongEnum, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_token)?;
       Ok(())
@@ -571,7 +571,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseBoolean(&self, _arg_input: &[bool], _arg_repeated: &mut Vec<bool>) -> binder::public_api::Result<Vec<bool>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseBoolean, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseBoolean, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_input)?;
       _aidl_data.write_slice_size(Some(_arg_repeated))?;
@@ -590,7 +590,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseByte(&self, _arg_input: &[u8], _arg_repeated: &mut Vec<u8>) -> binder::public_api::Result<Vec<u8>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseByte, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseByte, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_input)?;
       _aidl_data.write_slice_size(Some(_arg_repeated))?;
@@ -609,7 +609,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseChar(&self, _arg_input: &[u16], _arg_repeated: &mut Vec<u16>) -> binder::public_api::Result<Vec<u16>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseChar, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseChar, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_input)?;
       _aidl_data.write_slice_size(Some(_arg_repeated))?;
@@ -628,7 +628,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseInt(&self, _arg_input: &[i32], _arg_repeated: &mut Vec<i32>) -> binder::public_api::Result<Vec<i32>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseInt, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseInt, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_input)?;
       _aidl_data.write_slice_size(Some(_arg_repeated))?;
@@ -647,7 +647,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseLong(&self, _arg_input: &[i64], _arg_repeated: &mut Vec<i64>) -> binder::public_api::Result<Vec<i64>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseLong, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseLong, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_input)?;
       _aidl_data.write_slice_size(Some(_arg_repeated))?;
@@ -666,7 +666,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseFloat(&self, _arg_input: &[f32], _arg_repeated: &mut Vec<f32>) -> binder::public_api::Result<Vec<f32>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseFloat, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseFloat, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_input)?;
       _aidl_data.write_slice_size(Some(_arg_repeated))?;
@@ -685,7 +685,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseDouble(&self, _arg_input: &[f64], _arg_repeated: &mut Vec<f64>) -> binder::public_api::Result<Vec<f64>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseDouble, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseDouble, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_input)?;
       _aidl_data.write_slice_size(Some(_arg_repeated))?;
@@ -704,7 +704,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseString, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseString, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_input)?;
       _aidl_data.write_slice_size(Some(_arg_repeated))?;
@@ -723,7 +723,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseByteEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseByteEnum, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseByteEnum, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_input)?;
       _aidl_data.write_slice_size(Some(_arg_repeated))?;
@@ -742,7 +742,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseIntEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseIntEnum, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseIntEnum, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_input)?;
       _aidl_data.write_slice_size(Some(_arg_repeated))?;
@@ -761,7 +761,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseLongEnum, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseLongEnum, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_input)?;
       _aidl_data.write_slice_size(Some(_arg_repeated))?;
@@ -780,7 +780,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> {
-    let _aidl_reply = self.binder.transact(transactions::GetOtherTestService, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::GetOtherTestService, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_name)?;
       Ok(())
@@ -797,7 +797,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn VerifyName(&self, _arg_service: &dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback, _arg_name: &str) -> binder::public_api::Result<bool> {
-    let _aidl_reply = self.binder.transact(transactions::VerifyName, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::VerifyName, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_service)?;
       _aidl_data.write(_arg_name)?;
@@ -815,7 +815,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseStringList, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseStringList, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_input)?;
       Ok(())
@@ -833,7 +833,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor) -> binder::public_api::Result<binder::parcel::ParcelFileDescriptor> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatParcelFileDescriptor, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatParcelFileDescriptor, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_read)?;
       Ok(())
@@ -850,7 +850,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseParcelFileDescriptorArray(&self, _arg_input: &[binder::parcel::ParcelFileDescriptor], _arg_repeated: &mut Vec<Option<binder::parcel::ParcelFileDescriptor>>) -> binder::public_api::Result<Vec<binder::parcel::ParcelFileDescriptor>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseParcelFileDescriptorArray, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseParcelFileDescriptorArray, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_input)?;
       _aidl_data.write_slice_size(Some(_arg_repeated))?;
@@ -869,7 +869,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ThrowServiceException(&self, _arg_code: i32) -> binder::public_api::Result<()> {
-    let _aidl_reply = self.binder.transact(transactions::ThrowServiceException, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ThrowServiceException, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_code)?;
       Ok(())
@@ -885,7 +885,7 @@ impl ITestService for BpTestService {
     Ok(())
   }
   fn RepeatNullableIntArray(&self, _arg_input: Option<&[i32]>) -> binder::public_api::Result<Option<Vec<i32>>> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatNullableIntArray, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableIntArray, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_input)?;
       Ok(())
@@ -902,7 +902,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatNullableByteEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatNullableByteEnumArray, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableByteEnumArray, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_input)?;
       Ok(())
@@ -919,7 +919,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatNullableIntEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatNullableIntEnumArray, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableIntEnumArray, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_input)?;
       Ok(())
@@ -936,7 +936,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatNullableLongEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatNullableLongEnumArray, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableLongEnumArray, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_input)?;
       Ok(())
@@ -953,7 +953,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatNullableString(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatNullableString, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableString, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_input)?;
       Ok(())
@@ -970,7 +970,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatNullableStringList(&self, _arg_input: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatNullableStringList, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableStringList, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_input)?;
       Ok(())
@@ -987,7 +987,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatNullableParcelable, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableParcelable, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_input)?;
       Ok(())
@@ -1004,7 +1004,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn TakesAnIBinder(&self, _arg_input: &binder::SpIBinder) -> binder::public_api::Result<()> {
-    let _aidl_reply = self.binder.transact(transactions::TakesAnIBinder, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::TakesAnIBinder, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_input)?;
       Ok(())
@@ -1020,7 +1020,7 @@ impl ITestService for BpTestService {
     Ok(())
   }
   fn TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>) -> binder::public_api::Result<()> {
-    let _aidl_reply = self.binder.transact(transactions::TakesANullableIBinder, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::TakesANullableIBinder, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_input)?;
       Ok(())
@@ -1036,7 +1036,7 @@ impl ITestService for BpTestService {
     Ok(())
   }
   fn RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<String> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatUtf8CppString, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatUtf8CppString, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_token)?;
       Ok(())
@@ -1053,7 +1053,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>) -> binder::public_api::Result<Option<String>> {
-    let _aidl_reply = self.binder.transact(transactions::RepeatNullableUtf8CppString, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableUtf8CppString, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_token)?;
       Ok(())
@@ -1070,7 +1070,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseUtf8CppString, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseUtf8CppString, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_input)?;
       _aidl_data.write_slice_size(Some(_arg_repeated))?;
@@ -1089,7 +1089,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseNullableUtf8CppString(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseNullableUtf8CppString, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseNullableUtf8CppString, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_input)?;
       _aidl_data.write_slice_size(_arg_repeated.as_deref())?;
@@ -1108,7 +1108,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
-    let _aidl_reply = self.binder.transact(transactions::ReverseUtf8CppStringList, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::ReverseUtf8CppStringList, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_input)?;
       Ok(())
@@ -1126,7 +1126,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
-    let _aidl_reply = self.binder.transact(transactions::GetCallback, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::GetCallback, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(&_arg_return_null)?;
       Ok(())
@@ -1143,7 +1143,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<()> {
-    let _aidl_reply = self.binder.transact(transactions::FillOutStructuredParcelable, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::FillOutStructuredParcelable, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       _aidl_data.write(_arg_parcel)?;
       Ok(())
@@ -1160,7 +1160,7 @@ impl ITestService for BpTestService {
     Ok(())
   }
   fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> {
-    let _aidl_reply = self.binder.transact(transactions::GetOldNameInterface, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::GetOldNameInterface, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       Ok(())
     });
@@ -1176,7 +1176,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn GetNewNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> {
-    let _aidl_reply = self.binder.transact(transactions::GetNewNameInterface, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::GetNewNameInterface, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       Ok(())
     });
@@ -1192,7 +1192,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn GetCppJavaTests(&self) -> binder::public_api::Result<Option<binder::SpIBinder>> {
-    let _aidl_reply = self.binder.transact(transactions::GetCppJavaTests, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::GetCppJavaTests, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       Ok(())
     });
@@ -1208,7 +1208,7 @@ impl ITestService for BpTestService {
     Ok(_aidl_return)
   }
   fn getBackendType(&self) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType> {
-    let _aidl_reply = self.binder.transact(transactions::getBackendType, binder::FLAG_CLEAR_BUF, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::getBackendType, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
       Ok(())
     });
