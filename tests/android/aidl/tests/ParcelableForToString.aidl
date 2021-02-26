@@ -16,11 +16,8 @@
 
 package android.aidl.tests;
 
-import android.aidl.tests.GenericStructuredParcelable;
-import android.aidl.tests.IntEnum;
 import android.aidl.tests.OtherParcelableForToString;
-import android.aidl.tests.StructuredParcelable;
-import android.aidl.tests.Union;
+import android.aidl.tests.IntEnum;
 
 @JavaDerive(toString=true)
 parcelable ParcelableForToString {
@@ -41,10 +38,8 @@ parcelable ParcelableForToString {
     List<String> stringList;
     OtherParcelableForToString parcelableValue;
     OtherParcelableForToString[] parcelableArray;
-    IntEnum enumValue = IntEnum.FOO;
+    IntEnum enumValue;
     IntEnum[] enumArray;
     String[] nullArray;
     List<String> nullList;
-    GenericStructuredParcelable<int, StructuredParcelable, IntEnum> parcelableGeneric;
-    Union unionValue;
 }
