@@ -215,6 +215,7 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         {"preprocess", no_argument, 0, 's'},
 #ifndef _WIN32
         {"dumpapi", no_argument, 0, 'u'},
+        {"no_license", no_argument, 0, 'x'},
         {"checkapi", optional_argument, 0, 'A'},
 #endif
         {"apimapping", required_argument, 0, 'i'},
@@ -279,6 +280,9 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         if (task_ != Options::Task::UNSPECIFIED) {
           task_ = Options::Task::DUMP_API;
         }
+        break;
+      case 'x':
+        dump_no_license_ = true;
         break;
       case 'A':
         if (task_ != Options::Task::UNSPECIFIED) {
