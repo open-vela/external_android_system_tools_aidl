@@ -38,6 +38,7 @@ class AidlInterface;
 class AidlParcelable;
 class AidlTypeSpecifier;
 class AidlDocument;
+struct ArgumentAspect;
 
 namespace android {
 namespace aidl {
@@ -73,7 +74,7 @@ class AidlTypenames final {
     const AidlDefinedType* defined_type;
   };
   ResolvedTypename ResolveTypename(const string& type_name) const;
-  pair<bool, string> CanBeOutParameter(const AidlTypeSpecifier& type) const;
+  ArgumentAspect GetArgumentAspect(const AidlTypeSpecifier& type) const;
   bool CanBeJavaOnlyImmutable(const AidlTypeSpecifier& type) const;
   bool CanBeFixedSize(const AidlTypeSpecifier& type) const;
   static bool IsList(const AidlTypeSpecifier& type);
