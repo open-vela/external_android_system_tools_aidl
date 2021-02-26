@@ -145,6 +145,8 @@ class Options final {
 
   bool GenLog() const { return gen_log_; }
 
+  bool DumpNoLicense() const { return dump_no_license_; }
+
   bool Ok() const { return error_message_.stream_.str().empty(); }
 
   string GetErrorMessage() const { return error_message_.stream_.str(); }
@@ -186,6 +188,7 @@ class Options final {
   int version_ = 0;
   string hash_ = "";
   bool gen_log_ = false;
+  bool dump_no_license_ = false;
   ErrorMessage error_message_;
   WarningOptions warning_options_;
 };
