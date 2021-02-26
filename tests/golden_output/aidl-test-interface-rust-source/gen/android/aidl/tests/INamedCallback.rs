@@ -35,7 +35,7 @@ lazy_static! {
 pub(crate) mod mangled { pub use super::INamedCallback as _7_android_4_aidl_5_tests_14_INamedCallback; }
 impl INamedCallback for BpNamedCallback {
   fn GetName(&self) -> binder::public_api::Result<String> {
-    let _aidl_reply = self.binder.transact(transactions::GetName, 0, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::GetName, binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       Ok(())
     });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {

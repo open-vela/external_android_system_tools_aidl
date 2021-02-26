@@ -105,6 +105,7 @@ void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const Aid
   vector<string> flags;
   if (method.IsOneway()) flags.push_back("binder::FLAG_ONEWAY");
   if (iface.IsSensitiveData()) flags.push_back("binder::FLAG_CLEAR_BUF");
+  flags.push_back("binder::FLAG_PRIVATE_LOCAL");
 
   string transact_flags = flags.empty() ? "0" : Join(flags, " | ");
   out << "let _aidl_reply = self.binder.transact("
@@ -383,6 +384,9 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
   code_writer->Dedent();
   *code_writer << "},\n";
   code_writer->Dedent();
+  if (iface->IsVintfStability()) {
+    *code_writer << "stability: binder::Stability::Vintf,\n";
+  }
   *code_writer << "}\n";
   code_writer->Dedent();
   *code_writer << "}\n";
