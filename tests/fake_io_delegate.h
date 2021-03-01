@@ -62,8 +62,8 @@ class FakeIoDelegate : public IoDelegate {
   // Returns true iff we've previously written to |path|.
   // When we return true, we'll set *contents to the written string.
   bool GetWrittenContents(const std::string& path, std::string* content) const;
-  const std::map<std::string, std::string>& InputFiles() const;
-  const std::map<std::string, std::string>& OutputFiles() const;
+  std::vector<std::string> ListInputFiles() const;
+  std::vector<std::string> ListOutputFiles() const;
 
   bool PathWasRemoved(const std::string& path);
 
