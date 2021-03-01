@@ -289,19 +289,28 @@ bool AidlTypenames::IsList(const AidlTypeSpecifier& type) {
   return type.GetName() == "List";
 }
 
-// Only T[], List, Map, ParcelFileDescriptor and mutable Parcelable can be an out parameter.
-// Returns pair of
-//  - bool: tells if the type can be an out/inout parameter
-//  - string: the aspect of the type which decides whether the type can be "out" or not.
-pair<bool, string> AidlTypenames::CanBeOutParameter(const AidlTypeSpecifier& type) const {
+ArgumentAspect AidlTypenames::GetArgumentAspect(const AidlTypeSpecifier& type) const {
+  if (type.IsArray()) {
+    return {"array",
+            {AidlArgument::Direction::IN_DIR, AidlArgument::Direction::OUT_DIR,
+             AidlArgument::Direction::INOUT_DIR}};
+  }
   const string& name = type.GetName();
-  if (type.IsArray()) return {true, "array"};
-
   if (IsBuiltinTypename(name)) {
-    if (name == "List" || name == "Map" || name == "ParcelFileDescriptor") {
-      return {true, name};
+    if (name == "List" || name == "Map") {
+      return {name,
+              {AidlArgument::Direction::IN_DIR, AidlArgument::Direction::OUT_DIR,
+               AidlArgument::Direction::INOUT_DIR}};
+    } else if (name == "ParcelFileDescriptor") {
+      // "out ParcelFileDescriptor" is not allowed because ParcelFileDescriptor is not
+      // default-constructible.
+      return {name, {AidlArgument::Direction::IN_DIR, AidlArgument::Direction::INOUT_DIR}};
+    } else if (name == "ParcelableHolder") {
+      // TODO(b/156872582): Support it when ParcelableHolder supports every backend.
+      return {name, {}};
+    } else {
+      return {name, {AidlArgument::Direction::IN_DIR}};
     }
-    return {false, name};
   }
 
   const AidlDefinedType* t = TryGetDefinedType(name);
@@ -309,11 +318,15 @@ pair<bool, string> AidlTypenames::CanBeOutParameter(const AidlTypeSpecifier& typ
 
   // An 'out' field is passed as an argument, so it doesn't make sense if it is immutable.
   if (t->AsParcelable() != nullptr) {
-    if (t->IsJavaOnlyImmutable()) return {false, "@JavaOnlyImmutable"};
-    return {true, "parcelable/union"};
+    if (t->IsJavaOnlyImmutable()) {
+      return {"@JavaOnlyImmutable", {AidlArgument::Direction::IN_DIR}};
+    }
+    return {"parcelable/union",
+            {AidlArgument::Direction::IN_DIR, AidlArgument::Direction::OUT_DIR,
+             AidlArgument::Direction::INOUT_DIR}};
   }
 
-  return {false, t->GetPreprocessDeclarationName()};
+  return {t->GetPreprocessDeclarationName(), {AidlArgument::Direction::IN_DIR}};
 }
 
 const AidlEnumDeclaration* AidlTypenames::GetEnumDeclaration(const AidlTypeSpecifier& type) const {
