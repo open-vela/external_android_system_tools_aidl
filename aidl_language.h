@@ -538,7 +538,6 @@ class AidlArgument : public AidlVariableDeclaration {
   bool IsIn() const { return direction_ & IN_DIR; }
   bool DirectionWasSpecified() const { return direction_specified_; }
   string GetDirectionSpecifier() const;
-  bool CheckValid(const AidlTypenames& typenames) const;
 
   // ToString is for dumping AIDL.
   // Returns string representation of this argument including direction
@@ -554,11 +553,6 @@ class AidlArgument : public AidlVariableDeclaration {
  private:
   Direction direction_;
   bool direction_specified_;
-};
-
-struct ArgumentAspect {
-  std::string name;
-  std::set<AidlArgument::Direction> possible_directions;
 };
 
 class AidlUnaryConstExpression;
