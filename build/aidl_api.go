@@ -56,6 +56,7 @@ type aidlApiProperties struct {
 	Stability *string
 	Imports   []string
 	Versions  []string
+	Dumpapi   DumpApiProperties
 }
 
 type aidlApi struct {
@@ -127,6 +128,9 @@ func (m *aidlApi) createApiDumpFromSource(ctx android.ModuleContext) apiDump {
 	var optionalFlags []string
 	if m.properties.Stability != nil {
 		optionalFlags = append(optionalFlags, "--stability", *m.properties.Stability)
+	}
+	if proptools.Bool(m.properties.Dumpapi.No_license) {
+		optionalFlags = append(optionalFlags, "--no_license")
 	}
 
 	ctx.Build(pctx, android.BuildParams{
@@ -369,6 +373,7 @@ func addApiModule(mctx android.LoadHookContext, i *aidlInterface) string {
 		Stability: i.properties.Stability,
 		Imports:   concat(i.properties.Imports, []string{i.ModuleBase.Name()}),
 		Versions:  i.properties.Versions,
+		Dumpapi:   i.properties.Dumpapi,
 	})
 	return apiModule
 }
