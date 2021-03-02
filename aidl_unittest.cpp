@@ -1493,9 +1493,7 @@ interface IFoo {
 
   EXPECT_TRUE(io_delegate_.GetWrittenContents("dump/foo/bar/Data.aidl", &actual));
   EXPECT_EQ(string(kPreamble).append(R"(package foo.bar;
-/**
- * @hide
- */
+/* @hide */
 parcelable Data {
   int x = 10;
   int y;
