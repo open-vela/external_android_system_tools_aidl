@@ -170,8 +170,10 @@ bool dump_api(const Options& options, const IoDelegate& io_delegate) {
       for (const auto& type : doc.DefinedTypes()) {
         unique_ptr<CodeWriter> writer =
             io_delegate.GetCodeWriter(GetApiDumpPathFor(*type, options));
-        // dump doc comments (license) as well for each type
-        DumpComments(*writer, doc.GetComments());
+        if (!options.DumpNoLicense()) {
+          // dump doc comments (license) as well for each type
+          DumpComments(*writer, doc.GetComments());
+        }
         (*writer) << kPreamble;
         if (!type->GetPackage().empty()) {
           (*writer) << "package " << type->GetPackage() << ";\n";
