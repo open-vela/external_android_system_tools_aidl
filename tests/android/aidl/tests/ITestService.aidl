@@ -127,10 +127,12 @@ interface ITestService {
     @utf8InCpp String[] ReverseUtf8CppString(
             in @utf8InCpp String[] input, out @utf8InCpp String[] repeated);
 
+    @SuppressWarnings(value={"out-nullable"})
     @nullable @utf8InCpp String[] ReverseNullableUtf8CppString(
             in @nullable @utf8InCpp String[] input,
             out @nullable @utf8InCpp String[] repeated);
 
+    @SuppressWarnings(value={"out-nullable"})
     @nullable @utf8InCpp List<String> ReverseUtf8CppStringList(
             in @nullable @utf8InCpp List<String> input,
             out @nullable @utf8InCpp List<String> repeated);
