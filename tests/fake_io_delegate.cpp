@@ -152,20 +152,12 @@ bool FakeIoDelegate::GetWrittenContents(const string& path, string* content) con
   return true;
 }
 
-std::vector<std::string> FakeIoDelegate::ListInputFiles() const {
-  std::vector<std::string> out;
-  for (const auto& [file, contents] : file_contents_) {
-    out.push_back(file);
-  }
-  return out;
+const std::map<std::string, std::string>& FakeIoDelegate::InputFiles() const {
+  return file_contents_;
 }
 
-std::vector<std::string> FakeIoDelegate::ListOutputFiles() const {
-  std::vector<std::string> out;
-  for (const auto& [file, contents] : written_file_contents_) {
-    out.push_back(file);
-  }
-  return out;
+const std::map<std::string, std::string>& FakeIoDelegate::OutputFiles() const {
+  return written_file_contents_;
 }
 
 bool FakeIoDelegate::PathWasRemoved(const std::string& path) {
