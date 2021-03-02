@@ -213,7 +213,7 @@ TEST_P(AidlTest, RejectOutParametersForIBinder) {
 }
 
 TEST_P(AidlTest, RejectsOutParametersInOnewayInterface) {
-  const string oneway_interface = "package a; oneway interface IBar { void f(out int bar); }";
+  const string oneway_interface = "package a; oneway interface IBar { void f(out int[] bar); }";
   const string expected_stderr =
       "ERROR: a/IBar.aidl:1.40-42: oneway method 'f' cannot have out parameters\n";
   CaptureStderr();
@@ -222,7 +222,7 @@ TEST_P(AidlTest, RejectsOutParametersInOnewayInterface) {
 }
 
 TEST_P(AidlTest, RejectsOutParametersInOnewayMethod) {
-  const string oneway_method = "package a; interface IBar { oneway void f(out int bar); }";
+  const string oneway_method = "package a; interface IBar { oneway void f(out int[] bar); }";
   const string expected_stderr =
       "ERROR: a/IBar.aidl:1.40-42: oneway method 'f' cannot have out parameters\n";
   CaptureStderr();
@@ -2768,6 +2768,31 @@ TEST_P(AidlTest, ParcelFileDescriptorIsBuiltinType) {
   EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
   // output files should be the same
   EXPECT_EQ(outputs, io_delegate_.OutputFiles());
+}
+
+TEST_P(AidlTest, RejectsOutputParcelFileDescriptor) {
+  Options options = Options::From("aidl p/IFoo.aidl -I . --lang=" + to_string(GetLanguage()));
+  CaptureStderr();
+  io_delegate_.SetFileContents("p/IFoo.aidl",
+                               "package p;"
+                               "interface IFoo{"
+                               "  void foo(out ParcelFileDescriptor fd);"
+                               "}");
+  EXPECT_EQ(1, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("can't be an out parameter"));
+}
+
+TEST_P(AidlTest, RejectsArgumentDirectionNotSpecified) {
+  Options options = Options::From("aidl p/IFoo.aidl -I . --lang=" + to_string(GetLanguage()));
+  CaptureStderr();
+  io_delegate_.SetFileContents("p/IFoo.aidl",
+                               "package p;"
+                               "interface IFoo{"
+                               "  void foo(ParcelFileDescriptor fd);"
+                               "}");
+  EXPECT_EQ(1, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(),
+              HasSubstr("ParcelFileDescriptor can be an in or inout parameter."));
 }
 
 TEST_F(AidlTest, ManualIds) {
