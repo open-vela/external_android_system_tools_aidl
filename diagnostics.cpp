@@ -234,6 +234,20 @@ struct DiagnoseFileDescriptor : DiagnosticsVisitor {
   }
 };
 
+struct DiagnoseOutNullable : DiagnosticsVisitor {
+  DiagnoseOutNullable(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
+  void Visit(const AidlArgument& a) override {
+    if (a.GetType().IsArray()) return;
+    if (a.IsOut() && a.GetType().IsNullable()) {
+      diag.Report(a.GetLocation(), DiagnosticID::out_nullable)
+          << "'" << a.GetName() << "' is an " << a.GetDirectionSpecifier()
+          << " parameter and also nullable. Some backends don't support setting null value to out "
+             "parameters. Please use it as return value or drop @nullable to avoid potential "
+             "errors.";
+    }
+  }
+};
+
 bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnosticsContext diag(mapping);
 
@@ -244,6 +258,7 @@ bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnoseMixedOneway{diag}.Check(doc);
   DiagnoseOutArray{diag}.Check(doc);
   DiagnoseFileDescriptor{diag}.Check(doc);
+  DiagnoseOutNullable{diag}.Check(doc);
 
   return diag.ErrorCount() == 0;
 }
