@@ -147,7 +147,34 @@ TEST_F(DiagnosticsTest, ArraysAsOutputParametersConsideredHarmful) {
 TEST_F(DiagnosticsTest, file_descriptor) {
   expect_diagnostics = {DiagnosticID::file_descriptor};
   ParseFiles({{"IFoo.aidl",
-               "interface IFoo { \n"
+               "interface IFoo {\n"
                "  void foo(in FileDescriptor fd);\n"
                "}"}});
+}
+
+TEST_F(DiagnosticsTest, out_nullable) {
+  expect_diagnostics = {DiagnosticID::out_nullable};
+  ParseFiles({{"IFoo.aidl",
+               "interface IFoo {\n"
+               "  void foo(out @nullable Bar bar);\n"
+               "}"},
+              {"Bar.aidl", "parcelable Bar {}"}});
+}
+
+TEST_F(DiagnosticsTest, inout_nullable) {
+  expect_diagnostics = {DiagnosticID::out_nullable};
+  ParseFiles({{"IFoo.aidl",
+               "interface IFoo {\n"
+               "  void foo(inout @nullable Bar bar);\n"
+               "}"},
+              {"Bar.aidl", "parcelable Bar {}"}});
+}
+
+TEST_F(DiagnosticsTest, out_nullable_OkayForArrays) {
+  expect_diagnostics = {DiagnosticID::out_array};  // not triggering out_nullable
+  ParseFiles({{"IFoo.aidl",
+               "interface IFoo {\n"
+               "  void foo(inout @nullable Bar[] bar1, out @nullable Bar[] bar2);\n"
+               "}"},
+              {"Bar.aidl", "parcelable Bar {}"}});
 }
