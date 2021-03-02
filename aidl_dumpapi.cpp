@@ -58,7 +58,11 @@ void DumpVisitor::DumpMembers(const AidlDefinedType& dt) {
 void DumpVisitor::DumpComments(const AidlCommentable& c) {
   const auto hidden = c.IsHidden();
   const auto deprecated = FindDeprecated(c.GetComments());
-  if (hidden || deprecated) {
+  if (hidden && !deprecated) {
+    // to pass --checkapi between the current and the tot in the mainline-prod branch
+    // emit @hide in a legacy dump style
+    out << "/* @hide */\n";
+  } else if (hidden || deprecated) {
     out << "/**\n";
     if (hidden) {
       out << " * @hide\n";
