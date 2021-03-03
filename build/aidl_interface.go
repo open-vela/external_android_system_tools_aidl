@@ -816,8 +816,6 @@ func (i *aidlInterface) isAllowedListedModule() bool {
 		"ipmemorystore-aidl-interfaces",
 		"dnsresolver_aidl_interface",
 		"netd_event_listener_interface",
-		// TODO(b/180417006) remove it after the prebuilt doesn't include it anymore
-		"android.hardware.gnss",
 	}
 	return android.InList(i.ModuleBase.Name(), allowlist)
 }
