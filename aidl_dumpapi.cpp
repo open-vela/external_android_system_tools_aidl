@@ -58,7 +58,11 @@ void DumpVisitor::DumpMembers(const AidlDefinedType& dt) {
 void DumpVisitor::DumpComments(const AidlCommentable& c) {
   const auto hidden = c.IsHidden();
   const auto deprecated = FindDeprecated(c.GetComments());
-  if (hidden || deprecated) {
+  if (hidden && !deprecated) {
+    // to pass --checkapi between the current and the tot in the mainline-prod branch
+    // emit @hide in a legacy dump style
+    out << "/* @hide */\n";
+  } else if (hidden || deprecated) {
     out << "/**\n";
     if (hidden) {
       out << " * @hide\n";
@@ -170,8 +174,10 @@ bool dump_api(const Options& options, const IoDelegate& io_delegate) {
       for (const auto& type : doc.DefinedTypes()) {
         unique_ptr<CodeWriter> writer =
             io_delegate.GetCodeWriter(GetApiDumpPathFor(*type, options));
-        // dump doc comments (license) as well for each type
-        DumpComments(*writer, doc.GetComments());
+        if (!options.DumpNoLicense()) {
+          // dump doc comments (license) as well for each type
+          DumpComments(*writer, doc.GetComments());
+        }
         (*writer) << kPreamble;
         if (!type->GetPackage().empty()) {
           (*writer) << "package " << type->GetPackage() << ";\n";
