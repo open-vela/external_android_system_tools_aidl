@@ -103,8 +103,8 @@ void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const Aid
 
   // Call transact()
   vector<string> flags;
-  if (method.IsOneway()) flags.push_back("binder::SpIBinder::FLAG_ONEWAY");
-  if (iface.IsSensitiveData()) flags.push_back("binder::SpIBinder::FLAG_CLEAR_BUF");
+  if (method.IsOneway()) flags.push_back("binder::FLAG_ONEWAY");
+  if (iface.IsSensitiveData()) flags.push_back("binder::FLAG_CLEAR_BUF");
 
   string transact_flags = flags.empty() ? "0" : Join(flags, " | ");
   out << "let _aidl_reply = self.binder.transact("
@@ -354,8 +354,8 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
 
   *code_writer << "#![allow(non_upper_case_globals)]\n";
   *code_writer << "#![allow(non_snake_case)]\n";
-  // Import IBinder for transact()
-  *code_writer << "#[allow(unused_imports)] use binder::IBinder;\n";
+  // Import IBinderInternal for transact()
+  *code_writer << "#[allow(unused_imports)] use binder::IBinderInternal;\n";
 
   auto trait_name = ClassName(*iface, cpp::ClassNames::INTERFACE);
   auto client_name = ClassName(*iface, cpp::ClassNames::CLIENT);
@@ -448,13 +448,11 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
   // The constants get their own sub-module to avoid conflicts
   *code_writer << "pub mod transactions {\n";
   code_writer->Indent();
-  // Import IBinder so we can access FIRST_CALL_TRANSACTION
-  *code_writer << "#[allow(unused_imports)] use binder::IBinder;\n";
   for (const auto& method : iface->GetMethods()) {
     // Generate the transaction code constant
     *code_writer << "pub const " << method->GetName()
                  << ": binder::TransactionCode = "
-                    "binder::SpIBinder::FIRST_CALL_TRANSACTION + " +
+                    "binder::FIRST_CALL_TRANSACTION + " +
                         std::to_string(method->GetId()) + ";\n";
   }
   code_writer->Dedent();
