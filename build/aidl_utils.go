@@ -28,6 +28,15 @@ func wrap(prefix string, strs []string, suffix string) []string {
 	return ret
 }
 
+// wrapFunc(p, a, s, f) = [p + f(v) + s for v in a]
+func wrapFunc(prefix string, strs []string, suffix string, f func(string) string) []string {
+	ret := make([]string, len(strs))
+	for i, v := range strs {
+		ret[i] = prefix + f(v) + suffix
+	}
+	return ret
+}
+
 // concat(a...) = sum((i for i in a), [])
 func concat(sstrs ...[]string) []string {
 	var ret []string
