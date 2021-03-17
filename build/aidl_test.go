@@ -1053,3 +1053,81 @@ func TestAidlFlags(t *testing.T) {
 		}
 	}
 }
+
+func TestAidlModuleNameContainsVersion(t *testing.T) {
+	testAidlError(t, "aidl_interface should not have '-V<number> suffix", `
+		aidl_interface {
+			name: "myiface-V2",
+			srcs: ["a/Foo.aidl", "b/Bar.aidl"],
+		}
+	`)
+	// Ugly, but okay
+	testAidl(t, `
+		aidl_interface {
+			name: "myiface-V2aa",
+			srcs: ["a/Foo.aidl", "b/Bar.aidl"],
+		}
+	`)
+}
+
+func TestExplicitAidlModuleImport(t *testing.T) {
+	for _, importVersion := range []string{"V1", "V2"} {
+
+		ctx, _ := testAidl(t, `
+			aidl_interface {
+				name: "foo",
+				srcs: ["Foo.aidl"],
+				versions: [
+					"1",
+				],
+				imports: ["bar-`+importVersion+`"]
+			}
+
+			aidl_interface {
+				name: "bar",
+				srcs: ["Bar.aidl"],
+				versions: [
+					"1",
+				],
+			}
+		`, withFiles(map[string][]byte{
+			"aidl_api/foo/1/Foo.aidl": nil,
+			"aidl_api/foo/1/.hash":    nil,
+			"aidl_api/bar/1/Bar.aidl": nil,
+			"aidl_api/bar/1/.hash":    nil,
+		}))
+		for _, foo := range []string{"foo-V1-cpp", "foo-V2-cpp"} {
+			ldRule := ctx.ModuleForTests(foo, nativeVariant).Rule("ld")
+			libFlags := ldRule.Args["libFlags"]
+			libBar := filepath.Join("bar-"+importVersion+"-cpp", nativeVariant, "bar-"+importVersion+"-cpp.so")
+			if !strings.Contains(libFlags, libBar) {
+				t.Errorf("%q is not found in %q", libBar, libFlags)
+			}
+
+		}
+	}
+
+	testAidlError(t, "module \"foo_interface\": imports: \"foo\" depends on \"bar\" version \"3\"", `
+		aidl_interface {
+			name: "foo",
+			srcs: ["Foo.aidl"],
+			versions: [
+				"1",
+			],
+			imports: ["bar-V3"]
+		}
+
+		aidl_interface {
+			name: "bar",
+			srcs: ["Bar.aidl"],
+			versions: [
+				"1",
+			],
+		}
+	`, withFiles(map[string][]byte{
+		"aidl_api/foo/1/Foo.aidl": nil,
+		"aidl_api/foo/1/.hash":    nil,
+		"aidl_api/bar/1/Bar.aidl": nil,
+		"aidl_api/bar/1/.hash":    nil,
+	}))
+}

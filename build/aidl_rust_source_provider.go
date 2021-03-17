@@ -62,7 +62,7 @@ func (sp *aidlRustSourceProvider) GenerateSource(ctx rust.ModuleContext, _ rust.
 	// so we can use the crate:: Rust path prefix to refer to
 	// both crate-local and imported paths (from dependencies)
 	importFlags := make([]string, len(sp.properties.Imports))
-	for i, dep := range sp.properties.Imports {
+	for i, dep := range trimVersionSuffixInList(sp.properties.Imports) {
 		importFlags[i] = "-I" + fixRustName(dep)
 	}
 
