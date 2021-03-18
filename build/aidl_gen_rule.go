@@ -63,18 +63,18 @@ var (
 )
 
 type aidlGenProperties struct {
-	Srcs       []string `android:"path"`
-	AidlRoot   string   // base directory for the input aidl file
-	Imports    []string
-	Stability  *string
-	Lang       string // target language [java|cpp|ndk|rust]
-	BaseName   string
-	GenLog     bool
-	Version    string
-	GenTrace   bool
-	Unstable   *bool
-	Visibility []string
-	Flags      []string
+	Srcs                  []string `android:"path"`
+	AidlRoot              string   // base directory for the input aidl file
+	ImportsWithoutVersion []string
+	Stability             *string
+	Lang                  string // target language [java|cpp|ndk|rust]
+	BaseName              string
+	GenLog                bool
+	Version               string
+	GenTrace              bool
+	Unstable              *bool
+	Visibility            []string
+	Flags                 []string
 }
 
 type aidlGenRule struct {
@@ -276,7 +276,7 @@ func (g *aidlGenRule) GeneratedHeaderDirs() android.Paths {
 }
 
 func (g *aidlGenRule) DepsMutator(ctx android.BottomUpMutatorContext) {
-	ctx.AddDependency(ctx.Module(), nil, wrap("", g.properties.Imports, aidlInterfaceSuffix)...)
+	ctx.AddDependency(ctx.Module(), nil, wrap("", g.properties.ImportsWithoutVersion, aidlInterfaceSuffix)...)
 	if !proptools.Bool(g.properties.Unstable) {
 		ctx.AddDependency(ctx.Module(), nil, g.properties.BaseName+aidlApiSuffix)
 	}

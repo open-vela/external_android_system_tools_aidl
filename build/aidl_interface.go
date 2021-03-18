@@ -23,6 +23,7 @@ import (
 
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -323,7 +324,11 @@ type aidlInterfaceProperties struct {
 
 	// List of aidl_interface modules that this uses. If one of your AIDL interfaces uses an
 	// interface or parcelable from another aidl_interface, you should put its name here.
+	// It could be an aidl_interface solely or with version(such as -V1)
 	Imports []string
+
+	// List of aidl_interface modules that this uses. It trims version suffix in 'Imports' field.
+	ImportsWithoutVersion []string `blueprint:"mutated"`
 
 	// Used by gen dependency to fill out aidl include path
 	Full_import_paths []string `blueprint:"mutated"`
@@ -445,7 +450,8 @@ func addUnstableModule(mctx android.LoadHookContext, moduleName string) {
 
 func checkImports(mctx android.BottomUpMutatorContext) {
 	if i, ok := mctx.Module().(*aidlInterface); ok {
-		for _, anImport := range i.properties.Imports {
+		for _, anImportWithVersion := range i.properties.Imports {
+			anImport, version := parseModuleWithVersion(anImportWithVersion)
 			other := lookupInterface(anImport, mctx.Config())
 
 			if other == nil {
@@ -454,7 +460,12 @@ func checkImports(mctx android.BottomUpMutatorContext) {
 				}
 				mctx.PropertyErrorf("imports", "Import does not exist: "+anImport)
 			}
-
+			if version != "" {
+				candidateVersions := concat(other.properties.Versions, []string{other.nextVersion()})
+				if !android.InList(version, candidateVersions) {
+					mctx.PropertyErrorf("imports", "%q depends on %q version %q(%q), which doesn't exist. The version must be one of %q", i.ModuleBase.Name(), anImport, version, anImportWithVersion, candidateVersions)
+				}
+			}
 			if i.shouldGenerateJavaBackend() && !other.shouldGenerateJavaBackend() {
 				mctx.PropertyErrorf("backend.java.enabled",
 					"Java backend not enabled in the imported AIDL interface %q", anImport)
@@ -577,7 +588,34 @@ func (i *aidlInterface) hasVersion() bool {
 	return len(i.properties.Versions) > 0
 }
 
+func hasVersionSuffix(moduleName string) bool {
+	hasVersionSuffix, _ := regexp.MatchString("-V\\d+$", moduleName)
+	return hasVersionSuffix
+}
+
+func parseModuleWithVersion(moduleName string) (string, string) {
+	if hasVersionSuffix(moduleName) {
+		versionIdx := strings.LastIndex(moduleName, "-V")
+		if versionIdx == -1 {
+			panic("-V must exist in this context")
+		}
+		return moduleName[:versionIdx], moduleName[versionIdx+len("-V"):]
+	}
+	return moduleName, ""
+}
+
+func trimVersionSuffixInList(moduleNames []string) []string {
+	return wrapFunc("", moduleNames, "", func(moduleName string) string {
+		moduleNameWithoutVersion, _ := parseModuleWithVersion(moduleName)
+		return moduleNameWithoutVersion
+	})
+}
+
 func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
+	if hasVersionSuffix(i.ModuleBase.Name()) {
+		mctx.PropertyErrorf("name", "aidl_interface should not have '-V<number> suffix")
+	}
+	i.properties.ImportsWithoutVersion = trimVersionSuffixInList(i.properties.Imports)
 	if !isRelativePath(i.properties.Local_include_dir) {
 		mctx.PropertyErrorf("local_include_dir", "must be relative path: "+i.properties.Local_include_dir)
 	}
