@@ -1,6 +1,6 @@
 #![allow(non_upper_case_globals)]
 #![allow(non_snake_case)]
-#[allow(unused_imports)] use binder::IBinder;
+#[allow(unused_imports)] use binder::IBinderInternal;
 use binder::declare_binder_interface;
 declare_binder_interface! {
   INamedCallback["android.aidl.tests.INamedCallback"] {
@@ -25,8 +25,7 @@ pub trait INamedCallbackDefault: Send + Sync {
   }
 }
 pub mod transactions {
-  #[allow(unused_imports)] use binder::IBinder;
-  pub const GetName: binder::TransactionCode = binder::SpIBinder::FIRST_CALL_TRANSACTION + 0;
+  pub const GetName: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 0;
 }
 pub type INamedCallbackDefaultRef = Option<std::sync::Arc<dyn INamedCallbackDefault>>;
 use lazy_static::lazy_static;
