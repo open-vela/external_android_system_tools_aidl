@@ -171,7 +171,7 @@ macro_rules! test_reverse_array {
         fn $test() {
             let mut array = $array;
 
-            // Java need initial values here (can't resize arrays)
+            // Java needs initial values here (can't resize arrays)
             let mut repeated = vec![Default::default(); array.len()];
 
             let result = get_test_service().$func(&array, &mut repeated);
@@ -291,12 +291,6 @@ fn test_parcel_file_descriptor() {
 fn test_parcel_file_descriptor_array() {
     let service = get_test_service();
 
-    let backend = service.getBackendType().expect("error getting backend type");
-    if backend == BackendType::JAVA {
-        // TODO(b/178863692): returning unknown transaction
-        return;
-    }
-
     let (read_file, write_file) = build_pipe();
     let input = vec![
         binder::ParcelFileDescriptor::new(read_file),
@@ -304,6 +298,15 @@ fn test_parcel_file_descriptor_array() {
     ];
 
     let mut repeated = vec![];
+
+    let backend = service.getBackendType().expect("error getting backend type");
+    if backend == BackendType::JAVA {
+        // Java needs initial values here (can't resize arrays)
+        // Other backends can't accept 'None', but we can use it in Java for convenience, rather
+        // than creating file descriptors.
+        repeated = vec![None, None];
+    }
+
     let result = service
         .ReverseParcelFileDescriptorArray(&input[..], &mut repeated)
         .expect("error calling ReverseParcelFileDescriptorArray");
@@ -448,7 +451,7 @@ macro_rules! test_reverse_null_array {
 macro_rules! test_reverse_nullable_array {
     ($service:expr, $func:ident, $array:expr) => {{
         let mut array = $array;
-        // Java need initial values here (can't resize arrays)
+        // Java needs initial values here (can't resize arrays)
         let mut repeated = Some(vec![Default::default(); array.len()]);
         let result = $service.$func(Some(&array[..]), &mut repeated);
         assert_eq!(repeated.as_ref(), Some(&array));
