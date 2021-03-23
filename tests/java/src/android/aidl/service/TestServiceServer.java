@@ -49,6 +49,7 @@ import android.os.ServiceSpecificException;
 import android.util.Log;
 import java.io.File;
 import java.io.FileDescriptor;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -287,11 +288,15 @@ public class TestServiceServer extends ITestService.Stub {
   @Override
   public ParcelFileDescriptor[] ReverseParcelFileDescriptorArray(
       ParcelFileDescriptor[] input, ParcelFileDescriptor[] repeated) throws RemoteException {
-    Log.i("TestServiceServer", "ReverseParcelFileDescriptorArray");
     ParcelFileDescriptor[] reversed = new ParcelFileDescriptor[input.length];
     for (int i = 0; i < input.length; i++) {
       repeated[i] = input[i];
-      reversed[i] = input[input.length - i - 1];
+      try {
+        // extra dup, because of PARCELABLE_WRITE_RETURN_VALUE
+        reversed[i] = input[input.length - i - 1].dup();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
     return reversed;
   }
