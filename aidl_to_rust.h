@@ -29,7 +29,6 @@ enum class StorageMode {
   DEFAULT_VALUE,       // Value that implements Default::default()
   IN_ARGUMENT,         // Value for primitives, & for larger types
   UNSIZED_ARGUMENT,    // Unsized input argument, e.g., str/slice
-  INTERFACE_ARGUMENT,  // Interface argument, e.g., dyn IFoo
   OUT_ARGUMENT,        // Mutable reference to write-only raw type
   INOUT_ARGUMENT,      // Mutable reference to inout argument
   PARCELABLE_FIELD,    // Field in a parcelable
@@ -38,7 +37,6 @@ enum class StorageMode {
 enum class ReferenceMode {
   VALUE,
   REF,
-  REF_DEREF,
   MUT_REF,
   AS_REF,
   AS_DEREF,
@@ -47,7 +45,6 @@ enum class ReferenceMode {
 inline bool IsReference(ReferenceMode ref_mode) {
   switch (ref_mode) {
     case ReferenceMode::REF:
-    case ReferenceMode::REF_DEREF:
     case ReferenceMode::MUT_REF:
       return true;
 
