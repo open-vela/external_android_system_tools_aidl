@@ -101,6 +101,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::Send(const ::std::optional<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
@@ -153,6 +154,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::Piff(int32_t times) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
@@ -178,6 +180,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::TakesABinder(const ::android::sp<::foo::IFooType>& f, ::android::sp<::foo::IFooType>* _aidl_return) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
@@ -214,6 +217,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::NullableBinder(::android::sp<::foo::IFooType>* _aidl_return) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
@@ -246,6 +250,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::StringListMethod(const ::std::vector<::android::String16>& input, ::std::vector<::android::String16>* output, ::std::vector<::android::String16>* _aidl_return) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
@@ -286,6 +291,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::BinderListMethod(const ::std::vector<::android::sp<::android::IBinder>>& input, ::std::vector<::android::sp<::android::IBinder>>* output, ::std::vector<::android::sp<::android::IBinder>>* _aidl_return) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
@@ -326,6 +332,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::TakesAFileDescriptor(::android::base::unique_fd f, ::android::base::unique_fd* _aidl_return) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
@@ -362,6 +369,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::TakesAFileDescriptorArray(const ::std::vector<::android::base::unique_fd>& f, ::std::vector<::android::base::unique_fd>* _aidl_return) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
@@ -417,6 +425,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::Send(const ::std::optional<::std::vector<int32_t>>& goes_in, ::std::vector<double>* goes_in_and_out, ::std::vector<bool>* goes_out, ::std::vector<int32_t>* _aidl_return) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
@@ -470,6 +479,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::Piff(int32_t times) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
@@ -496,6 +506,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::TakesABinder(const ::android::sp<::foo::IFooType>& f, ::android::sp<::foo::IFooType>* _aidl_return) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
@@ -533,6 +544,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::NullableBinder(::android::sp<::foo::IFooType>* _aidl_return) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
@@ -566,6 +578,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::StringListMethod(const ::std::vector<::android::String16>& input, ::std::vector<::android::String16>* output, ::std::vector<::android::String16>* _aidl_return) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
@@ -607,6 +620,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::BinderListMethod(const ::std::vector<::android::sp<::android::IBinder>>& input, ::std::vector<::android::sp<::android::IBinder>>* output, ::std::vector<::android::sp<::android::IBinder>>* _aidl_return) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
@@ -648,6 +662,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::TakesAFileDescriptor(::android::base::unique_fd f, ::android::base::unique_fd* _aidl_return) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
@@ -685,6 +700,7 @@ BpComplexTypeInterface::BpComplexTypeInterface(const ::android::sp<::android::IB
 
 ::android::binder::Status BpComplexTypeInterface::TakesAFileDescriptorArray(const ::std::vector<::android::base::unique_fd>& f, ::std::vector<::android::base::unique_fd>* _aidl_return) {
   ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remote());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
