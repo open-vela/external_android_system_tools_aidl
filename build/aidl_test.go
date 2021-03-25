@@ -16,7 +16,6 @@ package aidl
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -32,53 +31,31 @@ import (
 	"android/soong/rust"
 )
 
-var buildDir string
-
-func setUp() {
-	var err error
-	buildDir, err = ioutil.TempDir("", "soong_aidl_test")
-	if err != nil {
-		panic(err)
-	}
-}
-
-func tearDown() {
-	os.RemoveAll(buildDir)
-}
-
 func TestMain(m *testing.M) {
-	run := func() int {
-		setUp()
-		defer tearDown()
-
-		return m.Run()
-	}
-
-	os.Exit(run())
+	os.Exit(m.Run())
 }
 
-type testCustomizer func(fs map[string][]byte, config android.Config)
-
-func withFiles(files map[string][]byte) testCustomizer {
-	return func(fs map[string][]byte, config android.Config) {
-		for k, v := range files {
-			fs[k] = v
-		}
-	}
+func withFiles(files map[string][]byte) android.FixturePreparer {
+	return android.FixtureMergeMockFs(files)
 }
 
-func setReleaseEnv() testCustomizer {
-	return func(_ map[string][]byte, config android.Config) {
-		config.TestProductVariables.Platform_sdk_codename = proptools.StringPtr("REL")
-		config.TestProductVariables.Platform_sdk_final = proptools.BoolPtr(true)
-	}
+func setReleaseEnv() android.FixturePreparer {
+	return android.FixtureModifyProductVariables(func(variables android.FixtureProductVariables) {
+		variables.Platform_sdk_codename = proptools.StringPtr("REL")
+		variables.Platform_sdk_final = proptools.BoolPtr(true)
+	})
 }
 
-func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android.TestContext, android.Config) {
+func _testAidl(t *testing.T, bp string, customizers ...android.FixturePreparer) android.FixturePreparer {
 	t.Helper()
 
-	bp = bp + java.GatherRequiredDepsForTest()
-	bp = bp + cc.GatherRequiredDepsForTest(android.Android)
+	preparers := []android.FixturePreparer{}
+
+	preparers = append(preparers,
+		cc.PrepareForTestWithCcDefaultModules,
+		java.PrepareForTestWithJavaDefaultModules,
+	)
+
 	bp = bp + `
 		package {
 			default_visibility: ["//visibility:public"],
@@ -146,102 +123,58 @@ func _testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android
 			name: "aidl_metadata_json",
 		}
 	`
-	fs := map[string][]byte{}
 
-	cc.GatherRequiredFilesForTest(fs)
+	preparers = append(preparers, android.FixtureWithRootAndroidBp(bp))
 
-	for _, c := range customizers {
-		// The fs now needs to be populated before creating the config, call customizers twice
-		// for now, once to get any fs changes, and later after the config was created to
-		// set product variables or targets.
-		tempConfig := android.TestArchConfig(buildDir, nil, bp, fs)
-		c(fs, tempConfig)
-	}
+	preparers = append(preparers, android.FixtureModifyProductVariables(func(variables android.FixtureProductVariables) {
+		// To keep tests stable, fix Platform_sdk_codename and Platform_sdk_final
+		// Use setReleaseEnv() to test release version
+		variables.Platform_sdk_codename = proptools.StringPtr("Q")
+		variables.Platform_version_active_codenames = []string{"Q"}
+		variables.Platform_sdk_final = proptools.BoolPtr(false)
+	}))
 
-	config := android.TestArchConfig(buildDir, nil, bp, fs)
+	preparers = append(preparers, customizers...)
 
-	// To keep tests stable, fix Platform_sdk_codename and Platform_sdk_final
-	// Use setReleaseEnv() to test release version
-	config.TestProductVariables.Platform_sdk_codename = proptools.StringPtr("Q")
-	config.TestProductVariables.Platform_version_active_codenames = []string{"Q"}
-	config.TestProductVariables.Platform_sdk_final = proptools.BoolPtr(false)
+	preparers = append(preparers,
+		apex.PrepareForTestWithApexBuildComponents,
+		rust.PrepareForTestWithRustBuildComponents,
+		android.FixtureRegisterWithContext(func(ctx android.RegistrationContext) {
+			ctx.RegisterModuleType("aidl_interface", aidlInterfaceFactory)
+			ctx.RegisterModuleType("aidl_interfaces_metadata", aidlInterfacesMetadataSingletonFactory)
+			ctx.RegisterModuleType("rust_defaults", func() android.Module {
+				return rust.DefaultsFactory()
+			})
 
-	for _, c := range customizers {
-		// The fs now needs to be populated before creating the config, call customizers twice
-		// for now, earlier to get any fs changes, and now after the config was created to
-		// set product variables or targets.
-		tempFS := map[string][]byte{}
-		c(tempFS, config)
-	}
+			ctx.PreArchMutators(func(ctx android.RegisterMutatorsContext) {
+				ctx.BottomUp("checkImports", checkImports)
+				ctx.TopDown("createAidlInterface", createAidlInterfaceMutator)
+			})
 
-	ctx := android.NewTestArchContext(config)
-	android.RegisterPackageBuildComponents(ctx)
-	ctx.PreArchMutators(android.RegisterVisibilityRuleChecker)
+			ctx.PostDepsMutators(func(ctx android.RegisterMutatorsContext) {
+				ctx.BottomUp("checkUnstableModule", checkUnstableModuleMutator).Parallel()
+				ctx.BottomUp("recordVersions", recordVersions).Parallel()
+				ctx.BottomUp("checkDuplicatedVersions", checkDuplicatedVersions).Parallel()
+			})
+		}),
+	)
 
-	cc.RegisterRequiredBuildComponentsForTest(ctx)
-	java.RegisterRequiredBuildComponentsForTest(ctx)
-	ctx.RegisterModuleType("aidl_interface", aidlInterfaceFactory)
-	ctx.RegisterModuleType("aidl_interfaces_metadata", aidlInterfacesMetadataSingletonFactory)
-	ctx.RegisterModuleType("rust_defaults", func() android.Module {
-		return rust.DefaultsFactory()
-	})
-	ctx.RegisterModuleType("rust_library", rust.RustLibraryFactory)
-
-	ctx.RegisterModuleType("apex", apex.BundleFactory)
-	ctx.RegisterModuleType("apex_key", apex.ApexKeyFactory)
-
-	ctx.PreArchMutators(android.RegisterDefaultsPreArchMutators)
-	ctx.PreArchMutators(android.RegisterVisibilityRuleGatherer)
-
-	ctx.PreArchMutators(func(ctx android.RegisterMutatorsContext) {
-		ctx.BottomUp("checkImports", checkImports)
-		ctx.TopDown("createAidlInterface", createAidlInterfaceMutator)
-	})
-
-	ctx.PostDepsMutators(android.RegisterVisibilityRuleEnforcer)
-
-	ctx.PreDepsMutators(func(ctx android.RegisterMutatorsContext) {
-		ctx.BottomUp("rust_libraries", rust.LibraryMutator).Parallel()
-		ctx.BottomUp("rust_stdlinkage", rust.LibstdMutator).Parallel()
-		ctx.BottomUp("rust_begin", rust.BeginMutator).Parallel()
-	})
-	ctx.PostDepsMutators(android.RegisterOverridePostDepsMutators)
-	ctx.PreDepsMutators(apex.RegisterPreDepsMutators)
-	ctx.PostDepsMutators(apex.RegisterPostDepsMutators)
-	ctx.PostDepsMutators(func(ctx android.RegisterMutatorsContext) {
-		ctx.BottomUp("checkUnstableModule", checkUnstableModuleMutator).Parallel()
-		ctx.BottomUp("recordVersions", recordVersions).Parallel()
-		ctx.BottomUp("checkDuplicatedVersions", checkDuplicatedVersions).Parallel()
-	})
-	ctx.Register()
-
-	return ctx, config
+	return android.GroupFixturePreparers(preparers...)
 }
 
-func testAidl(t *testing.T, bp string, customizers ...testCustomizer) (*android.TestContext, android.Config) {
+func testAidl(t *testing.T, bp string, customizers ...android.FixturePreparer) (*android.TestContext, android.Config) {
 	t.Helper()
-	ctx, config := _testAidl(t, bp, customizers...)
-	_, errs := ctx.ParseBlueprintsFiles("Android.bp")
-	android.FailIfErrored(t, errs)
-	_, errs = ctx.PrepareBuildActions(config)
-	android.FailIfErrored(t, errs)
-	return ctx, config
+	preparer := _testAidl(t, bp, customizers...)
+	result := preparer.RunTest(t)
+	return result.TestContext, result.Config
 }
 
-func testAidlError(t *testing.T, pattern, bp string, customizers ...testCustomizer) {
+func testAidlError(t *testing.T, pattern, bp string, customizers ...android.FixturePreparer) {
 	t.Helper()
-	ctx, config := _testAidl(t, bp, customizers...)
-	_, errs := ctx.ParseBlueprintsFiles("Android.bp")
-	if len(errs) > 0 {
-		android.FailIfNoMatchingErrors(t, pattern, errs)
-		return
-	}
-	_, errs = ctx.PrepareBuildActions(config)
-	if len(errs) > 0 {
-		android.FailIfNoMatchingErrors(t, pattern, errs)
-		return
-	}
-	t.Fatalf("missing expected error %q (0 errors are returned)", pattern)
+	preparer := _testAidl(t, bp, customizers...)
+	preparer.
+		ExtendWithErrorHandler(android.FixtureExpectsAtLeastOneErrorMatchingPattern(pattern)).
+		RunTest(t)
 }
 
 // asserts that there are expected module regardless of variants
@@ -762,16 +695,16 @@ func TestImports(t *testing.T) {
 		}
 	`)
 
-	ldRule := ctx.ModuleForTests("foo-V1-cpp", nativeVariant).Rule("ld")
+	ldRule := ctx.ModuleForTests("foo-V1-cpp", nativeVariant).Rule("ld").RelativeToTop()
 	libFlags := ldRule.Args["libFlags"]
 	libBar := filepath.Join("bar.1-V1-cpp", nativeVariant, "bar.1-V1-cpp.so")
 	if !strings.Contains(libFlags, libBar) {
 		t.Errorf("%q is not found in %q", libBar, libFlags)
 	}
 
-	rustcRule := ctx.ModuleForTests("foo-V1-rust", nativeRustVariant).Rule("rustc")
+	rustcRule := ctx.ModuleForTests("foo-V1-rust", nativeRustVariant).Rule("rustc").RelativeToTop()
 	libFlags = rustcRule.Args["libFlags"]
-	libBar = filepath.Join(buildDir, ".intermediates", "bar.1-V1-rust", nativeRustVariant, "libbar_1_V1.dylib.so")
+	libBar = filepath.Join("out", "soong", ".intermediates", "bar.1-V1-rust", nativeRustVariant, "libbar_1_V1.dylib.so")
 	libBarFlag := "--extern bar_1=" + libBar
 	if !strings.Contains(libFlags, libBarFlag) {
 		t.Errorf("%q is not found in %q", libBarFlag, libFlags)
