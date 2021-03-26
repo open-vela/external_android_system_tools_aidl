@@ -448,6 +448,7 @@ java_test {
         "tests/java/src/android/aidl/tests/UnionTests.java",
         "tests/java/src/android/aidl/tests/ExtensionTests.java",
         "tests/java/src/android/aidl/tests/NullableTests.java",
+        "tests/java/src/android/aidl/tests/VintfTests.java",
     ],
 }
 
