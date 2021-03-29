@@ -35,7 +35,7 @@ lazy_static! {
 pub(crate) mod mangled { pub use super::IOldName as _7_android_4_aidl_5_tests_8_IOldName; }
 impl IOldName for BpOldName {
   fn RealName(&self) -> binder::public_api::Result<String> {
-    let _aidl_reply = self.binder.transact(transactions::RealName, 0, |_aidl_data| {
+    let _aidl_reply = self.binder.transact(transactions::RealName, binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       Ok(())
     });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
