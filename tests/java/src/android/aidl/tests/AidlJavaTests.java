@@ -11,8 +11,7 @@ public class AidlJavaTests {
         junit.addListener(new TextListener(System.out));
         Result result = junit.run(ExtensionTests.class, GenericTests.class,
             JavaOnlyImmutableAnnotationTests.class, MapTests.class, NullableTests.class,
-            TestServiceClient.class, TestVersionedInterface.class, UnionTests.class,
-            VintfTests.class);
+            TestServiceClient.class, TestVersionedInterface.class, UnionTests.class);
 
         System.out.println(result.wasSuccessful() ? "TEST SUCCESS" : "TEST FAILURE");
     }
