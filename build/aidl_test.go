@@ -695,14 +695,14 @@ func TestImports(t *testing.T) {
 		}
 	`)
 
-	ldRule := ctx.ModuleForTests("foo-V1-cpp", nativeVariant).Rule("ld").RelativeToTop()
+	ldRule := ctx.ModuleForTests("foo-V1-cpp", nativeVariant).Rule("ld")
 	libFlags := ldRule.Args["libFlags"]
 	libBar := filepath.Join("bar.1-V1-cpp", nativeVariant, "bar.1-V1-cpp.so")
 	if !strings.Contains(libFlags, libBar) {
 		t.Errorf("%q is not found in %q", libBar, libFlags)
 	}
 
-	rustcRule := ctx.ModuleForTests("foo-V1-rust", nativeRustVariant).Rule("rustc").RelativeToTop()
+	rustcRule := ctx.ModuleForTests("foo-V1-rust", nativeRustVariant).Rule("rustc")
 	libFlags = rustcRule.Args["libFlags"]
 	libBar = filepath.Join("out", "soong", ".intermediates", "bar.1-V1-rust", nativeRustVariant, "libbar_1_V1.dylib.so")
 	libBarFlag := "--extern bar_1=" + libBar
