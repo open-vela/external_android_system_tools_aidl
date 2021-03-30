@@ -227,6 +227,9 @@ python_test_host {
         "aidl_test_rust_service",
     ],
     test_suites: ["general-tests"],
+    test_options: {
+        unit_test: false,
+    },
 }
 
 cc_defaults {
