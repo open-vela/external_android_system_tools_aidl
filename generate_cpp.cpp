@@ -243,7 +243,7 @@ unique_ptr<Declaration> DefineClientTransaction(const AidlTypenames& typenames,
   if (interface.IsSensitiveData()) {
     b->AddLiteral(StringPrintf("%s.markSensitive()", kDataVarName));
   }
-  b->AddLiteral(StringPrintf("%s.markForBinder(remote())", kDataVarName));
+  b->AddLiteral(StringPrintf("%s.markForBinder(remoteStrong())", kDataVarName));
 
   // Even if we're oneway, the transact method still takes a parcel.
   b->AddLiteral(StringPrintf("%s %s", kAndroidParcelLiteral, kReplyVarName));
