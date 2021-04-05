@@ -31,7 +31,7 @@ BpNewName::BpNewName(const ::android::sp<::android::IBinder>& _aidl_impl)
 
 ::android::binder::Status BpNewName::RealName(::android::String16* _aidl_return) {
   ::android::Parcel _aidl_data;
-  _aidl_data.markForBinder(remote());
+  _aidl_data.markForBinder(remoteStrong());
   ::android::Parcel _aidl_reply;
   ::android::status_t _aidl_ret_status = ::android::OK;
   ::android::binder::Status _aidl_status;
