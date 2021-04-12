@@ -247,7 +247,7 @@ fn test_binder_exchange() {
         .GetOtherTestService(NAME)
         .expect("error calling GetOtherTestService");
     assert_eq!(got.GetName().as_ref().map(String::as_ref), Ok(NAME));
-    assert_eq!(service.VerifyName(&*got, NAME), Ok(true));
+    assert_eq!(service.VerifyName(&got, NAME), Ok(true));
 }
 
 fn build_pipe() -> (File, File) {
