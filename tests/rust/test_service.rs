@@ -161,7 +161,7 @@ impl ITestService::ITestService for TestService {
 
     fn VerifyName(
         &self,
-        service: &binder::Strong<dyn INamedCallback::INamedCallback>,
+        service: &dyn INamedCallback::INamedCallback,
         name: &str,
     ) -> binder::Result<bool> {
         service.GetName().map(|found_name| found_name == name)
