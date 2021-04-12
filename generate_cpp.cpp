@@ -17,6 +17,7 @@
 #include "generate_cpp.h"
 #include "aidl.h"
 
+#include <algorithm>
 #include <cctype>
 #include <cstring>
 #include <memory>
@@ -26,6 +27,7 @@
 
 #include <android-base/format.h>
 #include <android-base/stringprintf.h>
+#include <android-base/strings.h>
 
 #include "aidl_language.h"
 #include "aidl_to_cpp.h"
@@ -1553,8 +1555,37 @@ bool GenerateCppEnumDeclaration(const std::string& filename, const Options& opti
   return true;
 }
 
+// Ensures that output_file is  <out_dir>/<packagename>/<typename>.cpp
+bool ValidateOutputFilePath(const string& output_file, const Options& options,
+                            const AidlDefinedType& defined_type) {
+  const auto& out_dir =
+      !options.OutputDir().empty() ? options.OutputDir() : options.OutputHeaderDir();
+  if (output_file.empty() || !android::base::StartsWith(output_file, out_dir)) {
+    // If output_file is not set (which happens in the unit tests) or is outside of out_dir, we can
+    // help but accepting it, because the path is what the user has requested.
+    return true;
+  }
+
+  string canonical_name = defined_type.GetCanonicalName();
+  std::replace(canonical_name.begin(), canonical_name.end(), '.', OS_PATH_SEPARATOR);
+  const string expected = out_dir + canonical_name + ".cpp";
+  if (expected != output_file) {
+    AIDL_ERROR(defined_type) << "Output file is expected to be at " << expected << ", but is "
+                             << output_file << ".\n If this is an Android platform "
+                             << "build, consider providing the input AIDL files using a filegroup "
+                             << "with `path:\"<base>\"` so that the AIDL files are located at "
+                             << "<base>/<packagename>/<typename>.aidl.";
+    return false;
+  }
+  return true;
+}
+
 bool GenerateCpp(const string& output_file, const Options& options, const AidlTypenames& typenames,
                  const AidlDefinedType& defined_type, const IoDelegate& io_delegate) {
+  if (!ValidateOutputFilePath(output_file, options, defined_type)) {
+    return false;
+  }
+
   const AidlStructuredParcelable* parcelable = defined_type.AsStructuredParcelable();
   if (parcelable != nullptr) {
     return GenerateCppParcelable(output_file, options, typenames, *parcelable, io_delegate);
