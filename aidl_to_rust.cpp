@@ -127,11 +127,7 @@ std::string GetRustName(const AidlTypeSpecifier& type, const AidlTypenames& type
     return m[element_type_name];
   }
   if (TypeIsInterface(element_type, typenames)) {
-    if (mode == StorageMode::INTERFACE_ARGUMENT) {
-      return "dyn " + GetRawRustName(element_type);
-    } else {
-      return "binder::Strong<dyn " + GetRawRustName(element_type) + ">";
-    }
+    return "binder::Strong<dyn " + GetRawRustName(element_type) + ">";
   }
 
   return GetRawRustName(element_type);
@@ -181,8 +177,7 @@ std::string RustNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typen
     rust_name = GetRustName(type, typenames, mode);
   }
 
-  if (mode == StorageMode::IN_ARGUMENT || mode == StorageMode::UNSIZED_ARGUMENT ||
-      mode == StorageMode::INTERFACE_ARGUMENT) {
+  if (mode == StorageMode::IN_ARGUMENT || mode == StorageMode::UNSIZED_ARGUMENT) {
     // If this is a nullable input argument, put the reference inside the option,
     // e.g., `Option<&str>` instead of `&Option<str>`
     rust_name = "&" + rust_name;
@@ -211,9 +206,6 @@ StorageMode ArgumentStorageMode(const AidlArgument& arg, const AidlTypenames& ty
 
   const auto typeName = arg.GetType().GetName();
   const auto definedType = typenames.TryGetDefinedType(typeName);
-  if (definedType != nullptr && definedType->AsInterface() != nullptr) {
-    return StorageMode::INTERFACE_ARGUMENT;
-  }
 
   const bool isEnum = definedType && definedType->AsEnumDeclaration() != nullptr;
   const bool isPrimitive = AidlTypenames::IsPrimitiveTypename(typeName);
@@ -250,16 +242,6 @@ ReferenceMode ArgumentReferenceMode(const AidlArgument& arg, const AidlTypenames
         return ReferenceMode::REF;
       }
 
-    case StorageMode::INTERFACE_ARGUMENT:
-      if (arg.GetType().IsNullable()) {
-        // &Option<Strong<dyn IFoo>> => Option<&dyn IFoo>
-        return ReferenceMode::AS_DEREF;
-      } else {
-        // &Strong<dyn IFoo> => &dyn IFoo
-        // Needs inner dereference to pierce the Strong: &*arg
-        return ReferenceMode::REF_DEREF;
-      }
-
     default:
       return ReferenceMode::VALUE;
   }
@@ -269,9 +251,6 @@ std::string TakeReference(ReferenceMode ref_mode, const std::string& name) {
   switch (ref_mode) {
     case ReferenceMode::REF:
       return "&" + name;
-
-    case ReferenceMode::REF_DEREF:
-      return "&*" + name;
 
     case ReferenceMode::MUT_REF:
       return "&mut " + name;
@@ -310,7 +289,7 @@ bool TypeHasDefault(const AidlTypeSpecifier& type, const AidlTypenames& typename
     return false;
   }
 
-  // dyn IFoo values don't implement Default
+  // Strong<dyn IFoo> values don't implement Default
   if (TypeIsInterface(type, typenames)) {
     return false;
   }
