@@ -3723,6 +3723,23 @@ TEST_P(AidlTest, ErrorInterfaceName) {
             GetCapturedStderr());
 }
 
+TEST_F(AidlTest, RejectsIncorrectOutputFilePathOnLegacyCppInput) {
+  const std::string input_file = "base/p/q/IFoo.aidl";
+  const std::string header_dir = "out/";
+  const std::string output_file = "out/base/p/q/IFoo.cpp";
+  const std::string package = "p.q";  // not base.p.q
+  io_delegate_.SetFileContents(input_file, "package " + package + "; interface IFoo {}");
+
+  auto options = Options::From({"aidl-cpp", input_file, header_dir, output_file});
+  CaptureStderr();
+  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_THAT(
+      GetCapturedStderr(),
+      testing::StartsWith(
+          "ERROR: base/p/q/IFoo.aidl:1.13-23: Output file is expected to be at out/p/q/IFoo.cpp, "
+          "but is out/base/p/q/IFoo.cpp."));
+}
+
 TEST_F(AidlTest, FormatCommentsForJava) {
   using android::aidl::FormatCommentsForJava;
 
