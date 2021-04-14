@@ -20,13 +20,15 @@ use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
     self, BnTestService, BpTestService,
 };
 use aidl_test_interface::aidl::android::aidl::tests::{
-    BackendType::BackendType,
-    ByteEnum::ByteEnum, ConstantExpressionEnum::ConstantExpressionEnum, INamedCallback, INewName,
-    IOldName, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable, Union,
+    BackendType::BackendType, ByteEnum::ByteEnum, ConstantExpressionEnum::ConstantExpressionEnum,
+    INamedCallback, INewName, IOldName, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable,
+    Union,
 };
-use aidl_test_interface::binder::{self, Interface, ParcelFileDescriptor, SpIBinder};
+use aidl_test_interface::binder::{
+    self, BinderFeatures, Interface, ParcelFileDescriptor, SpIBinder,
+};
 use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::{
-    IFooInterface, IFooInterface::BnFooInterface, IFooInterface::BpFooInterface, BazUnion::BazUnion,
+    BazUnion::BazUnion, IFooInterface, IFooInterface::BnFooInterface, IFooInterface::BpFooInterface,
 };
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -154,7 +156,7 @@ impl ITestService::ITestService for TestService {
         let mut service_map = self.service_map.lock().unwrap();
         let other_service = service_map.entry(name.into()).or_insert_with(|| {
             let named_callback = NamedCallback(name.into());
-            INamedCallback::BnNamedCallback::new_binder(named_callback)
+            INamedCallback::BnNamedCallback::new_binder(named_callback, BinderFeatures::default())
         });
         Ok(other_service.to_owned())
     }
@@ -283,11 +285,17 @@ impl ITestService::ITestService for TestService {
     }
 
     fn GetOldNameInterface(&self) -> binder::Result<binder::Strong<dyn IOldName::IOldName>> {
-        Ok(IOldName::BnOldName::new_binder(OldName))
+        Ok(IOldName::BnOldName::new_binder(
+            OldName,
+            BinderFeatures::default(),
+        ))
     }
 
     fn GetNewNameInterface(&self) -> binder::Result<binder::Strong<dyn INewName::INewName>> {
-        Ok(INewName::BnNewName::new_binder(NewName))
+        Ok(INewName::BnNewName::new_binder(
+            NewName,
+            BinderFeatures::default(),
+        ))
     }
 
     fn GetCppJavaTests(&self) -> binder::Result<Option<SpIBinder>> {
@@ -319,11 +327,11 @@ fn main() {
     binder::ProcessState::start_thread_pool();
 
     let service_name = <BpTestService as ITestService::ITestService>::get_descriptor();
-    let service = BnTestService::new_binder(TestService::default());
+    let service = BnTestService::new_binder(TestService::default(), BinderFeatures::default());
     binder::add_service(service_name, service.as_binder()).expect("Could not register service");
 
     let versioned_service_name = <BpFooInterface as IFooInterface::IFooInterface>::get_descriptor();
-    let versioned_service = BnFooInterface::new_binder(FooInterface);
+    let versioned_service = BnFooInterface::new_binder(FooInterface, BinderFeatures::default());
     binder::add_service(versioned_service_name, versioned_service.as_binder())
         .expect("Could not register service");
 
