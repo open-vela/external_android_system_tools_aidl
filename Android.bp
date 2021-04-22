@@ -38,7 +38,7 @@ cc_defaults {
         "-Werror",
         "-Wextra",
     ],
-    header_libs: ["libgtest_prod_headers"],
+    whole_static_libs: ["libgtest_prod"],
     static_libs: [
         "libbase",
         "libcutils",
