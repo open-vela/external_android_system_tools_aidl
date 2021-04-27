@@ -231,6 +231,19 @@ static bool HasZeroEnumerator(const AidlEnumDeclaration& enum_decl) {
                      });
 }
 
+static bool EvaluatesToZero(const AidlEnumDeclaration& enum_decl, const std::string& value) {
+  if (value == "") return true;
+  // Because --check_api runs with "valid" AIDL definitions, we can safely assume that
+  // the value is formatted as <scope>.<enumerator>.
+  auto enumerator_name = value.substr(value.find_last_of('.') + 1);
+  for (const auto& enumerator : enum_decl.GetEnumerators()) {
+    if (enumerator->GetName() == enumerator_name) {
+      return enumerator->GetValue()->Literal() == "0";
+    }
+  }
+  AIDL_FATAL(enum_decl) << "Can't find " << enumerator_name << " in " << enum_decl.GetName();
+}
+
 static bool are_compatible_parcelables(const AidlDefinedType& older, const AidlTypenames&,
                                        const AidlDefinedType& newer,
                                        const AidlTypenames& new_types) {
@@ -257,10 +270,18 @@ static bool are_compatible_parcelables(const AidlDefinedType& older, const AidlT
 
     string old_value = old_field->GetDefaultValue() ? old_field->GetDefaultValue()->Literal() : "";
     string new_value = new_field->GetDefaultValue() ? new_field->GetDefaultValue()->Literal() : "";
-    if (old_value != new_value) {
-      AIDL_ERROR(new_field) << "Changed default value: " << old_value << " to " << new_value << ".";
-      compatible = false;
+
+    if (old_value == new_value) {
+      continue;
     }
+    // For enum type fields, we accept setting explicit default value which is "zero"
+    auto enum_decl = new_types.GetEnumDeclaration(new_field->GetType());
+    if (old_value == "" && enum_decl && EvaluatesToZero(*enum_decl, new_value)) {
+      continue;
+    }
+
+    AIDL_ERROR(new_field) << "Changed default value: " << old_value << " to " << new_value << ".";
+    compatible = false;
   }
 
   // Reordering of fields is an incompatible change.
