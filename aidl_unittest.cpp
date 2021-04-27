@@ -2165,6 +2165,32 @@ TEST_F(AidlTestCompatibleChanges, NewFieldOfNewType) {
   EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
 }
 
+TEST_F(AidlTestCompatibleChanges, CompatibleExplicitDefaults) {
+  io_delegate_.SetFileContents("old/p/Data.aidl",
+                               "package p;\n"
+                               "parcelable Data {\n"
+                               "  p.Enum e;\n"
+                               "}");
+  io_delegate_.SetFileContents("old/p/Enum.aidl",
+                               "package p;\n"
+                               "enum Enum {\n"
+                               "  FOO = 0,\n"
+                               "  BAR = 1,\n"
+                               "}");
+  io_delegate_.SetFileContents("new/p/Data.aidl",
+                               "package p;\n"
+                               "parcelable Data {\n"
+                               "  p.Enum e = p.Enum.FOO;\n"
+                               "}");
+  io_delegate_.SetFileContents("new/p/Enum.aidl",
+                               "package p;\n"
+                               "enum Enum {\n"
+                               "  FOO = 0,\n"
+                               "  BAR = 1,\n"
+                               "}");
+  EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
+}
+
 class AidlTestIncompatibleChanges : public AidlTest {
  protected:
   Options options_ = Options::From("aidl --checkapi old new");
