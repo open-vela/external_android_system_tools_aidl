@@ -382,6 +382,8 @@ cc_test {
     static_libs: [
         "libcutils",
         "libgmock",
+        //  client uses the latest version
+        "aidl-test-versioned-interface-V2-ndk_platform",
         "aidl-test-interface-ndk_platform",
         "aidl_test_loggable_interface-ndk_platform"
     ],
@@ -390,6 +392,7 @@ cc_test {
     ],
     srcs: [
         "tests/aidl_test_client_ndk_loggable_interface.cpp",
+        "tests/aidl_test_client_ndk_versioned_interface.cpp",
     ],
 }
 
