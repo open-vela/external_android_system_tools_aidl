@@ -1124,21 +1124,22 @@ void BuildReadFromParcel(const AidlStructuredParcelable& parcel, const AidlTypen
       "static_cast<size_t>(_aidl_parcelable_raw_size);\n"
       "if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;\n");
 
+  auto checkAvailableData = StringPrintf(
+      "if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {\n"
+      "  _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);\n"
+      "  return %s;\n"
+      "}",
+      kAndroidStatusVarName);
   for (const auto& variable : parcel.GetFields()) {
+    read_block->AddLiteral(checkAvailableData);
     string method = ParcelReadMethodOf(variable->GetType(), typenames);
-
     read_block->AddStatement(new Assignment(
         kAndroidStatusVarName, new MethodCall(StringPrintf("_aidl_parcel->%s", method.c_str()),
                                               ParcelReadCastOf(variable->GetType(), typenames,
                                                                "&" + variable->GetName()))));
     read_block->AddStatement(ReturnOnStatusNotOk());
-    read_block->AddLiteral(StringPrintf(
-        "if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {\n"
-        "  _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);\n"
-        "  return %s;\n"
-        "}",
-        kAndroidStatusVarName));
   }
+  read_block->AddLiteral("_aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size)");
   read_block->AddLiteral(StringPrintf("return %s", kAndroidStatusVarName));
 }
 
