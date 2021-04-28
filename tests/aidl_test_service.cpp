@@ -638,6 +638,10 @@ class VersionedService : public android::aidl::versioned::tests::BnFooInterface 
     }
     return Status::ok();
   }
+  Status callWithFoo(::android::aidl::versioned::tests::Foo* outFoo) override {
+    (void)outFoo;
+    return Status::ok();
+  }
 };
 
 class LoggableInterfaceService : public android::aidl::loggable::BnLoggableInterface {

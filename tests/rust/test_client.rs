@@ -623,7 +623,7 @@ fn test_versioned_interface_hash() {
     let hash = service.getInterfaceHash();
     assert_eq!(
         hash.as_ref().map(String::as_str),
-        Ok("796b4ab269d476662bed4ab57092ed000e48d5d7")
+        Ok("4b32bf2134c87894404e935d52c5c64886f23215")
     );
 }
 
