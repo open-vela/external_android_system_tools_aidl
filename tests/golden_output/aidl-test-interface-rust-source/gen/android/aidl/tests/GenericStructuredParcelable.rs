@@ -49,16 +49,13 @@ impl binder::parcel::DeserializeOption for GenericStructuredParcelable {
     let parcelable_size: i32 = parcel.read()?;
     if parcelable_size < 0 { return Err(binder::StatusCode::BAD_VALUE); }
     let mut result = Self::default();
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
-    }
     result.a = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
       return Ok(Some(result));
     }
     result.b = parcel.read()?;
-    unsafe {
-      parcel.set_data_position(start_pos + parcelable_size)?;
+    if (parcel.get_data_position() - start_pos) == parcelable_size {
+      return Ok(Some(result));
     }
     Ok(Some(result))
   }
