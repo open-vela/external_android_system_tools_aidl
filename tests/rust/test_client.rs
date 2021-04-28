@@ -656,6 +656,18 @@ fn test_versioned_unknown_union_field_triggers_error() {
     }
 }
 
+#[test]
+fn test_parcelable_param_with_new_fields() {
+    let service: binder::Strong<dyn IFooInterface::IFooInterface> =
+        binder::get_interface(<BpFooInterface as IFooInterface::IFooInterface>::get_descriptor())
+            .expect("did not get binder service");
+
+    let mut out_foo = Default::default();
+    let ret = service.callWithFoo(&mut out_foo);
+    assert!(ret.is_ok());
+    assert_eq!(out_foo.intDefault42, 42);
+}
+
 fn test_renamed_interface<F>(f: F)
 where
     F: FnOnce(binder::Strong<dyn IOldName::IOldName>, binder::Strong<dyn INewName::INewName>),
