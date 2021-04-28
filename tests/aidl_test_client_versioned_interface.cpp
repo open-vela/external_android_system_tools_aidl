@@ -44,7 +44,7 @@ TEST_F(VersionedInterfaceTest, getInterfaceVersion) {
 }
 
 TEST_F(VersionedInterfaceTest, getInterfaceHash) {
-  EXPECT_EQ("796b4ab269d476662bed4ab57092ed000e48d5d7", versioned->getInterfaceHash());
+  EXPECT_EQ("4b32bf2134c87894404e935d52c5c64886f23215", versioned->getInterfaceHash());
 }
 
 TEST_F(VersionedInterfaceTest, noProblemWhenPassingAUnionWithOldField) {
