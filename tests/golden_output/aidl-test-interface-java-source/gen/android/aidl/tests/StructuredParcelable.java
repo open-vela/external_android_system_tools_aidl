@@ -153,7 +153,6 @@ public class StructuredParcelable implements android.os.Parcelable
     int _aidl_parcelable_size = _aidl_parcel.readInt();
     try {
       if (_aidl_parcelable_size < 0) return;
-      if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       shouldContainThreeFs = _aidl_parcel.createIntArray();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       f = _aidl_parcel.readInt();
@@ -269,6 +268,7 @@ public class StructuredParcelable implements android.os.Parcelable
       }
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       defaultWithFoo = _aidl_parcel.readInt();
+      if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
     } finally {
       if (_aidl_start_pos > (Integer.MAX_VALUE - _aidl_parcelable_size)) {
         throw new android.os.BadParcelableException("Overflow in the size of parcelable");
