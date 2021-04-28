@@ -19,4 +19,5 @@ package android.aidl.versioned.tests;
 interface IFooInterface {
   void originalApi();
   @utf8InCpp String acceptUnionAndReturnString(in android.aidl.versioned.tests.BazUnion u);
+  void callWithFoo(out android.aidl.versioned.tests.Foo outFoo);
 }
