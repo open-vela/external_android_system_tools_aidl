@@ -28,8 +28,7 @@ use aidl_test_interface::binder::{
     self, BinderFeatures, Interface, ParcelFileDescriptor, SpIBinder,
 };
 use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::{
-    BazUnion::BazUnion, Foo::Foo, IFooInterface, IFooInterface::BnFooInterface,
-    IFooInterface::BpFooInterface,
+    BazUnion::BazUnion, IFooInterface, IFooInterface::BnFooInterface, IFooInterface::BpFooInterface,
 };
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -320,12 +319,6 @@ impl IFooInterface::IFooInterface for FooInterface {
         match u {
             BazUnion::IntNum(n) => Ok(n.to_string()),
         }
-    }
-    fn callWithFoo(&self, _out_foo: &mut Foo) -> binder::Result<()> {
-        Ok(())
-    }
-    fn ignoreParcelableAndRepeatInt(&self, _in_foo: &Foo, value: i32) -> binder::Result<i32> {
-        Ok(value)
     }
 }
 
