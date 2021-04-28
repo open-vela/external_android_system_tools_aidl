@@ -74,6 +74,10 @@ public class TestServiceServer extends ITestService.Stub {
     @Override
     public void callWithFoo(Foo outFoo) {}
     @Override
+    public int ignoreParcelableAndRepeatInt(Foo inFoo, int value) {
+      return value;
+    }
+    @Override
     public final int getInterfaceVersion() {
       return IFooInterface.VERSION;
     }
