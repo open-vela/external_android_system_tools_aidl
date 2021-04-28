@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import android.aidl.versioned.tests.BazUnion;
+import android.aidl.versioned.tests.Foo;
 import android.aidl.versioned.tests.IFooInterface;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -75,5 +76,12 @@ public class TestVersionedInterface {
       expectedException.expect(IllegalArgumentException.class);
 
       service.acceptUnionAndReturnString(BazUnion.longNum(42L));
+    }
+
+    @Test
+    public void testPacelableParamWithNewFields() throws RemoteException {
+      Foo outFoo = new Foo();
+      service.callWithFoo(outFoo);
+      assertThat(outFoo.intDefault42, is(42));
     }
 }
