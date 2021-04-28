@@ -52,7 +52,7 @@ public class TestVersionedInterface {
 
     @Test
     public void testGetInterfaceHash() throws RemoteException {
-      assertThat(service.getInterfaceHash(), is("796b4ab269d476662bed4ab57092ed000e48d5d7"));
+      assertThat(service.getInterfaceHash(), is("4b32bf2134c87894404e935d52c5c64886f23215"));
     }
 
     @Rule public ExpectedException expectedException = ExpectedException.none();

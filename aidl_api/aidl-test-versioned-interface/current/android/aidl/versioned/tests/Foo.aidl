@@ -17,9 +17,6 @@
 // later when a module using the interface is updated, e.g., Mainline modules.
 
 package android.aidl.versioned.tests;
-interface IFooInterface {
-  void originalApi();
-  @utf8InCpp String acceptUnionAndReturnString(in android.aidl.versioned.tests.BazUnion u);
-  void callWithFoo(out android.aidl.versioned.tests.Foo outFoo);
-  void newApi();
+parcelable Foo {
+  int intDefault42 = 42;
 }
