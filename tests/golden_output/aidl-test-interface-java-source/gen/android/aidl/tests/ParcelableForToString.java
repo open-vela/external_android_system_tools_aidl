@@ -95,6 +95,7 @@ public class ParcelableForToString implements android.os.Parcelable
     int _aidl_parcelable_size = _aidl_parcel.readInt();
     try {
       if (_aidl_parcelable_size < 0) return;
+      if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       intValue = _aidl_parcel.readInt();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       intArray = _aidl_parcel.createIntArray();
@@ -155,7 +156,6 @@ public class ParcelableForToString implements android.os.Parcelable
       else {
         unionValue = null;
       }
-      if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
     } finally {
       if (_aidl_start_pos > (Integer.MAX_VALUE - _aidl_parcelable_size)) {
         throw new android.os.BadParcelableException("Overflow in the size of parcelable");
