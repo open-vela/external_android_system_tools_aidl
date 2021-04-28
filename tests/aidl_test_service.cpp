@@ -642,6 +642,12 @@ class VersionedService : public android::aidl::versioned::tests::BnFooInterface 
     (void)outFoo;
     return Status::ok();
   }
+  Status ignoreParcelableAndRepeatInt(const ::android::aidl::versioned::tests::Foo& inFoo,
+                                      int32_t value, int32_t* ret) override {
+    (void)inFoo;
+    *ret = value;
+    return Status::ok();
+  }
 };
 
 class LoggableInterfaceService : public android::aidl::loggable::BnLoggableInterface {
