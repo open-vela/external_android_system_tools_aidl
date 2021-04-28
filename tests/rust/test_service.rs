@@ -324,6 +324,9 @@ impl IFooInterface::IFooInterface for FooInterface {
     fn callWithFoo(&self, _out_foo: &mut Foo) -> binder::Result<()> {
         Ok(())
     }
+    fn ignoreParcelableAndRepeatInt(&self, _in_foo: &Foo, value: i32) -> binder::Result<i32> {
+        Ok(value)
+    }
 }
 
 fn main() {
