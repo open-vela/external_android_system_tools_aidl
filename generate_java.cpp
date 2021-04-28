@@ -581,12 +581,11 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
   }
   out << ";\n";
 
-  std::shared_ptr<LiteralStatement> sizeCheck = std::make_shared<LiteralStatement>(out.str());
+  std::shared_ptr<LiteralStatement> sizeCheck = nullptr;
   // keep this across different fields in order to create the classloader
   // at most once.
   bool is_classloader_created = false;
   for (const auto& field : parcel->GetFields()) {
-    read_or_create_method->statements->Add(sizeCheck);
     const auto field_variable_name =
         (parcel->IsJavaOnlyImmutable() ? "_aidl_temp_" : "") + field->GetName();
     string code;
@@ -611,6 +610,8 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
     }
     writer->Close();
     read_or_create_method->statements->Add(std::make_shared<LiteralStatement>(code));
+    if (!sizeCheck) sizeCheck = std::make_shared<LiteralStatement>(out.str());
+    read_or_create_method->statements->Add(sizeCheck);
   }
 
   out.str("");
