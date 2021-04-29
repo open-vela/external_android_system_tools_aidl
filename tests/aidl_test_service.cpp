@@ -638,18 +638,13 @@ class VersionedService : public android::aidl::versioned::tests::BnFooInterface 
     }
     return Status::ok();
   }
-  Status returnsLengthOfFooArray(const vector<::android::aidl::versioned::tests::Foo>& foos,
-                                 int32_t* ret) override {
-    *ret = static_cast<int32_t>(foos.size());
+  Status callWithFoo(::android::aidl::versioned::tests::Foo* outFoo) override {
+    (void)outFoo;
     return Status::ok();
   }
-  Status ignoreParcelablesAndRepeatInt(const ::android::aidl::versioned::tests::Foo& inFoo,
-                                       ::android::aidl::versioned::tests::Foo* inoutFoo,
-                                       ::android::aidl::versioned::tests::Foo* outFoo,
-                                       int32_t value, int32_t* ret) override {
+  Status ignoreParcelableAndRepeatInt(const ::android::aidl::versioned::tests::Foo& inFoo,
+                                      int32_t value, int32_t* ret) override {
     (void)inFoo;
-    (void)inoutFoo;
-    (void)outFoo;
     *ret = value;
     return Status::ok();
   }
