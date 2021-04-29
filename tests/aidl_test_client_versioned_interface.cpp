@@ -25,6 +25,7 @@ using android::OK;
 using android::sp;
 using android::String16;
 using android::aidl::versioned::tests::BazUnion;
+using android::aidl::versioned::tests::Foo;
 using android::aidl::versioned::tests::IFooInterface;
 
 class VersionedInterfaceTest : public AidlTest {
@@ -66,4 +67,11 @@ TEST_F(VersionedInterfaceTest, errorWhenPassingAUnionWithNewField) {
   } else {
     EXPECT_EQ(::android::BAD_VALUE, status.transactionError()) << status;
   }
+}
+
+TEST_F(VersionedInterfaceTest, parcelableParamContainsNewField) {
+  Foo outFoo;
+  auto status = versioned->callWithFoo(&outFoo);
+  EXPECT_TRUE(status.isOk());
+  EXPECT_EQ(42, outFoo.intDefault42);
 }
