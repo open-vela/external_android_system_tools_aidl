@@ -321,10 +321,10 @@ impl IFooInterface::IFooInterface for FooInterface {
             BazUnion::IntNum(n) => Ok(n.to_string()),
         }
     }
-    fn callWithFoo(&self, _out_foo: &mut Foo) -> binder::Result<()> {
-        Ok(())
+    fn returnsLengthOfFooArray(&self, foos: &[Foo]) -> binder::Result<i32> {
+        Ok(foos.len() as i32)
     }
-    fn ignoreParcelableAndRepeatInt(&self, _in_foo: &Foo, value: i32) -> binder::Result<i32> {
+    fn ignoreParcelablesAndRepeatInt(&self, _in_foo: &Foo, _inout_foo: &mut Foo, _out_foo: &mut Foo, value: i32) -> binder::Result<i32> {
         Ok(value)
     }
 }
