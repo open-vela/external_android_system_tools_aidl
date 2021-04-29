@@ -1102,14 +1102,14 @@ void GenerateParcelSource(CodeWriter& out, const AidlTypenames& types,
   StatusCheckReturn(out);
 
   for (const auto& variable : defined_type.GetFields()) {
-    out << "_aidl_ret_status = ";
-    ReadFromParcelFor({out, types, variable->GetType(), "parcel", "&" + variable->GetName()});
-    out << ";\n";
-    StatusCheckReturn(out);
     out << "if (AParcel_getDataPosition(parcel) - _aidl_start_pos >= _aidl_parcelable_size) {\n"
         << "  AParcel_setDataPosition(parcel, _aidl_start_pos + _aidl_parcelable_size);\n"
         << "  return _aidl_ret_status;\n"
         << "}\n";
+    out << "_aidl_ret_status = ";
+    ReadFromParcelFor({out, types, variable->GetType(), "parcel", "&" + variable->GetName()});
+    out << ";\n";
+    StatusCheckReturn(out);
   }
   out << "AParcel_setDataPosition(parcel, _aidl_start_pos + _aidl_parcelable_size);\n"
       << "return _aidl_ret_status;\n";
