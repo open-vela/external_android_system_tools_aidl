@@ -1122,16 +1122,18 @@ void BuildReadFromParcel(const AidlStructuredParcelable& parcel, const AidlTypen
       "if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;\n"
       "[[maybe_unused]] size_t _aidl_parcelable_size = "
       "static_cast<size_t>(_aidl_parcelable_raw_size);\n"
-      "if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;\n");
+      "if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;\n",
+      /*add_semicolon=*/false);
 
   auto checkAvailableData = StringPrintf(
       "if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {\n"
       "  _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);\n"
       "  return %s;\n"
-      "}",
+      "}\n",
       kAndroidStatusVarName);
+
   for (const auto& variable : parcel.GetFields()) {
-    read_block->AddLiteral(checkAvailableData);
+    read_block->AddLiteral(checkAvailableData, /*add_semicolon=*/false);
     string method = ParcelReadMethodOf(variable->GetType(), typenames);
     read_block->AddStatement(new Assignment(
         kAndroidStatusVarName, new MethodCall(StringPrintf("_aidl_parcel->%s", method.c_str()),
@@ -1150,7 +1152,8 @@ void BuildWriteToParcel(const AidlStructuredParcelable& parcel, const AidlTypena
 
   write_block->AddLiteral(
       "auto _aidl_start_pos = _aidl_parcel->dataPosition();\n"
-      "_aidl_parcel->writeInt32(0);");
+      "_aidl_parcel->writeInt32(0);\n",
+      /*add_semicolon=*/false);
 
   for (const auto& variable : parcel.GetFields()) {
     string method = ParcelWriteMethodOf(variable->GetType(), typenames);
@@ -1165,7 +1168,8 @@ void BuildWriteToParcel(const AidlStructuredParcelable& parcel, const AidlTypena
       "auto _aidl_end_pos = _aidl_parcel->dataPosition();\n"
       "_aidl_parcel->setDataPosition(_aidl_start_pos);\n"
       "_aidl_parcel->writeInt32(_aidl_end_pos - _aidl_start_pos);\n"
-      "_aidl_parcel->setDataPosition(_aidl_end_pos);");
+      "_aidl_parcel->setDataPosition(_aidl_end_pos);\n",
+      /*add_semicolon=*/false);
   write_block->AddLiteral(StringPrintf("return %s", kAndroidStatusVarName));
 }
 
