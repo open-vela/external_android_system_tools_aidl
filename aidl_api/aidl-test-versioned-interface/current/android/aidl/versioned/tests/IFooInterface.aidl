@@ -21,5 +21,6 @@ interface IFooInterface {
   void originalApi();
   @utf8InCpp String acceptUnionAndReturnString(in android.aidl.versioned.tests.BazUnion u);
   void callWithFoo(out android.aidl.versioned.tests.Foo outFoo);
+  int ignoreParcelableAndRepeatInt(in android.aidl.versioned.tests.Foo inFoo, int value);
   void newApi();
 }
