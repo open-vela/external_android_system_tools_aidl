@@ -55,7 +55,7 @@ function _golden_test() {
   if [ "$update" = 1 ]; then
     "$root"/build/soong/soong_ui.bash --make-mode \
       $(for i in "${modules[@]}"; do
-          echo "$i" | sed 's/-source//'
+          echo "out/soong/.intermediates/system/tools/aidl/$i/timestamp"
         done)
   fi
 
@@ -67,7 +67,7 @@ function _golden_test() {
     if [ "$update" = 1 ]; then
       rm -rf "$golden"
       mkdir -p "$golden"
-      cp -r "$built" "$golden/.."
+      cp -r "$built/gen" "$golden"
     else
       diff -r "$built" "$golden" || e=1
     fi
