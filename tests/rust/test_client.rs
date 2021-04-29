@@ -623,7 +623,7 @@ fn test_versioned_interface_hash() {
     let hash = service.getInterfaceHash();
     assert_eq!(
         hash.as_ref().map(String::as_str),
-        Ok("4b32bf2134c87894404e935d52c5c64886f23215")
+        Ok("fc8e8929f1bd9b61994893938e30de50df13cf18")
     );
 }
 
@@ -666,6 +666,17 @@ fn test_parcelable_param_with_new_fields() {
     let ret = service.callWithFoo(&mut out_foo);
     assert!(ret.is_ok());
     assert_eq!(out_foo.intDefault42, 42);
+}
+
+#[test]
+fn test_read_data_correctly_after_parcelable_with_new_field() {
+    let service: binder::Strong<dyn IFooInterface::IFooInterface> =
+        binder::get_interface(<BpFooInterface as IFooInterface::IFooInterface>::get_descriptor())
+            .expect("did not get binder service");
+
+    let in_foo = Default::default();
+    let ret = service.ignoreParcelableAndRepeatInt(&in_foo, 43);
+    assert_eq!(ret, Ok(43));
 }
 
 fn test_renamed_interface<F>(f: F)
