@@ -561,19 +561,22 @@ void GenerateParcelDeserializeBody(CodeWriter& out, const AidlStructuredParcelab
   out << "let start_pos = parcel.get_data_position();\n";
   out << "let parcelable_size: i32 = parcel.read()?;\n";
   out << "if parcelable_size < 0 { return Err(binder::StatusCode::BAD_VALUE); }\n";
+  out << "if start_pos.checked_add(parcelable_size).is_none() {\n";
+  out << "  return Err(binder::StatusCode::BAD_VALUE);\n";
+  out << "}\n";
 
-  // Pre-emit the common field prolog code, shared between all fields:
-  ostringstream prolog;
-  prolog << "if (parcel.get_data_position() - start_pos) == parcelable_size {\n";
+  // Pre-emit the common field prologue code, shared between all fields:
+  ostringstream prologue;
+  prologue << "if (parcel.get_data_position() - start_pos) == parcelable_size {\n";
   // We assume the lhs can never be > parcelable_size, because then the read
   // immediately preceding this check would have returned NOT_ENOUGH_DATA
-  prolog << "  return Ok(Some(result));\n";
-  prolog << "}\n";
-  string prolog_str = prolog.str();
+  prologue << "  return Ok(Some(result));\n";
+  prologue << "}\n";
+  string prologue_str = prologue.str();
 
   out << "let mut result = Self::default();\n";
   for (const auto& variable : parcel->GetFields()) {
-    out << prolog_str;
+    out << prologue_str;
     if (!TypeHasDefault(variable->GetType(), typenames)) {
       out << "result." << variable->GetName() << " = Some(parcel.read()?);\n";
     } else {
