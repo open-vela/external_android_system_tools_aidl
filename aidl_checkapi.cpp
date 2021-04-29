@@ -262,6 +262,15 @@ static bool are_compatible_parcelables(const AidlDefinedType& older, const AidlT
     return false;
   }
 
+  // android.net.UidRangeParcel should be frozen to prevent breakage in legacy (b/186720556)
+  if (older.GetCanonicalName() == "android.net.UidRangeParcel" &&
+      old_fields.size() != new_fields.size()) {
+    AIDL_ERROR(newer) << "Number of fields in " << older.GetCanonicalName() << " is changed from "
+                      << old_fields.size() << " to " << new_fields.size()
+                      << ". But it is forbidden because of legacy support.";
+    return false;
+  }
+
   bool compatible = true;
   for (size_t i = 0; i < old_fields.size(); i++) {
     const auto& old_field = old_fields.at(i);
