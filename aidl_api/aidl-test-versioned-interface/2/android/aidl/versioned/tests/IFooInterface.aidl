@@ -19,7 +19,7 @@ package android.aidl.versioned.tests;
 interface IFooInterface {
   void originalApi();
   @utf8InCpp String acceptUnionAndReturnString(in android.aidl.versioned.tests.BazUnion u);
-  void callWithFoo(out android.aidl.versioned.tests.Foo outFoo);
-  int ignoreParcelableAndRepeatInt(in android.aidl.versioned.tests.Foo inFoo, int value);
+  @SuppressWarnings(value={"inout-parameter"}) int ignoreParcelablesAndRepeatInt(in android.aidl.versioned.tests.Foo inFoo, inout android.aidl.versioned.tests.Foo inoutFoo, out android.aidl.versioned.tests.Foo outFoo, int value);
+  int returnsLengthOfFooArray(in android.aidl.versioned.tests.Foo[] foos);
   void newApi();
 }
