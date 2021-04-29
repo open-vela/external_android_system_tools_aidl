@@ -2691,6 +2691,21 @@ TEST_F(AidlTestIncompatibleChanges, FixedSizeAddedField) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
+TEST_F(AidlTestIncompatibleChanges, UidRangeParcelAddedField) {
+  const string expected_stderr =
+      "ERROR: new/android/net/UidRangeParcel.aidl:1.32-47: Number of fields in "
+      "android.net.UidRangeParcel is changed from 1 to 2. "
+      "But it is forbidden because of legacy support.\n";
+  io_delegate_.SetFileContents("old/android/net/UidRangeParcel.aidl",
+                               "package android.net; parcelable UidRangeParcel { int A = 1; }");
+  io_delegate_.SetFileContents(
+      "new/android/net/UidRangeParcel.aidl",
+      "package android.net; parcelable UidRangeParcel { int A = 1; int B = 2; }");
+  CaptureStderr();
+  EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
 TEST_F(AidlTestIncompatibleChanges, FixedSizeRemovedField) {
   const string expected_stderr =
       "ERROR: new/p/Foo.aidl:1.33-37: Number of fields in p.Foo is reduced from 2 to 1.\n";
