@@ -51,7 +51,7 @@ TEST_F(VersionedInterfaceTest, getInterfaceHash) {
   string hash;
   auto status = versioned->getInterfaceHash(&hash);
   EXPECT_TRUE(status.isOk()) << status.getDescription();
-  EXPECT_EQ("4b32bf2134c87894404e935d52c5c64886f23215", hash);
+  EXPECT_EQ("fc8e8929f1bd9b61994893938e30de50df13cf18", hash);
 }
 
 TEST_F(VersionedInterfaceTest, parcelableParamContainsNewField) {
@@ -59,4 +59,12 @@ TEST_F(VersionedInterfaceTest, parcelableParamContainsNewField) {
   auto status = versioned->callWithFoo(&outFoo);
   EXPECT_TRUE(status.isOk()) << status.getDescription();
   EXPECT_EQ(42, outFoo.intDefault42);
+}
+
+TEST_F(VersionedInterfaceTest, readDataCorrectlyAfterParcelableWithNewField) {
+  Foo inFoo;
+  int32_t ret;
+  auto status = versioned->ignoreParcelableAndRepeatInt(inFoo, 43, &ret);
+  EXPECT_TRUE(status.isOk()) << status.getDescription();
+  EXPECT_EQ(43, ret);
 }
