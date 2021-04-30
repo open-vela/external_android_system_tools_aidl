@@ -13,7 +13,10 @@ namespace tests {
   if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;
   [[maybe_unused]] size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
   if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;
-  ;
+  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
+    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+    return _aidl_ret_status;
+  }
   _aidl_ret_status = _aidl_parcel->readInt32Vector(&shouldContainThreeFs);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -21,7 +24,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(&f);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -29,7 +32,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readUtf8FromUtf16(&shouldBeJerry);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -37,7 +40,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readByte(reinterpret_cast<int8_t *>(&shouldBeByteBar));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -45,7 +48,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&shouldBeIntBar));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -53,7 +56,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt64(reinterpret_cast<int64_t *>(&shouldBeLongBar));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -61,7 +64,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readEnumVector(&shouldContainTwoByteFoos);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -69,7 +72,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readEnumVector(&shouldContainTwoIntFoos);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -77,7 +80,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readEnumVector(&shouldContainTwoLongFoos);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -85,7 +88,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readString16(&stringDefaultsToFoo);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -93,7 +96,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readByte(&byteDefaultsToFour);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -101,7 +104,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(&intDefaultsToFive);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -109,7 +112,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt64(&longDefaultsToNegativeSeven);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -117,7 +120,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readBool(&booleanDefaultsToTrue);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -125,7 +128,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readChar(&charDefaultsToC);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -133,7 +136,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readFloat(&floatDefaultsToPi);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -141,7 +144,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readDouble(&doubleWithDefault);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -149,7 +152,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32Vector(&arrayDefaultsTo123);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -157,7 +160,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32Vector(&arrayDefaultsToEmpty);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -165,7 +168,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readBool(&boolDefault);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -173,7 +176,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readByte(&byteDefault);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -181,7 +184,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(&intDefault);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -189,7 +192,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt64(&longDefault);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -197,7 +200,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readFloat(&floatDefault);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -205,7 +208,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readDouble(&doubleDefault);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -213,7 +216,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readDouble(&checkDoubleFromFloat);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -221,7 +224,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readString16Vector(&checkStringArray1);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -229,7 +232,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readUtf8VectorFromUtf16Vector(&checkStringArray2);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -237,7 +240,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(&int32_min);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -245,7 +248,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(&int32_max);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -253,7 +256,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt64(&int64_max);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -261,7 +264,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(&hexInt32_neg_1);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -269,7 +272,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readNullableStrongBinder(&ibinder);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -277,7 +280,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32Vector(&int32_1);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -285,7 +288,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt64Vector(&int64_1);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -293,7 +296,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(&hexInt32_pos_1);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -301,7 +304,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(&hexInt64_pos_1);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -309,7 +312,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&const_exprs_1));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -317,7 +320,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&const_exprs_2));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -325,7 +328,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&const_exprs_3));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -333,7 +336,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&const_exprs_4));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -341,7 +344,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&const_exprs_5));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -349,7 +352,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&const_exprs_6));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -357,7 +360,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&const_exprs_7));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -365,7 +368,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&const_exprs_8));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -373,7 +376,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&const_exprs_9));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -381,7 +384,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&const_exprs_10));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -389,7 +392,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readUtf8FromUtf16(&addString1);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -397,7 +400,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readUtf8FromUtf16(&addString2);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -405,7 +408,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(&shouldSetBit0AndBit2);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -413,7 +416,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readParcelable(&u);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -421,7 +424,7 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readParcelable(&shouldBeConstS1);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -429,22 +432,19 @@ namespace tests {
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
-  };
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&defaultWithFoo));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  };
+  _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
   return _aidl_ret_status;
 }
 
 ::android::status_t StructuredParcelable::writeToParcel(::android::Parcel* _aidl_parcel) const {
   ::android::status_t _aidl_ret_status = ::android::OK;
   auto _aidl_start_pos = _aidl_parcel->dataPosition();
-  _aidl_parcel->writeInt32(0);;
+  _aidl_parcel->writeInt32(0);
   _aidl_ret_status = _aidl_parcel->writeInt32Vector(shouldContainThreeFs);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -660,7 +660,7 @@ namespace tests {
   auto _aidl_end_pos = _aidl_parcel->dataPosition();
   _aidl_parcel->setDataPosition(_aidl_start_pos);
   _aidl_parcel->writeInt32(_aidl_end_pos - _aidl_start_pos);
-  _aidl_parcel->setDataPosition(_aidl_end_pos);;
+  _aidl_parcel->setDataPosition(_aidl_end_pos);
   return _aidl_ret_status;
 }
 

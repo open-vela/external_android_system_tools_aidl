@@ -623,7 +623,7 @@ fn test_versioned_interface_hash() {
     let hash = service.getInterfaceHash();
     assert_eq!(
         hash.as_ref().map(String::as_str),
-        Ok("796b4ab269d476662bed4ab57092ed000e48d5d7")
+        Ok("fc8e8929f1bd9b61994893938e30de50df13cf18")
     );
 }
 
@@ -654,6 +654,29 @@ fn test_versioned_unknown_union_field_triggers_error() {
     } else {
         assert_eq!(ret.unwrap_err().transaction_error(), binder::StatusCode::BAD_VALUE);
     }
+}
+
+#[test]
+fn test_parcelable_param_with_new_fields() {
+    let service: binder::Strong<dyn IFooInterface::IFooInterface> =
+        binder::get_interface(<BpFooInterface as IFooInterface::IFooInterface>::get_descriptor())
+            .expect("did not get binder service");
+
+    let mut out_foo = Default::default();
+    let ret = service.callWithFoo(&mut out_foo);
+    assert!(ret.is_ok());
+    assert_eq!(out_foo.intDefault42, 42);
+}
+
+#[test]
+fn test_read_data_correctly_after_parcelable_with_new_field() {
+    let service: binder::Strong<dyn IFooInterface::IFooInterface> =
+        binder::get_interface(<BpFooInterface as IFooInterface::IFooInterface>::get_descriptor())
+            .expect("did not get binder service");
+
+    let in_foo = Default::default();
+    let ret = service.ignoreParcelableAndRepeatInt(&in_foo, 43);
+    assert_eq!(ret, Ok(43));
 }
 
 fn test_renamed_interface<F>(f: F)

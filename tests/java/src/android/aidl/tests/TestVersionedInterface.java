@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import android.aidl.versioned.tests.BazUnion;
+import android.aidl.versioned.tests.Foo;
 import android.aidl.versioned.tests.IFooInterface;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -52,7 +53,7 @@ public class TestVersionedInterface {
 
     @Test
     public void testGetInterfaceHash() throws RemoteException {
-      assertThat(service.getInterfaceHash(), is("796b4ab269d476662bed4ab57092ed000e48d5d7"));
+      assertThat(service.getInterfaceHash(), is("fc8e8929f1bd9b61994893938e30de50df13cf18"));
     }
 
     @Rule public ExpectedException expectedException = ExpectedException.none();
@@ -75,5 +76,19 @@ public class TestVersionedInterface {
       expectedException.expect(IllegalArgumentException.class);
 
       service.acceptUnionAndReturnString(BazUnion.longNum(42L));
+    }
+
+    @Test
+    public void testPacelableParamWithNewFields() throws RemoteException {
+      Foo outFoo = new Foo();
+      service.callWithFoo(outFoo);
+      assertThat(outFoo.intDefault42, is(42));
+    }
+
+    @Test
+    public void testReadDataCorrectlyAfterParcelableWithNewField() throws RemoteException {
+      Foo inFoo = new Foo();
+      int ret = service.ignoreParcelableAndRepeatInt(inFoo, 43);
+      assertThat(ret, is(43));
     }
 }
