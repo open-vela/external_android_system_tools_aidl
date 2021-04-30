@@ -5,8 +5,9 @@ interface IFooInterface {
     // V1
     void originalApi();
     @utf8InCpp String acceptUnionAndReturnString(in BazUnion u);
-    void callWithFoo(out Foo outFoo);
-    int ignoreParcelableAndRepeatInt(in Foo inFoo, int value);
+    @SuppressWarnings(value={"inout-parameter"})
+    int ignoreParcelablesAndRepeatInt(in Foo inFoo, inout Foo inoutFoo, out Foo outFoo, int value);
+    int returnsLengthOfFooArray(in Foo[] foos);
     // V2
     void newApi();
 }
