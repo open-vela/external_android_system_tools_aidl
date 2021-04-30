@@ -45,7 +45,7 @@ TEST_F(VersionedInterfaceTest, getInterfaceVersion) {
 }
 
 TEST_F(VersionedInterfaceTest, getInterfaceHash) {
-  EXPECT_EQ("fc8e8929f1bd9b61994893938e30de50df13cf18", versioned->getInterfaceHash());
+  EXPECT_EQ("9e7be1859820c59d9d55dd133e71a3687b5d2e5b", versioned->getInterfaceHash());
 }
 
 TEST_F(VersionedInterfaceTest, noProblemWhenPassingAUnionWithOldField) {
@@ -69,17 +69,18 @@ TEST_F(VersionedInterfaceTest, errorWhenPassingAUnionWithNewField) {
   }
 }
 
-TEST_F(VersionedInterfaceTest, parcelableParamContainsNewField) {
-  Foo outFoo;
-  auto status = versioned->callWithFoo(&outFoo);
+TEST_F(VersionedInterfaceTest, arrayOfParcelableWithNewParam) {
+  std::vector<Foo> foos(42);
+  int32_t length;
+  auto status = versioned->returnsLengthOfFooArray(foos, &length);
   EXPECT_TRUE(status.isOk());
-  EXPECT_EQ(42, outFoo.intDefault42);
+  EXPECT_EQ(42, length);
 }
 
 TEST_F(VersionedInterfaceTest, readDataCorrectlyAfterParcelableWithNewField) {
-  Foo inFoo;
+  Foo inFoo, inoutFoo, outFoo;
   int32_t ret;
-  auto status = versioned->ignoreParcelableAndRepeatInt(inFoo, 43, &ret);
+  auto status = versioned->ignoreParcelablesAndRepeatInt(inFoo, &inoutFoo, &outFoo, 43, &ret);
   EXPECT_TRUE(status.isOk());
   EXPECT_EQ(43, ret);
 }

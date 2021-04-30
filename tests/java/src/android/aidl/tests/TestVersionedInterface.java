@@ -53,7 +53,7 @@ public class TestVersionedInterface {
 
     @Test
     public void testGetInterfaceHash() throws RemoteException {
-      assertThat(service.getInterfaceHash(), is("fc8e8929f1bd9b61994893938e30de50df13cf18"));
+      assertThat(service.getInterfaceHash(), is("9e7be1859820c59d9d55dd133e71a3687b5d2e5b"));
     }
 
     @Rule public ExpectedException expectedException = ExpectedException.none();
@@ -79,16 +79,21 @@ public class TestVersionedInterface {
     }
 
     @Test
-    public void testPacelableParamWithNewFields() throws RemoteException {
-      Foo outFoo = new Foo();
-      service.callWithFoo(outFoo);
-      assertThat(outFoo.intDefault42, is(42));
+    public void testArrayOfPacelableWithNewField() throws RemoteException {
+      Foo[] foos = new Foo[42];
+      for (int i = 0; i < foos.length; i++) {
+        foos[i] = new Foo();
+      }
+      int length = service.returnsLengthOfFooArray(foos);
+      assertThat(length, is(foos.length));
     }
 
     @Test
     public void testReadDataCorrectlyAfterParcelableWithNewField() throws RemoteException {
       Foo inFoo = new Foo();
-      int ret = service.ignoreParcelableAndRepeatInt(inFoo, 43);
+      Foo inoutFoo = new Foo();
+      Foo outFoo = new Foo();
+      int ret = service.ignoreParcelablesAndRepeatInt(inFoo, inoutFoo, outFoo, 43);
       assertThat(ret, is(43));
     }
 }

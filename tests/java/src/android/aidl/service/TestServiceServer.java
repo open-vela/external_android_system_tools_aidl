@@ -72,9 +72,11 @@ public class TestServiceServer extends ITestService.Stub {
       throw new IllegalArgumentException();
     }
     @Override
-    public void callWithFoo(Foo outFoo) {}
+    public int returnsLengthOfFooArray(Foo[] foos) {
+      return foos.length;
+    }
     @Override
-    public int ignoreParcelableAndRepeatInt(Foo inFoo, int value) {
+    public int ignoreParcelablesAndRepeatInt(Foo inFoo, Foo inoutFoo, Foo outFoo, int value) {
       return value;
     }
     @Override
