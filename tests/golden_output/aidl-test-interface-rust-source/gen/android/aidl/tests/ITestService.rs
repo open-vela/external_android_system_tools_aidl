@@ -607,7 +607,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<bool> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn ReverseByte(&self, _arg_input: &[u8], _arg_repeated: &mut Vec<u8>) -> binder::public_api::Result<Vec<u8>> {
@@ -626,7 +626,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<u8> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn ReverseChar(&self, _arg_input: &[u16], _arg_repeated: &mut Vec<u16>) -> binder::public_api::Result<Vec<u16>> {
@@ -645,7 +645,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<u16> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn ReverseInt(&self, _arg_input: &[i32], _arg_repeated: &mut Vec<i32>) -> binder::public_api::Result<Vec<i32>> {
@@ -664,7 +664,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<i32> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn ReverseLong(&self, _arg_input: &[i64], _arg_repeated: &mut Vec<i64>) -> binder::public_api::Result<Vec<i64>> {
@@ -683,7 +683,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<i64> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn ReverseFloat(&self, _arg_input: &[f32], _arg_repeated: &mut Vec<f32>) -> binder::public_api::Result<Vec<f32>> {
@@ -702,7 +702,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<f32> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn ReverseDouble(&self, _arg_input: &[f64], _arg_repeated: &mut Vec<f64>) -> binder::public_api::Result<Vec<f64>> {
@@ -721,7 +721,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<f64> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn ReverseString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> {
@@ -740,7 +740,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<String> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn ReverseByteEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>> {
@@ -759,7 +759,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn ReverseIntEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>> {
@@ -778,7 +778,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>> {
@@ -797,7 +797,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> {
@@ -850,7 +850,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<String> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor) -> binder::public_api::Result<binder::parcel::ParcelFileDescriptor> {
@@ -886,7 +886,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<binder::parcel::ParcelFileDescriptor> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn ThrowServiceException(&self, _arg_code: i32) -> binder::public_api::Result<()> {
@@ -1106,7 +1106,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<String> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn ReverseNullableUtf8CppString(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
@@ -1125,7 +1125,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<Option<String>>> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
@@ -1143,7 +1143,7 @@ impl ITestService for BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<Option<String>>> = _aidl_reply.read()?;
-    *_arg_repeated = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
   fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
@@ -1177,7 +1177,7 @@ impl ITestService for BpTestService {
     let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    *_arg_parcel = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_parcel)?;
     Ok(())
   }
   fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> {
