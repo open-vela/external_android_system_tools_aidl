@@ -35,27 +35,20 @@ impl binder::parcel::SerializeOption for UnionInUnion {
     }
   }
 }
-impl binder::parcel::Deserialize for UnionInUnion {
-  fn deserialize(parcel: &binder::parcel::Parcel) -> binder::Result<Self> {
-    <Self as binder::parcel::DeserializeOption>::deserialize_option(parcel)
-       .transpose()
-       .unwrap_or(Err(binder::StatusCode::UNEXPECTED_NULL))
-  }
-}
-impl binder::parcel::DeserializeArray for UnionInUnion {}
-impl binder::parcel::DeserializeOption for UnionInUnion {
-  fn deserialize_option(parcel: &binder::parcel::Parcel) -> binder::Result<Option<Self>> {
-    let status: i32 = parcel.read()?;
-    if status == 0 { return Ok(None); }
+binder::impl_deserialize_for_parcelable!(UnionInUnion);
+impl UnionInUnion {
+  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
     let tag: i32 = parcel.read()?;
     match tag {
       0 => {
         let value: crate::mangled::_7_android_4_aidl_5_tests_6_unions_9_EnumUnion = parcel.read()?;
-        Ok(Some(Self::First(value)))
+        *self = Self::First(value);
+        Ok(())
       }
       1 => {
         let value: i32 = parcel.read()?;
-        Ok(Some(Self::Second(value)))
+        *self = Self::Second(value);
+        Ok(())
       }
       _ => {
         Err(binder::StatusCode::BAD_VALUE)
