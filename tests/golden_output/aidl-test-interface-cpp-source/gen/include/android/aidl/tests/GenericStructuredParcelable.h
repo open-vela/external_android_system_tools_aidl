@@ -37,8 +37,8 @@ public:
 
   int32_t a = int32_t(0);
   int32_t b = int32_t(0);
-  ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) override final;
-  ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const override final;
+  ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
+  ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
   static const ::android::String16& getParcelableDescriptor() {
     static const ::android::StaticString16 DESCIPTOR (u"android.aidl.tests.GenericStructuredParcelable");
     return DESCIPTOR;

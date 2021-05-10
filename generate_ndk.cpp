@@ -891,9 +891,9 @@ void GenerateServerHeader(CodeWriter& out, const AidlTypenames& types,
       continue;
     }
     if (method->GetName() == kGetInterfaceVersion && options.Version() > 0) {
-      out << NdkMethodDecl(types, *method) << " final override;\n";
+      out << NdkMethodDecl(types, *method) << " final;\n";
     } else if (method->GetName() == kGetInterfaceHash && !options.Hash().empty()) {
-      out << NdkMethodDecl(types, *method) << " final override;\n";
+      out << NdkMethodDecl(types, *method) << " final;\n";
     } else {
       AIDL_FATAL(defined_type) << "Meta method '" << method->GetName() << "' is unimplemented.";
     }

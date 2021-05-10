@@ -965,7 +965,7 @@ unique_ptr<Document> BuildServerHeader(const AidlTypenames& /* typenames */,
 
   if (options.Version() > 0) {
     std::ostringstream code;
-    code << "int32_t " << kGetInterfaceVersion << "() final override;\n";
+    code << "int32_t " << kGetInterfaceVersion << "() final;\n";
     publics.emplace_back(new LiteralDecl(code.str()));
   }
   if (!options.Hash().empty()) {
@@ -1276,11 +1276,11 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
 
   unique_ptr<MethodDecl> read(new MethodDecl(kAndroidStatusLiteral, "readFromParcel",
                                              ArgList("const ::android::Parcel* _aidl_parcel"),
-                                             MethodDecl::IS_OVERRIDE | MethodDecl::IS_FINAL));
+                                             MethodDecl::IS_FINAL));
   parcel_class->AddPublic(std::move(read));
-  unique_ptr<MethodDecl> write(new MethodDecl(
-      kAndroidStatusLiteral, "writeToParcel", ArgList("::android::Parcel* _aidl_parcel"),
-      MethodDecl::IS_OVERRIDE | MethodDecl::IS_CONST | MethodDecl::IS_FINAL));
+  unique_ptr<MethodDecl> write(new MethodDecl(kAndroidStatusLiteral, "writeToParcel",
+                                              ArgList("::android::Parcel* _aidl_parcel"),
+                                              MethodDecl::IS_CONST | MethodDecl::IS_FINAL));
   parcel_class->AddPublic(std::move(write));
 
   parcel_class->AddPublic(std::unique_ptr<LiteralDecl>(
