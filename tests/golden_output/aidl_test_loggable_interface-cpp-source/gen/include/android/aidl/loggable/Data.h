@@ -41,8 +41,8 @@ public:
   ::std::string str;
   ::android::aidl::loggable::Union nestedUnion;
   ::android::aidl::loggable::Enum nestedEnum = ::android::aidl::loggable::Enum(::android::aidl::loggable::Enum::FOO);
-  ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) override final;
-  ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const override final;
+  ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
+  ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
   static const ::android::String16& getParcelableDescriptor() {
     static const ::android::StaticString16 DESCIPTOR (u"android.aidl.loggable.Data");
     return DESCIPTOR;
