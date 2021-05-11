@@ -260,6 +260,9 @@ bool AidlTypenames::CanBeJavaOnlyImmutable(const AidlTypeSpecifier& type) const 
                         "type, and String.";
     return false;
   }
+  if (t->AsEnumDeclaration()) {
+    return true;
+  }
   return t->IsJavaOnlyImmutable();
 }
 
