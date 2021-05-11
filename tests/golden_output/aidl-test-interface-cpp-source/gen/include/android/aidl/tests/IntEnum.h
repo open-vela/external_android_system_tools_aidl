@@ -17,7 +17,7 @@ enum class IntEnum : int32_t {
   BAZ = 2001,
 };
 
-[[nodiscard]] static inline std::string toString(IntEnum val) {
+static inline std::string toString(IntEnum val) {
   switch(val) {
   case IntEnum::FOO:
     return "FOO";
