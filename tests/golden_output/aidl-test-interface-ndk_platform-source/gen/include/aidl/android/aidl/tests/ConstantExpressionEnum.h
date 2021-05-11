@@ -27,7 +27,7 @@ enum class ConstantExpressionEnum : int32_t {
   hexInt64_1 = 1,
 };
 
-static inline std::string toString(ConstantExpressionEnum val) {
+[[nodiscard]] static inline std::string toString(ConstantExpressionEnum val) {
   switch(val) {
   case ConstantExpressionEnum::decInt32_1:
     return "decInt32_1";
