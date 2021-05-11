@@ -16,6 +16,7 @@ public:
   explicit BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl);
   virtual ~BpTestService() = default;
   ::android::binder::Status UnimplementedMethod(int32_t arg, int32_t* _aidl_return) override;
+  ::android::binder::Status Deprecated() override __attribute__((deprecated("to make sure we have something in system/tools/aidl which does a compile check of deprecated and make sure this is reflected in goldens")));
   ::android::binder::Status TestOneway() override;
   ::android::binder::Status RepeatBoolean(bool token, bool* _aidl_return) override;
   ::android::binder::Status RepeatByte(int8_t token, int8_t* _aidl_return) override;
