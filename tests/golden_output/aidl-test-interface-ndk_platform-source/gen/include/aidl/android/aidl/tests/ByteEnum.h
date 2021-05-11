@@ -20,7 +20,7 @@ enum class ByteEnum : int8_t {
   BAZ = 3,
 };
 
-static inline std::string toString(ByteEnum val) {
+[[nodiscard]] static inline std::string toString(ByteEnum val) {
   switch(val) {
   case ByteEnum::FOO:
     return "FOO";
