@@ -248,6 +248,34 @@ struct DiagnoseOutNullable : DiagnosticsVisitor {
   }
 };
 
+struct DiagnoseImports : DiagnosticsVisitor {
+  DiagnoseImports(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
+  void Visit(const AidlDocument& doc) override {
+    auto collide_with_decls = [&](const auto& import) {
+      for (const auto& type : doc.DefinedTypes()) {
+        if (type->GetCanonicalName() != import->GetNeededClass() &&
+            type->GetName() == import->SimpleName()) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    std::set<std::string> imported_names;
+    for (const auto& import : doc.Imports()) {
+      if (collide_with_decls(import)) {
+        diag.Report(import->GetLocation(), DiagnosticID::unique_import)
+            << import->SimpleName() << " is already defined in this file.";
+      }
+      auto [_, inserted] = imported_names.insert(import->SimpleName());
+      if (!inserted) {
+        diag.Report(import->GetLocation(), DiagnosticID::unique_import)
+            << import->SimpleName() << " is already imported.";
+      }
+    }
+  }
+};
+
 bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnosticsContext diag(mapping);
 
@@ -259,6 +287,7 @@ bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnoseOutArray{diag}.Check(doc);
   DiagnoseFileDescriptor{diag}.Check(doc);
   DiagnoseOutNullable{diag}.Check(doc);
+  DiagnoseImports{diag}.Check(doc);
 
   return diag.ErrorCount() == 0;
 }

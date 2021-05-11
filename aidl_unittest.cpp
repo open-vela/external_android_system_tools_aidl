@@ -104,7 +104,7 @@ class AidlTest : public ::testing::TestWithParam<Options::Language> {
     args.emplace_back(path);
     Options options = Options::From(args);
     vector<string> imported_files;
-    ImportResolver import_resolver{io_delegate_, path, import_paths_, {}};
+    ImportResolver import_resolver{io_delegate_, path, import_paths_};
     AidlError actual_error = ::android::aidl::internals::load_and_validate_aidl(
         path, options, io_delegate_, &typenames_, &imported_files);
 
@@ -706,7 +706,7 @@ TEST_P(AidlTest, PreferImportToPreprocessed) {
   EXPECT_TRUE(typenames_.ResolveTypename("another.IBar").is_resolved);
   // But if we request just "IBar" we should get our imported one.
   AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", false, nullptr, {});
-  ambiguous_type.Resolve(typenames_);
+  ambiguous_type.Resolve(typenames_, parse_result);
   EXPECT_EQ("one.IBar", ambiguous_type.GetName());
 }
 
@@ -728,7 +728,7 @@ TEST_P(AidlTest, B147918827) {
   EXPECT_TRUE(typenames_.ResolveTypename("another.IBar").is_resolved);
   // But if we request just "IBar" we should get our imported one.
   AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", false, nullptr, {});
-  ambiguous_type.Resolve(typenames_);
+  ambiguous_type.Resolve(typenames_, parse_result);
   EXPECT_EQ("one.IBar", ambiguous_type.GetName());
 }
 
@@ -833,6 +833,18 @@ TEST_F(AidlTest, RejectQualifiedTypeNameUnlessPreprocessed) {
   CaptureStderr();
   EXPECT_FALSE(Parser::Parse("path", io_delegate_, typenames_, /*is_preprocessed=*/false));
   EXPECT_THAT(GetCapturedStderr(), HasSubstr("Type name can't be qualified"));
+}
+
+TEST_P(AidlTest, PreprocessedCanDeclareJavaStyleBuiltinTypes) {
+  string contents = R"(
+    interface android.os.IBinder;
+    interface android.os.IInterface;
+    parcelable android.os.ParcelFileDescriptor;
+  )";
+  io_delegate_.SetFileContents("path", contents);
+  CaptureStderr();
+  EXPECT_TRUE(Parser::Parse("path", io_delegate_, typenames_, /*is_preprocessed=*/true));
+  EXPECT_THAT(GetCapturedStderr(), "");
 }
 
 TEST_P(AidlTest, SupportDeprecated) {
@@ -1042,6 +1054,17 @@ TEST_F(AidlTest, FailOnParcelable) {
   CaptureStderr();
   EXPECT_NE(0, ::android::aidl::compile_aidl(options4, io_delegate_));
   EXPECT_EQ(expected_bar_stderr, GetCapturedStderr());
+}
+
+TEST_P(AidlTest, ImportingJavaStyleBuiltinTypesIsAllowed) {
+  string contents = R"(
+    import android.os.IBinder;
+    import android.os.IInterface;
+    interface IFoo {
+      void foo(in IBinder b);
+    }
+  )";
+  EXPECT_NE(nullptr, Parse("IFoo.aidl", contents, typenames_, GetLanguage()));
 }
 
 TEST_P(AidlTest, StructuredFailOnUnstructuredParcelable) {
@@ -1264,6 +1287,22 @@ TEST_P(AidlTest, UnderstandsNestedParcelables) {
   EXPECT_EQ("::p::Outer::Inner", cpp::CppNameOf(nested_type, typenames_));
 }
 
+TEST_P(AidlTest, UnderstandsNestedParcelablesWithoutImports) {
+  io_delegate_.SetFileContents("p/Outer.aidl",
+                               "package p; parcelable Outer.Inner cpp_header \"baz/header\";");
+  import_paths_.emplace("");
+  const string input_path = "p/IFoo.aidl";
+  const string input = "package p; interface IFoo { p.Outer.Inner get(); }";
+
+  auto parse_result = Parse(input_path, input, typenames_, GetLanguage());
+  EXPECT_NE(nullptr, parse_result);
+
+  EXPECT_TRUE(typenames_.ResolveTypename("p.Outer.Inner").is_resolved);
+  // C++ uses "::" instead of "." to refer to a inner class.
+  AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.Outer.Inner", false, nullptr, {});
+  EXPECT_EQ("::p::Outer::Inner", cpp::CppNameOf(nested_type, typenames_));
+}
+
 TEST_F(AidlTest, CppNameOf_GenericType) {
   io_delegate_.SetFileContents("p/Wrapper.aidl", "package p; parcelable Wrapper<T> { T wrapped; }");
   import_paths_.emplace("");
@@ -1331,7 +1370,7 @@ TEST_P(AidlTest, UnderstandsNativeParcelables) {
   EXPECT_NE(nullptr, parse_result);
   EXPECT_TRUE(typenames_.ResolveTypename("p.Bar").is_resolved);
   AidlTypeSpecifier native_type(AIDL_LOCATION_HERE, "p.Bar", false, nullptr, {});
-  native_type.Resolve(typenames_);
+  native_type.Resolve(typenames_, parse_result);
 
   EXPECT_EQ("p.Bar", java::InstantiableJavaSignatureOf(native_type, typenames_));
   // C++ understands C++ specific stuff
@@ -1813,17 +1852,17 @@ TEST_F(AidlTest, CheckNumGenericTypeSecifier) {
 TEST_F(AidlTest, CheckTypeParameterInMapType) {
   const string expected_stderr =
       "ERROR: p/IFoo.aidl:1.28-31: The type of key in map must be String, but it is 'p.Bar'\n";
-  Options options = Options::From("aidl -I p p/IFoo.aidl");
+  Options options = Options::From("aidl -I . p/IFoo.aidl");
   io_delegate_.SetFileContents("p/Bar.aidl", "package p; parcelable Bar { String s; }");
 
   io_delegate_.SetFileContents("p/IFoo.aidl",
                                "package p; interface IFoo {"
-                               "Map<String, Bar> foo();}");
+                               "Map<String, p.Bar> foo();}");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
 
   io_delegate_.SetFileContents("p/IFoo.aidl",
                                "package p; interface IFoo {"
-                               "Map<Bar, Bar> foo();}");
+                               "Map<p.Bar, p.Bar> foo();}");
   CaptureStderr();
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
@@ -1851,40 +1890,39 @@ TEST_F(AidlTest, WrongGenericType) {
 }
 
 TEST_F(AidlTest, UserDefinedUnstructuredGenericParcelableType) {
-  Options optionsForParcelable = Options::From("aidl -I p p/Bar.aidl");
+  Options optionsForParcelable = Options::From("aidl -I . p/Bar.aidl");
   io_delegate_.SetFileContents("p/Bar.aidl", "package p; parcelable Bar<T, T>;");
   CaptureStderr();
   EXPECT_NE(0, ::android::aidl::compile_aidl(optionsForParcelable, io_delegate_));
   EXPECT_EQ("ERROR: p/Bar.aidl:1.22-26: Every type parameter should be unique.\n",
             GetCapturedStderr());
 
-  Options options = Options::From("aidl -I p p/IFoo.aidl");
+  Options options = Options::From("aidl -I . p/IFoo.aidl");
   io_delegate_.SetFileContents("p/Bar.aidl", "package p; parcelable Bar;");
   io_delegate_.SetFileContents("p/IFoo.aidl",
                                "package p; interface IFoo {"
-                               "Bar<String, String> foo();}");
+                               "p.Bar<String, String> foo();}");
   CaptureStderr();
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
-  EXPECT_EQ("ERROR: p/IFoo.aidl:1.28-31: p.Bar is not a generic type.\n", GetCapturedStderr());
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("p.Bar is not a generic type"));
   io_delegate_.SetFileContents("p/Bar.aidl", "package p; parcelable Bar<T>;");
   CaptureStderr();
   EXPECT_NE(0, ::android::aidl::compile_aidl(options, io_delegate_));
-  EXPECT_EQ("ERROR: p/IFoo.aidl:1.28-31: p.Bar must have 1 type parameters, but got 2\n",
-            GetCapturedStderr());
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("p.Bar must have 1 type parameters, but got 2"));
   io_delegate_.SetFileContents("p/Bar.aidl", "package p; parcelable Bar<T, V>;");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
   io_delegate_.SetFileContents("p/IFoo.aidl",
                                "package p; interface IFoo {"
-                               "Bar<String, ParcelFileDescriptor> foo();}");
+                               "p.Bar<String, ParcelFileDescriptor> foo();}");
   EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
 
   io_delegate_.SetFileContents("p/IFoo.aidl",
                                "package p; interface IFoo {"
-                               "Bar<int, long> foo();}");
+                               "p.Bar<int, long> foo();}");
 
   io_delegate_.SetFileContents("p/IFoo.aidl",
                                "package p; interface IFoo {"
-                               "Bar<int[], long[]> foo();}");
+                               "p.Bar<int[], long[]> foo();}");
 
   EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
 }

@@ -178,3 +178,41 @@ TEST_F(DiagnosticsTest, out_nullable_OkayForArrays) {
                "}"},
               {"Bar.aidl", "parcelable Bar {}"}});
 }
+
+TEST_F(DiagnosticsTest, RejectImportsCollisionWithTopLevelDecl) {
+  expect_diagnostics = {DiagnosticID::unique_import};
+  ParseFiles({{"p/IFoo.aidl",
+               "package p;\n"
+               "import q.IFoo;\n"  // should collide with previous import
+               "interface IFoo{}"},
+              {"q/IFoo.aidl", "package q; interface IFoo{}"}});
+}
+
+TEST_F(DiagnosticsTest, RejectImportsCollision) {
+  expect_diagnostics = {DiagnosticID::unique_import};
+  ParseFiles({{"p/IFoo.aidl",
+               "package p;\n"
+               "import q.IBar;\n"
+               "import r.IBar;\n"  // should collide with previous import
+               "interface IFoo{}"},
+              {"q/IBar.aidl", "package q; interface IBar{}"},
+              {"r/IBar.aidl", "package r; interface IBar{}"}});
+}
+
+TEST_F(DiagnosticsTest, AllowImportingSelf) {
+  expect_diagnostics = {};
+  ParseFiles({{"p/IFoo.aidl",
+               "package p;\n"
+               "import p.IFoo;\n"
+               "interface IFoo{}"}});
+}
+
+TEST_F(DiagnosticsTest, AllowRedundantImports) {
+  expect_diagnostics = {};
+  ParseFiles({{"p/IFoo.aidl",
+               "package p;\n"
+               "import q.IBar;\n"
+               "import q.IBar;\n"  // ugly, but okay
+               "interface IFoo{}"},
+              {"q/IBar.aidl", "package q; interface IBar{}"}});
+}
