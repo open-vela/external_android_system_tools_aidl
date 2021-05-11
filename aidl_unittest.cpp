@@ -3202,6 +3202,15 @@ TEST_F(AidlTest, RejectMutableParcelableFromJavaOnlyImmutableParcelable) {
   EXPECT_EQ(expected_error, GetCapturedStderr());
 }
 
+TEST_F(AidlTest, JavaOnlyImmutableParcelableWithEnumFields) {
+  io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable parcelable Foo { Bar bar; }");
+  io_delegate_.SetFileContents("Bar.aidl", "enum Bar { FOO }");
+  CaptureStderr();
+  Options options = Options::From("aidl --lang=java Foo.aidl -I .");
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+}
+
 TEST_F(AidlTest, RejectMutableParcelableFromJavaOnlyImmutableUnion) {
   io_delegate_.SetFileContents("Foo.aidl", "@JavaOnlyImmutable union Foo { Bar bar; }");
   io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar { String a; }");
