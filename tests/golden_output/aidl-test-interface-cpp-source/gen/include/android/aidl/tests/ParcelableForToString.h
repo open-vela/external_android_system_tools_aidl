@@ -63,8 +63,8 @@ public:
   ::std::vector<::android::String16> nullList;
   ::android::aidl::tests::GenericStructuredParcelable<int32_t, ::android::aidl::tests::StructuredParcelable, ::android::aidl::tests::IntEnum> parcelableGeneric;
   ::android::aidl::tests::Union unionValue;
-  ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) override final;
-  ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const override final;
+  ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
+  ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
   static const ::android::String16& getParcelableDescriptor() {
     static const ::android::StaticString16 DESCIPTOR (u"android.aidl.tests.ParcelableForToString");
     return DESCIPTOR;
