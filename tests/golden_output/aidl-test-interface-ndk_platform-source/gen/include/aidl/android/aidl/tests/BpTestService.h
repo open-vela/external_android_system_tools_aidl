@@ -14,6 +14,7 @@ public:
   virtual ~BpTestService();
 
   ::ndk::ScopedAStatus UnimplementedMethod(int32_t in_arg, int32_t* _aidl_return) override;
+  ::ndk::ScopedAStatus Deprecated() override __attribute__((deprecated("to make sure we have something in system/tools/aidl which does a compile check of deprecated and make sure this is reflected in goldens")));
   ::ndk::ScopedAStatus TestOneway() override;
   ::ndk::ScopedAStatus RepeatBoolean(bool in_token, bool* _aidl_return) override;
   ::ndk::ScopedAStatus RepeatByte(int8_t in_token, int8_t* _aidl_return) override;

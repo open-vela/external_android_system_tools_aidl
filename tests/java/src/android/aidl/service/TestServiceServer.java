@@ -106,6 +106,8 @@ public class TestServiceServer extends ITestService.Stub {
     throw new RemoteException();
   }
   @Override
+  public void Deprecated() throws RemoteException {}
+  @Override
   public boolean RepeatBoolean(boolean token) throws RemoteException {
     return token;
   }

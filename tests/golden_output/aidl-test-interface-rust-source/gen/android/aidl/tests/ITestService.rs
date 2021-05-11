@@ -12,6 +12,8 @@ declare_binder_interface! {
 pub trait ITestService: binder::Interface + Send {
   fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.ITestService" }
   fn UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<i32>;
+  #[deprecated = "to make sure we have something in system/tools/aidl which does a compile check of deprecated and make sure this is reflected in goldens"]
+  fn Deprecated(&self) -> binder::public_api::Result<()>;
   fn TestOneway(&self) -> binder::public_api::Result<()>;
   fn RepeatBoolean(&self, _arg_token: bool) -> binder::public_api::Result<bool>;
   fn RepeatByte(&self, _arg_token: i8) -> binder::public_api::Result<i8>;
@@ -70,6 +72,9 @@ pub trait ITestService: binder::Interface + Send {
 }
 pub trait ITestServiceDefault: Send + Sync {
   fn UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<i32> {
+    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
+  }
+  fn Deprecated(&self) -> binder::public_api::Result<()> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
   fn TestOneway(&self) -> binder::public_api::Result<()> {
@@ -222,55 +227,56 @@ pub trait ITestServiceDefault: Send + Sync {
 }
 pub mod transactions {
   pub const UnimplementedMethod: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 0;
-  pub const TestOneway: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 1;
-  pub const RepeatBoolean: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 2;
-  pub const RepeatByte: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 3;
-  pub const RepeatChar: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 4;
-  pub const RepeatInt: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 5;
-  pub const RepeatLong: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 6;
-  pub const RepeatFloat: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 7;
-  pub const RepeatDouble: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 8;
-  pub const RepeatString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 9;
-  pub const RepeatByteEnum: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 10;
-  pub const RepeatIntEnum: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 11;
-  pub const RepeatLongEnum: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 12;
-  pub const ReverseBoolean: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 13;
-  pub const ReverseByte: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 14;
-  pub const ReverseChar: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 15;
-  pub const ReverseInt: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 16;
-  pub const ReverseLong: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 17;
-  pub const ReverseFloat: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 18;
-  pub const ReverseDouble: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 19;
-  pub const ReverseString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 20;
-  pub const ReverseByteEnum: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 21;
-  pub const ReverseIntEnum: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 22;
-  pub const ReverseLongEnum: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 23;
-  pub const GetOtherTestService: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 24;
-  pub const VerifyName: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 25;
-  pub const ReverseStringList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 26;
-  pub const RepeatParcelFileDescriptor: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 27;
-  pub const ReverseParcelFileDescriptorArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 28;
-  pub const ThrowServiceException: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 29;
-  pub const RepeatNullableIntArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 30;
-  pub const RepeatNullableByteEnumArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 31;
-  pub const RepeatNullableIntEnumArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 32;
-  pub const RepeatNullableLongEnumArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 33;
-  pub const RepeatNullableString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 34;
-  pub const RepeatNullableStringList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 35;
-  pub const RepeatNullableParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 36;
-  pub const TakesAnIBinder: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 37;
-  pub const TakesANullableIBinder: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 38;
-  pub const RepeatUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 39;
-  pub const RepeatNullableUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 40;
-  pub const ReverseUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 41;
-  pub const ReverseNullableUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 42;
-  pub const ReverseUtf8CppStringList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 43;
-  pub const GetCallback: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 44;
-  pub const FillOutStructuredParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 45;
-  pub const GetOldNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 46;
-  pub const GetNewNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 47;
-  pub const GetCppJavaTests: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 48;
-  pub const getBackendType: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 49;
+  pub const Deprecated: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 1;
+  pub const TestOneway: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 2;
+  pub const RepeatBoolean: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 3;
+  pub const RepeatByte: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 4;
+  pub const RepeatChar: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 5;
+  pub const RepeatInt: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 6;
+  pub const RepeatLong: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 7;
+  pub const RepeatFloat: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 8;
+  pub const RepeatDouble: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 9;
+  pub const RepeatString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 10;
+  pub const RepeatByteEnum: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 11;
+  pub const RepeatIntEnum: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 12;
+  pub const RepeatLongEnum: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 13;
+  pub const ReverseBoolean: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 14;
+  pub const ReverseByte: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 15;
+  pub const ReverseChar: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 16;
+  pub const ReverseInt: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 17;
+  pub const ReverseLong: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 18;
+  pub const ReverseFloat: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 19;
+  pub const ReverseDouble: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 20;
+  pub const ReverseString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 21;
+  pub const ReverseByteEnum: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 22;
+  pub const ReverseIntEnum: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 23;
+  pub const ReverseLongEnum: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 24;
+  pub const GetOtherTestService: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 25;
+  pub const VerifyName: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 26;
+  pub const ReverseStringList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 27;
+  pub const RepeatParcelFileDescriptor: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 28;
+  pub const ReverseParcelFileDescriptorArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 29;
+  pub const ThrowServiceException: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 30;
+  pub const RepeatNullableIntArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 31;
+  pub const RepeatNullableByteEnumArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 32;
+  pub const RepeatNullableIntEnumArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 33;
+  pub const RepeatNullableLongEnumArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 34;
+  pub const RepeatNullableString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 35;
+  pub const RepeatNullableStringList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 36;
+  pub const RepeatNullableParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 37;
+  pub const TakesAnIBinder: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 38;
+  pub const TakesANullableIBinder: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 39;
+  pub const RepeatUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 40;
+  pub const RepeatNullableUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 41;
+  pub const ReverseUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 42;
+  pub const ReverseNullableUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 43;
+  pub const ReverseUtf8CppStringList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 44;
+  pub const GetCallback: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 45;
+  pub const FillOutStructuredParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 46;
+  pub const GetOldNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 47;
+  pub const GetNewNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 48;
+  pub const GetCppJavaTests: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 49;
+  pub const getBackendType: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 50;
 }
 pub type ITestServiceDefaultRef = Option<std::sync::Arc<dyn ITestServiceDefault>>;
 use lazy_static::lazy_static;
@@ -369,6 +375,21 @@ impl ITestService for BpTestService {
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: i32 = _aidl_reply.read()?;
     Ok(_aidl_return)
+  }
+  fn Deprecated(&self) -> binder::public_api::Result<()> {
+    let _aidl_reply = self.binder.transact(transactions::Deprecated, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      Ok(())
+    });
+    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
+      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
+        return _aidl_default_impl.Deprecated();
+      }
+    }
+    let _aidl_reply = _aidl_reply?;
+    let _aidl_status: binder::Status = _aidl_reply.read()?;
+    if !_aidl_status.is_ok() { return Err(_aidl_status); }
+    Ok(())
   }
   fn TestOneway(&self) -> binder::public_api::Result<()> {
     let _aidl_reply = self.binder.transact(transactions::TestOneway, binder::FLAG_ONEWAY | binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
@@ -1226,6 +1247,7 @@ impl ITestService for BpTestService {
 }
 impl ITestService for binder::Binder<BnTestService> {
   fn UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<i32> { self.0.UnimplementedMethod(_arg_arg) }
+  fn Deprecated(&self) -> binder::public_api::Result<()> { self.0.Deprecated() }
   fn TestOneway(&self) -> binder::public_api::Result<()> { self.0.TestOneway() }
   fn RepeatBoolean(&self, _arg_token: bool) -> binder::public_api::Result<bool> { self.0.RepeatBoolean(_arg_token) }
   fn RepeatByte(&self, _arg_token: i8) -> binder::public_api::Result<i8> { self.0.RepeatByte(_arg_token) }
@@ -1285,6 +1307,16 @@ fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::Transaction
         Ok(_aidl_return) => {
           _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
           _aidl_reply.write(_aidl_return)?;
+        }
+        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
+      }
+      Ok(())
+    }
+    transactions::Deprecated => {
+      let _aidl_return = _aidl_service.Deprecated();
+      match &_aidl_return {
+        Ok(_aidl_return) => {
+          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
         }
         Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
       }

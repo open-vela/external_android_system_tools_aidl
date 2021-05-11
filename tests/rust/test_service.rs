@@ -129,6 +129,10 @@ impl ITestService::ITestService for TestService {
         Err(binder::StatusCode::UNKNOWN_ERROR.into())
     }
 
+    fn Deprecated(&self) -> binder::Result<()> {
+        Ok(())
+    }
+
     impl_repeat_reverse! {RepeatBoolean, ReverseBoolean, bool}
     impl_repeat_reverse! {RepeatChar, ReverseChar, u16}
     impl_repeat_reverse! {RepeatInt, ReverseInt, i32}
