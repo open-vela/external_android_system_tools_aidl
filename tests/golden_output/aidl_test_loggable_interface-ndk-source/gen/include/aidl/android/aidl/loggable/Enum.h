@@ -18,7 +18,7 @@ enum class Enum : int8_t {
   FOO = 42,
 };
 
-[[nodiscard]] static inline std::string toString(Enum val) {
+static inline std::string toString(Enum val) {
   switch(val) {
   case Enum::FOO:
     return "FOO";
