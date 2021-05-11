@@ -1338,10 +1338,10 @@ std::unique_ptr<Document> BuildParcelSource(const AidlTypenames& typenames, cons
 std::string GenerateEnumToString(const AidlTypenames& typenames,
                                  const AidlEnumDeclaration& enum_decl) {
   std::ostringstream code;
-  const std::string signature =
-      "static inline std::string toString(" + enum_decl.GetName() + " val)";
+  code << "[[nodiscard]]";
   GenerateDeprecated(code, enum_decl);
-  code << signature << " {\n";
+  code << " static inline std::string toString(" << enum_decl.GetName() << " val)";
+  code << " {\n";
   code << "  switch(val) {\n";
   std::set<std::string> unique_cases;
   for (const auto& enumerator : enum_decl.GetEnumerators()) {
