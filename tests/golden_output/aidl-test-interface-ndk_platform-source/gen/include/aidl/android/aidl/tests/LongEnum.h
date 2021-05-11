@@ -20,7 +20,7 @@ enum class LongEnum : int64_t {
   BAZ = 200000000001L,
 };
 
-[[nodiscard]] static inline std::string toString(LongEnum val) {
+static inline std::string toString(LongEnum val) {
   switch(val) {
   case LongEnum::FOO:
     return "FOO";
