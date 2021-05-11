@@ -98,8 +98,8 @@ public:
     _value.emplace<_tag>(std::forward<_Tp>(_args)...);
   }
 
-  ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) override final;
-  ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const override final;
+  ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
+  ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
   static const ::android::String16& getParcelableDescriptor() {
     static const ::android::StaticString16 DESCIPTOR (u"android.aidl.tests.unions.EnumUnion");
     return DESCIPTOR;
