@@ -298,6 +298,8 @@ class NativeService : public BnTestService {
 
   Status TestOneway() override { return Status::fromStatusT(android::UNKNOWN_ERROR); }
 
+  Status Deprecated() override { return Status::ok(); }
+
   Status RepeatBoolean(bool token, bool* _aidl_return) override {
     LogRepeatedToken(token ? 1 : 0);
     *_aidl_return = token;

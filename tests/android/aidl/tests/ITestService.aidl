@@ -63,6 +63,12 @@ interface ITestService {
     // methods to be added and removed.
     int UnimplementedMethod(int arg);
 
+    /**
+     * @deprecated to make sure we have something in system/tools/aidl which does a compile check
+     *     of deprecated and make sure this is reflected in goldens
+     */
+    void Deprecated();
+
     oneway void TestOneway();
 
     // Test that primitives work as parameters and return types.

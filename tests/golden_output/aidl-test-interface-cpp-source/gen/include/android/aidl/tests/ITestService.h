@@ -109,6 +109,7 @@ public:
   static const ::android::String16& STRING_TEST_CONSTANT2();
   static const ::std::string& STRING_TEST_CONSTANT_UTF8();
   virtual ::android::binder::Status UnimplementedMethod(int32_t arg, int32_t* _aidl_return) = 0;
+  virtual ::android::binder::Status Deprecated() __attribute__((deprecated("to make sure we have something in system/tools/aidl which does a compile check of deprecated and make sure this is reflected in goldens"))) = 0;
   virtual ::android::binder::Status TestOneway() = 0;
   virtual ::android::binder::Status RepeatBoolean(bool token, bool* _aidl_return) = 0;
   virtual ::android::binder::Status RepeatByte(int8_t token, int8_t* _aidl_return) = 0;
@@ -166,6 +167,9 @@ public:
     return nullptr;
   }
   ::android::binder::Status UnimplementedMethod(int32_t, int32_t*) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status Deprecated() override __attribute__((deprecated("to make sure we have something in system/tools/aidl which does a compile check of deprecated and make sure this is reflected in goldens"))) {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status TestOneway() override {
