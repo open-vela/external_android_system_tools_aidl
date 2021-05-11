@@ -21,7 +21,7 @@ enum class BackendType : int8_t {
   RUST = 3,
 };
 
-[[nodiscard]] static inline std::string toString(BackendType val) {
+static inline std::string toString(BackendType val) {
   switch(val) {
   case BackendType::CPP:
     return "CPP";
