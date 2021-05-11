@@ -1271,7 +1271,7 @@ std::string GenerateEnumToString(const AidlTypenames& typenames,
                                  const AidlEnumDeclaration& enum_decl) {
   std::ostringstream code;
   const std::string signature =
-      "[[nodiscard]] static inline std::string toString(" + enum_decl.GetName() + " val)";
+      "static inline std::string toString(" + enum_decl.GetName() + " val)";
   if (enum_decl.IsDeprecated()) {
     code << signature;
     cpp::GenerateDeprecated(code, enum_decl);
