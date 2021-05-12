@@ -891,9 +891,9 @@ void GenerateServerHeader(CodeWriter& out, const AidlTypenames& types,
       continue;
     }
     if (method->GetName() == kGetInterfaceVersion && options.Version() > 0) {
-      out << NdkMethodDecl(types, *method) << " final override;\n";
+      out << NdkMethodDecl(types, *method) << " final;\n";
     } else if (method->GetName() == kGetInterfaceHash && !options.Hash().empty()) {
-      out << NdkMethodDecl(types, *method) << " final override;\n";
+      out << NdkMethodDecl(types, *method) << " final;\n";
     } else {
       AIDL_FATAL(defined_type) << "Meta method '" << method->GetName() << "' is unimplemented.";
     }
@@ -1271,7 +1271,7 @@ std::string GenerateEnumToString(const AidlTypenames& typenames,
                                  const AidlEnumDeclaration& enum_decl) {
   std::ostringstream code;
   const std::string signature =
-      "static inline std::string toString(" + enum_decl.GetName() + " val)";
+      "[[nodiscard]] static inline std::string toString(" + enum_decl.GetName() + " val)";
   if (enum_decl.IsDeprecated()) {
     code << signature;
     cpp::GenerateDeprecated(code, enum_decl);
