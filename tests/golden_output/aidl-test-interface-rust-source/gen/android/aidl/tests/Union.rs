@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Union {
   Ns(Vec<i32>),
