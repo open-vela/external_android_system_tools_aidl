@@ -37,6 +37,9 @@ struct AidlInterfaceMetadata {
   // true if the interface is different from the last frozen version
   bool has_development;
 
+  // list of all frozen versions
+  std::vector<size_t> versions;
+
   static std::vector<AidlInterfaceMetadata> all();
 };
 

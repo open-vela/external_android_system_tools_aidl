@@ -40,6 +40,7 @@ TEST(AidlMetadata, HasTestInstances) {
   EXPECT_THAT(info->hashes, ElementsAre("13e24b2fac6a979971819fba2ab0d6d7c4182122",
                                         "dc2a9292847e43b4360bb183f7491f0e9895eaa9",
                                         "54f935920ab0934c242145cf00f9852ae3f5a63e"));
+  EXPECT_THAT(info->versions, ElementsAre(1, 2, 3));
   EXPECT_EQ(info->has_development, true);
 }
 
@@ -49,5 +50,6 @@ TEST(AidlMetadata, HasTestInstancesNoDevelopment) {
   EXPECT_EQ(info->stability, "");
   EXPECT_THAT(info->types, ElementsAre("INoPackage", "some_package.IBar"));
   EXPECT_THAT(info->hashes, ElementsAre("fcd36db451cdbeeb049833fd7f499a987acf3930"));
+  EXPECT_THAT(info->versions, ElementsAre(1));
   EXPECT_EQ(info->has_development, false);
 }
