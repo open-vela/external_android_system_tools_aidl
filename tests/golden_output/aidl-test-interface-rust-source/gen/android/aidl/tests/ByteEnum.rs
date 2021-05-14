@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 #![allow(non_upper_case_globals)]
 use binder::declare_binder_enum;
 declare_binder_enum! { ByteEnum : i8 {
