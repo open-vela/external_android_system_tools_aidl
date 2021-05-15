@@ -61,24 +61,26 @@ void Parser::SetTypeParameters(AidlTypeSpecifier* type,
   }
 }
 
-class ConstantReferenceResolver : public AidlVisitor {
+class ReferenceResolver : public AidlVisitor {
  public:
-  ConstantReferenceResolver(const AidlDefinedType* scope, const AidlTypenames& typenames,
-                            TypeResolver& resolver, bool* success)
+  ReferenceResolver(const AidlDefinedType* scope, const AidlTypenames& typenames,
+                    TypeResolver& resolver, bool* success)
       : scope_(scope), typenames_(typenames), resolver_(resolver), success_(success) {}
+
+  void Visit(const AidlTypeSpecifier& t) override {
+    AidlTypeSpecifier& type = const_cast<AidlTypeSpecifier&>(t);
+    if (!resolver_(typenames_.GetDocumentFor(scope_), &type)) {
+      AIDL_ERROR(type) << "Failed to resolve '" << type.GetUnresolvedName() << "'";
+      *success_ = false;
+    }
+  }
+
   void Visit(const AidlConstantReference& v) override {
     if (IsCircularReference(&v)) {
       *success_ = false;
       return;
     }
 
-    if (v.GetRefType() && !v.GetRefType()->IsResolved()) {
-      if (!resolver_(typenames_.GetDocumentFor(scope_), v.GetRefType().get())) {
-        AIDL_ERROR(v.GetRefType()) << "Unknown type '" << v.GetRefType()->GetName() << "'";
-        *success_ = false;
-        return;
-      }
-    }
     const AidlConstantValue* resolved = v.Resolve(scope_);
     if (!resolved) {
       AIDL_ERROR(v) << "Unknown reference '" << v.Literal() << "'";
@@ -88,7 +90,7 @@ class ConstantReferenceResolver : public AidlVisitor {
 
     // resolve recursive references
     Push(&v);
-    VisitTopDown(*this, *resolved);
+    VisitBottomUp(*this, *resolved);
     Pop();
   }
 
@@ -133,20 +135,13 @@ class ConstantReferenceResolver : public AidlVisitor {
   std::vector<StackElem> stack_ = {};
 };
 
+// Resolve "unresolved" types in the "main" document.
 bool Parser::Resolve(TypeResolver& type_resolver) {
   bool success = true;
-  for (AidlTypeSpecifier* typespec : unresolved_typespecs_) {
-    if (!type_resolver(document_, typespec)) {
-      AIDL_ERROR(typespec) << "Failed to resolve '" << typespec->GetUnresolvedName() << "'";
-      success = false;
-      // don't stop to show more errors if any
-    }
-  }
 
-  // resolve "field references" as well.
   for (const auto& type : document_->DefinedTypes()) {
-    ConstantReferenceResolver ref_resolver{type.get(), typenames_, type_resolver, &success};
-    VisitTopDown(ref_resolver, *type);
+    ReferenceResolver ref_resolver{type.get(), typenames_, type_resolver, &success};
+    VisitBottomUp(ref_resolver, *type);
   }
 
   return success;
