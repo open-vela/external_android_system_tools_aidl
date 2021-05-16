@@ -1180,6 +1180,62 @@ TEST_P(AidlTest, UnderstandsNestedParcelables) {
   EXPECT_EQ("::p::Outer::Inner", cpp::CppNameOf(nested_type, typenames_));
 }
 
+TEST_F(AidlTest, CppNameOf_GenericType) {
+  io_delegate_.SetFileContents("p/Wrapper.aidl", "package p; parcelable Wrapper<T> { T wrapped; }");
+  import_paths_.emplace("");
+  // Since we don't support compilation of Wrapper directly (due to "T" reference),
+  // prepare Holder so that Wrapper gets parsed into AidlTypenames
+  const string input_path = "p/Holder.aidl";
+  const string input =
+      "package p; import p.Wrapper; parcelable Holder {\n"
+      "  @nullable Wrapper<String> value;\n"
+      "}";
+
+  auto parse_result = Parse(input_path, input, typenames_, Options::Language::CPP);
+  EXPECT_NE(nullptr, parse_result);
+
+  auto type = [](std::string name, auto&&... type_params) -> std::unique_ptr<AidlTypeSpecifier> {
+    auto params = new std::vector<std::unique_ptr<AidlTypeSpecifier>>;
+    (..., params->emplace_back(std::move(type_params)));
+    return std::make_unique<AidlTypeSpecifier>(AIDL_LOCATION_HERE, name, false, params, Comments{});
+  };
+
+  auto set_nullable = [](std::unique_ptr<AidlTypeSpecifier>&& type) {
+    std::vector<AidlAnnotation> annotations;
+    annotations.emplace_back(*AidlAnnotation::Parse(AIDL_LOCATION_HERE, "nullable", nullptr, {}));
+    type->Annotate(std::move(annotations));
+    return std::move(type);
+  };
+
+  auto set_array = [](std::unique_ptr<AidlTypeSpecifier>&& type) {
+    (void)type->SetArray();
+    return std::move(type);
+  };
+
+  auto w = type("p.Wrapper", type("String"));
+  EXPECT_EQ("::p::Wrapper<::android::String16>", cpp::CppNameOf(*w, typenames_));
+
+  auto nullable_w = set_nullable(type("p.Wrapper", type("String")));
+  EXPECT_EQ("::std::optional<::p::Wrapper<::android::String16>>",
+            cpp::CppNameOf(*nullable_w, typenames_));
+
+  auto array_w = set_array(type("p.Wrapper", type("String")));
+  EXPECT_EQ("::std::vector<::p::Wrapper<::android::String16>>",
+            cpp::CppNameOf(*array_w, typenames_));
+
+  auto nullable_array_w = set_nullable(set_array(type("p.Wrapper", type("String"))));
+  EXPECT_EQ("::std::optional<::std::vector<::std::optional<::p::Wrapper<::android::String16>>>>",
+            cpp::CppNameOf(*nullable_array_w, typenames_));
+
+  auto list_w = type("List", type("p.Wrapper", type("String")));
+  EXPECT_EQ("::std::vector<::p::Wrapper<::android::String16>>",
+            cpp::CppNameOf(*list_w, typenames_));
+
+  auto nullable_list_w = set_nullable(type("List", type("p.Wrapper", type("String"))));
+  EXPECT_EQ("::std::optional<::std::vector<::std::optional<::p::Wrapper<::android::String16>>>>",
+            cpp::CppNameOf(*nullable_list_w, typenames_));
+}
+
 TEST_P(AidlTest, UnderstandsNativeParcelables) {
   io_delegate_.SetFileContents(
       "p/Bar.aidl",
