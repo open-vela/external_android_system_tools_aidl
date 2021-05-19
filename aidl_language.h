@@ -700,8 +700,10 @@ class AidlConstantReference : public AidlConstantValue {
   const std::string& GetFieldName() const { return field_name_; }
 
   bool CheckValid() const override;
-  void TraverseChildren(std::function<void(const AidlNode&)>) const override {
-    // resolved_ is not my child.
+  void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override {
+    if (ref_type_) {
+      traverse(*ref_type_);
+    }
   }
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
   const AidlConstantValue* Resolve(const AidlDefinedType* scope) const;
@@ -1249,4 +1251,17 @@ inline void VisitTopDown(AidlVisitor& v, const AidlNode& node) {
     n.TraverseChildren(top_down);
   };
   top_down(node);
+}
+
+// Utility to make a visitor to visit AST tree in bottom-up order
+// Given:       foo
+//              / \
+//            bar baz
+// VisitBottomUp(v, foo) makes v visit bar -> baz -> foo.
+inline void VisitBottomUp(AidlVisitor& v, const AidlNode& node) {
+  std::function<void(const AidlNode&)> bottom_up = [&](const AidlNode& n) {
+    n.TraverseChildren(bottom_up);
+    n.DispatchVisit(v);
+  };
+  bottom_up(node);
 }
