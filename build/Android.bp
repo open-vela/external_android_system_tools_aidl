@@ -241,3 +241,9 @@ aidl_interface {
         },
     },
 }
+
+sh_binary {
+    name: "aidl_hash_gen",
+    src: "hash_gen.sh",
+    host_supported: true,
+}
