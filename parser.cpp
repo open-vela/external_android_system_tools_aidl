@@ -68,6 +68,12 @@ class ReferenceResolver : public AidlVisitor {
       : scope_(scope), typenames_(typenames), resolver_(resolver), success_(success) {}
 
   void Visit(const AidlTypeSpecifier& t) override {
+    // We're visiting the same node again. This can happen when two constant references
+    // point to an ancestor of this node.
+    if (t.IsResolved()) {
+      return;
+    }
+
     AidlTypeSpecifier& type = const_cast<AidlTypeSpecifier&>(t);
     if (!resolver_(typenames_.GetDocumentFor(scope_), &type)) {
       AIDL_ERROR(type) << "Failed to resolve '" << type.GetUnresolvedName() << "'";
@@ -88,6 +94,10 @@ class ReferenceResolver : public AidlVisitor {
       return;
     }
 
+    // On error, skip recursive visiting to avoid redundant messages
+    if (!*success_) {
+      return;
+    }
     // resolve recursive references
     Push(&v);
     VisitBottomUp(*this, *resolved);
