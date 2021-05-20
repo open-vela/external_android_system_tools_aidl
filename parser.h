@@ -87,12 +87,6 @@ class Parser {
   void SetPackage(const std::string& package) { package_ = package; }
   const std::string& Package() const { return package_; }
 
-  void DeferResolution(AidlTypeSpecifier* typespec) {
-    unresolved_typespecs_.emplace_back(typespec);
-  }
-
-  const vector<AidlTypeSpecifier*>& GetUnresolvedTypespecs() const { return unresolved_typespecs_; }
-
   bool Resolve(TypeResolver& type_resolver);
   void SetDocument(std::unique_ptr<AidlDocument>&& document) {
     // The parsed document is owned by typenames_. This parser object only has
@@ -121,6 +115,5 @@ class Parser {
   YY_BUFFER_STATE buffer_;
   int error_ = 0;
 
-  vector<AidlTypeSpecifier*> unresolved_typespecs_;
   const AidlDocument* document_;
 };
