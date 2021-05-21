@@ -186,8 +186,15 @@ std::string GetCppName(const AidlTypeSpecifier& raw_type, const AidlTypenames& t
   if (definedType != nullptr && definedType->AsInterface() != nullptr) {
     return "::android::sp<" + GetRawCppName(type) + ">";
   }
-
-  return WrapIfNullable(GetRawCppName(type), raw_type, typenames);
+  auto cpp_name = GetRawCppName(type);
+  if (type.IsGeneric()) {
+    std::vector<std::string> type_params;
+    for (const auto& parameter : type.GetTypeParameters()) {
+      type_params.push_back(CppNameOf(*parameter, typenames));
+    }
+    cpp_name += "<" + base::Join(type_params, ", ") + ">";
+  }
+  return WrapIfNullable(cpp_name, raw_type, typenames);
 }
 }  // namespace
 std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value) {
@@ -223,13 +230,6 @@ std::string CppNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typena
       return "::std::optional<::std::vector<" + cpp_name + ">>";
     }
     return "::std::vector<" + cpp_name + ">";
-  } else if (type.IsGeneric()) {
-    std::vector<std::string> type_params;
-    for (const auto& parameter : type.GetTypeParameters()) {
-      type_params.push_back(CppNameOf(*parameter, typenames));
-    }
-    return StringPrintf("%s<%s>", GetCppName(type, typenames).c_str(),
-                        base::Join(type_params, ", ").c_str());
   }
   return GetCppName(type, typenames);
 }

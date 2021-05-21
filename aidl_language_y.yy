@@ -660,7 +660,6 @@ arg
 non_array_type
  : annotation_list qualified_name {
     $$ = new AidlTypeSpecifier(loc(@2), $2->GetText(), false, nullptr, $2->GetComments());
-    ps->DeferResolution($$);
     if (!$1->empty()) {
       $$->SetComments($1->begin()->GetComments());
       $$->Annotate(std::move(*$1));

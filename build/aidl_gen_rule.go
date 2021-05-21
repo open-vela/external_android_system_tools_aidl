@@ -85,7 +85,7 @@ type aidlGenRule struct {
 	implicitInputs android.Paths
 	importFlags    string
 
-	// TODO(b/149952131): always have a hash file
+	// A frozen aidl_interface always have a hash file
 	hashFile android.Path
 
 	genOutDir     android.ModuleGenPath
