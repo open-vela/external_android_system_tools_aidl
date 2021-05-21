@@ -56,6 +56,7 @@ int main(int argc, char** argv) {
       std::cout << "std::string(\"" << intf.asString() << "\")," << std::endl;
     }
     std::cout << "}," << std::endl;
+    std::cout << entry["has_development"].asString() << "," << std::endl;
     std::cout << "}," << std::endl;
   }
   std::cout << "};" << std::endl;

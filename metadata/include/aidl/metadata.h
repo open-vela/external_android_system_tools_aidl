@@ -34,6 +34,9 @@ struct AidlInterfaceMetadata {
   // list of all hashes
   std::vector<std::string> hashes;
 
+  // true if the interface is different from the last frozen version
+  bool has_development;
+
   static std::vector<AidlInterfaceMetadata> all();
 };
 
