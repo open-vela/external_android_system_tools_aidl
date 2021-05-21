@@ -471,12 +471,12 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   //////////////////////////////////////////////////////////////////////////
 
   // Parse the main input file
-  const AidlDocument* document = Parser::Parse(input_file_name, io_delegate, *typenames);
-  if (document == nullptr) {
+  std::unique_ptr<Parser> main_parser = Parser::Parse(input_file_name, io_delegate, *typenames);
+  if (main_parser == nullptr) {
     return AidlError::PARSE_ERROR;
   }
   int num_top_level_decls = 0;
-  for (const auto& type : document->DefinedTypes()) {
+  for (const auto& type : main_parser->ParsedDocument().DefinedTypes()) {
     if (type->AsUnstructuredParcelable() == nullptr) {
       num_top_level_decls++;
       if (num_top_level_decls > 1) {
@@ -500,7 +500,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   vector<string> import_paths;
   ImportResolver import_resolver{io_delegate, input_file_name, options.ImportDirs(),
                                  options.InputFiles()};
-  for (const auto& import : document->Imports()) {
+  for (const auto& import : main_parser->ParsedDocument().Imports()) {
     if (AidlTypenames::IsBuiltinTypename(import->GetNeededClass())) {
       continue;
     }
@@ -524,8 +524,8 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
 
     import_paths.emplace_back(import_path);
 
-    auto imported_doc = Parser::Parse(import_path, io_delegate, *typenames);
-    if (imported_doc == nullptr) {
+    std::unique_ptr<Parser> import_parser = Parser::Parse(import_path, io_delegate, *typenames);
+    if (import_parser == nullptr) {
       AIDL_ERROR(import_path) << "error while importing " << import_path << " for " << import;
       err = AidlError::BAD_IMPORT;
       continue;
@@ -538,8 +538,8 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   for (const auto& imported_file : options.ImportFiles()) {
     import_paths.emplace_back(imported_file);
 
-    auto impoted_doc = Parser::Parse(imported_file, io_delegate, *typenames);
-    if (impoted_doc == nullptr) {
+    std::unique_ptr<Parser> import_parser = Parser::Parse(imported_file, io_delegate, *typenames);
+    if (import_parser == nullptr) {
       AIDL_ERROR(imported_file) << "error while importing " << imported_file;
       err = AidlError::BAD_IMPORT;
       continue;
@@ -549,11 +549,10 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     return err;
   }
 
-  TypeResolver resolver = [&](const AidlDefinedType* scope, AidlTypeSpecifier* type) {
+  TypeResolver resolver = [&](const AidlDocument* doc, AidlTypeSpecifier* type) {
     if (type->Resolve(*typenames)) return true;
 
     const string unresolved_name = type->GetUnresolvedName();
-    const auto doc = typenames->GetDocumentFor(scope);
     const std::optional<string> canonical_name = doc->ResolveName(unresolved_name);
     if (!canonical_name) {
       return false;
@@ -564,8 +563,8 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     }
     import_paths.push_back(import_path);
 
-    auto imported_doc = Parser::Parse(import_path, io_delegate, *typenames);
-    if (imported_doc == nullptr) {
+    std::unique_ptr<Parser> import_parser = Parser::Parse(import_path, io_delegate, *typenames);
+    if (import_parser == nullptr) {
       AIDL_ERROR(import_path) << "error while importing " << import_path << " for " << import_path;
       return false;
     }
@@ -579,7 +578,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   const bool is_dump_api = options.GetTask() == Options::Task::DUMP_API;
 
   // Resolve the unresolved type references found from the input file
-  if (!is_check_api && !ResolveReferences(*document, resolver)) {
+  if (!is_check_api && !main_parser->Resolve(resolver)) {
     // Resolution is not need for check api because all typespecs are
     // using fully qualified names.
     return AidlError::BAD_TYPE;
@@ -599,10 +598,10 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   // serious failures.
   bool contains_unstructured_parcelable = false;
 
-  const auto& types = document->DefinedTypes();
+  const auto& types = main_parser->ParsedDocument().DefinedTypes();
   const int num_defined_types = types.size();
   for (const auto& defined_type : types) {
-    AIDL_FATAL_IF(defined_type == nullptr, document);
+    AIDL_FATAL_IF(defined_type == nullptr, main_parser->FileName());
 
     // Ensure type is exactly one of the following:
     AidlInterface* interface = defined_type->AsInterface();
@@ -716,11 +715,11 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     }
   }
 
-  if (!ValidateAnnotationContext(*document)) {
+  if (!ValidateAnnotationContext(main_parser->ParsedDocument())) {
     return AidlError::BAD_TYPE;
   }
 
-  if (!is_check_api && !Diagnose(*document, options.GetDiagnosticMapping())) {
+  if (!is_check_api && !Diagnose(main_parser->ParsedDocument(), options.GetDiagnosticMapping())) {
     return AidlError::BAD_TYPE;
   }
 
@@ -878,10 +877,10 @@ bool preprocess_aidl(const Options& options, const IoDelegate& io_delegate) {
 
   for (const auto& file : options.InputFiles()) {
     AidlTypenames typenames;
-    const AidlDocument* document = Parser::Parse(file, io_delegate, typenames);
-    if (document == nullptr) return false;
+    std::unique_ptr<Parser> p = Parser::Parse(file, io_delegate, typenames);
+    if (p == nullptr) return false;
 
-    for (const auto& defined_type : document->DefinedTypes()) {
+    for (const auto& defined_type : p->ParsedDocument().DefinedTypes()) {
       if (!writer->Write("%s %s;\n", defined_type->GetPreprocessDeclarationName().c_str(),
                          defined_type->GetCanonicalName().c_str())) {
         return false;
