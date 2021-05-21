@@ -75,6 +75,9 @@ type aidlApi struct {
 
 	// for triggering freezing API as the new version
 	freezeApiTimestamp android.WritablePath
+
+	// for checking for active development on unfrozen version
+	hasDevelopment android.WritablePath
 }
 
 func (m *aidlApi) apiDir() string {
@@ -145,43 +148,17 @@ func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, 
 	if creatingNewVersion {
 		// We are asked to create a new version. But before doing that, check if the given
 		// dump is the same as the latest version. If so, don't create a new version,
-		// otherwise we will be unnecessarily creating many versions. `newVersionNeededFile`
-		// is created when the equality check fails.
-		newVersionNeededFile := android.PathForModuleOut(ctx, "updateapi_"+version+".needed")
-		rb.Command().Text("rm -f " + newVersionNeededFile.String())
-
-		if latestVersionDump != nil {
-			equalityCheckCommand := rb.Command()
-			equalityCheckCommand.BuiltTool("aidl").
-				FlagWithArg("--checkapi=", "equal")
-			if m.properties.Stability != nil {
-				equalityCheckCommand.FlagWithArg("--stability ", *m.properties.Stability)
-			}
-			importPaths, implicits := getImportsFromDeps(ctx, false)
-			equalityCheckCommand.FlagForEachArg("-I", importPaths).Implicits(implicits)
-			equalityCheckCommand.
-				Text(latestVersionDump.dir.String()).Implicits(latestVersionDump.files).
-				Text(dump.dir.String()).Implicits(dump.files).
-				Text("&> /dev/null")
-			equalityCheckCommand.
-				Text("|| touch").
-				Text(newVersionNeededFile.String())
-		} else {
-			// If there is no latest version (i.e. we are creating the initial version)
-			// create the new version unconditionally
-			rb.Command().Text("touch").Text(newVersionNeededFile.String())
-		}
-
+		// otherwise we will be unnecessarily creating many versions.
 		// Copy the given dump to the target directory only when the equality check failed
-		// (i.e. `newVersionNeededFile` exists).
+		// (i.e. `has_development` file contains "1").
 		rb.Command().
-			Text("if [ -f " + newVersionNeededFile.String() + " ]; then").
+			Text("if [ \"$(cat ").Input(m.hasDevelopment).Text(")\" = \"1\" ]; then").
 			Text("cp -rf " + dump.dir.String() + "/. " + targetDir).Implicits(dump.files).
 			Text("; fi")
 
 		// Also modify Android.bp file to add the new version to the 'versions' property.
 		rb.Command().
-			Text("if [ -f " + newVersionNeededFile.String() + " ]; then").
+			Text("if [ \"$(cat ").Input(m.hasDevelopment).Text(")\" = \"1\" ]; then").
 			BuiltTool("bpmodify").
 			Text("-w -m " + m.properties.BaseName).
 			Text("-parameter versions -a " + version).
@@ -309,6 +286,29 @@ func (m *aidlApi) checkIntegrity(ctx android.ModuleContext, dump apiDump) androi
 	return timestampFile
 }
 
+func (m *aidlApi) checkForDevelopment(ctx android.ModuleContext, latestVersionDump *apiDump, totDump apiDump) android.WritablePath {
+	hasDevPath := android.PathForModuleOut(ctx, "has_development")
+	rb := android.NewRuleBuilder(pctx, ctx)
+	rb.Command().Text("rm -f " + hasDevPath.String())
+	if latestVersionDump != nil {
+		hasDevCommand := rb.Command()
+		hasDevCommand.BuiltTool("aidl").FlagWithArg("--checkapi=", "equal")
+		if m.properties.Stability != nil {
+			hasDevCommand.FlagWithArg("--stability ", *m.properties.Stability)
+		}
+		importPaths, implicits := getImportsFromDeps(ctx, false)
+		hasDevCommand.FlagForEachArg("-I", importPaths).Implicits(implicits)
+		hasDevCommand.
+			Text(latestVersionDump.dir.String()).Implicits(latestVersionDump.files).
+			Text(totDump.dir.String()).Implicits(totDump.files).
+			Text("; echo $? >").Output(hasDevPath)
+	} else {
+		rb.Command().Text("echo 1 >").Output(hasDevPath)
+	}
+	rb.Build("check_for_development", "")
+	return hasDevPath
+}
+
 func (m *aidlApi) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	// An API dump is created from source and it is compared against the API dump of the
 	// 'current' (yet-to-be-finalized) version. By checking this we enforce that any change in
@@ -386,6 +386,9 @@ func (m *aidlApi) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 		m.checkApiTimestamps = append(m.checkApiTimestamps, checked)
 	}
 
+	// Check for active development on the unfrozen version
+	m.hasDevelopment = m.checkForDevelopment(ctx, latestVersionDump, totApiDump)
+
 	// API dump from source is updated to the 'current' version. Triggered by `m <name>-update-api`
 	m.updateApiTimestamp = m.makeApiDumpAsVersion(ctx, totApiDump, currentVersion, nil)
 
@@ -426,6 +429,7 @@ func (m *aidlApi) DepsMutator(ctx android.BottomUpMutatorContext) {
 	ctx.AddDependency(ctx.Module(), importApiDep, wrap("", m.properties.ImportsWithoutVersion, aidlApiSuffix)...)
 	ctx.AddDependency(ctx.Module(), importInterfaceDep, wrap("", m.properties.ImportsWithoutVersion, aidlInterfaceSuffix)...)
 	ctx.AddDependency(ctx.Module(), interfaceDep, m.properties.BaseName+aidlInterfaceSuffix)
+	ctx.AddReverseDependency(ctx.Module(), nil, aidlMetadataSingletonName)
 }
 
 func aidlApiFactory() android.Module {
