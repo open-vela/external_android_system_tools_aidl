@@ -3778,10 +3778,7 @@ TEST_F(AidlTest, RejectsCircularReferencingEnumerators) {
   auto options = Options::From("aidl -I a --lang ndk -o out -h out a/p/Foo.aidl");
   EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
   auto err = GetCapturedStderr();
-  EXPECT_EQ(
-      "ERROR: a/p/Foo.aidl:1.26-28: Found a circular reference: B -> A -> B\n"
-      "ERROR: a/p/Foo.aidl:1.29-31: Found a circular reference: A -> B -> A\n",
-      err);
+  EXPECT_EQ("ERROR: a/p/Foo.aidl:1.26-28: Found a circular reference: B -> A -> B\n", err);
 }
 
 TEST_F(AidlTest, RejectsCircularReferencingConsts) {
@@ -3802,6 +3799,27 @@ TEST_F(AidlTest, RecursiveReferences) {
   io_delegate_.SetFileContents("a/p/Baz.aidl", "package p; parcelable Baz { const int A = 1; }");
   CaptureStderr();
   auto options = Options::From("aidl -I a --lang ndk -o out -h out a/p/Foo.aidl");
+  EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+}
+
+TEST_P(AidlTest, CircularReferenceWithFullyQualified) {
+  io_delegate_.SetFileContents("Foo.aidl", "enum Foo { A = Foo.A }");
+  auto options =
+      Options::From("aidl --lang " + to_string(GetLanguage()) + " -I . -o out -h out Foo.aidl");
+  const string err = "ERROR: Foo.aidl:1.15-21: Found a circular reference: Foo.A -> Foo.A\n";
+  CaptureStderr();
+  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ(err, GetCapturedStderr());
+}
+
+TEST_P(AidlTest, ConstRefsCanPointToTheSameValue) {
+  io_delegate_.SetFileContents("Foo.aidl", "enum Foo { A = 0 }");
+  // this demonstrates the case that "Foo.A" const-ref node is visited twice by B and C.
+  io_delegate_.SetFileContents("Bar.aidl", "enum Bar { A = Foo.A, B = A, C = A }");
+  auto options =
+      Options::From("aidl --lang " + to_string(GetLanguage()) + " -I . -o out -h out Bar.aidl");
+  CaptureStderr();
   EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
   EXPECT_EQ("", GetCapturedStderr());
 }
