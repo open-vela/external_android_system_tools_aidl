@@ -264,12 +264,10 @@ func TestUnstableVersionUsageInRelease(t *testing.T) {
 	expectedError := `foo-V2-java is disallowed in release version because it is unstable.`
 	testAidlError(t, expectedError, unstableVersionUsageInJavaBp, setReleaseEnv(), withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
-		"aidl_api/foo/1/.hash":      nil,
 	}))
 
 	testAidl(t, unstableVersionUsageInJavaBp, withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
-		"aidl_api/foo/1/.hash":      nil,
 	}))
 
 	// A stable version can be used in release version
@@ -290,12 +288,10 @@ func TestUnstableVersionUsageInRelease(t *testing.T) {
 
 	testAidl(t, stableVersionUsageInJavaBp, setReleaseEnv(), withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
-		"aidl_api/foo/1/.hash":      nil,
 	}))
 
 	testAidl(t, stableVersionUsageInJavaBp, withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
-		"aidl_api/foo/1/.hash":      nil,
 	}))
 }
 
@@ -355,7 +351,6 @@ func TestUnstableVersionedModuleUsageInRelease(t *testing.T) {
 	testAidlError(t, expectedError, nonVersionedModuleUsageInJavaBp, setReleaseEnv())
 	testAidl(t, nonVersionedModuleUsageInJavaBp, withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
-		"aidl_api/foo/1/.hash":      nil,
 	}))
 }
 
@@ -466,7 +461,6 @@ func TestCreatesModulesWithFrozenVersions(t *testing.T) {
 		}
 	`, withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
-		"aidl_api/foo/1/.hash":      nil,
 	}))
 
 	// For frozen version "1"
@@ -601,9 +595,7 @@ func TestNativeOutputIsAlwaysVersioned(t *testing.T) {
 		}
 	`, withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
-		"aidl_api/foo/1/.hash":      nil,
 		"aidl_api/foo/2/foo.2.aidl": nil,
-		"aidl_api/foo/2/.hash":      nil,
 	}))
 
 	// alias for the latest frozen version (=2)
