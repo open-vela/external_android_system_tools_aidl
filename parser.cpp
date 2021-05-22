@@ -25,15 +25,9 @@ int yyparse(Parser*);
 YY_BUFFER_STATE yy_scan_buffer(char*, size_t, void*);
 void yy_delete_buffer(YY_BUFFER_STATE, void*);
 
-const AidlDocument* Parser::Parse(const std::string& filename,
-                                  const android::aidl::IoDelegate& io_delegate,
-                                  AidlTypenames& typenames) {
-  // reuse pre-parsed document from typenames
-  for (auto& doc : typenames.AllDocuments()) {
-    if (doc->GetLocation().GetFile() == filename) {
-      return doc.get();
-    }
-  }
+std::unique_ptr<Parser> Parser::Parse(const std::string& filename,
+                                      const android::aidl::IoDelegate& io_delegate,
+                                      AidlTypenames& typenames) {
   // Make sure we can read the file first, before trashing previous state.
   unique_ptr<string> raw_buffer = io_delegate.GetFileContents(filename);
   if (raw_buffer == nullptr) {
@@ -45,13 +39,13 @@ const AidlDocument* Parser::Parse(const std::string& filename,
   // nulls at the end.
   raw_buffer->append(2u, '\0');
 
-  Parser parser(filename, *raw_buffer, typenames);
+  std::unique_ptr<Parser> parser(new Parser(filename, *raw_buffer, typenames));
 
-  if (yy::parser(&parser).parse() != 0 || parser.HasError()) {
+  if (yy::parser(parser.get()).parse() != 0 || parser->HasError()) {
     return nullptr;
   }
 
-  return parser.ParsedDocument();
+  return parser;
 }
 
 void Parser::SetTypeParameters(AidlTypeSpecifier* type,
@@ -67,31 +61,24 @@ void Parser::SetTypeParameters(AidlTypeSpecifier* type,
   }
 }
 
-class ReferenceResolver : public AidlVisitor {
+class ConstantReferenceResolver : public AidlVisitor {
  public:
-  ReferenceResolver(const AidlDefinedType* scope, TypeResolver& resolver, bool* success)
-      : scope_(scope), resolver_(resolver), success_(success) {}
-
-  void Visit(const AidlTypeSpecifier& t) override {
-    // We're visiting the same node again. This can happen when two constant references
-    // point to an ancestor of this node.
-    if (t.IsResolved()) {
-      return;
-    }
-
-    AidlTypeSpecifier& type = const_cast<AidlTypeSpecifier&>(t);
-    if (!resolver_(scope_, &type)) {
-      AIDL_ERROR(type) << "Failed to resolve '" << type.GetUnresolvedName() << "'";
-      *success_ = false;
-    }
-  }
-
+  ConstantReferenceResolver(const AidlDefinedType* scope, const AidlTypenames& typenames,
+                            TypeResolver& resolver, bool* success)
+      : scope_(scope), typenames_(typenames), resolver_(resolver), success_(success) {}
   void Visit(const AidlConstantReference& v) override {
     if (IsCircularReference(&v)) {
       *success_ = false;
       return;
     }
 
+    if (v.GetRefType() && !v.GetRefType()->IsResolved()) {
+      if (!resolver_(typenames_.GetDocumentFor(scope_), v.GetRefType().get())) {
+        AIDL_ERROR(v.GetRefType()) << "Unknown type '" << v.GetRefType()->GetName() << "'";
+        *success_ = false;
+        return;
+      }
+    }
     const AidlConstantValue* resolved = v.Resolve(scope_);
     if (!resolved) {
       AIDL_ERROR(v) << "Unknown reference '" << v.Literal() << "'";
@@ -99,13 +86,9 @@ class ReferenceResolver : public AidlVisitor {
       return;
     }
 
-    // On error, skip recursive visiting to avoid redundant messages
-    if (!*success_) {
-      return;
-    }
     // resolve recursive references
     Push(&v);
-    VisitBottomUp(*this, *resolved);
+    VisitTopDown(*this, *resolved);
     Pop();
   }
 
@@ -144,18 +127,26 @@ class ReferenceResolver : public AidlVisitor {
   }
 
   const AidlDefinedType* scope_;
+  const AidlTypenames& typenames_;
   TypeResolver& resolver_;
   bool* success_;
   std::vector<StackElem> stack_ = {};
 };
 
-// Resolve "unresolved" types in the "main" document.
-bool ResolveReferences(const AidlDocument& document, TypeResolver& type_resolver) {
+bool Parser::Resolve(TypeResolver& type_resolver) {
   bool success = true;
+  for (AidlTypeSpecifier* typespec : unresolved_typespecs_) {
+    if (!type_resolver(document_, typespec)) {
+      AIDL_ERROR(typespec) << "Failed to resolve '" << typespec->GetUnresolvedName() << "'";
+      success = false;
+      // don't stop to show more errors if any
+    }
+  }
 
-  for (const auto& type : document.DefinedTypes()) {
-    ReferenceResolver ref_resolver{type.get(), type_resolver, &success};
-    VisitBottomUp(ref_resolver, *type);
+  // resolve "field references" as well.
+  for (const auto& type : document_->DefinedTypes()) {
+    ConstantReferenceResolver ref_resolver{type.get(), typenames_, type_resolver, &success};
+    VisitTopDown(ref_resolver, *type);
   }
 
   return success;
