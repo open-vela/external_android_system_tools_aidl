@@ -377,3 +377,26 @@ func addApiModule(mctx android.LoadHookContext, i *aidlInterface) string {
 	})
 	return apiModule
 }
+
+func init() {
+	android.RegisterSingletonType("aidl-freeze-api", freezeApiSingletonFactory)
+}
+
+func freezeApiSingletonFactory() android.Singleton {
+	return &freezeApiSingleton{}
+}
+
+type freezeApiSingleton struct{}
+
+func (f *freezeApiSingleton) GenerateBuildActions(ctx android.SingletonContext) {
+	var files android.Paths
+	ctx.VisitAllModules(func(module android.Module) {
+		if !module.Enabled() {
+			return
+		}
+		if m, ok := module.(*aidlApi); ok {
+			files = append(files, m.freezeApiTimestamp)
+		}
+	})
+	ctx.Phony("aidl-freeze-api", files...)
+}
