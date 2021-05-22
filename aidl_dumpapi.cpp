@@ -34,7 +34,11 @@ namespace aidl {
 void DumpVisitor::DumpType(const AidlDefinedType& dt, const string& type) {
   DumpComments(dt);
   DumpAnnotations(dt);
-  out << type << " " << dt.GetName() << " {\n";
+  out << type << " " << dt.GetName();
+  if (auto generic_type = dt.AsParameterizable(); generic_type && generic_type->IsGeneric()) {
+    out << "<" << Join(generic_type->GetTypeParameters(), ", ") << ">";
+  }
+  out << " {\n";
   out.Indent();
   DumpMembers(dt);
   out.Dedent();
