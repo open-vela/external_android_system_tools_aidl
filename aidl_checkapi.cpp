@@ -401,8 +401,8 @@ static bool are_compatible_enums(const AidlEnumDeclaration& older,
   return compatible;
 }
 
-static Result<AidlTypenames> load_from_dir(const Options& options, const IoDelegate& io_delegate,
-                                           const std::string& dir) {
+static Result<AidlTypenames> LoadApiDump(const Options& options, const IoDelegate& io_delegate,
+                                         const std::string& dir) {
   Result<std::vector<std::string>> dir_files = io_delegate.ListFiles(dir);
   if (!dir_files.ok()) {
     AIDL_ERROR(dir) << dir_files.error();
@@ -412,7 +412,9 @@ static Result<AidlTypenames> load_from_dir(const Options& options, const IoDeleg
   AidlTypenames typenames;
   for (const auto& file : *dir_files) {
     if (!android::base::EndsWith(file, ".aidl")) continue;
-    if (internals::load_and_validate_aidl(file, options, io_delegate, &typenames,
+    // current "dir" is added to "imports" so that referenced.aidl files in the current
+    // module are available when resolving references.
+    if (internals::load_and_validate_aidl(file, options.PlusImportDir(dir), io_delegate, &typenames,
                                           nullptr /* imported_files */) != AidlError::OK) {
       AIDL_ERROR(file) << "Failed to read.";
       return Error();
@@ -427,19 +429,29 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
   AIDL_FATAL_IF(options.InputFiles().size() != 2, AIDL_LOCATION_HERE)
       << "--checkapi requires two inputs "
       << "but got " << options.InputFiles().size();
-  auto old_tns = load_from_dir(options, io_delegate, options.InputFiles().at(0));
+  auto old_tns = LoadApiDump(options, io_delegate, options.InputFiles().at(0));
   if (!old_tns.ok()) {
     return false;
   }
-  auto new_tns = load_from_dir(options, io_delegate, options.InputFiles().at(1));
+  auto new_tns = LoadApiDump(options, io_delegate, options.InputFiles().at(1));
   if (!new_tns.ok()) {
     return false;
   }
 
   const Options::CheckApiLevel level = options.GetCheckApiLevel();
 
-  std::vector<AidlDefinedType*> old_types = old_tns->AllDefinedTypes();
-  std::vector<AidlDefinedType*> new_types = new_tns->AllDefinedTypes();
+  // We don't check impoted types.
+  auto get_types_in = [](const AidlTypenames& tns, const std::string& location) {
+    std::vector<AidlDefinedType*> types;
+    for (const auto& type : tns.AllDefinedTypes()) {
+      if (StartsWith(type->GetLocation().GetFile(), location)) {
+        types.push_back(type);
+      }
+    }
+    return types;
+  };
+  std::vector<AidlDefinedType*> old_types = get_types_in(*old_tns, options.InputFiles().at(0));
+  std::vector<AidlDefinedType*> new_types = get_types_in(*new_tns, options.InputFiles().at(1));
 
   bool compatible = true;
 
