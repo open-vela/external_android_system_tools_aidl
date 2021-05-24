@@ -126,12 +126,14 @@ func _testAidl(t *testing.T, bp string, customizers ...android.FixturePreparer) 
 			crate_name: "binder",
 			srcs: [""],
 		}
+	`
+	preparers = append(preparers, android.FixtureWithRootAndroidBp(bp))
+	preparers = append(preparers, android.FixtureAddTextFile("system/tools/aidl/build/Android.bp", `
 		aidl_interfaces_metadata {
 			name: "aidl_metadata_json",
+			visibility: ["//system/tools/aidl:__subpackages__"],
 		}
-	`
-
-	preparers = append(preparers, android.FixtureWithRootAndroidBp(bp))
+	`))
 
 	preparers = append(preparers, android.FixtureModifyProductVariables(func(variables android.FixtureProductVariables) {
 		// To keep tests stable, fix Platform_sdk_codename and Platform_sdk_final
@@ -264,10 +266,12 @@ func TestUnstableVersionUsageInRelease(t *testing.T) {
 	expectedError := `foo-V2-java is disallowed in release version because it is unstable.`
 	testAidlError(t, expectedError, unstableVersionUsageInJavaBp, setReleaseEnv(), withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
+		"aidl_api/foo/1/.hash":      nil,
 	}))
 
 	testAidl(t, unstableVersionUsageInJavaBp, withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
+		"aidl_api/foo/1/.hash":      nil,
 	}))
 
 	// A stable version can be used in release version
@@ -288,10 +292,12 @@ func TestUnstableVersionUsageInRelease(t *testing.T) {
 
 	testAidl(t, stableVersionUsageInJavaBp, setReleaseEnv(), withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
+		"aidl_api/foo/1/.hash":      nil,
 	}))
 
 	testAidl(t, stableVersionUsageInJavaBp, withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
+		"aidl_api/foo/1/.hash":      nil,
 	}))
 }
 
@@ -351,6 +357,7 @@ func TestUnstableVersionedModuleUsageInRelease(t *testing.T) {
 	testAidlError(t, expectedError, nonVersionedModuleUsageInJavaBp, setReleaseEnv())
 	testAidl(t, nonVersionedModuleUsageInJavaBp, withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
+		"aidl_api/foo/1/.hash":      nil,
 	}))
 }
 
@@ -461,6 +468,7 @@ func TestCreatesModulesWithFrozenVersions(t *testing.T) {
 		}
 	`, withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
+		"aidl_api/foo/1/.hash":      nil,
 	}))
 
 	// For frozen version "1"
@@ -595,7 +603,9 @@ func TestNativeOutputIsAlwaysVersioned(t *testing.T) {
 		}
 	`, withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
+		"aidl_api/foo/1/.hash":      nil,
 		"aidl_api/foo/2/foo.2.aidl": nil,
+		"aidl_api/foo/2/.hash":      nil,
 	}))
 
 	// alias for the latest frozen version (=2)
@@ -968,6 +978,94 @@ func TestRustDuplicateNames(t *testing.T) {
 			},
 		}
 	`)
+}
+
+func TestAidlImportFlagsForImportedModules(t *testing.T) {
+	customizer := withFiles(map[string][]byte{
+		"foo/Android.bp": []byte(`
+			aidl_interface {
+				name: "foo-iface",
+				srcs: ["a/Foo.aidl"],
+				imports: ["bar-iface"],
+				versions: ["1"],
+			}
+		`),
+		"foo/a/Foo.aidl": nil,
+		"foo/aidl_api/foo-iface/current/a/Foo.aidl": nil,
+		"foo/aidl_api/foo-iface/1/a/Foo.aidl":       nil,
+		"foo/aidl_api/foo-iface/1/.hash":            nil,
+		"bar/Android.bp": []byte(`
+			aidl_interface {
+				name: "bar-iface",
+				srcs: ["b/Bar.aidl"],
+				versions: ["1"],
+			}
+		`),
+		"bar/b/Bar.aidl": nil,
+		"bar/aidl_api/bar-iface/current/b/Bar.aidl": nil,
+		"bar/aidl_api/bar-iface/1/b/Bar.aidl":       nil,
+		"bar/aidl_api/bar-iface/1/.hash":            nil,
+	})
+	ctx, _ := testAidl(t, ``, customizer)
+
+	// checkapidump rule is to compare "compatibility" between ToT and "current"
+	rule := ctx.ModuleForTests("foo-iface-api", "").Output("checkapi_dump.timestamp")
+	imports := strings.Split(rule.Args["imports"], " ")
+	android.AssertStringListContains(t, "checkapi should have imports", imports,
+		"-Ibar/aidl_api/bar-iface/current")
+
+	// updateapi_2 rule is to create a new version ("2") of apiDump from ToT
+	// This also runs --checkapi for equality between latest("1") and ToT before creating "2"
+	rule = ctx.ModuleForTests("foo-iface-api", "").Output("updateapi_2.timestamp")
+	android.AssertStringDoesContain(t, "checkapi should have imports",
+		rule.RuleParams.Command, "-Ibar/aidl_api/bar-iface/current")
+}
+
+func TestAidlImportFlagsForIncludeDirs(t *testing.T) {
+	customizer := withFiles(map[string][]byte{
+		"foo/Android.bp": []byte(`
+			aidl_interface {
+				name: "foo-iface",
+				local_include_dir: "src",
+				include_dirs: [
+						"path1",
+						"path2/sub",
+				],
+				srcs: [
+						"src/foo/Foo.aidl",
+				],
+				imports: [
+						"bar-iface",
+				],
+				versions: ["1", "2"],
+			}
+			aidl_interface {
+				name: "bar-iface",
+				local_include_dir: "src",
+				srcs: [
+						"src/bar/Bar.aidl",
+				],
+			}
+		`),
+		"foo/src/foo/Foo.aidl":                        nil,
+		"foo/src/bar/Bar.aidl":                        nil,
+		"foo/aidl_api/foo-iface/current/foo/Foo.aidl": nil,
+		"foo/aidl_api/foo-iface/1/foo/Foo.aidl":       nil,
+		"foo/aidl_api/foo-iface/1/.hash":              nil,
+		"foo/aidl_api/foo-iface/2/foo/Foo.aidl":       nil,
+		"foo/aidl_api/foo-iface/2/.hash":              nil,
+	})
+	ctx, _ := testAidl(t, ``, customizer)
+
+	rule := ctx.ModuleForTests("foo-iface-api", "").Output("checkapi_2.timestamp")
+	imports := strings.Split(rule.Args["imports"], " ")
+	// should import "current" of "imports" modules
+	assertListContains(t, imports, "-Ifoo/aidl_api/bar-iface/current")
+	assertListContains(t, imports, "-Ipath1")
+	assertListContains(t, imports, "-Ipath2/sub")
+
+	// should trigger to check imported "current"
+	assertListContains(t, rule.Implicits.Strings(), "out/soong/.intermediates/foo/bar-iface-api/checkapi_current.timestamp")
 }
 
 func TestAidlFlags(t *testing.T) {
