@@ -1629,6 +1629,25 @@ TEST_F(AidlTest, ApiDumpWithEnumDefaultValues) {
             actual);
 }
 
+TEST_F(AidlTest, ApiDumpWithGenerics) {
+  io_delegate_.SetFileContents("foo/bar/Foo.aidl",
+                               "package foo.bar;\n"
+                               "parcelable Foo<T, U> {\n"
+                               "}\n");
+
+  vector<string> args = {"aidl", "--dumpapi", "-I . ", "-o dump", "foo/bar/Foo.aidl"};
+  Options options = Options::From(args);
+  CaptureStderr();
+  EXPECT_TRUE(dump_api(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+  string actual;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("dump/foo/bar/Foo.aidl", &actual));
+  EXPECT_EQ(string(kPreamble).append("package foo.bar;\n"
+                                     "parcelable Foo<T, U> {\n"
+                                     "}\n"),
+            actual);
+}
+
 TEST_F(AidlTest, CheckNumGenericTypeSecifier) {
   const string expected_list_stderr =
       "ERROR: p/IFoo.aidl:1.37-41: List can only have one type parameter, but got: "
