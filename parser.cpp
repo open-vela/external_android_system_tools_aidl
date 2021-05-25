@@ -51,7 +51,7 @@ const AidlDocument* Parser::Parse(const std::string& filename,
     return nullptr;
   }
 
-  return parser.document_;
+  return parser.ParsedDocument();
 }
 
 void Parser::SetTypeParameters(AidlTypeSpecifier* type,
