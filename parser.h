@@ -88,7 +88,6 @@ class Parser {
   void SetPackage(const std::string& package) { package_ = package; }
   const std::string& Package() const { return package_; }
 
-  bool Resolve(TypeResolver& type_resolver);
   void SetDocument(std::unique_ptr<AidlDocument>&& document) {
     // The parsed document is owned by typenames_. This parser object only has
     // a reference to it.
@@ -97,11 +96,6 @@ class Parser {
       document_ = nullptr;
       AddError();
     }
-  }
-
-  const AidlDocument* ParsedDocument() const {
-    AIDL_FATAL_IF(HasError(), FileName());
-    return document_;
   }
 
  private:
