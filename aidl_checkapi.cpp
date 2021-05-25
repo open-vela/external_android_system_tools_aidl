@@ -41,10 +41,18 @@ using std::set;
 using std::string;
 using std::vector;
 
+struct DumpForEqualityVisitor : DumpVisitor {
+  DumpForEqualityVisitor(CodeWriter& out) : DumpVisitor(out) {}
+
+  void DumpConstantValue(const AidlTypeSpecifier&, const AidlConstantValue& c) {
+    out << c.Literal();
+  }
+};
+
 static std::string Dump(const AidlDefinedType& type) {
   string code;
   CodeWriterPtr out = CodeWriter::ForString(&code);
-  DumpVisitor visitor(*out);
+  DumpForEqualityVisitor visitor(*out);
   type.DispatchVisit(visitor);
   out->Close();
   return code;
@@ -146,8 +154,8 @@ static bool are_compatible_constants(const AidlDefinedType& older, const AidlDef
     const auto new_c = found->second;
     compatible &= are_compatible_types(old_c->GetType(), new_c->GetType());
 
-    const string old_value = old_c->ValueString(AidlConstantValueDecorator);
-    const string new_value = new_c->ValueString(AidlConstantValueDecorator);
+    const string old_value = old_c->GetValue().Literal();
+    const string new_value = new_c->GetValue().Literal();
     if (old_value != new_value) {
       AIDL_ERROR(newer) << "Changed constant value: " << older.GetCanonicalName() << "."
                         << old_c->GetName() << " from " << old_value << " to " << new_value << ".";
@@ -219,14 +227,21 @@ static bool are_compatible_interfaces(const AidlInterface& older, const AidlInte
 static bool HasZeroEnumerator(const AidlEnumDeclaration& enum_decl) {
   return std::any_of(enum_decl.GetEnumerators().begin(), enum_decl.GetEnumerators().end(),
                      [&](const unique_ptr<AidlEnumerator>& enumerator) {
-                       return enumerator->GetValue()->ValueString(
-                                  enum_decl.GetBackingType(), AidlConstantValueDecorator) == "0";
+                       return enumerator->GetValue()->Literal() == "0";
                      });
 }
 
-static bool EvaluatesToZero(const AidlEnumDeclaration& enum_decl, const AidlConstantValue* value) {
-  if (value == nullptr) return true;
-  return value->ValueString(enum_decl.GetBackingType(), AidlConstantValueDecorator) == "0";
+static bool EvaluatesToZero(const AidlEnumDeclaration& enum_decl, const std::string& value) {
+  if (value == "") return true;
+  // Because --check_api runs with "valid" AIDL definitions, we can safely assume that
+  // the value is formatted as <scope>.<enumerator>.
+  auto enumerator_name = value.substr(value.find_last_of('.') + 1);
+  for (const auto& enumerator : enum_decl.GetEnumerators()) {
+    if (enumerator->GetName() == enumerator_name) {
+      return enumerator->GetValue()->Literal() == "0";
+    }
+  }
+  AIDL_FATAL(enum_decl) << "Can't find " << enumerator_name << " in " << enum_decl.GetName();
 }
 
 static bool are_compatible_parcelables(const AidlDefinedType& older, const AidlTypenames&,
@@ -262,14 +277,15 @@ static bool are_compatible_parcelables(const AidlDefinedType& older, const AidlT
     const auto& new_field = new_fields.at(i);
     compatible &= are_compatible_types(old_field->GetType(), new_field->GetType());
 
-    const string old_value = old_field->ValueString(AidlConstantValueDecorator);
-    const string new_value = new_field->ValueString(AidlConstantValueDecorator);
+    string old_value = old_field->GetDefaultValue() ? old_field->GetDefaultValue()->Literal() : "";
+    string new_value = new_field->GetDefaultValue() ? new_field->GetDefaultValue()->Literal() : "";
+
     if (old_value == new_value) {
       continue;
     }
     // For enum type fields, we accept setting explicit default value which is "zero"
     auto enum_decl = new_types.GetEnumDeclaration(new_field->GetType());
-    if (old_value == "" && enum_decl && EvaluatesToZero(*enum_decl, new_field->GetDefaultValue())) {
+    if (old_value == "" && enum_decl && EvaluatesToZero(*enum_decl, new_value)) {
       continue;
     }
 
@@ -374,10 +390,8 @@ static bool are_compatible_enums(const AidlEnumDeclaration& older,
       compatible = false;
       continue;
     }
-    const string old_value =
-        old_enum_map[name]->ValueString(older.GetBackingType(), AidlConstantValueDecorator);
-    const string new_value =
-        new_enum_map[name]->ValueString(newer.GetBackingType(), AidlConstantValueDecorator);
+    const string old_value = old_enum_map[name]->Literal();
+    const string new_value = new_enum_map[name]->Literal();
     if (old_value != new_value) {
       AIDL_ERROR(newer) << "Changed enumerator value: " << older.GetCanonicalName() << "::" << name
                         << " from " << old_value << " to " << new_value << ".";
