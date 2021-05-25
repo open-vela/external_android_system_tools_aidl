@@ -3757,6 +3757,20 @@ parcelable Foo {
             err);
 }
 
+TEST_F(AidlTest, EnumDefaultShouldBeEnumerators_RejectsNumericValue) {
+  io_delegate_.SetFileContents("a/p/Enum.aidl", "package p; enum Enum { FOO = 1, BAR = 2}");
+  io_delegate_.SetFileContents("a/p/Foo.aidl", R"(
+package p;
+import p.Enum;
+parcelable Foo {
+  Enum e = 1;
+})");
+  CaptureStderr();
+  auto options = Options::From("aidl -I a --lang java -o out -h out a/p/Foo.aidl");
+  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Invalid value (1) for enum p.Enum"));
+}
+
 TEST_P(AidlTest, DefaultWithEmptyArray) {
   io_delegate_.SetFileContents("a/p/Foo.aidl", "package p; parcelable Foo { p.Bar[] bars = {}; }");
   io_delegate_.SetFileContents("a/p/Bar.aidl", "package p; parcelable Bar { }");
