@@ -457,10 +457,10 @@ func checkImports(mctx android.BottomUpMutatorContext) {
 			other := lookupInterface(anImport, mctx.Config())
 
 			if other == nil {
-				if mctx.Config().AllowMissingDependencies() {
-					continue
+				if !mctx.Config().AllowMissingDependencies() {
+					mctx.PropertyErrorf("imports", "Import does not exist: "+anImport)
 				}
-				mctx.PropertyErrorf("imports", "Import does not exist: "+anImport)
+				continue
 			}
 			if version != "" {
 				candidateVersions := concat(other.properties.Versions, []string{other.nextVersion()})
