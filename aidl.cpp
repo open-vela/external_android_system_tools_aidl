@@ -575,13 +575,9 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     }
     return true;
   };
-  const bool is_check_api = options.GetTask() == Options::Task::CHECK_API;
-  const bool is_dump_api = options.GetTask() == Options::Task::DUMP_API;
 
-  // Resolve the unresolved type references found from the input file
-  if (!is_check_api && !ResolveReferences(*document, resolver)) {
-    // Resolution is not need for check api because all typespecs are
-    // using fully qualified names.
+  // Resolve the unresolved references
+  if (!ResolveReferences(*document, resolver)) {
     return AidlError::BAD_TYPE;
   }
 
@@ -622,17 +618,12 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     {
       bool valid_type = true;
 
-      if (!is_check_api) {
-        // Ideally, we could do this for check api, but we can't resolve imports
-        if (!defined_type->CheckValid(*typenames)) {
-          valid_type = false;
-        }
+      if (!defined_type->CheckValid(*typenames)) {
+        valid_type = false;
       }
 
-      if (!is_dump_api && !is_check_api) {
-        if (!defined_type->LanguageSpecificCheckValid(*typenames, options.TargetLanguage())) {
-          valid_type = false;
-        }
+      if (!defined_type->LanguageSpecificCheckValid(*typenames, options.TargetLanguage())) {
+        valid_type = false;
       }
 
       if (!valid_type) {
@@ -702,16 +693,14 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     }
     // Verify the var/const declarations.
     // const expressions should be non-empty when evaluated with the var/const type.
-    if (!is_check_api) {
-      for (const auto& constant : defined_type->GetConstantDeclarations()) {
-        if (constant->ValueString(AidlConstantValueDecorator).empty()) {
-          return AidlError::BAD_TYPE;
-        }
+    for (const auto& constant : defined_type->GetConstantDeclarations()) {
+      if (constant->ValueString(AidlConstantValueDecorator).empty()) {
+        return AidlError::BAD_TYPE;
       }
-      for (const auto& var : defined_type->GetFields()) {
-        if (var->GetDefaultValue() && var->ValueString(AidlConstantValueDecorator).empty()) {
-          return AidlError::BAD_TYPE;
-        }
+    }
+    for (const auto& var : defined_type->GetFields()) {
+      if (var->GetDefaultValue() && var->ValueString(AidlConstantValueDecorator).empty()) {
+        return AidlError::BAD_TYPE;
       }
     }
   }
@@ -720,7 +709,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     return AidlError::BAD_TYPE;
   }
 
-  if (!is_check_api && !Diagnose(*document, options.GetDiagnosticMapping())) {
+  if (!Diagnose(*document, options.GetDiagnosticMapping())) {
     return AidlError::BAD_TYPE;
   }
 
