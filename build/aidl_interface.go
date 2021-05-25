@@ -53,6 +53,7 @@ var (
 func init() {
 	pctx.Import("android/soong/android")
 	pctx.HostBinToolVariable("aidlCmd", "aidl")
+	pctx.HostBinToolVariable("aidlHashGen", "aidl_hash_gen")
 	pctx.SourcePathVariable("aidlToJniCmd", "system/tools/aidl/build/aidl_to_jni.py")
 	pctx.SourcePathVariable("aidlRustGlueCmd", "system/tools/aidl/build/aidl_rust_glue.py")
 	android.RegisterModuleType("aidl_interface", aidlInterfaceFactory)
