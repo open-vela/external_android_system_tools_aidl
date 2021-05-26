@@ -1685,6 +1685,25 @@ TEST_F(AidlTest, ApiDumpWithEnumDefaultValues) {
             actual);
 }
 
+TEST_F(AidlTest, ApiDumpWithGenerics) {
+  io_delegate_.SetFileContents("foo/bar/Foo.aidl",
+                               "package foo.bar;\n"
+                               "parcelable Foo<T, U> {\n"
+                               "}\n");
+
+  vector<string> args = {"aidl", "--dumpapi", "-I . ", "-o dump", "foo/bar/Foo.aidl"};
+  Options options = Options::From(args);
+  CaptureStderr();
+  EXPECT_TRUE(dump_api(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+  string actual;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("dump/foo/bar/Foo.aidl", &actual));
+  EXPECT_EQ(string(kPreamble).append("package foo.bar;\n"
+                                     "parcelable Foo<T, U> {\n"
+                                     "}\n"),
+            actual);
+}
+
 TEST_F(AidlTest, CheckNumGenericTypeSecifier) {
   const string expected_list_stderr =
       "ERROR: p/IFoo.aidl:1.37-41: List can only have one type parameter, but got: "
@@ -1997,6 +2016,17 @@ TEST_F(AidlTest, CheckApi_EnumFieldsWithDefaultValues) {
   EXPECT_TRUE(::android::aidl::check_api(options, io_delegate_));
 }
 
+TEST_F(AidlTest, CheckApi_EnumFieldsFromImported) {
+  Options options = Options::From("aidl --checkapi old new -I import");
+
+  io_delegate_.SetFileContents("old/p/Foo.aidl", "package p; parcelable Foo{ other.Enum e; }");
+  io_delegate_.SetFileContents("new/p/Foo.aidl",
+                               "package p; parcelable Foo{ other.Enum e = other.Enum.FOO; }");
+  io_delegate_.SetFileContents("import/other/Enum.aidl", "package other; enum Enum { FOO }");
+
+  EXPECT_TRUE(::android::aidl::check_api(options, io_delegate_));
+}
+
 TEST_F(AidlTest, CheckApiEqual_EnumFieldsWithDefaultValues) {
   Options options = Options::From("aidl --checkapi=equal old new");
   const string foo_definition = "package p; parcelable Foo{ p.Enum e = p.Enum.FOO; }";
@@ -2045,7 +2075,7 @@ TEST_F(AidlTestCompatibleChanges, NewMethod) {
                                "interface IFoo {"
                                "  void foo(int a);"
                                "  void bar();"
-                               "  void baz(in List<IFoo> arg);"
+                               "  void baz(in List<String> arg);"
                                "}");
   EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
 }
