@@ -65,7 +65,6 @@ var (
 type aidlGenProperties struct {
 	Srcs                  []string `android:"path"`
 	AidlRoot              string   // base directory for the input aidl file
-	IsToT                 bool
 	ImportsWithoutVersion []string
 	Stability             *string
 	Lang                  string // target language [java|cpp|ndk|rust]
@@ -86,7 +85,7 @@ type aidlGenRule struct {
 	implicitInputs android.Paths
 	importFlags    string
 
-	// TODO(b/149952131): always have a hash file
+	// A frozen aidl_interface always have a hash file
 	hashFile android.Path
 
 	genOutDir     android.ModuleGenPath
@@ -99,7 +98,7 @@ var _ android.SourceFileProducer = (*aidlGenRule)(nil)
 var _ genrule.SourceFileGenerator = (*aidlGenRule)(nil)
 
 func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
-	srcs, imports := getPaths(ctx, g.properties.Srcs, g.properties.AidlRoot)
+	srcs, imports := getPaths(ctx, g.properties.Srcs)
 
 	if ctx.Failed() {
 		return
@@ -108,10 +107,23 @@ func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	genDirTimestamp := android.PathForModuleGen(ctx, "timestamp") // $out/gen/timestamp
 	g.implicitInputs = append(g.implicitInputs, genDirTimestamp)
 
-	importPaths, implicits := getImportsFromDeps(ctx, g.properties.IsToT)
-	imports = append(imports, importPaths...)
-
-	g.importFlags = strings.Join(wrap("-I", imports, ""), " ")
+	var importPaths []string
+	importPaths = append(importPaths, imports...)
+	ctx.VisitDirectDeps(func(dep android.Module) {
+		if importedAidl, ok := dep.(*aidlInterface); ok {
+			importPaths = append(importPaths, importedAidl.properties.Full_import_paths...)
+		} else if api, ok := dep.(*aidlApi); ok {
+			// When compiling an AIDL interface, also make sure that each
+			// version of the interface is compatible with its previous version
+			for _, path := range api.checkApiTimestamps {
+				g.implicitInputs = append(g.implicitInputs, path)
+			}
+			for _, path := range api.checkHashTimestamps {
+				g.implicitInputs = append(g.implicitInputs, path)
+			}
+		}
+	})
+	g.importFlags = strings.Join(wrap("-I", importPaths, ""), " ")
 
 	g.genOutDir = android.PathForModuleGen(ctx)
 	g.genHeaderDir = android.PathForModuleGen(ctx, "include")
@@ -123,10 +135,9 @@ func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 
 	// This is to clean genOutDir before generating any file
 	ctx.Build(pctx, android.BuildParams{
-		Rule:      aidlDirPrepareRule,
-		Implicits: implicits,
-		Inputs:    srcs,
-		Output:    genDirTimestamp,
+		Rule:   aidlDirPrepareRule,
+		Inputs: srcs,
+		Output: genDirTimestamp,
 		Args: map[string]string{
 			"outDir": g.genOutDir.String(),
 		},
@@ -272,16 +283,10 @@ func (g *aidlGenRule) GeneratedHeaderDirs() android.Paths {
 }
 
 func (g *aidlGenRule) DepsMutator(ctx android.BottomUpMutatorContext) {
-	// original interface
-	ctx.AddDependency(ctx.Module(), interfaceDep, g.properties.BaseName+aidlInterfaceSuffix)
-
+	ctx.AddDependency(ctx.Module(), nil, wrap("", g.properties.ImportsWithoutVersion, aidlInterfaceSuffix)...)
 	if !proptools.Bool(g.properties.Unstable) {
-		// for checkapi timestamps
-		ctx.AddDependency(ctx.Module(), apiDep, g.properties.BaseName+aidlApiSuffix)
+		ctx.AddDependency(ctx.Module(), nil, g.properties.BaseName+aidlApiSuffix)
 	}
-
-	// imported interfaces
-	ctx.AddDependency(ctx.Module(), importInterfaceDep, wrap("", g.properties.ImportsWithoutVersion, aidlInterfaceSuffix)...)
 
 	ctx.AddReverseDependency(ctx.Module(), nil, aidlMetadataSingletonName)
 }
