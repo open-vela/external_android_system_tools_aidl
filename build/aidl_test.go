@@ -27,6 +27,7 @@ import (
 	"android/soong/android"
 	"android/soong/apex"
 	"android/soong/cc"
+	"android/soong/genrule"
 	"android/soong/java"
 	"android/soong/rust"
 )
@@ -61,6 +62,7 @@ func _testAidl(t *testing.T, bp string, customizers ...android.FixturePreparer) 
 	preparers = append(preparers,
 		cc.PrepareForTestWithCcDefaultModules,
 		java.PrepareForTestWithJavaDefaultModules,
+		genrule.PrepareForTestWithGenRuleBuildComponents,
 	)
 
 	bp = bp + `
@@ -1057,15 +1059,149 @@ func TestAidlImportFlagsForIncludeDirs(t *testing.T) {
 	})
 	ctx, _ := testAidl(t, ``, customizer)
 
-	rule := ctx.ModuleForTests("foo-iface-api", "").Output("checkapi_2.timestamp")
-	imports := strings.Split(rule.Args["imports"], " ")
-	// should import "current" of "imports" modules
-	assertListContains(t, imports, "-Ifoo/aidl_api/bar-iface/current")
-	assertListContains(t, imports, "-Ipath1")
-	assertListContains(t, imports, "-Ipath2/sub")
+	{
+		rule := ctx.ModuleForTests("foo-iface-api", "").Output("checkapi_2.timestamp")
+		imports := strings.Split(rule.Args["imports"], " ")
+		android.AssertArrayString(t, "should import aidl_api/1 for V1", []string{
+			"-Ifoo/aidl_api/bar-iface/current",
+			"-Ipath1",
+			"-Ipath2/sub",
+		}, imports)
 
-	// should trigger to check imported "current"
-	assertListContains(t, rule.Implicits.Strings(), "out/soong/.intermediates/foo/bar-iface-api/checkapi_current.timestamp")
+		// should trigger to check imported "current"
+		assertListContains(t, rule.Implicits.Strings(), "out/soong/.intermediates/foo/bar-iface-api/checkapi_current.timestamp")
+	}
+
+	// compile for older version
+	{
+		rule := ctx.ModuleForTests("foo-iface-V1-cpp-source", "").Output("foo/Foo.cpp")
+		imports := strings.Split(rule.Args["imports"], " ")
+		android.AssertArrayString(t, "should import foo/1(target) and bar/current(imported)", []string{
+			"-Ifoo/aidl_api/foo-iface/1",
+			"-Ipath1",
+			"-Ipath2/sub",
+			"-Ifoo/aidl_api/bar-iface/current",
+		}, imports)
+	}
+	// compile for tot version
+	{
+		rule := ctx.ModuleForTests("foo-iface-V3-cpp-source", "").Output("foo/Foo.cpp")
+		imports := strings.Split(rule.Args["imports"], " ")
+		android.AssertArrayString(t, "aidlCompile should import ToT", []string{
+			"-Ifoo/src",
+			"-Ipath1",
+			"-Ipath2/sub",
+			"-Ifoo/src",
+		}, imports)
+	}
+}
+
+func TestSupportsGenruleAndFilegroup(t *testing.T) {
+	customizer := withFiles(map[string][]byte{
+		"foo/Android.bp": []byte(`
+			aidl_interface {
+				name: "foo-iface",
+				local_include_dir: "src",
+				include_dirs: [
+						"path1",
+						"path2/sub",
+				],
+				srcs: [
+						"src/foo/Foo.aidl",
+						":filegroup1",
+						":gen1",
+				],
+				imports: [
+						"bar-iface",
+				],
+				versions: ["1"],
+			}
+			filegroup {
+				name: "filegroup1",
+				path: "filegroup/sub",
+				srcs: [
+						"filegroup/sub/pkg/Bar.aidl",
+				],
+			}
+			genrule {
+				name: "gen1",
+				cmd: "generate baz/Baz.aidl",
+				out: [
+					"baz/Baz.aidl",
+				]
+			}
+			aidl_interface {
+				name: "bar-iface",
+				local_include_dir: "src",
+				srcs: [
+						"src/bar/Bar.aidl",
+				],
+			}
+		`),
+		"foo/aidl_api/foo-iface/1/foo/Foo.aidl": nil,
+		"foo/aidl_api/foo-iface/1/.hash":        nil,
+		"foo/filegroup/sub/pkg/Bar.aidl":        nil,
+		"foo/src/foo/Foo.aidl":                  nil,
+	})
+	ctx, _ := testAidl(t, ``, customizer)
+
+	// aidlCompile for snapshots (v1)
+	{
+		rule := ctx.ModuleForTests("foo-iface-V1-cpp-source", "").Output("foo/Foo.cpp")
+		imports := strings.Split(rule.Args["imports"], " ")
+		android.AssertArrayString(t, "aidlCompile should import filegroup/genrule as well", []string{
+			"-Ifoo/aidl_api/foo-iface/1",
+			"-Ipath1",
+			"-Ipath2/sub",
+			"-Ifoo/aidl_api/bar-iface/current",
+		}, imports)
+	}
+	// aidlCompile for ToT (v2)
+	{
+		rule := ctx.ModuleForTests("foo-iface-V2-cpp-source", "").Output("foo/Foo.cpp")
+		imports := strings.Split(rule.Args["imports"], " ")
+		android.AssertArrayString(t, "aidlCompile should import filegroup/genrule as well", []string{
+			"-Ifoo/src",
+			"-Ifoo/filegroup/sub",
+			"-Iout/soong/.intermediates/foo/gen1/gen",
+			"-Ipath1",
+			"-Ipath2/sub",
+			"-Ifoo/src",
+		}, imports)
+	}
+
+	// dumpapi
+	{
+		rule := ctx.ModuleForTests("foo-iface-api", "").Rule("aidlDumpApiRule")
+		android.AssertPathsRelativeToTopEquals(t, "dumpapi should dump srcs/filegroups/genrules", []string{
+			"foo/src/foo/Foo.aidl",
+			"foo/filegroup/sub/pkg/Bar.aidl",
+			"out/soong/.intermediates/foo/gen1/gen/baz/Baz.aidl",
+		}, rule.Inputs)
+
+		dumpDir := "out/soong/.intermediates/foo/foo-iface-api/dump"
+		android.AssertPathsRelativeToTopEquals(t, "dumpapi should dump with rel paths", []string{
+			dumpDir + "/foo/Foo.aidl",
+			dumpDir + "/pkg/Bar.aidl",
+			dumpDir + "/baz/Baz.aidl",
+			dumpDir + "/.hash",
+		}, rule.Outputs.Paths())
+
+		imports := strings.Split(rule.Args["imports"], " ")
+		android.AssertArrayString(t, "dumpapi should import filegroup/genrule as well", []string{
+			// these are from foo-iface.srcs
+			"-Ifoo/src",
+			"-Ifoo/filegroup/sub",
+			"-Iout/soong/.intermediates/foo/gen1/gen",
+
+			// this is from bar-iface.srcs
+			"-Ifoo/src",
+
+			// these are from foo-iface.include_dirs
+			"-Ipath1",
+			"-Ipath2/sub",
+		}, imports)
+	}
 }
 
 func TestAidlFlags(t *testing.T) {

@@ -93,19 +93,14 @@ type apiDump struct {
 }
 
 func (m *aidlApi) createApiDumpFromSource(ctx android.ModuleContext) apiDump {
-	srcs, imports := getPaths(ctx, m.properties.Srcs)
+	srcs, imports := getPaths(ctx, m.properties.Srcs, m.properties.AidlRoot)
 
 	if ctx.Failed() {
 		return apiDump{}
 	}
 
-	var importPaths []string
-	importPaths = append(importPaths, imports...)
-	ctx.VisitDirectDeps(func(dep android.Module) {
-		if importedAidl, ok := dep.(*aidlInterface); ok {
-			importPaths = append(importPaths, importedAidl.properties.Full_import_paths...)
-		}
-	})
+	importPaths, _ := getImportsFromDeps(ctx, true)
+	imports = append(imports, importPaths...)
 
 	var apiDir android.WritablePath
 	var apiFiles android.WritablePaths
@@ -135,7 +130,7 @@ func (m *aidlApi) createApiDumpFromSource(ctx android.ModuleContext) apiDump {
 		Inputs:  srcs,
 		Args: map[string]string{
 			"optionalFlags": strings.Join(optionalFlags, " "),
-			"imports":       strings.Join(wrap("-I", importPaths, ""), " "),
+			"imports":       strings.Join(wrap("-I", imports, ""), " "),
 			"outDir":        apiDir.String(),
 			"hashFile":      hashFile.String(),
 			"latestVersion": versionForHashGen(nextVersion(m.properties.Versions)),
@@ -165,7 +160,7 @@ func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, 
 			if m.properties.Stability != nil {
 				equalityCheckCommand.FlagWithArg("--stability ", *m.properties.Stability)
 			}
-			importPaths, implicits := m.getImportsForCheckApi(ctx)
+			importPaths, implicits := getImportsFromDeps(ctx, false)
 			equalityCheckCommand.FlagForEachArg("-I", importPaths).Implicits(implicits)
 			equalityCheckCommand.
 				Text(latestVersionDump.dir.String()).Implicits(latestVersionDump.files).
@@ -211,27 +206,31 @@ func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, 
 	return timestampFile
 }
 
-// calculates "import" flags(-I) for --checkapi command. The list of imports differs from --dumpapi
-// or --compile because --checkapi works with "apiDump"s.
-// For example, local_include_dirs is not provided because apiDump has all .aidl files.
-func (m *aidlApi) getImportsForCheckApi(ctx android.ModuleContext) (importPaths []string, implicits android.Paths) {
+// calculates import flags(-I) from deps.
+// When the target is ToT, use ToT of imported interfaces. If not, we use "current" snapshot of
+// imported interfaces.
+func getImportsFromDeps(ctx android.ModuleContext, targetIsToT bool) (importPaths []string, implicits android.Paths) {
 	ctx.VisitDirectDeps(func(dep android.Module) {
-		if importedAidl, ok := dep.(*aidlInterface); ok {
-			switch ctx.OtherModuleDependencyTag(dep) {
-			case importDep:
-				if proptools.Bool(importedAidl.properties.Unstable) {
-					importPaths = append(importPaths, importedAidl.properties.Full_import_paths...)
-				} else {
-					// use "current" snapshot from stable "imported" modules
-					currentDir := filepath.Join(ctx.OtherModuleDir(dep), aidlApiDir, importedAidl.BaseModuleName(), currentVersion)
-					importPaths = append(importPaths, currentDir)
-				}
-			case interfaceDep:
-				importPaths = append(importPaths, importedAidl.properties.Include_dirs...)
+		switch ctx.OtherModuleDependencyTag(dep) {
+		case importInterfaceDep:
+			iface := dep.(*aidlInterface)
+			if proptools.Bool(iface.properties.Unstable) || targetIsToT {
+				importPaths = append(importPaths, iface.properties.Full_import_paths...)
+			} else {
+				// use "current" snapshot from stable "imported" modules
+				currentDir := filepath.Join(ctx.OtherModuleDir(dep), aidlApiDir, iface.BaseModuleName(), currentVersion)
+				importPaths = append(importPaths, currentDir)
+				// TODO(b/189288369) this should be transitive
+				importPaths = append(importPaths, iface.properties.Include_dirs...)
 			}
-		} else if importedApi, ok := dep.(*aidlApi); ok {
+		case interfaceDep:
+			iface := dep.(*aidlInterface)
+			importPaths = append(importPaths, iface.properties.Include_dirs...)
+		case importApiDep, apiDep:
+			api := dep.(*aidlApi)
 			// add imported module's checkapiTimestamps as implicits to make sure that imported apiDump is up-to-date
-			implicits = append(implicits, importedApi.checkApiTimestamps.Paths()...)
+			implicits = append(implicits, api.checkApiTimestamps.Paths()...)
+			implicits = append(implicits, api.checkHashTimestamps.Paths()...)
 		}
 	})
 	return
@@ -246,7 +245,7 @@ func (m *aidlApi) checkApi(ctx android.ModuleContext, oldDump, newDump apiDump, 
 		optionalFlags = append(optionalFlags, "--stability", *m.properties.Stability)
 	}
 
-	importPaths, implicits := m.getImportsForCheckApi(ctx)
+	importPaths, implicits := getImportsFromDeps(ctx, false)
 	implicits = append(implicits, oldDump.files...)
 	implicits = append(implicits, newDump.files...)
 	implicits = append(implicits, messageFile)
@@ -419,14 +418,16 @@ type depTag struct {
 }
 
 var (
-	importDep    = depTag{name: "imported-interface"}
+	apiDep       = depTag{name: "api"}
 	interfaceDep = depTag{name: "interface"}
-	importApiDep = depTag{name: "imported-api"}
+
+	importApiDep       = depTag{name: "imported-api"}
+	importInterfaceDep = depTag{name: "imported-interface"}
 )
 
 func (m *aidlApi) DepsMutator(ctx android.BottomUpMutatorContext) {
 	ctx.AddDependency(ctx.Module(), importApiDep, wrap("", m.properties.ImportsWithoutVersion, aidlApiSuffix)...)
-	ctx.AddDependency(ctx.Module(), importDep, wrap("", m.properties.ImportsWithoutVersion, aidlInterfaceSuffix)...)
+	ctx.AddDependency(ctx.Module(), importInterfaceDep, wrap("", m.properties.ImportsWithoutVersion, aidlInterfaceSuffix)...)
 	ctx.AddDependency(ctx.Module(), interfaceDep, m.properties.BaseName+aidlInterfaceSuffix)
 }
 
