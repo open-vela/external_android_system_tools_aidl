@@ -52,7 +52,7 @@ func (s *aidlMapping) DepsMutator(ctx android.BottomUpMutatorContext) {
 }
 
 func (s *aidlMapping) GenerateAndroidBuildActions(ctx android.ModuleContext) {
-	srcs, imports := getPaths(ctx, s.properties.Srcs)
+	srcs, imports := getPaths(ctx, s.properties.Srcs, "")
 
 	s.outputFilePath = android.PathForModuleOut(ctx, s.properties.Output)
 	outDir := android.PathForModuleGen(ctx)
