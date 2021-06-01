@@ -220,19 +220,28 @@ func checkDuplicatedVersions(mctx android.BottomUpMutatorContext) {
 	}
 }
 
-func getPaths(ctx android.ModuleContext, rawSrcs []string) (paths android.Paths, imports []string) {
-	srcs := android.PathsForModuleSrc(ctx, rawSrcs)
+func getPaths(ctx android.ModuleContext, rawSrcs []string, root string) (srcs android.Paths, imports []string) {
+	// TODO(b/189288369): move this to android.PathsForModuleSrcSubDir(ctx, srcs, subdir)
+	for _, src := range rawSrcs {
+		if m, _ := android.SrcIsModuleWithTag(src); m != "" {
+			srcs = append(srcs, android.PathsForModuleSrc(ctx, []string{src})...)
+		} else {
+			srcs = append(srcs, android.PathsWithModuleSrcSubDir(ctx, android.PathsForModuleSrc(ctx, []string{src}), root)...)
+		}
+	}
 
 	if len(srcs) == 0 {
 		ctx.PropertyErrorf("srcs", "No sources provided.")
 	}
 
+	// gather base directories from input .aidl files
 	for _, src := range srcs {
 		if src.Ext() != ".aidl" {
 			// Silently ignore non-aidl files as some filegroups have both java and aidl files together
 			continue
 		}
 		baseDir := strings.TrimSuffix(src.String(), src.Rel())
+		baseDir = strings.TrimSuffix(baseDir, "/")
 		if baseDir != "" && !android.InList(baseDir, imports) {
 			imports = append(imports, baseDir)
 		}

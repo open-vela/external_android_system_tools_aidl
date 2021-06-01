@@ -93,7 +93,7 @@ type apiDump struct {
 }
 
 func (m *aidlApi) createApiDumpFromSource(ctx android.ModuleContext) apiDump {
-	srcs, imports := getPaths(ctx, m.properties.Srcs)
+	srcs, imports := getPaths(ctx, m.properties.Srcs, m.properties.AidlRoot)
 
 	if ctx.Failed() {
 		return apiDump{}
@@ -211,6 +211,49 @@ func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, 
 	rb.Build("dump_aidl_api"+m.properties.BaseName+"_"+version,
 		"Making AIDL API of "+m.properties.BaseName+" as version "+version)
 	return timestampFile
+}
+
+type depTag struct {
+	blueprint.BaseDependencyTag
+	name string
+}
+
+var (
+	apiDep       = depTag{name: "api"}
+	interfaceDep = depTag{name: "interface"}
+
+	importApiDep       = depTag{name: "imported-api"}
+	importInterfaceDep = depTag{name: "imported-interface"}
+)
+
+// calculates import flags(-I) from deps.
+// When the target is ToT, use ToT of imported interfaces. If not, we use "current" snapshot of
+// imported interfaces.
+func getImportsFromDeps(ctx android.ModuleContext, targetIsToT bool) (importPaths []string, implicits android.Paths) {
+	ctx.VisitDirectDeps(func(dep android.Module) {
+		switch ctx.OtherModuleDependencyTag(dep) {
+		case importInterfaceDep:
+			iface := dep.(*aidlInterface)
+			if proptools.Bool(iface.properties.Unstable) || targetIsToT {
+				importPaths = append(importPaths, iface.properties.Full_import_paths...)
+			} else {
+				// use "current" snapshot from stable "imported" modules
+				currentDir := filepath.Join(ctx.OtherModuleDir(dep), aidlApiDir, iface.BaseModuleName(), currentVersion)
+				importPaths = append(importPaths, currentDir)
+				// TODO(b/189288369) this should be transitive
+				importPaths = append(importPaths, iface.properties.Include_dirs...)
+			}
+		case interfaceDep:
+			iface := dep.(*aidlInterface)
+			importPaths = append(importPaths, iface.properties.Include_dirs...)
+		case importApiDep, apiDep:
+			api := dep.(*aidlApi)
+			// add imported module's checkapiTimestamps as implicits to make sure that imported apiDump is up-to-date
+			implicits = append(implicits, api.checkApiTimestamps.Paths()...)
+			implicits = append(implicits, api.checkHashTimestamps.Paths()...)
+		}
+	})
+	return
 }
 
 func (m *aidlApi) checkApi(ctx android.ModuleContext, oldDump, newDump apiDump, checkApiLevel string, messageFile android.Path) android.WritablePath {
