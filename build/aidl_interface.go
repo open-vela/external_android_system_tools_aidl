@@ -763,11 +763,9 @@ func (i *aidlInterface) Name() string {
 	return i.ModuleBase.Name() + aidlInterfaceSuffix
 }
 func (i *aidlInterface) GenerateAndroidBuildActions(ctx android.ModuleContext) {
-	aidlRoot := android.PathForModuleSrc(ctx, i.properties.Local_include_dir)
-	for _, src := range android.PathsForModuleSrc(ctx, i.properties.Srcs) {
-		baseDir := getBaseDir(ctx, src, aidlRoot)
-		relPath, _ := filepath.Rel(baseDir, src.String())
-		computedType := strings.TrimSuffix(strings.ReplaceAll(relPath, "/", "."), ".aidl")
+	srcs, _ := getPaths(ctx, i.properties.Srcs, i.properties.Local_include_dir)
+	for _, src := range srcs {
+		computedType := strings.TrimSuffix(strings.ReplaceAll(src.Rel(), "/", "."), ".aidl")
 		i.computedTypes = append(i.computedTypes, computedType)
 	}
 }
