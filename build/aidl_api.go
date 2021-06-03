@@ -107,8 +107,11 @@ func (m *aidlApi) createApiDumpFromSource(ctx android.ModuleContext) apiDump {
 	var hashFile android.WritablePath
 
 	apiDir = android.PathForModuleOut(ctx, "dump")
+	aidlRoot := android.PathForModuleSrc(ctx, m.properties.AidlRoot)
 	for _, src := range srcs {
-		outFile := android.PathForModuleOut(ctx, "dump", src.Rel())
+		baseDir := getBaseDir(ctx, src, aidlRoot)
+		relPath, _ := filepath.Rel(baseDir, src.String())
+		outFile := android.PathForModuleOut(ctx, "dump", relPath)
 		apiFiles = append(apiFiles, outFile)
 	}
 	hashFile = android.PathForModuleOut(ctx, "dump", ".hash")
