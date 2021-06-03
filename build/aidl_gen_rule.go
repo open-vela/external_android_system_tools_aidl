@@ -141,7 +141,8 @@ func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 }
 
 func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContext, src android.Path) (android.WritablePath, android.Paths) {
-	baseDir := getBaseDir(ctx, src, android.PathForModuleSrc(ctx, g.properties.AidlRoot))
+	relPath := src.Rel()
+	baseDir := strings.TrimSuffix(strings.TrimSuffix(src.String(), relPath), "/")
 
 	var ext string
 	if g.properties.Lang == langJava {
@@ -151,7 +152,6 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 	} else {
 		ext = "cpp"
 	}
-	relPath, _ := filepath.Rel(baseDir, src.String())
 	outFile := android.PathForModuleGen(ctx, pathtools.ReplaceExtension(relPath, ext))
 	implicits := g.implicitInputs
 
