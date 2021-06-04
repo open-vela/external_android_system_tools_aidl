@@ -908,7 +908,10 @@ class AidlDefinedType : public AidlAnnotatable {
   std::string GetPackage() const { return package_; }
   /* dot joined package and name, example: "android.package.foo.IBar" */
   std::string GetCanonicalName() const;
-  const std::vector<std::string>& GetSplitPackage() const { return split_package_; }
+  std::vector<std::string> GetSplitPackage() const {
+    if (package_.empty()) return std::vector<std::string>();
+    return android::base::Split(package_, ".");
+  }
 
   virtual std::string GetPreprocessDeclarationName() const = 0;
 
@@ -979,8 +982,7 @@ class AidlDefinedType : public AidlAnnotatable {
   bool CheckValidWithMembers(const AidlTypenames& typenames) const;
 
   std::string name_;
-  const std::string package_;
-  const std::vector<std::string> split_package_;
+  std::string package_;
   std::vector<std::unique_ptr<AidlVariableDeclaration>> variables_;
   std::vector<std::unique_ptr<AidlConstantDeclaration>> constants_;
   std::vector<std::unique_ptr<AidlMethod>> methods_;
@@ -1166,11 +1168,16 @@ class AidlInterface final : public AidlDefinedType {
 
 class AidlPackage : public AidlNode {
  public:
-  AidlPackage(const AidlLocation& location, const Comments& comments)
-      : AidlNode(location, comments) {}
+  AidlPackage(const AidlLocation& location, const std::string& name, const Comments& comments)
+      : AidlNode(location, comments), name_(name) {}
   virtual ~AidlPackage() = default;
   void TraverseChildren(std::function<void(const AidlNode&)>) const {}
   void DispatchVisit(AidlVisitor& v) const { v.Visit(*this); }
+
+  const std::string& GetName() const { return name_; }
+
+ private:
+  std::string name_;
 };
 
 class AidlImport : public AidlNode {
