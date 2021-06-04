@@ -900,11 +900,20 @@ string AidlMethod::ToString() const {
 AidlDefinedType::AidlDefinedType(const AidlLocation& location, const std::string& name,
                                  const Comments& comments, const std::string& package,
                                  std::vector<std::unique_ptr<AidlMember>>* members)
-    : AidlAnnotatable(location, comments),
-      name_(name),
-      package_(package),
-      split_package_(package.empty() ? std::vector<std::string>()
-                                     : android::base::Split(package, ".")) {
+    : AidlAnnotatable(location, comments), name_(name), package_(package) {
+  // adjust name/package when name is fully qualified (for preprocessed files)
+  if (package_.empty() && name_.find('.') != std::string::npos) {
+    // Note that this logic is absolutely wrong.  Given a parcelable
+    // org.some.Foo.Bar, the class name is Foo.Bar, but this code will claim that
+    // the class is just Bar.  However, this was the way it was done in the past.
+    //
+    // See b/17415692
+    auto pos = name.rfind('.');
+    // name is the last part.
+    name_ = name.substr(pos + 1);
+    // package is the initial parts (except the last).
+    package_ = name.substr(0, pos);
+  }
   if (members) {
     for (auto& m : *members) {
       if (auto constant = m->AsConstantDeclaration(); constant) {

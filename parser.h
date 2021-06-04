@@ -68,7 +68,7 @@ class Parser {
   // Parse contents of file |filename|. Should only be called once.
   static const AidlDocument* Parse(const std::string& filename,
                                    const android::aidl::IoDelegate& io_delegate,
-                                   AidlTypenames& typenames);
+                                   AidlTypenames& typenames, bool is_preprocessed = false);
 
   void AddError() { error_++; }
   bool HasError() const { return error_ != 0; }
@@ -85,30 +85,23 @@ class Parser {
   void SetTypeParameters(AidlTypeSpecifier* type,
                          std::vector<std::unique_ptr<AidlTypeSpecifier>>* type_args);
 
-  void SetPackage(const std::string& package) { package_ = package; }
+  // fully-qualified type names are allowed only in preprocessed files
+  void CheckValidTypeName(const AidlToken& token, const AidlLocation& loc);
+
+  void SetPackage(const AidlPackage& package);
   const std::string& Package() const { return package_; }
 
-  void SetDocument(std::unique_ptr<AidlDocument>&& document) {
-    // The parsed document is owned by typenames_. This parser object only has
-    // a reference to it.
-    document_ = document.get();
-    if (!typenames_.AddDocument(std::move(document))) {
-      document_ = nullptr;
-      AddError();
-    }
-  }
+  void SetDocument(std::unique_ptr<AidlDocument> document) { document_ = std::move(document); }
 
  private:
-  explicit Parser(const std::string& filename, std::string& raw_buffer,
-                  android::aidl::AidlTypenames& typenames);
+  explicit Parser(const std::string& filename, std::string& raw_buffer, bool is_preprocessed);
 
   std::string filename_;
+  bool is_preprocessed_;
   std::string package_;
-  AidlTypenames& typenames_;
-
   void* scanner_ = nullptr;
   YY_BUFFER_STATE buffer_;
   int error_ = 0;
 
-  const AidlDocument* document_;
+  std::unique_ptr<AidlDocument> document_;
 };

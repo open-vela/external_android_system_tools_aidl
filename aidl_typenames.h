@@ -57,11 +57,10 @@ namespace aidl {
 class AidlTypenames final {
  public:
   AidlTypenames() = default;
-  bool AddDocument(std::unique_ptr<AidlDocument> doc);
+  bool AddDocument(std::unique_ptr<AidlDocument> doc, bool is_preprocessed);
   const AidlDocument* GetDocumentFor(const AidlDefinedType* type) const;
   const std::vector<std::unique_ptr<AidlDocument>>& AllDocuments() const { return documents_; }
   const AidlDocument& MainDocument() const;
-  bool AddPreprocessedType(unique_ptr<AidlDefinedType> type);
   static bool IsBuiltinTypename(const string& type_name);
   static bool IsPrimitiveTypename(const string& type_name);
   bool IsParcelable(const string& type_name) const;
@@ -103,7 +102,7 @@ class AidlTypenames final {
   };
   DefinedImplResult TryGetDefinedTypeImpl(const string& type_name) const;
   map<string, AidlDefinedType*> defined_types_;
-  map<string, unique_ptr<AidlDefinedType>> preprocessed_types_;
+  map<string, AidlDefinedType*> preprocessed_types_;
   std::vector<std::unique_ptr<AidlDocument>> documents_;
 };
 

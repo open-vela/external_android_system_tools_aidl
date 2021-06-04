@@ -115,9 +115,20 @@ bool AidlTypenames::IsIgnorableImport(const string& import) const {
   return in_ignore_import || defined_type_not_from_preprocessed;
 }
 
-bool AidlTypenames::AddDocument(std::unique_ptr<AidlDocument> doc) {
+bool AidlTypenames::AddDocument(std::unique_ptr<AidlDocument> doc, bool is_preprocessed) {
+  auto& types = is_preprocessed ? preprocessed_types_ : defined_types_;
   for (const auto& type : doc->DefinedTypes()) {
-    if (defined_types_.find(type->GetCanonicalName()) != defined_types_.end()) {
+    // ParcelFileDescriptor is treated as a built-in type, but it's also in the framework.aidl.
+    // So aidl should ignore built-in types in framework.aidl to prevent duplication.
+    // (b/130899491)
+    if (is_preprocessed && IsBuiltinTypename(type->GetName())) {
+      continue;
+    }
+
+    if (auto prev_definition = types.find(type->GetCanonicalName());
+        prev_definition != types.end()) {
+      AIDL_ERROR(type) << "redefinition:" << type->GetCanonicalName() << " is defined "
+                       << prev_definition->second->GetLocation();
       return false;
     }
     if (!HasValidNameComponents(*type)) {
@@ -126,7 +137,7 @@ bool AidlTypenames::AddDocument(std::unique_ptr<AidlDocument> doc) {
   }
   documents_.push_back(std::move(doc));
   for (const auto& type : documents_.back()->DefinedTypes()) {
-    defined_types_.emplace(type->GetCanonicalName(), type.get());
+    types.emplace(type->GetCanonicalName(), type.get());
   }
   return true;
 }
@@ -145,18 +156,6 @@ const AidlDocument* AidlTypenames::GetDocumentFor(const AidlDefinedType* type) c
 const AidlDocument& AidlTypenames::MainDocument() const {
   AIDL_FATAL_IF(documents_.size() == 0, AIDL_LOCATION_HERE) << "Main document doesn't exist";
   return *(documents_[0]);
-}
-
-bool AidlTypenames::AddPreprocessedType(unique_ptr<AidlDefinedType> type) {
-  const string name = type->GetCanonicalName();
-  if (preprocessed_types_.find(name) != preprocessed_types_.end()) {
-    return false;
-  }
-  if (!HasValidNameComponents(*type)) {
-    return false;
-  }
-  preprocessed_types_.insert(make_pair(name, std::move(type)));
-  return true;
 }
 
 bool AidlTypenames::IsBuiltinTypename(const string& type_name) {
@@ -192,7 +191,7 @@ AidlTypenames::DefinedImplResult AidlTypenames::TryGetDefinedTypeImpl(
 
   auto found_prep = preprocessed_types_.find(type_name);
   if (found_prep != preprocessed_types_.end()) {
-    return DefinedImplResult(found_prep->second.get(), true);
+    return DefinedImplResult(found_prep->second, true);
   }
 
   // Then match with the class name. Defined types has higher priority than
@@ -205,7 +204,7 @@ AidlTypenames::DefinedImplResult AidlTypenames::TryGetDefinedTypeImpl(
 
   for (auto it = preprocessed_types_.begin(); it != preprocessed_types_.end(); it++) {
     if (it->second->GetName() == type_name) {
-      return DefinedImplResult(it->second.get(), true);
+      return DefinedImplResult(it->second, true);
     }
   }
 

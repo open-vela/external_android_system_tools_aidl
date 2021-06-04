@@ -27,7 +27,7 @@ void yy_delete_buffer(YY_BUFFER_STATE, void*);
 
 const AidlDocument* Parser::Parse(const std::string& filename,
                                   const android::aidl::IoDelegate& io_delegate,
-                                  AidlTypenames& typenames) {
+                                  AidlTypenames& typenames, bool is_preprocessed) {
   auto clean_path = android::aidl::IoDelegate::CleanPath(filename);
   // reuse pre-parsed document from typenames
   for (auto& doc : typenames.AllDocuments()) {
@@ -46,13 +46,18 @@ const AidlDocument* Parser::Parse(const std::string& filename,
   // nulls at the end.
   raw_buffer->append(2u, '\0');
 
-  Parser parser(clean_path, *raw_buffer, typenames);
+  Parser parser(clean_path, *raw_buffer, is_preprocessed);
 
   if (yy::parser(&parser).parse() != 0 || parser.HasError()) {
     return nullptr;
   }
 
-  return parser.document_;
+  // transfer ownership to AidlTypenames and return the raw pointer
+  const AidlDocument* result = parser.document_.get();
+  if (!typenames.AddDocument(std::move(parser.document_), is_preprocessed)) {
+    return nullptr;
+  }
+  return result;
 }
 
 void Parser::SetTypeParameters(AidlTypeSpecifier* type,
@@ -66,6 +71,21 @@ void Parser::SetTypeParameters(AidlTypeSpecifier* type,
     AddError();
     delete type_args;
   }
+}
+
+void Parser::CheckValidTypeName(const AidlToken& token, const AidlLocation& loc) {
+  if (!is_preprocessed_ && token.GetText().find('.') != std::string::npos) {
+    AIDL_ERROR(loc) << "Type name can't be qualified. Use `package`.";
+    AddError();
+  }
+}
+
+void Parser::SetPackage(const AidlPackage& package) {
+  if (is_preprocessed_) {
+    AIDL_ERROR(package) << "Preprocessed file can't declare package.";
+    AddError();
+  }
+  package_ = package.GetName();
 }
 
 class ReferenceResolver : public AidlVisitor {
@@ -162,9 +182,8 @@ bool ResolveReferences(const AidlDocument& document, TypeResolver& type_resolver
   return success;
 }
 
-Parser::Parser(const std::string& filename, std::string& raw_buffer,
-               android::aidl::AidlTypenames& typenames)
-    : filename_(filename), typenames_(typenames) {
+Parser::Parser(const std::string& filename, std::string& raw_buffer, bool is_preprocessed)
+    : filename_(filename), is_preprocessed_(is_preprocessed) {
   yylex_init(&scanner_);
   buffer_ = yy_scan_buffer(&raw_buffer[0], raw_buffer.length(), scanner_);
 }
