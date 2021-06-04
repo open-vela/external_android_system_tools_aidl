@@ -44,6 +44,9 @@ class IoDelegate {
   static bool GetAbsolutePath(const std::string& path,
                               std::string* absolute_path);
 
+  // Remove leading "./" from |path|.
+  static std::string CleanPath(const std::string& path);
+
   // Returns a unique_ptr to the contents of |filename|.
   // Will append the optional |content_suffix| to the returned contents.
   virtual std::unique_ptr<std::string> GetFileContents(

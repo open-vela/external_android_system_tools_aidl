@@ -962,7 +962,7 @@ TEST_F(AidlTest, FailOnParcelable) {
 
 TEST_P(AidlTest, StructuredFailOnUnstructuredParcelable) {
   const string expected_stderr =
-      "ERROR: ./o/WhoKnowsWhat.aidl:1.22-35: o.WhoKnowsWhat is not structured, but this is a "
+      "ERROR: o/WhoKnowsWhat.aidl:1.22-35: o.WhoKnowsWhat is not structured, but this is a "
       "structured interface.\n";
   io_delegate_.SetFileContents("o/WhoKnowsWhat.aidl", "package o; parcelable WhoKnowsWhat;");
   import_paths_.emplace("");

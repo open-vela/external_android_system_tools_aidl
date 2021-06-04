@@ -167,16 +167,6 @@ bool FakeIoDelegate::PathWasRemoved(const std::string& path) {
   return false;
 }
 
-string FakeIoDelegate::CleanPath(const string& path) const {
-  string clean_path = path;
-  while (clean_path.length() >= 2 &&
-         clean_path[0] == '.' &&
-         clean_path[1] == OS_PATH_SEPARATOR) {
-    clean_path = clean_path.substr(2);
-  }
-  return clean_path;
-}
-
 }  // namespace test
 }  // namespace aidl
 }  // namespace android
