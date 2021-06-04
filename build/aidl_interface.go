@@ -348,9 +348,6 @@ type aidlInterfaceProperties struct {
 	// List of aidl_interface modules that this uses. It trims version suffix in 'Imports' field.
 	ImportsWithoutVersion []string `blueprint:"mutated"`
 
-	// Used by gen dependency to fill out aidl include path
-	Full_import_paths []string `blueprint:"mutated"`
-
 	// Stability promise. Currently only supports "vintf".
 	// If this is unset, this corresponds to an interface with stability within
 	// this compilation context (so an interface loaded here can only be used
@@ -423,6 +420,8 @@ type aidlInterface struct {
 
 	// list of module names that are created for this interface
 	internalModuleNames []string
+
+	preprocessed android.WritablePath
 }
 
 func (i *aidlInterface) shouldGenerateJavaBackend() bool {
@@ -637,11 +636,6 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 	if !isRelativePath(i.properties.Local_include_dir) {
 		mctx.PropertyErrorf("local_include_dir", "must be relative path: "+i.properties.Local_include_dir)
 	}
-	var importPaths []string
-	importPaths = append(importPaths, filepath.Join(mctx.ModuleDir(), i.properties.Local_include_dir))
-	importPaths = append(importPaths, i.properties.Include_dirs...)
-
-	i.properties.Full_import_paths = importPaths
 
 	i.gatherInterface(mctx)
 	i.checkStability(mctx)
@@ -769,15 +763,35 @@ func srcsVisibility(mctx android.LoadHookContext, lang string) []string {
 func (i *aidlInterface) Name() string {
 	return i.ModuleBase.Name() + aidlInterfaceSuffix
 }
+
 func (i *aidlInterface) GenerateAndroidBuildActions(ctx android.ModuleContext) {
-	srcs, _ := getPaths(ctx, i.properties.Srcs, i.properties.Local_include_dir)
+	srcs, imports := getPaths(ctx, i.properties.Srcs, i.properties.Local_include_dir)
 	for _, src := range srcs {
 		computedType := strings.TrimSuffix(strings.ReplaceAll(src.Rel(), "/", "."), ".aidl")
 		i.computedTypes = append(i.computedTypes, computedType)
 	}
+
+	// generate preprocessed.aidl which contains only types with evaluated constants.
+	// "imports" will use preprocessed.aidl with -p flag to avoid parsing the entire transitive list
+	// of dependencies.
+	deps := getDeps(ctx)
+	i.preprocessed = android.PathForModuleOut(ctx, "preprocessed.aidl")
+	rb := android.NewRuleBuilder(pctx, ctx)
+	preprocessCommand := rb.Command().BuiltTool("aidl").
+		FlagWithOutput("--preprocess ", i.preprocessed).
+		Flag("--structured")
+	if i.properties.Stability != nil {
+		preprocessCommand.FlagWithArg("--stability ", *i.properties.Stability)
+	}
+	preprocessCommand.FlagForEachInput("-p", deps.preprocessed)
+	preprocessCommand.FlagForEachArg("-I", concat(imports, i.properties.Include_dirs))
+	preprocessCommand.Inputs(srcs)
+	rb.Build("export_"+i.BaseModuleName(), "export types for "+i.BaseModuleName())
 }
+
 func (i *aidlInterface) DepsMutator(ctx android.BottomUpMutatorContext) {
 	ctx.AddReverseDependency(ctx.Module(), nil, aidlMetadataSingletonName)
+	ctx.AddDependency(ctx.Module(), importInterfaceDep, wrap("", i.properties.ImportsWithoutVersion, aidlInterfaceSuffix)...)
 }
 
 var (
