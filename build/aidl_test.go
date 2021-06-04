@@ -340,6 +340,34 @@ func TestNonVersionedModuleUsageInRelease(t *testing.T) {
 	testAidl(t, nonVersionedUnstableModuleUsageInJavaBp)
 }
 
+func TestImportInRelease(t *testing.T) {
+	importInRelease := `
+	aidl_interface {
+		name: "foo",
+		srcs: [
+			"IFoo.aidl",
+		],
+		imports: ["bar"],
+		versions: ["1"],
+	}
+
+	aidl_interface {
+		name: "bar",
+		srcs: [
+			"IBar.aidl",
+		],
+		versions: ["1"],
+	}
+	`
+
+	testAidl(t, importInRelease, setReleaseEnv(), withFiles(map[string][]byte{
+		"aidl_api/foo/1/foo.1.aidl": nil,
+		"aidl_api/foo/1/.hash":      nil,
+		"aidl_api/bar/1/bar.1.aidl": nil,
+		"aidl_api/bar/1/.hash":      nil,
+	}))
+}
+
 func TestUnstableVersionedModuleUsageInRelease(t *testing.T) {
 	nonVersionedModuleUsageInJavaBp := `
 	aidl_interface {
