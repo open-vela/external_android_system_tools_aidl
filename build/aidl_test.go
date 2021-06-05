@@ -340,6 +340,34 @@ func TestNonVersionedModuleUsageInRelease(t *testing.T) {
 	testAidl(t, nonVersionedUnstableModuleUsageInJavaBp)
 }
 
+func TestImportInRelease(t *testing.T) {
+	importInRelease := `
+	aidl_interface {
+		name: "foo",
+		srcs: [
+			"IFoo.aidl",
+		],
+		imports: ["bar"],
+		versions: ["1"],
+	}
+
+	aidl_interface {
+		name: "bar",
+		srcs: [
+			"IBar.aidl",
+		],
+		versions: ["1"],
+	}
+	`
+
+	testAidl(t, importInRelease, setReleaseEnv(), withFiles(map[string][]byte{
+		"aidl_api/foo/1/foo.1.aidl": nil,
+		"aidl_api/foo/1/.hash":      nil,
+		"aidl_api/bar/1/bar.1.aidl": nil,
+		"aidl_api/bar/1/.hash":      nil,
+	}))
+}
+
 func TestUnstableVersionedModuleUsageInRelease(t *testing.T) {
 	nonVersionedModuleUsageInJavaBp := `
 	aidl_interface {
@@ -1016,9 +1044,9 @@ func TestAidlImportFlagsForImportedModules(t *testing.T) {
 	android.AssertStringListContains(t, "checkapi should have imports", imports,
 		"-Ibar/aidl_api/bar-iface/current")
 
-	// updateapi_2 rule is to create a new version ("2") of apiDump from ToT
-	// This also runs --checkapi for equality between latest("1") and ToT before creating "2"
-	rule = ctx.ModuleForTests("foo-iface-api", "").Output("updateapi_2.timestamp")
+	// has_development rule runs --checkapi for equality between latest("1")
+	// and ToT
+	rule = ctx.ModuleForTests("foo-iface-api", "").Output("has_development")
 	android.AssertStringDoesContain(t, "checkapi should have imports",
 		rule.RuleParams.Command, "-Ibar/aidl_api/bar-iface/current")
 }
