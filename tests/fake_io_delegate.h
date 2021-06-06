@@ -68,9 +68,6 @@ class FakeIoDelegate : public IoDelegate {
   bool PathWasRemoved(const std::string& path);
 
  private:
-  // Remove leading "./" from |path|.
-  std::string CleanPath(const std::string& path) const;
-
   std::map<std::string, std::string> file_contents_;
   // Normally, writing to files leaves the IoDelegate unchanged, so
   // GetCodeWriter is a const method.  However, for tests, we break this
