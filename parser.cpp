@@ -28,16 +28,17 @@ void yy_delete_buffer(YY_BUFFER_STATE, void*);
 const AidlDocument* Parser::Parse(const std::string& filename,
                                   const android::aidl::IoDelegate& io_delegate,
                                   AidlTypenames& typenames) {
+  auto clean_path = android::aidl::IoDelegate::CleanPath(filename);
   // reuse pre-parsed document from typenames
   for (auto& doc : typenames.AllDocuments()) {
-    if (doc->GetLocation().GetFile() == filename) {
+    if (doc->GetLocation().GetFile() == clean_path) {
       return doc.get();
     }
   }
   // Make sure we can read the file first, before trashing previous state.
-  unique_ptr<string> raw_buffer = io_delegate.GetFileContents(filename);
+  unique_ptr<string> raw_buffer = io_delegate.GetFileContents(clean_path);
   if (raw_buffer == nullptr) {
-    AIDL_ERROR(filename) << "Error while opening file for parsing";
+    AIDL_ERROR(clean_path) << "Error while opening file for parsing";
     return nullptr;
   }
 
@@ -45,7 +46,7 @@ const AidlDocument* Parser::Parse(const std::string& filename,
   // nulls at the end.
   raw_buffer->append(2u, '\0');
 
-  Parser parser(filename, *raw_buffer, typenames);
+  Parser parser(clean_path, *raw_buffer, typenames);
 
   if (yy::parser(&parser).parse() != 0 || parser.HasError()) {
     return nullptr;
