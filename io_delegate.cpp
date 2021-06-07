@@ -43,6 +43,7 @@ using std::vector;
 using android::base::Error;
 using android::base::Result;
 using android::base::Split;
+using android::base::StartsWith;
 
 namespace android {
 namespace aidl {
@@ -243,6 +244,13 @@ Result<vector<string>> IoDelegate::ListFiles(const string& dir) const {
   return result;
 }
 #endif
+
+string IoDelegate::CleanPath(const string& path) {
+  if (base::StartsWith(path, string{'.', OS_PATH_SEPARATOR})) {
+    return path.substr(2);
+  }
+  return path;
+}
 
 }  // namespace android
 }  // namespace aidl
