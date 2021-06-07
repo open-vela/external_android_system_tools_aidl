@@ -65,6 +65,7 @@ var (
 type aidlGenProperties struct {
 	Srcs                  []string `android:"path"`
 	AidlRoot              string   // base directory for the input aidl file
+	IsToT                 bool
 	ImportsWithoutVersion []string
 	Stability             *string
 	Lang                  string // target language [java|cpp|ndk|rust]
@@ -82,7 +83,6 @@ type aidlGenRule struct {
 
 	properties aidlGenProperties
 
-	deps           deps
 	implicitInputs android.Paths
 	importFlags    string
 
@@ -98,11 +98,6 @@ type aidlGenRule struct {
 var _ android.SourceFileProducer = (*aidlGenRule)(nil)
 var _ genrule.SourceFileGenerator = (*aidlGenRule)(nil)
 
-func (g *aidlGenRule) getImports(ctx android.ModuleContext) map[string]string {
-	iface := ctx.GetDirectDepWithTag(g.properties.BaseName, interfaceDep).(*aidlInterface)
-	return iface.getImports(g.properties.Version)
-}
-
 func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	srcs, imports := getPaths(ctx, g.properties.Srcs, g.properties.AidlRoot)
 
@@ -110,14 +105,12 @@ func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 		return
 	}
 
-	g.deps = getDeps(ctx, g.getImports(ctx))
-
 	genDirTimestamp := android.PathForModuleGen(ctx, "timestamp") // $out/gen/timestamp
 	g.implicitInputs = append(g.implicitInputs, genDirTimestamp)
-	g.implicitInputs = append(g.implicitInputs, g.deps.implicits...)
-	g.implicitInputs = append(g.implicitInputs, g.deps.preprocessed...)
 
-	imports = append(imports, g.deps.imports...)
+	importPaths, implicits := getImportsFromDeps(ctx, g.properties.IsToT)
+	imports = append(imports, importPaths...)
+
 	g.importFlags = strings.Join(wrap("-I", imports, ""), " ")
 
 	g.genOutDir = android.PathForModuleGen(ctx)
@@ -130,9 +123,10 @@ func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 
 	// This is to clean genOutDir before generating any file
 	ctx.Build(pctx, android.BuildParams{
-		Rule:   aidlDirPrepareRule,
-		Inputs: srcs,
-		Output: genDirTimestamp,
+		Rule:      aidlDirPrepareRule,
+		Implicits: implicits,
+		Inputs:    srcs,
+		Output:    genDirTimestamp,
 		Args: map[string]string{
 			"outDir": g.genOutDir.String(),
 		},
@@ -183,7 +177,6 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 	if g.properties.Stability != nil {
 		optionalFlags = append(optionalFlags, "--stability", *g.properties.Stability)
 	}
-	optionalFlags = append(optionalFlags, wrap("-p", g.deps.preprocessed.Strings(), "")...)
 
 	var headers android.WritablePaths
 	if g.properties.Lang == langJava {
