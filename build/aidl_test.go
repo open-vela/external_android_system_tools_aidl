@@ -1059,7 +1059,7 @@ func TestAidlImportFlagsForImportedModules(t *testing.T) {
 		android.AssertStringEquals(t, "checkapi(dump == current) imports", "", rule.Args["imports"])
 		android.AssertStringDoesContain(t, "checkapi(dump == current) optionalFlags",
 			rule.Args["optionalFlags"],
-			"-pout/soong/.intermediates/bar/bar-iface_interface/preprocessed.aidl")
+			"-pout/soong/.intermediates/bar/bar-iface_interface/2/preprocessed.aidl")
 	}
 
 	// has_development rule runs --checkapi for equality between latest("1")
@@ -1068,7 +1068,7 @@ func TestAidlImportFlagsForImportedModules(t *testing.T) {
 		rule := ctx.ModuleForTests("foo-iface-api", "").Output("has_development")
 		android.AssertStringDoesContain(t, "checkapi(dump == latest(1)) should import import's preprocessed",
 			rule.RuleParams.Command,
-			"-pout/soong/.intermediates/bar/bar-iface_interface/preprocessed.aidl")
+			"-pout/soong/.intermediates/bar/bar-iface_interface/2/preprocessed.aidl")
 	}
 
 	// compile (v1)
@@ -1077,7 +1077,7 @@ func TestAidlImportFlagsForImportedModules(t *testing.T) {
 		android.AssertStringEquals(t, "compile(old=1) should import aidl_api/1", "-Ifoo/aidl_api/foo-iface/1", rule.Args["imports"])
 		android.AssertStringDoesContain(t, "compile(old=1) should import bar.preprocessed",
 			rule.Args["optionalFlags"],
-			"-pout/soong/.intermediates/bar/bar-iface_interface/preprocessed.aidl")
+			"-pout/soong/.intermediates/bar/bar-iface_interface/1/preprocessed.aidl")
 	}
 	// compile ToT(v2)
 	{
@@ -1085,7 +1085,7 @@ func TestAidlImportFlagsForImportedModules(t *testing.T) {
 		android.AssertStringEquals(t, "compile(tot=2) should import base dirs of srcs", "-Ifoo", rule.Args["imports"])
 		android.AssertStringDoesContain(t, "compile(tot=2) should import bar.preprocessed",
 			rule.Args["optionalFlags"],
-			"-pout/soong/.intermediates/bar/bar-iface_interface/preprocessed.aidl")
+			"-pout/soong/.intermediates/bar/bar-iface_interface/2/preprocessed.aidl")
 	}
 }
 
@@ -1236,7 +1236,7 @@ func TestSupportsGenruleAndFilegroup(t *testing.T) {
 			rule.Args["imports"])
 		android.AssertStringDoesContain(t, "compile(1) should import bar.preprocessed",
 			rule.Args["optionalFlags"],
-			"-pout/soong/.intermediates/foo/bar-iface_interface/preprocessed.aidl")
+			"-pout/soong/.intermediates/foo/bar-iface_interface/1/preprocessed.aidl")
 	}
 	// aidlCompile for ToT (v2)
 	{
@@ -1246,7 +1246,7 @@ func TestSupportsGenruleAndFilegroup(t *testing.T) {
 			rule.Args["imports"])
 		android.AssertStringDoesContain(t, "compile(tot=2) should import bar.preprocessed",
 			rule.Args["optionalFlags"],
-			"-pout/soong/.intermediates/foo/bar-iface_interface/preprocessed.aidl")
+			"-pout/soong/.intermediates/foo/bar-iface_interface/1/preprocessed.aidl")
 	}
 
 	// dumpapi
@@ -1271,7 +1271,7 @@ func TestSupportsGenruleAndFilegroup(t *testing.T) {
 			rule.Args["imports"])
 		android.AssertStringDoesContain(t, "dumpapi should import bar.preprocessed",
 			rule.Args["optionalFlags"],
-			"-pout/soong/.intermediates/foo/bar-iface_interface/preprocessed.aidl")
+			"-pout/soong/.intermediates/foo/bar-iface_interface/1/preprocessed.aidl")
 	}
 }
 
@@ -1376,4 +1376,88 @@ func TestExplicitAidlModuleImport(t *testing.T) {
 		"aidl_api/bar/1/Bar.aidl": nil,
 		"aidl_api/bar/1/.hash":    nil,
 	}))
+}
+
+func TestUseVersionedPreprocessedWhenImporotedWithVersions(t *testing.T) {
+	ctx, _ := testAidl(t, `
+		aidl_interface {
+			name: "unstable-foo",
+			srcs: ["foo/Foo.aidl"],
+			imports: [
+					"bar",
+					"baz-V1",
+					"unstable-bar",
+			],
+			unstable: true,
+		}
+		aidl_interface {
+			name: "foo",
+			srcs: ["foo/Foo.aidl"],
+			imports: [
+					"bar",
+					"baz-V1",
+			],
+			versions: ["1"],
+		}
+		aidl_interface {
+			name: "foo-no-versions",
+			srcs: ["foo/Foo.aidl"],
+			imports: [
+					"bar",
+			],
+		}
+		aidl_interface {
+			name: "bar",
+			srcs: ["bar/Bar.aidl"],
+			versions: ["1"],
+		}
+		aidl_interface {
+			name: "unstable-bar",
+			srcs: ["bar/Bar.aidl"],
+			unstable: true,
+		}
+		aidl_interface {
+			name: "baz",
+			srcs: ["baz/Baz.aidl"],
+			versions: ["1"],
+		}
+	`, withFiles(map[string][]byte{
+		"foo/Foo.aidl":                nil,
+		"bar/Bar.aidl":                nil,
+		"baz/Baz.aidl":                nil,
+		"aidl_api/foo/1/foo/Foo.aidl": nil,
+		"aidl_api/foo/1/.hash":        nil,
+		"aidl_api/bar/1/bar/Bar.aidl": nil,
+		"aidl_api/bar/1/.hash":        nil,
+		"aidl_api/baz/1/baz/Baz.aidl": nil,
+		"aidl_api/baz/1/.hash":        nil,
+	}))
+	{
+		rule := ctx.ModuleForTests("foo-V2-java-source", "").Output("foo/Foo.java")
+		android.AssertStringDoesContain(t, "foo-V2(tot) imports bar-V2(tot) for 'bar'", rule.Args["optionalFlags"],
+			"-pout/soong/.intermediates/bar_interface/2/preprocessed.aidl")
+		android.AssertStringDoesContain(t, "foo-V2(tot) imports baz-V1 for 'baz-V1'", rule.Args["optionalFlags"],
+			"-pout/soong/.intermediates/baz_interface/1/preprocessed.aidl")
+	}
+	{
+		rule := ctx.ModuleForTests("foo-V1-java-source", "").Output("foo/Foo.java")
+		android.AssertStringDoesContain(t, "foo-V1 imports bar-V1(latest) for 'bar'", rule.Args["optionalFlags"],
+			"-pout/soong/.intermediates/bar_interface/1/preprocessed.aidl")
+		android.AssertStringDoesContain(t, "foo-V1 imports baz-V1 for 'baz-V1'", rule.Args["optionalFlags"],
+			"-pout/soong/.intermediates/baz_interface/1/preprocessed.aidl")
+	}
+	{
+		rule := ctx.ModuleForTests("unstable-foo-java-source", "").Output("foo/Foo.java")
+		android.AssertStringDoesContain(t, "unstable-foo imports bar-V2(latest) for 'bar'", rule.Args["optionalFlags"],
+			"-pout/soong/.intermediates/bar_interface/2/preprocessed.aidl")
+		android.AssertStringDoesContain(t, "unstable-foo imports baz-V1 for 'baz-V1'", rule.Args["optionalFlags"],
+			"-pout/soong/.intermediates/baz_interface/1/preprocessed.aidl")
+		android.AssertStringDoesContain(t, "unstable-foo imports unstable-bar(ToT) for 'unstable-bar'", rule.Args["optionalFlags"],
+			"-pout/soong/.intermediates/unstable-bar_interface/preprocessed.aidl")
+	}
+	{
+		rule := ctx.ModuleForTests("foo-no-versions-V1-java-source", "").Output("foo/Foo.java")
+		android.AssertStringDoesContain(t, "foo-no-versions-V1(latest) imports bar-V2(latest) for 'bar'", rule.Args["optionalFlags"],
+			"-pout/soong/.intermediates/bar_interface/2/preprocessed.aidl")
+	}
 }
