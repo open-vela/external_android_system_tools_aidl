@@ -98,6 +98,11 @@ type aidlGenRule struct {
 var _ android.SourceFileProducer = (*aidlGenRule)(nil)
 var _ genrule.SourceFileGenerator = (*aidlGenRule)(nil)
 
+func (g *aidlGenRule) getImports(ctx android.ModuleContext) map[string]string {
+	iface := ctx.GetDirectDepWithTag(g.properties.BaseName, interfaceDep).(*aidlInterface)
+	return iface.getImports(g.properties.Version)
+}
+
 func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	srcs, imports := getPaths(ctx, g.properties.Srcs, g.properties.AidlRoot)
 
@@ -105,7 +110,7 @@ func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 		return
 	}
 
-	g.deps = getDeps(ctx)
+	g.deps = getDeps(ctx, g.getImports(ctx))
 
 	genDirTimestamp := android.PathForModuleGen(ctx, "timestamp") // $out/gen/timestamp
 	g.implicitInputs = append(g.implicitInputs, genDirTimestamp)
