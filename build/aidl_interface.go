@@ -239,7 +239,7 @@ func getPaths(ctx android.ModuleContext, rawSrcs []string, root string) (srcs an
 	}
 
 	if len(srcs) == 0 {
-		ctx.PropertyErrorf("srcs", "No sources provided.")
+		ctx.PropertyErrorf("srcs", "No sources provided in %v", root)
 	}
 
 	// gather base directories from input .aidl files
@@ -421,7 +421,11 @@ type aidlInterface struct {
 	// list of module names that are created for this interface
 	internalModuleNames []string
 
-	preprocessed android.WritablePath
+	// map for version to preprocessed.aidl file.
+	// There's two additional alias for versions:
+	// - ""(empty) is for ToT
+	// - "latest" is for i.latestVersion()
+	preprocessed map[string]android.WritablePath
 }
 
 func (i *aidlInterface) shouldGenerateJavaBackend() bool {
@@ -765,28 +769,76 @@ func (i *aidlInterface) Name() string {
 }
 
 func (i *aidlInterface) GenerateAndroidBuildActions(ctx android.ModuleContext) {
-	srcs, imports := getPaths(ctx, i.properties.Srcs, i.properties.Local_include_dir)
+	srcs, _ := getPaths(ctx, i.properties.Srcs, i.properties.Local_include_dir)
 	for _, src := range srcs {
 		computedType := strings.TrimSuffix(strings.ReplaceAll(src.Rel(), "/", "."), ".aidl")
 		i.computedTypes = append(i.computedTypes, computedType)
 	}
 
-	// generate preprocessed.aidl which contains only types with evaluated constants.
-	// "imports" will use preprocessed.aidl with -p flag to avoid parsing the entire transitive list
-	// of dependencies.
-	deps := getDeps(ctx)
-	i.preprocessed = android.PathForModuleOut(ctx, "preprocessed.aidl")
+	i.preprocessed = make(map[string]android.WritablePath)
+	// generate (len(versions) + 1) preprocessed.aidl files
+	for _, version := range concat(i.properties.Versions, []string{i.nextVersion()}) {
+		i.preprocessed[version] = i.buildPreprocessed(ctx, version)
+	}
+	// helpful aliases
+	if !proptools.Bool(i.properties.Unstable) {
+		if i.hasVersion() {
+			i.preprocessed["latest"] = i.preprocessed[i.latestVersion()]
+		} else {
+			// when we have no frozen versions yet, use "next version" as latest
+			i.preprocessed["latest"] = i.preprocessed[i.nextVersion()]
+		}
+		i.preprocessed[""] = i.preprocessed[i.nextVersion()]
+	}
+}
+
+// imported interfaces
+// TODO(b/146436251) use imports in versions_with_info
+// For example, foo-V1 should use bar-V1 while foo-V2 should use bar-V2
+//   name: "foo",
+//   versions_with_info: [
+//     { version: "1", imports: ["bar-V1"]},
+//     { version: "2", imports: ["bar-V2"]},
+//   ]
+func (i *aidlInterface) getImports(version string) map[string]string {
+	imports := make(map[string]string)
+	useLatestStable := !proptools.Bool(i.properties.Unstable) && version != "" && version != i.nextVersion()
+	for _, importString := range i.properties.Imports {
+		name, targetVersion := parseModuleWithVersion(importString)
+		if targetVersion == "" && useLatestStable {
+			targetVersion = "latest"
+		}
+		imports[name] = targetVersion
+	}
+	return imports
+}
+
+// generate preprocessed.aidl which contains only types with evaluated constants.
+// "imports" will use preprocessed.aidl with -p flag to avoid parsing the entire transitive list
+// of dependencies.
+func (i *aidlInterface) buildPreprocessed(ctx android.ModuleContext, version string) android.WritablePath {
+	deps := getDeps(ctx, i.getImports(version))
+
+	preprocessed := android.PathForModuleOut(ctx, version, "preprocessed.aidl")
 	rb := android.NewRuleBuilder(pctx, ctx)
+	srcs, root_dir := i.srcsForVersion(ctx, version)
+	paths, imports := getPaths(ctx, srcs, root_dir)
+
 	preprocessCommand := rb.Command().BuiltTool("aidl").
-		FlagWithOutput("--preprocess ", i.preprocessed).
+		FlagWithOutput("--preprocess ", preprocessed).
 		Flag("--structured")
 	if i.properties.Stability != nil {
 		preprocessCommand.FlagWithArg("--stability ", *i.properties.Stability)
 	}
 	preprocessCommand.FlagForEachInput("-p", deps.preprocessed)
 	preprocessCommand.FlagForEachArg("-I", concat(imports, i.properties.Include_dirs))
-	preprocessCommand.Inputs(srcs)
-	rb.Build("export_"+i.BaseModuleName(), "export types for "+i.BaseModuleName())
+	preprocessCommand.Inputs(paths)
+	name := i.BaseModuleName()
+	if version != "" {
+		name += "/" + version
+	}
+	rb.Build("export_"+name, "export types for "+name)
+	return preprocessed
 }
 
 func (i *aidlInterface) DepsMutator(ctx android.BottomUpMutatorContext) {
