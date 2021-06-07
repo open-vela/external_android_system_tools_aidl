@@ -301,7 +301,7 @@ func (m *aidlApi) checkForDevelopment(ctx android.ModuleContext, latestVersionDu
 		hasDevCommand.
 			Text(latestVersionDump.dir.String()).Implicits(latestVersionDump.files).
 			Text(totDump.dir.String()).Implicits(totDump.files).
-			Text("; echo $? >").Output(hasDevPath)
+			Text("2> /dev/null; echo $? >").Output(hasDevPath)
 	} else {
 		rb.Command().Text("echo 1 >").Output(hasDevPath)
 	}
