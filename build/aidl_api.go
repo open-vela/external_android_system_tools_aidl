@@ -90,9 +90,15 @@ func (m *aidlApi) nextVersion() string {
 }
 
 type apiDump struct {
+	version  string
 	dir      android.Path
 	files    android.Paths
 	hashFile android.OptionalPath
+}
+
+func (m *aidlApi) getImports(ctx android.ModuleContext, version string) map[string]string {
+	iface := ctx.GetDirectDepWithTag(m.properties.BaseName, interfaceDep).(*aidlInterface)
+	return iface.getImports(version)
 }
 
 func (m *aidlApi) createApiDumpFromSource(ctx android.ModuleContext) apiDump {
@@ -102,7 +108,8 @@ func (m *aidlApi) createApiDumpFromSource(ctx android.ModuleContext) apiDump {
 		return apiDump{}
 	}
 
-	deps := getDeps(ctx)
+	// dumpapi uses imports for ToT("") version
+	deps := getDeps(ctx, m.getImports(ctx, m.nextVersion()))
 	imports = append(imports, deps.imports...)
 
 	var apiDir android.WritablePath
@@ -125,6 +132,7 @@ func (m *aidlApi) createApiDumpFromSource(ctx android.ModuleContext) apiDump {
 	}
 	optionalFlags = append(optionalFlags, wrap("-p", deps.preprocessed.Strings(), "")...)
 
+	version := nextVersion(m.properties.Versions)
 	ctx.Build(pctx, android.BuildParams{
 		Rule:      aidlDumpApiRule,
 		Outputs:   append(apiFiles, hashFile),
@@ -135,10 +143,10 @@ func (m *aidlApi) createApiDumpFromSource(ctx android.ModuleContext) apiDump {
 			"imports":       strings.Join(wrap("-I", imports, ""), " "),
 			"outDir":        apiDir.String(),
 			"hashFile":      hashFile.String(),
-			"latestVersion": versionForHashGen(nextVersion(m.properties.Versions)),
+			"latestVersion": versionForHashGen(version),
 		},
 	})
-	return apiDump{apiDir, apiFiles.Paths(), android.OptionalPathForPath(hashFile)}
+	return apiDump{version, apiDir, apiFiles.Paths(), android.OptionalPathForPath(hashFile)}
 }
 
 func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, version string, latestVersionDump *apiDump) android.WritablePath {
@@ -155,6 +163,7 @@ func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, 
 		// (i.e. `has_development` file contains "1").
 		rb.Command().
 			Text("if [ \"$(cat ").Input(m.hasDevelopment).Text(")\" = \"1\" ]; then").
+			Text("mkdir -p " + targetDir + " && ").
 			Text("cp -rf " + dump.dir.String() + "/. " + targetDir).Implicits(dump.files).
 			Text("; fi")
 
@@ -191,13 +200,18 @@ type deps struct {
 // calculates import flags(-I) from deps.
 // When the target is ToT, use ToT of imported interfaces. If not, we use "current" snapshot of
 // imported interfaces.
-func getDeps(ctx android.ModuleContext) deps {
+func getDeps(ctx android.ModuleContext, versionedImports map[string]string) deps {
 	var deps deps
 	ctx.VisitDirectDeps(func(dep android.Module) {
 		switch ctx.OtherModuleDependencyTag(dep) {
 		case importInterfaceDep:
 			iface := dep.(*aidlInterface)
-			deps.preprocessed = append(deps.preprocessed, iface.preprocessed)
+			if version, ok := versionedImports[iface.BaseModuleName()]; ok {
+				if iface.preprocessed[version] == nil {
+					ctx.ModuleErrorf("can't import %v's preprocessed(version=%v)", iface.BaseModuleName(), version)
+				}
+				deps.preprocessed = append(deps.preprocessed, iface.preprocessed[version])
+			}
 		case interfaceDep:
 			iface := dep.(*aidlInterface)
 			deps.imports = append(deps.imports, iface.properties.Include_dirs...)
@@ -215,7 +229,8 @@ func (m *aidlApi) checkApi(ctx android.ModuleContext, oldDump, newDump apiDump, 
 	newVersion := newDump.dir.Base()
 	timestampFile := android.PathForModuleOut(ctx, "checkapi_"+newVersion+".timestamp")
 
-	deps := getDeps(ctx)
+	// --checkapi(old,new) should use imports for "new"
+	deps := getDeps(ctx, m.getImports(ctx, newDump.version))
 	var implicits android.Paths
 	implicits = append(implicits, deps.implicits...)
 	implicits = append(implicits, deps.preprocessed...)
@@ -301,7 +316,8 @@ func (m *aidlApi) checkForDevelopment(ctx android.ModuleContext, latestVersionDu
 		if m.properties.Stability != nil {
 			hasDevCommand.FlagWithArg("--stability ", *m.properties.Stability)
 		}
-		deps := getDeps(ctx)
+		// checkapi(latest, tot) should use imports for nextVersion(=tot)
+		deps := getDeps(ctx, m.getImports(ctx, m.nextVersion()))
 		hasDevCommand.
 			FlagForEachArg("-I", deps.imports).Implicits(deps.implicits).
 			FlagForEachInput("-p", deps.preprocessed).
@@ -325,6 +341,7 @@ func (m *aidlApi) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	var currentApiDump apiDump
 	if currentApiDir.Valid() {
 		currentApiDump = apiDump{
+			version:  nextVersion(m.properties.Versions),
 			dir:      currentApiDir.Path(),
 			files:    ctx.Glob(filepath.Join(currentApiDir.Path().String(), "**/*.aidl"), nil),
 			hashFile: android.ExistentPathForSource(ctx, ctx.ModuleDir(), m.apiDir(), currentVersion, ".hash"),
@@ -355,6 +372,7 @@ func (m *aidlApi) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 		if apiDirPath.Valid() {
 			hashFilePath := filepath.Join(apiDir, ".hash")
 			dump := apiDump{
+				version:  ver,
 				dir:      apiDirPath.Path(),
 				files:    ctx.Glob(filepath.Join(apiDirPath.String(), "**/*.aidl"), nil),
 				hashFile: android.ExistentPathForSource(ctx, hashFilePath),
