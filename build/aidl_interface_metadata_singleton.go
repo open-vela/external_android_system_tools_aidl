@@ -32,12 +32,11 @@ var (
 			`echo "\"stability\": \"${stability}\"," && ` +
 			`echo "\"types\": [${types}]," && ` +
 			`echo "\"hashes\": [${hashes}]," && ` +
-			`echo "\"has_development\": ${has_development}," && ` +
-			`echo "\"versions\": [${versions}]" && ` +
+			`echo "\"has_development\": ${has_development}" && ` +
 			`echo '}' ` +
 			`;} >> ${out}`,
 		Description: "AIDL metadata: ${out}",
-	}, "name", "stability", "types", "hashes", "has_development", "versions")
+	}, "name", "stability", "types", "hashes", "has_development")
 
 	joinJsonObjectsToArrayRule = pctx.StaticRule("joinJsonObjectsToArrayRule", blueprint.RuleParams{
 		Rspfile:        "$out.rsp",
@@ -84,7 +83,6 @@ func (m *aidlInterfacesMetadataSingleton) GenerateAndroidBuildActions(ctx androi
 		ComputedTypes  []string
 		HashFiles      []string
 		HasDevelopment android.WritablePath
-		Versions       []string
 	}
 
 	// name -> ModuleInfo
@@ -99,7 +97,6 @@ func (m *aidlInterfacesMetadataSingleton) GenerateAndroidBuildActions(ctx androi
 			info := moduleInfos[t.ModuleBase.Name()]
 			info.Stability = proptools.StringDefault(t.properties.Stability, "")
 			info.ComputedTypes = t.computedTypes
-			info.Versions = t.properties.Versions
 			moduleInfos[t.ModuleBase.Name()] = info
 		case *aidlGenRule:
 			info := moduleInfos[t.properties.BaseName]
@@ -147,7 +144,6 @@ func (m *aidlInterfacesMetadataSingleton) GenerateAndroidBuildActions(ctx androi
 						info.HashFiles,
 						` hash extra; printf '%s' $$hash)\"`), ", "),
 				"has_development": hasDevelopmentValue,
-				"versions":        strings.Join(info.Versions, ", "),
 			},
 		})
 	}
