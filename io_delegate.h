@@ -23,7 +23,6 @@
 #include <android-base/result.h>
 
 #include "code_writer.h"
-#include "line_reader.h"
 
 namespace android {
 namespace aidl {
@@ -52,9 +51,6 @@ class IoDelegate {
   virtual std::unique_ptr<std::string> GetFileContents(
       const std::string& filename,
       const std::string& content_suffix = "") const;
-
-  virtual std::unique_ptr<LineReader> GetLineReader(
-      const std::string& file_path) const;
 
   virtual bool FileIsReadable(const std::string& path) const;
 
