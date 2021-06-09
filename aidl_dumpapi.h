@@ -38,6 +38,7 @@ struct DumpVisitor : AidlVisitor {
   void Visit(const AidlMethod& m) override;
   void Visit(const AidlVariableDeclaration& v) override;
   void Visit(const AidlConstantDeclaration& c) override;
+  void Visit(const AidlEnumerator& e) override;
   void Visit(const AidlTypeSpecifier& t) override;
 };
 
