@@ -50,6 +50,7 @@
 #include "options.h"
 #include "os.h"
 #include "parser.h"
+#include "preprocess.h"
 
 #ifndef O_BINARY
 #  define O_BINARY  0
@@ -302,51 +303,6 @@ bool check_and_assign_method_ids(const std::vector<std::unique_ptr<AidlMethod>>&
   return true;
 }
 
-// TODO: Remove this in favor of using the YACC parser b/25479378
-bool ParsePreprocessedLine(const string& line, string* decl, std::string* package,
-                           string* class_name) {
-  // erase all trailing whitespace and semicolons
-  const size_t end = line.find_last_not_of(" ;\t");
-  if (end == string::npos) {
-    return false;
-  }
-  if (line.rfind(';', end) != string::npos) {
-    return false;
-  }
-
-  decl->clear();
-  string type;
-  vector<string> pieces = Split(line.substr(0, end + 1), " \t");
-  for (const string& piece : pieces) {
-    if (piece.empty()) {
-      continue;
-    }
-    if (decl->empty()) {
-      *decl = std::move(piece);
-    } else if (type.empty()) {
-      type = std::move(piece);
-    } else {
-      return false;
-    }
-  }
-
-  // Note that this logic is absolutely wrong.  Given a parcelable
-  // org.some.Foo.Bar, the class name is Foo.Bar, but this code will claim that
-  // the class is just Bar.  However, this was the way it was done in the past.
-  //
-  // See b/17415692
-  size_t dot_pos = type.rfind('.');
-  if (dot_pos != string::npos) {
-    *class_name = type.substr(dot_pos + 1);
-    *package = type.substr(0, dot_pos);
-  } else {
-    *class_name = type;
-    package->clear();
-  }
-
-  return true;
-}
-
 bool ValidateAnnotationContext(const AidlDocument& doc) {
   struct AnnotationValidator : AidlVisitor {
     bool success = true;
@@ -402,65 +358,6 @@ bool ValidateAnnotationContext(const AidlDocument& doc) {
 
 namespace internals {
 
-bool parse_preprocessed_file(const IoDelegate& io_delegate, const string& filename,
-                             AidlTypenames* typenames) {
-  bool success = true;
-  unique_ptr<LineReader> line_reader = io_delegate.GetLineReader(filename);
-  if (!line_reader) {
-    AIDL_ERROR(filename) << "cannot open preprocessed file";
-    success = false;
-    return success;
-  }
-
-  string line;
-  int lineno = 1;
-  for ( ; line_reader->ReadLine(&line); ++lineno) {
-    if (line.empty() || line.compare(0, 2, "//") == 0) {
-      // skip comments and empty lines
-      continue;
-    }
-
-    string decl;
-    std::string package;
-    string class_name;
-    if (!ParsePreprocessedLine(line, &decl, &package, &class_name)) {
-      success = false;
-      break;
-    }
-
-    AidlLocation::Point point = {.line = lineno, .column = 0 /*column*/};
-    AidlLocation location = AidlLocation(filename, point, point, AidlLocation::Source::EXTERNAL);
-
-    if (decl == "parcelable") {
-      // ParcelFileDescriptor is treated as a built-in type, but it's also in the framework.aidl.
-      // So aidl should ignore built-in types in framework.aidl to prevent duplication.
-      // (b/130899491)
-      if (AidlTypenames::IsBuiltinTypename(class_name)) {
-        continue;
-      }
-      AidlParcelable* doc = new AidlParcelable(location, class_name, package, Comments{});
-      typenames->AddPreprocessedType(unique_ptr<AidlParcelable>(doc));
-    } else if (decl == "structured_parcelable") {
-      AidlStructuredParcelable* doc =
-          new AidlStructuredParcelable(location, class_name, package, Comments{}, nullptr, nullptr);
-      typenames->AddPreprocessedType(unique_ptr<AidlStructuredParcelable>(doc));
-    } else if (decl == "interface") {
-      AidlInterface* doc =
-          new AidlInterface(location, class_name, Comments{}, false, package, nullptr);
-      typenames->AddPreprocessedType(unique_ptr<AidlInterface>(doc));
-    } else {
-      success = false;
-      break;
-    }
-  }
-  if (!success) {
-    AIDL_ERROR(filename) << " on line " << lineno << " malformed preprocessed file line: '" << line
-                         << "'";
-  }
-
-  return success;
-}
-
 AidlError load_and_validate_aidl(const std::string& input_file_name, const Options& options,
                                  const IoDelegate& io_delegate, AidlTypenames* typenames,
                                  vector<string>* imported_files) {
@@ -487,13 +384,11 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   }
 
   // Import the preprocessed file
-  for (const string& s : options.PreprocessedFiles()) {
-    if (!parse_preprocessed_file(io_delegate, s, typenames)) {
-      err = AidlError::BAD_PRE_PROCESSED_FILE;
+  for (const string& filename : options.PreprocessedFiles()) {
+    auto preprocessed = Parser::Parse(filename, io_delegate, *typenames, /*is_preprocessed=*/true);
+    if (!preprocessed) {
+      return AidlError::BAD_PRE_PROCESSED_FILE;
     }
-  }
-  if (err != AidlError::OK) {
-    return err;
   }
 
   // Find files to import and parse them
@@ -526,7 +421,8 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
 
     auto imported_doc = Parser::Parse(import_path, io_delegate, *typenames);
     if (imported_doc == nullptr) {
-      AIDL_ERROR(import_path) << "error while importing " << import_path << " for " << import;
+      AIDL_ERROR(import_path) << "error while importing " << import_path << " for "
+                              << import->GetNeededClass();
       err = AidlError::BAD_IMPORT;
       continue;
     }
@@ -862,25 +758,6 @@ bool dump_mappings(const Options& options, const IoDelegate& io_delegate) {
   return true;
 }
 
-bool preprocess_aidl(const Options& options, const IoDelegate& io_delegate) {
-  unique_ptr<CodeWriter> writer = io_delegate.GetCodeWriter(options.OutputFile());
-
-  for (const auto& file : options.InputFiles()) {
-    AidlTypenames typenames;
-    const AidlDocument* document = Parser::Parse(file, io_delegate, typenames);
-    if (document == nullptr) return false;
-
-    for (const auto& defined_type : document->DefinedTypes()) {
-      if (!writer->Write("%s %s;\n", defined_type->GetPreprocessDeclarationName().c_str(),
-                         defined_type->GetCanonicalName().c_str())) {
-        return false;
-      }
-    }
-  }
-
-  return writer->Close();
-}
-
 int aidl_entry(const Options& options, const IoDelegate& io_delegate) {
   AidlErrorLog::clearError();
 
@@ -890,7 +767,7 @@ int aidl_entry(const Options& options, const IoDelegate& io_delegate) {
       ret = android::aidl::compile_aidl(options, io_delegate);
       break;
     case Options::Task::PREPROCESS:
-      ret = android::aidl::preprocess_aidl(options, io_delegate) ? 0 : 1;
+      ret = android::aidl::Preprocess(options, io_delegate) ? 0 : 1;
       break;
     case Options::Task::DUMP_API:
       ret = android::aidl::dump_api(options, io_delegate) ? 0 : 1;

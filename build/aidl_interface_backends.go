@@ -75,7 +75,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 	}, &aidlGenProperties{
 		Srcs:                  srcs,
 		AidlRoot:              aidlRoot,
-		IsToT:                 version == i.nextVersion(),
 		ImportsWithoutVersion: i.properties.ImportsWithoutVersion,
 		Stability:             i.properties.Stability,
 		Lang:                  lang,
@@ -233,7 +232,6 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 	}, &aidlGenProperties{
 		Srcs:                  srcs,
 		AidlRoot:              aidlRoot,
-		IsToT:                 version == i.nextVersion(),
 		ImportsWithoutVersion: i.properties.ImportsWithoutVersion,
 		Stability:             i.properties.Stability,
 		Lang:                  langJava,
@@ -283,7 +281,6 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		Srcs:                  srcs,
 		AidlRoot:              aidlRoot,
 		ImportsWithoutVersion: i.properties.ImportsWithoutVersion,
-		IsToT:                 version == i.nextVersion(),
 		Stability:             i.properties.Stability,
 		Lang:                  langRust,
 		BaseName:              i.ModuleBase.Name(),
@@ -331,7 +328,7 @@ func (i *aidlInterface) versionedName(version string) string {
 	return name + "-V" + version
 }
 
-func (i *aidlInterface) srcsForVersion(mctx android.LoadHookContext, version string) (srcs []string, aidlRoot string) {
+func (i *aidlInterface) srcsForVersion(mctx android.EarlyModuleContext, version string) (srcs []string, aidlRoot string) {
 	if version == i.nextVersion() {
 		return i.properties.Srcs, i.properties.Local_include_dir
 	} else {

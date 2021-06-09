@@ -35,9 +35,10 @@
 #include "comments.h"
 #include "logging.h"
 #include "options.h"
+#include "parser.h"
+#include "preprocess.h"
 #include "tests/fake_io_delegate.h"
 
-using android::aidl::internals::parse_preprocessed_file;
 using android::aidl::test::FakeIoDelegate;
 using android::base::StringPrintf;
 using std::map;
@@ -675,7 +676,7 @@ TEST_F(AidlTest, ParsesPreprocessedFile) {
   string simple_content = "parcelable a.Foo;\ninterface b.IBar;";
   io_delegate_.SetFileContents("path", simple_content);
   EXPECT_FALSE(typenames_.ResolveTypename("a.Foo").is_resolved);
-  EXPECT_TRUE(parse_preprocessed_file(io_delegate_, "path", &typenames_));
+  EXPECT_TRUE(Parser::Parse("path", io_delegate_, typenames_, /*is_preprocessed=*/true));
   EXPECT_TRUE(typenames_.ResolveTypename("a.Foo").is_resolved);
   EXPECT_TRUE(typenames_.ResolveTypename("b.IBar").is_resolved);
 }
@@ -685,7 +686,7 @@ TEST_F(AidlTest, ParsesPreprocessedFileWithWhitespace) {
   io_delegate_.SetFileContents("path", simple_content);
 
   EXPECT_FALSE(typenames_.ResolveTypename("a.Foo").is_resolved);
-  EXPECT_TRUE(parse_preprocessed_file(io_delegate_, "path", &typenames_));
+  EXPECT_TRUE(Parser::Parse("path", io_delegate_, typenames_, /*is_preprocessed=*/true));
   EXPECT_TRUE(typenames_.ResolveTypename("a.Foo").is_resolved);
   EXPECT_TRUE(typenames_.ResolveTypename("b.IBar").is_resolved);
 }
@@ -737,18 +738,101 @@ TEST_F(AidlTest, WritePreprocessedFile) {
   io_delegate_.SetFileContents("one/IBar.aidl", "package one; import p.Outer;"
                                                 "interface IBar {}");
 
-  vector<string> args {
-    "aidl",
-    "--preprocess",
-    "preprocessed",
-    "p/Outer.aidl",
-    "one/IBar.aidl"};
+  vector<string> args{"aidl", "--preprocess", "preprocessed",
+                      "-I.",  "p/Outer.aidl", "one/IBar.aidl"};
   Options options = Options::From(args);
-  EXPECT_TRUE(::android::aidl::preprocess_aidl(options, io_delegate_));
+  EXPECT_TRUE(::android::aidl::Preprocess(options, io_delegate_));
 
-  string output;
-  EXPECT_TRUE(io_delegate_.GetWrittenContents("preprocessed", &output));
-  EXPECT_EQ("parcelable p.Outer.Inner;\ninterface one.IBar;\n", output);
+  std::map<std::string, std::string> expected = {{"preprocessed",
+                                                  "parcelable p.Outer.Inner;\n"
+                                                  "interface one.IBar {\n"
+                                                  "}\n"}};
+  EXPECT_THAT(io_delegate_.OutputFiles(), testing::Eq(expected));
+}
+
+TEST_F(AidlTest, PreprocessVariousThings) {
+  io_delegate_.SetFileContents("foo/bar/IFoo.aidl",
+                               "package foo.bar;\n"
+                               "interface IFoo {\n"
+                               "    int foo();\n"
+                               "    const int FOO = foo.bar.Bar.BAR + 1; // should be 44\n"
+                               "}\n");
+  io_delegate_.SetFileContents("foo/bar/Bar.aidl",
+                               "package foo.bar;\n"
+                               "parcelable Bar {\n"
+                               "    const int BAR = imported.Foo.FOO + 1; // should be 43\n"
+                               "    imported.Foo foo;\n"
+                               "}\n");
+  io_delegate_.SetFileContents("foo/bar/Gen.aidl",
+                               "package foo.bar;\n"
+                               "parcelable Gen<T> {\n"
+                               "}\n");
+  io_delegate_.SetFileContents("foo/bar/Enum.aidl",
+                               "package foo.bar;\n"
+                               "enum Enum {\n"
+                               "    FOO = 3, BAR = FOO + 3, // should be 3, 6\n"
+                               "}\n");
+  io_delegate_.SetFileContents("sub/imported/Foo.aidl",
+                               "package imported;\n"
+                               "parcelable Foo {\n"
+                               "    const int FOO = 42;\n"
+                               "}\n");
+
+  vector<string> args = {
+      "aidl",
+      "--preprocess",
+      "preprocessed",
+      "-Isub",
+      "-I.",
+      "foo/bar/IFoo.aidl",
+      "foo/bar/Bar.aidl",
+      "foo/bar/Gen.aidl",
+      "foo/bar/Enum.aidl",
+  };
+  ASSERT_TRUE(Preprocess(Options::From(args), io_delegate_));
+  std::string preprocessed =
+      "interface foo.bar.IFoo {\n"
+      "  const int FOO = 44;\n"
+      "}\n"
+      "parcelable foo.bar.Bar {\n"
+      "  const int BAR = 43;\n"
+      "}\n"
+      "parcelable foo.bar.Gen<T> {\n"
+      "}\n"
+      "enum foo.bar.Enum {\n"
+      "  FOO = 3,\n"
+      "  BAR = 6,\n"
+      "}\n";
+  std::map<std::string, std::string> expected = {{"preprocessed", preprocessed}};
+  EXPECT_THAT(io_delegate_.OutputFiles(), testing::Eq(expected));
+
+  // use preprocessed
+  io_delegate_.SetFileContents("a/Foo.aidl",
+                               "package a; parcelable Foo { const int y = foo.bar.Bar.BAR; }");
+  io_delegate_.SetFileContents("preprocessed", preprocessed);
+  CaptureStderr();
+  auto options = Options::From("aidl --lang java -o out a/Foo.aidl -ppreprocessed");
+  EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/Foo.java", &code));
+  EXPECT_THAT(code, testing::HasSubstr("public static final int y = 43;"));
+}
+
+TEST_F(AidlTest, PreprocessedFileCantDeclarePackage) {
+  string simple_content = "package xxx; parcelable a.Foo;";
+  io_delegate_.SetFileContents("path", simple_content);
+  CaptureStderr();
+  EXPECT_FALSE(Parser::Parse("path", io_delegate_, typenames_, /*is_preprocessed=*/true));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Preprocessed file can't declare package."));
+}
+
+TEST_F(AidlTest, RejectQualifiedTypeNameUnlessPreprocessed) {
+  string simple_content = "parcelable a.Foo {}";
+  io_delegate_.SetFileContents("path", simple_content);
+  CaptureStderr();
+  EXPECT_FALSE(Parser::Parse("path", io_delegate_, typenames_, /*is_preprocessed=*/false));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Type name can't be qualified"));
 }
 
 TEST_P(AidlTest, SupportDeprecated) {
