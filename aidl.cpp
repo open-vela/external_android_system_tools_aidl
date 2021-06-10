@@ -431,20 +431,6 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     return err;
   }
 
-  for (const auto& imported_file : options.ImportFiles()) {
-    import_paths.emplace_back(imported_file);
-
-    auto impoted_doc = Parser::Parse(imported_file, io_delegate, *typenames);
-    if (impoted_doc == nullptr) {
-      AIDL_ERROR(imported_file) << "error while importing " << imported_file;
-      err = AidlError::BAD_IMPORT;
-      continue;
-    }
-  }
-  if (err != AidlError::OK) {
-    return err;
-  }
-
   TypeResolver resolver = [&](const AidlDefinedType* scope, AidlTypeSpecifier* type) {
     if (type->Resolve(*typenames)) return true;
 
