@@ -1287,6 +1287,22 @@ TEST_P(AidlTest, UnderstandsNestedParcelables) {
   EXPECT_EQ("::p::Outer::Inner", cpp::CppNameOf(nested_type, typenames_));
 }
 
+TEST_P(AidlTest, UnderstandsNestedParcelablesWithoutImports) {
+  io_delegate_.SetFileContents("p/Outer.aidl",
+                               "package p; parcelable Outer.Inner cpp_header \"baz/header\";");
+  import_paths_.emplace("");
+  const string input_path = "p/IFoo.aidl";
+  const string input = "package p; interface IFoo { p.Outer.Inner get(); }";
+
+  auto parse_result = Parse(input_path, input, typenames_, GetLanguage());
+  EXPECT_NE(nullptr, parse_result);
+
+  EXPECT_TRUE(typenames_.ResolveTypename("p.Outer.Inner").is_resolved);
+  // C++ uses "::" instead of "." to refer to a inner class.
+  AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.Outer.Inner", false, nullptr, {});
+  EXPECT_EQ("::p::Outer::Inner", cpp::CppNameOf(nested_type, typenames_));
+}
+
 TEST_F(AidlTest, CppNameOf_GenericType) {
   io_delegate_.SetFileContents("p/Wrapper.aidl", "package p; parcelable Wrapper<T> { T wrapped; }");
   import_paths_.emplace("");
