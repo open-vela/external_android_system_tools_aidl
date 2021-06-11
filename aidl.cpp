@@ -393,8 +393,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
 
   // Find files to import and parse them
   vector<string> import_paths;
-  ImportResolver import_resolver{io_delegate, input_file_name, options.ImportDirs(),
-                                 options.InputFiles()};
+  ImportResolver import_resolver{io_delegate, input_file_name, options.ImportDirs()};
   for (const auto& import : document->Imports()) {
     if (AidlTypenames::IsBuiltinTypename(import->GetNeededClass())) {
       continue;

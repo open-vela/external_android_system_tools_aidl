@@ -104,7 +104,7 @@ class AidlTest : public ::testing::TestWithParam<Options::Language> {
     args.emplace_back(path);
     Options options = Options::From(args);
     vector<string> imported_files;
-    ImportResolver import_resolver{io_delegate_, path, import_paths_, {}};
+    ImportResolver import_resolver{io_delegate_, path, import_paths_};
     AidlError actual_error = ::android::aidl::internals::load_and_validate_aidl(
         path, options, io_delegate_, &typenames_, &imported_files);
 

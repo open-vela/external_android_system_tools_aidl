@@ -28,8 +28,7 @@ namespace aidl {
 class ImportResolver {
  public:
   ImportResolver(const IoDelegate& io_delegate, const std::string& input_file_name,
-                 const std::set<std::string>& import_paths,
-                 const std::vector<std::string>& input_files);
+                 const std::set<std::string>& import_paths);
   virtual ~ImportResolver() = default;
 
   // non-copyable, non-movable
