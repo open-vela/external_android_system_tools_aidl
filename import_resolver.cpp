@@ -37,8 +37,8 @@ namespace android {
 namespace aidl {
 
 ImportResolver::ImportResolver(const IoDelegate& io_delegate, const string& input_file_name,
-                               const set<string>& import_paths, const vector<string>& input_files)
-    : io_delegate_(io_delegate), input_file_name_(input_file_name), input_files_(input_files) {
+                               const set<string>& import_paths)
+    : io_delegate_(io_delegate), input_file_name_(input_file_name) {
   for (string path : import_paths) {
     if (path.empty()) {
       path = ".";
