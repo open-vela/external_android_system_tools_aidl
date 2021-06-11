@@ -190,6 +190,7 @@ cc_fuzz {
             "smoreland@google.com",
             "jiyong@google.com",
             "jeongik@google.com",
+            "jooyung@google.com",
         ],
     },
 
