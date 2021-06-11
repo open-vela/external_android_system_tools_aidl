@@ -112,8 +112,6 @@ class Options final {
 
   const set<string>& ImportDirs() const { return import_dirs_; }
 
-  const set<string>& ImportFiles() const { return import_files_; }
-
   const vector<string>& PreprocessedFiles() const { return preprocessed_files_; }
 
   string DependencyFile() const {
@@ -177,7 +175,6 @@ class Options final {
   Task task_ = Task::COMPILE;
   CheckApiLevel check_api_level_ = CheckApiLevel::COMPATIBLE;
   set<string> import_dirs_;
-  set<string> import_files_;
   vector<string> preprocessed_files_;
   string dependency_file_;
   bool gen_traces_ = false;
