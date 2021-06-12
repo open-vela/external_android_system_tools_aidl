@@ -4071,6 +4071,14 @@ TEST_F(AidlTest, SuppressWarningsIsNotForArgs) {
   EXPECT_THAT(GetCapturedStderr(), HasSubstr("@SuppressWarnings is not available"));
 }
 
+TEST_F(AidlTest, VoidCantBeUsedInMethodParameterType) {
+  io_delegate_.SetFileContents("p/IFoo.aidl", "interface IFoo{ void j(void n);}");
+  auto options = Options::From("aidl --lang=java -o out p/IFoo.aidl");
+  CaptureStderr();
+  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("'void' is an invalid type for the parameter 'n'"));
+}
+
 struct TypeParam {
   string kind;
   string literal;

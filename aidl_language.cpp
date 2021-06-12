@@ -1444,6 +1444,12 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
         AIDL_ERROR(arg) << "Argument name cannot begin with '_aidl'";
         return false;
       }
+
+      if (arg->GetType().GetName() == "void") {
+        AIDL_ERROR(arg->GetType())
+            << "'void' is an invalid type for the parameter '" << arg->GetName() << "'";
+        return false;
+      }
     }
 
     auto it = method_names.find(m->GetName());
