@@ -700,10 +700,8 @@ class AidlConstantReference : public AidlConstantValue {
   const std::string& GetFieldName() const { return field_name_; }
 
   bool CheckValid() const override;
-  void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override {
-    if (ref_type_) {
-      traverse(*ref_type_);
-    }
+  void TraverseChildren(std::function<void(const AidlNode&)>) const override {
+    // resolved_ is not my child.
   }
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
   const AidlConstantValue* Resolve(const AidlDefinedType* scope) const;
@@ -908,10 +906,7 @@ class AidlDefinedType : public AidlAnnotatable {
   std::string GetPackage() const { return package_; }
   /* dot joined package and name, example: "android.package.foo.IBar" */
   std::string GetCanonicalName() const;
-  std::vector<std::string> GetSplitPackage() const {
-    if (package_.empty()) return std::vector<std::string>();
-    return android::base::Split(package_, ".");
-  }
+  const std::vector<std::string>& GetSplitPackage() const { return split_package_; }
 
   virtual std::string GetPreprocessDeclarationName() const = 0;
 
@@ -982,7 +977,8 @@ class AidlDefinedType : public AidlAnnotatable {
   bool CheckValidWithMembers(const AidlTypenames& typenames) const;
 
   std::string name_;
-  std::string package_;
+  const std::string package_;
+  const std::vector<std::string> split_package_;
   std::vector<std::unique_ptr<AidlVariableDeclaration>> variables_;
   std::vector<std::unique_ptr<AidlConstantDeclaration>> constants_;
   std::vector<std::unique_ptr<AidlMethod>> methods_;
@@ -1168,16 +1164,11 @@ class AidlInterface final : public AidlDefinedType {
 
 class AidlPackage : public AidlNode {
  public:
-  AidlPackage(const AidlLocation& location, const std::string& name, const Comments& comments)
-      : AidlNode(location, comments), name_(name) {}
+  AidlPackage(const AidlLocation& location, const Comments& comments)
+      : AidlNode(location, comments) {}
   virtual ~AidlPackage() = default;
   void TraverseChildren(std::function<void(const AidlNode&)>) const {}
   void DispatchVisit(AidlVisitor& v) const { v.Visit(*this); }
-
-  const std::string& GetName() const { return name_; }
-
- private:
-  std::string name_;
 };
 
 class AidlImport : public AidlNode {
@@ -1258,17 +1249,4 @@ inline void VisitTopDown(AidlVisitor& v, const AidlNode& node) {
     n.TraverseChildren(top_down);
   };
   top_down(node);
-}
-
-// Utility to make a visitor to visit AST tree in bottom-up order
-// Given:       foo
-//              / \
-//            bar baz
-// VisitBottomUp(v, foo) makes v visit bar -> baz -> foo.
-inline void VisitBottomUp(AidlVisitor& v, const AidlNode& node) {
-  std::function<void(const AidlNode&)> bottom_up = [&](const AidlNode& n) {
-    n.TraverseChildren(bottom_up);
-    n.DispatchVisit(v);
-  };
-  bottom_up(node);
 }

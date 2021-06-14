@@ -35,10 +35,9 @@
 #include "comments.h"
 #include "logging.h"
 #include "options.h"
-#include "parser.h"
-#include "preprocess.h"
 #include "tests/fake_io_delegate.h"
 
+using android::aidl::internals::parse_preprocessed_file;
 using android::aidl::test::FakeIoDelegate;
 using android::base::StringPrintf;
 using std::map;
@@ -676,7 +675,7 @@ TEST_F(AidlTest, ParsesPreprocessedFile) {
   string simple_content = "parcelable a.Foo;\ninterface b.IBar;";
   io_delegate_.SetFileContents("path", simple_content);
   EXPECT_FALSE(typenames_.ResolveTypename("a.Foo").is_resolved);
-  EXPECT_TRUE(Parser::Parse("path", io_delegate_, typenames_, /*is_preprocessed=*/true));
+  EXPECT_TRUE(parse_preprocessed_file(io_delegate_, "path", &typenames_));
   EXPECT_TRUE(typenames_.ResolveTypename("a.Foo").is_resolved);
   EXPECT_TRUE(typenames_.ResolveTypename("b.IBar").is_resolved);
 }
@@ -686,7 +685,7 @@ TEST_F(AidlTest, ParsesPreprocessedFileWithWhitespace) {
   io_delegate_.SetFileContents("path", simple_content);
 
   EXPECT_FALSE(typenames_.ResolveTypename("a.Foo").is_resolved);
-  EXPECT_TRUE(Parser::Parse("path", io_delegate_, typenames_, /*is_preprocessed=*/true));
+  EXPECT_TRUE(parse_preprocessed_file(io_delegate_, "path", &typenames_));
   EXPECT_TRUE(typenames_.ResolveTypename("a.Foo").is_resolved);
   EXPECT_TRUE(typenames_.ResolveTypename("b.IBar").is_resolved);
 }
@@ -738,101 +737,18 @@ TEST_F(AidlTest, WritePreprocessedFile) {
   io_delegate_.SetFileContents("one/IBar.aidl", "package one; import p.Outer;"
                                                 "interface IBar {}");
 
-  vector<string> args{"aidl", "--preprocess", "preprocessed",
-                      "-I.",  "p/Outer.aidl", "one/IBar.aidl"};
+  vector<string> args {
+    "aidl",
+    "--preprocess",
+    "preprocessed",
+    "p/Outer.aidl",
+    "one/IBar.aidl"};
   Options options = Options::From(args);
-  EXPECT_TRUE(::android::aidl::Preprocess(options, io_delegate_));
+  EXPECT_TRUE(::android::aidl::preprocess_aidl(options, io_delegate_));
 
-  std::map<std::string, std::string> expected = {{"preprocessed",
-                                                  "parcelable p.Outer.Inner;\n"
-                                                  "interface one.IBar {\n"
-                                                  "}\n"}};
-  EXPECT_THAT(io_delegate_.OutputFiles(), testing::Eq(expected));
-}
-
-TEST_F(AidlTest, PreprocessVariousThings) {
-  io_delegate_.SetFileContents("foo/bar/IFoo.aidl",
-                               "package foo.bar;\n"
-                               "interface IFoo {\n"
-                               "    int foo();\n"
-                               "    const int FOO = foo.bar.Bar.BAR + 1; // should be 44\n"
-                               "}\n");
-  io_delegate_.SetFileContents("foo/bar/Bar.aidl",
-                               "package foo.bar;\n"
-                               "parcelable Bar {\n"
-                               "    const int BAR = imported.Foo.FOO + 1; // should be 43\n"
-                               "    imported.Foo foo;\n"
-                               "}\n");
-  io_delegate_.SetFileContents("foo/bar/Gen.aidl",
-                               "package foo.bar;\n"
-                               "parcelable Gen<T> {\n"
-                               "}\n");
-  io_delegate_.SetFileContents("foo/bar/Enum.aidl",
-                               "package foo.bar;\n"
-                               "enum Enum {\n"
-                               "    FOO = 3, BAR = FOO + 3, // should be 3, 6\n"
-                               "}\n");
-  io_delegate_.SetFileContents("sub/imported/Foo.aidl",
-                               "package imported;\n"
-                               "parcelable Foo {\n"
-                               "    const int FOO = 42;\n"
-                               "}\n");
-
-  vector<string> args = {
-      "aidl",
-      "--preprocess",
-      "preprocessed",
-      "-Isub",
-      "-I.",
-      "foo/bar/IFoo.aidl",
-      "foo/bar/Bar.aidl",
-      "foo/bar/Gen.aidl",
-      "foo/bar/Enum.aidl",
-  };
-  ASSERT_TRUE(Preprocess(Options::From(args), io_delegate_));
-  std::string preprocessed =
-      "interface foo.bar.IFoo {\n"
-      "  const int FOO = 44;\n"
-      "}\n"
-      "parcelable foo.bar.Bar {\n"
-      "  const int BAR = 43;\n"
-      "}\n"
-      "parcelable foo.bar.Gen<T> {\n"
-      "}\n"
-      "enum foo.bar.Enum {\n"
-      "  FOO = 3,\n"
-      "  BAR = 6,\n"
-      "}\n";
-  std::map<std::string, std::string> expected = {{"preprocessed", preprocessed}};
-  EXPECT_THAT(io_delegate_.OutputFiles(), testing::Eq(expected));
-
-  // use preprocessed
-  io_delegate_.SetFileContents("a/Foo.aidl",
-                               "package a; parcelable Foo { const int y = foo.bar.Bar.BAR; }");
-  io_delegate_.SetFileContents("preprocessed", preprocessed);
-  CaptureStderr();
-  auto options = Options::From("aidl --lang java -o out a/Foo.aidl -ppreprocessed");
-  EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
-  EXPECT_EQ("", GetCapturedStderr());
-  string code;
-  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/Foo.java", &code));
-  EXPECT_THAT(code, testing::HasSubstr("public static final int y = 43;"));
-}
-
-TEST_F(AidlTest, PreprocessedFileCantDeclarePackage) {
-  string simple_content = "package xxx; parcelable a.Foo;";
-  io_delegate_.SetFileContents("path", simple_content);
-  CaptureStderr();
-  EXPECT_FALSE(Parser::Parse("path", io_delegate_, typenames_, /*is_preprocessed=*/true));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Preprocessed file can't declare package."));
-}
-
-TEST_F(AidlTest, RejectQualifiedTypeNameUnlessPreprocessed) {
-  string simple_content = "parcelable a.Foo {}";
-  io_delegate_.SetFileContents("path", simple_content);
-  CaptureStderr();
-  EXPECT_FALSE(Parser::Parse("path", io_delegate_, typenames_, /*is_preprocessed=*/false));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Type name can't be qualified"));
+  string output;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("preprocessed", &output));
+  EXPECT_EQ("parcelable p.Outer.Inner;\ninterface one.IBar;\n", output);
 }
 
 TEST_P(AidlTest, SupportDeprecated) {
@@ -1046,7 +962,7 @@ TEST_F(AidlTest, FailOnParcelable) {
 
 TEST_P(AidlTest, StructuredFailOnUnstructuredParcelable) {
   const string expected_stderr =
-      "ERROR: o/WhoKnowsWhat.aidl:1.22-35: o.WhoKnowsWhat is not structured, but this is a "
+      "ERROR: ./o/WhoKnowsWhat.aidl:1.22-35: o.WhoKnowsWhat is not structured, but this is a "
       "structured interface.\n";
   io_delegate_.SetFileContents("o/WhoKnowsWhat.aidl", "package o; parcelable WhoKnowsWhat;");
   import_paths_.emplace("");
@@ -1262,62 +1178,6 @@ TEST_P(AidlTest, UnderstandsNestedParcelables) {
   // C++ uses "::" instead of "." to refer to a inner class.
   AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.Outer.Inner", false, nullptr, {});
   EXPECT_EQ("::p::Outer::Inner", cpp::CppNameOf(nested_type, typenames_));
-}
-
-TEST_F(AidlTest, CppNameOf_GenericType) {
-  io_delegate_.SetFileContents("p/Wrapper.aidl", "package p; parcelable Wrapper<T> { T wrapped; }");
-  import_paths_.emplace("");
-  // Since we don't support compilation of Wrapper directly (due to "T" reference),
-  // prepare Holder so that Wrapper gets parsed into AidlTypenames
-  const string input_path = "p/Holder.aidl";
-  const string input =
-      "package p; import p.Wrapper; parcelable Holder {\n"
-      "  @nullable Wrapper<String> value;\n"
-      "}";
-
-  auto parse_result = Parse(input_path, input, typenames_, Options::Language::CPP);
-  EXPECT_NE(nullptr, parse_result);
-
-  auto type = [](std::string name, auto&&... type_params) -> std::unique_ptr<AidlTypeSpecifier> {
-    auto params = new std::vector<std::unique_ptr<AidlTypeSpecifier>>;
-    (..., params->emplace_back(std::move(type_params)));
-    return std::make_unique<AidlTypeSpecifier>(AIDL_LOCATION_HERE, name, false, params, Comments{});
-  };
-
-  auto set_nullable = [](std::unique_ptr<AidlTypeSpecifier>&& type) {
-    std::vector<AidlAnnotation> annotations;
-    annotations.emplace_back(*AidlAnnotation::Parse(AIDL_LOCATION_HERE, "nullable", nullptr, {}));
-    type->Annotate(std::move(annotations));
-    return std::move(type);
-  };
-
-  auto set_array = [](std::unique_ptr<AidlTypeSpecifier>&& type) {
-    (void)type->SetArray();
-    return std::move(type);
-  };
-
-  auto w = type("p.Wrapper", type("String"));
-  EXPECT_EQ("::p::Wrapper<::android::String16>", cpp::CppNameOf(*w, typenames_));
-
-  auto nullable_w = set_nullable(type("p.Wrapper", type("String")));
-  EXPECT_EQ("::std::optional<::p::Wrapper<::android::String16>>",
-            cpp::CppNameOf(*nullable_w, typenames_));
-
-  auto array_w = set_array(type("p.Wrapper", type("String")));
-  EXPECT_EQ("::std::vector<::p::Wrapper<::android::String16>>",
-            cpp::CppNameOf(*array_w, typenames_));
-
-  auto nullable_array_w = set_nullable(set_array(type("p.Wrapper", type("String"))));
-  EXPECT_EQ("::std::optional<::std::vector<::std::optional<::p::Wrapper<::android::String16>>>>",
-            cpp::CppNameOf(*nullable_array_w, typenames_));
-
-  auto list_w = type("List", type("p.Wrapper", type("String")));
-  EXPECT_EQ("::std::vector<::p::Wrapper<::android::String16>>",
-            cpp::CppNameOf(*list_w, typenames_));
-
-  auto nullable_list_w = set_nullable(type("List", type("p.Wrapper", type("String"))));
-  EXPECT_EQ("::std::optional<::std::vector<::std::optional<::p::Wrapper<::android::String16>>>>",
-            cpp::CppNameOf(*nullable_list_w, typenames_));
 }
 
 TEST_P(AidlTest, UnderstandsNativeParcelables) {
@@ -2100,17 +1960,6 @@ TEST_F(AidlTest, CheckApi_EnumFieldsWithDefaultValues) {
   EXPECT_TRUE(::android::aidl::check_api(options, io_delegate_));
 }
 
-TEST_F(AidlTest, CheckApi_EnumFieldsFromImported) {
-  Options options = Options::From("aidl --checkapi old new -I import");
-
-  io_delegate_.SetFileContents("old/p/Foo.aidl", "package p; parcelable Foo{ other.Enum e; }");
-  io_delegate_.SetFileContents("new/p/Foo.aidl",
-                               "package p; parcelable Foo{ other.Enum e = other.Enum.FOO; }");
-  io_delegate_.SetFileContents("import/other/Enum.aidl", "package other; enum Enum { FOO }");
-
-  EXPECT_TRUE(::android::aidl::check_api(options, io_delegate_));
-}
-
 TEST_F(AidlTest, CheckApiEqual_EnumFieldsWithDefaultValues) {
   Options options = Options::From("aidl --checkapi=equal old new");
   const string foo_definition = "package p; parcelable Foo{ p.Enum e = p.Enum.FOO; }";
@@ -2159,7 +2008,7 @@ TEST_F(AidlTestCompatibleChanges, NewMethod) {
                                "interface IFoo {"
                                "  void foo(int a);"
                                "  void bar();"
-                               "  void baz(in List<String> arg);"
+                               "  void baz(in List<IFoo> arg);"
                                "}");
   EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
 }
@@ -3841,20 +3690,6 @@ parcelable Foo {
             err);
 }
 
-TEST_F(AidlTest, EnumDefaultShouldBeEnumerators_RejectsNumericValue) {
-  io_delegate_.SetFileContents("a/p/Enum.aidl", "package p; enum Enum { FOO = 1, BAR = 2}");
-  io_delegate_.SetFileContents("a/p/Foo.aidl", R"(
-package p;
-import p.Enum;
-parcelable Foo {
-  Enum e = 1;
-})");
-  CaptureStderr();
-  auto options = Options::From("aidl -I a --lang java -o out -h out a/p/Foo.aidl");
-  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Invalid value (1) for enum p.Enum"));
-}
-
 TEST_P(AidlTest, DefaultWithEmptyArray) {
   io_delegate_.SetFileContents("a/p/Foo.aidl", "package p; parcelable Foo { p.Bar[] bars = {}; }");
   io_delegate_.SetFileContents("a/p/Bar.aidl", "package p; parcelable Bar { }");
@@ -3906,7 +3741,10 @@ TEST_F(AidlTest, RejectsCircularReferencingEnumerators) {
   auto options = Options::From("aidl -I a --lang ndk -o out -h out a/p/Foo.aidl");
   EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
   auto err = GetCapturedStderr();
-  EXPECT_EQ("ERROR: a/p/Foo.aidl:1.26-28: Found a circular reference: B -> A -> B\n", err);
+  EXPECT_EQ(
+      "ERROR: a/p/Foo.aidl:1.26-28: Found a circular reference: B -> A -> B\n"
+      "ERROR: a/p/Foo.aidl:1.29-31: Found a circular reference: A -> B -> A\n",
+      err);
 }
 
 TEST_F(AidlTest, RejectsCircularReferencingConsts) {
@@ -3927,27 +3765,6 @@ TEST_F(AidlTest, RecursiveReferences) {
   io_delegate_.SetFileContents("a/p/Baz.aidl", "package p; parcelable Baz { const int A = 1; }");
   CaptureStderr();
   auto options = Options::From("aidl -I a --lang ndk -o out -h out a/p/Foo.aidl");
-  EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
-  EXPECT_EQ("", GetCapturedStderr());
-}
-
-TEST_P(AidlTest, CircularReferenceWithFullyQualified) {
-  io_delegate_.SetFileContents("Foo.aidl", "enum Foo { A = Foo.A }");
-  auto options =
-      Options::From("aidl --lang " + to_string(GetLanguage()) + " -I . -o out -h out Foo.aidl");
-  const string err = "ERROR: Foo.aidl:1.15-21: Found a circular reference: Foo.A -> Foo.A\n";
-  CaptureStderr();
-  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
-  EXPECT_EQ(err, GetCapturedStderr());
-}
-
-TEST_P(AidlTest, ConstRefsCanPointToTheSameValue) {
-  io_delegate_.SetFileContents("Foo.aidl", "enum Foo { A = 0 }");
-  // this demonstrates the case that "Foo.A" const-ref node is visited twice by B and C.
-  io_delegate_.SetFileContents("Bar.aidl", "enum Bar { A = Foo.A, B = A, C = A }");
-  auto options =
-      Options::From("aidl --lang " + to_string(GetLanguage()) + " -I . -o out -h out Bar.aidl");
-  CaptureStderr();
   EXPECT_EQ(0, aidl::compile_aidl(options, io_delegate_));
   EXPECT_EQ("", GetCapturedStderr());
 }
@@ -4069,14 +3886,6 @@ TEST_F(AidlTest, SuppressWarningsIsNotForArgs) {
   CaptureStderr();
   EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
   EXPECT_THAT(GetCapturedStderr(), HasSubstr("@SuppressWarnings is not available"));
-}
-
-TEST_F(AidlTest, VoidCantBeUsedInMethodParameterType) {
-  io_delegate_.SetFileContents("p/IFoo.aidl", "interface IFoo{ void j(void n);}");
-  auto options = Options::From("aidl --lang=java -o out p/IFoo.aidl");
-  CaptureStderr();
-  EXPECT_EQ(1, aidl::compile_aidl(options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("'void' is an invalid type for the parameter 'n'"));
 }
 
 struct TypeParam {
