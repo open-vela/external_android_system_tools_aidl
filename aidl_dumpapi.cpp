@@ -139,13 +139,6 @@ void DumpVisitor::Visit(const AidlConstantDeclaration& c) {
   out << ";\n";
 }
 
-void DumpVisitor::Visit(const AidlEnumerator& e) {
-  out << e.GetName() << " = ";
-
-  e.GetValue()->DispatchVisit(*this);
-  out << ",\n";
-}
-
 void DumpVisitor::Visit(const AidlTypeSpecifier& t) {
   out << t.ToString();
 }

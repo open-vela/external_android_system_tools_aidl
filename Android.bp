@@ -100,11 +100,11 @@ cc_library_static {
         "generate_rust.cpp",
         "import_resolver.cpp",
         "io_delegate.cpp",
-        "line_reader.cpp",
         "location.cpp",
         "logging.cpp",
         "options.cpp",
         "parser.cpp",
+        "preprocess.cpp",
     ],
     yacc: {
         gen_location_hh: true,
@@ -190,6 +190,7 @@ cc_fuzz {
             "smoreland@google.com",
             "jiyong@google.com",
             "jeongik@google.com",
+            "jooyung@google.com",
         ],
     },
 
