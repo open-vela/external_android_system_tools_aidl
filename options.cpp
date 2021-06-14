@@ -79,8 +79,6 @@ string Options::GetUsage() const {
   sstr << "OPTION:" << endl
        << "  -I DIR, --include=DIR" << endl
        << "          Use DIR as a search path for import statements." << endl
-       << "  -m FILE, --import=FILE" << endl
-       << "          Import FILE directly without searching in the search paths." << endl
        << "  -p FILE, --preprocessed=FILE" << endl
        << "          Include FILE which is created by --preprocess." << endl
        << "  -d FILE, --dep=FILE" << endl
@@ -220,7 +218,6 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
 #endif
         {"apimapping", required_argument, 0, 'i'},
         {"include", required_argument, 0, 'I'},
-        {"import", required_argument, 0, 'm'},
         {"preprocessed", required_argument, 0, 'p'},
         {"dep", required_argument, 0, 'd'},
         {"out", required_argument, 0, 'o'},
@@ -237,7 +234,7 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         {0, 0, 0, 0},
     };
     const int c = getopt_long(argc, const_cast<char* const*>(argv.data()),
-                              "I:m:p:d:o:h:abtv:", long_options, nullptr);
+                              "I:p:d:o:h:abtv:", long_options, nullptr);
     if (c == -1) {
       // no more options
       break;
@@ -304,10 +301,6 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
 #endif
       case 'I': {
         import_dirs_.emplace(Trim(optarg));
-        break;
-      }
-      case 'm': {
-        import_files_.emplace(Trim(optarg));
         break;
       }
       case 'p':

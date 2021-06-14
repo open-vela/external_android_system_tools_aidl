@@ -25,13 +25,20 @@ int yyparse(Parser*);
 YY_BUFFER_STATE yy_scan_buffer(char*, size_t, void*);
 void yy_delete_buffer(YY_BUFFER_STATE, void*);
 
-std::unique_ptr<Parser> Parser::Parse(const std::string& filename,
-                                      const android::aidl::IoDelegate& io_delegate,
-                                      AidlTypenames& typenames) {
+const AidlDocument* Parser::Parse(const std::string& filename,
+                                  const android::aidl::IoDelegate& io_delegate,
+                                  AidlTypenames& typenames, bool is_preprocessed) {
+  auto clean_path = android::aidl::IoDelegate::CleanPath(filename);
+  // reuse pre-parsed document from typenames
+  for (auto& doc : typenames.AllDocuments()) {
+    if (doc->GetLocation().GetFile() == clean_path) {
+      return doc.get();
+    }
+  }
   // Make sure we can read the file first, before trashing previous state.
-  unique_ptr<string> raw_buffer = io_delegate.GetFileContents(filename);
+  unique_ptr<string> raw_buffer = io_delegate.GetFileContents(clean_path);
   if (raw_buffer == nullptr) {
-    AIDL_ERROR(filename) << "Error while opening file for parsing";
+    AIDL_ERROR(clean_path) << "Error while opening file for parsing";
     return nullptr;
   }
 
@@ -39,13 +46,18 @@ std::unique_ptr<Parser> Parser::Parse(const std::string& filename,
   // nulls at the end.
   raw_buffer->append(2u, '\0');
 
-  std::unique_ptr<Parser> parser(new Parser(filename, *raw_buffer, typenames));
+  Parser parser(clean_path, *raw_buffer, is_preprocessed);
 
-  if (yy::parser(parser.get()).parse() != 0 || parser->HasError()) {
+  if (yy::parser(&parser).parse() != 0 || parser.HasError()) {
     return nullptr;
   }
 
-  return parser;
+  // transfer ownership to AidlTypenames and return the raw pointer
+  const AidlDocument* result = parser.document_.get();
+  if (!typenames.AddDocument(std::move(parser.document_), is_preprocessed)) {
+    return nullptr;
+  }
+  return result;
 }
 
 void Parser::SetTypeParameters(AidlTypeSpecifier* type,
@@ -61,24 +73,46 @@ void Parser::SetTypeParameters(AidlTypeSpecifier* type,
   }
 }
 
-class ConstantReferenceResolver : public AidlVisitor {
+void Parser::CheckValidTypeName(const AidlToken& token, const AidlLocation& loc) {
+  if (!is_preprocessed_ && token.GetText().find('.') != std::string::npos) {
+    AIDL_ERROR(loc) << "Type name can't be qualified. Use `package`.";
+    AddError();
+  }
+}
+
+void Parser::SetPackage(const AidlPackage& package) {
+  if (is_preprocessed_) {
+    AIDL_ERROR(package) << "Preprocessed file can't declare package.";
+    AddError();
+  }
+  package_ = package.GetName();
+}
+
+class ReferenceResolver : public AidlVisitor {
  public:
-  ConstantReferenceResolver(const AidlDefinedType* scope, const AidlTypenames& typenames,
-                            TypeResolver& resolver, bool* success)
-      : scope_(scope), typenames_(typenames), resolver_(resolver), success_(success) {}
+  ReferenceResolver(const AidlDefinedType* scope, TypeResolver& resolver, bool* success)
+      : scope_(scope), resolver_(resolver), success_(success) {}
+
+  void Visit(const AidlTypeSpecifier& t) override {
+    // We're visiting the same node again. This can happen when two constant references
+    // point to an ancestor of this node.
+    if (t.IsResolved()) {
+      return;
+    }
+
+    AidlTypeSpecifier& type = const_cast<AidlTypeSpecifier&>(t);
+    if (!resolver_(scope_, &type)) {
+      AIDL_ERROR(type) << "Failed to resolve '" << type.GetUnresolvedName() << "'";
+      *success_ = false;
+    }
+  }
+
   void Visit(const AidlConstantReference& v) override {
     if (IsCircularReference(&v)) {
       *success_ = false;
       return;
     }
 
-    if (v.GetRefType() && !v.GetRefType()->IsResolved()) {
-      if (!resolver_(typenames_.GetDocumentFor(scope_), v.GetRefType().get())) {
-        AIDL_ERROR(v.GetRefType()) << "Unknown type '" << v.GetRefType()->GetName() << "'";
-        *success_ = false;
-        return;
-      }
-    }
     const AidlConstantValue* resolved = v.Resolve(scope_);
     if (!resolved) {
       AIDL_ERROR(v) << "Unknown reference '" << v.Literal() << "'";
@@ -86,9 +120,13 @@ class ConstantReferenceResolver : public AidlVisitor {
       return;
     }
 
+    // On error, skip recursive visiting to avoid redundant messages
+    if (!*success_) {
+      return;
+    }
     // resolve recursive references
     Push(&v);
-    VisitTopDown(*this, *resolved);
+    VisitBottomUp(*this, *resolved);
     Pop();
   }
 
@@ -127,34 +165,25 @@ class ConstantReferenceResolver : public AidlVisitor {
   }
 
   const AidlDefinedType* scope_;
-  const AidlTypenames& typenames_;
   TypeResolver& resolver_;
   bool* success_;
   std::vector<StackElem> stack_ = {};
 };
 
-bool Parser::Resolve(TypeResolver& type_resolver) {
+// Resolve "unresolved" types in the "main" document.
+bool ResolveReferences(const AidlDocument& document, TypeResolver& type_resolver) {
   bool success = true;
-  for (AidlTypeSpecifier* typespec : unresolved_typespecs_) {
-    if (!type_resolver(document_, typespec)) {
-      AIDL_ERROR(typespec) << "Failed to resolve '" << typespec->GetUnresolvedName() << "'";
-      success = false;
-      // don't stop to show more errors if any
-    }
-  }
 
-  // resolve "field references" as well.
-  for (const auto& type : document_->DefinedTypes()) {
-    ConstantReferenceResolver ref_resolver{type.get(), typenames_, type_resolver, &success};
-    VisitTopDown(ref_resolver, *type);
+  for (const auto& type : document.DefinedTypes()) {
+    ReferenceResolver ref_resolver{type.get(), type_resolver, &success};
+    VisitBottomUp(ref_resolver, *type);
   }
 
   return success;
 }
 
-Parser::Parser(const std::string& filename, std::string& raw_buffer,
-               android::aidl::AidlTypenames& typenames)
-    : filename_(filename), typenames_(typenames) {
+Parser::Parser(const std::string& filename, std::string& raw_buffer, bool is_preprocessed)
+    : filename_(filename), is_preprocessed_(is_preprocessed) {
   yylex_init(&scanner_);
   buffer_ = yy_scan_buffer(&raw_buffer[0], raw_buffer.length(), scanner_);
 }
