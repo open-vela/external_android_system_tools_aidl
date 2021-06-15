@@ -18,7 +18,6 @@
 #include "aidl_language.h"
 #include "logging.h"
 
-#include <android-base/file.h>
 #include <android-base/strings.h>
 
 #include <map>
@@ -104,20 +103,20 @@ static bool HasValidNameComponents(const AidlDefinedType& defined) {
 }
 
 bool AidlTypenames::IsIgnorableImport(const string& import) const {
-  if (IsBuiltinTypename(import)) return true;
-
   static set<string> ignore_import = {
       "android.os.IInterface",   "android.os.IBinder", "android.os.Parcelable", "android.os.Parcel",
       "android.content.Context", "java.lang.String",   "java.lang.CharSequence"};
   // these known built-in types don't need to be imported
-  if (ignore_import.find(import) != ignore_import.end()) return true;
-
-  if (TryGetDefinedType(import)) return true;
-
-  return false;
+  const bool in_ignore_import = ignore_import.find(import) != ignore_import.end();
+  // an already defined type doesn't need to be imported again unless it is from
+  // the preprocessed file
+  auto ret = TryGetDefinedTypeImpl(import);
+  const bool defined_type_not_from_preprocessed = ret.type != nullptr && !ret.from_preprocessed;
+  return in_ignore_import || defined_type_not_from_preprocessed;
 }
 
 bool AidlTypenames::AddDocument(std::unique_ptr<AidlDocument> doc, bool is_preprocessed) {
+  auto& types = is_preprocessed ? preprocessed_types_ : defined_types_;
   for (const auto& type : doc->DefinedTypes()) {
     // ParcelFileDescriptor is treated as a built-in type, but it's also in the framework.aidl.
     // So aidl should ignore built-in types in framework.aidl to prevent duplication.
@@ -126,8 +125,8 @@ bool AidlTypenames::AddDocument(std::unique_ptr<AidlDocument> doc, bool is_prepr
       continue;
     }
 
-    if (auto prev_definition = defined_types_.find(type->GetCanonicalName());
-        prev_definition != defined_types_.end()) {
+    if (auto prev_definition = types.find(type->GetCanonicalName());
+        prev_definition != types.end()) {
       AIDL_ERROR(type) << "redefinition:" << type->GetCanonicalName() << " is defined "
                        << prev_definition->second->GetLocation();
       return false;
@@ -136,19 +135,9 @@ bool AidlTypenames::AddDocument(std::unique_ptr<AidlDocument> doc, bool is_prepr
       return false;
     }
   }
-  // transfer ownership of document
   documents_.push_back(std::move(doc));
-  // populate global 'type' namespace with fully-qualified names
   for (const auto& type : documents_.back()->DefinedTypes()) {
-    defined_types_.emplace(type->GetCanonicalName(), type.get());
-  }
-  if (is_preprocessed) {
-    // preprocessed unstructured parcelable types can be referenced without qualification
-    for (const auto& type : documents_.back()->DefinedTypes()) {
-      if (type->AsUnstructuredParcelable()) {
-        defined_types_.emplace(type->GetName(), type.get());
-      }
-    }
+    types.emplace(type->GetCanonicalName(), type.get());
   }
   return true;
 }
@@ -189,11 +178,37 @@ bool AidlTypenames::IsParcelable(const string& type_name) const {
 }
 
 const AidlDefinedType* AidlTypenames::TryGetDefinedType(const string& type_name) const {
+  return TryGetDefinedTypeImpl(type_name).type;
+}
+
+AidlTypenames::DefinedImplResult AidlTypenames::TryGetDefinedTypeImpl(
+    const string& type_name) const {
+  // Do the exact match first.
   auto found_def = defined_types_.find(type_name);
   if (found_def != defined_types_.end()) {
-    return found_def->second;
+    return DefinedImplResult(found_def->second, false);
   }
-  return nullptr;
+
+  auto found_prep = preprocessed_types_.find(type_name);
+  if (found_prep != preprocessed_types_.end()) {
+    return DefinedImplResult(found_prep->second, true);
+  }
+
+  // Then match with the class name. Defined types has higher priority than
+  // types from the preprocessed file.
+  for (auto it = defined_types_.begin(); it != defined_types_.end(); it++) {
+    if (it->second->GetName() == type_name) {
+      return DefinedImplResult(it->second, false);
+    }
+  }
+
+  for (auto it = preprocessed_types_.begin(); it != preprocessed_types_.end(); it++) {
+    if (it->second->GetName() == type_name) {
+      return DefinedImplResult(it->second, true);
+    }
+  }
+
+  return DefinedImplResult(nullptr, false);
 }
 
 std::vector<AidlDefinedType*> AidlTypenames::AllDefinedTypes() const {
@@ -345,6 +360,9 @@ const AidlParcelable* AidlTypenames::GetParcelable(const AidlTypeSpecifier& type
 
 void AidlTypenames::IterateTypes(const std::function<void(const AidlDefinedType&)>& body) const {
   for (const auto& kv : defined_types_) {
+    body(*kv.second);
+  }
+  for (const auto& kv : preprocessed_types_) {
     body(*kv.second);
   }
 }
