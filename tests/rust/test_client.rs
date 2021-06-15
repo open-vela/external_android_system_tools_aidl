@@ -29,7 +29,7 @@ use aidl_test_interface::aidl::android::aidl::tests::unions::{
 };
 use aidl_test_interface::binder;
 use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::{
-    IFooInterface, IFooInterface::BpFooInterface, BazUnion::BazUnion,
+    IFooInterface, IFooInterface::BpFooInterface, BazUnion::BazUnion, Foo::Foo,
 };
 use std::fs::File;
 use std::io::{Read, Write};
@@ -674,10 +674,12 @@ fn test_read_data_correctly_after_parcelable_with_new_field() {
             .expect("did not get binder service");
 
     let in_foo = Default::default();
-    let mut inout_foo = Default::default();
-    let mut out_foo = Default::default();
+    let mut inout_foo = Foo { intDefault42: 0 };
+    let mut out_foo = Foo { intDefault42: 0 };
     let ret = service.ignoreParcelablesAndRepeatInt(&in_foo, &mut inout_foo, &mut out_foo, 43);
     assert_eq!(ret, Ok(43));
+    assert_eq!(inout_foo.intDefault42, 0);
+    assert_eq!(out_foo.intDefault42, 0);
 }
 
 fn test_renamed_interface<F>(f: F)
