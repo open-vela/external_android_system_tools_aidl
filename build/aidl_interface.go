@@ -77,6 +77,10 @@ func createAidlInterfaceMutator(mctx android.TopDownMutatorContext) {
 }
 
 func checkUnstableModuleMutator(mctx android.BottomUpMutatorContext) {
+	// If it is an aidl interface, we don't need to check its dependencies.
+	if isAidlModule(mctx.ModuleName(), mctx.Config()) {
+		return
+	}
 	mctx.VisitDirectDepsIf(func(m android.Module) bool {
 		return android.InList(m.Name(), *unstableModules(mctx.Config()))
 	}, func(m android.Module) {
@@ -93,6 +97,15 @@ func checkUnstableModuleMutator(mctx android.BottomUpMutatorContext) {
 	})
 }
 
+func isAidlModule(moduleName string, config android.Config) bool {
+	for _, i := range *aidlInterfaces(config) {
+		if android.InList(moduleName, i.internalModuleNames) {
+			return true
+		}
+	}
+	return false
+}
+
 func recordVersions(mctx android.BottomUpMutatorContext) {
 	switch mctx.Module().(type) {
 	case *java.Library:
@@ -103,13 +116,7 @@ func recordVersions(mctx android.BottomUpMutatorContext) {
 		return
 	}
 
-	isAidlModule := false // whether this module is from an AIDL interface
-	for _, i := range *aidlInterfaces(mctx.Config()) {
-		if android.InList(mctx.ModuleName(), i.internalModuleNames) {
-			isAidlModule = true
-			break
-		}
-	}
+	isAidlModule := isAidlModule(mctx.ModuleName(), mctx.Config())
 
 	// First, gather all the AIDL interfaces modules that are directly or indirectly
 	// depended on by this module
