@@ -96,120 +96,110 @@ impl binder::parcel::SerializeOption for ParcelableForToString {
     })
   }
 }
-impl binder::parcel::Deserialize for ParcelableForToString {
-  fn deserialize(parcel: &binder::parcel::Parcel) -> binder::Result<Self> {
-    <Self as binder::parcel::DeserializeOption>::deserialize_option(parcel)
-       .transpose()
-       .unwrap_or(Err(binder::StatusCode::UNEXPECTED_NULL))
-  }
-}
-impl binder::parcel::DeserializeArray for ParcelableForToString {}
-impl binder::parcel::DeserializeOption for ParcelableForToString {
-  fn deserialize_option(parcel: &binder::parcel::Parcel) -> binder::Result<Option<Self>> {
-    let status: i32 = parcel.read()?;
-    if status == 0 { return Ok(None); }
+binder::impl_deserialize_for_parcelable!(ParcelableForToString);
+impl ParcelableForToString {
+  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
     let start_pos = parcel.get_data_position();
     let parcelable_size: i32 = parcel.read()?;
     if parcelable_size < 0 { return Err(binder::StatusCode::BAD_VALUE); }
     if start_pos.checked_add(parcelable_size).is_none() {
       return Err(binder::StatusCode::BAD_VALUE);
     }
-    let mut result = Self::default();
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.intValue = parcel.read()?;
+    self.intValue = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.intArray = parcel.read()?;
+    self.intArray = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.longValue = parcel.read()?;
+    self.longValue = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.longArray = parcel.read()?;
+    self.longArray = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.doubleValue = parcel.read()?;
+    self.doubleValue = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.doubleArray = parcel.read()?;
+    self.doubleArray = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.floatValue = parcel.read()?;
+    self.floatValue = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.floatArray = parcel.read()?;
+    self.floatArray = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.byteValue = parcel.read()?;
+    self.byteValue = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.byteArray = parcel.read()?;
+    self.byteArray = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.booleanValue = parcel.read()?;
+    self.booleanValue = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.booleanArray = parcel.read()?;
+    self.booleanArray = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.stringValue = parcel.read()?;
+    self.stringValue = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.stringArray = parcel.read()?;
+    self.stringArray = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.stringList = parcel.read()?;
+    self.stringList = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.parcelableValue = parcel.read()?;
+    self.parcelableValue = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.parcelableArray = parcel.read()?;
+    self.parcelableArray = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.enumValue = parcel.read()?;
+    self.enumValue = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.enumArray = parcel.read()?;
+    self.enumArray = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.nullArray = parcel.read()?;
+    self.nullArray = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.nullList = parcel.read()?;
+    self.nullList = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.parcelableGeneric = parcel.read()?;
+    self.parcelableGeneric = parcel.read()?;
     if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(Some(result));
+      return Ok(());
     }
-    result.unionValue = parcel.read()?;
+    self.unionValue = parcel.read()?;
     unsafe {
       parcel.set_data_position(start_pos + parcelable_size)?;
     }
-    Ok(Some(result))
+    Ok(())
   }
 }
