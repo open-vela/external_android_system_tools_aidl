@@ -36,20 +36,27 @@ impl binder::parcel::SerializeOption for UnionWithFd {
     }
   }
 }
-binder::impl_deserialize_for_parcelable!(UnionWithFd);
-impl UnionWithFd {
-  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+impl binder::parcel::Deserialize for UnionWithFd {
+  fn deserialize(parcel: &binder::parcel::Parcel) -> binder::Result<Self> {
+    <Self as binder::parcel::DeserializeOption>::deserialize_option(parcel)
+       .transpose()
+       .unwrap_or(Err(binder::StatusCode::UNEXPECTED_NULL))
+  }
+}
+impl binder::parcel::DeserializeArray for UnionWithFd {}
+impl binder::parcel::DeserializeOption for UnionWithFd {
+  fn deserialize_option(parcel: &binder::parcel::Parcel) -> binder::Result<Option<Self>> {
+    let status: i32 = parcel.read()?;
+    if status == 0 { return Ok(None); }
     let tag: i32 = parcel.read()?;
     match tag {
       0 => {
         let value: i32 = parcel.read()?;
-        *self = Self::Num(value);
-        Ok(())
+        Ok(Some(Self::Num(value)))
       }
       1 => {
         let value: Option<binder::parcel::ParcelFileDescriptor> = Some(parcel.read()?);
-        *self = Self::Pfd(value);
-        Ok(())
+        Ok(Some(Self::Pfd(value)))
       }
       _ => {
         Err(binder::StatusCode::BAD_VALUE)
