@@ -50,6 +50,8 @@ ImportResolver::ImportResolver(const IoDelegate& io_delegate, const string& inpu
   }
 }
 
+// TODO(b/182508839) handle the case when canonical_type represents a nest type
+// For example, "com.foo.Foo.Bar" can result in ./com/foo/Foo.aidl.
 string ImportResolver::FindImportFile(const string& canonical_name) const {
   // Convert the canonical name to a relative file path.
   string relative_path = canonical_name;
