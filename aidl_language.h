@@ -121,20 +121,6 @@ class AidlVisitor {
   virtual void Visit(const AidlPackage&) {}
 };
 
-class AidlScope {
- public:
-  virtual ~AidlScope() = default;
-  virtual std::string ResolveName(const std::string& name) const = 0;
-  void SetEnclosingScope(const AidlScope* enclosing) {
-    AIDL_FATAL_IF(enclosing_, AIDL_LOCATION_HERE) << "SetEnclosingScope can be set only once.";
-    enclosing_ = enclosing;
-  }
-  const AidlScope* GetEnclosingScope() const { return enclosing_; }
-
- private:
-  const AidlScope* enclosing_ = nullptr;
-};
-
 // Anything that is locatable in a .aidl file.
 class AidlNode {
  public:
@@ -416,7 +402,7 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
 
   // Resolve the base type name to a fully-qualified name. Return false if the
   // resolution fails.
-  bool Resolve(const AidlTypenames& typenames, const AidlScope* scope);
+  bool Resolve(const AidlTypenames& typenames);
 
   bool CheckValid(const AidlTypenames& typenames) const;
   bool LanguageSpecificCheckValid(const AidlTypenames& typenames, Options::Language lang) const;
@@ -904,7 +890,7 @@ class AidlMethod : public AidlMember {
 
 // AidlDefinedType represents either an interface, parcelable, or enum that is
 // defined in the source file.
-class AidlDefinedType : public AidlAnnotatable, public AidlScope {
+class AidlDefinedType : public AidlAnnotatable {
  public:
   AidlDefinedType(const AidlLocation& location, const std::string& name, const Comments& comments,
                   const std::string& package, std::vector<std::unique_ptr<AidlMember>>* members);
@@ -917,8 +903,6 @@ class AidlDefinedType : public AidlAnnotatable, public AidlScope {
   AidlDefinedType& operator=(AidlDefinedType&&) = delete;
 
   const std::string& GetName() const { return name_; };
-
-  std::string ResolveName(const std::string& name) const override;
 
   /* dot joined package, example: "android.package.foo" */
   std::string GetPackage() const { return package_; }
@@ -1209,7 +1193,6 @@ class AidlImport : public AidlNode {
   AidlImport& operator=(AidlImport&&) = delete;
 
   const std::string& GetNeededClass() const { return needed_class_; }
-  std::string SimpleName() const { return needed_class_.substr(needed_class_.rfind('.') + 1); }
   void TraverseChildren(std::function<void(const AidlNode&)>) const {}
   void DispatchVisit(AidlVisitor& v) const { v.Visit(*this); }
 
@@ -1218,11 +1201,14 @@ class AidlImport : public AidlNode {
 };
 
 // AidlDocument models an AIDL file
-class AidlDocument : public AidlCommentable, public AidlScope {
+class AidlDocument : public AidlCommentable {
  public:
   AidlDocument(const AidlLocation& location, const Comments& comments,
                std::vector<std::unique_ptr<AidlImport>> imports,
-               std::vector<std::unique_ptr<AidlDefinedType>> defined_types);
+               std::vector<std::unique_ptr<AidlDefinedType>> defined_types)
+      : AidlCommentable(location, comments),
+        imports_(std::move(imports)),
+        defined_types_(std::move(defined_types)) {}
   ~AidlDocument() = default;
 
   // non-copyable, non-movable
@@ -1231,7 +1217,7 @@ class AidlDocument : public AidlCommentable, public AidlScope {
   AidlDocument& operator=(const AidlDocument&) = delete;
   AidlDocument& operator=(AidlDocument&&) = delete;
 
-  std::string ResolveName(const std::string& name) const override;
+  std::optional<std::string> ResolveName(const std::string& unresolved_type) const;
   const std::vector<std::unique_ptr<AidlImport>>& Imports() const { return imports_; }
   const std::vector<std::unique_ptr<AidlDefinedType>>& DefinedTypes() const {
     return defined_types_;
