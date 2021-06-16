@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum UnionInUnion {
   First(crate::mangled::_7_android_4_aidl_5_tests_6_unions_9_EnumUnion),
