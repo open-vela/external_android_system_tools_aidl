@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct StructuredParcelable {
   pub shouldContainThreeFs: Vec<i32>,
@@ -192,227 +193,167 @@ impl binder::parcel::SerializeOption for StructuredParcelable {
 binder::impl_deserialize_for_parcelable!(StructuredParcelable);
 impl StructuredParcelable {
   fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
-    let start_pos = parcel.get_data_position();
-    let parcelable_size: i32 = parcel.read()?;
-    if parcelable_size < 0 { return Err(binder::StatusCode::BAD_VALUE); }
-    if start_pos.checked_add(parcelable_size).is_none() {
-      return Err(binder::StatusCode::BAD_VALUE);
-    }
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.shouldContainThreeFs = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.f = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.shouldBeJerry = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.shouldBeByteBar = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.shouldBeIntBar = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.shouldBeLongBar = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.shouldContainTwoByteFoos = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.shouldContainTwoIntFoos = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.shouldContainTwoLongFoos = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.stringDefaultsToFoo = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.byteDefaultsToFour = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.intDefaultsToFive = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.longDefaultsToNegativeSeven = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.booleanDefaultsToTrue = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.charDefaultsToC = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.floatDefaultsToPi = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.doubleWithDefault = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.arrayDefaultsTo123 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.arrayDefaultsToEmpty = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.boolDefault = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.byteDefault = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.intDefault = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.longDefault = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.floatDefault = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.doubleDefault = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.checkDoubleFromFloat = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.checkStringArray1 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.checkStringArray2 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.int32_min = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.int32_max = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.int64_max = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.hexInt32_neg_1 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.ibinder = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.int32_1 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.int64_1 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.hexInt32_pos_1 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.hexInt64_pos_1 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.const_exprs_1 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.const_exprs_2 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.const_exprs_3 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.const_exprs_4 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.const_exprs_5 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.const_exprs_6 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.const_exprs_7 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.const_exprs_8 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.const_exprs_9 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.const_exprs_10 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.addString1 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.addString2 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.shouldSetBit0AndBit2 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.u = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.shouldBeConstS1 = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.defaultWithFoo = parcel.read()?;
-    unsafe {
-      parcel.set_data_position(start_pos + parcelable_size)?;
-    }
-    Ok(())
+    parcel.sized_read(|subparcel| {
+      if subparcel.has_more_data() {
+        self.shouldContainThreeFs = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.f = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.shouldBeJerry = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.shouldBeByteBar = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.shouldBeIntBar = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.shouldBeLongBar = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.shouldContainTwoByteFoos = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.shouldContainTwoIntFoos = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.shouldContainTwoLongFoos = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.stringDefaultsToFoo = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.byteDefaultsToFour = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.intDefaultsToFive = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.longDefaultsToNegativeSeven = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.booleanDefaultsToTrue = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.charDefaultsToC = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.floatDefaultsToPi = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.doubleWithDefault = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.arrayDefaultsTo123 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.arrayDefaultsToEmpty = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.boolDefault = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.byteDefault = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.intDefault = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.longDefault = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.floatDefault = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.doubleDefault = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.checkDoubleFromFloat = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.checkStringArray1 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.checkStringArray2 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.int32_min = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.int32_max = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.int64_max = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.hexInt32_neg_1 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.ibinder = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.int32_1 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.int64_1 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.hexInt32_pos_1 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.hexInt64_pos_1 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.const_exprs_1 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.const_exprs_2 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.const_exprs_3 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.const_exprs_4 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.const_exprs_5 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.const_exprs_6 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.const_exprs_7 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.const_exprs_8 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.const_exprs_9 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.const_exprs_10 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.addString1 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.addString2 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.shouldSetBit0AndBit2 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.u = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.shouldBeConstS1 = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.defaultWithFoo = subparcel.read()?;
+      }
+      Ok(())
+    })
   }
 }
