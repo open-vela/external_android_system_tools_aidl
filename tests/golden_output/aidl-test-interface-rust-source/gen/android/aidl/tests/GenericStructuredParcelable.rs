@@ -1,4 +1,3 @@
-#![forbid(unsafe_code)]
 #[derive(Debug)]
 pub struct GenericStructuredParcelable {
   pub a: i32,

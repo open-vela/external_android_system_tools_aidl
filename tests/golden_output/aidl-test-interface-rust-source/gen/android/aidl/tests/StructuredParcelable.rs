@@ -1,4 +1,3 @@
-#![forbid(unsafe_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct StructuredParcelable {
   pub shouldContainThreeFs: Vec<i32>,
