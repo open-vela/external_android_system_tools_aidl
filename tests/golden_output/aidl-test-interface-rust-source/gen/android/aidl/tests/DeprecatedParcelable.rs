@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 #[derive(Debug)]
 #[deprecated = "test"]
 pub struct DeprecatedParcelable {
