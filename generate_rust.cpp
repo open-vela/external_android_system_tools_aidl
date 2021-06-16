@@ -353,6 +353,10 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
                            const Options& options) {
   CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
 
+  // Forbid the use of unsafe in auto-generated code.
+  // Unsafe code should only be allowed in libbinder_rs.
+  *code_writer << "#![forbid(unsafe_code)]\n";
+
   *code_writer << "#![allow(non_upper_case_globals)]\n";
   *code_writer << "#![allow(non_snake_case)]\n";
   // Import IBinderInternal for transact()
@@ -723,6 +727,10 @@ bool GenerateRustParcel(const string& filename, const ParcelableType* parcel,
                         const AidlTypenames& typenames, const IoDelegate& io_delegate) {
   CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
 
+  // Forbid the use of unsafe in auto-generated code.
+  // Unsafe code should only be allowed in libbinder_rs.
+  *code_writer << "#![forbid(unsafe_code)]\n";
+
   // Debug is always derived because all Rust AIDL types implement it
   // ParcelFileDescriptor doesn't support any of the others because
   // it's a newtype over std::fs::File which only implements Debug
@@ -749,6 +757,10 @@ bool GenerateRustParcel(const string& filename, const ParcelableType* parcel,
 bool GenerateRustEnumDeclaration(const string& filename, const AidlEnumDeclaration* enum_decl,
                                  const AidlTypenames& typenames, const IoDelegate& io_delegate) {
   CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
+
+  // Forbid the use of unsafe in auto-generated code.
+  // Unsafe code should only be allowed in libbinder_rs.
+  *code_writer << "#![forbid(unsafe_code)]\n";
 
   const auto& aidl_backing_type = enum_decl->GetBackingType();
   auto backing_type = RustNameOf(aidl_backing_type, typenames, StorageMode::VALUE);
