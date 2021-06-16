@@ -1193,6 +1193,7 @@ class AidlImport : public AidlNode {
   AidlImport& operator=(AidlImport&&) = delete;
 
   const std::string& GetNeededClass() const { return needed_class_; }
+  std::string SimpleName() const { return needed_class_.substr(needed_class_.rfind('.') + 1); }
   void TraverseChildren(std::function<void(const AidlNode&)>) const {}
   void DispatchVisit(AidlVisitor& v) const { v.Visit(*this); }
 
