@@ -1,4 +1,3 @@
-#![forbid(unsafe_code)]
 #[derive(Debug)]
 pub struct OtherParcelableForToString {
   pub field: String,
