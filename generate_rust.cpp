@@ -353,10 +353,6 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
                            const Options& options) {
   CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
 
-  // Forbid the use of unsafe in auto-generated code.
-  // Unsafe code should only be allowed in libbinder_rs.
-  *code_writer << "#![forbid(unsafe_code)]\n";
-
   *code_writer << "#![allow(non_upper_case_globals)]\n";
   *code_writer << "#![allow(non_snake_case)]\n";
   // Import IBinderInternal for transact()
@@ -562,23 +558,36 @@ void GenerateParcelSerializeBody(CodeWriter& out, const AidlStructuredParcelable
 
 void GenerateParcelDeserializeBody(CodeWriter& out, const AidlStructuredParcelable* parcel,
                                    const AidlTypenames& typenames) {
-  out << "parcel.sized_read(|subparcel| {\n";
-  out.Indent();
+  out << "let start_pos = parcel.get_data_position();\n";
+  out << "let parcelable_size: i32 = parcel.read()?;\n";
+  out << "if parcelable_size < 0 { return Err(binder::StatusCode::BAD_VALUE); }\n";
+  out << "if start_pos.checked_add(parcelable_size).is_none() {\n";
+  out << "  return Err(binder::StatusCode::BAD_VALUE);\n";
+  out << "}\n";
+
+  // Pre-emit the common field prologue code, shared between all fields:
+  ostringstream prologue;
+  prologue << "if (parcel.get_data_position() - start_pos) == parcelable_size {\n";
+  // We assume the lhs can never be > parcelable_size, because then the read
+  // immediately preceding this check would have returned NOT_ENOUGH_DATA
+  prologue << "  return Ok(());\n";
+  prologue << "}\n";
+  string prologue_str = prologue.str();
 
   for (const auto& variable : parcel->GetFields()) {
-    out << "if subparcel.has_more_data() {\n";
-    out.Indent();
+    out << prologue_str;
     if (!TypeHasDefault(variable->GetType(), typenames)) {
-      out << "self." << variable->GetName() << " = Some(subparcel.read()?);\n";
+      out << "self." << variable->GetName() << " = Some(parcel.read()?);\n";
     } else {
-      out << "self." << variable->GetName() << " = subparcel.read()?;\n";
+      out << "self." << variable->GetName() << " = parcel.read()?;\n";
     }
-    out.Dedent();
-    out << "}\n";
   }
+  // Now we read all fields.
+  // Skip remaining data in case we're reading from a newer version
+  out << "unsafe {\n";
+  out << "  parcel.set_data_position(start_pos + parcelable_size)?;\n";
+  out << "}\n";
   out << "Ok(())\n";
-  out.Dedent();
-  out << "})\n";
 }
 
 void GenerateParcelBody(CodeWriter& out, const AidlUnionDecl* parcel,
@@ -727,10 +736,6 @@ bool GenerateRustParcel(const string& filename, const ParcelableType* parcel,
                         const AidlTypenames& typenames, const IoDelegate& io_delegate) {
   CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
 
-  // Forbid the use of unsafe in auto-generated code.
-  // Unsafe code should only be allowed in libbinder_rs.
-  *code_writer << "#![forbid(unsafe_code)]\n";
-
   // Debug is always derived because all Rust AIDL types implement it
   // ParcelFileDescriptor doesn't support any of the others because
   // it's a newtype over std::fs::File which only implements Debug
@@ -757,10 +762,6 @@ bool GenerateRustParcel(const string& filename, const ParcelableType* parcel,
 bool GenerateRustEnumDeclaration(const string& filename, const AidlEnumDeclaration* enum_decl,
                                  const AidlTypenames& typenames, const IoDelegate& io_delegate) {
   CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
-
-  // Forbid the use of unsafe in auto-generated code.
-  // Unsafe code should only be allowed in libbinder_rs.
-  *code_writer << "#![forbid(unsafe_code)]\n";
 
   const auto& aidl_backing_type = enum_decl->GetBackingType();
   auto backing_type = RustNameOf(aidl_backing_type, typenames, StorageMode::VALUE);
