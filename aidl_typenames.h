@@ -88,21 +88,13 @@ class AidlTypenames final {
   // Returns the AidlParcelable of the given type, or nullptr if the type
   // is not an AidlParcelable;
   const AidlParcelable* GetParcelable(const AidlTypeSpecifier& type) const;
-  // Iterates over all defined and then preprocessed types
+  // Iterates over all defined types
   void IterateTypes(const std::function<void(const AidlDefinedType&)>& body) const;
   // Fixes AST after type/ref resolution before validation
   bool Autofill() const;
 
  private:
-  struct DefinedImplResult {
-    DefinedImplResult(const AidlDefinedType* type, const bool from_preprocessed)
-        : type(type), from_preprocessed(from_preprocessed) {}
-    const AidlDefinedType* type;
-    const bool from_preprocessed;
-  };
-  DefinedImplResult TryGetDefinedTypeImpl(const string& type_name) const;
   map<string, AidlDefinedType*> defined_types_;
-  map<string, AidlDefinedType*> preprocessed_types_;
   std::vector<std::unique_ptr<AidlDocument>> documents_;
 };
 
