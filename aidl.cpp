@@ -393,12 +393,8 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
 
   // Find files to import and parse them
   vector<string> import_paths;
-  ImportResolver import_resolver{io_delegate, input_file_name, options.ImportDirs(),
-                                 options.InputFiles()};
+  ImportResolver import_resolver{io_delegate, input_file_name, options.ImportDirs()};
   for (const auto& import : document->Imports()) {
-    if (AidlTypenames::IsBuiltinTypename(import->GetNeededClass())) {
-      continue;
-    }
     if (typenames->IsIgnorableImport(import->GetNeededClass())) {
       // There are places in the Android tree where an import doesn't resolve,
       // but we'll pick the type up through the preprocessed types.
@@ -407,11 +403,6 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     }
     string import_path = import_resolver.FindImportFile(import->GetNeededClass());
     if (import_path.empty()) {
-      if (typenames->ResolveTypename(import->GetNeededClass()).is_resolved) {
-        // This could happen when the type is from the preprocessed aidl file.
-        // In that case, use the type from preprocessed aidl file
-        continue;
-      }
       AIDL_ERROR(input_file_name) << "Couldn't find import for class " << import->GetNeededClass();
       err = AidlError::BAD_IMPORT;
       continue;
@@ -432,26 +423,23 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   }
 
   TypeResolver resolver = [&](const AidlDefinedType* scope, AidlTypeSpecifier* type) {
-    if (type->Resolve(*typenames)) return true;
-
-    const string unresolved_name = type->GetUnresolvedName();
-    const auto doc = typenames->GetDocumentFor(scope);
-    const std::optional<string> canonical_name = doc->ResolveName(unresolved_name);
-    if (!canonical_name) {
-      return false;
+    // resolve with already loaded types
+    if (type->Resolve(*typenames, scope)) {
+      return true;
     }
-    const string import_path = import_resolver.FindImportFile(*canonical_name);
+    const string import_path = import_resolver.FindImportFile(scope->ResolveName(type->GetName()));
     if (import_path.empty()) {
       return false;
     }
     import_paths.push_back(import_path);
-
     auto imported_doc = Parser::Parse(import_path, io_delegate, *typenames);
     if (imported_doc == nullptr) {
       AIDL_ERROR(import_path) << "error while importing " << import_path << " for " << import_path;
       return false;
     }
-    if (!type->Resolve(*typenames)) {
+
+    // now, try to resolve it again
+    if (!type->Resolve(*typenames, scope)) {
       AIDL_ERROR(type) << "Can't resolve " << type->GetName();
       return false;
     }
@@ -551,7 +539,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
       if (options.Version() > 0) {
         AidlTypeSpecifier* ret =
             new AidlTypeSpecifier(AIDL_LOCATION_HERE, "int", false, nullptr, Comments{});
-        ret->Resolve(*typenames);
+        ret->Resolve(*typenames, nullptr);
         vector<unique_ptr<AidlArgument>>* args = new vector<unique_ptr<AidlArgument>>();
         auto method = std::make_unique<AidlMethod>(
             AIDL_LOCATION_HERE, false, ret, "getInterfaceVersion", args, Comments{},
@@ -562,7 +550,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
       if (!options.Hash().empty()) {
         AidlTypeSpecifier* ret =
             new AidlTypeSpecifier(AIDL_LOCATION_HERE, "String", false, nullptr, Comments{});
-        ret->Resolve(*typenames);
+        ret->Resolve(*typenames, nullptr);
         vector<unique_ptr<AidlArgument>>* args = new vector<unique_ptr<AidlArgument>>();
         auto method = std::make_unique<AidlMethod>(
             AIDL_LOCATION_HERE, false, ret, kGetInterfaceHash, args, Comments{},

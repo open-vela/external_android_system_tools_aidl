@@ -348,7 +348,7 @@ void UnionWriter::PrivateFields(CodeWriter& out) const {
 void UnionWriter::PublicFields(CodeWriter& out) const {
   AidlTypeSpecifier tag_type(AIDL_LOCATION_HERE, "int", /* is_array= */ false,
                              /* type_params= */ nullptr, Comments{});
-  tag_type.Resolve(typenames);
+  tag_type.Resolve(typenames, nullptr);
 
   out << "enum Tag : " << name_of(tag_type, typenames) << " {\n";
   bool is_first = true;
@@ -427,7 +427,7 @@ void set(_Tp&&... _args) {{
 void UnionWriter::ReadFromParcel(CodeWriter& out, const ParcelWriterContext& ctx) const {
   AidlTypeSpecifier tag_type(AIDL_LOCATION_HERE, "int", /* is_array= */ false,
                              /* type_params= */ nullptr, Comments{});
-  tag_type.Resolve(typenames);
+  tag_type.Resolve(typenames, nullptr);
 
   const string tag = "_aidl_tag";
   const string value = "_aidl_value";
@@ -471,7 +471,7 @@ void UnionWriter::ReadFromParcel(CodeWriter& out, const ParcelWriterContext& ctx
 void UnionWriter::WriteToParcel(CodeWriter& out, const ParcelWriterContext& ctx) const {
   AidlTypeSpecifier tag_type(AIDL_LOCATION_HERE, "int", /* is_array= */ false,
                              /* type_params= */ nullptr, Comments{});
-  tag_type.Resolve(typenames);
+  tag_type.Resolve(typenames, nullptr);
 
   const string tag = "_aidl_tag";
   const string value = "_aidl_value";
