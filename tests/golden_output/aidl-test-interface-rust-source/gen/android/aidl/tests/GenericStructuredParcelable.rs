@@ -36,23 +36,14 @@ impl binder::parcel::SerializeOption for GenericStructuredParcelable {
 binder::impl_deserialize_for_parcelable!(GenericStructuredParcelable);
 impl GenericStructuredParcelable {
   fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
-    let start_pos = parcel.get_data_position();
-    let parcelable_size: i32 = parcel.read()?;
-    if parcelable_size < 0 { return Err(binder::StatusCode::BAD_VALUE); }
-    if start_pos.checked_add(parcelable_size).is_none() {
-      return Err(binder::StatusCode::BAD_VALUE);
-    }
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.a = parcel.read()?;
-    if (parcel.get_data_position() - start_pos) == parcelable_size {
-      return Ok(());
-    }
-    self.b = parcel.read()?;
-    unsafe {
-      parcel.set_data_position(start_pos + parcelable_size)?;
-    }
-    Ok(())
+    parcel.sized_read(|subparcel| {
+      if subparcel.has_more_data() {
+        self.a = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.b = subparcel.read()?;
+      }
+      Ok(())
+    })
   }
 }
