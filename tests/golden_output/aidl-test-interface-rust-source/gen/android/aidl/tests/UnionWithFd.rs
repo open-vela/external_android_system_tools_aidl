@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 #[derive(Debug)]
 pub enum UnionWithFd {
   Num(i32),
