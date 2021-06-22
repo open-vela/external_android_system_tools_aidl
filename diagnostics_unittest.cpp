@@ -129,6 +129,17 @@ TEST_F(DiagnosticsTest, DontMixOnewayWithTwowayMethods) {
   });
 }
 
+TEST_F(DiagnosticsTest, DontMixOnewayWithTwowayMethodsSuppressedAtMethod) {
+  expect_diagnostics = {};
+  ParseFiles({
+      {"IFoo.aidl",
+       "interface IFoo {\n"
+       "  void foo();\n"
+       "  @SuppressWarnings(value={\"mixed-oneway\"}) oneway void bar();\n"
+       "}"},
+  });
+}
+
 TEST_F(DiagnosticsTest, OnewayInterfaceIsOkayWithSyntheticMethods) {
   optional_args = "--version 2";  // will add getInterfaceVersion() synthetic method
   expect_diagnostics = {};

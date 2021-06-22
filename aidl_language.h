@@ -1161,7 +1161,7 @@ class AidlUnionDecl : public AidlParcelable {
 class AidlInterface final : public AidlDefinedType {
  public:
   AidlInterface(const AidlLocation& location, const std::string& name, const Comments& comments,
-                bool oneway_, const std::string& package,
+                bool oneway, const std::string& package,
                 std::vector<std::unique_ptr<AidlMember>>* members);
   virtual ~AidlInterface() = default;
 
