@@ -195,6 +195,7 @@ struct DiagnoseMixedOneway : DiagnosticsVisitor {
     bool has_twoway = false;
     for (const auto& m : i.GetMethods()) {
       if (!m->IsUserDefined()) continue;
+      if (Suppressed(*m)) continue;
       if (m->IsOneway()) {
         has_oneway = true;
       } else {
@@ -207,6 +208,14 @@ struct DiagnoseMixedOneway : DiagnosticsVisitor {
           << "' has both one-way and two-way methods. This makes it hard to reason about threading "
              "of client code.";
     }
+  }
+  bool Suppressed(const AidlMethod& m) const {
+    for (const auto& w : m.GetType().SuppressWarnings()) {
+      if (w == to_string(DiagnosticID::mixed_oneway)) {
+        return true;
+      }
+    }
+    return false;
   }
 };
 
