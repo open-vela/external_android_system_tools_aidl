@@ -54,6 +54,13 @@ func setReleaseEnv() android.FixturePreparer {
 	})
 }
 
+func setTestFreezeEnv() android.FixturePreparer {
+	return android.FixtureMergeEnv(map[string]string{
+		"AIDL_FROZEN_REL":    "true",
+		"AIDL_FROZEN_OWNERS": "aosp test",
+	})
+}
+
 func _testAidl(t *testing.T, bp string, customizers ...android.FixturePreparer) android.FixturePreparer {
 	t.Helper()
 
@@ -243,6 +250,7 @@ func TestVintfWithoutVersionInRelease(t *testing.T) {
 	}`
 	expectedError := `module "foo_interface": versions: must be set \(need to be frozen\) when "unstable" is false, PLATFORM_VERSION_CODENAME is REL, and "owner" property is missing.`
 	testAidlError(t, expectedError, vintfWithoutVersionBp, setReleaseEnv())
+	testAidlError(t, expectedError, vintfWithoutVersionBp, setTestFreezeEnv())
 
 	ctx, _ := testAidl(t, vintfWithoutVersionBp)
 	assertModulesExists(t, ctx, "foo-V1-java", "foo-V1-rust", "foo-V1-cpp", "foo-V1-ndk", "foo-V1-ndk_platform")
@@ -264,17 +272,15 @@ func TestUnstableVersionUsageInRelease(t *testing.T) {
 		name: "bar",
 		libs: ["foo-V2-java"],
 	}`
+	files := withFiles(map[string][]byte{
+		"aidl_api/foo/1/foo.1.aidl": nil,
+		"aidl_api/foo/1/.hash":      nil,
+	})
 
 	expectedError := `foo-V2-java is disallowed in release version because it is unstable.`
-	testAidlError(t, expectedError, unstableVersionUsageInJavaBp, setReleaseEnv(), withFiles(map[string][]byte{
-		"aidl_api/foo/1/foo.1.aidl": nil,
-		"aidl_api/foo/1/.hash":      nil,
-	}))
-
-	testAidl(t, unstableVersionUsageInJavaBp, withFiles(map[string][]byte{
-		"aidl_api/foo/1/foo.1.aidl": nil,
-		"aidl_api/foo/1/.hash":      nil,
-	}))
+	testAidlError(t, expectedError, unstableVersionUsageInJavaBp, setReleaseEnv(), files)
+	testAidlError(t, expectedError, unstableVersionUsageInJavaBp, setTestFreezeEnv(), files)
+	testAidl(t, unstableVersionUsageInJavaBp, files)
 
 	// A stable version can be used in release version
 	stableVersionUsageInJavaBp := `
@@ -292,15 +298,9 @@ func TestUnstableVersionUsageInRelease(t *testing.T) {
 		libs: ["foo-V1-java"],
 	}`
 
-	testAidl(t, stableVersionUsageInJavaBp, setReleaseEnv(), withFiles(map[string][]byte{
-		"aidl_api/foo/1/foo.1.aidl": nil,
-		"aidl_api/foo/1/.hash":      nil,
-	}))
-
-	testAidl(t, stableVersionUsageInJavaBp, withFiles(map[string][]byte{
-		"aidl_api/foo/1/foo.1.aidl": nil,
-		"aidl_api/foo/1/.hash":      nil,
-	}))
+	testAidl(t, stableVersionUsageInJavaBp, setReleaseEnv(), files)
+	testAidl(t, stableVersionUsageInJavaBp, setTestFreezeEnv(), files)
+	testAidl(t, stableVersionUsageInJavaBp, files)
 }
 
 // The module which has never been frozen and is not "unstable" is not allowed in release version.
@@ -320,6 +320,7 @@ func TestNonVersionedModuleUsageInRelease(t *testing.T) {
 
 	expectedError := `"foo_interface": versions: must be set \(need to be frozen\) when "unstable" is false, PLATFORM_VERSION_CODENAME is REL, and "owner" property is missing.`
 	testAidlError(t, expectedError, nonVersionedModuleUsageInJavaBp, setReleaseEnv())
+	testAidlError(t, expectedError, nonVersionedModuleUsageInJavaBp, setTestFreezeEnv())
 	testAidl(t, nonVersionedModuleUsageInJavaBp)
 
 	nonVersionedUnstableModuleUsageInJavaBp := `
@@ -337,7 +338,49 @@ func TestNonVersionedModuleUsageInRelease(t *testing.T) {
 	}`
 
 	testAidl(t, nonVersionedUnstableModuleUsageInJavaBp, setReleaseEnv())
+	testAidl(t, nonVersionedUnstableModuleUsageInJavaBp, setTestFreezeEnv())
 	testAidl(t, nonVersionedUnstableModuleUsageInJavaBp)
+}
+
+func TestNonVersionedModuleOwnedByTestUsageInRelease(t *testing.T) {
+	nonVersionedModuleUsageInJavaBp := `
+	aidl_interface {
+		name: "foo",
+		owner: "test",
+		srcs: [
+			"IFoo.aidl",
+		],
+	}
+
+	java_library {
+		name: "bar",
+		libs: ["foo-V1-java"],
+	}`
+
+	expectedError := `"foo_interface": versions: must be set \(need to be frozen\) when "unstable" is false, PLATFORM_VERSION_CODENAME is REL, and "owner" property is missing.`
+	testAidl(t, nonVersionedModuleUsageInJavaBp, setReleaseEnv())
+	testAidlError(t, expectedError, nonVersionedModuleUsageInJavaBp, setTestFreezeEnv())
+	testAidl(t, nonVersionedModuleUsageInJavaBp)
+}
+
+func TestNonVersionedModuleOwnedByOtherUsageInRelease(t *testing.T) {
+	nonVersionedModuleUsageInJavaBp := `
+	aidl_interface {
+		name: "foo",
+		owner: "unknown-owner",
+		srcs: [
+			"IFoo.aidl",
+		],
+	}
+
+	java_library {
+		name: "bar",
+		libs: ["foo-V1-java"],
+	}`
+
+	testAidl(t, nonVersionedModuleUsageInJavaBp, setReleaseEnv())
+	testAidl(t, nonVersionedModuleUsageInJavaBp, setTestFreezeEnv())
+	testAidl(t, nonVersionedModuleUsageInJavaBp)
 }
 
 func TestImportInRelease(t *testing.T) {
@@ -359,13 +402,16 @@ func TestImportInRelease(t *testing.T) {
 		versions: ["1"],
 	}
 	`
-
-	testAidl(t, importInRelease, setReleaseEnv(), withFiles(map[string][]byte{
+	files := withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
 		"aidl_api/foo/1/.hash":      nil,
 		"aidl_api/bar/1/bar.1.aidl": nil,
 		"aidl_api/bar/1/.hash":      nil,
-	}))
+	})
+
+	testAidl(t, importInRelease, setReleaseEnv(), files)
+	testAidl(t, importInRelease, setTestFreezeEnv(), files)
+	testAidl(t, importInRelease, files)
 }
 
 func TestUnstableVersionedModuleUsageInRelease(t *testing.T) {
@@ -385,10 +431,62 @@ func TestUnstableVersionedModuleUsageInRelease(t *testing.T) {
 
 	expectedError := `Android.bp:10:2: module \"bar\" variant \"android_common\": foo-V2-java is disallowed in release version because it is unstable, and its \"owner\" property is missing.`
 	testAidlError(t, expectedError, nonVersionedModuleUsageInJavaBp, setReleaseEnv())
+	testAidlError(t, expectedError, nonVersionedModuleUsageInJavaBp, setTestFreezeEnv())
 	testAidl(t, nonVersionedModuleUsageInJavaBp, withFiles(map[string][]byte{
 		"aidl_api/foo/1/foo.1.aidl": nil,
 		"aidl_api/foo/1/.hash":      nil,
 	}))
+}
+
+func TestUnstableVersionedModuleOwnedByTestUsageInRelease(t *testing.T) {
+	nonVersionedModuleUsageInJavaBp := `
+	aidl_interface {
+		name: "foo",
+		owner: "test",
+		srcs: [
+			"IFoo.aidl",
+		],
+		versions: ["1"],
+	}
+
+	java_library {
+		name: "bar",
+		libs: ["foo-V2-java"],
+	}`
+	files := withFiles(map[string][]byte{
+		"aidl_api/foo/1/foo.1.aidl": nil,
+		"aidl_api/foo/1/.hash":      nil,
+	})
+
+	expectedError := `Android.bp:11:2: module \"bar\" variant \"android_common\": foo-V2-java is disallowed in release version because it is unstable, and its \"owner\" property is missing.`
+	testAidl(t, nonVersionedModuleUsageInJavaBp, setReleaseEnv(), files)
+	testAidlError(t, expectedError, nonVersionedModuleUsageInJavaBp, setTestFreezeEnv())
+	testAidl(t, nonVersionedModuleUsageInJavaBp, files)
+}
+
+func TestUnstableVersionedModuleOwnedByOtherUsageInRelease(t *testing.T) {
+	nonVersionedModuleUsageInJavaBp := `
+	aidl_interface {
+		name: "foo",
+		owner: "unknown-owner",
+		srcs: [
+			"IFoo.aidl",
+		],
+		versions: ["1"],
+	}
+
+	java_library {
+		name: "bar",
+		libs: ["foo-V2-java"],
+	}`
+	files := withFiles(map[string][]byte{
+		"aidl_api/foo/1/foo.1.aidl": nil,
+		"aidl_api/foo/1/.hash":      nil,
+	})
+
+	testAidl(t, nonVersionedModuleUsageInJavaBp, setReleaseEnv(), files)
+	testAidl(t, nonVersionedModuleUsageInJavaBp, setTestFreezeEnv(), files)
+	testAidl(t, nonVersionedModuleUsageInJavaBp, files)
 }
 
 func TestUnstableModules(t *testing.T) {
