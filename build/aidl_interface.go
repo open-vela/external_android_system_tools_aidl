@@ -652,7 +652,6 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 	}
 
 	var libs []string
-	sdkIsFinal := !mctx.Config().DefaultAppTargetSdk(mctx).IsPreview()
 
 	unstable := proptools.Bool(i.properties.Unstable)
 
@@ -667,13 +666,18 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 		}
 	}
 
+	sdkIsFinal := !mctx.Config().DefaultAppTargetSdk(mctx).IsPreview()
+	requireFrozenNoOwner := i.Owner() == "" && (sdkIsFinal || mctx.Config().IsEnvTrue("AIDL_FROZEN_REL"))
+	requireFrozenWithOwner := i.Owner() != "" && android.InList(i.Owner(), strings.Fields(mctx.Config().Getenv("AIDL_FROZEN_OWNERS")))
+	requireFrozenByOwner := requireFrozenNoOwner || requireFrozenWithOwner
+
 	// Two different types of 'unstable' here
 	// - 'unstable: true' meaning the module is never stable
 	// - current unfrozen ToT version
 	//
 	// OEM branches may remove 'i.Owner()' here to apply the check to all interfaces, in
 	// addition to core platform interfaces. Otherwise, we rely on vts_treble_vintf_vendor_test.
-	requireFrozenVersion := !unstable && sdkIsFinal && i.Owner() == ""
+	requireFrozenVersion := !unstable && requireFrozenByOwner
 
 	// surface error early, main check is via checkUnstableModuleMutator
 	if requireFrozenVersion && !i.hasVersion() {
