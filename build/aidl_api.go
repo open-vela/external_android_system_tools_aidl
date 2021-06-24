@@ -506,7 +506,16 @@ func (f *freezeApiSingleton) GenerateBuildActions(ctx android.SingletonContext) 
 			return
 		}
 		if m, ok := module.(*aidlApi); ok {
-			files = append(files, m.freezeApiTimestamp)
+			ownersToFreeze := strings.Fields(ctx.Config().Getenv("AIDL_FREEZE_OWNERS"))
+			var shouldBeFrozen bool
+			if len(ownersToFreeze) > 0 {
+				shouldBeFrozen = android.InList(m.Owner(), ownersToFreeze)
+			} else {
+				shouldBeFrozen = m.Owner() == ""
+			}
+			if shouldBeFrozen {
+				files = append(files, m.freezeApiTimestamp)
+			}
 		}
 	})
 	ctx.Phony("aidl-freeze-api", files...)
