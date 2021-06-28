@@ -374,10 +374,6 @@ template<typename _Tp>
 static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, {name}>;
 
 {name}() : _value(std::in_place_index<{default_name}>, {default_value}) {{ }}
-{name}(const {name}&) = default;
-{name}({name}&&) = default;
-{name}& operator=(const {name}&) = default;
-{name}& operator=({name}&&) = default;
 
 template <typename _Tp, typename = std::enable_if_t<_not_self<_Tp>>>
 // NOLINTNEXTLINE(google-explicit-constructor)

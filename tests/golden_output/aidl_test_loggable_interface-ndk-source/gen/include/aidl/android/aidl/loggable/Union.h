@@ -38,10 +38,6 @@ public:
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, Union>;
 
   Union() : _value(std::in_place_index<num>, int32_t(43)) { }
-  Union(const Union&) = default;
-  Union(Union&&) = default;
-  Union& operator=(const Union&) = default;
-  Union& operator=(Union&&) = default;
 
   template <typename _Tp, typename = std::enable_if_t<_not_self<_Tp>>>
   // NOLINTNEXTLINE(google-explicit-constructor)
