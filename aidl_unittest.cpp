@@ -819,6 +819,58 @@ TEST_F(AidlTest, PreprocessVariousThings) {
   EXPECT_THAT(code, testing::HasSubstr("public static final int y = 43;"));
 }
 
+TEST_F(AidlTest, AllowMultipleUnstructuredNestedParcelablesInASingleDocument) {
+  io_delegate_.SetFileContents("p/IFoo.aidl",
+                               "package p;\n"
+                               "import x.Outer;\n"
+                               "interface IFoo {\n"
+                               "  void foo(in Outer.Inner1 in1, in Outer.Inner2 in2);\n"
+                               "}");
+  io_delegate_.SetFileContents("imported/x/Outer.aidl",
+                               "package x;\n"
+                               "parcelable Outer.Inner1;\n"
+                               "parcelable Outer.Inner2;\n");
+  auto opt = Options::From("aidl -Iimported --lang=java p/IFoo.aidl");
+  CaptureStderr();
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(opt, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+}
+
+TEST_F(AidlTest,
+       StubsSourceIsGeneratedFromDuplicateDefinitionWithFrameworkAidl_FrameworkAidlLater) {
+  // Main doc(Foo.aidl) is loaded
+  // And then framework.aidl is loaded as preprocessed. (conflict)
+  io_delegate_.SetFileContents("sdk/framework.aidl", "parcelable x.Foo.Inner;\n");
+  io_delegate_.SetFileContents("x/Foo.aidl",
+                               "package x;\n"
+                               "parcelable Foo.Inner;\n");
+  auto opt = Options::From("aidl -psdk/framework.aidl -I. x/Foo.aidl");
+  CaptureStderr();
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(opt, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+}
+
+TEST_F(AidlTest,
+       StubsSourceIsGeneratedFromDuplicateDefinitionWithFrameworkAidl_FrameworkAidlFirst) {
+  // Main doc(IBar.aidl) is loaded first.
+  // Framework.aidl is loaded as preprocessed.
+  // And then import(Foo.aidl) is loaded. (conflict)
+  io_delegate_.SetFileContents("sdk/framework.aidl", "parcelable x.Foo.Inner;\n");
+  io_delegate_.SetFileContents("x/IBar.aidl",
+                               "package x;\n"
+                               "import x.Foo;\n"
+                               "interface IBar {\n"
+                               "  void bar(in Foo.Inner inner);\n"
+                               "}");
+  io_delegate_.SetFileContents("x/Foo.aidl",
+                               "package x;\n"
+                               "parcelable Foo.Inner;\n");
+  auto opt = Options::From("aidl -psdk/framework.aidl -I. x/IBar.aidl");
+  CaptureStderr();
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(opt, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+}
+
 TEST_F(AidlTest, PreprocessedFileCantDeclarePackage) {
   string simple_content = "package xxx; parcelable a.Foo;";
   io_delegate_.SetFileContents("path", simple_content);
