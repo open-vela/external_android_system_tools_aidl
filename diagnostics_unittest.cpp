@@ -227,3 +227,24 @@ TEST_F(DiagnosticsTest, AllowRedundantImports) {
                "interface IFoo{}"},
               {"q/IBar.aidl", "package q; interface IBar{}"}});
 }
+
+TEST_F(DiagnosticsTest, UntypedCollectionInterface) {
+  expect_diagnostics = {DiagnosticID::untyped_collection};
+  ParseFiles({{"IFoo.aidl", "interface IFoo { void foo(in Map m); }"}});
+}
+
+TEST_F(DiagnosticsTest, UntypedCollectionParcelable) {
+  expect_diagnostics = {DiagnosticID::untyped_collection};
+  ParseFiles({{"Foo.aidl", "parcelable Foo { Map m; }"}});
+}
+
+TEST_F(DiagnosticsTest, UntypedCollectionUnion) {
+  expect_diagnostics = {DiagnosticID::untyped_collection};
+  ParseFiles({{"Foo.aidl", "union Foo { List l; }"}});
+}
+
+TEST_F(DiagnosticsTest, UntypedCollectionInTypeArg) {
+  expect_diagnostics = {DiagnosticID::untyped_collection};
+  ParseFiles({{"IFoo.aidl", "interface IFoo { void foo(in Bar<Map> m); }"},
+              {"Bar.aidl", "parcelable Bar<T> {}"}});
+}
