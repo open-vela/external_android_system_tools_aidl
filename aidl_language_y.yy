@@ -192,7 +192,7 @@ document
     } else if (!$2->empty()) {
       comments = $2->front()->GetComments();
     }
-    ps->SetDocument(std::make_unique<AidlDocument>(loc(@1), comments, std::move(*$2), std::move(*$3)));
+    ps->MakeDocument(loc(@1), comments, std::move(*$2), std::move(*$3));
     delete $1;
     delete $2;
     delete $3;

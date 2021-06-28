@@ -123,6 +123,7 @@ class AidlVisitor {
 
 class AidlScope {
  public:
+  AidlScope(const AidlNode* self) : self_(self) {}
   virtual ~AidlScope() = default;
   virtual std::string ResolveName(const std::string& name) const = 0;
   void SetEnclosingScope(const AidlScope* enclosing) {
@@ -130,8 +131,10 @@ class AidlScope {
     enclosing_ = enclosing;
   }
   const AidlScope* GetEnclosingScope() const { return enclosing_; }
+  const AidlNode& GetNode() const { return *self_; }
 
  private:
+  const AidlNode* self_;
   const AidlScope* enclosing_ = nullptr;
 };
 
@@ -928,6 +931,7 @@ class AidlDefinedType : public AidlAnnotatable, public AidlScope {
     if (package_.empty()) return std::vector<std::string>();
     return android::base::Split(package_, ".");
   }
+  const AidlDocument& GetDocument() const;
 
   virtual std::string GetPreprocessDeclarationName() const = 0;
 
@@ -1222,7 +1226,7 @@ class AidlDocument : public AidlCommentable, public AidlScope {
  public:
   AidlDocument(const AidlLocation& location, const Comments& comments,
                std::vector<std::unique_ptr<AidlImport>> imports,
-               std::vector<std::unique_ptr<AidlDefinedType>> defined_types);
+               std::vector<std::unique_ptr<AidlDefinedType>> defined_types, bool is_preprocessed);
   ~AidlDocument() = default;
 
   // non-copyable, non-movable
@@ -1236,6 +1240,7 @@ class AidlDocument : public AidlCommentable, public AidlScope {
   const std::vector<std::unique_ptr<AidlDefinedType>>& DefinedTypes() const {
     return defined_types_;
   }
+  bool IsPreprocessed() const { return is_preprocessed_; }
 
   void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override {
     for (const auto& i : Imports()) {
@@ -1250,6 +1255,7 @@ class AidlDocument : public AidlCommentable, public AidlScope {
  private:
   const std::vector<std::unique_ptr<AidlImport>> imports_;
   const std::vector<std::unique_ptr<AidlDefinedType>> defined_types_;
+  bool is_preprocessed_;
 };
 
 template <typename T>
