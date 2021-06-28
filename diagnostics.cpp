@@ -285,18 +285,6 @@ struct DiagnoseImports : DiagnosticsVisitor {
   }
 };
 
-struct DiagnoseUntypedCollection : DiagnosticsVisitor {
-  DiagnoseUntypedCollection(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
-  void Visit(const AidlTypeSpecifier& t) override {
-    if (t.GetName() == "List" || t.GetName() == "Map") {
-      if (!t.IsGeneric()) {
-        diag.Report(t.GetLocation(), DiagnosticID::untyped_collection)
-            << "Use List<V> or Map<K,V> instead.";
-      }
-    }
-  }
-};
-
 bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnosticsContext diag(mapping);
 
@@ -309,7 +297,6 @@ bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnoseFileDescriptor{diag}.Check(doc);
   DiagnoseOutNullable{diag}.Check(doc);
   DiagnoseImports{diag}.Check(doc);
-  DiagnoseUntypedCollection{diag}.Check(doc);
 
   return diag.ErrorCount() == 0;
 }
