@@ -117,51 +117,51 @@ bool AidlTypenames::IsIgnorableImport(const string& import) const {
   return false;
 }
 
-// Add a parsed document and populate type names in it.
-// Name conflict is an error unless one of them is from preprocessed.
-// For legacy, we populate unqualified names from preprocessed unstructured parcelable types
-// so that they can be referenced via a simple name.
-bool AidlTypenames::AddDocument(std::unique_ptr<AidlDocument> doc) {
-  bool is_preprocessed = doc->IsPreprocessed();
+bool AidlTypenames::AddDocument(std::unique_ptr<AidlDocument> doc, bool is_preprocessed) {
   for (const auto& type : doc->DefinedTypes()) {
-    if (IsBuiltinTypename(type->GetName())) {
-      // ParcelFileDescriptor is treated as a built-in type, but it's also in the framework.aidl.
-      // So aidl should ignore built-in types in framework.aidl to prevent duplication.
-      // (b/130899491)
-      if (is_preprocessed) {
-        continue;
-      }
-      // HasValidNameComponents handles name conflicts with built-in types
+    // ParcelFileDescriptor is treated as a built-in type, but it's also in the framework.aidl.
+    // So aidl should ignore built-in types in framework.aidl to prevent duplication.
+    // (b/130899491)
+    if (is_preprocessed && IsBuiltinTypename(type->GetName())) {
+      continue;
     }
 
     if (auto prev_definition = defined_types_.find(type->GetCanonicalName());
         prev_definition != defined_types_.end()) {
-      // Skip duplicate type in preprocessed document
-      if (is_preprocessed) {
-        continue;
-      }
-      // Overwrite duplicate type which is already added via preprocessed with a new one
-      if (!prev_definition->second->GetDocument().IsPreprocessed()) {
-        AIDL_ERROR(type) << "redefinition: " << type->GetCanonicalName() << " is defined "
-                         << prev_definition->second->GetLocation();
-        return false;
-      }
-    }
-
-    if (!HasValidNameComponents(*type)) {
+      AIDL_ERROR(type) << "redefinition:" << type->GetCanonicalName() << " is defined "
+                       << prev_definition->second->GetLocation();
       return false;
     }
-
-    // populate global 'type' namespace with fully-qualified names
-    defined_types_.emplace(type->GetCanonicalName(), type.get());
-    // preprocessed unstructured parcelable types can be referenced without qualification
-    if (is_preprocessed && type->AsUnstructuredParcelable()) {
-      defined_types_.emplace(type->GetName(), type.get());
+    if (!HasValidNameComponents(*type)) {
+      return false;
     }
   }
   // transfer ownership of document
   documents_.push_back(std::move(doc));
+  // populate global 'type' namespace with fully-qualified names
+  for (const auto& type : documents_.back()->DefinedTypes()) {
+    defined_types_.emplace(type->GetCanonicalName(), type.get());
+  }
+  if (is_preprocessed) {
+    // preprocessed unstructured parcelable types can be referenced without qualification
+    for (const auto& type : documents_.back()->DefinedTypes()) {
+      if (type->AsUnstructuredParcelable()) {
+        defined_types_.emplace(type->GetName(), type.get());
+      }
+    }
+  }
   return true;
+}
+
+const AidlDocument* AidlTypenames::GetDocumentFor(const AidlDefinedType* type) const {
+  for (const auto& doc : AllDocuments()) {
+    for (const auto& defined_type : doc->DefinedTypes()) {
+      if (defined_type.get() == type) {
+        return doc.get();
+      }
+    }
+  }
+  return nullptr;
 }
 
 const AidlDocument& AidlTypenames::MainDocument() const {
