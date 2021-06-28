@@ -41,10 +41,6 @@ public:
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, EnumUnion>;
 
   EnumUnion() : _value(std::in_place_index<intEnum>, ::aidl::android::aidl::tests::IntEnum(::aidl::android::aidl::tests::IntEnum::FOO)) { }
-  EnumUnion(const EnumUnion&) = default;
-  EnumUnion(EnumUnion&&) = default;
-  EnumUnion& operator=(const EnumUnion&) = default;
-  EnumUnion& operator=(EnumUnion&&) = default;
 
   template <typename _Tp, typename = std::enable_if_t<_not_self<_Tp>>>
   // NOLINTNEXTLINE(google-explicit-constructor)
