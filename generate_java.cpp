@@ -688,8 +688,10 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   out << " * This file is auto-generated.  DO NOT MODIFY.\n";
   out << " */\n";
 
-  out << "package " + decl->GetPackage() + ";\n";
-  out << "\n";
+  if (!decl->GetPackage().empty()) {
+    out << "package " + decl->GetPackage() + ";\n";
+    out << "\n";
+  }
   out << GenerateComments(*decl);
   out << GenerateAnnotations(*decl);
 
