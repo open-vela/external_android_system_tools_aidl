@@ -51,10 +51,6 @@ public:
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, UnionWithFd>;
 
   UnionWithFd() : _value(std::in_place_index<num>, int32_t(0)) { }
-  UnionWithFd(const UnionWithFd&) = default;
-  UnionWithFd(UnionWithFd&&) = default;
-  UnionWithFd& operator=(const UnionWithFd&) = default;
-  UnionWithFd& operator=(UnionWithFd&&) = default;
 
   template <typename _Tp, typename = std::enable_if_t<_not_self<_Tp>>>
   // NOLINTNEXTLINE(google-explicit-constructor)
