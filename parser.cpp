@@ -54,7 +54,7 @@ const AidlDocument* Parser::Parse(const std::string& filename,
 
   // transfer ownership to AidlTypenames and return the raw pointer
   const AidlDocument* result = parser.document_.get();
-  if (!typenames.AddDocument(std::move(parser.document_), is_preprocessed)) {
+  if (!typenames.AddDocument(std::move(parser.document_))) {
     return nullptr;
   }
   return result;
@@ -191,4 +191,12 @@ Parser::Parser(const std::string& filename, std::string& raw_buffer, bool is_pre
 Parser::~Parser() {
   yy_delete_buffer(buffer_, scanner_);
   yylex_destroy(scanner_);
+}
+
+void Parser::MakeDocument(const AidlLocation& location, const Comments& comments,
+                          std::vector<std::unique_ptr<AidlImport>> imports,
+                          std::vector<std::unique_ptr<AidlDefinedType>> defined_types) {
+  AIDL_FATAL_IF(document_.get(), location);
+  document_ = std::make_unique<AidlDocument>(location, comments, std::move(imports),
+                                             std::move(defined_types), is_preprocessed_);
 }
