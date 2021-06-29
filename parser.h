@@ -91,7 +91,9 @@ class Parser {
   void SetPackage(const AidlPackage& package);
   const std::string& Package() const { return package_; }
 
-  void SetDocument(std::unique_ptr<AidlDocument> document) { document_ = std::move(document); }
+  void MakeDocument(const AidlLocation& location, const Comments& comments,
+                    std::vector<std::unique_ptr<AidlImport>> imports,
+                    std::vector<std::unique_ptr<AidlDefinedType>> defined_types);
 
  private:
   explicit Parser(const std::string& filename, std::string& raw_buffer, bool is_preprocessed);

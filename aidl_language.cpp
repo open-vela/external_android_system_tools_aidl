@@ -906,7 +906,7 @@ string AidlMethod::ToString() const {
 AidlDefinedType::AidlDefinedType(const AidlLocation& location, const std::string& name,
                                  const Comments& comments, const std::string& package,
                                  std::vector<std::unique_ptr<AidlMember>>* members)
-    : AidlAnnotatable(location, comments), name_(name), package_(package) {
+    : AidlAnnotatable(location, comments), AidlScope(this), name_(name), package_(package) {
   // adjust name/package when name is fully qualified (for preprocessed files)
   if (package_.empty() && name_.find('.') != std::string::npos) {
     // Note that this logic is absolutely wrong.  Given a parcelable
@@ -1028,6 +1028,25 @@ std::string AidlDefinedType::ResolveName(const std::string& name) const {
   AIDL_FATAL_IF(!GetEnclosingScope(), this)
       << "Type should have an enclosing scope.(e.g. AidlDocument)";
   return GetEnclosingScope()->ResolveName(name);
+}
+
+template <typename T>
+const T* AidlCast(const AidlNode& node) {
+  struct CastVisitor : AidlVisitor {
+    const T* cast = nullptr;
+    void Visit(const T& t) override { cast = &t; }
+  } visitor;
+  node.DispatchVisit(visitor);
+  return visitor.cast;
+}
+
+const AidlDocument& AidlDefinedType::GetDocument() const {
+  // TODO(b/182508839): resolve with nested types when we support nested types
+  auto scope = GetEnclosingScope();
+  AIDL_FATAL_IF(!scope, this) << "no scope defined.";
+  auto doc = AidlCast<AidlDocument>(scope->GetNode());
+  AIDL_FATAL_IF(!doc, this) << "scope is not a document.";
+  return *doc;
 }
 
 AidlParcelable::AidlParcelable(const AidlLocation& location, const std::string& name,
@@ -1524,10 +1543,13 @@ AidlImport::AidlImport(const AidlLocation& location, const std::string& needed_c
 
 AidlDocument::AidlDocument(const AidlLocation& location, const Comments& comments,
                            std::vector<std::unique_ptr<AidlImport>> imports,
-                           std::vector<std::unique_ptr<AidlDefinedType>> defined_types)
+                           std::vector<std::unique_ptr<AidlDefinedType>> defined_types,
+                           bool is_preprocessed)
     : AidlCommentable(location, comments),
+      AidlScope(this),
       imports_(std::move(imports)),
-      defined_types_(std::move(defined_types)) {
+      defined_types_(std::move(defined_types)),
+      is_preprocessed_(is_preprocessed) {
   for (const auto& t : defined_types_) {
     t->SetEnclosingScope(this);
   }
