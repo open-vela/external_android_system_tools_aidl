@@ -57,8 +57,7 @@ namespace aidl {
 class AidlTypenames final {
  public:
   AidlTypenames() = default;
-  bool AddDocument(std::unique_ptr<AidlDocument> doc, bool is_preprocessed);
-  const AidlDocument* GetDocumentFor(const AidlDefinedType* type) const;
+  bool AddDocument(std::unique_ptr<AidlDocument> doc);
   const std::vector<std::unique_ptr<AidlDocument>>& AllDocuments() const { return documents_; }
   const AidlDocument& MainDocument() const;
   static bool IsBuiltinTypename(const string& type_name);
