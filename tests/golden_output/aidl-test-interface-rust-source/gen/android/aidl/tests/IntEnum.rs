@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 #![allow(non_upper_case_globals)]
 use binder::declare_binder_enum;
-declare_binder_enum! { IntEnum : i32 {
+declare_binder_enum! { IntEnum : [i32; 3] {
   FOO = 1000,
   BAR = 2000,
   BAZ = 2001,

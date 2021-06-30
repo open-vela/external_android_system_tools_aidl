@@ -768,8 +768,8 @@ bool GenerateRustEnumDeclaration(const string& filename, const AidlEnumDeclarati
   // TODO(b/177860423) support "deprecated" for enum types
   *code_writer << "#![allow(non_upper_case_globals)]\n";
   *code_writer << "use binder::declare_binder_enum;\n";
-  *code_writer << "declare_binder_enum! { " << enum_decl->GetName() << " : " << backing_type
-               << " {\n";
+  *code_writer << "declare_binder_enum! { " << enum_decl->GetName() << " : [" << backing_type
+               << "; " << std::to_string(enum_decl->GetEnumerators().size()) << "] {\n";
   code_writer->Indent();
   for (const auto& enumerator : enum_decl->GetEnumerators()) {
     auto value = enumerator->GetValue()->ValueString(aidl_backing_type, ConstantValueDecorator);
