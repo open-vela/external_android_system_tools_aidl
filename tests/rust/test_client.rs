@@ -169,7 +169,7 @@ macro_rules! test_reverse_array {
     ($test:ident, $func:ident, $array:expr) => {
         #[test]
         fn $test() {
-            let mut array = $array;
+            let mut array = $array.to_vec();
 
             // Java needs initial values here (can't resize arrays)
             let mut repeated = vec![Default::default(); array.len()];
@@ -206,6 +206,11 @@ test_reverse_array! {
     test_array_byte_enum,
     ReverseByteEnum,
     vec![ByteEnum::FOO, ByteEnum::BAR, ByteEnum::BAR]
+}
+test_reverse_array! {
+    test_array_byte_enum_values,
+    ReverseByteEnum,
+    ByteEnum::enum_values()
 }
 test_reverse_array! {
     test_array_byte_enum_v2,
