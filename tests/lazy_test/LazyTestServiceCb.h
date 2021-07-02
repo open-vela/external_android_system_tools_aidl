@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,22 @@
 
 #pragma once
 
-#include <BnLazyTestService.h>
+#include <BnLazyTestServiceCb.h>
 #include <binder/Status.h>
 
 namespace android {
 namespace binder {
 
-class LazyTestService : public BnLazyTestService {
+class LazyTestServiceCb : public BnLazyTestServiceCb {
  public:
-  LazyTestService() {}
-  virtual ~LazyTestService() {}
+  LazyTestServiceCb() : mFd(-1) {}
+  virtual ~LazyTestServiceCb() {}
 
-  ::android::binder::Status forcePersist(bool persist);
+  ::android::binder::Status setEventFd(const ::android::os::ParcelFileDescriptor& parcelFd);
+  void setCustomActiveServicesCallback();
+
+ private:
+  int mFd;
 };
 
 }  // namespace binder
