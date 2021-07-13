@@ -344,12 +344,6 @@ fn test_parcel_file_descriptor_array() {
 fn test_service_specific_exception() {
     let service = get_test_service();
 
-    let backend = service.getBackendType().expect("error getting backend type");
-    if backend == BackendType::JAVA {
-        // TODO(b/178861468): not correctly thrown from Java
-        return;
-    }
-
     for i in -1..2 {
         let result = service.ThrowServiceException(i);
         assert!(result.is_err());
