@@ -348,7 +348,7 @@ void UnionWriter::PrivateFields(CodeWriter& out) const {
 void UnionWriter::PublicFields(CodeWriter& out) const {
   AidlTypeSpecifier tag_type(AIDL_LOCATION_HERE, "int", /* is_array= */ false,
                              /* type_params= */ nullptr, Comments{});
-  tag_type.Resolve(typenames, nullptr);
+  tag_type.Resolve(typenames);
 
   out << "enum Tag : " << name_of(tag_type, typenames) << " {\n";
   bool is_first = true;
@@ -374,6 +374,10 @@ template<typename _Tp>
 static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, {name}>;
 
 {name}() : _value(std::in_place_index<{default_name}>, {default_value}) {{ }}
+{name}(const {name}&) = default;
+{name}({name}&&) = default;
+{name}& operator=(const {name}&) = default;
+{name}& operator=({name}&&) = default;
 
 template <typename _Tp, typename = std::enable_if_t<_not_self<_Tp>>>
 // NOLINTNEXTLINE(google-explicit-constructor)
@@ -423,7 +427,7 @@ void set(_Tp&&... _args) {{
 void UnionWriter::ReadFromParcel(CodeWriter& out, const ParcelWriterContext& ctx) const {
   AidlTypeSpecifier tag_type(AIDL_LOCATION_HERE, "int", /* is_array= */ false,
                              /* type_params= */ nullptr, Comments{});
-  tag_type.Resolve(typenames, nullptr);
+  tag_type.Resolve(typenames);
 
   const string tag = "_aidl_tag";
   const string value = "_aidl_value";
@@ -467,7 +471,7 @@ void UnionWriter::ReadFromParcel(CodeWriter& out, const ParcelWriterContext& ctx
 void UnionWriter::WriteToParcel(CodeWriter& out, const ParcelWriterContext& ctx) const {
   AidlTypeSpecifier tag_type(AIDL_LOCATION_HERE, "int", /* is_array= */ false,
                              /* type_params= */ nullptr, Comments{});
-  tag_type.Resolve(typenames, nullptr);
+  tag_type.Resolve(typenames);
 
   const string tag = "_aidl_tag";
   const string value = "_aidl_value";

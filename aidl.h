@@ -46,6 +46,7 @@ enum class AidlError {
 };
 
 int compile_aidl(const Options& options, const IoDelegate& io_delegate);
+bool preprocess_aidl(const Options& options, const IoDelegate& io_delegate);
 bool dump_mappings(const Options& options, const IoDelegate& io_delegate);
 
 // main entry point to AIDL
@@ -80,6 +81,9 @@ namespace internals {
 AidlError load_and_validate_aidl(const std::string& input_file_name, const Options& options,
                                  const IoDelegate& io_delegate, AidlTypenames* typenames,
                                  vector<string>* imported_files);
+
+bool parse_preprocessed_file(const IoDelegate& io_delegate, const std::string& filename,
+                             AidlTypenames* typenames);
 
 } // namespace internals
 
