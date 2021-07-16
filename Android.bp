@@ -100,11 +100,11 @@ cc_library_static {
         "generate_rust.cpp",
         "import_resolver.cpp",
         "io_delegate.cpp",
+        "line_reader.cpp",
         "location.cpp",
         "logging.cpp",
         "options.cpp",
         "parser.cpp",
-        "preprocess.cpp",
     ],
     yacc: {
         gen_location_hh: true,
@@ -190,7 +190,6 @@ cc_fuzz {
             "smoreland@google.com",
             "jiyong@google.com",
             "jeongik@google.com",
-            "jooyung@google.com",
         ],
     },
 
@@ -367,7 +366,6 @@ cc_test {
     ],
     srcs: [
         "tests/aidl_test_client.cpp",
-        "tests/aidl_test_client_builtin_transactions.cpp",
         "tests/aidl_test_client_file_descriptors.cpp",
         "tests/aidl_test_client_parcelables.cpp",
         "tests/aidl_test_client_nullables.cpp",
@@ -388,9 +386,9 @@ cc_test {
         "libcutils",
         "libgmock",
         //  client uses the latest version
-        "aidl-test-versioned-interface-V2-ndk",
-        "aidl-test-interface-ndk",
-        "aidl_test_loggable_interface-ndk"
+        "aidl-test-versioned-interface-V2-ndk_platform",
+        "aidl-test-interface-ndk_platform",
+        "aidl_test_loggable_interface-ndk_platform"
     ],
     shared_libs: [
         "libbinder_ndk",
@@ -454,7 +452,6 @@ java_test {
         "tests/java/src/android/aidl/tests/TestServiceClient.java",
         "tests/java/src/android/aidl/tests/JavaOnlyImmutableAnnotationTests.java",
         "tests/java/src/android/aidl/tests/AidlJavaTests.java",
-        "tests/java/src/android/aidl/tests/BuiltInTests.java",
         "tests/java/src/android/aidl/tests/GenericTests.java",
         "tests/java/src/android/aidl/tests/TestVersionedInterface.java",
         "tests/java/src/android/aidl/tests/UnionTests.java",
@@ -494,10 +491,11 @@ genrule {
         // warning: keep this list up to date with tests/golden_test.sh
         ":aidl-test-interface-cpp-source",
         ":aidl-test-interface-java-source",
-        ":aidl-test-interface-ndk-source",
+        ":aidl-test-interface-ndk_platform-source",
         ":aidl-test-interface-rust-source",
         ":aidl_test_loggable_interface-cpp-source",
         ":aidl_test_loggable_interface-java-source",
+        ":aidl_test_loggable_interface-ndk_platform-source",
         ":aidl_test_loggable_interface-ndk-source",
         "tests/golden_output/**/*",
     ],
