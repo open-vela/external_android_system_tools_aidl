@@ -1,7 +1,6 @@
-#![forbid(unsafe_code)]
 #![allow(non_upper_case_globals)]
 use binder::declare_binder_enum;
-declare_binder_enum! { ConstantExpressionEnum : [i32; 10] {
+declare_binder_enum! { ConstantExpressionEnum : i32 {
   decInt32_1 = 1,
   decInt32_2 = 1,
   decInt64_1 = 1,
