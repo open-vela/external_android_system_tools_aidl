@@ -75,6 +75,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 	}, &aidlGenProperties{
 		Srcs:                  srcs,
 		AidlRoot:              aidlRoot,
+		IsToT:                 version == i.nextVersion(),
 		ImportsWithoutVersion: i.properties.ImportsWithoutVersion,
 		Stability:             i.properties.Stability,
 		Lang:                  lang,
@@ -96,19 +97,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 	var cpp_std *string
 	var hostSupported *bool
 	var addCflags []string
-	targetProp := ccTargetProperties{
-		// Currently necessary for host builds
-		// TODO(b/31559095): bionic on host should define this
-		// TODO(b/146436251): default isn't applied because the module is created
-		// in PreArchMutators, when import behavior becomes explicit, the logic can
-		// be moved back to LoadHook
-		Host: hostProperties{Cflags: []string{
-			"-D__INTRODUCED_IN(n)=",
-			"-D__assert(a,b,c)=",
-			// We want all the APIs to be available on the host.
-			"-D__ANDROID_API__=10000"}},
-		Darwin: darwinProperties{Enabled: proptools.BoolPtr(false)},
-	}
 
 	if lang == langCpp {
 		importExportDependencies = append(importExportDependencies, "libbinder", "libutils")
@@ -117,27 +105,23 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		}
 		hostSupported = i.properties.Host_supported
 		minSdkVersion = i.properties.Backend.Cpp.Min_sdk_version
-	} else if lang == langNdk || lang == langNdkPlatform {
+	} else if lang == langNdk {
 		importExportDependencies = append(importExportDependencies, "libbinder_ndk")
-		nonAppProps := imageProperties{
-			Cflags: []string{"-DBINDER_STABILITY_SUPPORT"},
-		}
 		if genTrace {
 			sharedLibDependency = append(sharedLibDependency, "libandroid")
-			nonAppProps.Exclude_shared_libs = []string{"libandroid"}
-			nonAppProps.Header_libs = []string{"libandroid_aidltrace"}
-			nonAppProps.Shared_libs = []string{"libcutils"}
 		}
-		targetProp.Platform = nonAppProps
-		targetProp.Vendor = nonAppProps
-		targetProp.Product = nonAppProps
+		sdkVersion = proptools.StringPtr("current")
+		stl = proptools.StringPtr("c++_shared")
 		minSdkVersion = i.properties.Backend.Ndk.Min_sdk_version
-		hostSupported = i.properties.Host_supported
-		if lang == langNdk && i.shouldGenerateAppNdkBackend() {
-			sdkVersion = proptools.StringPtr("current")
-			// Don't worry! This maps to libc++.so for the platform variant.
-			stl = proptools.StringPtr("c++_shared")
+	} else if lang == langNdkPlatform {
+		importExportDependencies = append(importExportDependencies, "libbinder_ndk")
+		if genTrace {
+			headerLibs = append(headerLibs, "libandroid_aidltrace")
+			sharedLibDependency = append(sharedLibDependency, "libcutils")
 		}
+		hostSupported = i.properties.Host_supported
+		addCflags = append(addCflags, "-DBINDER_STABILITY_SUPPORT")
+		minSdkVersion = i.properties.Backend.Ndk.Min_sdk_version
 	} else {
 		panic("Unrecognized language: " + lang)
 	}
@@ -159,6 +143,19 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		// As libbinder is not available for the product processes, we must not create
 		// product variant for the aidl_interface
 		productAvailable = nil
+	}
+
+	if lang == langNdk {
+		// TODO(b/121157555): when the NDK variant is its own variant, these wouldn't interact,
+		// but we can't create a vendor or product version of an NDK variant
+		//
+		// nil (unspecified) is used instead of false so that this can't conflict with
+		// 'vendor: true', for instance.
+		vendorAvailable = nil
+		odmAvailable = nil
+		productAvailable = nil
+		overrideVndkProperties.Vndk.Enabled = proptools.BoolPtr(false)
+		overrideVndkProperties.Vndk.Support_system_process = proptools.BoolPtr(false)
 	}
 
 	mctx.CreateModule(aidlImplementationGeneratorFactory, &nameProperties{
@@ -189,8 +186,19 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 				Apex_available:            commonProperties.Apex_available,
 				Min_sdk_version:           minSdkVersion,
 				UseApexNameMacro:          true,
-				Target:                    targetProp,
-				Tidy:                      proptools.BoolPtr(true),
+				Target: ccTargetProperties{
+					// Currently necessary for host builds
+					// TODO(b/31559095): bionic on host should define this
+					// TODO(b/146436251): default isn't applied because the module is created
+					// in PreArchMutators, when import behavior becomes explicit, the logic can
+					// be moved back to LoadHook
+					Host: hostProperties{Cflags: []string{
+						"-D__INTRODUCED_IN(n)=",
+						"-D__assert(a,b,c)=",
+						// We want all the APIs to be available on the host.
+						"-D__ANDROID_API__=10000"}},
+					Darwin: perTargetProperties{Enabled: proptools.BoolPtr(false)}},
+				Tidy: proptools.BoolPtr(true),
 				// Do the tidy check only for the generated headers
 				Tidy_flags:            []string{"--header-filter=" + android.PathForOutput(mctx).String() + ".*"},
 				Tidy_checks_as_errors: []string{"*"},
@@ -225,6 +233,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 	}, &aidlGenProperties{
 		Srcs:                  srcs,
 		AidlRoot:              aidlRoot,
+		IsToT:                 version == i.nextVersion(),
 		ImportsWithoutVersion: i.properties.ImportsWithoutVersion,
 		Stability:             i.properties.Stability,
 		Lang:                  langJava,
@@ -274,6 +283,7 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		Srcs:                  srcs,
 		AidlRoot:              aidlRoot,
 		ImportsWithoutVersion: i.properties.ImportsWithoutVersion,
+		IsToT:                 version == i.nextVersion(),
 		Stability:             i.properties.Stability,
 		Lang:                  langRust,
 		BaseName:              i.ModuleBase.Name(),
@@ -293,7 +303,7 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		Defaults:       []string{"aidl-rust-module-defaults"},
 		Host_supported: i.properties.Host_supported,
 		Apex_available: i.properties.Backend.Rust.Apex_available,
-		Target:         rustTargetProperties{Darwin: darwinProperties{Enabled: proptools.BoolPtr(false)}},
+		Target:         rustTargetProperties{Darwin: perTargetProperties{Enabled: proptools.BoolPtr(false)}},
 	}, &rust.SourceProviderProperties{
 		Source_stem: proptools.StringPtr(versionedRustName),
 	}, &aidlRustSourceProviderProperties{
@@ -321,7 +331,7 @@ func (i *aidlInterface) versionedName(version string) string {
 	return name + "-V" + version
 }
 
-func (i *aidlInterface) srcsForVersion(mctx android.EarlyModuleContext, version string) (srcs []string, aidlRoot string) {
+func (i *aidlInterface) srcsForVersion(mctx android.LoadHookContext, version string) (srcs []string, aidlRoot string) {
 	if version == i.nextVersion() {
 		return i.properties.Srcs, i.properties.Local_include_dir
 	} else {
@@ -420,24 +430,20 @@ func (g *aidlImplementationGenerator) GenerateImplementation(ctx android.TopDown
 	i := lookupInterface(g.properties.AidlInterfaceName, ctx.Config())
 	version := g.properties.Version
 	lang := g.properties.Lang
-	imports := make([]string, len(i.properties.Imports))
-	for idx, anImport := range i.properties.Imports {
-		importModule, _ := parseModuleWithVersion(anImport)
-		if lookupInterface(importModule, ctx.Config()) == nil {
-			if ctx.Config().AllowMissingDependencies() {
-				continue
-			}
-			panic(anImport + " doesn't exist, it should be checked in 'checkImports' mutator.")
-		}
-		imports[idx] = i.getImportWithVersion(version, anImport, ctx.Config()) + "-" + lang
-	}
-
 	if g.properties.Lang == langJava {
+		imports := make([]string, len(i.properties.Imports))
+		for idx, anImport := range i.properties.Imports {
+			imports[idx] = i.getImportWithVersion(version, anImport, ctx.Config()) + "-" + langJava
+		}
 		if p, ok := g.properties.ModuleProperties[0].(*javaProperties); ok {
 			p.Static_libs = imports
 		}
 		ctx.CreateModule(java.LibraryFactory, g.properties.ModuleProperties...)
 	} else {
+		imports := make([]string, len(i.properties.Imports))
+		for idx, anImport := range i.properties.Imports {
+			imports[idx] = i.getImportWithVersion(version, anImport, ctx.Config()) + "-" + lang
+		}
 		if p, ok := g.properties.ModuleProperties[0].(*ccProperties); ok {
 			p.Shared_libs = append(p.Shared_libs, imports...)
 			p.Export_shared_lib_headers = append(p.Export_shared_lib_headers, imports...)
