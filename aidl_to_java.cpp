@@ -731,11 +731,11 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
        }},
       {"IBinder[]",
        [](const CodeGeneratorContext& c) {
-         c.writer << c.var << " = " << c.parcel << ".createBinderArray();\n";
+         c.writer << c.parcel << ".readBinderArray(" << c.var << ");\n";
        }},
       {"FileDescriptor[]",
        [](const CodeGeneratorContext& c) {
-         c.writer << c.var << " = " << c.parcel << ".createRawFileDescriptorArray();\n";
+         c.writer << c.parcel << ".readRawFileDescriptorArray(" << c.var << ");\n";
        }},
       {"ParcelFileDescriptor",
        [](const CodeGeneratorContext& c) {
