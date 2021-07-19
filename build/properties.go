@@ -21,27 +21,17 @@ type nameProperties struct {
 type hostProperties struct {
 	Cflags []string
 }
-
-type darwinProperties struct {
+type perTargetProperties struct {
 	Enabled *bool
 }
 
-type imageProperties struct {
-	Shared_libs         []string
-	Header_libs         []string
-	Exclude_shared_libs []string
-	Cflags              []string
-}
-
 type ccTargetProperties struct {
-	Host     hostProperties
-	Darwin   darwinProperties
-	Platform imageProperties
-	Vendor   imageProperties
+	Host   hostProperties
+	Darwin perTargetProperties
 }
 
 type rustTargetProperties struct {
-	Darwin darwinProperties
+	Darwin perTargetProperties
 }
 
 type ccProperties struct {
