@@ -40,10 +40,8 @@ const (
 	langCpp                   = "cpp"
 	langJava                  = "java"
 	langNdk                   = "ndk"
+	langNdkPlatform           = "ndk_platform"
 	langRust                  = "rust"
-	// TODO(b/161456198) remove the NDK platform backend as the 'platform' variant of the NDK
-	// backend serves the same purpose.
-	langNdkPlatform = "ndk_platform"
 
 	currentVersion = "current"
 )
@@ -380,18 +378,19 @@ type aidlInterfaceProperties struct {
 		Cpp struct {
 			CommonNativeBackendProperties
 		}
-		// Backend of the compiler generating code for C++ clients using libbinder_ndk
-		// (stable C interface to system's libbinder) When enabled, this creates a target
-		// called "<name>-V<ver>-ndk" (for both apps and platform) and
-		// "<name>-V<ver>-ndk_platform" (for platform only).
-		// TODO(b/161456198): remove the ndk_platform backend as the ndk backend can serve
-		// the same purpose.
+		// Backend of the compiler generating code for C++ clients using
+		// libbinder_ndk (stable C interface to system's libbinder)
+		// When enabled, this creates a target called "<name>-ndk"
+		// (for apps) and "<name>-ndk_platform" (for platform usage).
 		Ndk struct {
 			CommonNativeBackendProperties
 
-			// If set to false, the ndk backend is exclusive to platform and is not
-			// available to applications. Default is true (i.e. available to both
-			// applications and platform).
+			// Currently, all ndk-supported interfaces generate two variants:
+			// - ndk - for apps to use, against an NDK
+			// - ndk_platform - for the platform to use
+			//
+			// This adds an option to disable the 'ndk' variant in cases where APIs
+			// only available in the platform version work.
 			Apps_enabled *bool
 		}
 		// Backend of the compiler generating code for Rust clients.
@@ -431,27 +430,25 @@ type aidlInterface struct {
 
 func (i *aidlInterface) shouldGenerateJavaBackend() bool {
 	// explicitly true if not specified to give early warning to devs
-	return proptools.BoolDefault(i.properties.Backend.Java.Enabled, true)
+	return i.properties.Backend.Java.Enabled == nil || *i.properties.Backend.Java.Enabled
 }
 
 func (i *aidlInterface) shouldGenerateCppBackend() bool {
 	// explicitly true if not specified to give early warning to devs
-	return proptools.BoolDefault(i.properties.Backend.Cpp.Enabled, true)
+	return i.properties.Backend.Cpp.Enabled == nil || *i.properties.Backend.Cpp.Enabled
 }
 
 func (i *aidlInterface) shouldGenerateNdkBackend() bool {
 	// explicitly true if not specified to give early warning to devs
-	return proptools.BoolDefault(i.properties.Backend.Ndk.Enabled, true)
 	return i.properties.Backend.Ndk.Enabled == nil || *i.properties.Backend.Ndk.Enabled
 }
 
-// Returns whether the ndk backend supports applications or not. Default is `true`. `false` is
-// returned only when `apps_enabled` is explicitly set to false. Note that the ndk_platform backend
-// (which will be removed in the future) is not affected by this. In other words, it is always
-// exclusive for the platform, as its name clearly shows.
 func (i *aidlInterface) shouldGenerateAppNdkBackend() bool {
-	return i.shouldGenerateNdkBackend() &&
-		proptools.BoolDefault(i.properties.Backend.Ndk.Apps_enabled, true)
+	if !i.shouldGenerateNdkBackend() {
+		return false
+	}
+	// explicitly true if not specified to give early warning to devs
+	return i.properties.Backend.Ndk.Apps_enabled == nil || *i.properties.Backend.Ndk.Apps_enabled
 }
 
 func (i *aidlInterface) shouldGenerateRustBackend() bool {
@@ -691,7 +688,7 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 	nextVersion := i.nextVersion()
 	shouldGenerateLangBackendMap := map[string]bool{
 		langCpp:         i.shouldGenerateCppBackend(),
-		langNdk:         i.shouldGenerateNdkBackend(),
+		langNdk:         i.shouldGenerateAppNdkBackend(),
 		langNdkPlatform: i.shouldGenerateNdkBackend(),
 		langJava:        i.shouldGenerateJavaBackend(),
 		langRust:        i.shouldGenerateRustBackend()}
