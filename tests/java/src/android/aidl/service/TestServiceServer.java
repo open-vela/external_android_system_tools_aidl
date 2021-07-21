@@ -525,6 +525,24 @@ public class TestServiceServer extends ITestService.Stub {
     @Override
     public void TakesANullableIBinderList(List<IBinder> input) throws RemoteException {}
     @Override
+    public IBinder[] ReverseIBinderArray(IBinder[] input, IBinder[] repeated) {
+      IBinder[] reversed = new IBinder[input.length];
+      for (int i = 0; i < input.length; i++) {
+        repeated[i] = input[i];
+        reversed[i] = input[input.length - i - 1];
+      }
+      return reversed;
+    }
+    @Override
+    public IBinder[] ReverseNullableIBinderArray(IBinder[] input, IBinder[] repeated) {
+      IBinder[] reversed = new IBinder[input.length];
+      for (int i = 0; i < input.length; i++) {
+        repeated[i] = input[i];
+        reversed[i] = input[input.length - i - 1];
+      }
+      return reversed;
+    }
+    @Override
     public void RepeatExtendableParcelable(ExtendableParcelable ep, ExtendableParcelable ep2)
         throws RemoteException {
       ep2.a = ep.a;
