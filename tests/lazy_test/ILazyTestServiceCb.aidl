@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,10 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <BnLazyTestService.h>
-#include <binder/Status.h>
-
-namespace android {
-namespace binder {
-
-class LazyTestService : public BnLazyTestService {
- public:
-  LazyTestService() {}
-  virtual ~LazyTestService() {}
-
-  ::android::binder::Status forcePersist(bool persist);
-};
-
-}  // namespace binder
-}  // namespace android
+interface ILazyTestServiceCb {
+    /**
+     * Set the eventfd used to notify that the active services
+     * callback is being executed and is about to terminate the process.
+     */
+    void setEventFd(in ParcelFileDescriptor parcelFd);
+}
