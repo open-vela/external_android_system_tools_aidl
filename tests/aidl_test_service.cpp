@@ -281,7 +281,7 @@ class CppJavaTests : public BnCppJavaTests {
                                      std::optional<vector<sp<IBinder>>>* _aidl_return) override {
     *repeated = input;
     *_aidl_return = input;
-    if (_aidl_return) {
+    if (*_aidl_return) {
       std::reverse((*_aidl_return)->begin(), (*_aidl_return)->end());
     }
     return Status::ok();
