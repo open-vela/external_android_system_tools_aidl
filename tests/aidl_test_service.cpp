@@ -249,6 +249,7 @@ class CppJavaTests : public BnCppJavaTests {
   Status ReverseFileDescriptorArray(const vector<unique_fd>& input, vector<unique_fd>* repeated,
                                     vector<unique_fd>* _aidl_return) override {
     ALOGI("Reversing descriptor array of length %zu", input.size());
+    repeated->clear();
     for (const auto& item : input) {
       repeated->push_back(unique_fd(dup(item.get())));
       _aidl_return->push_back(unique_fd(dup(item.get())));
@@ -280,7 +281,7 @@ class CppJavaTests : public BnCppJavaTests {
                                      std::optional<vector<sp<IBinder>>>* _aidl_return) override {
     *repeated = input;
     *_aidl_return = input;
-    if (_aidl_return) {
+    if (*_aidl_return) {
       std::reverse((*_aidl_return)->begin(), (*_aidl_return)->end());
     }
     return Status::ok();
