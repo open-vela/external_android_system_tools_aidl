@@ -446,14 +446,12 @@ func (i *aidlInterface) shouldGenerateNdkBackend() bool {
 }
 
 // Returns whether the ndk backend supports applications or not. Default is `true`. `false` is
-// returned when `apps_enabled` is explicitly set to false or the interface is exclusive to vendor
-// (i.e. `vendor: true`). Note that the ndk_platform backend (which will be removed in the future)
-// is not affected by this. In other words, it is always exclusive for the platform, as its name
-// clearly shows.
+// returned only when `apps_enabled` is explicitly set to false. Note that the ndk_platform backend
+// (which will be removed in the future) is not affected by this. In other words, it is always
+// exclusive for the platform, as its name clearly shows.
 func (i *aidlInterface) shouldGenerateAppNdkBackend() bool {
 	return i.shouldGenerateNdkBackend() &&
-		proptools.BoolDefault(i.properties.Backend.Ndk.Apps_enabled, true) &&
-		!i.SocSpecific()
+		proptools.BoolDefault(i.properties.Backend.Ndk.Apps_enabled, true)
 }
 
 func (i *aidlInterface) shouldGenerateRustBackend() bool {
