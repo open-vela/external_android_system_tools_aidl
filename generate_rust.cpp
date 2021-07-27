@@ -187,7 +187,7 @@ void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const Aid
     }
 
     for (const AidlArgument* arg : method.GetOutArguments()) {
-      out << "*" << kArgumentPrefix << arg->GetName() << " = _aidl_reply.read()?;\n";
+      out << "_aidl_reply.read_onto(" << kArgumentPrefix << arg->GetName() << ")?;\n";
     }
   }
 
@@ -352,6 +352,10 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
                            const AidlTypenames& typenames, const IoDelegate& io_delegate,
                            const Options& options) {
   CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
+
+  // Forbid the use of unsafe in auto-generated code.
+  // Unsafe code should only be allowed in libbinder_rs.
+  *code_writer << "#![forbid(unsafe_code)]\n";
 
   *code_writer << "#![allow(non_upper_case_globals)]\n";
   *code_writer << "#![allow(non_snake_case)]\n";
@@ -558,37 +562,23 @@ void GenerateParcelSerializeBody(CodeWriter& out, const AidlStructuredParcelable
 
 void GenerateParcelDeserializeBody(CodeWriter& out, const AidlStructuredParcelable* parcel,
                                    const AidlTypenames& typenames) {
-  out << "let start_pos = parcel.get_data_position();\n";
-  out << "let parcelable_size: i32 = parcel.read()?;\n";
-  out << "if parcelable_size < 0 { return Err(binder::StatusCode::BAD_VALUE); }\n";
-  out << "if start_pos.checked_add(parcelable_size).is_none() {\n";
-  out << "  return Err(binder::StatusCode::BAD_VALUE);\n";
-  out << "}\n";
+  out << "parcel.sized_read(|subparcel| {\n";
+  out.Indent();
 
-  // Pre-emit the common field prologue code, shared between all fields:
-  ostringstream prologue;
-  prologue << "if (parcel.get_data_position() - start_pos) == parcelable_size {\n";
-  // We assume the lhs can never be > parcelable_size, because then the read
-  // immediately preceding this check would have returned NOT_ENOUGH_DATA
-  prologue << "  return Ok(Some(result));\n";
-  prologue << "}\n";
-  string prologue_str = prologue.str();
-
-  out << "let mut result = Self::default();\n";
   for (const auto& variable : parcel->GetFields()) {
-    out << prologue_str;
+    out << "if subparcel.has_more_data() {\n";
+    out.Indent();
     if (!TypeHasDefault(variable->GetType(), typenames)) {
-      out << "result." << variable->GetName() << " = Some(parcel.read()?);\n";
+      out << "self." << variable->GetName() << " = Some(subparcel.read()?);\n";
     } else {
-      out << "result." << variable->GetName() << " = parcel.read()?;\n";
+      out << "self." << variable->GetName() << " = subparcel.read()?;\n";
     }
+    out.Dedent();
+    out << "}\n";
   }
-  // Now we read all fields.
-  // Skip remaining data in case we're reading from a newer version
-  out << "unsafe {\n";
-  out << "  parcel.set_data_position(start_pos + parcelable_size)?;\n";
-  out << "}\n";
-  out << "Ok(Some(result))\n";
+  out << "Ok(())\n";
+  out.Dedent();
+  out << "})\n";
 }
 
 void GenerateParcelBody(CodeWriter& out, const AidlUnionDecl* parcel,
@@ -668,7 +658,8 @@ void GenerateParcelDeserializeBody(CodeWriter& out, const AidlUnionDecl* parcel,
     } else {
       out << "parcel.read()?;\n";
     }
-    out << "Ok(Some(Self::" << variable->GetCapitalizedName() << "(value)))\n";
+    out << "*self = Self::" << variable->GetCapitalizedName() << "(value);\n";
+    out << "Ok(())\n";
     out.Dedent();
     out << "}\n";
   }
@@ -713,23 +704,15 @@ void GenerateParcelSerialize(CodeWriter& out, const ParcelableType* parcel,
 template <typename ParcelableType>
 void GenerateParcelDeserialize(CodeWriter& out, const ParcelableType* parcel,
                                const AidlTypenames& typenames) {
-  out << "impl binder::parcel::Deserialize for " << parcel->GetName() << " {\n";
-  out << "  fn deserialize(parcel: &binder::parcel::Parcel) -> binder::Result<Self> {\n";
-  out << "    <Self as binder::parcel::DeserializeOption>::deserialize_option(parcel)\n";
-  out << "       .transpose()\n";
-  out << "       .unwrap_or(Err(binder::StatusCode::UNEXPECTED_NULL))\n";
-  out << "  }\n";
-  out << "}\n";
+  out << "binder::impl_deserialize_for_parcelable!(" << parcel->GetName() << ");\n";
 
-  out << "impl binder::parcel::DeserializeArray for " << parcel->GetName() << " {}\n";
-
-  out << "impl binder::parcel::DeserializeOption for " << parcel->GetName() << " {\n";
+  // The actual deserialization code lives in the private
+  // deserialize_parcelable() method which we emit here.
+  out << "impl " << parcel->GetName() << " {\n";
   out.Indent();
-  out << "fn deserialize_option(parcel: &binder::parcel::Parcel) -> binder::Result<Option<Self>> "
-         "{\n";
+  out << "fn deserialize_parcelable(&mut self, "
+         "parcel: &binder::parcel::Parcel) -> binder::Result<()> {\n";
   out.Indent();
-  out << "let status: i32 = parcel.read()?;\n";
-  out << "if status == 0 { return Ok(None); }\n";
 
   GenerateParcelDeserializeBody(out, parcel, typenames);
 
@@ -743,6 +726,10 @@ template <typename ParcelableType>
 bool GenerateRustParcel(const string& filename, const ParcelableType* parcel,
                         const AidlTypenames& typenames, const IoDelegate& io_delegate) {
   CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
+
+  // Forbid the use of unsafe in auto-generated code.
+  // Unsafe code should only be allowed in libbinder_rs.
+  *code_writer << "#![forbid(unsafe_code)]\n";
 
   // Debug is always derived because all Rust AIDL types implement it
   // ParcelFileDescriptor doesn't support any of the others because
@@ -771,14 +758,18 @@ bool GenerateRustEnumDeclaration(const string& filename, const AidlEnumDeclarati
                                  const AidlTypenames& typenames, const IoDelegate& io_delegate) {
   CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
 
+  // Forbid the use of unsafe in auto-generated code.
+  // Unsafe code should only be allowed in libbinder_rs.
+  *code_writer << "#![forbid(unsafe_code)]\n";
+
   const auto& aidl_backing_type = enum_decl->GetBackingType();
   auto backing_type = RustNameOf(aidl_backing_type, typenames, StorageMode::VALUE);
 
   // TODO(b/177860423) support "deprecated" for enum types
   *code_writer << "#![allow(non_upper_case_globals)]\n";
   *code_writer << "use binder::declare_binder_enum;\n";
-  *code_writer << "declare_binder_enum! { " << enum_decl->GetName() << " : " << backing_type
-               << " {\n";
+  *code_writer << "declare_binder_enum! { " << enum_decl->GetName() << " : [" << backing_type
+               << "; " << std::to_string(enum_decl->GetEnumerators().size()) << "] {\n";
   code_writer->Indent();
   for (const auto& enumerator : enum_decl->GetEnumerators()) {
     auto value = enumerator->GetValue()->ValueString(aidl_backing_type, ConstantValueDecorator);

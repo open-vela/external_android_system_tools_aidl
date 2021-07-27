@@ -486,9 +486,15 @@ string AidlTypeSpecifier::ToString() const {
   return ret;
 }
 
-bool AidlTypeSpecifier::Resolve(const AidlTypenames& typenames) {
+// When `scope` is specified, name is resolved first based on it.
+// `scope` can be null for built-in types and fully-qualified types.
+bool AidlTypeSpecifier::Resolve(const AidlTypenames& typenames, const AidlScope* scope) {
   AIDL_FATAL_IF(IsResolved(), this);
-  AidlTypenames::ResolvedTypename result = typenames.ResolveTypename(unresolved_name_);
+  std::string name = unresolved_name_;
+  if (scope) {
+    name = scope->ResolveName(name);
+  }
+  AidlTypenames::ResolvedTypename result = typenames.ResolveTypename(name);
   if (result.is_resolved) {
     fully_qualified_name_ = result.canonical_name;
     split_name_ = Split(fully_qualified_name_, ".");
@@ -900,11 +906,20 @@ string AidlMethod::ToString() const {
 AidlDefinedType::AidlDefinedType(const AidlLocation& location, const std::string& name,
                                  const Comments& comments, const std::string& package,
                                  std::vector<std::unique_ptr<AidlMember>>* members)
-    : AidlAnnotatable(location, comments),
-      name_(name),
-      package_(package),
-      split_package_(package.empty() ? std::vector<std::string>()
-                                     : android::base::Split(package, ".")) {
+    : AidlAnnotatable(location, comments), AidlScope(this), name_(name), package_(package) {
+  // adjust name/package when name is fully qualified (for preprocessed files)
+  if (package_.empty() && name_.find('.') != std::string::npos) {
+    // Note that this logic is absolutely wrong.  Given a parcelable
+    // org.some.Foo.Bar, the class name is Foo.Bar, but this code will claim that
+    // the class is just Bar.  However, this was the way it was done in the past.
+    //
+    // See b/17415692
+    auto pos = name.rfind('.');
+    // name is the last part.
+    name_ = name.substr(pos + 1);
+    // package is the initial parts (except the last).
+    package_ = name.substr(0, pos);
+  }
   if (members) {
     for (auto& m : *members) {
       if (auto constant = m->AsConstantDeclaration(); constant) {
@@ -993,6 +1008,45 @@ bool AidlDefinedType::CheckValidForGetterNames() const {
     }
   }
   return success;
+}
+
+std::string AidlDefinedType::ResolveName(const std::string& name) const {
+  // TODO(b/182508839): resolve with nested types when we support nested types
+  //
+  // For example, in the following (the syntax is TBD), t1's Type is x.Foo.Bar.Type
+  // while t2's Type is y.Type.
+  //
+  // package x;
+  // import y.Type;
+  // parcelable Foo {
+  //   parcelable Bar {
+  //     enum Type { Type1, Type2 }
+  //     Type t1;
+  //   }
+  //   Type t2;
+  // }
+  AIDL_FATAL_IF(!GetEnclosingScope(), this)
+      << "Type should have an enclosing scope.(e.g. AidlDocument)";
+  return GetEnclosingScope()->ResolveName(name);
+}
+
+template <typename T>
+const T* AidlCast(const AidlNode& node) {
+  struct CastVisitor : AidlVisitor {
+    const T* cast = nullptr;
+    void Visit(const T& t) override { cast = &t; }
+  } visitor;
+  node.DispatchVisit(visitor);
+  return visitor.cast;
+}
+
+const AidlDocument& AidlDefinedType::GetDocument() const {
+  // TODO(b/182508839): resolve with nested types when we support nested types
+  auto scope = GetEnclosingScope();
+  AIDL_FATAL_IF(!scope, this) << "no scope defined.";
+  auto doc = AidlCast<AidlDocument>(scope->GetNode());
+  AIDL_FATAL_IF(!doc, this) << "scope is not a document.";
+  return *doc;
 }
 
 AidlParcelable::AidlParcelable(const AidlLocation& location, const std::string& name,
@@ -1260,7 +1314,7 @@ bool AidlEnumDeclaration::Autofill(const AidlTypenames& typenames) {
         std::make_unique<AidlTypeSpecifier>(AIDL_LOCATION_HERE, "byte", false, nullptr, Comments{});
   }
   // Autofill() is called after type resolution, we resolve the backing type manually.
-  if (!backing_type_->Resolve(typenames)) {
+  if (!backing_type_->Resolve(typenames, nullptr)) {
     AIDL_ERROR(this) << "Invalid backing type: " << backing_type_->GetName();
   }
   return true;
@@ -1435,6 +1489,12 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
         AIDL_ERROR(arg) << "Argument name cannot begin with '_aidl'";
         return false;
       }
+
+      if (arg->GetType().GetName() == "void") {
+        AIDL_ERROR(arg->GetType())
+            << "'void' is an invalid type for the parameter '" << arg->GetName() << "'";
+        return false;
+      }
     }
 
     auto it = method_names.find(m->GetName());
@@ -1481,31 +1541,49 @@ AidlImport::AidlImport(const AidlLocation& location, const std::string& needed_c
                        const Comments& comments)
     : AidlNode(location, comments), needed_class_(needed_class) {}
 
-// Resolves unresolved type name to fully qualified typename to import
-// case #1: SimpleName --> import p.SimpleName
-// case #2: Outer.Inner --> import p.Outer
-// case #3: p.SimpleName --> (as is)
-std::optional<std::string> AidlDocument::ResolveName(const std::string& unresolved_name) const {
-  std::string canonical_name;
-  const auto first_dot = unresolved_name.find_first_of('.');
+AidlDocument::AidlDocument(const AidlLocation& location, const Comments& comments,
+                           std::vector<std::unique_ptr<AidlImport>> imports,
+                           std::vector<std::unique_ptr<AidlDefinedType>> defined_types,
+                           bool is_preprocessed)
+    : AidlCommentable(location, comments),
+      AidlScope(this),
+      imports_(std::move(imports)),
+      defined_types_(std::move(defined_types)),
+      is_preprocessed_(is_preprocessed) {
+  for (const auto& t : defined_types_) {
+    t->SetEnclosingScope(this);
+  }
+}
+
+// Resolves type name in the current document.
+// - built-in types
+// - imported types
+// - top-level type
+std::string AidlDocument::ResolveName(const std::string& name) const {
+  if (AidlTypenames::IsBuiltinTypename(name)) {
+    return name;
+  }
+
+  const auto first_dot = name.find_first_of('.');
+  // For "Outer.Inner", we look up "Outer" in the import list.
   const std::string class_name =
-      (first_dot == std::string::npos) ? unresolved_name : unresolved_name.substr(0, first_dot);
+      (first_dot == std::string::npos) ? name : name.substr(0, first_dot);
+  // Keep ".Inner", to make a fully-qualified name
+  const std::string nested_type = (first_dot == std::string::npos) ? "" : name.substr(first_dot);
+
   for (const auto& import : Imports()) {
-    const auto& fq_name = import->GetNeededClass();
-    const auto last_dot = fq_name.find_last_of('.');
-    const std::string imported_type_name =
-        (last_dot == std::string::npos) ? fq_name : fq_name.substr(last_dot + 1);
-    if (imported_type_name == class_name) {
-      if (canonical_name != "" && canonical_name != fq_name) {
-        AIDL_ERROR(import) << "Ambiguous type: " << canonical_name << " vs. " << fq_name;
-        return {};
-      }
-      canonical_name = fq_name;
+    if (import->SimpleName() == class_name) {
+      return import->GetNeededClass() + nested_type;
     }
   }
-  // if not found, use unresolved_name as it is
-  if (canonical_name == "") {
-    return unresolved_name;
+
+  // check if it is a top-level type.
+  for (const auto& type : DefinedTypes()) {
+    if (type->GetName() == class_name) {
+      return type->GetCanonicalName() + nested_type;
+    }
   }
-  return canonical_name;
+
+  // name itself might be fully-qualified name.
+  return name;
 }

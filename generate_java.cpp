@@ -688,8 +688,10 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   out << " * This file is auto-generated.  DO NOT MODIFY.\n";
   out << " */\n";
 
-  out << "package " + decl->GetPackage() + ";\n";
-  out << "\n";
+  if (!decl->GetPackage().empty()) {
+    out << "package " + decl->GetPackage() + ";\n";
+    out << "\n";
+  }
   out << GenerateComments(*decl);
   out << GenerateAnnotations(*decl);
 
@@ -718,7 +720,9 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   // default ctor() inits with first member's default value
   out << "public " + clazz + "() {\n";
   out.Indent();
-  out << first_type + " _value = " << (first_value.empty() ? "null" : first_value) << ";\n";
+  out << first_type + " _value = "
+      << (first_value.empty() ? DefaultJavaValueOf(first_field->GetType(), typenames) : first_value)
+      << ";\n";
   out << "this._tag = " << first_field->GetName() << ";\n";
   out << "this._value = _value;\n";
   out.Dedent();
