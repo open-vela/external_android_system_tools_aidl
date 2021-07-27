@@ -198,6 +198,17 @@ aidl_interface {
     ],
 }
 
+aidl_interface {
+    name: "test-piece-6",
+    unstable: true,
+    local_include_dir: "tests_6",
+    flags: ["-Werror"],
+    srcs: [
+        "tests_6/test6/Bar.aidl",
+        "tests_6/test6/Foo.aidl",
+    ],
+}
+
 // These test that a parcel imported from A->B->C will have the required dependencies to link in
 // all backends (C++ backends need to link direclty against the constructor of the parcelable
 // in order to work)
@@ -240,4 +251,10 @@ aidl_interface {
             enabled: true,
         },
     },
+}
+
+sh_binary {
+    name: "aidl_hash_gen",
+    src: "hash_gen.sh",
+    host_supported: true,
 }
