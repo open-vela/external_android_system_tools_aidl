@@ -285,6 +285,10 @@ void ReturnStatement::Write(CodeWriter* to) const {
   to->Write(";\n");
 }
 
+void BreakStatement::Write(CodeWriter* to) const {
+  to->Write("break;\n");
+}
+
 void TryStatement::Write(CodeWriter* to) const {
   to->Write("try ");
   this->statements->Write(to);

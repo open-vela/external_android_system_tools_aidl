@@ -207,7 +207,22 @@ void StubClass::finish() {
       std::vector<std::shared_ptr<Expression>>{this->transact_code, this->transact_data,
                                                this->transact_reply, this->transact_flags});
   default_case->statements->Add(std::make_shared<ReturnStatement>(superCall));
+
+  auto case_count = transact_switch_user->cases.size();
   transact_switch_user->cases.push_back(default_case);
+
+  // Interface token validation is done for user-defined transactions.
+  if (case_count > 0) {
+    auto ifStatement = std::make_shared<IfStatement>();
+    ifStatement->expression = std::make_shared<LiteralExpression>(
+        "code >= android.os.IBinder.FIRST_CALL_TRANSACTION && "
+        "code <= android.os.IBinder.LAST_CALL_TRANSACTION");
+    ifStatement->statements = std::make_shared<StatementBlock>();
+    ifStatement->statements->Add(std::make_shared<MethodCall>(
+        this->transact_data, "enforceInterface",
+        std::vector<std::shared_ptr<Expression>>{this->get_transact_descriptor(nullptr)}));
+    transact_statements->Add(ifStatement);
+  }
 
   // Meta transactions are looked up prior to user-defined transactions.
   transact_statements->Add(this->transact_switch_meta);
@@ -221,6 +236,12 @@ void StubClass::finish() {
     auto code_switch_default_case = std::make_shared<Case>();
     code_switch_default_case->statements->Add(std::make_shared<ReturnStatement>(NULL_VALUE));
     this->code_to_method_name_switch->cases.push_back(code_switch_default_case);
+  }
+
+  // There will be at least one statement for the default, but if we emit a
+  // return true after that default, it will be unreachable.
+  if (case_count > 0) {
+    transact_statements->Add(std::make_shared<ReturnStatement>(TRUE_VALUE));
   }
 }
 
@@ -425,7 +446,7 @@ static void generate_stub_code(const AidlInterface& iface, const AidlMethod& met
                                std::shared_ptr<Variable> transact_reply,
                                const AidlTypenames& typenames,
                                std::shared_ptr<StatementBlock> statement_block,
-                               std::shared_ptr<StubClass> stubClass, const Options& options) {
+                               const Options& options) {
   // try and finally
   auto tryStatement = std::make_shared<TryStatement>();
   auto finallyStatement = std::make_shared<FinallyStatement>();
@@ -448,11 +469,6 @@ static void generate_stub_code(const AidlInterface& iface, const AidlMethod& met
   }
 
   auto realCall = std::make_shared<MethodCall>(THIS_VALUE, method.GetName());
-
-  // interface token validation is the very first thing we do
-  statements->Add(std::make_shared<MethodCall>(
-      transact_data, "enforceInterface",
-      std::vector<std::shared_ptr<Expression>>{stubClass->get_transact_descriptor(&method)}));
 
   // args
   VariableFactory stubArgs("_arg");
@@ -525,9 +541,6 @@ static void generate_stub_code(const AidlInterface& iface, const AidlMethod& met
       generate_write_to_parcel(arg->GetType(), statements, v, transact_reply, true, typenames);
     }
   }
-
-  // return true
-  statements->Add(std::make_shared<ReturnStatement>(TRUE_VALUE));
 }
 
 static void generate_stub_case(const AidlInterface& iface, const AidlMethod& method,
@@ -537,7 +550,8 @@ static void generate_stub_case(const AidlInterface& iface, const AidlMethod& met
   auto c = std::make_shared<Case>(transactCodeName);
 
   generate_stub_code(iface, method, oneway, stubClass->transact_data, stubClass->transact_reply,
-                     typenames, c->statements, stubClass, options);
+                     typenames, c->statements, options);
+  c->statements->Add(std::make_shared<BreakStatement>());
 
   stubClass->transact_switch_user->cases.push_back(c);
 }
@@ -562,7 +576,8 @@ static void generate_stub_case_outline(const AidlInterface& iface, const AidlMet
     stubClass->elements.push_back(onTransact_case);
 
     generate_stub_code(iface, method, oneway, transact_data, transact_reply, typenames,
-                       onTransact_case->statements, stubClass, options);
+                       onTransact_case->statements, options);
+    onTransact_case->statements->Add(std::make_shared<ReturnStatement>(TRUE_VALUE));
   }
 
   // Generate the case dispatch.
@@ -828,8 +843,7 @@ static void generate_methods(const AidlInterface& iface, const AidlMethod& metho
     if (method.GetName() == kGetInterfaceVersion && options.Version() > 0) {
       auto c = std::make_shared<Case>(transactCodeName);
       std::ostringstream code;
-      code << "data.enforceInterface(descriptor);\n"
-           << "reply.writeNoException();\n"
+      code << "reply.writeNoException();\n"
            << "reply.writeInt(" << kGetInterfaceVersion << "());\n"
            << "return true;\n";
       c->statements->Add(std::make_shared<LiteralStatement>(code.str()));
@@ -838,8 +852,7 @@ static void generate_methods(const AidlInterface& iface, const AidlMethod& metho
     if (method.GetName() == kGetInterfaceHash && !options.Hash().empty()) {
       auto c = std::make_shared<Case>(transactCodeName);
       std::ostringstream code;
-      code << "data.enforceInterface(descriptor);\n"
-           << "reply.writeNoException();\n"
+      code << "reply.writeNoException();\n"
            << "reply.writeString(" << kGetInterfaceHash << "());\n"
            << "return true;\n";
       c->statements->Add(std::make_shared<LiteralStatement>(code.str()));
