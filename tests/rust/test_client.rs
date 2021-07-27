@@ -518,11 +518,11 @@ fn test_parcelable() {
     assert_eq!(parcelable.byteDefaultsToFour, 4);
     assert_eq!(parcelable.intDefaultsToFive, 5);
     assert_eq!(parcelable.longDefaultsToNegativeSeven, -7);
-    assert_eq!(parcelable.booleanDefaultsToTrue, true);
+    assert!(parcelable.booleanDefaultsToTrue);
     assert_eq!(parcelable.charDefaultsToC, 'C' as u16);
     assert_eq!(parcelable.floatDefaultsToPi, 3.14f32);
     assert_eq!(parcelable.doubleWithDefault, -3.14e17f64);
-    assert_eq!(parcelable.boolDefault, false);
+    assert!(!parcelable.boolDefault);
     assert_eq!(parcelable.byteDefault, 0);
     assert_eq!(parcelable.intDefault, 0);
     assert_eq!(parcelable.longDefault, 0);
