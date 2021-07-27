@@ -364,9 +364,9 @@ static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlType
     AIDL_FATAL_IF(type_param->IsGeneric(), aidl) << "AIDL doesn't support nested type parameter";
 
     AidlTypeSpecifier array_type =
-        AidlTypeSpecifier(AIDL_LOCATION_HERE, type_param->GetUnresolvedName(), true /* isArray */,
+        AidlTypeSpecifier(AIDL_LOCATION_HERE, type_param->GetName(), true /* isArray */,
                           nullptr /* type_params */, aidl.GetComments());
-    if (!(array_type.Resolve(types) && array_type.CheckValid(types))) {
+    if (!(array_type.Resolve(types, nullptr) && array_type.CheckValid(types))) {
       AIDL_FATAL(aidl) << "The type parameter is wrong.";
     }
     return GetTypeAspect(types, array_type);
