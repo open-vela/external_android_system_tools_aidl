@@ -387,9 +387,9 @@ cc_test {
         "libcutils",
         "libgmock",
         //  client uses the latest version
-        "aidl-test-versioned-interface-V2-ndk_platform",
-        "aidl-test-interface-ndk_platform",
-        "aidl_test_loggable_interface-ndk_platform"
+        "aidl-test-versioned-interface-V2-ndk",
+        "aidl-test-interface-ndk",
+        "aidl_test_loggable_interface-ndk"
     ],
     shared_libs: [
         "libbinder_ndk",
@@ -492,11 +492,10 @@ genrule {
         // warning: keep this list up to date with tests/golden_test.sh
         ":aidl-test-interface-cpp-source",
         ":aidl-test-interface-java-source",
-        ":aidl-test-interface-ndk_platform-source",
+        ":aidl-test-interface-ndk-source",
         ":aidl-test-interface-rust-source",
         ":aidl_test_loggable_interface-cpp-source",
         ":aidl_test_loggable_interface-java-source",
-        ":aidl_test_loggable_interface-ndk_platform-source",
         ":aidl_test_loggable_interface-ndk-source",
         "tests/golden_output/**/*",
     ],
