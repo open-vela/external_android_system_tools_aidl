@@ -7,12 +7,10 @@
       "name": "aidl_integration_test"
     },
     {
-      "name": "aidl_lazy_test"
-    }
-  ],
-  "imports": [
+      "name": "CtsNdkBinderTestCases"
+    },
     {
-      "path": "frameworks/native/libs/binder"
+      "name": "aidl_lazy_test"
     }
   ]
 }
