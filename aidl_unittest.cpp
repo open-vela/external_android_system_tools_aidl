@@ -435,14 +435,16 @@ TEST_F(AidlTest, ParsesJavaOnlyStableParcelable) {
 
   EXPECT_EQ(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
   EXPECT_EQ(0, ::android::aidl::compile_aidl(cpp_options, io_delegate_));
-
+  const string expected_stderr =
+      "ERROR: a/Foo.aidl:1.48-52: Cannot declared parcelable in a --structured interface. "
+      "Parcelable must be defined in AIDL directly.\n";
   CaptureStderr();
   EXPECT_NE(0, ::android::aidl::compile_aidl(cpp_structured_options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Cannot declare unstructured"));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
 
   CaptureStderr();
   EXPECT_NE(0, ::android::aidl::compile_aidl(rust_options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Cannot declare unstructured"));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
 TEST_F(AidlTest, ParcelableSupportJavaDeriveToString) {
@@ -668,23 +670,6 @@ TEST_P(AidlTest, CppHeaderCanBeIdentifierAsWell) {
   EXPECT_NE(nullptr, parse_result);
   const AidlInterface* interface = parse_result->AsInterface();
   EXPECT_EQ((Comments{{"// get bar\n"}}), interface->GetMethods()[0]->GetComments());
-}
-
-TEST_F(AidlTest, RejectsIfCppHeaderIsMissing) {
-  io_delegate_.SetFileContents("Foo.aidl", "parcelable Foo;");
-  Options options = Options::From("aidl --lang cpp -h h -o o Foo.aidl");
-  CaptureStderr();
-  EXPECT_EQ(1, ::android::aidl::compile_aidl(options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("must have C++ header defined"));
-}
-
-TEST_F(AidlTest, RejectsIfTypeRefsCppHeaderIsMissing) {
-  io_delegate_.SetFileContents("Foo.aidl", "parcelable Foo;");
-  io_delegate_.SetFileContents("IBar.aidl", "interface IBar { void bar(in Foo foo); }");
-  Options options = Options::From("aidl -I . --lang cpp -h h -o o IBar.aidl");
-  CaptureStderr();
-  EXPECT_EQ(1, ::android::aidl::compile_aidl(options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("must have C++ header defined"));
 }
 
 TEST_F(AidlTest, ParsesPreprocessedFile) {
@@ -1076,7 +1061,8 @@ TEST_P(AidlTest, RequireOuterClass) {
 }
 
 TEST_P(AidlTest, ParseCompoundParcelableFromPreprocess) {
-  io_delegate_.SetFileContents("preprocessed", "parcelable p.Outer.Inner cpp_header \"inner.h\";");
+  io_delegate_.SetFileContents("preprocessed",
+                               "parcelable p.Outer.Inner;");
   preprocessed_files_.push_back("preprocessed");
   auto parse_result = Parse("p/IFoo.aidl", "package p; interface IFoo { void f(in Inner c); }",
                             typenames_, GetLanguage());
@@ -1137,8 +1123,7 @@ TEST_P(AidlTest, StructuredFailOnUnstructuredParcelable) {
   const string expected_stderr =
       "ERROR: o/WhoKnowsWhat.aidl:1.22-35: o.WhoKnowsWhat is not structured, but this is a "
       "structured interface.\n";
-  io_delegate_.SetFileContents("o/WhoKnowsWhat.aidl",
-                               "package o; parcelable WhoKnowsWhat cpp_header \"who_knows.h\";");
+  io_delegate_.SetFileContents("o/WhoKnowsWhat.aidl", "package o; parcelable WhoKnowsWhat;");
   import_paths_.emplace("");
   AidlError error;
   CaptureStderr();
