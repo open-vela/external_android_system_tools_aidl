@@ -354,6 +354,34 @@ bool ValidateAnnotationContext(const AidlDocument& doc) {
   return validator.success;
 }
 
+bool ValidateCppHeader(const AidlDocument& doc) {
+  struct CppHeaderVisitor : AidlVisitor {
+    bool success = true;
+    void Visit(const AidlParcelable& p) override {
+      if (p.GetCppHeader().empty()) {
+        AIDL_ERROR(p) << "Unstructured parcelable \"" << p.GetName()
+                      << "\" must have C++ header defined.";
+        success = false;
+      }
+    }
+    void Visit(const AidlTypeSpecifier& m) override {
+      auto type = m.GetDefinedType();
+      if (type) {
+        auto unstructured = type->AsUnstructuredParcelable();
+        if (unstructured && unstructured->GetCppHeader().empty()) {
+          AIDL_ERROR(m) << "Unstructured parcelable \"" << m.GetUnresolvedName()
+                        << "\" must have C++ header defined.";
+          success = false;
+        }
+      }
+    }
+  };
+
+  CppHeaderVisitor validator;
+  VisitTopDown(validator, doc);
+  return validator.success;
+}
+
 }  // namespace
 
 namespace internals {
@@ -505,8 +533,8 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
       bool isStable = unstructured_parcelable->IsStableApiParcelable(options.TargetLanguage());
       if (options.IsStructured() && !isStable) {
         AIDL_ERROR(unstructured_parcelable)
-            << "Cannot declared parcelable in a --structured interface. Parcelable must be defined "
-               "in AIDL directly.";
+            << "Cannot declare unstructured parcelable in a --structured interface. Parcelable "
+               "must be defined in AIDL directly.";
         return AidlError::NOT_STRUCTURED;
       }
       if (options.FailOnParcelable()) {
@@ -579,11 +607,21 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     return AidlError::BAD_TYPE;
   }
 
+  if ((options.TargetLanguage() == Options::Language::CPP ||
+       options.TargetLanguage() == Options::Language::NDK) &&
+      !ValidateCppHeader(*document)) {
+    return AidlError::BAD_TYPE;
+  }
+
   if (!Diagnose(*document, options.GetDiagnosticMapping())) {
     return AidlError::BAD_TYPE;
   }
 
   typenames->IterateTypes([&](const AidlDefinedType& type) {
+    if (!type.LanguageSpecificCheckValid(*typenames, options.TargetLanguage())) {
+      err = AidlError::BAD_TYPE;
+    }
+
     if (options.IsStructured() && type.AsUnstructuredParcelable() != nullptr &&
         !type.AsUnstructuredParcelable()->IsStableApiParcelable(options.TargetLanguage())) {
       err = AidlError::NOT_STRUCTURED;
