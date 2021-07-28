@@ -160,7 +160,7 @@ fn test_repeat_string() {
         ITestService::STRING_TEST_CONSTANT2.into(),
     ];
     for input in &inputs {
-        let result = service.RepeatString(&input);
+        let result = service.RepeatString(input);
         assert_eq!(result.as_ref(), Ok(input));
     }
 }
