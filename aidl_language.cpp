@@ -1215,27 +1215,8 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
 }
 
 // TODO: we should treat every backend all the same in future.
-bool AidlParcelable::LanguageSpecificCheckValid(const AidlTypenames& /*typenames*/,
+bool AidlParcelable::LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                                 Options::Language lang) const {
-  if (lang == Options::Language::CPP || lang == Options::Language::NDK) {
-    const AidlParcelable* unstructured_parcelable = this->AsUnstructuredParcelable();
-    if (unstructured_parcelable != nullptr) {
-      if (unstructured_parcelable->GetCppHeader().empty()) {
-        AIDL_ERROR(unstructured_parcelable)
-            << "Unstructured parcelable must have C++ header defined.";
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-// TODO: we should treat every backend all the same in future.
-bool AidlStructuredParcelable::LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                                          Options::Language lang) const {
-  if (!AidlParcelable::LanguageSpecificCheckValid(typenames, lang)) {
-    return false;
-  }
   for (const auto& v : this->GetFields()) {
     if (!v->GetType().LanguageSpecificCheckValid(typenames, lang)) {
       return false;
@@ -1397,20 +1378,6 @@ bool AidlUnionDecl::CheckValid(const AidlTypenames& typenames) const {
   }
 
   return success;
-}
-
-// TODO: we should treat every backend all the same in future.
-bool AidlUnionDecl::LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                               Options::Language lang) const {
-  if (!AidlParcelable::LanguageSpecificCheckValid(typenames, lang)) {
-    return false;
-  }
-  for (const auto& v : this->GetFields()) {
-    if (!v->GetType().LanguageSpecificCheckValid(typenames, lang)) {
-      return false;
-    }
-  }
-  return true;
 }
 
 // TODO: we should treat every backend all the same in future.
