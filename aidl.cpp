@@ -584,6 +584,10 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   }
 
   typenames->IterateTypes([&](const AidlDefinedType& type) {
+    if (!type.LanguageSpecificCheckValid(*typenames, options.TargetLanguage())) {
+      err = AidlError::BAD_TYPE;
+    }
+
     if (options.IsStructured() && type.AsUnstructuredParcelable() != nullptr &&
         !type.AsUnstructuredParcelable()->IsStableApiParcelable(options.TargetLanguage())) {
       err = AidlError::NOT_STRUCTURED;
