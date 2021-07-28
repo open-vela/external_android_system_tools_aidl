@@ -8,6 +8,9 @@
     },
     {
       "name": "aidl_lazy_test"
+    },
+    {
+      "name": "CtsNdkBinderTestCases"
     }
   ],
   "imports": [
