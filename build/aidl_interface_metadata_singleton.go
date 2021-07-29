@@ -125,6 +125,11 @@ func (m *aidlInterfacesMetadataSingleton) GenerateAndroidBuildActions(ctx androi
 		// objects per version and sub-objects per backend, we could
 		// avoid needing to filter out duplicates.
 		info.HashFiles = android.FirstUniqueStrings(info.HashFiles)
+		readHashes := ""
+		if len(info.HashFiles) > 0 {
+			readHashes = "$$(sed 's/.*/\"&\",/' " + strings.Join(info.HashFiles, " ") +
+				"| tr '\n' ' ' | sed 's/, $$//')"
+		}
 
 		implicits := android.PathsForSource(ctx, info.HashFiles)
 		hasDevelopmentValue := "true"
@@ -139,13 +144,10 @@ func (m *aidlInterfacesMetadataSingleton) GenerateAndroidBuildActions(ctx androi
 			Input:     info.HasDevelopment,
 			Output:    metadataPath,
 			Args: map[string]string{
-				"name":      name,
-				"stability": info.Stability,
-				"types":     strings.Join(wrap(`\"`, info.ComputedTypes, `\"`), ", "),
-				"hashes": strings.Join(
-					wrap(`\"$$(read -r < `,
-						info.HashFiles,
-						` hash extra; printf '%s' $$hash)\"`), ", "),
+				"name":            name,
+				"stability":       info.Stability,
+				"types":           strings.Join(wrap(`\"`, info.ComputedTypes, `\"`), ", "),
+				"hashes":          readHashes,
 				"has_development": hasDevelopmentValue,
 				"versions":        strings.Join(info.Versions, ", "),
 			},
