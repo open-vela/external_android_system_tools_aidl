@@ -1061,8 +1061,7 @@ TEST_P(AidlTest, RequireOuterClass) {
 }
 
 TEST_P(AidlTest, ParseCompoundParcelableFromPreprocess) {
-  io_delegate_.SetFileContents("preprocessed",
-                               "parcelable p.Outer.Inner;");
+  io_delegate_.SetFileContents("preprocessed", "parcelable p.Outer.Inner cpp_header \"inner.h\";");
   preprocessed_files_.push_back("preprocessed");
   auto parse_result = Parse("p/IFoo.aidl", "package p; interface IFoo { void f(in Inner c); }",
                             typenames_, GetLanguage());
@@ -1123,7 +1122,8 @@ TEST_P(AidlTest, StructuredFailOnUnstructuredParcelable) {
   const string expected_stderr =
       "ERROR: o/WhoKnowsWhat.aidl:1.22-35: o.WhoKnowsWhat is not structured, but this is a "
       "structured interface.\n";
-  io_delegate_.SetFileContents("o/WhoKnowsWhat.aidl", "package o; parcelable WhoKnowsWhat;");
+  io_delegate_.SetFileContents("o/WhoKnowsWhat.aidl",
+                               "package o; parcelable WhoKnowsWhat cpp_header \"who_knows.h\";");
   import_paths_.emplace("");
   AidlError error;
   CaptureStderr();
