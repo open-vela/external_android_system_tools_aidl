@@ -49,7 +49,8 @@ TEST(AidlMetadata, HasTestInstancesNoDevelopment) {
   ASSERT_NE(info, std::nullopt);
   EXPECT_EQ(info->stability, "");
   EXPECT_THAT(info->types, ElementsAre("INoPackage", "some_package.IBar"));
-  EXPECT_THAT(info->hashes, ElementsAre("fcd36db451cdbeeb049833fd7f499a987acf3930"));
+  EXPECT_THAT(info->hashes, ElementsAre("c544902ab8a1d2e72ae9396032ba113e9b9698c4",
+                                        "fcd36db451cdbeeb049833fd7f499a987acf3930"));
   EXPECT_THAT(info->versions, ElementsAre(1));
   EXPECT_EQ(info->has_development, false);
 }

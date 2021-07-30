@@ -43,7 +43,7 @@ var (
 	}, "optionalFlags", "imports", "old", "new", "messageFile", "checkApiLevel")
 
 	aidlVerifyHashRule = pctx.StaticRule("aidlVerifyHashRule", blueprint.RuleParams{
-		Command: `if [ $$(cd '${apiDir}' && { find ./ -name "*.aidl" -print0 | LC_ALL=C sort -z | xargs -0 sha1sum && echo ${version}; } | sha1sum | cut -d " " -f 1) = $$(read -r <'${hashFile}' hash extra; printf %s $$hash) ]; then ` +
+		Command: `if [ $$(cd '${apiDir}' && { find ./ -name "*.aidl" -print0 | LC_ALL=C sort -z | xargs -0 sha1sum && echo ${version}; } | sha1sum | cut -d " " -f 1) = $$(tail -1 '${hashFile}') ]; then ` +
 			`touch ${out}; else cat '${messageFile}' && exit 1; fi`,
 		Description: "Verify ${apiDir} files have not been modified",
 	}, "apiDir", "version", "messageFile", "hashFile")
