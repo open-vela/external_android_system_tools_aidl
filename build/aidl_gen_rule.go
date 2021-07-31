@@ -169,7 +169,7 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 		if !strings.HasPrefix(baseDir, ctx.Config().BuildDir()) {
 			hashFile := android.ExistentPathForSource(ctx, baseDir, ".hash")
 			if hashFile.Valid() {
-				hash = "$$(read -r <" + hashFile.Path().String() + " hash extra; printf '%s' \"$$hash\")"
+				hash = "$$(tail -1 '" + hashFile.Path().String() + "')"
 				implicits = append(implicits, hashFile.Path())
 
 				g.hashFile = hashFile.Path()
