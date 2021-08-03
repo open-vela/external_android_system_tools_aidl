@@ -367,6 +367,7 @@ cc_test {
     ],
     srcs: [
         "tests/aidl_test_client.cpp",
+        "tests/aidl_test_client_builtin_transactions.cpp",
         "tests/aidl_test_client_file_descriptors.cpp",
         "tests/aidl_test_client_parcelables.cpp",
         "tests/aidl_test_client_nullables.cpp",
@@ -453,6 +454,7 @@ java_test {
         "tests/java/src/android/aidl/tests/TestServiceClient.java",
         "tests/java/src/android/aidl/tests/JavaOnlyImmutableAnnotationTests.java",
         "tests/java/src/android/aidl/tests/AidlJavaTests.java",
+        "tests/java/src/android/aidl/tests/BuiltInTests.java",
         "tests/java/src/android/aidl/tests/GenericTests.java",
         "tests/java/src/android/aidl/tests/TestVersionedInterface.java",
         "tests/java/src/android/aidl/tests/UnionTests.java",
