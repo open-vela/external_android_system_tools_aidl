@@ -254,6 +254,12 @@ struct ReturnStatement : public Statement {
   void Write(CodeWriter* to) const override;
 };
 
+struct BreakStatement : public Statement {
+  BreakStatement() = default;
+  virtual ~BreakStatement() = default;
+  void Write(CodeWriter* to) const override;
+};
+
 struct TryStatement : public Statement {
   std::shared_ptr<StatementBlock> statements = std::make_shared<StatementBlock>();
 
