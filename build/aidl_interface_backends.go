@@ -75,7 +75,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 	}, &aidlGenProperties{
 		Srcs:                  srcs,
 		AidlRoot:              aidlRoot,
-		IsToT:                 version == i.nextVersion(),
 		ImportsWithoutVersion: i.properties.ImportsWithoutVersion,
 		Stability:             i.properties.Stability,
 		Lang:                  lang,
@@ -226,7 +225,6 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 	}, &aidlGenProperties{
 		Srcs:                  srcs,
 		AidlRoot:              aidlRoot,
-		IsToT:                 version == i.nextVersion(),
 		ImportsWithoutVersion: i.properties.ImportsWithoutVersion,
 		Stability:             i.properties.Stability,
 		Lang:                  langJava,
@@ -276,7 +274,6 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		Srcs:                  srcs,
 		AidlRoot:              aidlRoot,
 		ImportsWithoutVersion: i.properties.ImportsWithoutVersion,
-		IsToT:                 version == i.nextVersion(),
 		Stability:             i.properties.Stability,
 		Lang:                  langRust,
 		BaseName:              i.ModuleBase.Name(),
@@ -324,7 +321,7 @@ func (i *aidlInterface) versionedName(version string) string {
 	return name + "-V" + version
 }
 
-func (i *aidlInterface) srcsForVersion(mctx android.LoadHookContext, version string) (srcs []string, aidlRoot string) {
+func (i *aidlInterface) srcsForVersion(mctx android.EarlyModuleContext, version string) (srcs []string, aidlRoot string) {
 	if version == i.nextVersion() {
 		return i.properties.Srcs, i.properties.Local_include_dir
 	} else {
@@ -423,20 +420,24 @@ func (g *aidlImplementationGenerator) GenerateImplementation(ctx android.TopDown
 	i := lookupInterface(g.properties.AidlInterfaceName, ctx.Config())
 	version := g.properties.Version
 	lang := g.properties.Lang
-	if g.properties.Lang == langJava {
-		imports := make([]string, len(i.properties.Imports))
-		for idx, anImport := range i.properties.Imports {
-			imports[idx] = i.getImportWithVersion(version, anImport, ctx.Config()) + "-" + langJava
+	imports := make([]string, len(i.properties.Imports))
+	for idx, anImport := range i.properties.Imports {
+		importModule, _ := parseModuleWithVersion(anImport)
+		if lookupInterface(importModule, ctx.Config()) == nil {
+			if ctx.Config().AllowMissingDependencies() {
+				continue
+			}
+			panic(anImport + " doesn't exist, it should be checked in 'checkImports' mutator.")
 		}
+		imports[idx] = i.getImportWithVersion(version, anImport, ctx.Config()) + "-" + lang
+	}
+
+	if g.properties.Lang == langJava {
 		if p, ok := g.properties.ModuleProperties[0].(*javaProperties); ok {
 			p.Static_libs = imports
 		}
 		ctx.CreateModule(java.LibraryFactory, g.properties.ModuleProperties...)
 	} else {
-		imports := make([]string, len(i.properties.Imports))
-		for idx, anImport := range i.properties.Imports {
-			imports[idx] = i.getImportWithVersion(version, anImport, ctx.Config()) + "-" + lang
-		}
 		if p, ok := g.properties.ModuleProperties[0].(*ccProperties); ok {
 			p.Shared_libs = append(p.Shared_libs, imports...)
 			p.Export_shared_lib_headers = append(p.Export_shared_lib_headers, imports...)
