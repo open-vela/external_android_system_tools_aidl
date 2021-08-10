@@ -200,7 +200,7 @@ Options Options::From(const vector<string>& args) {
 }
 
 Options::Options(int argc, const char* const raw_argv[], Options::Language default_lang)
-    : myname_(raw_argv[0]), language_(default_lang) {
+    : myname_(argc >= 1 ? raw_argv[0] : "aidl"), language_(default_lang) {
   std::vector<const char*> argv = warning_options_.Parse(argc, raw_argv, error_message_);
   if (!Ok()) return;
   argc = argv.size();
