@@ -775,9 +775,6 @@ int aidl_entry(const Options& options, const IoDelegate& io_delegate) {
 
   int ret = 1;
   switch (options.GetTask()) {
-    case Options::Task::HELP:
-      ret = 0;
-      break;
     case Options::Task::COMPILE:
       ret = android::aidl::compile_aidl(options, io_delegate);
       break;
