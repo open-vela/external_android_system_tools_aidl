@@ -77,7 +77,7 @@ class Options final {
  public:
   enum class Language { UNSPECIFIED, JAVA, CPP, NDK, RUST };
 
-  enum class Task { UNSPECIFIED, HELP, COMPILE, PREPROCESS, DUMP_API, CHECK_API, DUMP_MAPPINGS };
+  enum class Task { HELP, COMPILE, PREPROCESS, DUMP_API, CHECK_API, DUMP_MAPPINGS };
 
   enum class CheckApiLevel { COMPATIBLE, EQUAL };
 
