@@ -26,6 +26,7 @@
 #include <sstream>
 #include <string>
 
+#include <android-base/logging.h>
 #include <android-base/strings.h>
 #include "aidl_language.h"
 
@@ -368,14 +369,17 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         break;
       case 'e':
         std::cerr << GetUsage();
-        exit(0);
+        task_ = Task::HELP;
+        CHECK(Ok());
+        return;
       case 'i':
         output_file_ = Trim(optarg);
         task_ = Task::DUMP_MAPPINGS;
         break;
       default:
-        std::cerr << GetUsage();
-        exit(1);
+        error_message_ << GetUsage();
+        CHECK(!Ok());
+        return;
     }
   }  // while
 
