@@ -269,33 +269,27 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         }
         break;
       case 's':
-        if (task_ != Options::Task::UNSPECIFIED) {
-          task_ = Options::Task::PREPROCESS;
-        }
+        task_ = Options::Task::PREPROCESS;
         break;
 #ifndef _WIN32
       case 'u':
-        if (task_ != Options::Task::UNSPECIFIED) {
-          task_ = Options::Task::DUMP_API;
-        }
+        task_ = Options::Task::DUMP_API;
         break;
       case 'x':
         dump_no_license_ = true;
         break;
       case 'A':
-        if (task_ != Options::Task::UNSPECIFIED) {
-          task_ = Options::Task::CHECK_API;
-          // to ensure that all parcelables in the api dumpes are structured
-          structured_ = true;
-          if (optarg) {
-            if (strcmp(optarg, "compatible") == 0)
-              check_api_level_ = CheckApiLevel::COMPATIBLE;
-            else if (strcmp(optarg, "equal") == 0)
-              check_api_level_ = CheckApiLevel::EQUAL;
-            else {
-              error_message_ << "Unsupported --checkapi level: '" << optarg << "'" << endl;
-              return;
-            }
+        task_ = Options::Task::CHECK_API;
+        // to ensure that all parcelables in the api dumpes are structured
+        structured_ = true;
+        if (optarg) {
+          if (strcmp(optarg, "compatible") == 0)
+            check_api_level_ = CheckApiLevel::COMPATIBLE;
+          else if (strcmp(optarg, "equal") == 0)
+            check_api_level_ = CheckApiLevel::EQUAL;
+          else {
+            error_message_ << "Unsupported --checkapi level: '" << optarg << "'" << endl;
+            return;
           }
         }
         break;
