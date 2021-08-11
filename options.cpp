@@ -26,6 +26,7 @@
 #include <sstream>
 #include <string>
 
+#include <android-base/logging.h>
 #include <android-base/strings.h>
 #include "aidl_language.h"
 
@@ -200,7 +201,7 @@ Options Options::From(const vector<string>& args) {
 }
 
 Options::Options(int argc, const char* const raw_argv[], Options::Language default_lang)
-    : myname_(raw_argv[0]), language_(default_lang) {
+    : myname_(argc >= 1 ? raw_argv[0] : "aidl"), language_(default_lang) {
   std::vector<const char*> argv = warning_options_.Parse(argc, raw_argv, error_message_);
   if (!Ok()) return;
   argc = argv.size();
@@ -268,33 +269,27 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         }
         break;
       case 's':
-        if (task_ != Options::Task::UNSPECIFIED) {
-          task_ = Options::Task::PREPROCESS;
-        }
+        task_ = Options::Task::PREPROCESS;
         break;
 #ifndef _WIN32
       case 'u':
-        if (task_ != Options::Task::UNSPECIFIED) {
-          task_ = Options::Task::DUMP_API;
-        }
+        task_ = Options::Task::DUMP_API;
         break;
       case 'x':
         dump_no_license_ = true;
         break;
       case 'A':
-        if (task_ != Options::Task::UNSPECIFIED) {
-          task_ = Options::Task::CHECK_API;
-          // to ensure that all parcelables in the api dumpes are structured
-          structured_ = true;
-          if (optarg) {
-            if (strcmp(optarg, "compatible") == 0)
-              check_api_level_ = CheckApiLevel::COMPATIBLE;
-            else if (strcmp(optarg, "equal") == 0)
-              check_api_level_ = CheckApiLevel::EQUAL;
-            else {
-              error_message_ << "Unsupported --checkapi level: '" << optarg << "'" << endl;
-              return;
-            }
+        task_ = Options::Task::CHECK_API;
+        // to ensure that all parcelables in the api dumpes are structured
+        structured_ = true;
+        if (optarg) {
+          if (strcmp(optarg, "compatible") == 0)
+            check_api_level_ = CheckApiLevel::COMPATIBLE;
+          else if (strcmp(optarg, "equal") == 0)
+            check_api_level_ = CheckApiLevel::EQUAL;
+          else {
+            error_message_ << "Unsupported --checkapi level: '" << optarg << "'" << endl;
+            return;
           }
         }
         break;
@@ -368,14 +363,17 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         break;
       case 'e':
         std::cerr << GetUsage();
-        exit(0);
+        task_ = Task::HELP;
+        CHECK(Ok());
+        return;
       case 'i':
         output_file_ = Trim(optarg);
         task_ = Task::DUMP_MAPPINGS;
         break;
       default:
-        std::cerr << GetUsage();
-        exit(1);
+        error_message_ << GetUsage();
+        CHECK(!Ok());
+        return;
     }
   }  // while
 
