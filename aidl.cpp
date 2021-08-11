@@ -774,32 +774,28 @@ int aidl_entry(const Options& options, const IoDelegate& io_delegate) {
   AidlErrorLog::clearError();
 
   bool success = false;
-  if (options.Ok()) {
-    switch (options.GetTask()) {
-      case Options::Task::HELP:
-        success = true;
-        break;
-      case Options::Task::COMPILE:
-        success = android::aidl::compile_aidl(options, io_delegate);
-        break;
-      case Options::Task::PREPROCESS:
-        success = android::aidl::Preprocess(options, io_delegate);
-        break;
-      case Options::Task::DUMP_API:
-        success = android::aidl::dump_api(options, io_delegate);
-        break;
-      case Options::Task::CHECK_API:
-        success = android::aidl::check_api(options, io_delegate);
-        break;
-      case Options::Task::DUMP_MAPPINGS:
-        success = android::aidl::dump_mappings(options, io_delegate);
-        break;
-      default:
-        AIDL_FATAL(AIDL_LOCATION_HERE)
-            << "Unrecognized task: " << static_cast<size_t>(options.GetTask());
-    }
-  } else {
-    AIDL_ERROR(options.GetErrorMessage()) << options.GetUsage();
+  switch (options.GetTask()) {
+    case Options::Task::HELP:
+      success = true;
+      break;
+    case Options::Task::COMPILE:
+      success = android::aidl::compile_aidl(options, io_delegate);
+      break;
+    case Options::Task::PREPROCESS:
+      success = android::aidl::Preprocess(options, io_delegate);
+      break;
+    case Options::Task::DUMP_API:
+      success = android::aidl::dump_api(options, io_delegate);
+      break;
+    case Options::Task::CHECK_API:
+      success = android::aidl::check_api(options, io_delegate);
+      break;
+    case Options::Task::DUMP_MAPPINGS:
+      success = android::aidl::dump_mappings(options, io_delegate);
+      break;
+    default:
+      AIDL_FATAL(AIDL_LOCATION_HERE)
+          << "Unrecognized task: " << static_cast<size_t>(options.GetTask());
   }
 
   const bool reportedError = AidlErrorLog::hadError();
