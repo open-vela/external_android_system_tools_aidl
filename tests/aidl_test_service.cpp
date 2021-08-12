@@ -97,6 +97,7 @@ using android::aidl::tests::INewName;
 using android::aidl::tests::IntEnum;
 using android::aidl::tests::IOldName;
 using android::aidl::tests::LongEnum;
+using android::aidl::tests::RecursiveList;
 using android::aidl::tests::SimpleParcelable;
 using android::aidl::tests::StructuredParcelable;
 using android::aidl::tests::Union;
@@ -604,6 +605,20 @@ class NativeService : public BnTestService {
 
     parcelable->u = Union::make<Union::ns>({1, 2, 3});
     parcelable->shouldBeConstS1 = Union::S1();
+    return Status::ok();
+  }
+
+  ::android::binder::Status ReverseList(const RecursiveList& list, RecursiveList* ret) override {
+    std::unique_ptr<RecursiveList> reversed;
+    const RecursiveList* cur = &list;
+    while (cur) {
+      auto node = std::make_unique<RecursiveList>();
+      node->value = cur->value;
+      node->next = std::move(reversed);
+      reversed = std::move(node);
+      cur = cur->next.get();
+    }
+    *ret = std::move(*reversed);
     return Status::ok();
   }
 
