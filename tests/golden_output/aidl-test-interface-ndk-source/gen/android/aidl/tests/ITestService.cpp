@@ -947,7 +947,25 @@ static binder_status_t _aidl_onTransact(AIBinder* _aidl_binder, transaction_code
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 47 /*GetOldNameInterface*/): {
+    case (FIRST_CALL_TRANSACTION + 47 /*ReverseList*/): {
+      ::aidl::android::aidl::tests::RecursiveList in_list;
+      ::aidl::android::aidl::tests::RecursiveList _aidl_return;
+
+      _aidl_ret_status = ::ndk::AParcel_readParcelable(_aidl_in, &in_list);
+      if (_aidl_ret_status != STATUS_OK) break;
+
+      ::ndk::ScopedAStatus _aidl_status = _aidl_impl->ReverseList(in_list, &_aidl_return);
+      _aidl_ret_status = AParcel_writeStatusHeader(_aidl_out, _aidl_status.get());
+      if (_aidl_ret_status != STATUS_OK) break;
+
+      if (!AStatus_isOk(_aidl_status.get())) break;
+
+      _aidl_ret_status = ::ndk::AParcel_writeParcelable(_aidl_out, _aidl_return);
+      if (_aidl_ret_status != STATUS_OK) break;
+
+      break;
+    }
+    case (FIRST_CALL_TRANSACTION + 48 /*GetOldNameInterface*/): {
       std::shared_ptr<::aidl::android::aidl::tests::IOldName> _aidl_return;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->GetOldNameInterface(&_aidl_return);
@@ -961,7 +979,7 @@ static binder_status_t _aidl_onTransact(AIBinder* _aidl_binder, transaction_code
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 48 /*GetNewNameInterface*/): {
+    case (FIRST_CALL_TRANSACTION + 49 /*GetNewNameInterface*/): {
       std::shared_ptr<::aidl::android::aidl::tests::INewName> _aidl_return;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->GetNewNameInterface(&_aidl_return);
@@ -975,7 +993,7 @@ static binder_status_t _aidl_onTransact(AIBinder* _aidl_binder, transaction_code
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 49 /*GetCppJavaTests*/): {
+    case (FIRST_CALL_TRANSACTION + 50 /*GetCppJavaTests*/): {
       ::ndk::SpAIBinder _aidl_return;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->GetCppJavaTests(&_aidl_return);
@@ -989,7 +1007,7 @@ static binder_status_t _aidl_onTransact(AIBinder* _aidl_binder, transaction_code
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 50 /*getBackendType*/): {
+    case (FIRST_CALL_TRANSACTION + 51 /*getBackendType*/): {
       ::aidl::android::aidl::tests::BackendType _aidl_return;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->getBackendType(&_aidl_return);
@@ -3008,6 +3026,47 @@ BpTestService::~BpTestService() {}
   _aidl_status_return:
   return _aidl_status;
 }
+::ndk::ScopedAStatus BpTestService::ReverseList(const ::aidl::android::aidl::tests::RecursiveList& in_list, ::aidl::android::aidl::tests::RecursiveList* _aidl_return) {
+  binder_status_t _aidl_ret_status = STATUS_OK;
+  ::ndk::ScopedAStatus _aidl_status;
+  ::ndk::ScopedAParcel _aidl_in;
+  ::ndk::ScopedAParcel _aidl_out;
+
+  _aidl_ret_status = AIBinder_prepareTransaction(asBinder().get(), _aidl_in.getR());
+  AParcel_markSensitive(_aidl_in.get());
+  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
+
+  _aidl_ret_status = ::ndk::AParcel_writeParcelable(_aidl_in.get(), in_list);
+  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
+
+  _aidl_ret_status = AIBinder_transact(
+    asBinder().get(),
+    (FIRST_CALL_TRANSACTION + 47 /*ReverseList*/),
+    _aidl_in.getR(),
+    _aidl_out.getR(),
+    FLAG_CLEAR_BUF
+    #ifdef BINDER_STABILITY_SUPPORT
+    | FLAG_PRIVATE_LOCAL
+    #endif  // BINDER_STABILITY_SUPPORT
+    );
+  if (_aidl_ret_status == STATUS_UNKNOWN_TRANSACTION && ITestService::getDefaultImpl()) {
+    _aidl_status = ITestService::getDefaultImpl()->ReverseList(in_list, _aidl_return);
+    goto _aidl_status_return;
+  }
+  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
+
+  _aidl_ret_status = AParcel_readStatusHeader(_aidl_out.get(), _aidl_status.getR());
+  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
+
+  if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
+  _aidl_ret_status = ::ndk::AParcel_readParcelable(_aidl_out.get(), _aidl_return);
+  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
+
+  _aidl_error:
+  _aidl_status.set(AStatus_fromStatus(_aidl_ret_status));
+  _aidl_status_return:
+  return _aidl_status;
+}
 ::ndk::ScopedAStatus BpTestService::GetOldNameInterface(std::shared_ptr<::aidl::android::aidl::tests::IOldName>* _aidl_return) {
   binder_status_t _aidl_ret_status = STATUS_OK;
   ::ndk::ScopedAStatus _aidl_status;
@@ -3020,7 +3079,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 47 /*GetOldNameInterface*/),
+    (FIRST_CALL_TRANSACTION + 48 /*GetOldNameInterface*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3058,7 +3117,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 48 /*GetNewNameInterface*/),
+    (FIRST_CALL_TRANSACTION + 49 /*GetNewNameInterface*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3096,7 +3155,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 49 /*GetCppJavaTests*/),
+    (FIRST_CALL_TRANSACTION + 50 /*GetCppJavaTests*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3134,7 +3193,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 50 /*getBackendType*/),
+    (FIRST_CALL_TRANSACTION + 51 /*getBackendType*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3444,6 +3503,11 @@ std::shared_ptr<ITestService> ITestService::default_impl = nullptr;
   return _aidl_status;
 }
 ::ndk::ScopedAStatus ITestServiceDefault::FillOutStructuredParcelable(::aidl::android::aidl::tests::StructuredParcelable* /*in_parcel*/) {
+  ::ndk::ScopedAStatus _aidl_status;
+  _aidl_status.set(AStatus_fromStatus(STATUS_UNKNOWN_TRANSACTION));
+  return _aidl_status;
+}
+::ndk::ScopedAStatus ITestServiceDefault::ReverseList(const ::aidl::android::aidl::tests::RecursiveList& /*in_list*/, ::aidl::android::aidl::tests::RecursiveList* /*_aidl_return*/) {
   ::ndk::ScopedAStatus _aidl_status;
   _aidl_status.set(AStatus_fromStatus(STATUS_UNKNOWN_TRANSACTION));
   return _aidl_status;
