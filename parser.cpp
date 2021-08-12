@@ -88,10 +88,77 @@ void Parser::SetPackage(const AidlPackage& package) {
   package_ = package.GetName();
 }
 
+const AidlDefinedType* AsDefinedType(const AidlNode& node) {
+  struct Visitor : AidlVisitor {
+    const AidlDefinedType* defined_type = nullptr;
+    void Visit(const AidlInterface& t) override { defined_type = &t; }
+    void Visit(const AidlEnumDeclaration& t) override { defined_type = &t; }
+    void Visit(const AidlStructuredParcelable& t) override { defined_type = &t; }
+    void Visit(const AidlUnionDecl& t) override { defined_type = &t; }
+    void Visit(const AidlParcelable& t) override { defined_type = &t; }
+  } v;
+  node.DispatchVisit(v);
+  return v.defined_type;
+}
+
+bool CheckNoRecursiveDefinition(const AidlNode& node) {
+  struct Visitor : AidlVisitor {
+    enum {
+      NOT_STARTED = 0,
+      STARTED = 1,
+      FINISHED = 2,
+    };
+    std::map<const AidlParcelable*, int> visited;
+    std::vector<std::string> path;
+    bool found_cycle = false;
+
+    void Visit(const AidlStructuredParcelable& t) override { FindCycle(&t); }
+    void Visit(const AidlUnionDecl& t) override { FindCycle(&t); }
+    void Visit(const AidlParcelable& t) override { FindCycle(&t); }
+
+    bool FindCycle(const AidlParcelable* p) {
+      // no need to search further
+      if (found_cycle) {
+        return true;
+      }
+      // we just found a cycle
+      if (visited[p] == STARTED) {
+        path.push_back(p->GetName());
+        AIDL_ERROR(p) << p->GetName()
+                      << " is a recursive parcelable: " << android::base::Join(path, "->");
+        return (found_cycle = true);
+      }
+      // we arrived here with a different route.
+      if (visited[p] == FINISHED) {
+        return false;
+      }
+      // start DFS
+      visited[p] = STARTED;
+      path.push_back(p->GetName());
+      for (const auto& f : p->GetFields()) {
+        const auto& ref = f->GetType();
+        if (!ref.IsArray() && !ref.IsHeapNullable()) {
+          const auto& type = ref.GetDefinedType();
+          if (type && type->AsParcelable()) {
+            if (FindCycle(type->AsParcelable())) {
+              return true;
+            }
+          }
+        }
+      }
+      path.pop_back();
+      visited[p] = FINISHED;
+      return false;
+    }
+  } v;
+  VisitTopDown(v, node);
+  return !v.found_cycle;
+}
+
 class ReferenceResolver : public AidlVisitor {
  public:
-  ReferenceResolver(const AidlDefinedType* scope, TypeResolver& resolver, bool* success)
-      : scope_(scope), resolver_(resolver), success_(success) {}
+  ReferenceResolver(TypeResolver& resolver, bool* success)
+      : resolver_(resolver), success_(success) {}
 
   void Visit(const AidlTypeSpecifier& t) override {
     // We're visiting the same node again. This can happen when two constant references
@@ -99,11 +166,26 @@ class ReferenceResolver : public AidlVisitor {
     if (t.IsResolved()) {
       return;
     }
+    AIDL_FATAL_IF(scope_.empty(), t) << "Can't have an unresolved type in global scope";
 
     AidlTypeSpecifier& type = const_cast<AidlTypeSpecifier&>(t);
-    if (!resolver_(scope_, &type)) {
+    if (!resolver_(scope_.back(), &type)) {
       AIDL_ERROR(type) << "Failed to resolve '" << type.GetUnresolvedName() << "'";
       *success_ = false;
+    }
+
+    // require definition:
+    // - parcelable, union
+    // - T
+    // - @nullable(heap=false) T
+    // interfaces, enums, arrays, @nullable(heap=true), we don't need a full definition
+    if (scope_.back()->AsParcelable()) {
+      auto resolved = t.GetDefinedType();
+      if (resolved && resolved->AsParcelable()) {
+        if (!t.IsArray() && !t.IsHeapNullable()) {
+          VisitAll(*resolved);
+        }
+      }
     }
   }
 
@@ -113,7 +195,11 @@ class ReferenceResolver : public AidlVisitor {
       return;
     }
 
-    const AidlConstantValue* resolved = v.Resolve(scope_);
+    if (v.GetRefType()) {
+      VisitAll(*v.GetRefType());
+    }
+
+    const AidlConstantValue* resolved = v.Resolve(scope_.back());
     if (!resolved) {
       AIDL_ERROR(v) << "Unknown reference '" << v.Literal() << "'";
       *success_ = false;
@@ -125,38 +211,50 @@ class ReferenceResolver : public AidlVisitor {
       return;
     }
     // resolve recursive references
-    Push(&v);
-    VisitBottomUp(*this, *resolved);
-    Pop();
+    PushConstRef(&v);
+    VisitAll(*resolved);
+    PopConstRef();
+  }
+
+  void VisitAll(const AidlNode& node) {
+    std::function<void(const AidlNode&)> top_down = [&](const AidlNode& a) {
+      a.DispatchVisit(*this);
+      auto defined_type = AsDefinedType(a);
+      if (defined_type) PushScope(defined_type);
+      a.TraverseChildren(top_down);
+      if (defined_type) PopScope();
+    };
+    top_down(node);
   }
 
  private:
-  struct StackElem {
-    const AidlDefinedType* scope;
-    const AidlConstantReference* ref;
-  };
-
-  void Push(const AidlConstantReference* ref) {
-    stack_.push_back({scope_, ref});
+  void PushConstRef(const AidlConstantReference* ref) {
+    stack_.push_back(ref);
     if (ref->GetRefType()) {
-      scope_ = ref->GetRefType()->GetDefinedType();
+      PushScope(ref->GetRefType()->GetDefinedType());
     }
   }
 
-  void Pop() {
-    scope_ = stack_.back().scope;
+  void PopConstRef() {
+    if (stack_.back()->GetRefType()) {
+      PopScope();
+    }
     stack_.pop_back();
   }
 
+  void PushScope(const AidlDefinedType* scope) { scope_.push_back(scope); }
+
+  void PopScope() { scope_.pop_back(); }
+
   bool IsCircularReference(const AidlConstantReference* ref) {
-    auto it = std::find_if(stack_.begin(), stack_.end(),
-                           [&](const auto& elem) { return elem.ref == ref; });
+    auto it =
+        std::find_if(stack_.begin(), stack_.end(), [&](const auto& elem) { return elem == ref; });
     if (it == stack_.end()) {
       return false;
     }
     std::vector<std::string> path;
     while (it != stack_.end()) {
-      path.push_back(it->ref->Literal());
+      path.push_back((*it)->Literal());
       ++it;
     }
     path.push_back(ref->Literal());
@@ -164,20 +262,20 @@ class ReferenceResolver : public AidlVisitor {
     return true;
   }
 
-  const AidlDefinedType* scope_;
   TypeResolver& resolver_;
   bool* success_;
-  std::vector<StackElem> stack_ = {};
+  std::vector<const AidlConstantReference*> stack_ = {};
+  std::vector<const AidlDefinedType*> scope_ = {};
 };
 
 // Resolve "unresolved" types in the "main" document.
 bool ResolveReferences(const AidlDocument& document, TypeResolver& type_resolver) {
   bool success = true;
 
-  for (const auto& type : document.DefinedTypes()) {
-    ReferenceResolver ref_resolver{type.get(), type_resolver, &success};
-    VisitBottomUp(ref_resolver, *type);
-  }
+  ReferenceResolver ref_resolver(type_resolver, &success);
+  ref_resolver.VisitAll(document);
+
+  success &= CheckNoRecursiveDefinition(document);
 
   return success;
 }

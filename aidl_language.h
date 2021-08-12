@@ -334,6 +334,7 @@ class AidlAnnotatable : public AidlCommentable {
     }
   }
   bool IsNullable() const;
+  bool IsHeapNullable() const;
   bool IsUtf8InCpp() const;
   bool IsSensitiveData() const;
   bool IsVintfStability() const;
