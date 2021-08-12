@@ -257,6 +257,63 @@ TEST_P(AidlTest, AcceptNullableList) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
+TEST_P(AidlTest, RejectRecursiveParcelable) {
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("Foo.aidl", "parcelable Foo { Foo foo; }", typenames_, GetLanguage()));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Foo is a recursive parcelable"));
+}
+
+TEST_P(AidlTest, RejectIndirectRecursiveParcelable) {
+  io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar { Foo foo; }");
+  import_paths_.emplace("");
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("Foo.aidl", "parcelable Foo { Bar bar; }", typenames_, GetLanguage()));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Foo is a recursive parcelable"));
+}
+
+TEST_P(AidlTest, RejectRecursiveTypeEvenIfNullable) {
+  // Note: in native backends @nullable is mapped to non-heap wrapper like std::optional/Option<T>
+  io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar { @nullable Foo foo; }");
+  import_paths_.emplace("");
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("Foo.aidl", "parcelable Foo { Bar bar; }", typenames_, GetLanguage()));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Foo is a recursive parcelable"));
+}
+
+TEST_P(AidlTest, OkayIfRecursionInvolvesHeapType) {
+  CaptureStderr();
+  std::string java_only_map_field;
+  if (GetLanguage() == Options::Language::JAVA) {
+    java_only_map_field = "  Map<String, Foo> map;\n";
+  }
+  EXPECT_NE(nullptr, Parse("Foo.aidl",
+                           "parcelable Foo {\n"
+                           "  List<Foo> list;\n" +
+                               java_only_map_field +
+                               "  Foo[] arr;\n"
+                               "  @nullable(heap=true) Foo heap_nullable;\n"
+                               "}\n",
+                           typenames_, GetLanguage()));
+  EXPECT_THAT(GetCapturedStderr(), "");
+}
+
+TEST_P(AidlTest, InterfaceCanReferenceItself) {
+  CaptureStderr();
+  EXPECT_NE(nullptr, Parse("IFoo.aidl", "interface IFoo { void foo(in IFoo self); }", typenames_,
+                           GetLanguage()));
+  EXPECT_THAT(GetCapturedStderr(), "");
+}
+
+TEST_P(AidlTest, HeapNullableCantApplyToOtherThanParcelables) {
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("Foo.aidl",
+                           "parcelable Foo {\n"
+                           "  @nullable(heap=true) String s;\n"
+                           "}",
+                           typenames_, GetLanguage()));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@nullable(heap=true) is available to parcelables"));
+}
+
 TEST_P(AidlTest, RejectsDuplicatedArgumentNames) {
   const string method = "package a; interface IFoo { void f(int a, int a); }";
   const string expected_stderr =
@@ -1371,15 +1428,8 @@ TEST_P(AidlTest, UnderstandsNestedParcelablesWithoutImports) {
 }
 
 TEST_F(AidlTest, CppNameOf_GenericType) {
-  io_delegate_.SetFileContents("p/Wrapper.aidl", "package p; parcelable Wrapper<T> { T wrapped; }");
-  import_paths_.emplace("");
-  // Since we don't support compilation of Wrapper directly (due to "T" reference),
-  // prepare Holder so that Wrapper gets parsed into AidlTypenames
-  const string input_path = "p/Holder.aidl";
-  const string input =
-      "package p; import p.Wrapper; parcelable Holder {\n"
-      "  @nullable Wrapper<String> value;\n"
-      "}";
+  const string input_path = "p/Wrapper.aidl";
+  const string input = "package p; parcelable Wrapper<T> {}";
 
   auto parse_result = Parse(input_path, input, typenames_, Options::Language::CPP);
   EXPECT_NE(nullptr, parse_result);

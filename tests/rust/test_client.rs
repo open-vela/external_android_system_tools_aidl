@@ -22,7 +22,8 @@ use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
     self, BpTestService, ITestServiceDefault, ITestServiceDefaultRef,
 };
 use aidl_test_interface::aidl::android::aidl::tests::{
-    BackendType::BackendType, ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable, Union,
+    BackendType::BackendType, ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum,
+    RecursiveList::RecursiveList, StructuredParcelable, Union,
 };
 use aidl_test_interface::aidl::android::aidl::tests::unions::{
     EnumUnion::EnumUnion,
@@ -571,6 +572,31 @@ fn test_parcelable() {
 
     assert_eq!(parcelable.u, Some(Union::Union::Ns(vec![1, 2, 3])));
     assert_eq!(parcelable.shouldBeConstS1, Some(Union::Union::S(Union::S1.to_string())))
+}
+
+#[test]
+fn test_reverse_recursive_list() {
+    let service = get_test_service();
+
+    let mut head = None;
+    for n in 0..10 {
+        let node = RecursiveList{
+            value: n,
+            next: head
+        };
+        head = Some(Box::new(node));
+    }
+    // head = [9, 8, .., 0]
+    let result = service.ReverseList(head.as_ref().unwrap());
+    assert!(result.is_ok());
+
+    // reversed should be [0, 1, ... 9]
+    let mut reversed: Option<&RecursiveList> = result.as_ref().ok();
+    for n in 0..10 {
+        assert_eq!(reversed.map(|inner| inner.value), Some(n));
+        reversed = reversed.unwrap().next.as_ref().map(|n| n.as_ref());
+    }
+    assert!(reversed.is_none())
 }
 
 #[test]

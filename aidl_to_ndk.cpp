@@ -159,6 +159,7 @@ TypeInfo ParcelableTypeInfo(const AidlParcelable& type, const AidlTypeSpecifier&
     }
     clazz += base::StringPrintf("<%s>", base::Join(type_params, ", ").c_str());
   }
+  const std::string nullable = typeSpec.IsHeapNullable() ? "std::unique_ptr" : "std::optional";
   return TypeInfo{
       .raw =
           TypeInfo::Aspect{
@@ -174,7 +175,7 @@ TypeInfo ParcelableTypeInfo(const AidlParcelable& type, const AidlTypeSpecifier&
           .write_func = StandardWrite("::ndk::AParcel_writeVector"),
       }),
       .nullable = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
-          .cpp_name = "std::optional<" + clazz + ">",
+          .cpp_name = nullable + "<" + clazz + ">",
           .value_is_cheap = false,
           .read_func = StandardRead("::ndk::AParcel_readNullableParcelable"),
           .write_func = StandardWrite("::ndk::AParcel_writeNullableParcelable"),
