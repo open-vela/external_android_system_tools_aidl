@@ -685,7 +685,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
 
 } // namespace internals
 
-int compile_aidl(const Options& options, const IoDelegate& io_delegate) {
+bool compile_aidl(const Options& options, const IoDelegate& io_delegate) {
   const Options::Language lang = options.TargetLanguage();
   for (const string& input_file : options.InputFiles()) {
     AidlTypenames typenames;
@@ -696,7 +696,7 @@ int compile_aidl(const Options& options, const IoDelegate& io_delegate) {
                                                            &typenames, &imported_files);
     bool allowError = aidl_err == AidlError::FOUND_PARCELABLE && !options.FailOnParcelable();
     if (aidl_err != AidlError::OK && !allowError) {
-      return 1;
+      return false;
     }
 
     for (const auto& defined_type : typenames.MainDocument().DefinedTypes()) {
@@ -707,13 +707,13 @@ int compile_aidl(const Options& options, const IoDelegate& io_delegate) {
       if (output_file_name.empty() && !options.OutputDir().empty()) {
         output_file_name = GetOutputFilePath(options, *defined_type);
         if (output_file_name.empty()) {
-          return 1;
+          return false;
         }
       }
 
       if (!write_dep_file(options, *defined_type, imported_files, io_delegate, input_file,
                           output_file_name)) {
-        return 1;
+        return false;
       }
 
       bool success = false;
@@ -738,11 +738,11 @@ int compile_aidl(const Options& options, const IoDelegate& io_delegate) {
         AIDL_FATAL(input_file) << "Should not reach here.";
       }
       if (!success) {
-        return 1;
+        return false;
       }
     }
   }
-  return 0;
+  return true;
 }
 
 bool dump_mappings(const Options& options, const IoDelegate& io_delegate) {
@@ -773,39 +773,41 @@ bool dump_mappings(const Options& options, const IoDelegate& io_delegate) {
 int aidl_entry(const Options& options, const IoDelegate& io_delegate) {
   AidlErrorLog::clearError();
 
-  int ret = 1;
-  switch (options.GetTask()) {
-    case Options::Task::HELP:
-      ret = 0;
-      break;
-    case Options::Task::COMPILE:
-      ret = android::aidl::compile_aidl(options, io_delegate);
-      break;
-    case Options::Task::PREPROCESS:
-      ret = android::aidl::Preprocess(options, io_delegate) ? 0 : 1;
-      break;
-    case Options::Task::DUMP_API:
-      ret = android::aidl::dump_api(options, io_delegate) ? 0 : 1;
-      break;
-    case Options::Task::CHECK_API:
-      ret = android::aidl::check_api(options, io_delegate) ? 0 : 1;
-      break;
-    case Options::Task::DUMP_MAPPINGS:
-      ret = android::aidl::dump_mappings(options, io_delegate) ? 0 : 1;
-      break;
-    default:
-      AIDL_FATAL(AIDL_LOCATION_HERE)
-          << "Unrecognized task: " << static_cast<size_t>(options.GetTask());
+  bool success = false;
+  if (options.Ok()) {
+    switch (options.GetTask()) {
+      case Options::Task::HELP:
+        success = true;
+        break;
+      case Options::Task::COMPILE:
+        success = android::aidl::compile_aidl(options, io_delegate);
+        break;
+      case Options::Task::PREPROCESS:
+        success = android::aidl::Preprocess(options, io_delegate);
+        break;
+      case Options::Task::DUMP_API:
+        success = android::aidl::dump_api(options, io_delegate);
+        break;
+      case Options::Task::CHECK_API:
+        success = android::aidl::check_api(options, io_delegate);
+        break;
+      case Options::Task::DUMP_MAPPINGS:
+        success = android::aidl::dump_mappings(options, io_delegate);
+        break;
+      default:
+        AIDL_FATAL(AIDL_LOCATION_HERE)
+            << "Unrecognized task: " << static_cast<size_t>(options.GetTask());
+    }
+  } else {
+    AIDL_ERROR(options.GetErrorMessage()) << options.GetUsage();
   }
 
-  // compiler invariants
-  const bool shouldReportError = ret != 0;
   const bool reportedError = AidlErrorLog::hadError();
-  AIDL_FATAL_IF(shouldReportError != reportedError, AIDL_LOCATION_HERE)
-      << "Compiler returned error " << ret << " but did" << (reportedError ? "" : " not")
+  AIDL_FATAL_IF(success == reportedError, AIDL_LOCATION_HERE)
+      << "Compiler returned success " << success << " but did" << (reportedError ? "" : " not")
       << " emit error logs";
 
-  return ret;
+  return success ? 0 : 1;
 }
 
 }  // namespace aidl
