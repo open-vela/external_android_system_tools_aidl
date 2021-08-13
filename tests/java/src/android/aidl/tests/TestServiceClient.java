@@ -18,10 +18,11 @@ package android.aidl.tests;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assume.assumeTrue;
 
 import android.aidl.tests.ByteEnum;
@@ -873,5 +874,24 @@ public class TestServiceClient {
       assertNotNull(reversed);
       assertThat(repeated.getNs(), is(new int[] {1, 2, 3}));
       assertThat(reversed.getNs(), is(new int[] {3, 2, 1}));
+    }
+
+    @Test
+    public void testReverseRecursiveList() throws RemoteException {
+      RecursiveList head = null;
+      for (int i = 0; i < 10; i++) {
+        RecursiveList node = new RecursiveList();
+        node.value = i;
+        node.next = head;
+        head = node;
+      }
+      // head: [9, 8, .. , 0]
+      RecursiveList reversed = service.ReverseList(head);
+      // reversed should be [0, 1, .. 9]
+      for (int i = 0; i < 10; i++) {
+        assertThat(reversed.value, is(i));
+        reversed = reversed.next;
+      }
+      assertNull(reversed);
     }
 }

@@ -213,6 +213,10 @@ public interface ITestService extends android.os.IInterface
     @Override public void FillOutStructuredParcelable(android.aidl.tests.StructuredParcelable parcel) throws android.os.RemoteException
     {
     }
+    @Override public android.aidl.tests.RecursiveList ReverseList(android.aidl.tests.RecursiveList list) throws android.os.RemoteException
+    {
+      return null;
+    }
     @Override public android.aidl.tests.IOldName GetOldNameInterface() throws android.os.RemoteException
     {
       return null;
@@ -852,6 +856,26 @@ public interface ITestService extends android.os.IInterface
           if ((_arg0!=null)) {
             reply.writeInt(1);
             _arg0.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+          }
+          else {
+            reply.writeInt(0);
+          }
+          break;
+        }
+        case TRANSACTION_ReverseList:
+        {
+          android.aidl.tests.RecursiveList _arg0;
+          if ((0!=data.readInt())) {
+            _arg0 = android.aidl.tests.RecursiveList.CREATOR.createFromParcel(data);
+          }
+          else {
+            _arg0 = null;
+          }
+          android.aidl.tests.RecursiveList _result = this.ReverseList(_arg0);
+          reply.writeNoException();
+          if ((_result!=null)) {
+            reply.writeInt(1);
+            _result.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
           }
           else {
             reply.writeInt(0);
@@ -2128,6 +2152,40 @@ public interface ITestService extends android.os.IInterface
           _data.recycle();
         }
       }
+      @Override public android.aidl.tests.RecursiveList ReverseList(android.aidl.tests.RecursiveList list) throws android.os.RemoteException
+      {
+        android.os.Parcel _data = android.os.Parcel.obtain();
+        _data.markSensitive();android.os.Parcel _reply = android.os.Parcel.obtain();
+        android.aidl.tests.RecursiveList _result;
+        try {
+          _data.writeInterfaceToken(DESCRIPTOR);
+          if ((list!=null)) {
+            _data.writeInt(1);
+            list.writeToParcel(_data, 0);
+          }
+          else {
+            _data.writeInt(0);
+          }
+          boolean _status = mRemote.transact(Stub.TRANSACTION_ReverseList, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
+          if (!_status) {
+            if (getDefaultImpl() != null) {
+              return getDefaultImpl().ReverseList(list);
+            }
+          }
+          _reply.readException();
+          if ((0!=_reply.readInt())) {
+            _result = android.aidl.tests.RecursiveList.CREATOR.createFromParcel(_reply);
+          }
+          else {
+            _result = null;
+          }
+        }
+        finally {
+          _reply.recycle();
+          _data.recycle();
+        }
+        return _result;
+      }
       @Override public android.aidl.tests.IOldName GetOldNameInterface() throws android.os.RemoteException
       {
         android.os.Parcel _data = android.os.Parcel.obtain();
@@ -2266,10 +2324,11 @@ public interface ITestService extends android.os.IInterface
     static final int TRANSACTION_ReverseUtf8CppStringList = (android.os.IBinder.FIRST_CALL_TRANSACTION + 44);
     static final int TRANSACTION_GetCallback = (android.os.IBinder.FIRST_CALL_TRANSACTION + 45);
     static final int TRANSACTION_FillOutStructuredParcelable = (android.os.IBinder.FIRST_CALL_TRANSACTION + 46);
-    static final int TRANSACTION_GetOldNameInterface = (android.os.IBinder.FIRST_CALL_TRANSACTION + 47);
-    static final int TRANSACTION_GetNewNameInterface = (android.os.IBinder.FIRST_CALL_TRANSACTION + 48);
-    static final int TRANSACTION_GetCppJavaTests = (android.os.IBinder.FIRST_CALL_TRANSACTION + 49);
-    static final int TRANSACTION_getBackendType = (android.os.IBinder.FIRST_CALL_TRANSACTION + 50);
+    static final int TRANSACTION_ReverseList = (android.os.IBinder.FIRST_CALL_TRANSACTION + 47);
+    static final int TRANSACTION_GetOldNameInterface = (android.os.IBinder.FIRST_CALL_TRANSACTION + 48);
+    static final int TRANSACTION_GetNewNameInterface = (android.os.IBinder.FIRST_CALL_TRANSACTION + 49);
+    static final int TRANSACTION_GetCppJavaTests = (android.os.IBinder.FIRST_CALL_TRANSACTION + 50);
+    static final int TRANSACTION_getBackendType = (android.os.IBinder.FIRST_CALL_TRANSACTION + 51);
     public static boolean setDefaultImpl(android.aidl.tests.ITestService impl) {
       // Only one user of this interface can use this function
       // at a time. This is a heuristic to detect if two different
@@ -2438,6 +2497,7 @@ public interface ITestService extends android.os.IInterface
   // Since this paracelable has clearly defined default values, it would be
   // inefficient to use an IPC to fill it out in practice.
   public void FillOutStructuredParcelable(android.aidl.tests.StructuredParcelable parcel) throws android.os.RemoteException;
+  public android.aidl.tests.RecursiveList ReverseList(android.aidl.tests.RecursiveList list) throws android.os.RemoteException;
   public android.aidl.tests.IOldName GetOldNameInterface() throws android.os.RemoteException;
   public android.aidl.tests.INewName GetNewNameInterface() throws android.os.RemoteException;
   // Retrieve the ICppJavaTests if the server supports it
