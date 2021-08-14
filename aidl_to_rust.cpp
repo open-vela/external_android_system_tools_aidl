@@ -189,7 +189,11 @@ std::string RustNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typen
       (!TypeHasDefault(type, typenames) &&
        (mode == StorageMode::DEFAULT_VALUE || mode == StorageMode::OUT_ARGUMENT ||
         mode == StorageMode::PARCELABLE_FIELD))) {
-    rust_name = "Option<" + rust_name + ">";
+    if (type.IsHeapNullable()) {
+      rust_name = "Option<Box<" + rust_name + ">>";
+    } else {
+      rust_name = "Option<" + rust_name + ">";
+    }
   }
 
   if (mode == StorageMode::OUT_ARGUMENT || mode == StorageMode::INOUT_ARGUMENT) {
