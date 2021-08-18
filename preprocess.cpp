@@ -126,7 +126,7 @@ bool Preprocess(const Options& options, const IoDelegate& io_delegate) {
     AidlTypenames typenames;
     auto result =
         internals::load_and_validate_aidl(file, options, io_delegate, &typenames, nullptr);
-    if (result == AidlError::OK || result == AidlError::FOUND_PARCELABLE) {
+    if (result == AidlError::OK) {
       const auto& doc = typenames.MainDocument();
       for (const auto& t : doc.DefinedTypes()) {
         t->DispatchVisit(visitor);

@@ -1143,6 +1143,15 @@ TEST_P(AidlTest, ParseCompoundParcelableFromPreprocess) {
   EXPECT_NE(nullptr, parse_result);
 }
 
+TEST_F(AidlTest, ApiMappingAcceptsUnstructuredParcelables) {
+  io_delegate_.SetFileContents("p/Foo.aidl", "package p; parcelable Foo;");
+
+  Options options1 = Options::From("aidl --apimapping mapping.txt p/Foo.aidl");
+  CaptureStderr();
+  EXPECT_EQ(0, aidl_entry(options1, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+}
+
 TEST_F(AidlTest, FailOnParcelable) {
   const string expected_foo_stderr =
       "ERROR: p/IFoo.aidl:1.22-27: Refusing to generate code with unstructured parcelables. "
