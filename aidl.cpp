@@ -487,12 +487,6 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   // Validation phase
   //////////////////////////////////////////////////////////////////////////
 
-  // For legacy reasons, by default, compiling an unstructured parcelable (which contains no output)
-  // is allowed. This must not be returned as an error until the very end of this procedure since
-  // this may be considered a success, and we should first check that there are not other, more
-  // serious failures.
-  bool contains_unstructured_parcelable = false;
-
   const auto& types = document->DefinedTypes();
   const int num_defined_types = types.size();
   for (const auto& defined_type : types) {
@@ -541,10 +535,8 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
         AIDL_ERROR(unstructured_parcelable)
             << "Refusing to generate code with unstructured parcelables. Declared parcelables "
                "should be in their own file and/or cannot be used with --structured interfaces.";
-        // Continue parsing for more errors
+        return AidlError::FOUND_PARCELABLE;
       }
-
-      contains_unstructured_parcelable = true;
     }
 
     if (defined_type->IsVintfStability()) {
@@ -675,11 +667,6 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     *imported_files = import_paths;
   }
 
-  if (contains_unstructured_parcelable) {
-    // Considered a success for the legacy case, so this must be returned last.
-    return AidlError::FOUND_PARCELABLE;
-  }
-
   return AidlError::OK;
 }
 
@@ -694,8 +681,7 @@ bool compile_aidl(const Options& options, const IoDelegate& io_delegate) {
 
     AidlError aidl_err = internals::load_and_validate_aidl(input_file, options, io_delegate,
                                                            &typenames, &imported_files);
-    bool allowError = aidl_err == AidlError::FOUND_PARCELABLE && !options.FailOnParcelable();
-    if (aidl_err != AidlError::OK && !allowError) {
+    if (aidl_err != AidlError::OK) {
       return false;
     }
 
