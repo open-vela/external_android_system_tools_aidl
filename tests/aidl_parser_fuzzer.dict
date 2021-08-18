@@ -89,7 +89,7 @@
 
 #arguments
 " aidl "
-" --apimappings "
+" --apimapping "
 " --checkapi=compatible "
 " --checkapi=equal "
 " --hash "
