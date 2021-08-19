@@ -60,6 +60,15 @@ string Options::GetUsage() const {
        << "   Check whether NEW_DIR API dump is {compatible|equal} extension " << endl
        << "   of the API dump OLD_DIR. Default: compatible" << endl
 #endif
+       << endl
+       << myname_ << " --apimapping OUTPUT INPUT..." << endl
+       << "   Generate a mapping of declared aidl method signatures to" << endl
+       << "   the original line number. e.g.: " << endl
+       << "       If line 39 of foo/bar/IFoo.aidl contains:"
+       << "         void doFoo(int bar, String baz);" << endl
+       << "       Then the result would be:" << endl
+       << "         foo.bar.Baz|doFoo|int,String,|void" << endl
+       << "         foo/bar/IFoo.aidl:39" << endl
        << endl;
 
   // Legacy option formats
@@ -107,14 +116,6 @@ string Options::GetUsage() const {
        << "          tool, that part will not be traced." << endl
        << "  --transaction_names" << endl
        << "          Generate transaction names." << endl
-       << "  --apimapping" << endl
-       << "          Generates a mapping of declared aidl method signatures to" << endl
-       << "          the original line number. e.g.: " << endl
-       << "              If line 39 of foo/bar/IFoo.aidl contains:"
-       << "              void doFoo(int bar, String baz);" << endl
-       << "              Then the result would be:" << endl
-       << "              foo.bar.Baz|doFoo|int,String,|void" << endl
-       << "              foo/bar/IFoo.aidl:39" << endl
        << "  -v VER, --version=VER" << endl
        << "          Set the version of the interface and parcelable to VER." << endl
        << "          VER must be an interger greater than 0." << endl
@@ -235,7 +236,7 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         {0, 0, 0, 0},
     };
     const int c = getopt_long(argc, const_cast<char* const*>(argv.data()),
-                              "I:p:d:o:h:abtv:", long_options, nullptr);
+                              "I:p:d:o:h:abtv:i:", long_options, nullptr);
     if (c == -1) {
       // no more options
       break;
@@ -421,7 +422,8 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
     }
   } else {
     // the new arguments format
-    if (task_ == Options::Task::COMPILE || task_ == Options::Task::DUMP_API) {
+    if (task_ == Options::Task::COMPILE || task_ == Options::Task::DUMP_API ||
+        task_ == Options::Task::DUMP_MAPPINGS) {
       if (argc - optind < 1) {
         error_message_ << "No input file." << endl;
         return;
@@ -432,7 +434,7 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
                        << "got " << (argc - optind) << "." << endl;
         return;
       }
-      if (task_ != Options::Task::CHECK_API && task_ != Options::Task::DUMP_MAPPINGS) {
+      if (task_ != Options::Task::CHECK_API) {
         output_file_ = argv[optind++];
       }
     }
