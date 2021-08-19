@@ -166,7 +166,7 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 		optionalFlags = append(optionalFlags, "--version "+g.properties.Version)
 
 		hash := "notfrozen"
-		if !strings.HasPrefix(baseDir, ctx.Config().BuildDir()) {
+		if !strings.HasPrefix(baseDir, ctx.Config().SoongOutDir()) {
 			hashFile := android.ExistentPathForSource(ctx, baseDir, ".hash")
 			if hashFile.Valid() {
 				hash = "$$(tail -1 '" + hashFile.Path().String() + "')"
