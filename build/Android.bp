@@ -114,7 +114,7 @@ aidl_interface {
         "tests_1/some_package/IBar.aidl",
     ],
     imports: [
-        "test-piece-1",
+        "test-piece-1-V3",
     ],
     backend: {
         java: {
@@ -133,7 +133,7 @@ aidl_interface {
         "tests_1/other_package/IBaz.aidl",
     ],
     imports: [
-        "test-piece-2",
+        "test-piece-2-V1",
     ],
     backend: {
         java: {
@@ -152,7 +152,7 @@ aidl_interface {
         "tests_2/another_package/IFaz.aidl",
     ],
     imports: [
-        "test-piece-1",
+        "test-piece-1-V3",
     ],
     backend: {
         java: {
@@ -173,7 +173,7 @@ aidl_interface {
         "test_package/IBaz.aidl",
     ],
     imports: [
-        "test-piece-2",
+        "test-piece-2-V1",
     ],
     backend: {
         java: {
