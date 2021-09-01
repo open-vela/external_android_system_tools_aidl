@@ -105,6 +105,8 @@ string Options::GetUsage() const {
        << "          Trigger fail when trying to compile a parcelable." << endl
        << "  --ninja" << endl
        << "          Generate dependency file in a format ninja understands." << endl
+       << "  --rpc" << endl
+       << "          (for Java) whether to generate support for RPC transactions." << endl
        << "  --structured" << endl
        << "          Whether this interface is defined exclusively in AIDL." << endl
        << "          It is therefore a candidate for stabilization." << endl
@@ -225,6 +227,7 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         {"out", required_argument, 0, 'o'},
         {"header_out", required_argument, 0, 'h'},
         {"ninja", no_argument, 0, 'n'},
+        {"rpc", no_argument, 0, 'r'},
         {"stability", required_argument, 0, 'Y'},
         {"structured", no_argument, 0, 'S'},
         {"trace", no_argument, 0, 't'},
@@ -332,6 +335,9 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         }
         break;
       }
+      case 'r':
+        gen_rpc_ = true;
+        break;
       case 't':
         gen_traces_ = true;
         break;
