@@ -86,6 +86,9 @@
 " a.path "
 " b.path "
 " Foo "
+" a/path/Foo.aidl "
+" b/path/Foo.aidl "
+" path/Foo.aidl "
 
 #arguments
 " aidl "
