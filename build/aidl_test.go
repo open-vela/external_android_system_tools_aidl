@@ -390,7 +390,7 @@ func TestImportInRelease(t *testing.T) {
 		srcs: [
 			"IFoo.aidl",
 		],
-		imports: ["bar"],
+		imports: ["bar-V1"],
 		versions: ["1"],
 	}
 
@@ -774,7 +774,7 @@ func TestImports(t *testing.T) {
 				"IFoo.aidl",
 			],
 			imports: [
-				"bar",
+				"bar-V1",
 			]
 		}
 		aidl_interface {
@@ -797,7 +797,7 @@ func TestImports(t *testing.T) {
 				"IFoo.aidl",
 			],
 			imports: [
-				"bar",
+				"bar-V1",
 			]
 		}
 		aidl_interface {
@@ -825,7 +825,7 @@ func TestImports(t *testing.T) {
 				},
 			},
 			imports: [
-				"bar.1",
+				"bar.1-V1",
 			]
 		}
 		aidl_interface {
@@ -893,7 +893,7 @@ func TestDuplicatedVersions(t *testing.T) {
 		aidl_interface {
 			name: "myiface2",
 			srcs: ["IBar.aidl"],
-			imports: ["myiface"]
+			imports: ["myiface-V2"]
 		}
 
 		cc_library {
@@ -920,7 +920,7 @@ func TestDuplicatedVersions(t *testing.T) {
 		aidl_interface {
 			name: "myiface2",
 			srcs: ["IBar.aidl"],
-			imports: ["myiface"]
+			imports: ["myiface-V2"]
 		}
 
 		cc_library {
@@ -948,7 +948,7 @@ func TestDuplicatedVersions(t *testing.T) {
 		aidl_interface {
 			name: "myiface2",
 			srcs: ["IBar.aidl"],
-			imports: ["myiface"]
+			imports: ["myiface-V2"]
 		}
 
 		cc_library {
@@ -971,7 +971,7 @@ func TestDuplicatedVersions(t *testing.T) {
 		aidl_interface {
 			name: "myiface2",
 			srcs: ["IBar.aidl"],
-			imports: ["myiface"]
+			imports: ["myiface-V2"]
 		}
 
 		cc_library {
@@ -1114,7 +1114,7 @@ func TestAidlImportFlagsForImportedModules(t *testing.T) {
 			aidl_interface {
 				name: "foo-iface",
 				srcs: ["a/Foo.aidl"],
-				imports: ["bar-iface"],
+				imports: ["bar-iface-V2"],
 				versions: ["1"],
 			}
 		`),
@@ -1127,7 +1127,7 @@ func TestAidlImportFlagsForImportedModules(t *testing.T) {
 			aidl_interface {
 				name: "bar-iface",
 				srcs: ["b/Bar.aidl"],
-				imports: ["baz-iface"],
+				imports: ["baz-iface-V1"],
 				versions: ["1"],
 			}
 		`),
@@ -1175,7 +1175,7 @@ func TestAidlImportFlagsForImportedModules(t *testing.T) {
 		android.AssertStringEquals(t, "compile(old=1) should import aidl_api/1", "-Ifoo/aidl_api/foo-iface/1", rule.Args["imports"])
 		android.AssertStringDoesContain(t, "compile(old=1) should import bar.preprocessed",
 			rule.Args["optionalFlags"],
-			"-pout/soong/.intermediates/bar/bar-iface_interface/1/preprocessed.aidl")
+			"-pout/soong/.intermediates/bar/bar-iface_interface/2/preprocessed.aidl")
 	}
 	// compile ToT(v2)
 	{
@@ -1285,7 +1285,7 @@ func TestSupportsGenruleAndFilegroup(t *testing.T) {
 						":gen1",
 				],
 				imports: [
-						"bar-iface",
+						"bar-iface-V1",
 				],
 				versions: ["1"],
 			}
@@ -1482,7 +1482,7 @@ func TestUseVersionedPreprocessedWhenImporotedWithVersions(t *testing.T) {
 			name: "unstable-foo",
 			srcs: ["foo/Foo.aidl"],
 			imports: [
-					"bar",
+					"bar-V2",
 					"baz-V1",
 					"unstable-bar",
 			],
@@ -1492,7 +1492,7 @@ func TestUseVersionedPreprocessedWhenImporotedWithVersions(t *testing.T) {
 			name: "foo",
 			srcs: ["foo/Foo.aidl"],
 			imports: [
-					"bar",
+					"bar-V1",
 					"baz-V1",
 			],
 			versions: ["1"],
@@ -1501,7 +1501,7 @@ func TestUseVersionedPreprocessedWhenImporotedWithVersions(t *testing.T) {
 			name: "foo-no-versions",
 			srcs: ["foo/Foo.aidl"],
 			imports: [
-					"bar",
+					"bar-V2",
 			],
 		}
 		aidl_interface {
@@ -1532,8 +1532,8 @@ func TestUseVersionedPreprocessedWhenImporotedWithVersions(t *testing.T) {
 	}))
 	{
 		rule := ctx.ModuleForTests("foo-V2-java-source", "").Output("foo/Foo.java")
-		android.AssertStringDoesContain(t, "foo-V2(tot) imports bar-V2(tot) for 'bar'", rule.Args["optionalFlags"],
-			"-pout/soong/.intermediates/bar_interface/2/preprocessed.aidl")
+		android.AssertStringDoesContain(t, "foo-V2(tot) imports bar-V1 for 'bar-V1'", rule.Args["optionalFlags"],
+			"-pout/soong/.intermediates/bar_interface/1/preprocessed.aidl")
 		android.AssertStringDoesContain(t, "foo-V2(tot) imports baz-V1 for 'baz-V1'", rule.Args["optionalFlags"],
 			"-pout/soong/.intermediates/baz_interface/1/preprocessed.aidl")
 	}
