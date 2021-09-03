@@ -51,13 +51,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     const std::string name = provider.ConsumeRandomLengthString();
     const std::string contents = provider.ConsumeRandomLengthString();
     io.SetFileContents(name, contents);
-
-    // b/195473218#comment9. Make it easier for the compiler to find files,
-    // probabilistically, so that the fuzzer does not have to guess it needs the
-    // same exact string in both places.
-    if (provider.ConsumeBool()) {
-      args.emplace_back(name);
-    }
   }
 
   if (kFuzzLog) {
