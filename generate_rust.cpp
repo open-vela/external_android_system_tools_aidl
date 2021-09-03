@@ -548,11 +548,11 @@ void GenerateParcelSerializeBody(CodeWriter& out, const AidlStructuredParcelable
   out.Indent();
   for (const auto& variable : parcel->GetFields()) {
     if (!TypeHasDefault(variable->GetType(), typenames)) {
-      out << "let __field_ref = this." << variable->GetName()
+      out << "let __field_ref = self." << variable->GetName()
           << ".as_ref().ok_or(binder::StatusCode::UNEXPECTED_NULL)?;\n";
       out << "subparcel.write(__field_ref)?;\n";
     } else {
-      out << "subparcel.write(&this." << variable->GetName() << ")?;\n";
+      out << "subparcel.write(&self." << variable->GetName() << ")?;\n";
     }
   }
   out << "Ok(())\n";
@@ -621,7 +621,7 @@ void GenerateParcelDefault(CodeWriter& out, const AidlUnionDecl* parcel) {
 
 void GenerateParcelSerializeBody(CodeWriter& out, const AidlUnionDecl* parcel,
                                  const AidlTypenames& typenames) {
-  out << "match this {\n";
+  out << "match self {\n";
   out.Indent();
   int tag = 0;
   for (const auto& variable : parcel->GetFields()) {
@@ -671,55 +671,31 @@ void GenerateParcelDeserializeBody(CodeWriter& out, const AidlUnionDecl* parcel,
 }
 
 template <typename ParcelableType>
-void GenerateParcelSerialize(CodeWriter& out, const ParcelableType* parcel,
+void GenerateParcelableTrait(CodeWriter& out, const ParcelableType* parcel,
                              const AidlTypenames& typenames) {
-  out << "impl binder::parcel::Serialize for " << parcel->GetName() << " {\n";
-  out << "  fn serialize(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {\n";
-  out << "    <Self as binder::parcel::SerializeOption>::serialize_option(Some(self), parcel)\n";
-  out << "  }\n";
-  out << "}\n";
-
-  out << "impl binder::parcel::SerializeArray for " << parcel->GetName() << " {}\n";
-
-  out << "impl binder::parcel::SerializeOption for " << parcel->GetName() << " {\n";
+  out << "impl binder::parcel::Parcelable for " << parcel->GetName() << " {\n";
   out.Indent();
-  out << "fn serialize_option(this: Option<&Self>, parcel: &mut binder::parcel::Parcel) -> "
-         "binder::Result<()> {\n";
-  out.Indent();
-  out << "let this = if let Some(this) = this {\n";
-  out << "  parcel.write(&1i32)?;\n";
-  out << "  this\n";
-  out << "} else {\n";
-  out << "  return parcel.write(&0i32);\n";
-  out << "};\n";
 
+  out << "fn write_to_parcel(&self, "
+         "parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {\n";
+  out.Indent();
   GenerateParcelSerializeBody(out, parcel, typenames);
-
   out.Dedent();
   out << "}\n";
-  out.Dedent();
-  out << "}\n";
-}
 
-template <typename ParcelableType>
-void GenerateParcelDeserialize(CodeWriter& out, const ParcelableType* parcel,
-                               const AidlTypenames& typenames) {
-  out << "binder::impl_deserialize_for_parcelable!(" << parcel->GetName() << ");\n";
-
-  // The actual deserialization code lives in the private
-  // deserialize_parcelable() method which we emit here.
-  out << "impl " << parcel->GetName() << " {\n";
-  out.Indent();
-  out << "fn deserialize_parcelable(&mut self, "
+  out << "fn read_from_parcel(&mut self, "
          "parcel: &binder::parcel::Parcel) -> binder::Result<()> {\n";
   out.Indent();
-
   GenerateParcelDeserializeBody(out, parcel, typenames);
+  out.Dedent();
+  out << "}\n";
 
   out.Dedent();
   out << "}\n";
-  out.Dedent();
-  out << "}\n";
+
+  // Emit the outer (de)serialization traits
+  out << "binder::impl_serialize_for_parcelable!(" << parcel->GetName() << ");\n";
+  out << "binder::impl_deserialize_for_parcelable!(" << parcel->GetName() << ");\n";
 }
 
 template <typename ParcelableType>
@@ -749,8 +725,7 @@ bool GenerateRustParcel(const string& filename, const ParcelableType* parcel,
   GenerateConstantDeclarations(*code_writer, *parcel, typenames);
   GenerateMangledAlias(*code_writer, parcel);
   GenerateParcelDefault(*code_writer, parcel);
-  GenerateParcelSerialize(*code_writer, parcel, typenames);
-  GenerateParcelDeserialize(*code_writer, parcel, typenames);
+  GenerateParcelableTrait(*code_writer, parcel, typenames);
   return true;
 }
 

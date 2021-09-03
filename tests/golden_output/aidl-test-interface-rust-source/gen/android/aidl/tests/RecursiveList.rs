@@ -13,30 +13,15 @@ impl Default for RecursiveList {
     }
   }
 }
-impl binder::parcel::Serialize for RecursiveList {
-  fn serialize(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    <Self as binder::parcel::SerializeOption>::serialize_option(Some(self), parcel)
-  }
-}
-impl binder::parcel::SerializeArray for RecursiveList {}
-impl binder::parcel::SerializeOption for RecursiveList {
-  fn serialize_option(this: Option<&Self>, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    let this = if let Some(this) = this {
-      parcel.write(&1i32)?;
-      this
-    } else {
-      return parcel.write(&0i32);
-    };
+impl binder::parcel::Parcelable for RecursiveList {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
     parcel.sized_write(|subparcel| {
-      subparcel.write(&this.value)?;
-      subparcel.write(&this.next)?;
+      subparcel.write(&self.value)?;
+      subparcel.write(&self.next)?;
       Ok(())
     })
   }
-}
-binder::impl_deserialize_for_parcelable!(RecursiveList);
-impl RecursiveList {
-  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
     parcel.sized_read(|subparcel| {
       if subparcel.has_more_data() {
         self.value = subparcel.read()?;
@@ -48,3 +33,5 @@ impl RecursiveList {
     })
   }
 }
+binder::impl_serialize_for_parcelable!(RecursiveList);
+binder::impl_deserialize_for_parcelable!(RecursiveList);
