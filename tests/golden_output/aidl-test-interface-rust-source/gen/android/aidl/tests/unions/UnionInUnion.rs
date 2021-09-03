@@ -10,21 +10,9 @@ impl Default for UnionInUnion {
     Self::First(Default::default())
   }
 }
-impl binder::parcel::Serialize for UnionInUnion {
-  fn serialize(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    <Self as binder::parcel::SerializeOption>::serialize_option(Some(self), parcel)
-  }
-}
-impl binder::parcel::SerializeArray for UnionInUnion {}
-impl binder::parcel::SerializeOption for UnionInUnion {
-  fn serialize_option(this: Option<&Self>, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    let this = if let Some(this) = this {
-      parcel.write(&1i32)?;
-      this
-    } else {
-      return parcel.write(&0i32);
-    };
-    match this {
+impl binder::parcel::Parcelable for UnionInUnion {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    match self {
       Self::First(v) => {
         parcel.write(&0i32)?;
         parcel.write(v)
@@ -35,10 +23,7 @@ impl binder::parcel::SerializeOption for UnionInUnion {
       }
     }
   }
-}
-binder::impl_deserialize_for_parcelable!(UnionInUnion);
-impl UnionInUnion {
-  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
     let tag: i32 = parcel.read()?;
     match tag {
       0 => {
@@ -57,3 +42,5 @@ impl UnionInUnion {
     }
   }
 }
+binder::impl_serialize_for_parcelable!(UnionInUnion);
+binder::impl_deserialize_for_parcelable!(UnionInUnion);

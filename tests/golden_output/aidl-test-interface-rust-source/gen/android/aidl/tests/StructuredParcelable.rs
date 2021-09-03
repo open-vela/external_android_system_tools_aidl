@@ -118,81 +118,66 @@ impl Default for StructuredParcelable {
     }
   }
 }
-impl binder::parcel::Serialize for StructuredParcelable {
-  fn serialize(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    <Self as binder::parcel::SerializeOption>::serialize_option(Some(self), parcel)
-  }
-}
-impl binder::parcel::SerializeArray for StructuredParcelable {}
-impl binder::parcel::SerializeOption for StructuredParcelable {
-  fn serialize_option(this: Option<&Self>, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    let this = if let Some(this) = this {
-      parcel.write(&1i32)?;
-      this
-    } else {
-      return parcel.write(&0i32);
-    };
+impl binder::parcel::Parcelable for StructuredParcelable {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
     parcel.sized_write(|subparcel| {
-      subparcel.write(&this.shouldContainThreeFs)?;
-      subparcel.write(&this.f)?;
-      subparcel.write(&this.shouldBeJerry)?;
-      subparcel.write(&this.shouldBeByteBar)?;
-      subparcel.write(&this.shouldBeIntBar)?;
-      subparcel.write(&this.shouldBeLongBar)?;
-      subparcel.write(&this.shouldContainTwoByteFoos)?;
-      subparcel.write(&this.shouldContainTwoIntFoos)?;
-      subparcel.write(&this.shouldContainTwoLongFoos)?;
-      subparcel.write(&this.stringDefaultsToFoo)?;
-      subparcel.write(&this.byteDefaultsToFour)?;
-      subparcel.write(&this.intDefaultsToFive)?;
-      subparcel.write(&this.longDefaultsToNegativeSeven)?;
-      subparcel.write(&this.booleanDefaultsToTrue)?;
-      subparcel.write(&this.charDefaultsToC)?;
-      subparcel.write(&this.floatDefaultsToPi)?;
-      subparcel.write(&this.doubleWithDefault)?;
-      subparcel.write(&this.arrayDefaultsTo123)?;
-      subparcel.write(&this.arrayDefaultsToEmpty)?;
-      subparcel.write(&this.boolDefault)?;
-      subparcel.write(&this.byteDefault)?;
-      subparcel.write(&this.intDefault)?;
-      subparcel.write(&this.longDefault)?;
-      subparcel.write(&this.floatDefault)?;
-      subparcel.write(&this.doubleDefault)?;
-      subparcel.write(&this.checkDoubleFromFloat)?;
-      subparcel.write(&this.checkStringArray1)?;
-      subparcel.write(&this.checkStringArray2)?;
-      subparcel.write(&this.int32_min)?;
-      subparcel.write(&this.int32_max)?;
-      subparcel.write(&this.int64_max)?;
-      subparcel.write(&this.hexInt32_neg_1)?;
-      subparcel.write(&this.ibinder)?;
-      subparcel.write(&this.int32_1)?;
-      subparcel.write(&this.int64_1)?;
-      subparcel.write(&this.hexInt32_pos_1)?;
-      subparcel.write(&this.hexInt64_pos_1)?;
-      subparcel.write(&this.const_exprs_1)?;
-      subparcel.write(&this.const_exprs_2)?;
-      subparcel.write(&this.const_exprs_3)?;
-      subparcel.write(&this.const_exprs_4)?;
-      subparcel.write(&this.const_exprs_5)?;
-      subparcel.write(&this.const_exprs_6)?;
-      subparcel.write(&this.const_exprs_7)?;
-      subparcel.write(&this.const_exprs_8)?;
-      subparcel.write(&this.const_exprs_9)?;
-      subparcel.write(&this.const_exprs_10)?;
-      subparcel.write(&this.addString1)?;
-      subparcel.write(&this.addString2)?;
-      subparcel.write(&this.shouldSetBit0AndBit2)?;
-      subparcel.write(&this.u)?;
-      subparcel.write(&this.shouldBeConstS1)?;
-      subparcel.write(&this.defaultWithFoo)?;
+      subparcel.write(&self.shouldContainThreeFs)?;
+      subparcel.write(&self.f)?;
+      subparcel.write(&self.shouldBeJerry)?;
+      subparcel.write(&self.shouldBeByteBar)?;
+      subparcel.write(&self.shouldBeIntBar)?;
+      subparcel.write(&self.shouldBeLongBar)?;
+      subparcel.write(&self.shouldContainTwoByteFoos)?;
+      subparcel.write(&self.shouldContainTwoIntFoos)?;
+      subparcel.write(&self.shouldContainTwoLongFoos)?;
+      subparcel.write(&self.stringDefaultsToFoo)?;
+      subparcel.write(&self.byteDefaultsToFour)?;
+      subparcel.write(&self.intDefaultsToFive)?;
+      subparcel.write(&self.longDefaultsToNegativeSeven)?;
+      subparcel.write(&self.booleanDefaultsToTrue)?;
+      subparcel.write(&self.charDefaultsToC)?;
+      subparcel.write(&self.floatDefaultsToPi)?;
+      subparcel.write(&self.doubleWithDefault)?;
+      subparcel.write(&self.arrayDefaultsTo123)?;
+      subparcel.write(&self.arrayDefaultsToEmpty)?;
+      subparcel.write(&self.boolDefault)?;
+      subparcel.write(&self.byteDefault)?;
+      subparcel.write(&self.intDefault)?;
+      subparcel.write(&self.longDefault)?;
+      subparcel.write(&self.floatDefault)?;
+      subparcel.write(&self.doubleDefault)?;
+      subparcel.write(&self.checkDoubleFromFloat)?;
+      subparcel.write(&self.checkStringArray1)?;
+      subparcel.write(&self.checkStringArray2)?;
+      subparcel.write(&self.int32_min)?;
+      subparcel.write(&self.int32_max)?;
+      subparcel.write(&self.int64_max)?;
+      subparcel.write(&self.hexInt32_neg_1)?;
+      subparcel.write(&self.ibinder)?;
+      subparcel.write(&self.int32_1)?;
+      subparcel.write(&self.int64_1)?;
+      subparcel.write(&self.hexInt32_pos_1)?;
+      subparcel.write(&self.hexInt64_pos_1)?;
+      subparcel.write(&self.const_exprs_1)?;
+      subparcel.write(&self.const_exprs_2)?;
+      subparcel.write(&self.const_exprs_3)?;
+      subparcel.write(&self.const_exprs_4)?;
+      subparcel.write(&self.const_exprs_5)?;
+      subparcel.write(&self.const_exprs_6)?;
+      subparcel.write(&self.const_exprs_7)?;
+      subparcel.write(&self.const_exprs_8)?;
+      subparcel.write(&self.const_exprs_9)?;
+      subparcel.write(&self.const_exprs_10)?;
+      subparcel.write(&self.addString1)?;
+      subparcel.write(&self.addString2)?;
+      subparcel.write(&self.shouldSetBit0AndBit2)?;
+      subparcel.write(&self.u)?;
+      subparcel.write(&self.shouldBeConstS1)?;
+      subparcel.write(&self.defaultWithFoo)?;
       Ok(())
     })
   }
-}
-binder::impl_deserialize_for_parcelable!(StructuredParcelable);
-impl StructuredParcelable {
-  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
     parcel.sized_read(|subparcel| {
       if subparcel.has_more_data() {
         self.shouldContainThreeFs = subparcel.read()?;
@@ -357,3 +342,5 @@ impl StructuredParcelable {
     })
   }
 }
+binder::impl_serialize_for_parcelable!(StructuredParcelable);
+binder::impl_deserialize_for_parcelable!(StructuredParcelable);
