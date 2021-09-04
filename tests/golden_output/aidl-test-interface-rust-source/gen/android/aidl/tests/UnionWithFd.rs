@@ -45,3 +45,6 @@ impl binder::parcel::Parcelable for UnionWithFd {
 }
 binder::impl_serialize_for_parcelable!(UnionWithFd);
 binder::impl_deserialize_for_parcelable!(UnionWithFd);
+impl binder::parcel::ParcelableMetadata for UnionWithFd {
+  fn get_descriptor() -> &'static str { "android.aidl.tests.UnionWithFd" }
+}
