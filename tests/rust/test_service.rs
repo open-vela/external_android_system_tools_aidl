@@ -23,6 +23,8 @@ use aidl_test_interface::aidl::android::aidl::tests::{
     BackendType::BackendType, ByteEnum::ByteEnum, ConstantExpressionEnum::ConstantExpressionEnum,
     INamedCallback, INewName, IOldName, IntEnum::IntEnum, LongEnum::LongEnum,
     RecursiveList::RecursiveList, StructuredParcelable,Union,
+    extension::ExtendableParcelable::ExtendableParcelable,
+    extension::MyExt::MyExt,
 };
 use aidl_test_interface::binder::{
     self, BinderFeatures, Interface, ParcelFileDescriptor, SpIBinder,
@@ -286,6 +288,24 @@ impl ITestService::ITestService for TestService {
 
         parcelable.u = Some(Union::Union::Ns(vec![1, 2, 3]));
         parcelable.shouldBeConstS1 = Some(Union::Union::S(Union::S1.to_string()));
+        Ok(())
+    }
+
+    fn RepeatExtendableParcelable(
+        &self,
+        ep: &ExtendableParcelable,
+        ep2: &mut ExtendableParcelable,
+    ) -> binder::Result<()> {
+        ep2.a = ep.a;
+        ep2.b = ep.b.clone();
+
+        let my_ext = ep.ext.get_parcelable::<MyExt>()?;
+        if let Some(my_ext) = my_ext {
+            ep2.ext.set_parcelable(my_ext)?;
+        } else {
+            ep2.ext.reset();
+        }
+
         Ok(())
     }
 

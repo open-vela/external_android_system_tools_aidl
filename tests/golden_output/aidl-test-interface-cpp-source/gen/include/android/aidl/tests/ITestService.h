@@ -9,6 +9,7 @@
 #include <android/aidl/tests/LongEnum.h>
 #include <android/aidl/tests/RecursiveList.h>
 #include <android/aidl/tests/StructuredParcelable.h>
+#include <android/aidl/tests/extension/ExtendableParcelable.h>
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
 #include <binder/ParcelFileDescriptor.h>
@@ -147,6 +148,7 @@ public:
   virtual ::android::binder::Status ReverseUtf8CppStringList(const ::std::optional<::std::vector<::std::optional<::std::string>>>& input, ::std::optional<::std::vector<::std::optional<::std::string>>>* repeated, ::std::optional<::std::vector<::std::optional<::std::string>>>* _aidl_return) = 0;
   virtual ::android::binder::Status GetCallback(bool return_null, ::android::sp<::android::aidl::tests::INamedCallback>* _aidl_return) = 0;
   virtual ::android::binder::Status FillOutStructuredParcelable(::android::aidl::tests::StructuredParcelable* parcel) = 0;
+  virtual ::android::binder::Status RepeatExtendableParcelable(const ::android::aidl::tests::extension::ExtendableParcelable& ep, ::android::aidl::tests::extension::ExtendableParcelable* ep2) = 0;
   virtual ::android::binder::Status ReverseList(const ::android::aidl::tests::RecursiveList& list, ::android::aidl::tests::RecursiveList* _aidl_return) = 0;
   virtual ::android::binder::Status GetOldNameInterface(::android::sp<::android::aidl::tests::IOldName>* _aidl_return) = 0;
   virtual ::android::binder::Status GetNewNameInterface(::android::sp<::android::aidl::tests::INewName>* _aidl_return) = 0;
@@ -298,6 +300,9 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status FillOutStructuredParcelable(::android::aidl::tests::StructuredParcelable*) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status RepeatExtendableParcelable(const ::android::aidl::tests::extension::ExtendableParcelable&, ::android::aidl::tests::extension::ExtendableParcelable*) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status ReverseList(const ::android::aidl::tests::RecursiveList&, ::android::aidl::tests::RecursiveList*) override {
