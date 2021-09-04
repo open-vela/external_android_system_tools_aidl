@@ -16,6 +16,7 @@
 
 //! Test Rust client for the AIDL compiler.
 
+use ::binder::{Parcel, parcel::Parcelable};
 use aidl_test_interface::aidl::android::aidl::tests::INewName::{self, BpNewName};
 use aidl_test_interface::aidl::android::aidl::tests::IOldName::{self, BpOldName};
 use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
@@ -24,6 +25,9 @@ use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
 use aidl_test_interface::aidl::android::aidl::tests::{
     BackendType::BackendType, ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum,
     RecursiveList::RecursiveList, StructuredParcelable, Union,
+    extension::ExtendableParcelable::ExtendableParcelable,
+    extension::MyExt::MyExt, extension::MyExt2::MyExt2,
+    extension::MyExtLike::MyExtLike,
 };
 use aidl_test_interface::aidl::android::aidl::tests::unions::{
     EnumUnion::EnumUnion,
@@ -32,9 +36,22 @@ use aidl_test_interface::binder;
 use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::{
     IFooInterface, IFooInterface::BpFooInterface, BazUnion::BazUnion, Foo::Foo,
 };
+use aidl_test_nonvintf_parcelable::aidl::android::aidl::tests::nonvintf::{
+    NonVintfExtendableParcelable::NonVintfExtendableParcelable,
+    NonVintfParcelable::NonVintfParcelable,
+};
+use aidl_test_unstable_parcelable::aidl::android::aidl::tests::unstable::{
+    UnstableExtendableParcelable::UnstableExtendableParcelable,
+    UnstableParcelable::UnstableParcelable,
+};
+use aidl_test_vintf_parcelable::aidl::android::aidl::tests::vintf::{
+    VintfExtendableParcelable::VintfExtendableParcelable,
+    VintfParcelable::VintfParcelable,
+};
 use std::fs::File;
 use std::io::{Read, Write};
 use std::os::unix::io::FromRawFd;
+use std::rc::Rc;
 use std::sync::Arc;
 
 fn get_test_service() -> binder::Strong<dyn ITestService::ITestService> {
@@ -572,6 +589,215 @@ fn test_parcelable() {
 
     assert_eq!(parcelable.u, Some(Union::Union::Ns(vec![1, 2, 3])));
     assert_eq!(parcelable.shouldBeConstS1, Some(Union::Union::S(Union::S1.to_string())))
+}
+
+#[test]
+fn test_repeat_extendable_parcelable() {
+    let service = get_test_service();
+
+    let ext = Rc::new(MyExt {
+        a: 42,
+        b: "EXT".into(),
+    });
+    let mut ep = ExtendableParcelable {
+        a: 1,
+        b: "a".into(),
+        c: 42,
+        ..Default::default()
+    };
+    ep.ext.set_parcelable(Rc::clone(&ext))
+        .expect("error setting parcelable");
+
+    let mut ep2 = ExtendableParcelable::default();
+    let result = service.RepeatExtendableParcelable(&ep, &mut ep2);
+    assert_eq!(result, Ok(()));
+    assert_eq!(ep2.a, ep.a);
+    assert_eq!(ep2.b, ep.b);
+
+    let ret_ext = ep2.ext.get_parcelable::<MyExt>()
+        .expect("error getting parcelable");
+    assert!(ret_ext.is_some());
+
+    let ret_ext = ret_ext.unwrap();
+    assert_eq!(ret_ext.a, ext.a);
+    assert_eq!(ret_ext.b, ext.b);
+}
+
+macro_rules! test_parcelable_holder_stability {
+    ($test:ident, $holder:path, $parcelable:path) => {
+        #[test]
+        fn $test() {
+            let mut holder = <$holder>::default();
+            let parcelable = Rc::new(<$parcelable>::default());
+            let result = holder.ext.set_parcelable(Rc::clone(&parcelable));
+            assert_eq!(result, Ok(()));
+
+            let parcelable2 = holder.ext.get_parcelable::<$parcelable>()
+                .unwrap()
+                .unwrap();
+            assert!(Rc::ptr_eq(&parcelable, &parcelable2));
+        }
+    }
+}
+
+test_parcelable_holder_stability!{
+    test_vintf_parcelable_holder_can_contain_vintf_parcelable,
+    VintfExtendableParcelable,
+    VintfParcelable
+}
+test_parcelable_holder_stability!{
+    test_stable_parcelable_holder_can_contain_vintf_parcelable,
+    NonVintfExtendableParcelable,
+    VintfParcelable
+}
+test_parcelable_holder_stability!{
+    test_stable_parcelable_holder_can_contain_non_vintf_parcelable,
+    NonVintfExtendableParcelable,
+    NonVintfParcelable
+}
+test_parcelable_holder_stability!{
+    test_stable_parcelable_holder_can_contain_unstable_parcelable,
+    NonVintfExtendableParcelable,
+    UnstableParcelable
+}
+test_parcelable_holder_stability!{
+    test_unstable_parcelable_holder_can_contain_vintf_parcelable,
+    UnstableExtendableParcelable,
+    VintfParcelable
+}
+test_parcelable_holder_stability!{
+    test_unstable_parcelable_holder_can_contain_non_vintf_parcelable,
+    UnstableExtendableParcelable,
+    NonVintfParcelable
+}
+test_parcelable_holder_stability!{
+    test_unstable_parcelable_holder_can_contain_unstable_parcelable,
+    UnstableExtendableParcelable,
+    UnstableParcelable
+}
+
+#[test]
+fn test_vintf_parcelable_holder_cannot_contain_not_vintf_parcelable() {
+    let mut holder = VintfExtendableParcelable::default();
+    let parcelable = Rc::new(NonVintfParcelable::default());
+    let result = holder.ext.set_parcelable(Rc::clone(&parcelable));
+    assert_eq!(result, Err(binder::StatusCode::BAD_VALUE));
+
+    let parcelable2 = holder.ext.get_parcelable::<NonVintfParcelable>();
+    assert!(parcelable2.unwrap().is_none());
+}
+
+#[test]
+fn test_vintf_parcelable_holder_cannot_contain_unstable_parcelable() {
+    let mut holder = VintfExtendableParcelable::default();
+    let parcelable = Rc::new(UnstableParcelable::default());
+    let result = holder.ext.set_parcelable(Rc::clone(&parcelable));
+    assert_eq!(result, Err(binder::StatusCode::BAD_VALUE));
+
+    let parcelable2 = holder.ext.get_parcelable::<UnstableParcelable>();
+    assert!(parcelable2.unwrap().is_none());
+}
+
+#[test]
+fn test_read_write_extension() {
+    let ext = Rc::new(MyExt {
+        a: 42,
+        b: "EXT".into(),
+    });
+    let ext2 = Rc::new(MyExt2 {
+        a: 42,
+        b: MyExt {
+            a: 24,
+            b: "INEXT".into(),
+        },
+        c: "EXT2".into(),
+    });
+
+    let mut ep = ExtendableParcelable {
+        a: 1,
+        b: "a".into(),
+        c: 42,
+        ..Default::default()
+    };
+
+    ep.ext.set_parcelable(Rc::clone(&ext))
+        .unwrap();
+    ep.ext2.set_parcelable(Rc::clone(&ext2))
+        .unwrap();
+
+    let ext_like = ep.ext.get_parcelable::<MyExtLike>();
+    assert_eq!(ext_like.unwrap_err(), binder::StatusCode::BAD_VALUE);
+
+    let actual_ext = ep.ext.get_parcelable::<MyExt>();
+    assert!(actual_ext.unwrap().is_some());
+    let actual_ext2 = ep.ext2.get_parcelable::<MyExt2>();
+    assert!(actual_ext2.unwrap().is_some());
+
+    check_extension_content(&ep, &ext, &ext2);
+
+    let mut parcel = Parcel::new();
+    ep.write_to_parcel(&mut parcel).unwrap();
+
+    unsafe {
+        parcel.set_data_position(0).unwrap();
+    }
+    let mut ep1 = ExtendableParcelable::default();
+    ep1.read_from_parcel(&parcel).unwrap();
+
+    unsafe {
+        parcel.set_data_position(0).unwrap();
+    }
+    ep1.write_to_parcel(&mut parcel).unwrap();
+
+    unsafe {
+        parcel.set_data_position(0).unwrap();
+    }
+    let mut ep2 = ExtendableParcelable::default();
+    ep2.read_from_parcel(&parcel).unwrap();
+
+    let ext_like = ep2.ext.get_parcelable::<MyExtLike>();
+    assert!(ext_like.unwrap().is_none());
+
+    let actual_ext = ep2.ext.get_parcelable::<MyExt>();
+    assert!(actual_ext.unwrap().is_some());
+
+    let new_ext2 = Rc::new(MyExt2 {
+        a: 79,
+        b: MyExt {
+            a: 42,
+            b: "INNEWEXT".into(),
+        },
+        c: "NEWEXT2".into(),
+    });
+    ep2.ext2.set_parcelable(Rc::clone(&new_ext2))
+        .unwrap();
+
+    check_extension_content(&ep1, &ext, &ext2);
+    check_extension_content(&ep2, &ext, &new_ext2);
+}
+
+fn check_extension_content(
+    ep: &ExtendableParcelable,
+    ext: &MyExt,
+    ext2: &MyExt2,
+) {
+    assert_eq!(ep.a, 1);
+    assert_eq!(ep.b, "a");
+    assert_eq!(ep.c, 42);
+
+    let actual_ext = ep.ext.get_parcelable::<MyExt>()
+        .unwrap()
+        .unwrap();
+    assert_eq!(ext.a, actual_ext.a);
+    assert_eq!(ext.b, actual_ext.b);
+
+    let actual_ext2 = ep.ext2.get_parcelable::<MyExt2>()
+        .unwrap()
+        .unwrap();
+    assert_eq!(ext2.a, actual_ext2.a);
+    assert_eq!(ext2.b.a, actual_ext2.b.a);
+    assert_eq!(ext2.b.b, actual_ext2.b.b);
+    assert_eq!(ext2.c, actual_ext2.c);
 }
 
 #[test]
