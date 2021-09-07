@@ -40,7 +40,7 @@ class Quantifier : public Expression {
   void Append(std::unique_ptr<Expression> expr);
 
  protected:
-  std::string String(std::string separator) const;
+  std::string String(const std::string& separator) const;
   std::vector<std::unique_ptr<Expression>> exprs_;
 };
 
@@ -57,7 +57,7 @@ class Predicate : public Expression {
  public:
   enum class Type { kPermission, kUid };
 
-  Predicate(Type type, std::string value) : type_(type), value_(value) {}
+  Predicate(Type type, const std::string& value) : type_(type), value_(value) {}
 
   Type GetType() const { return type_; }
   std::string GetTypeAsString() const;
