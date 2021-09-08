@@ -68,7 +68,7 @@ void Quantifier::Append(std::unique_ptr<Expression> expr) {
   exprs_.push_back(std::move(expr));
 }
 
-std::string Quantifier::String(std::string separator) const {
+std::string Quantifier::String(const std::string& separator) const {
   std::string ret;
   for (size_t i = 0; i < exprs_.size(); i++) {
     ret += exprs_[i]->ToString();
