@@ -373,6 +373,9 @@ type aidlInterfaceProperties struct {
 			// Whether to compile against platform APIs instead of
 			// an SDK.
 			Platform_apis *bool
+			// Whether RPC features are enabled (requires API level 32)
+			// TODO(b/175819535): enable this automatically?
+			Gen_rpc *bool
 		}
 		// Backend of the compiler generating code for C++ clients using
 		// libbinder (unstable C++ interface)

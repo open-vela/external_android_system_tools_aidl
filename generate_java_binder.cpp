@@ -615,8 +615,13 @@ static std::shared_ptr<Method> generate_proxy_method(
   proxy->statements->Add(std::make_shared<VariableDeclaration>(
       _data, std::make_shared<MethodCall>("android.os.Parcel", "obtain")));
 
+  if (options.GenRpc()) {
+    proxy->statements->Add(
+        std::make_shared<LiteralStatement>("_data.markForBinder(asBinder());\n"));
+  }
+
   if (iface.IsSensitiveData()) {
-    proxy->statements->Add(std::make_shared<LiteralStatement>("_data.markSensitive();"));
+    proxy->statements->Add(std::make_shared<LiteralStatement>("_data.markSensitive();\n"));
   }
 
   std::shared_ptr<Variable> _reply = nullptr;
@@ -875,8 +880,11 @@ static void generate_methods(const AidlInterface& iface, const AidlMethod& metho
            << "android.os.RemoteException {\n"
            << "  if (mCachedVersion == -1) {\n"
            << "    android.os.Parcel data = android.os.Parcel.obtain();\n"
-           << "    android.os.Parcel reply = android.os.Parcel.obtain();\n"
-           << "    try {\n"
+           << "    android.os.Parcel reply = android.os.Parcel.obtain();\n";
+      if (options.GenRpc()) {
+        code << "    data.markForBinder(asBinder());\n";
+      }
+      code << "    try {\n"
            << "      data.writeInterfaceToken(DESCRIPTOR);\n"
            << "      boolean _status = mRemote.transact(Stub." << transactCodeName << ", "
            << "data, reply, 0);\n"
@@ -904,8 +912,11 @@ static void generate_methods(const AidlInterface& iface, const AidlMethod& metho
            << "android.os.RemoteException {\n"
            << "  if (\"-1\".equals(mCachedHash)) {\n"
            << "    android.os.Parcel data = android.os.Parcel.obtain();\n"
-           << "    android.os.Parcel reply = android.os.Parcel.obtain();\n"
-           << "    try {\n"
+           << "    android.os.Parcel reply = android.os.Parcel.obtain();\n";
+      if (options.GenRpc()) {
+        code << "    data.markForBinder(asBinder());\n";
+      }
+      code << "    try {\n"
            << "      data.writeInterfaceToken(DESCRIPTOR);\n"
            << "      boolean _status = mRemote.transact(Stub." << transactCodeName << ", "
            << "data, reply, 0);\n"
