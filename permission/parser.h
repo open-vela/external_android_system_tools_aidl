@@ -95,7 +95,7 @@ class Parser {
 
   void* scanner_ = nullptr;
   YY_BUFFER_STATE buffer_;
-  Expression* root_;
+  Expression* root_ = nullptr;
   std::vector<std::string> errors_;
 };
 
