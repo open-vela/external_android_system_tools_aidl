@@ -1451,7 +1451,7 @@ TEST_F(AidlTest, CppNameOf_GenericType) {
 
   auto set_nullable = [](std::unique_ptr<AidlTypeSpecifier>&& type) {
     std::vector<AidlAnnotation> annotations;
-    annotations.emplace_back(*AidlAnnotation::Parse(AIDL_LOCATION_HERE, "nullable", nullptr, {}));
+    annotations.emplace_back(*AidlAnnotation::Parse(AIDL_LOCATION_HERE, "nullable", {}, {}));
     type->Annotate(std::move(annotations));
     return std::move(type);
   };
