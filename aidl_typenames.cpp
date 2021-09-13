@@ -123,6 +123,10 @@ bool AidlTypenames::IsIgnorableImport(const string& import) const {
 // so that they can be referenced via a simple name.
 bool AidlTypenames::AddDocument(std::unique_ptr<AidlDocument> doc) {
   bool is_preprocessed = doc->IsPreprocessed();
+  std::vector<AidlDefinedType*> types_to_add;
+  // Add types in two steps to avoid adding a type while the doc is rejected.
+  // 1. filter types to add
+  // 2. add types
   for (const auto& type : doc->DefinedTypes()) {
     if (IsBuiltinTypename(type->GetName())) {
       // ParcelFileDescriptor is treated as a built-in type, but it's also in the framework.aidl.
@@ -152,13 +156,18 @@ bool AidlTypenames::AddDocument(std::unique_ptr<AidlDocument> doc) {
       return false;
     }
 
+    types_to_add.push_back(type.get());
+  }
+
+  for (const auto& type : types_to_add) {
     // populate global 'type' namespace with fully-qualified names
-    defined_types_.emplace(type->GetCanonicalName(), type.get());
+    defined_types_.emplace(type->GetCanonicalName(), type);
     // preprocessed unstructured parcelable types can be referenced without qualification
     if (is_preprocessed && type->AsUnstructuredParcelable()) {
-      defined_types_.emplace(type->GetName(), type.get());
+      defined_types_.emplace(type->GetName(), type);
     }
   }
+
   // transfer ownership of document
   documents_.push_back(std::move(doc));
   return true;
