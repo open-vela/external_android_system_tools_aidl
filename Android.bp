@@ -173,6 +173,10 @@ cc_test {
         "liblog",
     ],
 
+    sanitize: {
+        address: true,
+    },
+
     required: ["aidl-golden-test-build-hook"],
 }
 
