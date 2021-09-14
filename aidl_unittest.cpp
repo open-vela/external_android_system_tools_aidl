@@ -1953,6 +1953,17 @@ TEST_F(AidlTest, ApiDumpWithGenerics) {
             actual);
 }
 
+TEST_F(AidlTest, ImportedDocumentHasDuplicateDefinitions) {
+  io_delegate_.SetFileContents("IFoo.aidl", "interface IFoo; interface IFoo;\n");
+  io_delegate_.SetFileContents("Bar.aidl", "enum Bar { CONST = IFoo.NONE }\n");
+
+  vector<string> args = {"aidl", "--dumpapi", "-I.", "-o out", "Bar.aidl"};
+  Options options = Options::From(args);
+  CaptureStderr();
+  EXPECT_FALSE(dump_api(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Can't find NONE in IFoo"));
+}
+
 TEST_F(AidlTest, CheckNumGenericTypeSecifier) {
   const string expected_list_stderr =
       "ERROR: p/IFoo.aidl:1.37-41: List can only have one type parameter, but got: "
