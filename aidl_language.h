@@ -252,9 +252,9 @@ class AidlAnnotation : public AidlNode {
 
   static std::string TypeToString(Type type);
 
-  static AidlAnnotation* Parse(
+  static std::unique_ptr<AidlAnnotation> Parse(
       const AidlLocation& location, const string& name,
-      std::map<std::string, std::shared_ptr<AidlConstantValue>>* parameter_list,
+      std::map<std::string, std::shared_ptr<AidlConstantValue>> parameter_list,
       const Comments& comments);
 
   AidlAnnotation(const AidlAnnotation&) = default;
@@ -306,7 +306,7 @@ class AidlAnnotation : public AidlNode {
   static const std::vector<Schema>& AllSchemas();
 
   AidlAnnotation(const AidlLocation& location, const Schema& schema,
-                 std::map<std::string, std::shared_ptr<AidlConstantValue>>&& parameters,
+                 std::map<std::string, std::shared_ptr<AidlConstantValue>> parameters,
                  const Comments& comments);
 
   const Schema& schema_;
