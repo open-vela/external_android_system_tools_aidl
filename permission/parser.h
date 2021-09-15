@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -28,16 +29,30 @@ using android::base::Result;
 
 namespace perm {
 
+class AndQuantifier;
+class OrQuantifier;
+class Predicate;
+
+class Visitor {
+ public:
+  virtual ~Visitor() = default;
+  virtual void Visit(const AndQuantifier&) {}
+  virtual void Visit(const OrQuantifier&) {}
+  virtual void Visit(const Predicate&) {}
+};
+
 // Base class.
 class Expression {
  public:
   virtual std::string ToString() const = 0;
   virtual ~Expression(){};
+  virtual void DispatchVisit(Visitor&) const = 0;
 };
 
 class Quantifier : public Expression {
  public:
   void Append(std::unique_ptr<Expression> expr);
+  const std::vector<std::unique_ptr<Expression>>& GetOperands() const { return exprs_; }
 
  protected:
   std::string String(const std::string& separator) const;
@@ -46,10 +61,12 @@ class Quantifier : public Expression {
 
 class AndQuantifier : public Quantifier {
   std::string ToString() const override;
+  void DispatchVisit(Visitor& v) const override { v.Visit(*this); }
 };
 
 class OrQuantifier : public Quantifier {
   std::string ToString() const override;
+  void DispatchVisit(Visitor& v) const override { v.Visit(*this); }
 };
 
 // A predicate on an attribute. For instance, "permission = ACCESS_FINE_LOCATION".
@@ -62,6 +79,8 @@ class Predicate : public Expression {
   Type GetType() const { return type_; }
   std::string GetTypeAsString() const;
   std::string ToString() const override;
+  void DispatchVisit(Visitor& v) const override { v.Visit(*this); }
+  std::string GetValue() const { return value_; }
 
  private:
   const Type type_;
