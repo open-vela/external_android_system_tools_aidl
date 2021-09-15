@@ -12,6 +12,17 @@ public:
   explicit BnNamedCallback();
   ::android::status_t onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) override;
 };  // class BnNamedCallback
+
+class INamedCallbackDelegator : public BnNamedCallback {
+public:
+  explicit INamedCallbackDelegator(::android::sp<INamedCallback> &impl) : _aidl_delegate(impl) {}
+
+  ::android::binder::Status GetName(::android::String16* _aidl_return) override {
+    return _aidl_delegate->GetName(_aidl_return);
+  }
+private:
+  ::android::sp<INamedCallback> _aidl_delegate;
+};  // class INamedCallbackDelegator
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android
