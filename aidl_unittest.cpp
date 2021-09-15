@@ -1451,7 +1451,7 @@ TEST_F(AidlTest, CppNameOf_GenericType) {
 
   auto set_nullable = [](std::unique_ptr<AidlTypeSpecifier>&& type) {
     std::vector<AidlAnnotation> annotations;
-    annotations.emplace_back(*AidlAnnotation::Parse(AIDL_LOCATION_HERE, "nullable", nullptr, {}));
+    annotations.emplace_back(*AidlAnnotation::Parse(AIDL_LOCATION_HERE, "nullable", {}, {}));
     type->Annotate(std::move(annotations));
     return std::move(type);
   };
@@ -1951,6 +1951,17 @@ TEST_F(AidlTest, ApiDumpWithGenerics) {
                                      "parcelable Foo<T, U> {\n"
                                      "}\n"),
             actual);
+}
+
+TEST_F(AidlTest, ImportedDocumentHasDuplicateDefinitions) {
+  io_delegate_.SetFileContents("IFoo.aidl", "interface IFoo; interface IFoo;\n");
+  io_delegate_.SetFileContents("Bar.aidl", "enum Bar { CONST = IFoo.NONE }\n");
+
+  vector<string> args = {"aidl", "--dumpapi", "-I.", "-o out", "Bar.aidl"};
+  Options options = Options::From(args);
+  CaptureStderr();
+  EXPECT_FALSE(dump_api(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Can't find NONE in IFoo"));
 }
 
 TEST_F(AidlTest, CheckNumGenericTypeSecifier) {
