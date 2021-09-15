@@ -35,6 +35,7 @@
 #include "aidl_language_y.h"
 #include "comments.h"
 #include "logging.h"
+#include "permission/parser.h"
 
 #include "aidl.h"
 
@@ -155,6 +156,7 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
        "SuppressWarnings",
        CONTEXT_TYPE | CONTEXT_MEMBER,
        {{"value", kStringArrayType, /* required= */ true}}},
+      {AidlAnnotation::Type::ENFORCE, "Enforce", CONTEXT_METHOD, {{"condition", kStringType}}},
   };
   return kSchemas;
 }
@@ -390,6 +392,24 @@ std::vector<std::string> AidlAnnotatable::SuppressWarnings() const {
     auto names = annot->ParamValue<std::vector<std::string>>("value");
     AIDL_FATAL_IF(!names.has_value(), this);
     return std::move(names.value());
+  }
+  return {};
+}
+
+// Parses the @Enforce annotation expression.
+std::unique_ptr<perm::Expression> AidlAnnotatable::EnforceExpression(
+    const AidlNode& context) const {
+  auto annot = GetAnnotation(annotations_, AidlAnnotation::Type::ENFORCE);
+  if (annot) {
+    auto perm_expr = annot->ParamValue<std::string>("condition");
+    if (perm_expr.has_value()) {
+      auto expr = perm::Parser::Parse(perm_expr.value());
+      if (expr.ok()) {
+        return std::move(expr.value());
+      }
+      AIDL_FATAL(context) << "Unable to parse @Enforce annotation: " << expr.error();
+    }
+    AIDL_FATAL(context) << "@Enforce annotation without condition";
   }
   return {};
 }

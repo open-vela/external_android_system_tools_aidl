@@ -32,6 +32,7 @@
 #include "location.h"
 #include "logging.h"
 #include "options.h"
+#include "permission/parser.h"
 
 using android::aidl::AidlTypenames;
 using android::aidl::CodeWriter;
@@ -231,6 +232,7 @@ class AidlAnnotation : public AidlNode {
     DESCRIPTOR,
     RUST_DERIVE,
     SUPPRESS_WARNINGS,
+    ENFORCE,
   };
 
   using TargetContext = uint16_t;
@@ -349,6 +351,7 @@ class AidlAnnotatable : public AidlCommentable {
   const AidlAnnotation* RustDerive() const;
   const AidlAnnotation* BackingType() const;
   std::vector<std::string> SuppressWarnings() const;
+  std::unique_ptr<perm::Expression> EnforceExpression(const AidlNode&) const;
 
   // ToString is for dumping AIDL.
   // Returns string representation of annotations.
