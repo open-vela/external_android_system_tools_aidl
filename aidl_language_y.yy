@@ -772,10 +772,9 @@ parameter_non_empty_list
 
 annotation
  : ANNOTATION {
-    auto annot = AidlAnnotation::Parse(loc(@1), $1->GetText(), {}, $1->GetComments());
-    if (annot) {
-      $$ = annot.release();
-    } else {
+    // release() returns nullptr if unique_ptr is empty.
+    $$ = AidlAnnotation::Parse(loc(@1), $1->GetText(), {}, $1->GetComments()).release();
+    if (!$$) {
       ps->AddError();
     }
     delete $1;
