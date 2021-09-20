@@ -55,6 +55,8 @@
 " @Descriptor "
 " @JavaDervie "
 " @RustDerive "
+" /** @hide */ "
+" /** @deprecated reason */ "
 
 # annotation arguments
 " value "
