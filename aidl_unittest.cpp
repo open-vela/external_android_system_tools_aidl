@@ -3388,6 +3388,48 @@ TEST_F(AidlTest, ParseRustDerive) {
   EXPECT_TRUE(compile_aidl(java_options, io_delegate_));
 }
 
+TEST_F(AidlTest, EmptyEnforceAnnotation) {
+  const string expected_stderr = "ERROR: a/IFoo.aidl:3.1-19: Missing 'condition' on @Enforce.\n";
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    interface IFoo {
+        @Enforce()
+        void Protected();
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(options, io_delegate_));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_F(AidlTest, EmptyEnforceCondition) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    interface IFoo {
+        @Enforce(condition="")
+        void Protected();
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(),
+              HasSubstr("ERROR: a/IFoo.aidl:3.1-31: Unable to parse @Enforce annotation"));
+}
+
+TEST_F(AidlTest, InvalidEnforceCondition) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    interface IFoo {
+        @Enforce(condition="invalid")
+        void Protected();
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(),
+              HasSubstr("ERROR: a/IFoo.aidl:3.1-38: Unable to parse @Enforce annotation"));
+}
+
 class AidlOutputPathTest : public AidlTest {
  protected:
   void SetUp() override {

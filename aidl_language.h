@@ -22,6 +22,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include <android-base/result.h>
 #include <android-base/strings.h>
 
 #include "aidl_typenames.h"
@@ -38,6 +39,7 @@ using android::aidl::AidlTypenames;
 using android::aidl::CodeWriter;
 using android::aidl::Comments;
 using android::aidl::Options;
+using android::base::Result;
 using std::shared_ptr;
 using std::string;
 using std::unique_ptr;
@@ -280,6 +282,8 @@ class AidlAnnotation : public AidlNode {
       const ConstantValueDecorator& decorator) const;
   void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override;
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
+
+  Result<unique_ptr<perm::Expression>> EnforceExpression() const;
 
  private:
   struct ParamType {
