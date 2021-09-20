@@ -721,9 +721,6 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
 
            c.writer.Dedent();
            c.writer << "});\n";
-
-           c.writer.Dedent();
-           c.writer << "}\n";
          } else {
            const string classloader = EnsureAndGetClassloader(const_cast<CodeGeneratorContext&>(c));
            c.writer << c.var << " = " << c.parcel << ".readHashMap(" << classloader << ");\n";
