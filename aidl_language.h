@@ -829,6 +829,7 @@ class AidlMethod : public AidlMember {
   AidlMethod& operator=(const AidlMethod&) = delete;
   AidlMethod& operator=(AidlMethod&&) = delete;
 
+  bool CheckValid(const AidlTypenames&) const;
   const AidlTypeSpecifier& GetType() const { return *type_; }
   AidlTypeSpecifier* GetMutableType() { return type_.get(); }
 
