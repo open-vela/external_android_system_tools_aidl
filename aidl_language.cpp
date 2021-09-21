@@ -979,6 +979,61 @@ string AidlMethod::ToString() const {
   return ret;
 }
 
+bool AidlMethod::CheckValid(const AidlTypenames& typenames) const {
+  if (!GetType().CheckValid(typenames)) {
+    return false;
+  }
+
+  // TODO(b/156872582): Support it when ParcelableHolder supports every backend.
+  if (GetType().GetName() == "ParcelableHolder") {
+    AIDL_ERROR(this) << "ParcelableHolder cannot be a return type";
+    return false;
+  }
+  if (IsOneway() && GetType().GetName() != "void") {
+    AIDL_ERROR(this) << "oneway method '" << GetName() << "' cannot return a value";
+    return false;
+  }
+
+  set<string> argument_names;
+  for (const auto& arg : GetArguments()) {
+    auto it = argument_names.find(arg->GetName());
+    if (it != argument_names.end()) {
+      AIDL_ERROR(this) << "method '" << GetName() << "' has duplicate argument name '"
+                       << arg->GetName() << "'";
+      return false;
+    }
+    argument_names.insert(arg->GetName());
+
+    if (!arg->CheckValid(typenames)) {
+      return false;
+    }
+
+    if (IsOneway() && arg->IsOut()) {
+      AIDL_ERROR(this) << "oneway method '" << this->GetName() << "' cannot have out parameters";
+      return false;
+    }
+
+    // check that the name doesn't match a keyword
+    if (IsJavaKeyword(arg->GetName().c_str())) {
+      AIDL_ERROR(arg) << "Argument name is a Java or aidl keyword";
+      return false;
+    }
+
+    // Reserve a namespace for internal use
+    if (android::base::StartsWith(arg->GetName(), "_aidl")) {
+      AIDL_ERROR(arg) << "Argument name cannot begin with '_aidl'";
+      return false;
+    }
+
+    if (arg->GetType().GetName() == "void") {
+      AIDL_ERROR(arg->GetType()) << "'void' is an invalid type for the parameter '"
+                                 << arg->GetName() << "'";
+      return false;
+    }
+  }
+  return true;
+}
+
 AidlDefinedType::AidlDefinedType(const AidlLocation& location, const std::string& name,
                                  const Comments& comments, const std::string& package,
                                  std::vector<std::unique_ptr<AidlMember>>* members)
@@ -1495,56 +1550,8 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
   // Has to be a pointer due to deleting copy constructor. No idea why.
   map<string, const AidlMethod*> method_names;
   for (const auto& m : GetMethods()) {
-    if (!m->GetType().CheckValid(typenames)) {
+    if (!m->CheckValid(typenames)) {
       return false;
-    }
-
-    // TODO(b/156872582): Support it when ParcelableHolder supports every backend.
-    if (m->GetType().GetName() == "ParcelableHolder") {
-      AIDL_ERROR(m) << "ParcelableHolder cannot be a return type";
-      return false;
-    }
-    if (m->IsOneway() && m->GetType().GetName() != "void") {
-      AIDL_ERROR(m) << "oneway method '" << m->GetName() << "' cannot return a value";
-      return false;
-    }
-
-    set<string> argument_names;
-    for (const auto& arg : m->GetArguments()) {
-      auto it = argument_names.find(arg->GetName());
-      if (it != argument_names.end()) {
-        AIDL_ERROR(m) << "method '" << m->GetName() << "' has duplicate argument name '"
-                      << arg->GetName() << "'";
-        return false;
-      }
-      argument_names.insert(arg->GetName());
-
-      if (!arg->CheckValid(typenames)) {
-        return false;
-      }
-
-      if (m->IsOneway() && arg->IsOut()) {
-        AIDL_ERROR(m) << "oneway method '" << m->GetName() << "' cannot have out parameters";
-        return false;
-      }
-
-      // check that the name doesn't match a keyword
-      if (IsJavaKeyword(arg->GetName().c_str())) {
-        AIDL_ERROR(arg) << "Argument name is a Java or aidl keyword";
-        return false;
-      }
-
-      // Reserve a namespace for internal use
-      if (android::base::StartsWith(arg->GetName(), "_aidl")) {
-        AIDL_ERROR(arg) << "Argument name cannot begin with '_aidl'";
-        return false;
-      }
-
-      if (arg->GetType().GetName() == "void") {
-        AIDL_ERROR(arg->GetType())
-            << "'void' is an invalid type for the parameter '" << arg->GetName() << "'";
-        return false;
-      }
     }
 
     auto it = method_names.find(m->GetName());
