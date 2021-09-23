@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <algorithm>
 #include <iostream>
 #include <set>
@@ -30,14 +31,14 @@
 
 #include <android-base/parsedouble.h>
 #include <android-base/parseint.h>
+#include <android-base/result.h>
 #include <android-base/strings.h>
 
+#include "aidl.h"
 #include "aidl_language_y.h"
 #include "comments.h"
 #include "logging.h"
 #include "permission/parser.h"
-
-#include "aidl.h"
 
 #ifdef _WIN32
 int isatty(int  fd)
@@ -47,7 +48,9 @@ int isatty(int  fd)
 #endif
 
 using android::aidl::IoDelegate;
+using android::base::Error;
 using android::base::Join;
+using android::base::Result;
 using android::base::Split;
 using std::cerr;
 using std::pair;
@@ -156,7 +159,10 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
        "SuppressWarnings",
        CONTEXT_TYPE | CONTEXT_MEMBER,
        {{"value", kStringArrayType, /* required= */ true}}},
-      {AidlAnnotation::Type::ENFORCE, "Enforce", CONTEXT_METHOD, {{"condition", kStringType}}},
+      {AidlAnnotation::Type::ENFORCE,
+       "Enforce",
+       CONTEXT_METHOD,
+       {{"condition", kStringType, /* required= */ true}}},
   };
   return kSchemas;
 }
@@ -263,7 +269,26 @@ bool AidlAnnotation::CheckValid() const {
       success = false;
     }
   }
-  return success;
+  if (!success) {
+    return false;
+  }
+  // For @Enforce annotations, validates the expression.
+  if (schema_.type == AidlAnnotation::Type::ENFORCE) {
+    auto expr = EnforceExpression();
+    if (!expr.ok()) {
+      AIDL_ERROR(this) << "Unable to parse @Enforce annotation: " << expr.error();
+      return false;
+    }
+  }
+  return true;
+}
+
+Result<unique_ptr<perm::Expression>> AidlAnnotation::EnforceExpression() const {
+  auto perm_expr = ParamValue<std::string>("condition");
+  if (perm_expr.has_value()) {
+    return perm::Parser::Parse(perm_expr.value());
+  }
+  return Error() << "No condition parameter for @Enforce";
 }
 
 // Checks if the annotation is applicable to the current context.
@@ -401,15 +426,12 @@ std::unique_ptr<perm::Expression> AidlAnnotatable::EnforceExpression(
     const AidlNode& context) const {
   auto annot = GetAnnotation(annotations_, AidlAnnotation::Type::ENFORCE);
   if (annot) {
-    auto perm_expr = annot->ParamValue<std::string>("condition");
-    if (perm_expr.has_value()) {
-      auto expr = perm::Parser::Parse(perm_expr.value());
-      if (expr.ok()) {
-        return std::move(expr.value());
-      }
-      AIDL_FATAL(context) << "Unable to parse @Enforce annotation: " << expr.error();
+    auto perm_expr = annot->EnforceExpression();
+    if (!perm_expr.ok()) {
+      // This should have been caught during validation.
+      AIDL_FATAL(context) << "Unable to parse @Enforce annotation: " << perm_expr.error();
     }
-    AIDL_FATAL(context) << "@Enforce annotation without condition";
+    return std::move(perm_expr.value());
   }
   return {};
 }
