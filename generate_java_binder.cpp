@@ -16,12 +16,10 @@
 
 #include "aidl.h"
 #include "aidl_to_java.h"
-#include "aidl_typenames.h"
 #include "ast_java.h"
 #include "generate_java.h"
 #include "logging.h"
 #include "options.h"
-#include "parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -209,22 +207,7 @@ void StubClass::finish() {
       std::vector<std::shared_ptr<Expression>>{this->transact_code, this->transact_data,
                                                this->transact_reply, this->transact_flags});
   default_case->statements->Add(std::make_shared<ReturnStatement>(superCall));
-
-  auto case_count = transact_switch_user->cases.size();
   transact_switch_user->cases.push_back(default_case);
-
-  // Interface token validation is done for user-defined transactions.
-  if (case_count > 0) {
-    auto ifStatement = std::make_shared<IfStatement>();
-    ifStatement->expression = std::make_shared<LiteralExpression>(
-        "code >= android.os.IBinder.FIRST_CALL_TRANSACTION && "
-        "code <= android.os.IBinder.LAST_CALL_TRANSACTION");
-    ifStatement->statements = std::make_shared<StatementBlock>();
-    ifStatement->statements->Add(std::make_shared<MethodCall>(
-        this->transact_data, "enforceInterface",
-        std::vector<std::shared_ptr<Expression>>{this->get_transact_descriptor(nullptr)}));
-    transact_statements->Add(ifStatement);
-  }
 
   // Meta transactions are looked up prior to user-defined transactions.
   transact_statements->Add(this->transact_switch_meta);
@@ -238,12 +221,6 @@ void StubClass::finish() {
     auto code_switch_default_case = std::make_shared<Case>();
     code_switch_default_case->statements->Add(std::make_shared<ReturnStatement>(NULL_VALUE));
     this->code_to_method_name_switch->cases.push_back(code_switch_default_case);
-  }
-
-  // There will be at least one statement for the default, but if we emit a
-  // return true after that default, it will be unreachable.
-  if (case_count > 0) {
-    transact_statements->Add(std::make_shared<ReturnStatement>(TRUE_VALUE));
   }
 }
 
@@ -443,107 +420,12 @@ static std::shared_ptr<Method> generate_interface_method(const AidlMethod& metho
   return decl;
 }
 
-// Visitor for the permission declared in the @Enforce annotation.
-// The visitor pattern evaluates one node at a time, recursive evaluations should be dispatched
-// by creating a new instance of the visitor. Visit methods should use SetResult to return their
-// current value. For example:
-//
-//   Visit(const perm::Expression& permissionExpression) {
-//     std::shared_ptr<Expression> expr = Evaluate(permissionExpression.FirstChild());
-//     ...
-//     SetResult(TRUE_VALUE);
-//   }
-class PermissionVisitor : public perm::Visitor {
- public:
-  // Converts a permission expression (e.g., "permission = CALL_PHONE") into an equivalent Java
-  // expression (e.g., "(checkPermission("CALL_PHONE", ...) == GRANTED").
-  static std::shared_ptr<Expression> Evaluate(const perm::Expression& expr) {
-    PermissionVisitor visitor;
-    expr.DispatchVisit(visitor);
-    return visitor.GetResult();
-  }
-
- private:
-  void Visit(const perm::AndQuantifier& quantifier) {
-    std::shared_ptr<Expression> result;
-    for (const auto& operand : quantifier.GetOperands()) {
-      auto expr = Evaluate(*operand);
-      if (result) {
-        result = std::make_shared<Comparison>(result, "&&", expr);
-      } else {
-        result = expr;
-      }
-    }
-    SetResult(result);
-  }
-
-  void Visit(const perm::OrQuantifier& quantifier) {
-    std::shared_ptr<Expression> result;
-    for (const auto& operand : quantifier.GetOperands()) {
-      auto expr = Evaluate(*operand);
-      if (result) {
-        result = std::make_shared<Comparison>(result, "||", expr);
-      } else {
-        result = expr;
-      }
-    }
-    SetResult(result);
-  }
-
-  void Visit(const perm::Predicate& p) {
-    switch (p.GetType()) {
-      case perm::Predicate::Type::kPermission: {
-        auto permissionGranted = std::make_shared<LiteralExpression>(
-            "android.content.pm.PackageManager.PERMISSION_GRANTED");
-        auto checkPermission = std::make_shared<MethodCall>(
-            std::make_shared<LiteralExpression>("android.permission.PermissionManager"),
-            "checkPermission",
-            std::vector<std::shared_ptr<Expression>>{
-                std::make_shared<LiteralExpression>("android.Manifest.permission." + p.GetValue()),
-                std::make_shared<MethodCall>(THIS_VALUE, "getCallingPid"),
-                std::make_shared<MethodCall>(THIS_VALUE, "getCallingUid")});
-        SetResult(std::make_shared<Comparison>(checkPermission, "==", permissionGranted));
-        break;
-      }
-      case perm::Predicate::Type::kUid: {
-        auto uid = std::make_shared<LiteralExpression>("android.os.Process." + p.GetValue());
-        auto getCallingUid = std::make_shared<MethodCall>(THIS_VALUE, "getCallingUid");
-        SetResult(std::make_shared<Comparison>(getCallingUid, "==", uid));
-        break;
-      }
-      default: {
-        AIDL_FATAL(AIDL_LOCATION_HERE) << "Unsupported predicate: " << p.ToString();
-        break;
-      }
-    }
-  }
-
-  std::shared_ptr<Expression> GetResult() { return result_; }
-  void SetResult(std::shared_ptr<Expression> expr) { result_ = expr; }
-  std::shared_ptr<Expression> result_;
-};
-
-static void generate_permission_checks(const AidlMethod& method,
-                                       std::shared_ptr<StatementBlock> addTo) {
-  auto expr = method.GetType().EnforceExpression(method);
-  if (expr) {
-    auto ifstatement = std::make_shared<IfStatement>();
-    auto permissionExpression = PermissionVisitor::Evaluate(*expr.get());
-    ifstatement->expression = std::make_shared<Comparison>(permissionExpression, "!=", TRUE_VALUE);
-    ifstatement->statements = std::make_shared<StatementBlock>();
-    ifstatement->statements->Add(std::make_shared<LiteralStatement>(android::base::StringPrintf(
-        "throw new SecurityException(\"Access denied, requires: %s\");\n",
-        expr->ToString().c_str())));
-    addTo->Add(ifstatement);
-  }
-}
-
 static void generate_stub_code(const AidlInterface& iface, const AidlMethod& method, bool oneway,
                                std::shared_ptr<Variable> transact_data,
                                std::shared_ptr<Variable> transact_reply,
                                const AidlTypenames& typenames,
                                std::shared_ptr<StatementBlock> statement_block,
-                               const Options& options) {
+                               std::shared_ptr<StubClass> stubClass, const Options& options) {
   // try and finally
   auto tryStatement = std::make_shared<TryStatement>();
   auto finallyStatement = std::make_shared<FinallyStatement>();
@@ -565,9 +447,12 @@ static void generate_stub_code(const AidlInterface& iface, const AidlMethod& met
             std::make_shared<LiteralExpression>("android.os.Trace.TRACE_TAG_AIDL")}));
   }
 
-  generate_permission_checks(method, statements);
-
   auto realCall = std::make_shared<MethodCall>(THIS_VALUE, method.GetName());
+
+  // interface token validation is the very first thing we do
+  statements->Add(std::make_shared<MethodCall>(
+      transact_data, "enforceInterface",
+      std::vector<std::shared_ptr<Expression>>{stubClass->get_transact_descriptor(&method)}));
 
   // args
   VariableFactory stubArgs("_arg");
@@ -640,6 +525,9 @@ static void generate_stub_code(const AidlInterface& iface, const AidlMethod& met
       generate_write_to_parcel(arg->GetType(), statements, v, transact_reply, true, typenames);
     }
   }
+
+  // return true
+  statements->Add(std::make_shared<ReturnStatement>(TRUE_VALUE));
 }
 
 static void generate_stub_case(const AidlInterface& iface, const AidlMethod& method,
@@ -649,8 +537,7 @@ static void generate_stub_case(const AidlInterface& iface, const AidlMethod& met
   auto c = std::make_shared<Case>(transactCodeName);
 
   generate_stub_code(iface, method, oneway, stubClass->transact_data, stubClass->transact_reply,
-                     typenames, c->statements, options);
-  c->statements->Add(std::make_shared<BreakStatement>());
+                     typenames, c->statements, stubClass, options);
 
   stubClass->transact_switch_user->cases.push_back(c);
 }
@@ -675,8 +562,7 @@ static void generate_stub_case_outline(const AidlInterface& iface, const AidlMet
     stubClass->elements.push_back(onTransact_case);
 
     generate_stub_code(iface, method, oneway, transact_data, transact_reply, typenames,
-                       onTransact_case->statements, options);
-    onTransact_case->statements->Add(std::make_shared<ReturnStatement>(TRUE_VALUE));
+                       onTransact_case->statements, stubClass, options);
   }
 
   // Generate the case dispatch.
@@ -714,13 +600,8 @@ static std::shared_ptr<Method> generate_proxy_method(
   proxy->statements->Add(std::make_shared<VariableDeclaration>(
       _data, std::make_shared<MethodCall>("android.os.Parcel", "obtain")));
 
-  if (options.GenRpc()) {
-    proxy->statements->Add(
-        std::make_shared<LiteralStatement>("_data.markForBinder(asBinder());\n"));
-  }
-
   if (iface.IsSensitiveData()) {
-    proxy->statements->Add(std::make_shared<LiteralStatement>("_data.markSensitive();\n"));
+    proxy->statements->Add(std::make_shared<LiteralStatement>("_data.markSensitive();"));
   }
 
   std::shared_ptr<Variable> _reply = nullptr;
@@ -947,7 +828,8 @@ static void generate_methods(const AidlInterface& iface, const AidlMethod& metho
     if (method.GetName() == kGetInterfaceVersion && options.Version() > 0) {
       auto c = std::make_shared<Case>(transactCodeName);
       std::ostringstream code;
-      code << "reply.writeNoException();\n"
+      code << "data.enforceInterface(descriptor);\n"
+           << "reply.writeNoException();\n"
            << "reply.writeInt(" << kGetInterfaceVersion << "());\n"
            << "return true;\n";
       c->statements->Add(std::make_shared<LiteralStatement>(code.str()));
@@ -956,7 +838,8 @@ static void generate_methods(const AidlInterface& iface, const AidlMethod& metho
     if (method.GetName() == kGetInterfaceHash && !options.Hash().empty()) {
       auto c = std::make_shared<Case>(transactCodeName);
       std::ostringstream code;
-      code << "reply.writeNoException();\n"
+      code << "data.enforceInterface(descriptor);\n"
+           << "reply.writeNoException();\n"
            << "reply.writeString(" << kGetInterfaceHash << "());\n"
            << "return true;\n";
       c->statements->Add(std::make_shared<LiteralStatement>(code.str()));
@@ -979,11 +862,8 @@ static void generate_methods(const AidlInterface& iface, const AidlMethod& metho
            << "android.os.RemoteException {\n"
            << "  if (mCachedVersion == -1) {\n"
            << "    android.os.Parcel data = android.os.Parcel.obtain();\n"
-           << "    android.os.Parcel reply = android.os.Parcel.obtain();\n";
-      if (options.GenRpc()) {
-        code << "    data.markForBinder(asBinder());\n";
-      }
-      code << "    try {\n"
+           << "    android.os.Parcel reply = android.os.Parcel.obtain();\n"
+           << "    try {\n"
            << "      data.writeInterfaceToken(DESCRIPTOR);\n"
            << "      boolean _status = mRemote.transact(Stub." << transactCodeName << ", "
            << "data, reply, 0);\n"
@@ -1011,11 +891,8 @@ static void generate_methods(const AidlInterface& iface, const AidlMethod& metho
            << "android.os.RemoteException {\n"
            << "  if (\"-1\".equals(mCachedHash)) {\n"
            << "    android.os.Parcel data = android.os.Parcel.obtain();\n"
-           << "    android.os.Parcel reply = android.os.Parcel.obtain();\n";
-      if (options.GenRpc()) {
-        code << "    data.markForBinder(asBinder());\n";
-      }
-      code << "    try {\n"
+           << "    android.os.Parcel reply = android.os.Parcel.obtain();\n"
+           << "    try {\n"
            << "      data.writeInterfaceToken(DESCRIPTOR);\n"
            << "      boolean _status = mRemote.transact(Stub." << transactCodeName << ", "
            << "data, reply, 0);\n"

@@ -26,7 +26,6 @@
 #include <sstream>
 #include <string>
 
-#include <android-base/logging.h>
 #include <android-base/strings.h>
 #include "aidl_language.h"
 
@@ -60,15 +59,6 @@ string Options::GetUsage() const {
        << "   Check whether NEW_DIR API dump is {compatible|equal} extension " << endl
        << "   of the API dump OLD_DIR. Default: compatible" << endl
 #endif
-       << endl
-       << myname_ << " --apimapping OUTPUT INPUT..." << endl
-       << "   Generate a mapping of declared aidl method signatures to" << endl
-       << "   the original line number. e.g.: " << endl
-       << "       If line 39 of foo/bar/IFoo.aidl contains:"
-       << "         void doFoo(int bar, String baz);" << endl
-       << "       Then the result would be:" << endl
-       << "         foo.bar.Baz|doFoo|int,String,|void" << endl
-       << "         foo/bar/IFoo.aidl:39" << endl
        << endl;
 
   // Legacy option formats
@@ -89,6 +79,8 @@ string Options::GetUsage() const {
   sstr << "OPTION:" << endl
        << "  -I DIR, --include=DIR" << endl
        << "          Use DIR as a search path for import statements." << endl
+       << "  -m FILE, --import=FILE" << endl
+       << "          Import FILE directly without searching in the search paths." << endl
        << "  -p FILE, --preprocessed=FILE" << endl
        << "          Include FILE which is created by --preprocess." << endl
        << "  -d FILE, --dep=FILE" << endl
@@ -105,8 +97,6 @@ string Options::GetUsage() const {
        << "          Trigger fail when trying to compile a parcelable." << endl
        << "  --ninja" << endl
        << "          Generate dependency file in a format ninja understands." << endl
-       << "  --rpc" << endl
-       << "          (for Java) whether to generate support for RPC transactions." << endl
        << "  --structured" << endl
        << "          Whether this interface is defined exclusively in AIDL." << endl
        << "          It is therefore a candidate for stabilization." << endl
@@ -118,6 +108,14 @@ string Options::GetUsage() const {
        << "          tool, that part will not be traced." << endl
        << "  --transaction_names" << endl
        << "          Generate transaction names." << endl
+       << "  --apimapping" << endl
+       << "          Generates a mapping of declared aidl method signatures to" << endl
+       << "          the original line number. e.g.: " << endl
+       << "              If line 39 of foo/bar/IFoo.aidl contains:"
+       << "              void doFoo(int bar, String baz);" << endl
+       << "              Then the result would be:" << endl
+       << "              foo.bar.Baz|doFoo|int,String,|void" << endl
+       << "              foo/bar/IFoo.aidl:39" << endl
        << "  -v VER, --version=VER" << endl
        << "          Set the version of the interface and parcelable to VER." << endl
        << "          VER must be an interger greater than 0." << endl
@@ -204,7 +202,7 @@ Options Options::From(const vector<string>& args) {
 }
 
 Options::Options(int argc, const char* const raw_argv[], Options::Language default_lang)
-    : myname_(argc >= 1 ? raw_argv[0] : "aidl"), language_(default_lang) {
+    : myname_(raw_argv[0]), language_(default_lang) {
   std::vector<const char*> argv = warning_options_.Parse(argc, raw_argv, error_message_);
   if (!Ok()) return;
   argc = argv.size();
@@ -222,12 +220,12 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
 #endif
         {"apimapping", required_argument, 0, 'i'},
         {"include", required_argument, 0, 'I'},
+        {"import", required_argument, 0, 'm'},
         {"preprocessed", required_argument, 0, 'p'},
         {"dep", required_argument, 0, 'd'},
         {"out", required_argument, 0, 'o'},
         {"header_out", required_argument, 0, 'h'},
         {"ninja", no_argument, 0, 'n'},
-        {"rpc", no_argument, 0, 'r'},
         {"stability", required_argument, 0, 'Y'},
         {"structured", no_argument, 0, 'S'},
         {"trace", no_argument, 0, 't'},
@@ -239,7 +237,7 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         {0, 0, 0, 0},
     };
     const int c = getopt_long(argc, const_cast<char* const*>(argv.data()),
-                              "I:p:d:o:h:abtv:i:", long_options, nullptr);
+                              "I:m:p:d:o:h:abtv:", long_options, nullptr);
     if (c == -1) {
       // no more options
       break;
@@ -273,33 +271,43 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         }
         break;
       case 's':
-        task_ = Options::Task::PREPROCESS;
+        if (task_ != Options::Task::UNSPECIFIED) {
+          task_ = Options::Task::PREPROCESS;
+        }
         break;
 #ifndef _WIN32
       case 'u':
-        task_ = Options::Task::DUMP_API;
+        if (task_ != Options::Task::UNSPECIFIED) {
+          task_ = Options::Task::DUMP_API;
+        }
         break;
       case 'x':
         dump_no_license_ = true;
         break;
       case 'A':
-        task_ = Options::Task::CHECK_API;
-        // to ensure that all parcelables in the api dumpes are structured
-        structured_ = true;
-        if (optarg) {
-          if (strcmp(optarg, "compatible") == 0)
-            check_api_level_ = CheckApiLevel::COMPATIBLE;
-          else if (strcmp(optarg, "equal") == 0)
-            check_api_level_ = CheckApiLevel::EQUAL;
-          else {
-            error_message_ << "Unsupported --checkapi level: '" << optarg << "'" << endl;
-            return;
+        if (task_ != Options::Task::UNSPECIFIED) {
+          task_ = Options::Task::CHECK_API;
+          // to ensure that all parcelables in the api dumpes are structured
+          structured_ = true;
+          if (optarg) {
+            if (strcmp(optarg, "compatible") == 0)
+              check_api_level_ = CheckApiLevel::COMPATIBLE;
+            else if (strcmp(optarg, "equal") == 0)
+              check_api_level_ = CheckApiLevel::EQUAL;
+            else {
+              error_message_ << "Unsupported --checkapi level: '" << optarg << "'" << endl;
+              return;
+            }
           }
         }
         break;
 #endif
       case 'I': {
         import_dirs_.emplace(Trim(optarg));
+        break;
+      }
+      case 'm': {
+        import_files_.emplace(Trim(optarg));
         break;
       }
       case 'p':
@@ -335,9 +343,6 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         }
         break;
       }
-      case 'r':
-        gen_rpc_ = true;
-        break;
       case 't':
         gen_traces_ = true;
         break;
@@ -370,17 +375,14 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         break;
       case 'e':
         std::cerr << GetUsage();
-        task_ = Task::HELP;
-        CHECK(Ok());
-        return;
+        exit(0);
       case 'i':
         output_file_ = Trim(optarg);
         task_ = Task::DUMP_MAPPINGS;
         break;
       default:
-        error_message_ << GetUsage();
-        CHECK(!Ok());
-        return;
+        std::cerr << GetUsage();
+        exit(1);
     }
   }  // while
 
@@ -428,8 +430,7 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
     }
   } else {
     // the new arguments format
-    if (task_ == Options::Task::COMPILE || task_ == Options::Task::DUMP_API ||
-        task_ == Options::Task::DUMP_MAPPINGS) {
+    if (task_ == Options::Task::COMPILE || task_ == Options::Task::DUMP_API) {
       if (argc - optind < 1) {
         error_message_ << "No input file." << endl;
         return;
@@ -440,7 +441,7 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
                        << "got " << (argc - optind) << "." << endl;
         return;
       }
-      if (task_ != Options::Task::CHECK_API) {
+      if (task_ != Options::Task::CHECK_API && task_ != Options::Task::DUMP_MAPPINGS) {
         output_file_ = argv[optind++];
       }
     }
