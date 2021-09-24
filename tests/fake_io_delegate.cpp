@@ -23,6 +23,7 @@
 #include "os.h"
 #include "tests/test_util.h"
 
+using android::base::Result;
 using android::base::StringAppendF;
 using android::base::StringPrintf;
 using std::string;
@@ -56,16 +57,6 @@ unique_ptr<string> FakeIoDelegate::GetFileContents(
   return contents;
 }
 
-unique_ptr<LineReader> FakeIoDelegate::GetLineReader(
-    const string& file_path) const {
-  unique_ptr<LineReader> ret;
-  const auto& it = file_contents_.find(CleanPath(file_path));
-  if (it != file_contents_.cend()) {
-    ret = LineReader::ReadFromMemory(it->second);
-  }
-  return ret;
-}
-
 bool FakeIoDelegate::FileIsReadable(const string& path) const {
   return file_contents_.find(CleanPath(path)) != file_contents_.end();
 }
@@ -89,11 +80,11 @@ void FakeIoDelegate::SetFileContents(const string& filename,
   file_contents_[filename] = contents;
 }
 
-vector<string> FakeIoDelegate::ListFiles(const string& dir) const {
+Result<vector<string>> FakeIoDelegate::ListFiles(const string& dir) const {
   const string dir_name = dir.back() == OS_PATH_SEPARATOR ? dir : dir + OS_PATH_SEPARATOR;
   vector<string> files;
   for (auto it = file_contents_.begin(); it != file_contents_.end(); it++) {
-    if (android::base::StartsWith(it->first, dir_name) && !it->second.empty()) {
+    if (android::base::StartsWith(it->first, dir_name)) {
       files.emplace_back(it->first);
     }
   }
@@ -140,7 +131,7 @@ void FakeIoDelegate::AddBrokenFilePath(const std::string& path) {
   broken_files_.insert(path);
 }
 
-bool FakeIoDelegate::GetWrittenContents(const string& path, string* content) {
+bool FakeIoDelegate::GetWrittenContents(const string& path, string* content) const {
   const auto it = written_file_contents_.find(path);
   if (it == written_file_contents_.end()) {
     return false;
@@ -151,12 +142,12 @@ bool FakeIoDelegate::GetWrittenContents(const string& path, string* content) {
   return true;
 }
 
-std::vector<std::string> FakeIoDelegate::ListOutputFiles() {
-  std::vector<std::string> out;
-  for (const auto& [file, contents] : written_file_contents_) {
-    out.push_back(file);
-  }
-  return out;
+const std::map<std::string, std::string>& FakeIoDelegate::InputFiles() const {
+  return file_contents_;
+}
+
+const std::map<std::string, std::string>& FakeIoDelegate::OutputFiles() const {
+  return written_file_contents_;
 }
 
 bool FakeIoDelegate::PathWasRemoved(const std::string& path) {
@@ -164,16 +155,6 @@ bool FakeIoDelegate::PathWasRemoved(const std::string& path) {
     return true;
   }
   return false;
-}
-
-string FakeIoDelegate::CleanPath(const string& path) const {
-  string clean_path = path;
-  while (clean_path.length() >= 2 &&
-         clean_path[0] == '.' &&
-         clean_path[1] == OS_PATH_SEPARATOR) {
-    clean_path = clean_path.substr(2);
-  }
-  return clean_path;
 }
 
 }  // namespace test
