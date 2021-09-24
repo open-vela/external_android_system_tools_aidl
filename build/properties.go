@@ -17,49 +17,28 @@ package aidl
 type nameProperties struct {
 	Name *string
 }
-
-type hostProperties struct {
-	Cflags []string
+type staticLib struct {
+	Whole_static_libs []string
 }
 
-type darwinProperties struct {
-	Enabled *bool
+type sharedLib struct {
+	Shared_libs               []string
+	Export_shared_lib_headers []string
 }
-
-type imageProperties struct {
-	Shared_libs         []string
-	Header_libs         []string
-	Exclude_shared_libs []string
-	Cflags              []string
-}
-
-type ccTargetProperties struct {
-	Host     hostProperties
-	Darwin   darwinProperties
-	Platform imageProperties
-	Vendor   imageProperties
-	Product  imageProperties
-}
-
-type rustTargetProperties struct {
-	Darwin darwinProperties
-}
-
 type ccProperties struct {
 	Name                      *string
 	Owner                     *string
 	Defaults                  []string
-	Double_loadable           *bool
 	Vendor_available          *bool
-	Odm_available             *bool
-	Product_available         *bool
 	Host_supported            *bool
 	Generated_sources         []string
 	Generated_headers         []string
+	Shared                    sharedLib
+	Static                    staticLib
+	Static_libs               []string
 	Shared_libs               []string
 	Export_shared_lib_headers []string
 	Export_generated_headers  []string
-	Header_libs               []string
 	Sdk_version               *string
 	Stl                       *string
 	Cpp_std                   *string
@@ -67,11 +46,6 @@ type ccProperties struct {
 	Stem                      *string
 	Apex_available            []string
 	Min_sdk_version           *string
-	UseApexNameMacro          bool
-	Target                    ccTargetProperties
-	Tidy                      *bool
-	Tidy_flags                []string
-	Tidy_checks_as_errors     []string
 }
 
 type javaProperties struct {
@@ -85,19 +59,6 @@ type javaProperties struct {
 	Static_libs     []string
 	Apex_available  []string
 	Min_sdk_version *string
-}
-
-type rustProperties struct {
-	Name           *string
-	Crate_name     string
-	Owner          *string
-	Defaults       []string
-	Host_supported *bool
-	Srcs           []string
-	Rustlibs       []string
-	Stem           *string
-	Target         rustTargetProperties
-	Apex_available []string
 }
 
 type phonyProperties struct {

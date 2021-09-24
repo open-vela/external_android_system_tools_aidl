@@ -19,12 +19,12 @@
 #include <stdlib.h>
 
 #include "aidl_language.h"
-#include "parser.h"
-#include "aidl_language_y.h"
+#include "aidl_language_y-module.h"
 
 #define YY_USER_ACTION yylloc->columns(yyleng);
 %}
 
+%option yylineno
 %option noyywrap
 %option nounput
 %option noinput
@@ -37,33 +37,26 @@
 identifier  [_a-zA-Z][_a-zA-Z0-9]*
 whitespace  ([ \t\r]+)
 intvalue    [0-9]+[lL]?
-hexvalue    0[x|X][0-9a-fA-F]+[lL]?
+hexvalue    0[x|X][0-9a-fA-F]+
 floatvalue  [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?f?
 
 %%
 %{
   /* This happens at every call to yylex (every time we receive one token) */
-  using android::aidl::Comments;
-  using android::aidl::Comment;
   std::string extra_text;
-  Comments comments;
   yylloc->step();
 %}
 
 \/\*                  { extra_text += yytext; BEGIN(LONG_COMMENT); }
-<LONG_COMMENT>\*+\/   { extra_text += yytext; yylloc->step(); BEGIN(INITIAL);
-                        comments.push_back({extra_text});
-                        extra_text.clear(); }
+<LONG_COMMENT>\*+\/   { extra_text += yytext; yylloc->step(); BEGIN(INITIAL);  }
 <LONG_COMMENT>\*+     { extra_text += yytext; }
 <LONG_COMMENT>\n+     { extra_text += yytext; yylloc->lines(yyleng); }
 <LONG_COMMENT>[^*\n]+ { extra_text += yytext; }
 
-\"[^\"]*\"            { yylval->token = new AidlToken(yytext, comments);
+\"[^\"]*\"            { yylval->token = new AidlToken(yytext, extra_text);
                         return yy::parser::token::C_STR; }
 
-\/\/.*                { extra_text += yytext; extra_text += "\n";
-                        comments.push_back({extra_text});
-                        extra_text.clear(); }
+\/\/.*                { extra_text += yytext; extra_text += "\n"; }
 
 \n+                   { yylloc->lines(yyleng); yylloc->step(); }
 {whitespace}          {}
@@ -103,53 +96,47 @@ floatvalue  [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?f?
 "!="                  { return(yy::parser::token::NEQ); }
 
     /* annotations */
-@{identifier}         { yylval->token = new AidlToken(yytext + 1, comments);
+@{identifier}         { yylval->token = new AidlToken(yytext + 1, extra_text);
                         return yy::parser::token::ANNOTATION;
                       }
 
     /* keywords */
-parcelable            { yylval->token = new AidlToken("parcelable", comments);
+parcelable            { yylval->token = new AidlToken("parcelable", extra_text);
                         return yy::parser::token::PARCELABLE;
                       }
-import                { yylval->token = new AidlToken("import", comments);
-                        return yy::parser::token::IMPORT; }
-package               { yylval->token = new AidlToken("package", comments);
-                        return yy::parser::token::PACKAGE; }
+import                { return yy::parser::token::IMPORT; }
+package               { return yy::parser::token::PACKAGE; }
 in                    { return yy::parser::token::IN; }
 out                   { return yy::parser::token::OUT; }
 inout                 { return yy::parser::token::INOUT; }
-cpp_header            { yylval->token = new AidlToken("cpp_header", comments);
-                        return yy::parser::token::CPP_HEADER; }
-const                 { yylval->token = new AidlToken("const", comments);
+cpp_header            { return yy::parser::token::CPP_HEADER; }
+const                 { yylval->token = new AidlToken("const", extra_text);
                         return yy::parser::token::CONST; }
 true                  { return yy::parser::token::TRUE_LITERAL; }
 false                 { return yy::parser::token::FALSE_LITERAL; }
 
-interface             { yylval->token = new AidlToken("interface", comments);
+interface             { yylval->token = new AidlToken("interface", extra_text);
                         return yy::parser::token::INTERFACE;
                       }
-oneway                { yylval->token = new AidlToken("oneway", comments);
+oneway                { yylval->token = new AidlToken("oneway", extra_text);
                         return yy::parser::token::ONEWAY;
                       }
-enum                  { yylval->token = new AidlToken("enum", comments);
+enum                  { yylval->token = new AidlToken("enum", extra_text);
                         return yy::parser::token::ENUM;
-                      }
-union                 { yylval->token = new AidlToken("union", comments);
-                        return yy::parser::token::UNION;
                       }
 
     /* scalars */
-{identifier}          { yylval->token = new AidlToken(yytext, comments);
+{identifier}          { yylval->token = new AidlToken(yytext, extra_text);
                         return yy::parser::token::IDENTIFIER;
                       }
 '.'                   { yylval->character = yytext[1];
                         return yy::parser::token::CHARVALUE;
                       }
-{intvalue}            { yylval->token = new AidlToken(yytext, comments);
+{intvalue}            { yylval->token = new AidlToken(yytext, extra_text);
                         return yy::parser::token::INTVALUE; }
-{floatvalue}          { yylval->token = new AidlToken(yytext, comments);
+{floatvalue}          { yylval->token = new AidlToken(yytext, extra_text);
                         return yy::parser::token::FLOATVALUE; }
-{hexvalue}            { yylval->token = new AidlToken(yytext, comments);
+{hexvalue}            { yylval->token = new AidlToken(yytext, extra_text);
                         return yy::parser::token::HEXVALUE; }
 
   /* lexical error! */
