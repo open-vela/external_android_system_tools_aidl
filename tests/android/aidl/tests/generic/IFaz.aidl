@@ -16,12 +16,10 @@
 
 package android.aidl.tests.generic;
 
-import android.aidl.tests.IntEnum;
 import android.aidl.tests.generic.Baz;
 import android.aidl.tests.generic.Pair;
 
 interface IFaz {
     Pair<int, String> getPair();
     Pair<Baz, Baz> getPair2();
-    Pair<int, IntEnum> getPair3();
 }
