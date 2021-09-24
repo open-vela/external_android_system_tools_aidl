@@ -128,7 +128,7 @@ func (m *aidlInterfacesMetadataSingleton) GenerateAndroidBuildActions(ctx androi
 		readHashes := ""
 		if len(info.HashFiles) > 0 {
 			readHashes = "$$(sed 's/.*/\"&\",/' " + strings.Join(info.HashFiles, " ") +
-				"| tr '\n' ' ' | sed 's/, $$//')"
+				"| tr '\\n' ' ' | sed 's/, $$//')"
 		}
 
 		implicits := android.PathsForSource(ctx, info.HashFiles)
