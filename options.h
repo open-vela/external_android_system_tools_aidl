@@ -77,7 +77,7 @@ class Options final {
  public:
   enum class Language { UNSPECIFIED, JAVA, CPP, NDK, RUST };
 
-  enum class Task { UNSPECIFIED, COMPILE, PREPROCESS, DUMP_API, CHECK_API, DUMP_MAPPINGS };
+  enum class Task { HELP, COMPILE, PREPROCESS, DUMP_API, CHECK_API, DUMP_MAPPINGS };
 
   enum class CheckApiLevel { COMPATIBLE, EQUAL };
 
@@ -85,6 +85,12 @@ class Options final {
   bool StabilityFromString(const std::string& stability, Stability* out_stability);
 
   Options(int argc, const char* const argv[], Language default_lang = Language::UNSPECIFIED);
+
+  Options PlusImportDir(const std::string& import_dir) const {
+    Options copy(*this);
+    copy.import_dirs_.insert(import_dir);
+    return copy;
+  }
 
   static Options From(const string& cmdline);
 
@@ -106,8 +112,6 @@ class Options final {
 
   const set<string>& ImportDirs() const { return import_dirs_; }
 
-  const set<string>& ImportFiles() const { return import_files_; }
-
   const vector<string>& PreprocessedFiles() const { return preprocessed_files_; }
 
   string DependencyFile() const {
@@ -115,6 +119,8 @@ class Options final {
   }
 
   bool AutoDepFile() const { return auto_dep_file_; }
+
+  bool GenRpc() const { return gen_rpc_; }
 
   bool GenTraces() const { return gen_traces_; }
 
@@ -171,9 +177,9 @@ class Options final {
   Task task_ = Task::COMPILE;
   CheckApiLevel check_api_level_ = CheckApiLevel::COMPATIBLE;
   set<string> import_dirs_;
-  set<string> import_files_;
   vector<string> preprocessed_files_;
   string dependency_file_;
+  bool gen_rpc_ = false;
   bool gen_traces_ = false;
   bool gen_transaction_names_ = false;
   bool dependency_file_ninja_ = false;
