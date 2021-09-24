@@ -25,13 +25,20 @@ int yyparse(Parser*);
 YY_BUFFER_STATE yy_scan_buffer(char*, size_t, void*);
 void yy_delete_buffer(YY_BUFFER_STATE, void*);
 
-std::unique_ptr<Parser> Parser::Parse(const std::string& filename,
-                                      const android::aidl::IoDelegate& io_delegate,
-                                      AidlTypenames& typenames) {
+const AidlDocument* Parser::Parse(const std::string& filename,
+                                  const android::aidl::IoDelegate& io_delegate,
+                                  AidlTypenames& typenames, bool is_preprocessed) {
+  auto clean_path = android::aidl::IoDelegate::CleanPath(filename);
+  // reuse pre-parsed document from typenames
+  for (auto& doc : typenames.AllDocuments()) {
+    if (doc->GetLocation().GetFile() == clean_path) {
+      return doc.get();
+    }
+  }
   // Make sure we can read the file first, before trashing previous state.
-  unique_ptr<string> raw_buffer = io_delegate.GetFileContents(filename);
+  unique_ptr<string> raw_buffer = io_delegate.GetFileContents(clean_path);
   if (raw_buffer == nullptr) {
-    AIDL_ERROR(filename) << "Error while opening file for parsing";
+    AIDL_ERROR(clean_path) << "Error while opening file for parsing";
     return nullptr;
   }
 
@@ -39,13 +46,18 @@ std::unique_ptr<Parser> Parser::Parse(const std::string& filename,
   // nulls at the end.
   raw_buffer->append(2u, '\0');
 
-  std::unique_ptr<Parser> parser(new Parser(filename, *raw_buffer, typenames));
+  Parser parser(clean_path, *raw_buffer, is_preprocessed);
 
-  if (yy::parser(parser.get()).parse() != 0 || parser->HasError()) {
+  if (yy::parser(&parser).parse() != 0 || parser.HasError()) {
     return nullptr;
   }
 
-  return parser;
+  // transfer ownership to AidlTypenames and return the raw pointer
+  const AidlDocument* result = parser.document_.get();
+  if (!typenames.AddDocument(std::move(parser.document_))) {
+    return nullptr;
+  }
+  return result;
 }
 
 void Parser::SetTypeParameters(AidlTypeSpecifier* type,
@@ -61,64 +73,188 @@ void Parser::SetTypeParameters(AidlTypeSpecifier* type,
   }
 }
 
-class ConstantReferenceResolver : public AidlVisitor {
+void Parser::CheckValidTypeName(const AidlToken& token, const AidlLocation& loc) {
+  if (!is_preprocessed_ && token.GetText().find('.') != std::string::npos) {
+    AIDL_ERROR(loc) << "Type name can't be qualified. Use `package`.";
+    AddError();
+  }
+}
+
+void Parser::SetPackage(const AidlPackage& package) {
+  if (is_preprocessed_) {
+    AIDL_ERROR(package) << "Preprocessed file can't declare package.";
+    AddError();
+  }
+  package_ = package.GetName();
+}
+
+const AidlDefinedType* AsDefinedType(const AidlNode& node) {
+  struct Visitor : AidlVisitor {
+    const AidlDefinedType* defined_type = nullptr;
+    void Visit(const AidlInterface& t) override { defined_type = &t; }
+    void Visit(const AidlEnumDeclaration& t) override { defined_type = &t; }
+    void Visit(const AidlStructuredParcelable& t) override { defined_type = &t; }
+    void Visit(const AidlUnionDecl& t) override { defined_type = &t; }
+    void Visit(const AidlParcelable& t) override { defined_type = &t; }
+  } v;
+  node.DispatchVisit(v);
+  return v.defined_type;
+}
+
+bool CheckNoRecursiveDefinition(const AidlNode& node) {
+  struct Visitor : AidlVisitor {
+    enum {
+      NOT_STARTED = 0,
+      STARTED = 1,
+      FINISHED = 2,
+    };
+    std::map<const AidlParcelable*, int> visited;
+    std::vector<std::string> path;
+    bool found_cycle = false;
+
+    void Visit(const AidlStructuredParcelable& t) override { FindCycle(&t); }
+    void Visit(const AidlUnionDecl& t) override { FindCycle(&t); }
+    void Visit(const AidlParcelable& t) override { FindCycle(&t); }
+
+    bool FindCycle(const AidlParcelable* p) {
+      // no need to search further
+      if (found_cycle) {
+        return true;
+      }
+      // we just found a cycle
+      if (visited[p] == STARTED) {
+        path.push_back(p->GetName());
+        AIDL_ERROR(p) << p->GetName()
+                      << " is a recursive parcelable: " << android::base::Join(path, "->");
+        return (found_cycle = true);
+      }
+      // we arrived here with a different route.
+      if (visited[p] == FINISHED) {
+        return false;
+      }
+      // start DFS
+      visited[p] = STARTED;
+      path.push_back(p->GetName());
+      for (const auto& f : p->GetFields()) {
+        const auto& ref = f->GetType();
+        if (!ref.IsArray() && !ref.IsHeapNullable()) {
+          const auto& type = ref.GetDefinedType();
+          if (type && type->AsParcelable()) {
+            if (FindCycle(type->AsParcelable())) {
+              return true;
+            }
+          }
+        }
+      }
+      path.pop_back();
+      visited[p] = FINISHED;
+      return false;
+    }
+  } v;
+  VisitTopDown(v, node);
+  return !v.found_cycle;
+}
+
+class ReferenceResolver : public AidlVisitor {
  public:
-  ConstantReferenceResolver(const AidlDefinedType* scope, const AidlTypenames& typenames,
-                            TypeResolver& resolver, bool* success)
-      : scope_(scope), typenames_(typenames), resolver_(resolver), success_(success) {}
+  ReferenceResolver(TypeResolver& resolver, bool* success)
+      : resolver_(resolver), success_(success) {}
+
+  void Visit(const AidlTypeSpecifier& t) override {
+    // We're visiting the same node again. This can happen when two constant references
+    // point to an ancestor of this node.
+    if (t.IsResolved()) {
+      return;
+    }
+    AIDL_FATAL_IF(scope_.empty(), t) << "Can't have an unresolved type in global scope";
+
+    AidlTypeSpecifier& type = const_cast<AidlTypeSpecifier&>(t);
+    if (!resolver_(scope_.back(), &type)) {
+      AIDL_ERROR(type) << "Failed to resolve '" << type.GetUnresolvedName() << "'";
+      *success_ = false;
+    }
+
+    // require definition:
+    // - parcelable, union
+    // - T
+    // - @nullable(heap=false) T
+    // interfaces, enums, arrays, @nullable(heap=true), we don't need a full definition
+    if (scope_.back()->AsParcelable()) {
+      auto resolved = t.GetDefinedType();
+      if (resolved && resolved->AsParcelable()) {
+        if (!t.IsArray() && !t.IsHeapNullable()) {
+          VisitAll(*resolved);
+        }
+      }
+    }
+  }
+
   void Visit(const AidlConstantReference& v) override {
     if (IsCircularReference(&v)) {
       *success_ = false;
       return;
     }
 
-    if (v.GetRefType() && !v.GetRefType()->IsResolved()) {
-      if (!resolver_(typenames_.GetDocumentFor(scope_), v.GetRefType().get())) {
-        AIDL_ERROR(v.GetRefType()) << "Unknown type '" << v.GetRefType()->GetName() << "'";
-        *success_ = false;
-        return;
-      }
+    if (v.GetRefType()) {
+      VisitAll(*v.GetRefType());
     }
-    const AidlConstantValue* resolved = v.Resolve(scope_);
+
+    const AidlConstantValue* resolved = v.Resolve(scope_.back());
     if (!resolved) {
       AIDL_ERROR(v) << "Unknown reference '" << v.Literal() << "'";
       *success_ = false;
       return;
     }
 
+    // On error, skip recursive visiting to avoid redundant messages
+    if (!*success_) {
+      return;
+    }
     // resolve recursive references
-    Push(&v);
-    VisitTopDown(*this, *resolved);
-    Pop();
+    PushConstRef(&v);
+    VisitAll(*resolved);
+    PopConstRef();
+  }
+
+  void VisitAll(const AidlNode& node) {
+    std::function<void(const AidlNode&)> top_down = [&](const AidlNode& a) {
+      a.DispatchVisit(*this);
+      auto defined_type = AsDefinedType(a);
+      if (defined_type) PushScope(defined_type);
+      a.TraverseChildren(top_down);
+      if (defined_type) PopScope();
+    };
+    top_down(node);
   }
 
  private:
-  struct StackElem {
-    const AidlDefinedType* scope;
-    const AidlConstantReference* ref;
-  };
-
-  void Push(const AidlConstantReference* ref) {
-    stack_.push_back({scope_, ref});
+  void PushConstRef(const AidlConstantReference* ref) {
+    stack_.push_back(ref);
     if (ref->GetRefType()) {
-      scope_ = ref->GetRefType()->GetDefinedType();
+      PushScope(ref->GetRefType()->GetDefinedType());
     }
   }
 
-  void Pop() {
-    scope_ = stack_.back().scope;
+  void PopConstRef() {
+    if (stack_.back()->GetRefType()) {
+      PopScope();
+    }
     stack_.pop_back();
   }
 
+  void PushScope(const AidlDefinedType* scope) { scope_.push_back(scope); }
+
+  void PopScope() { scope_.pop_back(); }
+
   bool IsCircularReference(const AidlConstantReference* ref) {
-    auto it = std::find_if(stack_.begin(), stack_.end(),
-                           [&](const auto& elem) { return elem.ref == ref; });
+    auto it =
+        std::find_if(stack_.begin(), stack_.end(), [&](const auto& elem) { return elem == ref; });
     if (it == stack_.end()) {
       return false;
     }
     std::vector<std::string> path;
     while (it != stack_.end()) {
-      path.push_back(it->ref->Literal());
+      path.push_back((*it)->Literal());
       ++it;
     }
     path.push_back(ref->Literal());
@@ -126,35 +262,26 @@ class ConstantReferenceResolver : public AidlVisitor {
     return true;
   }
 
-  const AidlDefinedType* scope_;
-  const AidlTypenames& typenames_;
   TypeResolver& resolver_;
   bool* success_;
-  std::vector<StackElem> stack_ = {};
+  std::vector<const AidlConstantReference*> stack_ = {};
+  std::vector<const AidlDefinedType*> scope_ = {};
 };
 
-bool Parser::Resolve(TypeResolver& type_resolver) {
+// Resolve "unresolved" types in the "main" document.
+bool ResolveReferences(const AidlDocument& document, TypeResolver& type_resolver) {
   bool success = true;
-  for (AidlTypeSpecifier* typespec : unresolved_typespecs_) {
-    if (!type_resolver(document_, typespec)) {
-      AIDL_ERROR(typespec) << "Failed to resolve '" << typespec->GetUnresolvedName() << "'";
-      success = false;
-      // don't stop to show more errors if any
-    }
-  }
 
-  // resolve "field references" as well.
-  for (const auto& type : document_->DefinedTypes()) {
-    ConstantReferenceResolver ref_resolver{type.get(), typenames_, type_resolver, &success};
-    VisitTopDown(ref_resolver, *type);
-  }
+  ReferenceResolver ref_resolver(type_resolver, &success);
+  ref_resolver.VisitAll(document);
+
+  success &= CheckNoRecursiveDefinition(document);
 
   return success;
 }
 
-Parser::Parser(const std::string& filename, std::string& raw_buffer,
-               android::aidl::AidlTypenames& typenames)
-    : filename_(filename), typenames_(typenames) {
+Parser::Parser(const std::string& filename, std::string& raw_buffer, bool is_preprocessed)
+    : filename_(filename), is_preprocessed_(is_preprocessed) {
   yylex_init(&scanner_);
   buffer_ = yy_scan_buffer(&raw_buffer[0], raw_buffer.length(), scanner_);
 }
@@ -162,4 +289,12 @@ Parser::Parser(const std::string& filename, std::string& raw_buffer,
 Parser::~Parser() {
   yy_delete_buffer(buffer_, scanner_);
   yylex_destroy(scanner_);
+}
+
+void Parser::MakeDocument(const AidlLocation& location, const Comments& comments,
+                          std::vector<std::unique_ptr<AidlImport>> imports,
+                          std::vector<std::unique_ptr<AidlDefinedType>> defined_types) {
+  AIDL_FATAL_IF(document_.get(), location);
+  document_ = std::make_unique<AidlDocument>(location, comments, std::move(imports),
+                                             std::move(defined_types), is_preprocessed_);
 }

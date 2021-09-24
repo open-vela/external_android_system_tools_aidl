@@ -18,10 +18,11 @@ package android.aidl.tests;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assume.assumeTrue;
 
 import android.aidl.tests.ByteEnum;
@@ -437,6 +438,21 @@ public class TestServiceClient {
         assertThat(reversed[2].getDouble(testDoubleKey), is(input[0].getDouble(testDoubleKey)));
     }
 
+    private void writeToFd(FileDescriptor fd, byte[] testData) throws IOException {
+      FileOutputStream fdStream = new FileOutputStream(fd);
+      fdStream.write(testData);
+      fdStream.close();
+    }
+
+    private void verifyFileContents(String file, byte[] testData) throws IOException {
+      FileInputStream fis = new FileInputStream(file);
+      byte[] readData = new byte[testData.length];
+
+      assertThat(fis.read(readData), is(readData.length));
+      assertThat(readData, is(testData));
+      assertThat(fis.read(), is(-1));
+    }
+
     @Test
     public void testFileDescriptorPassing() throws RemoteException, IOException {
         assumeTrue(cpp_java_tests != null);
@@ -448,18 +464,43 @@ public class TestServiceClient {
         FileDescriptor journeyed = cpp_java_tests.RepeatFileDescriptor(descriptor);
         fos.close();
 
-        FileOutputStream journeyedStream = new FileOutputStream(journeyed);
-
         String testData = "FrazzleSnazzleFlimFlamFlibbityGumboChops";
-        byte[] output = testData.getBytes();
-        journeyedStream.write(output);
-        journeyedStream.close();
+        writeToFd(journeyed, testData.getBytes());
+        verifyFileContents(file, testData.getBytes());
+    }
 
-        FileInputStream fis = new FileInputStream(file);
-        byte[] input = new byte[output.length];
+    @Test
+    public void testFileDescriptorArrayPassing() throws RemoteException, IOException {
+      assumeTrue(cpp_java_tests != null);
 
-        assertThat(fis.read(input), is(input.length));
-        assertThat(input, is(output));
+      final int kTestSize = 2;
+
+      String fileBase = "/data/local/tmp/aidl-test-file_";
+      String[] files = new String[kTestSize]; // any size to test
+      FileOutputStream[] fos = new FileOutputStream[kTestSize];
+      FileDescriptor[] descriptors = new FileDescriptor[kTestSize];
+      for (int i = 0; i < kTestSize; i++) {
+        files[i] = fileBase + i;
+        fos[i] = new FileOutputStream(files[i], false /*append*/);
+        descriptors[i] = fos[i].getFD();
+      }
+
+      FileDescriptor[] repeated = new FileDescriptor[kTestSize];
+      FileDescriptor[] reversed = cpp_java_tests.ReverseFileDescriptorArray(descriptors, repeated);
+
+      for (int i = 0; i < kTestSize; i++) {
+        fos[i].close();
+      }
+
+      for (int i = 0; i < kTestSize; i++) {
+        String testData = "Something " + i;
+
+        writeToFd(reversed[kTestSize - 1 - i], testData.getBytes());
+        verifyFileContents(files[i], testData.getBytes());
+
+        writeToFd(repeated[i], testData.getBytes());
+        verifyFileContents(files[i], (testData + testData).getBytes());
+      }
     }
 
     @Test
@@ -833,5 +874,24 @@ public class TestServiceClient {
       assertNotNull(reversed);
       assertThat(repeated.getNs(), is(new int[] {1, 2, 3}));
       assertThat(reversed.getNs(), is(new int[] {3, 2, 1}));
+    }
+
+    @Test
+    public void testReverseRecursiveList() throws RemoteException {
+      RecursiveList head = null;
+      for (int i = 0; i < 10; i++) {
+        RecursiveList node = new RecursiveList();
+        node.value = i;
+        node.next = head;
+        head = node;
+      }
+      // head: [9, 8, .. , 0]
+      RecursiveList reversed = service.ReverseList(head);
+      // reversed should be [0, 1, .. 9]
+      for (int i = 0; i < 10; i++) {
+        assertThat(reversed.value, is(i));
+        reversed = reversed.next;
+      }
+      assertNull(reversed);
     }
 }

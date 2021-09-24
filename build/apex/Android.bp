@@ -17,7 +17,7 @@ apex_test {
     updatable: false,
 
     native_shared_libs: [
-        "test-piece-1-V3-ndk_platform",
+        "test-piece-1-V3-ndk",
     ],
 }
 

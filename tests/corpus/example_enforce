@@ -1,0 +1,1 @@
+aidl\ --lang=java\ tests/IFoo.aidl\ --out\ .\ --header_out\ .\ tests/IFoo.aidl\ interface IFoo {  @Enforce(condition="permission = ABC || permission=DEF") void doFoo(); }

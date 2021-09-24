@@ -147,6 +147,9 @@ std::string WrapIfNullable(const std::string type_str, const AidlTypeSpecifier& 
 
   if (raw_type.IsNullable() && !AidlTypenames::IsPrimitiveTypename(type.GetName()) &&
       type.GetName() != "IBinder" && typenames.GetEnumDeclaration(type) == nullptr) {
+    if (raw_type.IsHeapNullable()) {
+      return "::std::unique_ptr<" + type_str + ">";
+    }
     return "::std::optional<" + type_str + ">";
   }
   return type_str;
@@ -186,8 +189,15 @@ std::string GetCppName(const AidlTypeSpecifier& raw_type, const AidlTypenames& t
   if (definedType != nullptr && definedType->AsInterface() != nullptr) {
     return "::android::sp<" + GetRawCppName(type) + ">";
   }
-
-  return WrapIfNullable(GetRawCppName(type), raw_type, typenames);
+  auto cpp_name = GetRawCppName(type);
+  if (type.IsGeneric()) {
+    std::vector<std::string> type_params;
+    for (const auto& parameter : type.GetTypeParameters()) {
+      type_params.push_back(CppNameOf(*parameter, typenames));
+    }
+    cpp_name += "<" + base::Join(type_params, ", ") + ">";
+  }
+  return WrapIfNullable(cpp_name, raw_type, typenames);
 }
 }  // namespace
 std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value) {
@@ -219,17 +229,12 @@ std::string GetTransactionIdFor(const AidlInterface& iface, const AidlMethod& me
 std::string CppNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
   if (type.IsArray() || typenames.IsList(type)) {
     std::string cpp_name = GetCppName(type, typenames);
-    if (type.IsNullable()) {
+    if (type.IsHeapNullable()) {
+      return "::std::unique_ptr<::std::vector<" + cpp_name + ">>";
+    } else if (type.IsNullable()) {
       return "::std::optional<::std::vector<" + cpp_name + ">>";
     }
     return "::std::vector<" + cpp_name + ">";
-  } else if (type.IsGeneric()) {
-    std::vector<std::string> type_params;
-    for (const auto& parameter : type.GetTypeParameters()) {
-      type_params.push_back(CppNameOf(*parameter, typenames));
-    }
-    return StringPrintf("%s<%s>", GetCppName(type, typenames).c_str(),
-                        base::Join(type_params, ", ").c_str());
   }
   return GetCppName(type, typenames);
 }
