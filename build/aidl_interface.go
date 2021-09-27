@@ -362,6 +362,12 @@ type aidlInterfaceProperties struct {
 	// the list is considered as the most recent version.
 	Versions []string
 
+	// The minimum version of the sdk that the compiled artifacts will run against
+	// For native modules, the property needs to be set when a module is a part of mainline modules(APEX).
+	// Forwarded to generated java/native module. This can be overridden by
+	// backend.<name>.min_sdk_version.
+	Min_sdk_version *string
+
 	Backend struct {
 		// Backend of the compiler generating code for Java clients.
 		// When enabled, this creates a target called "<name>-java".
@@ -467,6 +473,26 @@ func (i *aidlInterface) gatherInterface(mctx android.LoadHookContext) {
 	aidlInterfaceMutex.Lock()
 	defer aidlInterfaceMutex.Unlock()
 	*aidlInterfaces = append(*aidlInterfaces, i)
+}
+
+func (i *aidlInterface) minSdkVersion(lang string) *string {
+	var ver *string
+	switch lang {
+	case langCpp:
+		ver = i.properties.Backend.Cpp.Min_sdk_version
+	case langJava:
+		ver = i.properties.Backend.Java.Min_sdk_version
+	case langNdk, langNdkPlatform:
+		ver = i.properties.Backend.Ndk.Min_sdk_version
+	case langRust:
+		ver = i.properties.Backend.Rust.Min_sdk_version
+	default:
+		panic(fmt.Errorf("unsupported language backend %q\n", lang))
+	}
+	if ver == nil {
+		return i.properties.Min_sdk_version
+	}
+	return ver
 }
 
 func addUnstableModule(mctx android.LoadHookContext, moduleName string) {

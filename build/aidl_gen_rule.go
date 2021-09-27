@@ -67,6 +67,7 @@ type aidlGenProperties struct {
 	AidlRoot              string   // base directory for the input aidl file
 	ImportsWithoutVersion []string
 	Stability             *string
+	Min_sdk_version       *string
 	Lang                  string // target language [java|cpp|ndk|rust]
 	BaseName              string
 	GenLog                bool
@@ -186,6 +187,10 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 	}
 	if g.properties.Stability != nil {
 		optionalFlags = append(optionalFlags, "--stability", *g.properties.Stability)
+	}
+	minSdkVer := g.properties.Min_sdk_version
+	if minSdkVer != nil {
+		optionalFlags = append(optionalFlags, "--min_sdk_version "+*minSdkVer)
 	}
 	optionalFlags = append(optionalFlags, wrap("-p", g.deps.preprocessed.Strings(), "")...)
 
