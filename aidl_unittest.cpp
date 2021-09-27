@@ -648,9 +648,14 @@ TEST_P(AidlTest, ParseDescriptorAnnotation) {
 }
 
 TEST_P(AidlTest, UnknownAnnotation) {
-  const string oneway_method = "package a; @Unknown interface IFoo { }";
   CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", oneway_method, typenames_, GetLanguage()));
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", "package a; @Unknown interface IFoo { }", typenames_,
+                           GetLanguage()));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("not a recognized annotation"));
+
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", "package a; @Unknown(param=true) interface IFoo { }",
+                           typenames_, GetLanguage()));
   EXPECT_THAT(GetCapturedStderr(), HasSubstr("not a recognized annotation"));
 }
 
