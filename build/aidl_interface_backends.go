@@ -77,6 +77,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		AidlRoot:              aidlRoot,
 		ImportsWithoutVersion: i.properties.ImportsWithoutVersion,
 		Stability:             i.properties.Stability,
+		Min_sdk_version:       i.minSdkVersion(lang),
 		Lang:                  lang,
 		BaseName:              i.ModuleBase.Name(),
 		GenLog:                genLog,
@@ -91,7 +92,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 	var sharedLibDependency []string
 	var headerLibs []string
 	var sdkVersion *string
-	var minSdkVersion *string
 	var stl *string
 	var cpp_std *string
 	var hostSupported *bool
@@ -116,7 +116,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 			sharedLibDependency = append(sharedLibDependency, "libcutils")
 		}
 		hostSupported = i.properties.Host_supported
-		minSdkVersion = i.properties.Backend.Cpp.Min_sdk_version
 	} else if lang == langNdk || lang == langNdkPlatform {
 		importExportDependencies = append(importExportDependencies, "libbinder_ndk")
 		nonAppProps := imageProperties{
@@ -131,7 +130,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		targetProp.Platform = nonAppProps
 		targetProp.Vendor = nonAppProps
 		targetProp.Product = nonAppProps
-		minSdkVersion = i.properties.Backend.Ndk.Min_sdk_version
 		hostSupported = i.properties.Host_supported
 		if lang == langNdk && i.shouldGenerateAppNdkBackend() {
 			sdkVersion = proptools.StringPtr("current")
@@ -187,7 +185,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 				Cpp_std:                   cpp_std,
 				Cflags:                    append(addCflags, "-Wextra", "-Wall", "-Werror", "-Wextra-semi"),
 				Apex_available:            commonProperties.Apex_available,
-				Min_sdk_version:           minSdkVersion,
+				Min_sdk_version:           i.minSdkVersion(lang),
 				UseApexNameMacro:          true,
 				Target:                    targetProp,
 				Tidy:                      proptools.BoolPtr(true),
@@ -227,6 +225,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		AidlRoot:              aidlRoot,
 		ImportsWithoutVersion: i.properties.ImportsWithoutVersion,
 		Stability:             i.properties.Stability,
+		Min_sdk_version:       i.minSdkVersion(langJava),
 		Lang:                  langJava,
 		BaseName:              i.ModuleBase.Name(),
 		Version:               i.versionForAidlGenRule(version),
@@ -251,7 +250,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 			Platform_apis:   i.properties.Backend.Java.Platform_apis,
 			Srcs:            []string{":" + javaSourceGen},
 			Apex_available:  i.properties.Backend.Java.Apex_available,
-			Min_sdk_version: i.properties.Backend.Java.Min_sdk_version,
+			Min_sdk_version: i.minSdkVersion(langJava),
 		}},
 	})
 
@@ -276,6 +275,7 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		AidlRoot:              aidlRoot,
 		ImportsWithoutVersion: i.properties.ImportsWithoutVersion,
 		Stability:             i.properties.Stability,
+		Min_sdk_version:       i.minSdkVersion(langRust),
 		Lang:                  langRust,
 		BaseName:              i.ModuleBase.Name(),
 		Version:               i.versionForAidlGenRule(version),
