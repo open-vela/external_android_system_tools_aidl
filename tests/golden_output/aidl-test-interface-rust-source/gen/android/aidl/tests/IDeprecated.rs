@@ -8,6 +8,7 @@ declare_binder_interface! {
     native: BnDeprecated(on_transact),
     proxy: BpDeprecated {
     },
+    async: IDeprecatedAsync,
   }
 }
 #[deprecated = "test"]
@@ -20,6 +21,10 @@ pub trait IDeprecated: binder::Interface + Send {
     std::mem::replace(&mut *DEFAULT_IMPL.lock().unwrap(), d)
   }
 }
+#[deprecated = "test"]
+pub trait IDeprecatedAsync<P>: binder::Interface + Send {
+  fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.IDeprecated" }
+}
 pub trait IDeprecatedDefault: Send + Sync {
 }
 pub mod transactions {
@@ -29,7 +34,11 @@ use lazy_static::lazy_static;
 lazy_static! {
   static ref DEFAULT_IMPL: std::sync::Mutex<IDeprecatedDefaultRef> = std::sync::Mutex::new(None);
 }
+impl BpDeprecated {
+}
 impl IDeprecated for BpDeprecated {
+}
+impl<P: binder::BinderAsyncPool> IDeprecatedAsync<P> for BpDeprecated {
 }
 impl IDeprecated for binder::Binder<BnDeprecated> {
 }
