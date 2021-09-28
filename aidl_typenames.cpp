@@ -127,50 +127,36 @@ bool AidlTypenames::AddDocument(std::unique_ptr<AidlDocument> doc) {
   // Add types in two steps to avoid adding a type while the doc is rejected.
   // 1. filter types to add
   // 2. add types
-
-  std::function<bool(const std::vector<std::unique_ptr<AidlDefinedType>>&)> collect_types_to_add;
-  collect_types_to_add = [&](auto& types) {
-    for (const auto& type : types) {
-      if (IsBuiltinTypename(type->GetName())) {
-        // ParcelFileDescriptor is treated as a built-in type, but it's also in the framework.aidl.
-        // So aidl should ignore built-in types in framework.aidl to prevent duplication.
-        // (b/130899491)
-        if (is_preprocessed) {
-          continue;
-        }
-        // HasValidNameComponents handles name conflicts with built-in types
+  for (const auto& type : doc->DefinedTypes()) {
+    if (IsBuiltinTypename(type->GetName())) {
+      // ParcelFileDescriptor is treated as a built-in type, but it's also in the framework.aidl.
+      // So aidl should ignore built-in types in framework.aidl to prevent duplication.
+      // (b/130899491)
+      if (is_preprocessed) {
+        continue;
       }
+      // HasValidNameComponents handles name conflicts with built-in types
+    }
 
-      if (auto prev_definition = defined_types_.find(type->GetCanonicalName());
-          prev_definition != defined_types_.end()) {
-        // Skip duplicate type in preprocessed document
-        if (is_preprocessed) {
-          continue;
-        }
-        // Overwrite duplicate type which is already added via preprocessed with a new one
-        if (!prev_definition->second->GetDocument().IsPreprocessed()) {
-          AIDL_ERROR(type) << "redefinition: " << type->GetCanonicalName() << " is defined "
-                           << prev_definition->second->GetLocation();
-          return false;
-        }
+    if (auto prev_definition = defined_types_.find(type->GetCanonicalName());
+        prev_definition != defined_types_.end()) {
+      // Skip duplicate type in preprocessed document
+      if (is_preprocessed) {
+        continue;
       }
-
-      if (!HasValidNameComponents(*type)) {
-        return false;
-      }
-
-      types_to_add.push_back(type.get());
-
-      // recursively check nested types
-      if (!collect_types_to_add(type->GetNestedTypes())) {
+      // Overwrite duplicate type which is already added via preprocessed with a new one
+      if (!prev_definition->second->GetDocument().IsPreprocessed()) {
+        AIDL_ERROR(type) << "redefinition: " << type->GetCanonicalName() << " is defined "
+                         << prev_definition->second->GetLocation();
         return false;
       }
     }
-    return true;
-  };
 
-  if (!collect_types_to_add(doc->DefinedTypes())) {
-    return false;
+    if (!HasValidNameComponents(*type)) {
+      return false;
+    }
+
+    types_to_add.push_back(type.get());
   }
 
   for (const auto& type : types_to_add) {
