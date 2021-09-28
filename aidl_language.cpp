@@ -1271,14 +1271,20 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
 }
 
 // TODO: we should treat every backend all the same in future.
-bool AidlParcelable::LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                                Options::Language lang) const {
-  for (const auto& v : this->GetFields()) {
-    if (!v->GetType().LanguageSpecificCheckValid(typenames, lang)) {
-      return false;
+bool AidlDefinedType::LanguageSpecificCheckValid(const AidlTypenames& typenames,
+                                                 Options::Language lang) const {
+  struct Visitor : AidlVisitor {
+    Visitor(const AidlTypenames& typenames, Options::Language lang)
+        : typenames(typenames), lang(lang) {}
+    void Visit(const AidlTypeSpecifier& type) override {
+      success = success && type.LanguageSpecificCheckValid(typenames, lang);
     }
-  }
-  return true;
+    const AidlTypenames& typenames;
+    Options::Language lang;
+    bool success = true;
+  } v(typenames, lang);
+  VisitTopDown(v, *this);
+  return v.success;
 }
 
 AidlEnumerator::AidlEnumerator(const AidlLocation& location, const std::string& name,
@@ -1434,22 +1440,6 @@ bool AidlUnionDecl::CheckValid(const AidlTypenames& typenames) const {
   }
 
   return success;
-}
-
-// TODO: we should treat every backend all the same in future.
-bool AidlInterface::LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                               Options::Language lang) const {
-  for (const auto& m : this->GetMethods()) {
-    if (!m->GetType().LanguageSpecificCheckValid(typenames, lang)) {
-      return false;
-    }
-    for (const auto& arg : m->GetArguments()) {
-      if (!arg->GetType().LanguageSpecificCheckValid(typenames, lang)) {
-        return false;
-      }
-    }
-  }
-  return true;
 }
 
 AidlInterface::AidlInterface(const AidlLocation& location, const std::string& name,
