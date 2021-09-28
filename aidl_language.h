@@ -458,7 +458,7 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
 // Returns the universal value unaltered.
 std::string AidlConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value);
 
-class AidlMember : public AidlAnnotatable {
+class AidlMember : public AidlCommentable {
  public:
   AidlMember(const AidlLocation& location, const Comments& comments);
   virtual ~AidlMember() = default;
@@ -915,7 +915,7 @@ class AidlMethod : public AidlMember {
 
 // AidlDefinedType represents either an interface, parcelable, or enum that is
 // defined in the source file.
-class AidlDefinedType : public AidlMember, public AidlScope {
+class AidlDefinedType : public AidlAnnotatable, public AidlScope {
  public:
   AidlDefinedType(const AidlLocation& location, const std::string& name, const Comments& comments,
                   const std::string& package, std::vector<std::unique_ptr<AidlMember>>* members);
@@ -950,7 +950,8 @@ class AidlDefinedType : public AidlMember, public AidlScope {
   virtual const AidlInterface* AsInterface() const { return nullptr; }
   virtual const AidlParameterizable<std::string>* AsParameterizable() const { return nullptr; }
   virtual bool CheckValid(const AidlTypenames& typenames) const;
-  bool LanguageSpecificCheckValid(const AidlTypenames& typenames, Options::Language lang) const;
+  virtual bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
+                                          Options::Language lang) const = 0;
   AidlStructuredParcelable* AsStructuredParcelable() {
     return const_cast<AidlStructuredParcelable*>(
         const_cast<const AidlDefinedType*>(this)->AsStructuredParcelable());
@@ -984,8 +985,7 @@ class AidlDefinedType : public AidlMember, public AidlScope {
     return const_cast<AidlParcelable*>(
         const_cast<const AidlDefinedType*>(this)->AsUnstructuredParcelable());
   }
-  const AidlDefinedType* GetParentType() const;
-  const std::vector<std::unique_ptr<AidlDefinedType>>& GetNestedTypes() const { return types_; }
+
   const std::vector<std::unique_ptr<AidlVariableDeclaration>>& GetFields() const {
     return variables_;
   }
@@ -1014,7 +1014,6 @@ class AidlDefinedType : public AidlMember, public AidlScope {
   std::vector<std::unique_ptr<AidlVariableDeclaration>> variables_;
   std::vector<std::unique_ptr<AidlConstantDeclaration>> constants_;
   std::vector<std::unique_ptr<AidlMethod>> methods_;
-  std::vector<std::unique_ptr<AidlDefinedType>> types_;
   std::vector<const AidlMember*> members_;  // keep members in order of appearance.
 };
 
@@ -1035,6 +1034,8 @@ class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::s
   std::string GetCppHeader() const { return cpp_header_; }
 
   bool CheckValid(const AidlTypenames& typenames) const override;
+  bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
+                                  Options::Language lang) const override;
   const AidlParcelable* AsParcelable() const override { return this; }
   const AidlParameterizable<std::string>* AsParameterizable() const override { return this; }
   const AidlNode& AsAidlNode() const override { return *this; }
@@ -1119,6 +1120,10 @@ class AidlEnumDeclaration : public AidlDefinedType {
     return enumerators_;
   }
   bool CheckValid(const AidlTypenames& typenames) const override;
+  bool LanguageSpecificCheckValid(const AidlTypenames& /*typenames*/,
+                                  Options::Language) const override {
+    return true;
+  }
   std::string GetPreprocessDeclarationName() const override { return "enum"; }
 
   const AidlEnumDeclaration* AsEnumDeclaration() const override { return this; }
@@ -1177,6 +1182,9 @@ class AidlInterface final : public AidlDefinedType {
   std::string GetPreprocessDeclarationName() const override { return "interface"; }
 
   bool CheckValid(const AidlTypenames& typenames) const override;
+  bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
+                                  Options::Language lang) const override;
+
   std::string GetDescriptor() const;
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 };
