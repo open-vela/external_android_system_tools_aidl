@@ -978,14 +978,14 @@ AidlDefinedType::AidlDefinedType(const AidlLocation& location, const std::string
   }
   if (members) {
     for (auto& m : *members) {
-      if (auto constant = AidlCast<AidlConstantDeclaration>(*m); constant) {
+      if (auto constant = m->AsConstantDeclaration(); constant) {
         constants_.emplace_back(constant);
-      } else if (auto variable = AidlCast<AidlVariableDeclaration>(*m); variable) {
+      } else if (auto variable = m->AsVariableDeclaration(); variable) {
         variables_.emplace_back(variable);
-      } else if (auto method = AidlCast<AidlMethod>(*m); method) {
+      } else if (auto method = m->AsMethod(); method) {
         methods_.emplace_back(method);
       } else {
-        AIDL_FATAL(*m) << "Unknown member type.";
+        AIDL_FATAL(*m);
       }
       members_.push_back(m.release());
     }
@@ -1086,18 +1086,14 @@ std::string AidlDefinedType::ResolveName(const std::string& name) const {
   return GetEnclosingScope()->ResolveName(name);
 }
 
-template <>
-const AidlDefinedType* AidlCast<AidlDefinedType>(const AidlNode& node) {
-  struct Visitor : AidlVisitor {
-    const AidlDefinedType* defined_type = nullptr;
-    void Visit(const AidlInterface& t) override { defined_type = &t; }
-    void Visit(const AidlEnumDeclaration& t) override { defined_type = &t; }
-    void Visit(const AidlStructuredParcelable& t) override { defined_type = &t; }
-    void Visit(const AidlUnionDecl& t) override { defined_type = &t; }
-    void Visit(const AidlParcelable& t) override { defined_type = &t; }
-  } v;
-  node.DispatchVisit(v);
-  return v.defined_type;
+template <typename T>
+const T* AidlCast(const AidlNode& node) {
+  struct CastVisitor : AidlVisitor {
+    const T* cast = nullptr;
+    void Visit(const T& t) override { cast = &t; }
+  } visitor;
+  node.DispatchVisit(visitor);
+  return visitor.cast;
 }
 
 const AidlDocument& AidlDefinedType::GetDocument() const {
