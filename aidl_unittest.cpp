@@ -3077,30 +3077,36 @@ TEST_F(AidlTestIncompatibleChanges, FixedSizeRemovedField) {
 
 TEST_P(AidlTest, RejectNonFixedSizeFromFixedSize) {
   const string expected_stderr =
-      "ERROR: Foo.aidl:1.36-38: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
+      "ERROR: Foo.aidl:2.8-10: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
       "a.\n"
-      "ERROR: Foo.aidl:1.44-46: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
-      "b.\n"
-      "ERROR: Foo.aidl:1.55-57: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
+      "ERROR: Foo.aidl:3.6-8: The @FixedSize parcelable 'Foo' has a non-fixed size field named b.\n"
+      "ERROR: Foo.aidl:4.9-11: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
       "c.\n"
-      "ERROR: Foo.aidl:1.80-82: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
+      "ERROR: Foo.aidl:5.23-25: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
       "d.\n"
-      "ERROR: Foo.aidl:1.92-94: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
+      "ERROR: Foo.aidl:6.10-12: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
       "e.\n"
-      "ERROR: Foo.aidl:1.109-111: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
-      "f.\n";
+      "ERROR: Foo.aidl:7.15-17: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
+      "f.\n"
+      "ERROR: Foo.aidl:9.23-33: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
+      "nullable1.\n"
+      "ERROR: Foo.aidl:10.34-44: The @FixedSize parcelable 'Foo' has a non-fixed size field named "
+      "nullable2.\n";
 
   io_delegate_.SetFileContents("Foo.aidl",
-                               "@FixedSize parcelable Foo { "
-                               "  int[] a;"
-                               "  Bar b;"
-                               "  String c;"
-                               "  ParcelFileDescriptor d;"
-                               "  IBinder e;"
-                               "  List<String> f;"
-                               "  int isFixedSize;"
+                               "@FixedSize parcelable Foo {\n"
+                               "  int[] a;\n"
+                               "  Bar b;\n"
+                               "  String c;\n"
+                               "  ParcelFileDescriptor d;\n"
+                               "  IBinder e;\n"
+                               "  List<String> f;\n"
+                               "  int isFixedSize;\n"
+                               "  @nullable OtherFixed nullable1;\n"
+                               "  @nullable(heap=true) OtherFixed nullable2;\n"
                                "}");
   io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar { int a; }");
+  io_delegate_.SetFileContents("OtherFixed.aidl", "@FixedSize parcelable OtherFixed { int a; }");
   Options options = Options::From("aidl Foo.aidl -I . --lang=" + to_string(GetLanguage()));
 
   CaptureStderr();

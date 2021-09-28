@@ -262,7 +262,7 @@ bool AidlTypenames::CanBeJavaOnlyImmutable(const AidlTypeSpecifier& type) const 
 // Only FixedSize Parcelable, primitive types, and enum types can be FixedSize.
 bool AidlTypenames::CanBeFixedSize(const AidlTypeSpecifier& type) const {
   const string& name = type.GetName();
-  if (type.IsGeneric() || type.IsArray()) {
+  if (type.IsGeneric() || type.IsArray() || type.IsNullable()) {
     return false;
   }
   if (IsPrimitiveTypename(name)) {
