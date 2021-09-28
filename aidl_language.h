@@ -468,22 +468,6 @@ class AidlMember : public AidlCommentable {
   AidlMember(AidlMember&&) = delete;
   AidlMember& operator=(const AidlMember&) = delete;
   AidlMember& operator=(AidlMember&&) = delete;
-
-  virtual const AidlMethod* AsMethod() const { return nullptr; }
-  virtual const AidlConstantDeclaration* AsConstantDeclaration() const { return nullptr; }
-  virtual const AidlVariableDeclaration* AsVariableDeclaration() const { return nullptr; }
-
-  AidlMethod* AsMethod() {
-    return const_cast<AidlMethod*>(const_cast<const AidlMember*>(this)->AsMethod());
-  }
-  AidlConstantDeclaration* AsConstantDeclaration() {
-    return const_cast<AidlConstantDeclaration*>(
-        const_cast<const AidlMember*>(this)->AsConstantDeclaration());
-  }
-  AidlVariableDeclaration* AsVariableDeclaration() {
-    return const_cast<AidlVariableDeclaration*>(
-        const_cast<const AidlMember*>(this)->AsVariableDeclaration());
-  }
 };
 
 // TODO: This class is used for method arguments and also parcelable fields,
@@ -502,8 +486,6 @@ class AidlVariableDeclaration : public AidlMember {
   AidlVariableDeclaration(AidlVariableDeclaration&&) = delete;
   AidlVariableDeclaration& operator=(const AidlVariableDeclaration&) = delete;
   AidlVariableDeclaration& operator=(AidlVariableDeclaration&&) = delete;
-
-  const AidlVariableDeclaration* AsVariableDeclaration() const override { return this; }
 
   std::string GetName() const { return name_; }
   std::string GetCapitalizedName() const;
@@ -825,8 +807,6 @@ class AidlConstantDeclaration : public AidlMember {
     return value_->ValueString(GetType(), decorator);
   }
 
-  const AidlConstantDeclaration* AsConstantDeclaration() const override { return this; }
-
   void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override {
     traverse(GetType());
     traverse(GetValue());
@@ -854,7 +834,6 @@ class AidlMethod : public AidlMember {
   AidlMethod& operator=(const AidlMethod&) = delete;
   AidlMethod& operator=(AidlMethod&&) = delete;
 
-  const AidlMethod* AsMethod() const override { return this; }
   const AidlTypeSpecifier& GetType() const { return *type_; }
   AidlTypeSpecifier* GetMutableType() { return type_.get(); }
 
@@ -950,8 +929,7 @@ class AidlDefinedType : public AidlAnnotatable, public AidlScope {
   virtual const AidlInterface* AsInterface() const { return nullptr; }
   virtual const AidlParameterizable<std::string>* AsParameterizable() const { return nullptr; }
   virtual bool CheckValid(const AidlTypenames& typenames) const;
-  virtual bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                          Options::Language lang) const = 0;
+  bool LanguageSpecificCheckValid(const AidlTypenames& typenames, Options::Language lang) const;
   AidlStructuredParcelable* AsStructuredParcelable() {
     return const_cast<AidlStructuredParcelable*>(
         const_cast<const AidlDefinedType*>(this)->AsStructuredParcelable());
@@ -1034,8 +1012,6 @@ class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::s
   std::string GetCppHeader() const { return cpp_header_; }
 
   bool CheckValid(const AidlTypenames& typenames) const override;
-  bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                  Options::Language lang) const override;
   const AidlParcelable* AsParcelable() const override { return this; }
   const AidlParameterizable<std::string>* AsParameterizable() const override { return this; }
   const AidlNode& AsAidlNode() const override { return *this; }
@@ -1120,10 +1096,6 @@ class AidlEnumDeclaration : public AidlDefinedType {
     return enumerators_;
   }
   bool CheckValid(const AidlTypenames& typenames) const override;
-  bool LanguageSpecificCheckValid(const AidlTypenames& /*typenames*/,
-                                  Options::Language) const override {
-    return true;
-  }
   std::string GetPreprocessDeclarationName() const override { return "enum"; }
 
   const AidlEnumDeclaration* AsEnumDeclaration() const override { return this; }
@@ -1182,9 +1154,6 @@ class AidlInterface final : public AidlDefinedType {
   std::string GetPreprocessDeclarationName() const override { return "interface"; }
 
   bool CheckValid(const AidlTypenames& typenames) const override;
-  bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                  Options::Language lang) const override;
-
   std::string GetDescriptor() const;
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 };
@@ -1294,4 +1263,22 @@ inline void VisitBottomUp(AidlVisitor& v, const AidlNode& node) {
     n.DispatchVisit(v);
   };
   bottom_up(node);
+}
+
+template <typename T>
+const T* AidlCast(const AidlNode& node) {
+  struct CastVisitor : AidlVisitor {
+    const T* cast = nullptr;
+    void Visit(const T& t) override { cast = &t; }
+  } visitor;
+  node.DispatchVisit(visitor);
+  return visitor.cast;
+}
+
+template <>
+const AidlDefinedType* AidlCast<AidlDefinedType>(const AidlNode& node);
+
+template <typename T>
+T* AidlCast(AidlNode& node) {
+  return const_cast<T*>(AidlCast<T>(const_cast<const AidlNode&>(node)));
 }
