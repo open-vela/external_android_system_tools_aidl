@@ -88,19 +88,6 @@ void Parser::SetPackage(const AidlPackage& package) {
   package_ = package.GetName();
 }
 
-const AidlDefinedType* AsDefinedType(const AidlNode& node) {
-  struct Visitor : AidlVisitor {
-    const AidlDefinedType* defined_type = nullptr;
-    void Visit(const AidlInterface& t) override { defined_type = &t; }
-    void Visit(const AidlEnumDeclaration& t) override { defined_type = &t; }
-    void Visit(const AidlStructuredParcelable& t) override { defined_type = &t; }
-    void Visit(const AidlUnionDecl& t) override { defined_type = &t; }
-    void Visit(const AidlParcelable& t) override { defined_type = &t; }
-  } v;
-  node.DispatchVisit(v);
-  return v.defined_type;
-}
-
 bool CheckNoRecursiveDefinition(const AidlNode& node) {
   struct Visitor : AidlVisitor {
     enum {
@@ -219,7 +206,7 @@ class ReferenceResolver : public AidlVisitor {
   void VisitAll(const AidlNode& node) {
     std::function<void(const AidlNode&)> top_down = [&](const AidlNode& a) {
       a.DispatchVisit(*this);
-      auto defined_type = AsDefinedType(a);
+      auto defined_type = AidlCast<AidlDefinedType>(a);
       if (defined_type) PushScope(defined_type);
       a.TraverseChildren(top_down);
       if (defined_type) PopScope();
