@@ -473,7 +473,9 @@ void Document::Write(CodeWriter* to) const {
   for (const auto& include : include_list_) {
     to->Write("#include <%s>\n", include.c_str());
   }
-  to->Write("\n");
+  if (!include_list_.empty()) {
+    to->Write("\n");
+  }
 
   for (const auto& declaration : declarations_) {
     declaration->Write(to);

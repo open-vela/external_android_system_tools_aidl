@@ -287,6 +287,7 @@ std::string ParcelWriteCastOf(const AidlTypeSpecifier& type, const AidlTypenames
   return variable_name;
 }
 
+// Add includes for a type ref. Note that this is non-recursive.
 void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
                 std::set<std::string>* headers) {
   AIDL_FATAL_IF(typenames.IsList(type) && type.GetTypeParameters().size() != 1, type);
@@ -296,11 +297,6 @@ void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
 
   if (isVector) {
     headers->insert("vector");
-  }
-  if (type.IsGeneric()) {
-    for (const auto& parameter : type.GetTypeParameters()) {
-      AddHeaders(*parameter, typenames, headers);
-    }
   }
   if (isNullable) {
     if (type.GetName() != "IBinder") {
@@ -342,26 +338,32 @@ void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
     return;
   }
 
-  auto definedType = typenames.TryGetDefinedType(type.GetName());
-  AIDL_FATAL_IF(definedType == nullptr, type) << "Unexpected type: " << type.GetName();
+  auto defined_type = typenames.TryGetDefinedType(type.GetName());
+  AIDL_FATAL_IF(defined_type == nullptr, type) << "Unexpected type: " << type.GetName();
 
-  if (definedType->AsInterface() != nullptr || definedType->AsStructuredParcelable() != nullptr ||
-      definedType->AsEnumDeclaration() != nullptr || definedType->AsUnionDeclaration() != nullptr) {
-    AddHeaders(*definedType, headers);
-  } else if (definedType->AsParcelable() != nullptr) {
-    const std::string cpp_header = definedType->AsParcelable()->GetCppHeader();
-    AIDL_FATAL_IF(cpp_header.empty(), definedType->AsParcelable())
-        << "Parcelable " << definedType->AsParcelable()->GetCanonicalName()
-        << " has no C++ header defined.";
-    headers->insert(cpp_header);
-  }
+  headers->insert(CppHeaderForType(*defined_type));
 }
 
-void AddHeaders(const AidlDefinedType& definedType, std::set<std::string>* headers) {
-  vector<string> name = definedType.GetSplitPackage();
-  name.push_back(definedType.GetName());
-  const std::string cpp_header = Join(name, '/') + ".h";
-  headers->insert(cpp_header);
+std::string CppHeaderForType(const AidlDefinedType& defined_type) {
+  // Unstructured parcelable should set its cpp_header. use it.
+  if (auto unstructured = AidlCast<AidlParcelable>(defined_type); unstructured) {
+    const std::string cpp_header = unstructured->GetCppHeader();
+    AIDL_FATAL_IF(cpp_header.empty(), unstructured)
+        << "Parcelable " << unstructured->GetCanonicalName() << " has no C++ header defined.";
+    return cpp_header;
+  }
+  // For a nested type, we need to include its top-most parent type's header.
+  const AidlDefinedType* toplevel = &defined_type;
+  for (auto parent = toplevel->GetParentType(); parent;) {
+    toplevel = parent;
+    parent = toplevel->GetParentType();
+  }
+  AIDL_FATAL_IF(toplevel->GetParentType() != nullptr, defined_type)
+      << "Can't find a top-level decl";
+
+  vector<string> name = toplevel->GetSplitPackage();
+  name.push_back(toplevel->GetName());
+  return Join(name, '/') + ".h";
 }
 
 }  // namespace cpp

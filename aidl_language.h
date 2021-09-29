@@ -1104,6 +1104,9 @@ class AidlEnumDeclaration : public AidlDefinedType {
 
   void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override {
     AidlDefinedType::TraverseChildren(traverse);
+    if (backing_type_) {
+      traverse(*backing_type_);
+    }
     for (const auto& c : GetEnumerators()) {
       traverse(*c);
     }

@@ -1665,6 +1665,23 @@ TEST_F(AidlTest, TypeResolutionWithMultipleLevelsOfNesting) {
   }
 }
 
+TEST_F(AidlTest, HeaderForNestedTypeShouldPointToTopMostParent) {
+  const string input_path = "p/IFoo.aidl";
+  const string input =
+      "package p;\n"
+      "interface IFoo {\n"
+      "  parcelable Result {}\n"
+      "}";
+  CaptureStderr();
+  auto foo = Parse(input_path, input, typenames_, Options::Language::CPP);
+  ASSERT_NE(nullptr, foo);
+  EXPECT_EQ(GetCapturedStderr(), "");
+
+  auto result = typenames_.ResolveTypename("p.IFoo.Result").defined_type;
+  ASSERT_NE(nullptr, result);
+  EXPECT_EQ("p/IFoo.h", cpp::CppHeaderForType(*result));
+}
+
 TEST_F(AidlTest, CppNameOf_GenericType) {
   const string input_path = "p/Wrapper.aidl";
   const string input = "package p; parcelable Wrapper<T> {}";
