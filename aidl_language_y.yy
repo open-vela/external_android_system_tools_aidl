@@ -347,6 +347,10 @@ parcelable_members
     $1->emplace_back($2);
     $$ = $1;
   }
+ | parcelable_members decl {
+    $1->emplace_back($2);
+    $$ = $1;
+  }
  | parcelable_members error ';' {
     ps->AddError();
     $$ = $1;
@@ -397,6 +401,8 @@ interface_members
  | interface_members method_decl
   { $1->push_back(std::unique_ptr<AidlMember>($2)); $$ = $1; }
  | interface_members constant_decl
+  { $1->push_back(std::unique_ptr<AidlMember>($2)); $$ = $1; }
+ | interface_members decl
   { $1->push_back(std::unique_ptr<AidlMember>($2)); $$ = $1; }
  | interface_members error ';' {
     ps->AddError();
