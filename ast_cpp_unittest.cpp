@@ -32,9 +32,7 @@ namespace {
 
 // clang-format off
 const char kExpectedHeaderOutput[] =
-    R"(#pragma once
-
-#include <string>
+    R"(#include <string>
 #include <memory>
 
 namespace android {
@@ -58,9 +56,7 @@ public:
 )";
 
 const char kExpectedGenericHeaderOutput[] =
-    R"(#pragma once
-
-#include <string>
+    R"(#include <string>
 #include <memory>
 
 namespace android {
@@ -161,8 +157,8 @@ TEST_F(AstCppTests, GeneratesHeader) {
   vector<unique_ptr<Declaration>> test_ns_globals;
   test_ns_globals.push_back(std::move(android_ns));
 
-  CppHeader cpp_header{{"string", "memory"}, std::move(test_ns_globals)};
-  CompareGeneratedCode(cpp_header, kExpectedHeaderOutput);
+  Document doc{{"string", "memory"}, std::move(test_ns_globals)};
+  CompareGeneratedCode(doc, kExpectedHeaderOutput);
 }
 
 TEST_F(AstCppTests, GeneratesGenericHeader) {
@@ -185,8 +181,8 @@ TEST_F(AstCppTests, GeneratesGenericHeader) {
   vector<unique_ptr<Declaration>> test_ns_globals;
   test_ns_globals.push_back(std::move(android_ns));
 
-  CppHeader cpp_header{{"string", "memory"}, std::move(test_ns_globals)};
-  CompareGeneratedCode(cpp_header, kExpectedGenericHeaderOutput);
+  Document doc{{"string", "memory"}, std::move(test_ns_globals)};
+  CompareGeneratedCode(doc, kExpectedGenericHeaderOutput);
 }
 
 TEST_F(AstCppTests, GeneratesUnscopedEnum) {
