@@ -376,13 +376,6 @@ class Document : public AstNode {
   std::vector<std::unique_ptr<Declaration>> declarations_;
 };  // class Document
 
-class CppHeader final : public Document {
- public:
-  CppHeader(const std::vector<std::string>& include_list,
-            std::vector<std::unique_ptr<Declaration>> declarations);
-  void Write(CodeWriter* to) const override;
-};  // class CppHeader
-
 class CppSource final : public Document {
  public:
   CppSource(const std::vector<std::string>& include_list,

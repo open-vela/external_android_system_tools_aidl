@@ -482,16 +482,6 @@ void Document::Write(CodeWriter* to) const {
   }
 }
 
-CppHeader::CppHeader(const std::vector<std::string>& include_list,
-                     std::vector<std::unique_ptr<Declaration>> declarations)
-    : Document(include_list, std::move(declarations)) {}
-
-void CppHeader::Write(CodeWriter* to) const {
-  to->Write("#pragma once\n\n");
-
-  Document::Write(to);
-}
-
 CppSource::CppSource(const std::vector<std::string>& include_list,
                      std::vector<std::unique_ptr<Declaration>> declarations)
     : Document(include_list, std::move(declarations)) {}
