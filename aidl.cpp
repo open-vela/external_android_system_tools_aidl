@@ -688,6 +688,12 @@ bool compile_aidl(const Options& options, const IoDelegate& io_delegate) {
     for (const auto& defined_type : typenames.MainDocument().DefinedTypes()) {
       AIDL_FATAL_IF(defined_type == nullptr, input_file);
 
+      // TODO(b/182508839) add backend support for nested types
+      if (!defined_type->GetNestedTypes().empty()) {
+        AIDL_ERROR(defined_type) << "Nested types are not supported yet.";
+        return false;
+      }
+
       string output_file_name = options.OutputFile();
       // if needed, generate the output file name from the base folder
       if (output_file_name.empty() && !options.OutputDir().empty()) {
