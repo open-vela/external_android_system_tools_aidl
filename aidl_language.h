@@ -468,22 +468,6 @@ class AidlMember : public AidlCommentable {
   AidlMember(AidlMember&&) = delete;
   AidlMember& operator=(const AidlMember&) = delete;
   AidlMember& operator=(AidlMember&&) = delete;
-
-  virtual const AidlMethod* AsMethod() const { return nullptr; }
-  virtual const AidlConstantDeclaration* AsConstantDeclaration() const { return nullptr; }
-  virtual const AidlVariableDeclaration* AsVariableDeclaration() const { return nullptr; }
-
-  AidlMethod* AsMethod() {
-    return const_cast<AidlMethod*>(const_cast<const AidlMember*>(this)->AsMethod());
-  }
-  AidlConstantDeclaration* AsConstantDeclaration() {
-    return const_cast<AidlConstantDeclaration*>(
-        const_cast<const AidlMember*>(this)->AsConstantDeclaration());
-  }
-  AidlVariableDeclaration* AsVariableDeclaration() {
-    return const_cast<AidlVariableDeclaration*>(
-        const_cast<const AidlMember*>(this)->AsVariableDeclaration());
-  }
 };
 
 // TODO: This class is used for method arguments and also parcelable fields,
@@ -502,8 +486,6 @@ class AidlVariableDeclaration : public AidlMember {
   AidlVariableDeclaration(AidlVariableDeclaration&&) = delete;
   AidlVariableDeclaration& operator=(const AidlVariableDeclaration&) = delete;
   AidlVariableDeclaration& operator=(AidlVariableDeclaration&&) = delete;
-
-  const AidlVariableDeclaration* AsVariableDeclaration() const override { return this; }
 
   std::string GetName() const { return name_; }
   std::string GetCapitalizedName() const;
@@ -825,8 +807,6 @@ class AidlConstantDeclaration : public AidlMember {
     return value_->ValueString(GetType(), decorator);
   }
 
-  const AidlConstantDeclaration* AsConstantDeclaration() const override { return this; }
-
   void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override {
     traverse(GetType());
     traverse(GetValue());
@@ -854,7 +834,6 @@ class AidlMethod : public AidlMember {
   AidlMethod& operator=(const AidlMethod&) = delete;
   AidlMethod& operator=(AidlMethod&&) = delete;
 
-  const AidlMethod* AsMethod() const override { return this; }
   const AidlTypeSpecifier& GetType() const { return *type_; }
   AidlTypeSpecifier* GetMutableType() { return type_.get(); }
 
@@ -1284,4 +1263,22 @@ inline void VisitBottomUp(AidlVisitor& v, const AidlNode& node) {
     n.DispatchVisit(v);
   };
   bottom_up(node);
+}
+
+template <typename T>
+const T* AidlCast(const AidlNode& node) {
+  struct CastVisitor : AidlVisitor {
+    const T* cast = nullptr;
+    void Visit(const T& t) override { cast = &t; }
+  } visitor;
+  node.DispatchVisit(visitor);
+  return visitor.cast;
+}
+
+template <>
+const AidlDefinedType* AidlCast<AidlDefinedType>(const AidlNode& node);
+
+template <typename T>
+T* AidlCast(AidlNode& node) {
+  return const_cast<T*>(AidlCast<T>(const_cast<const AidlNode&>(node)));
 }
