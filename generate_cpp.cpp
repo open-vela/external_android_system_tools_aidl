@@ -1395,170 +1395,9 @@ std::unique_ptr<Document> BuildEnumHeader(const AidlTypenames& typenames,
                            NestInNamespaces(std::move(decls2), {"android", "internal"}))}};
 }
 
-bool WriteHeader(const Options& options, const AidlTypenames& typenames,
-                 const AidlInterface& interface, const IoDelegate& io_delegate,
-                 ClassNames header_type) {
-  unique_ptr<Document> header;
-  switch (header_type) {
-    case ClassNames::INTERFACE:
-      header = BuildInterfaceHeader(typenames, interface, options);
-      header_type = ClassNames::RAW;
-      break;
-    case ClassNames::CLIENT:
-      header = BuildClientHeader(typenames, interface, options);
-      break;
-    case ClassNames::SERVER:
-      header = BuildServerHeader(typenames, interface, options);
-      break;
-    default:
-      AIDL_FATAL(interface) << "aidl internal error";
-  }
-  if (!header) {
-    AIDL_ERROR(interface) << "aidl internal error: Failed to generate header.";
-    return false;
-  }
-
-  const string header_path = options.OutputHeaderDir() + HeaderFile(interface, header_type);
-  unique_ptr<CodeWriter> code_writer(io_delegate.GetCodeWriter(header_path));
-  header->Write(code_writer.get());
-
-  const bool success = code_writer->Close();
-  if (!success) {
-    io_delegate.RemovePath(header_path);
-  }
-
-  return success;
-}
-
 }  // namespace internals
 
 using namespace internals;
-
-bool GenerateCppInterface(const string& output_file, const Options& options,
-                          const AidlTypenames& typenames, const AidlInterface& interface,
-                          const IoDelegate& io_delegate) {
-  auto interface_src = BuildInterfaceSource(typenames, interface, options);
-  auto client_src = BuildClientSource(typenames, interface, options);
-  auto server_src = BuildServerSource(typenames, interface, options);
-
-  if (!interface_src || !client_src || !server_src) {
-    return false;
-  }
-
-  if (!WriteHeader(options, typenames, interface, io_delegate, ClassNames::INTERFACE) ||
-      !WriteHeader(options, typenames, interface, io_delegate, ClassNames::CLIENT) ||
-      !WriteHeader(options, typenames, interface, io_delegate, ClassNames::SERVER)) {
-    return false;
-  }
-
-  unique_ptr<CodeWriter> writer = io_delegate.GetCodeWriter(output_file);
-  interface_src->Write(writer.get());
-  client_src->Write(writer.get());
-  server_src->Write(writer.get());
-
-  const bool success = writer->Close();
-  if (!success) {
-    io_delegate.RemovePath(output_file);
-  }
-
-  return success;
-}
-
-template <typename ParcelableType>
-bool GenerateCppParcelable(const std::string& output_file, const Options& options,
-                           const AidlTypenames& typenames, const ParcelableType& parcelable,
-                           const IoDelegate& io_delegate) {
-  auto header = BuildParcelHeader(typenames, parcelable, options);
-  auto source = BuildParcelSource(typenames, parcelable, options);
-
-  if (!header || !source) {
-    return false;
-  }
-
-  const string header_path = options.OutputHeaderDir() + HeaderFile(parcelable, ClassNames::RAW);
-  unique_ptr<CodeWriter> header_writer(io_delegate.GetCodeWriter(header_path));
-  header->Write(header_writer.get());
-  if (parcelable.IsGeneric()) {
-    // Need to write all of the source in the header file, not cpp file.
-    source->Write(header_writer.get());
-  }
-  AIDL_FATAL_IF(!header_writer->Close(), header_path);
-
-  // TODO(b/111362593): no unecessary files just to have consistent output with interfaces
-  const string bp_header = options.OutputHeaderDir() + HeaderFile(parcelable, ClassNames::CLIENT);
-  unique_ptr<CodeWriter> bp_writer(io_delegate.GetCodeWriter(bp_header));
-  bp_writer->Write("#error TODO(b/111362593) parcelables do not have bp classes");
-  AIDL_FATAL_IF(!bp_writer->Close(), bp_header);
-  const string bn_header = options.OutputHeaderDir() + HeaderFile(parcelable, ClassNames::SERVER);
-  unique_ptr<CodeWriter> bn_writer(io_delegate.GetCodeWriter(bn_header));
-  bn_writer->Write("#error TODO(b/111362593) parcelables do not have bn classes");
-  AIDL_FATAL_IF(!bn_writer->Close(), bn_header);
-
-  unique_ptr<CodeWriter> source_writer = io_delegate.GetCodeWriter(output_file);
-  if (parcelable.IsGeneric()) {
-    // Since the type is generic, the source is written in the header file
-    auto empty_source = unique_ptr<Document>{new CppSource{{}, {}}};
-    empty_source->Write(source_writer.get());
-  } else {
-    source->Write(source_writer.get());
-  }
-  AIDL_FATAL_IF(!source_writer->Close(), output_file);
-
-  return true;
-}
-
-bool GenerateCppParcelDeclaration(const std::string& filename, const Options& options,
-                                  const AidlParcelable& parcelable, const IoDelegate& io_delegate) {
-  CodeWriterPtr source_writer = io_delegate.GetCodeWriter(filename);
-  *source_writer
-      << "// This file is intentionally left blank as placeholder for parcel declaration.\n";
-  AIDL_FATAL_IF(!source_writer->Close(), filename);
-
-  // TODO(b/111362593): no unecessary files just to have consistent output with interfaces
-  const string header_path = options.OutputHeaderDir() + HeaderFile(parcelable, ClassNames::RAW);
-  unique_ptr<CodeWriter> header_writer(io_delegate.GetCodeWriter(header_path));
-  header_writer->Write("#error TODO(b/111362593) parcelables do not have headers");
-  AIDL_FATAL_IF(!header_writer->Close(), header_path);
-  const string bp_header = options.OutputHeaderDir() + HeaderFile(parcelable, ClassNames::CLIENT);
-  unique_ptr<CodeWriter> bp_writer(io_delegate.GetCodeWriter(bp_header));
-  bp_writer->Write("#error TODO(b/111362593) parcelables do not have bp classes");
-  AIDL_FATAL_IF(!bp_writer->Close(), bp_header);
-  const string bn_header = options.OutputHeaderDir() + HeaderFile(parcelable, ClassNames::SERVER);
-  unique_ptr<CodeWriter> bn_writer(io_delegate.GetCodeWriter(bn_header));
-  bn_writer->Write("#error TODO(b/111362593) parcelables do not have bn classes");
-  AIDL_FATAL_IF(!bn_writer->Close(), bn_header);
-
-  return true;
-}
-
-bool GenerateCppEnumDeclaration(const std::string& filename, const Options& options,
-                                const AidlTypenames& typenames,
-                                const AidlEnumDeclaration& enum_decl,
-                                const IoDelegate& io_delegate) {
-  auto header = BuildEnumHeader(typenames, enum_decl);
-  if (!header) return false;
-
-  const string header_path = options.OutputHeaderDir() + HeaderFile(enum_decl, ClassNames::RAW);
-  unique_ptr<CodeWriter> header_writer(io_delegate.GetCodeWriter(header_path));
-  header->Write(header_writer.get());
-  AIDL_FATAL_IF(!header_writer->Close(), header_path);
-
-  // TODO(b/111362593): no unnecessary files just to have consistent output with interfaces
-  CodeWriterPtr source_writer = io_delegate.GetCodeWriter(filename);
-  *source_writer
-      << "// This file is intentionally left blank as placeholder for enum declaration.\n";
-  AIDL_FATAL_IF(!source_writer->Close(), filename);
-  const string bp_header = options.OutputHeaderDir() + HeaderFile(enum_decl, ClassNames::CLIENT);
-  unique_ptr<CodeWriter> bp_writer(io_delegate.GetCodeWriter(bp_header));
-  bp_writer->Write("#error TODO(b/111362593) enums do not have bp classes");
-  AIDL_FATAL_IF(!bp_writer->Close(), bp_header);
-  const string bn_header = options.OutputHeaderDir() + HeaderFile(enum_decl, ClassNames::SERVER);
-  unique_ptr<CodeWriter> bn_writer(io_delegate.GetCodeWriter(bn_header));
-  bn_writer->Write("#error TODO(b/111362593) enums do not have bn classes");
-  AIDL_FATAL_IF(!bn_writer->Close(), bn_header);
-
-  return true;
-}
 
 // Ensures that output_file is  <out_dir>/<packagename>/<typename>.cpp
 bool ValidateOutputFilePath(const string& output_file, const Options& options,
@@ -1585,41 +1424,116 @@ bool ValidateOutputFilePath(const string& output_file, const Options& options,
   return true;
 }
 
+// TODO(b/182508839) should emit nested types recursively
+void GenerateHeader(CodeWriter& out, const AidlDefinedType& defined_type,
+                    const AidlTypenames& typenames, const Options& options) {
+  if (auto iface = AidlCast<AidlInterface>(defined_type); iface) {
+    BuildInterfaceHeader(typenames, *iface, options)->Write(&out);
+  } else if (auto parcelable = AidlCast<AidlStructuredParcelable>(defined_type); parcelable) {
+    BuildParcelHeader(typenames, *parcelable, options)->Write(&out);
+    if (parcelable->IsGeneric()) {
+      BuildParcelSource(typenames, *parcelable, options)->Write(&out);
+    }
+  } else if (auto union_decl = AidlCast<AidlUnionDecl>(defined_type); union_decl) {
+    BuildParcelHeader(typenames, *union_decl, options)->Write(&out);
+    if (union_decl->IsGeneric()) {
+      BuildParcelSource(typenames, *union_decl, options)->Write(&out);
+    }
+  } else if (auto enum_decl = AidlCast<AidlEnumDeclaration>(defined_type); enum_decl) {
+    BuildEnumHeader(typenames, *enum_decl)->Write(&out);
+  } else if (auto parcelable = AidlCast<AidlParcelable>(defined_type); parcelable) {
+    out << "#error TODO(b/111362593) parcelables do not have headers";
+  } else {
+    AIDL_FATAL(defined_type) << "Unrecognized type sent for CPP generation.";
+  }
+}
+
+void GenerateClientHeader(CodeWriter& out, const AidlDefinedType& defined_type,
+                          const AidlTypenames& typenames, const Options& options) {
+  if (auto iface = AidlCast<AidlInterface>(defined_type); iface) {
+    BuildClientHeader(typenames, *iface, options)->Write(&out);
+  } else if (auto parcelable = AidlCast<AidlStructuredParcelable>(defined_type); parcelable) {
+    out << "#error TODO(b/111362593) parcelables do not have bp classes";
+  } else if (auto union_decl = AidlCast<AidlUnionDecl>(defined_type); union_decl) {
+    out << "#error TODO(b/111362593) parcelables do not have bp classes";
+  } else if (auto enum_decl = AidlCast<AidlEnumDeclaration>(defined_type); enum_decl) {
+    out << "#error TODO(b/111362593) enums do not have bp classes";
+  } else if (auto parcelable = AidlCast<AidlParcelable>(defined_type); parcelable) {
+    out << "#error TODO(b/111362593) parcelables do not have bp classes";
+  } else {
+    AIDL_FATAL(defined_type) << "Unrecognized type sent for CPP generation.";
+  }
+}
+
+void GenerateServerHeader(CodeWriter& out, const AidlDefinedType& defined_type,
+                          const AidlTypenames& typenames, const Options& options) {
+  if (auto iface = AidlCast<AidlInterface>(defined_type); iface) {
+    BuildServerHeader(typenames, *iface, options)->Write(&out);
+  } else if (auto parcelable = AidlCast<AidlStructuredParcelable>(defined_type); parcelable) {
+    out << "#error TODO(b/111362593) parcelables do not have bn classes";
+  } else if (auto union_decl = AidlCast<AidlUnionDecl>(defined_type); union_decl) {
+    out << "#error TODO(b/111362593) parcelables do not have bn classes";
+  } else if (auto enum_decl = AidlCast<AidlEnumDeclaration>(defined_type); enum_decl) {
+    out << "#error TODO(b/111362593) enums do not have bn classes";
+  } else if (auto parcelable = AidlCast<AidlParcelable>(defined_type); parcelable) {
+    out << "#error TODO(b/111362593) parcelables do not have bn classes";
+  } else {
+    AIDL_FATAL(defined_type) << "Unrecognized type sent for CPP generation.";
+  }
+}
+
+// TODO(b/182508839) should emit nested types recursively
+void GenerateSource(CodeWriter& out, const AidlDefinedType& defined_type,
+                    const AidlTypenames& typenames, const Options& options) {
+  if (auto iface = AidlCast<AidlInterface>(defined_type); iface) {
+    BuildInterfaceSource(typenames, *iface, options)->Write(&out);
+    BuildClientSource(typenames, *iface, options)->Write(&out);
+    BuildServerSource(typenames, *iface, options)->Write(&out);
+  } else if (auto parcelable = AidlCast<AidlStructuredParcelable>(defined_type); parcelable) {
+    if (!parcelable->IsGeneric()) {
+      BuildParcelSource(typenames, *parcelable, options)->Write(&out);
+    } else {
+      out << "\n";
+    }
+  } else if (auto union_decl = AidlCast<AidlUnionDecl>(defined_type); union_decl) {
+    if (!union_decl->IsGeneric()) {
+      BuildParcelSource(typenames, *union_decl, options)->Write(&out);
+    } else {
+      out << "\n";
+    }
+  } else if (auto enum_decl = AidlCast<AidlEnumDeclaration>(defined_type); enum_decl) {
+    out << "// This file is intentionally left blank as placeholder for enum declaration.\n";
+  } else if (auto parcelable = AidlCast<AidlParcelable>(defined_type); parcelable) {
+    out << "// This file is intentionally left blank as placeholder for parcel declaration.\n";
+  } else {
+    AIDL_FATAL(defined_type) << "Unrecognized type sent for CPP generation.";
+  }
+}
+
 bool GenerateCpp(const string& output_file, const Options& options, const AidlTypenames& typenames,
                  const AidlDefinedType& defined_type, const IoDelegate& io_delegate) {
   if (!ValidateOutputFilePath(output_file, options, defined_type)) {
     return false;
   }
 
-  const AidlStructuredParcelable* parcelable = defined_type.AsStructuredParcelable();
-  if (parcelable != nullptr) {
-    return GenerateCppParcelable(output_file, options, typenames, *parcelable, io_delegate);
-  }
+  // Wrap Generate* function to handle CodeWriter for a file.
+  auto gen = [&](auto file, auto fn) {
+    unique_ptr<CodeWriter> writer(io_delegate.GetCodeWriter(file));
+    fn(*writer, defined_type, typenames, options);
+    if (!writer->Close()) {
+      io_delegate.RemovePath(file);
+      return false;
+    }
+    return true;
+  };
 
-  // should come before AsParcelable() because union is a parcelable
-  const AidlUnionDecl* union_decl = defined_type.AsUnionDeclaration();
-  if (union_decl != nullptr) {
-    return GenerateCppParcelable(output_file, options, typenames, *union_decl, io_delegate);
-  }
-
-  // unstructured parcelable
-  const AidlParcelable* parcelable_decl = defined_type.AsParcelable();
-  if (parcelable_decl != nullptr) {
-    return GenerateCppParcelDeclaration(output_file, options, *parcelable_decl, io_delegate);
-  }
-
-  const AidlEnumDeclaration* enum_decl = defined_type.AsEnumDeclaration();
-  if (enum_decl != nullptr) {
-    return GenerateCppEnumDeclaration(output_file, options, typenames, *enum_decl, io_delegate);
-  }
-
-  const AidlInterface* interface = defined_type.AsInterface();
-  if (interface != nullptr) {
-    return GenerateCppInterface(output_file, options, typenames, *interface, io_delegate);
-  }
-
-  AIDL_FATAL(defined_type) << "Unrecognized type sent for cpp generation.";
-  return false;
+  return gen(options.OutputHeaderDir() + HeaderFile(defined_type, ClassNames::RAW),
+             &GenerateHeader) &&
+         gen(options.OutputHeaderDir() + HeaderFile(defined_type, ClassNames::CLIENT),
+             &GenerateClientHeader) &&
+         gen(options.OutputHeaderDir() + HeaderFile(defined_type, ClassNames::SERVER),
+             &GenerateServerHeader) &&
+         gen(output_file, &GenerateSource);
 }
 
 }  // namespace cpp
