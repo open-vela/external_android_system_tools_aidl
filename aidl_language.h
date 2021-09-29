@@ -458,7 +458,7 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
 // Returns the universal value unaltered.
 std::string AidlConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value);
 
-class AidlMember : public AidlCommentable {
+class AidlMember : public AidlAnnotatable {
  public:
   AidlMember(const AidlLocation& location, const Comments& comments);
   virtual ~AidlMember() = default;
@@ -894,7 +894,7 @@ class AidlMethod : public AidlMember {
 
 // AidlDefinedType represents either an interface, parcelable, or enum that is
 // defined in the source file.
-class AidlDefinedType : public AidlAnnotatable, public AidlScope {
+class AidlDefinedType : public AidlMember, public AidlScope {
  public:
   AidlDefinedType(const AidlLocation& location, const std::string& name, const Comments& comments,
                   const std::string& package, std::vector<std::unique_ptr<AidlMember>>* members);
@@ -963,7 +963,8 @@ class AidlDefinedType : public AidlAnnotatable, public AidlScope {
     return const_cast<AidlParcelable*>(
         const_cast<const AidlDefinedType*>(this)->AsUnstructuredParcelable());
   }
-
+  const AidlDefinedType* GetParentType() const;
+  const std::vector<std::unique_ptr<AidlDefinedType>>& GetNestedTypes() const { return types_; }
   const std::vector<std::unique_ptr<AidlVariableDeclaration>>& GetFields() const {
     return variables_;
   }
@@ -992,6 +993,7 @@ class AidlDefinedType : public AidlAnnotatable, public AidlScope {
   std::vector<std::unique_ptr<AidlVariableDeclaration>> variables_;
   std::vector<std::unique_ptr<AidlConstantDeclaration>> constants_;
   std::vector<std::unique_ptr<AidlMethod>> methods_;
+  std::vector<std::unique_ptr<AidlDefinedType>> types_;
   std::vector<const AidlMember*> members_;  // keep members in order of appearance.
 };
 
