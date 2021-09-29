@@ -950,8 +950,7 @@ class AidlDefinedType : public AidlAnnotatable, public AidlScope {
   virtual const AidlInterface* AsInterface() const { return nullptr; }
   virtual const AidlParameterizable<std::string>* AsParameterizable() const { return nullptr; }
   virtual bool CheckValid(const AidlTypenames& typenames) const;
-  virtual bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                          Options::Language lang) const = 0;
+  bool LanguageSpecificCheckValid(const AidlTypenames& typenames, Options::Language lang) const;
   AidlStructuredParcelable* AsStructuredParcelable() {
     return const_cast<AidlStructuredParcelable*>(
         const_cast<const AidlDefinedType*>(this)->AsStructuredParcelable());
@@ -1034,8 +1033,6 @@ class AidlParcelable : public AidlDefinedType, public AidlParameterizable<std::s
   std::string GetCppHeader() const { return cpp_header_; }
 
   bool CheckValid(const AidlTypenames& typenames) const override;
-  bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                  Options::Language lang) const override;
   const AidlParcelable* AsParcelable() const override { return this; }
   const AidlParameterizable<std::string>* AsParameterizable() const override { return this; }
   const AidlNode& AsAidlNode() const override { return *this; }
@@ -1120,10 +1117,6 @@ class AidlEnumDeclaration : public AidlDefinedType {
     return enumerators_;
   }
   bool CheckValid(const AidlTypenames& typenames) const override;
-  bool LanguageSpecificCheckValid(const AidlTypenames& /*typenames*/,
-                                  Options::Language) const override {
-    return true;
-  }
   std::string GetPreprocessDeclarationName() const override { return "enum"; }
 
   const AidlEnumDeclaration* AsEnumDeclaration() const override { return this; }
@@ -1182,9 +1175,6 @@ class AidlInterface final : public AidlDefinedType {
   std::string GetPreprocessDeclarationName() const override { return "interface"; }
 
   bool CheckValid(const AidlTypenames& typenames) const override;
-  bool LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                  Options::Language lang) const override;
-
   std::string GetDescriptor() const;
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 };
