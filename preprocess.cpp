@@ -27,7 +27,7 @@ namespace aidl {
 
 namespace {
 // PreprocessVisitor emits
-// - types including comments(hide/deprecated) and annotations
+// - type including comments(hide/deprecated) and annotations
 // - constant delcarations for interface/parcelable/unions
 // - enumerators for enums
 struct PreprocessVisitor : AidlVisitor {
@@ -37,12 +37,7 @@ struct PreprocessVisitor : AidlVisitor {
   void DumpType(const AidlDefinedType& dt, const string& type) {
     DumpComments(dt);
     DumpAnnotations(dt);
-    // Top-level definition emits canonical name while nested type emits "name" only.
-    if (dt.GetParentType()) {
-      out << type << " " << dt.GetName();
-    } else {
-      out << type << " " << dt.GetCanonicalName();
-    }
+    out << type << " " << dt.GetCanonicalName();
     if (auto generic_type = dt.AsParameterizable(); generic_type && generic_type->IsGeneric()) {
       out << "<" << Join(generic_type->GetTypeParameters(), ", ") << ">";
     }
@@ -52,9 +47,6 @@ struct PreprocessVisitor : AidlVisitor {
     out.Indent();
     for (const auto& constdecl : dt.GetConstantDeclarations()) {
       constdecl->DispatchVisit(*this);
-    }
-    for (const auto& nested : dt.GetNestedTypes()) {
-      nested->DispatchVisit(*this);
     }
     out.Dedent();
     out << "}\n";
