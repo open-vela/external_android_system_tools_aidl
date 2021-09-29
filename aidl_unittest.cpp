@@ -25,6 +25,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "aidl_checkapi.h"
@@ -45,6 +46,7 @@ using std::map;
 using std::set;
 using std::string;
 using std::unique_ptr;
+using std::variant;
 using std::vector;
 using testing::HasSubstr;
 using testing::TestParamInfo;
@@ -1414,7 +1416,7 @@ TEST_P(AidlTest, ParseNegativeConstHexValue) {
   EXPECT_EQ("-1", cpp_constants[0]->ValueString(cpp::ConstantValueDecorator));
 }
 
-TEST_P(AidlTest, UnderstandsNestedParcelables) {
+TEST_P(AidlTest, UnderstandsNestedUnstructuredParcelables) {
   io_delegate_.SetFileContents(
       "p/Outer.aidl",
       "package p; parcelable Outer.Inner cpp_header \"baz/header\";");
@@ -1432,7 +1434,7 @@ TEST_P(AidlTest, UnderstandsNestedParcelables) {
   EXPECT_EQ("::p::Outer::Inner", cpp::CppNameOf(nested_type, typenames_));
 }
 
-TEST_P(AidlTest, UnderstandsNestedParcelablesWithoutImports) {
+TEST_P(AidlTest, UnderstandsNestedUnstructuredParcelablesWithoutImports) {
   io_delegate_.SetFileContents("p/Outer.aidl",
                                "package p; parcelable Outer.Inner cpp_header \"baz/header\";");
   import_paths_.emplace("");
@@ -1446,6 +1448,221 @@ TEST_P(AidlTest, UnderstandsNestedParcelablesWithoutImports) {
   // C++ uses "::" instead of "." to refer to a inner class.
   AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.Outer.Inner", false, nullptr, {});
   EXPECT_EQ("::p::Outer::Inner", cpp::CppNameOf(nested_type, typenames_));
+}
+
+TEST_F(AidlTest, UnderstandsNestedTypes) {
+  io_delegate_.SetFileContents("p/IOuter.aidl",
+                               "package p;\n"
+                               "interface IOuter {\n"
+                               "  parcelable Inner {}\n"
+                               "}");
+  import_paths_.emplace("");
+  const string input_path = "p/IFoo.aidl";
+  const string input =
+      "package p;\n"
+      "import p.IOuter;\n"
+      "interface IFoo {\n"
+      "  IOuter.Inner get();\n"
+      "}";
+  CaptureStderr();
+  EXPECT_NE(nullptr, Parse(input_path, input, typenames_, Options::Language::CPP));
+  EXPECT_EQ(GetCapturedStderr(), "");
+
+  EXPECT_TRUE(typenames_.ResolveTypename("p.IOuter.Inner").is_resolved);
+  // C++ uses "::" instead of "." to refer to a inner class.
+  AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.IOuter.Inner", false, nullptr, {});
+  EXPECT_EQ("::p::IOuter::Inner", cpp::CppNameOf(nested_type, typenames_));
+}
+
+TEST_F(AidlTest, UnderstandsNestedTypesViaFullyQualifiedName) {
+  io_delegate_.SetFileContents("p/IOuter.aidl",
+                               "package p;\n"
+                               "interface IOuter {\n"
+                               "  parcelable Inner {}\n"
+                               "}");
+  import_paths_.emplace("");
+  const string input_path = "p/IFoo.aidl";
+  const string input =
+      "package p;\n"
+      "interface IFoo {\n"
+      "  p.IOuter.Inner get();\n"
+      "}";
+  CaptureStderr();
+  EXPECT_NE(nullptr, Parse(input_path, input, typenames_, Options::Language::CPP));
+  EXPECT_EQ(GetCapturedStderr(), "");
+
+  EXPECT_TRUE(typenames_.ResolveTypename("p.IOuter.Inner").is_resolved);
+}
+
+TEST_F(AidlTest, UnderstandsNestedTypesViaFullyQualifiedImport) {
+  io_delegate_.SetFileContents("p/IOuter.aidl",
+                               "package p;\n"
+                               "interface IOuter {\n"
+                               "  parcelable Inner {}\n"
+                               "}");
+  import_paths_.emplace("");
+  const string input_path = "p/IFoo.aidl";
+  const string input =
+      "package p;\n"
+      "import p.IOuter.Inner;"
+      "interface IFoo {\n"
+      "  Inner get();\n"
+      "}";
+  CaptureStderr();
+  EXPECT_NE(nullptr, Parse(input_path, input, typenames_, Options::Language::CPP));
+  EXPECT_EQ(GetCapturedStderr(), "");
+
+  EXPECT_TRUE(typenames_.ResolveTypename("p.IOuter.Inner").is_resolved);
+}
+
+TEST_F(AidlTest, UnderstandsNestedTypesInTheSameScope) {
+  const string input_path = "p/IFoo.aidl";
+  const string input =
+      "package p;\n"
+      "interface IFoo {\n"
+      "  parcelable Result {}\n"
+      "  Result get();\n"
+      "}";
+  CaptureStderr();
+  EXPECT_NE(nullptr, Parse(input_path, input, typenames_, Options::Language::CPP));
+  EXPECT_EQ(GetCapturedStderr(), "");
+
+  EXPECT_TRUE(typenames_.ResolveTypename("p.IFoo.Result").is_resolved);
+}
+
+// Finding the type of nested named member.
+struct TypeFinder : AidlVisitor {
+  string name;
+  const AidlTypeSpecifier* type = nullptr;
+  TypeFinder(std::string name) : name(name) {}
+  void Visit(const AidlVariableDeclaration& v) override {
+    if (v.GetName() == name) {
+      type = &v.GetType();
+    }
+  }
+  void Visit(const AidlMethod& m) override {
+    if (m.GetName() == name) {
+      type = &m.GetType();
+    }
+  }
+  static string Get(const AidlDefinedType& type, const string& name) {
+    TypeFinder v(name);
+    VisitTopDown(v, type);
+    return v.type ? v.type->Signature() : "(null)";
+  };
+};
+
+TEST_F(AidlTest, UnderstandsNestedTypesViaQualifiedInTheSameScope) {
+  io_delegate_.SetFileContents("q/IBar.aidl",
+                               "package q;\n"
+                               "interface IBar {\n"
+                               "  parcelable Baz {}\n"
+                               "}");
+  import_paths_.emplace("");
+  const string input_path = "p/IFoo.aidl";
+  const string input =
+      "package p;\n"
+      "import q.IBar;\n"
+      "interface IFoo {\n"
+      "  parcelable Nested {\n"
+      "    Baz t1;\n"
+      "  }\n"
+      "  parcelable Baz { }\n"
+      "  IBar.Baz t2();\n"
+      "  Baz t3();\n"
+      "}";
+  CaptureStderr();
+  auto foo = Parse(input_path, input, typenames_, Options::Language::CPP);
+  EXPECT_EQ(GetCapturedStderr(), "");
+  ASSERT_NE(nullptr, foo);
+
+  EXPECT_EQ(TypeFinder::Get(*foo, "t1"), "p.IFoo.Baz");
+  EXPECT_EQ(TypeFinder::Get(*foo, "t2"), "q.IBar.Baz");
+  EXPECT_EQ(TypeFinder::Get(*foo, "t3"), "p.IFoo.Baz");
+}
+
+TEST_F(AidlTest, RejectsNestedTypesWithParentsName) {
+  const string input_path = "p/Foo.aidl";
+  const string input =
+      "package p;\n"
+      "parcelable Foo {\n"
+      "  parcelable Foo {}\n"
+      "}";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse(input_path, input, typenames_, Options::Language::CPP));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Nested type 'Foo' has the same name as its parent."));
+}
+
+TEST_F(AidlTest, RejectsInterfaceAsNestedTypes) {
+  const string input_path = "p/IFoo.aidl";
+  const string input =
+      "package p;\n"
+      "interface IFoo {\n"
+      "  interface ICallback { void done(); }\n"
+      "  void doTask(ICallback cb);\n"
+      "}";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse(input_path, input, typenames_, Options::Language::CPP));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Interfaces should be at the root scope"));
+}
+
+TEST_F(AidlTest, RejectsNestedTypesWithDuplicateNames) {
+  const string input_path = "p/Foo.aidl";
+  const string input =
+      "package p;\n"
+      "interface Foo {\n"
+      "  parcelable Bar {}\n"
+      "  parcelable Bar {}\n"
+      "}";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse(input_path, input, typenames_, Options::Language::CPP));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Redefinition of 'Bar'"));
+}
+
+TEST_F(AidlTest, TypeResolutionWithMultipleLevelsOfNesting) {
+  struct Failure {
+    string err;
+  };
+  struct TestCase {
+    string type;
+    variant<string, Failure> expected;  // success<0> or failure<1>
+  };
+  vector<TestCase> cases = {
+      {"foo.A", "foo.A"},
+      {"foo.A.B", "foo.A.B"},
+      {"@nullable(heap=true) A", "foo.A.B.A"},
+      // In the scope of foo.A.B.A, B is resolved to A.B.A.B first.
+      {"B.A", Failure{"Failed to resolve 'B.A'"}},
+      {"B", "foo.A.B.A.B"},
+      {"A.B", "foo.A.B.A.B"},
+  };
+  const string input_path = "foo/A.aidl";
+  for (auto& [type, expected] : cases) {
+    AidlTypenames typenames;
+    // clang-format off
+    const string input =
+        "package foo;\n"
+        "parcelable A {\n"
+        "  parcelable B {\n"
+        "    parcelable A {\n"
+        "      parcelable B {\n"
+        "      }\n"
+        "      " + type + " m;\n"
+        "    }\n"
+        "  }\n"
+        "}";
+    // clang-format on
+    CaptureStderr();
+    auto foo = Parse(input_path, input, typenames, Options::Language::CPP);
+    if (auto failure = std::get_if<Failure>(&expected); failure) {
+      ASSERT_EQ(nullptr, foo);
+      EXPECT_THAT(GetCapturedStderr(), HasSubstr(failure->err));
+    } else {
+      EXPECT_EQ(GetCapturedStderr(), "");
+      ASSERT_NE(nullptr, foo);
+      EXPECT_EQ(TypeFinder::Get(*foo, "m"), std::get<string>(expected));
+    }
+  }
 }
 
 TEST_F(AidlTest, CppNameOf_GenericType) {
