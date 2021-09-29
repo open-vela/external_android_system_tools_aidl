@@ -1606,31 +1606,6 @@ TEST_F(AidlTest, RejectsInterfaceAsNestedTypes) {
   EXPECT_THAT(GetCapturedStderr(), HasSubstr("Interfaces should be at the root scope"));
 }
 
-TEST_F(AidlTest, RejectUnstructuredParcelableAsNestedTypes) {
-  const string input_path = "p/IFoo.aidl";
-  const string input =
-      "package p;\n"
-      "interface IFoo {\n"
-      "  parcelable Bar cpp_header \"Bar.h\";\n"
-      "}";
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse(input_path, input, typenames_, Options::Language::CPP));
-  EXPECT_THAT(GetCapturedStderr(),
-              HasSubstr("Unstructured parcelables should be at the root scope"));
-}
-
-TEST_F(AidlTest, HandleSyntaxErrorsInNestedDecl) {
-  const string input_path = "p/IFoo.aidl";
-  const string input =
-      "package p;\n"
-      "interface IFoo {\n"
-      "  parcelable;\n"  // missing identifier
-      "}";
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse(input_path, input, typenames_, Options::Language::CPP));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("expecting identifier"));
-}
-
 TEST_F(AidlTest, RejectsNestedTypesWithDuplicateNames) {
   const string input_path = "p/Foo.aidl";
   const string input =
@@ -1688,23 +1663,6 @@ TEST_F(AidlTest, TypeResolutionWithMultipleLevelsOfNesting) {
       EXPECT_EQ(TypeFinder::Get(*foo, "m"), std::get<string>(expected));
     }
   }
-}
-
-TEST_F(AidlTest, HeaderForNestedTypeShouldPointToTopMostParent) {
-  const string input_path = "p/IFoo.aidl";
-  const string input =
-      "package p;\n"
-      "interface IFoo {\n"
-      "  parcelable Result {}\n"
-      "}";
-  CaptureStderr();
-  auto foo = Parse(input_path, input, typenames_, Options::Language::CPP);
-  ASSERT_NE(nullptr, foo);
-  EXPECT_EQ(GetCapturedStderr(), "");
-
-  auto result = typenames_.ResolveTypename("p.IFoo.Result").defined_type;
-  ASSERT_NE(nullptr, result);
-  EXPECT_EQ("p/IFoo.h", cpp::CppHeaderForType(*result));
 }
 
 TEST_F(AidlTest, CppNameOf_GenericType) {
