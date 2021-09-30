@@ -16,8 +16,11 @@
 #endif
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
+
 class UnionWithFd : public ::android::Parcelable {
 public:
   inline bool operator!=(const UnionWithFd& rhs) const {
@@ -108,6 +111,9 @@ public:
 private:
   std::variant<int32_t, ::android::os::ParcelFileDescriptor> _value;
 };  // class UnionWithFd
+
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android
