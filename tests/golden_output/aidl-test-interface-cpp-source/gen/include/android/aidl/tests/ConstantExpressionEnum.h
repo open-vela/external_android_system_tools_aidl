@@ -6,11 +6,8 @@
 #include <string>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 enum class ConstantExpressionEnum : int32_t {
   decInt32_1 = 1,
   decInt32_2 = 1,
@@ -32,16 +29,11 @@ enum class ConstantExpressionEnum : int32_t {
     return std::to_string(static_cast<int32_t>(val));
   }
 }
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
 namespace android {
-
 namespace internal {
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc++17-extensions"
 template <>
@@ -58,7 +50,5 @@ constexpr inline std::array<::android::aidl::tests::ConstantExpressionEnum, 10> 
   ::android::aidl::tests::ConstantExpressionEnum::hexInt64_1,
 };
 #pragma clang diagnostic pop
-
 }  // namespace internal
-
 }  // namespace android

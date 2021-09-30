@@ -14,11 +14,8 @@
 #include <vector>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 class ParcelableForToString : public ::android::Parcelable {
 public:
   inline bool operator!=(const ParcelableForToString& rhs) const {
@@ -99,9 +96,6 @@ public:
     return os.str();
   }
 };  // class ParcelableForToString
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android

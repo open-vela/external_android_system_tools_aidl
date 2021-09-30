@@ -473,21 +473,13 @@ void Document::Write(CodeWriter* to) const {
   for (const auto& include : include_list_) {
     to->Write("#include <%s>\n", include.c_str());
   }
-  to->Write("\n");
+  if (!include_list_.empty()) {
+    to->Write("\n");
+  }
 
   for (const auto& declaration : declarations_) {
     declaration->Write(to);
   }
-}
-
-CppHeader::CppHeader(const std::vector<std::string>& include_list,
-                     std::vector<std::unique_ptr<Declaration>> declarations)
-    : Document(include_list, std::move(declarations)) {}
-
-void CppHeader::Write(CodeWriter* to) const {
-  to->Write("#pragma once\n\n");
-
-  Document::Write(to);
 }
 
 CppSource::CppSource(const std::vector<std::string>& include_list,

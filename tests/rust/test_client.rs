@@ -22,14 +22,15 @@ use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
     self, BpTestService, ITestServiceDefault, ITestServiceDefaultRef,
 };
 use aidl_test_interface::aidl::android::aidl::tests::{
-    BackendType::BackendType, ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable, Union,
+    BackendType::BackendType, ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum,
+    RecursiveList::RecursiveList, StructuredParcelable, Union,
 };
 use aidl_test_interface::aidl::android::aidl::tests::unions::{
     EnumUnion::EnumUnion,
 };
 use aidl_test_interface::binder;
 use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::{
-    IFooInterface, IFooInterface::BpFooInterface, BazUnion::BazUnion,
+    IFooInterface, IFooInterface::BpFooInterface, BazUnion::BazUnion, Foo::Foo,
 };
 use std::fs::File;
 use std::io::{Read, Write};
@@ -160,7 +161,7 @@ fn test_repeat_string() {
         ITestService::STRING_TEST_CONSTANT2.into(),
     ];
     for input in &inputs {
-        let result = service.RepeatString(&input);
+        let result = service.RepeatString(input);
         assert_eq!(result.as_ref(), Ok(input));
     }
 }
@@ -169,7 +170,7 @@ macro_rules! test_reverse_array {
     ($test:ident, $func:ident, $array:expr) => {
         #[test]
         fn $test() {
-            let mut array = $array;
+            let mut array = $array.to_vec();
 
             // Java needs initial values here (can't resize arrays)
             let mut repeated = vec![Default::default(); array.len()];
@@ -206,6 +207,11 @@ test_reverse_array! {
     test_array_byte_enum,
     ReverseByteEnum,
     vec![ByteEnum::FOO, ByteEnum::BAR, ByteEnum::BAR]
+}
+test_reverse_array! {
+    test_array_byte_enum_values,
+    ReverseByteEnum,
+    ByteEnum::enum_values()
 }
 test_reverse_array! {
     test_array_byte_enum_v2,
@@ -338,12 +344,6 @@ fn test_parcel_file_descriptor_array() {
 #[test]
 fn test_service_specific_exception() {
     let service = get_test_service();
-
-    let backend = service.getBackendType().expect("error getting backend type");
-    if backend == BackendType::JAVA {
-        // TODO(b/178861468): not correctly thrown from Java
-        return;
-    }
 
     for i in -1..2 {
         let result = service.ThrowServiceException(i);
@@ -519,11 +519,11 @@ fn test_parcelable() {
     assert_eq!(parcelable.byteDefaultsToFour, 4);
     assert_eq!(parcelable.intDefaultsToFive, 5);
     assert_eq!(parcelable.longDefaultsToNegativeSeven, -7);
-    assert_eq!(parcelable.booleanDefaultsToTrue, true);
+    assert!(parcelable.booleanDefaultsToTrue);
     assert_eq!(parcelable.charDefaultsToC, 'C' as u16);
     assert_eq!(parcelable.floatDefaultsToPi, 3.14f32);
     assert_eq!(parcelable.doubleWithDefault, -3.14e17f64);
-    assert_eq!(parcelable.boolDefault, false);
+    assert!(!parcelable.boolDefault);
     assert_eq!(parcelable.byteDefault, 0);
     assert_eq!(parcelable.intDefault, 0);
     assert_eq!(parcelable.longDefault, 0);
@@ -572,6 +572,31 @@ fn test_parcelable() {
 
     assert_eq!(parcelable.u, Some(Union::Union::Ns(vec![1, 2, 3])));
     assert_eq!(parcelable.shouldBeConstS1, Some(Union::Union::S(Union::S1.to_string())))
+}
+
+#[test]
+fn test_reverse_recursive_list() {
+    let service = get_test_service();
+
+    let mut head = None;
+    for n in 0..10 {
+        let node = RecursiveList{
+            value: n,
+            next: head
+        };
+        head = Some(Box::new(node));
+    }
+    // head = [9, 8, .., 0]
+    let result = service.ReverseList(head.as_ref().unwrap());
+    assert!(result.is_ok());
+
+    // reversed should be [0, 1, ... 9]
+    let mut reversed: Option<&RecursiveList> = result.as_ref().ok();
+    for n in 0..10 {
+        assert_eq!(reversed.map(|inner| inner.value), Some(n));
+        reversed = reversed.unwrap().next.as_ref().map(|n| n.as_ref());
+    }
+    assert!(reversed.is_none())
 }
 
 #[test]
@@ -674,10 +699,12 @@ fn test_read_data_correctly_after_parcelable_with_new_field() {
             .expect("did not get binder service");
 
     let in_foo = Default::default();
-    let mut inout_foo = Default::default();
-    let mut out_foo = Default::default();
+    let mut inout_foo = Foo { intDefault42: 0 };
+    let mut out_foo = Foo { intDefault42: 0 };
     let ret = service.ignoreParcelablesAndRepeatInt(&in_foo, &mut inout_foo, &mut out_foo, 43);
     assert_eq!(ret, Ok(43));
+    assert_eq!(inout_foo.intDefault42, 0);
+    assert_eq!(out_foo.intDefault42, 0);
 }
 
 fn test_renamed_interface<F>(f: F)

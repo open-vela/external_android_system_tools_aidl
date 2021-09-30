@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 #[derive(Debug)]
 #[deprecated = "test"]
 pub struct DeprecatedParcelable {
@@ -28,28 +29,11 @@ impl binder::parcel::SerializeOption for DeprecatedParcelable {
     })
   }
 }
-impl binder::parcel::Deserialize for DeprecatedParcelable {
-  fn deserialize(parcel: &binder::parcel::Parcel) -> binder::Result<Self> {
-    <Self as binder::parcel::DeserializeOption>::deserialize_option(parcel)
-       .transpose()
-       .unwrap_or(Err(binder::StatusCode::UNEXPECTED_NULL))
-  }
-}
-impl binder::parcel::DeserializeArray for DeprecatedParcelable {}
-impl binder::parcel::DeserializeOption for DeprecatedParcelable {
-  fn deserialize_option(parcel: &binder::parcel::Parcel) -> binder::Result<Option<Self>> {
-    let status: i32 = parcel.read()?;
-    if status == 0 { return Ok(None); }
-    let start_pos = parcel.get_data_position();
-    let parcelable_size: i32 = parcel.read()?;
-    if parcelable_size < 0 { return Err(binder::StatusCode::BAD_VALUE); }
-    if start_pos.checked_add(parcelable_size).is_none() {
-      return Err(binder::StatusCode::BAD_VALUE);
-    }
-    let mut result = Self::default();
-    unsafe {
-      parcel.set_data_position(start_pos + parcelable_size)?;
-    }
-    Ok(Some(result))
+binder::impl_deserialize_for_parcelable!(DeprecatedParcelable);
+impl DeprecatedParcelable {
+  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+    parcel.sized_read(|subparcel| {
+      Ok(())
+    })
   }
 }
