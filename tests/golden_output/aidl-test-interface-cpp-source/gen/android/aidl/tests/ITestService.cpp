@@ -1,33 +1,23 @@
 #include <android/aidl/tests/ITestService.h>
 #include <android/aidl/tests/BpTestService.h>
-
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(TestService, "android.aidl.tests.ITestService")
-
 const ::android::String16& ITestService::STRING_TEST_CONSTANT() {
   static const ::android::String16 value(::android::String16("foo"));
   return value;
 }
-
 const ::android::String16& ITestService::STRING_TEST_CONSTANT2() {
   static const ::android::String16 value(::android::String16("bar"));
   return value;
 }
-
 const ::std::string& ITestService::STRING_TEST_CONSTANT_UTF8() {
   static const ::std::string value("baz");
   return value;
 }
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
 #include <android/aidl/tests/BpTestService.h>
 #include <android/aidl/tests/BnTestService.h>
