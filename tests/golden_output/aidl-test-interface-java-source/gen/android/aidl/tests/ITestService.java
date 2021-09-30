@@ -945,8 +945,7 @@ public interface ITestService extends android.os.IInterface
       // methods to be added and removed.
       @Override public int UnimplementedMethod(int arg) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         int _result;
@@ -974,8 +973,7 @@ public interface ITestService extends android.os.IInterface
            */
       @Override public void Deprecated() throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         try {
@@ -996,8 +994,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public void TestOneway() throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
@@ -1016,8 +1013,7 @@ public interface ITestService extends android.os.IInterface
       // Test that primitives work as parameters and return types.
       @Override public boolean RepeatBoolean(boolean token) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         boolean _result;
@@ -1041,8 +1037,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public byte RepeatByte(byte token) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         byte _result;
@@ -1066,8 +1061,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public char RepeatChar(char token) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         char _result;
@@ -1091,8 +1085,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public int RepeatInt(int token) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         int _result;
@@ -1116,8 +1109,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public long RepeatLong(long token) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         long _result;
@@ -1141,8 +1133,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public float RepeatFloat(float token) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         float _result;
@@ -1166,8 +1157,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public double RepeatDouble(double token) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         double _result;
@@ -1191,8 +1181,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public java.lang.String RepeatString(java.lang.String token) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         java.lang.String _result;
@@ -1216,8 +1205,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public byte RepeatByteEnum(byte token) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         byte _result;
@@ -1241,8 +1229,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public int RepeatIntEnum(int token) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         int _result;
@@ -1266,8 +1253,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public long RepeatLongEnum(long token) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         long _result;
@@ -1292,8 +1278,7 @@ public interface ITestService extends android.os.IInterface
       // Test that arrays work as parameters and return types.
       @Override public boolean[] ReverseBoolean(boolean[] input, boolean[] repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         boolean[] _result;
@@ -1324,8 +1309,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public byte[] ReverseByte(byte[] input, byte[] repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         byte[] _result;
@@ -1356,8 +1340,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public char[] ReverseChar(char[] input, char[] repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         char[] _result;
@@ -1388,8 +1371,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public int[] ReverseInt(int[] input, int[] repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         int[] _result;
@@ -1420,8 +1402,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public long[] ReverseLong(long[] input, long[] repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         long[] _result;
@@ -1452,8 +1433,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public float[] ReverseFloat(float[] input, float[] repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         float[] _result;
@@ -1484,8 +1464,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public double[] ReverseDouble(double[] input, double[] repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         double[] _result;
@@ -1516,8 +1495,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public java.lang.String[] ReverseString(java.lang.String[] input, java.lang.String[] repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         java.lang.String[] _result;
@@ -1548,8 +1526,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public byte[] ReverseByteEnum(byte[] input, byte[] repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         byte[] _result;
@@ -1580,8 +1557,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public int[] ReverseIntEnum(int[] input, int[] repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         int[] _result;
@@ -1612,8 +1588,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public long[] ReverseLongEnum(long[] input, long[] repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         long[] _result;
@@ -1645,8 +1620,7 @@ public interface ITestService extends android.os.IInterface
       // Test that clients can send and receive Binders.
       @Override public android.aidl.tests.INamedCallback GetOtherTestService(java.lang.String name) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         android.aidl.tests.INamedCallback _result;
@@ -1670,8 +1644,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public boolean VerifyName(android.aidl.tests.INamedCallback service, java.lang.String name) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         boolean _result;
@@ -1697,8 +1670,7 @@ public interface ITestService extends android.os.IInterface
       // Test that List<T> types work correctly.
       @Override public java.util.List<java.lang.String> ReverseStringList(java.util.List<java.lang.String> input, java.util.List<java.lang.String> repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         java.util.List<java.lang.String> _result;
@@ -1723,8 +1695,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public android.os.ParcelFileDescriptor RepeatParcelFileDescriptor(android.os.ParcelFileDescriptor read) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         android.os.ParcelFileDescriptor _result;
@@ -1759,8 +1730,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public android.os.ParcelFileDescriptor[] ReverseParcelFileDescriptorArray(android.os.ParcelFileDescriptor[] input, android.os.ParcelFileDescriptor[] repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         android.os.ParcelFileDescriptor[] _result;
@@ -1792,8 +1762,7 @@ public interface ITestService extends android.os.IInterface
       // Test that service specific exceptions work correctly.
       @Override public void ThrowServiceException(int code) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         try {
@@ -1816,8 +1785,7 @@ public interface ITestService extends android.os.IInterface
       // Test nullability
       @Override public int[] RepeatNullableIntArray(int[] input) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         int[] _result;
@@ -1841,8 +1809,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public byte[] RepeatNullableByteEnumArray(byte[] input) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         byte[] _result;
@@ -1866,8 +1833,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public int[] RepeatNullableIntEnumArray(int[] input) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         int[] _result;
@@ -1891,8 +1857,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public long[] RepeatNullableLongEnumArray(long[] input) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         long[] _result;
@@ -1916,8 +1881,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public java.lang.String RepeatNullableString(java.lang.String input) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         java.lang.String _result;
@@ -1941,8 +1905,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public java.util.List<java.lang.String> RepeatNullableStringList(java.util.List<java.lang.String> input) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         java.util.List<java.lang.String> _result;
@@ -1966,8 +1929,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public android.aidl.tests.StructuredParcelable RepeatNullableParcelable(android.aidl.tests.StructuredParcelable input) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         android.aidl.tests.StructuredParcelable _result;
@@ -2002,8 +1964,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public void TakesAnIBinder(android.os.IBinder input) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         try {
@@ -2025,8 +1986,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public void TakesANullableIBinder(android.os.IBinder input) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         try {
@@ -2049,8 +2009,7 @@ public interface ITestService extends android.os.IInterface
       // Test utf8 decoding from utf16 wire format
       @Override public java.lang.String RepeatUtf8CppString(java.lang.String token) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         java.lang.String _result;
@@ -2074,8 +2033,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public java.lang.String RepeatNullableUtf8CppString(java.lang.String token) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         java.lang.String _result;
@@ -2099,8 +2057,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public java.lang.String[] ReverseUtf8CppString(java.lang.String[] input, java.lang.String[] repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         java.lang.String[] _result;
@@ -2131,8 +2088,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public java.lang.String[] ReverseNullableUtf8CppString(java.lang.String[] input, java.lang.String[] repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         java.lang.String[] _result;
@@ -2163,8 +2119,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public java.util.List<java.lang.String> ReverseUtf8CppStringList(java.util.List<java.lang.String> input, java.util.List<java.lang.String> repeated) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         java.util.List<java.lang.String> _result;
@@ -2189,8 +2144,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public android.aidl.tests.INamedCallback GetCallback(boolean return_null) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         android.aidl.tests.INamedCallback _result;
@@ -2216,8 +2170,7 @@ public interface ITestService extends android.os.IInterface
       // inefficient to use an IPC to fill it out in practice.
       @Override public void FillOutStructuredParcelable(android.aidl.tests.StructuredParcelable parcel) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         try {
@@ -2248,8 +2201,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public android.aidl.tests.RecursiveList ReverseList(android.aidl.tests.RecursiveList list) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         android.aidl.tests.RecursiveList _result;
@@ -2284,8 +2236,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public android.aidl.tests.IOldName GetOldNameInterface() throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         android.aidl.tests.IOldName _result;
@@ -2308,8 +2259,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public android.aidl.tests.INewName GetNewNameInterface() throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         android.aidl.tests.INewName _result;
@@ -2333,8 +2283,7 @@ public interface ITestService extends android.os.IInterface
       // Retrieve the ICppJavaTests if the server supports it
       @Override public android.os.IBinder GetCppJavaTests() throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         android.os.IBinder _result;
@@ -2357,8 +2306,7 @@ public interface ITestService extends android.os.IInterface
       }
       @Override public byte getBackendType() throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        _data.markForBinder(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         _data.markSensitive();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         byte _result;
