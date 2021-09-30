@@ -1,18 +1,11 @@
 #include <android/aidl/tests/IProtected.h>
 #include <android/aidl/tests/BpProtected.h>
-
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(Protected, "android.aidl.tests.IProtected")
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
 #include <android/aidl/tests/BpProtected.h>
 #include <android/aidl/tests/BnProtected.h>
