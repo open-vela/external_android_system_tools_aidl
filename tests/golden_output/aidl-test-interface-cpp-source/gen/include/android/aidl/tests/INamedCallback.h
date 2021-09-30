@@ -7,11 +7,8 @@
 #include <utils/StrongPointer.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 class INamedCallback : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(NamedCallback)
@@ -27,9 +24,6 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
 };  // class INamedCallbackDefault
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android

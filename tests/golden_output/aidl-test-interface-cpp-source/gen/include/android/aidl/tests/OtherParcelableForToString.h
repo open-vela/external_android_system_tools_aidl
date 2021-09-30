@@ -7,11 +7,8 @@
 #include <utils/String16.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 class OtherParcelableForToString : public ::android::Parcelable {
 public:
   inline bool operator!=(const OtherParcelableForToString& rhs) const {
@@ -48,9 +45,6 @@ public:
     return os.str();
   }
 };  // class OtherParcelableForToString
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
