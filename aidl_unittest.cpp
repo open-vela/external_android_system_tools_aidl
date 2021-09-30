@@ -1606,6 +1606,18 @@ TEST_F(AidlTest, RejectsInterfaceAsNestedTypes) {
   EXPECT_THAT(GetCapturedStderr(), HasSubstr("Interfaces should be at the root scope"));
 }
 
+TEST_F(AidlTest, HandleSyntaxErrorsInNestedDecl) {
+  const string input_path = "p/IFoo.aidl";
+  const string input =
+      "package p;\n"
+      "interface IFoo {\n"
+      "  parcelable;\n"  // missing identifier
+      "}";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse(input_path, input, typenames_, Options::Language::CPP));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("expecting identifier"));
+}
+
 TEST_F(AidlTest, RejectsNestedTypesWithDuplicateNames) {
   const string input_path = "p/Foo.aidl";
   const string input =
