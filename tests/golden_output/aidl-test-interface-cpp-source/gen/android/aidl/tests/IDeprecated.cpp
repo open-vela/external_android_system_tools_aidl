@@ -1,18 +1,11 @@
 #include <android/aidl/tests/IDeprecated.h>
 #include <android/aidl/tests/BpDeprecated.h>
-
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(Deprecated, "android.aidl.tests.IDeprecated")
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
 #include <android/aidl/tests/BpDeprecated.h>
 #include <android/aidl/tests/BnDeprecated.h>
