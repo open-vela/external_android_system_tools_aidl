@@ -46,6 +46,9 @@ public interface ILoggableInterface extends android.os.IInterface
     @Override public boolean onTransact(int code, android.os.Parcel data, android.os.Parcel reply, int flags) throws android.os.RemoteException
     {
       java.lang.String descriptor = DESCRIPTOR;
+      if (code >= android.os.IBinder.FIRST_CALL_TRANSACTION && code <= android.os.IBinder.LAST_CALL_TRANSACTION) {
+        data.enforceInterface(descriptor);
+      }
       switch (code)
       {
         case INTERFACE_TRANSACTION:
@@ -60,7 +63,6 @@ public interface ILoggableInterface extends android.os.IInterface
         {
           try {
             android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::ILoggableInterface::LogThis::server");
-            data.enforceInterface(descriptor);
             boolean _arg0;
             _arg0 = (0!=data.readInt());
             boolean[] _arg1;
@@ -133,17 +135,18 @@ public interface ILoggableInterface extends android.os.IInterface
               reply.writeInt(0);
             }
             reply.writeTypedArray(_arg20, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
-            return true;
           }
           finally {
             android.os.Trace.traceEnd(android.os.Trace.TRACE_TAG_AIDL);
           }
+          break;
         }
         default:
         {
           return super.onTransact(code, data, reply, flags);
         }
       }
+      return true;
     }
     private static class Proxy implements android.aidl.loggable.ILoggableInterface
     {

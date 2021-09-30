@@ -47,7 +47,7 @@ class ASTTest : public ::testing::Test {
     io_delegate_.SetFileContents(options_.InputFiles().at(0), file_contents_);
 
     vector<string> imported_files;
-    ImportResolver import_resolver{io_delegate_, options_.InputFiles().at(0), {"."}, {}};
+    ImportResolver import_resolver{io_delegate_, options_.InputFiles().at(0), {"."}};
     AidlError err = ::android::aidl::internals::load_and_validate_aidl(
         options_.InputFiles().front(), options_, io_delegate_, &typenames_, &imported_files);
 

@@ -21,8 +21,8 @@ use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
 };
 use aidl_test_interface::aidl::android::aidl::tests::{
     BackendType::BackendType, ByteEnum::ByteEnum, ConstantExpressionEnum::ConstantExpressionEnum,
-    INamedCallback, INewName, IOldName, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable,
-    Union,
+    INamedCallback, INewName, IOldName, IntEnum::IntEnum, LongEnum::LongEnum,
+    RecursiveList::RecursiveList, StructuredParcelable,Union,
 };
 use aidl_test_interface::binder::{
     self, BinderFeatures, Interface, ParcelFileDescriptor, SpIBinder,
@@ -287,6 +287,20 @@ impl ITestService::ITestService for TestService {
         parcelable.u = Some(Union::Union::Ns(vec![1, 2, 3]));
         parcelable.shouldBeConstS1 = Some(Union::Union::S(Union::S1.to_string()));
         Ok(())
+    }
+
+    fn ReverseList(&self, list: &RecursiveList) -> binder::Result<RecursiveList> {
+        let mut reversed: Option<RecursiveList> = None;
+        let mut cur: Option<&RecursiveList> = Some(list);
+        while let Some(node) = cur {
+            reversed = Some(RecursiveList{
+                value: node.value,
+                next: reversed.map(Box::new),
+            });
+            cur = node.next.as_ref().map(|n| n.as_ref());
+        };
+        // `list` is always not empty, so is `reversed`.
+        Ok(reversed.unwrap())
     }
 
     fn GetOldNameInterface(&self) -> binder::Result<binder::Strong<dyn IOldName::IOldName>> {
