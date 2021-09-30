@@ -711,12 +711,12 @@ static std::shared_ptr<Method> generate_proxy_method(
 
   // the parcels
   auto _data = std::make_shared<Variable>("android.os.Parcel", "_data");
-  proxy->statements->Add(std::make_shared<VariableDeclaration>(
-      _data, std::make_shared<MethodCall>("android.os.Parcel", "obtain")));
-
   if (options.GenRpc()) {
-    proxy->statements->Add(
-        std::make_shared<LiteralStatement>("_data.markForBinder(asBinder());\n"));
+    proxy->statements->Add(std::make_shared<LiteralStatement>(
+        "android.os.Parcel _data = android.os.Parcel.obtain(asBinder());\n"));
+  } else {
+    proxy->statements->Add(std::make_shared<LiteralStatement>(
+        "android.os.Parcel _data = android.os.Parcel.obtain();\n"));
   }
 
   if (iface.IsSensitiveData()) {
