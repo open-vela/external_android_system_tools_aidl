@@ -6,11 +6,8 @@
 #include <android/aidl/tests/ITestService.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 class BpTestService : public ::android::BpInterface<ITestService> {
 public:
   explicit BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl);
@@ -68,9 +65,6 @@ public:
   ::android::binder::Status GetCppJavaTests(::android::sp<::android::IBinder>* _aidl_return) override;
   ::android::binder::Status getBackendType(::android::aidl::tests::BackendType* _aidl_return) override;
 };  // class BpTestService
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
