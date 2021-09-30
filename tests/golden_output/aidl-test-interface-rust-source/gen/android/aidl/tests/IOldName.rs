@@ -1,4 +1,3 @@
-#![forbid(unsafe_code)]
 #![allow(non_upper_case_globals)]
 #![allow(non_snake_case)]
 #[allow(unused_imports)] use binder::IBinderInternal;

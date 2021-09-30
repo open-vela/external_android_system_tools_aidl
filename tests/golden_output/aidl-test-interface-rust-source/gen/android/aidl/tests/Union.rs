@@ -1,4 +1,3 @@
-#![forbid(unsafe_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Union {
   Ns(Vec<i32>),
@@ -62,45 +61,47 @@ impl binder::parcel::SerializeOption for Union {
     }
   }
 }
-binder::impl_deserialize_for_parcelable!(Union);
-impl Union {
-  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+impl binder::parcel::Deserialize for Union {
+  fn deserialize(parcel: &binder::parcel::Parcel) -> binder::Result<Self> {
+    <Self as binder::parcel::DeserializeOption>::deserialize_option(parcel)
+       .transpose()
+       .unwrap_or(Err(binder::StatusCode::UNEXPECTED_NULL))
+  }
+}
+impl binder::parcel::DeserializeArray for Union {}
+impl binder::parcel::DeserializeOption for Union {
+  fn deserialize_option(parcel: &binder::parcel::Parcel) -> binder::Result<Option<Self>> {
+    let status: i32 = parcel.read()?;
+    if status == 0 { return Ok(None); }
     let tag: i32 = parcel.read()?;
     match tag {
       0 => {
         let value: Vec<i32> = parcel.read()?;
-        *self = Self::Ns(value);
-        Ok(())
+        Ok(Some(Self::Ns(value)))
       }
       1 => {
         let value: i32 = parcel.read()?;
-        *self = Self::N(value);
-        Ok(())
+        Ok(Some(Self::N(value)))
       }
       2 => {
         let value: i32 = parcel.read()?;
-        *self = Self::M(value);
-        Ok(())
+        Ok(Some(Self::M(value)))
       }
       3 => {
         let value: String = parcel.read()?;
-        *self = Self::S(value);
-        Ok(())
+        Ok(Some(Self::S(value)))
       }
       4 => {
         let value: Option<binder::SpIBinder> = parcel.read()?;
-        *self = Self::Ibinder(value);
-        Ok(())
+        Ok(Some(Self::Ibinder(value)))
       }
       5 => {
         let value: Vec<String> = parcel.read()?;
-        *self = Self::Ss(value);
-        Ok(())
+        Ok(Some(Self::Ss(value)))
       }
       6 => {
         let value: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum = parcel.read()?;
-        *self = Self::Be(value);
-        Ok(())
+        Ok(Some(Self::Be(value)))
       }
       _ => {
         Err(binder::StatusCode::BAD_VALUE)
