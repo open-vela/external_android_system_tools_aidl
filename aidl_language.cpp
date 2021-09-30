@@ -1023,6 +1023,12 @@ bool AidlDefinedType::CheckValidWithMembers(const AidlTypenames& typenames) cons
     success = success && t->CheckValid(typenames);
   }
 
+  if (auto parameterizable = AsParameterizable();
+      parameterizable && parameterizable->IsGeneric() && !GetNestedTypes().empty()) {
+    AIDL_ERROR(this) << "Generic types can't have nested types.";
+    return false;
+  }
+
   std::set<std::string> nested_type_names;
   for (const auto& t : GetNestedTypes()) {
     bool duplicated = !nested_type_names.emplace(t->GetName()).second;
