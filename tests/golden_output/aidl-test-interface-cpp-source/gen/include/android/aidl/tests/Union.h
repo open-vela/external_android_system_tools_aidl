@@ -19,8 +19,11 @@
 #endif
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
+
 class Union : public ::android::Parcelable {
 public:
   inline bool operator!=(const Union& rhs) const {
@@ -56,6 +59,10 @@ public:
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, Union>;
 
   Union() : _value(std::in_place_index<ns>, ::std::vector<int32_t>({})) { }
+  Union(const Union&) = default;
+  Union(Union&&) = default;
+  Union& operator=(const Union&) = default;
+  Union& operator=(Union&&) = default;
 
   template <typename _Tp, typename = std::enable_if_t<_not_self<_Tp>>>
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -122,6 +129,9 @@ public:
 private:
   std::variant<::std::vector<int32_t>, int32_t, int32_t, ::std::string, ::android::sp<::android::IBinder>, ::std::vector<::std::string>, ::android::aidl::tests::ByteEnum> _value;
 };  // class Union
+
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android

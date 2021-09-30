@@ -1,7 +1,6 @@
-#![forbid(unsafe_code)]
 #![allow(non_upper_case_globals)]
 use binder::declare_binder_enum;
-declare_binder_enum! { DeprecatedEnum : [i32; 3] {
+declare_binder_enum! { DeprecatedEnum : i32 {
   A = 0,
   B = 1,
   C = 2,
