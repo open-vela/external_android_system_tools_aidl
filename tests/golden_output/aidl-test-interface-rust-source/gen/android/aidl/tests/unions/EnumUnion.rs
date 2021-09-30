@@ -1,4 +1,3 @@
-#![forbid(unsafe_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum EnumUnion {
   IntEnum(crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum),
@@ -36,20 +35,27 @@ impl binder::parcel::SerializeOption for EnumUnion {
     }
   }
 }
-binder::impl_deserialize_for_parcelable!(EnumUnion);
-impl EnumUnion {
-  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+impl binder::parcel::Deserialize for EnumUnion {
+  fn deserialize(parcel: &binder::parcel::Parcel) -> binder::Result<Self> {
+    <Self as binder::parcel::DeserializeOption>::deserialize_option(parcel)
+       .transpose()
+       .unwrap_or(Err(binder::StatusCode::UNEXPECTED_NULL))
+  }
+}
+impl binder::parcel::DeserializeArray for EnumUnion {}
+impl binder::parcel::DeserializeOption for EnumUnion {
+  fn deserialize_option(parcel: &binder::parcel::Parcel) -> binder::Result<Option<Self>> {
+    let status: i32 = parcel.read()?;
+    if status == 0 { return Ok(None); }
     let tag: i32 = parcel.read()?;
     match tag {
       0 => {
         let value: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum = parcel.read()?;
-        *self = Self::IntEnum(value);
-        Ok(())
+        Ok(Some(Self::IntEnum(value)))
       }
       1 => {
         let value: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum = parcel.read()?;
-        *self = Self::LongEnum(value);
-        Ok(())
+        Ok(Some(Self::LongEnum(value)))
       }
       _ => {
         Err(binder::StatusCode::BAD_VALUE)

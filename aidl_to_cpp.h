@@ -61,7 +61,7 @@ std::string ParcelWriteCastOf(const AidlTypeSpecifier& type, const AidlTypenames
 void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
                 std::set<std::string>* headers);
 
-std::string CppHeaderForType(const AidlDefinedType& defined_type);
+void AddHeaders(const AidlDefinedType& parcelable, std::set<std::string>* headers);
 }  // namespace cpp
 }  // namespace aidl
 }  // namespace android
