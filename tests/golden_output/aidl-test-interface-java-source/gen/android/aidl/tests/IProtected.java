@@ -115,7 +115,8 @@ public interface IProtected extends android.os.IInterface
       }
       @Override public void PermissionProtected() throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain();
+        _data.markForBinder(asBinder());
         android.os.Parcel _reply = android.os.Parcel.obtain();
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
@@ -135,7 +136,8 @@ public interface IProtected extends android.os.IInterface
       }
       @Override public void MultiplePermissions() throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain();
+        _data.markForBinder(asBinder());
         android.os.Parcel _reply = android.os.Parcel.obtain();
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
@@ -155,7 +157,8 @@ public interface IProtected extends android.os.IInterface
       }
       @Override public void MultiplePermissions2() throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain();
+        _data.markForBinder(asBinder());
         android.os.Parcel _reply = android.os.Parcel.obtain();
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
