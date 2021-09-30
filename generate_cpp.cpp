@@ -534,7 +534,7 @@ void BuildConstantDefinitions(const AidlDefinedType& type, const AidlTypenames& 
 }
 
 void BuildConstantDeclarations(const AidlDefinedType& type, const AidlTypenames& typenames,
-                               unique_ptr<ClassDecl>& cls, set<string>& includes) {
+                               unique_ptr<ClassDecl>& cls) {
   std::vector<std::unique_ptr<Declaration>> string_constants;
   unique_ptr<Enum> byte_constant_enum{new Enum{"", "int8_t", false}};
   unique_ptr<Enum> int_constant_enum{new Enum{"", "int32_t", false}};
@@ -572,8 +572,6 @@ void BuildConstantDeclarations(const AidlDefinedType& type, const AidlTypenames&
     cls->AddPublic(std::move(long_constant_enum));
   }
   if (!string_constants.empty()) {
-    includes.insert(kString16Header);
-
     for (auto& string_constant : string_constants) {
       cls->AddPublic(std::move(string_constant));
     }
@@ -998,16 +996,6 @@ unique_ptr<Document> BuildServerHeader(const AidlTypenames& /* typenames */,
 
 unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
                                           const AidlInterface& interface, const Options& options) {
-  set<string> includes = {kIBinderHeader, kIInterfaceHeader, kStatusHeader, kStrongPointerHeader};
-
-  for (const auto& method : interface.GetMethods()) {
-    for (const auto& argument : method->GetArguments()) {
-      AddHeaders(argument->GetType(), typenames, &includes);
-    }
-
-    AddHeaders(method->GetType(), typenames, &includes);
-  }
-
   const string i_name = ClassName(interface, ClassNames::INTERFACE);
   const string attribute = GetDeprecatedAttribute(interface);
   unique_ptr<ClassDecl> if_class{new ClassDecl{i_name, "::android::IInterface", {}, attribute}};
@@ -1028,11 +1016,7 @@ unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
     if_class->AddPublic(unique_ptr<Declaration>(new LiteralDecl(code.str())));
   }
 
-  BuildConstantDeclarations(interface, typenames, if_class, includes);
-
-  if (options.GenTraces()) {
-    includes.insert(kTraceHeader);
-  }
+  BuildConstantDeclarations(interface, typenames, if_class);
 
   if (!interface.GetMethods().empty()) {
     for (const auto& method : interface.GetMethods()) {
@@ -1097,9 +1081,8 @@ unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
       attribute,  // inherits the same attributes
   });
 
-  return unique_ptr<Document>{
-      new CppHeader{vector<string>(includes.begin(), includes.end()),
-                    NestInNamespaces(std::move(decls), interface.GetSplitPackage())}};
+  return unique_ptr<Document>(
+      new Document({}, NestInNamespaces(std::move(decls), interface.GetSplitPackage())));
 }
 
 string GetInitializer(const AidlTypenames& typenames, const AidlVariableDeclaration& variable) {
@@ -1254,19 +1237,12 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
   unique_ptr<ClassDecl> parcel_class{
       new ClassDecl{parcel.GetName(), "::android::Parcelable", type_params, attribute}};
 
-  set<string> includes = {kStatusHeader, kParcelHeader, kString16Header};
-  AddTypeSpecificHeaders(parcel, includes);
-
-  for (const auto& variable : parcel.GetFields()) {
-    AddHeaders(variable->GetType(), typenames, &includes);
-  }
-
   string operator_code;
   GenerateParcelableComparisonOperators(*CodeWriter::ForString(&operator_code), parcel);
   parcel_class->AddPublic(std::make_unique<LiteralDecl>(operator_code));
 
   BuildParcelFields(*parcel_class, parcel, typenames);
-  BuildConstantDeclarations(parcel, typenames, parcel_class, includes);
+  BuildConstantDeclarations(parcel, typenames, parcel_class);
 
   if (parcel.IsVintfStability()) {
     parcel_class->AddPublic(std::unique_ptr<LiteralDecl>(
@@ -1291,20 +1267,12 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
                                    parcel.GetCanonicalName().c_str()))));
 
   // toString() method
-  includes.insert("android/binder_to_string.h");
   string to_string;
   GenerateToString(*CodeWriter::ForString(&to_string), parcel);
   parcel_class->AddPublic(std::make_unique<LiteralDecl>(to_string));
 
-  auto decls = NestInNamespaces(std::move(parcel_class), parcel.GetSplitPackage());
-  // TODO(b/31559095) bionic on host should define this
-  if (parcel.AsUnionDeclaration()) {
-    decls.insert(decls.begin(),
-                 std::make_unique<LiteralDecl>(
-                     "#ifndef __BIONIC__\n#define __assert2(a,b,c,d) ((void)0)\n#endif\n\n"));
-  }
-  return unique_ptr<Document>{
-      new CppHeader{vector<string>(includes.begin(), includes.end()), std::move(decls)}};
+  return unique_ptr<Document>(
+      new Document({}, NestInNamespaces(std::move(parcel_class), parcel.GetSplitPackage())));
 }
 
 template <typename T>
@@ -1327,11 +1295,8 @@ std::unique_ptr<Document> BuildParcelSource(const AidlTypenames& typenames, cons
   file_decls.push_back(std::move(read));
   file_decls.push_back(std::move(write));
 
-  set<string> includes = {};
-  AddHeaders(parcel, &includes);
-
   return unique_ptr<Document>{
-      new CppSource{vector<string>(includes.begin(), includes.end()),
+      new CppSource{vector<string>{cpp::CppHeaderForType(parcel)},
                     NestInNamespaces(std::move(file_decls), parcel.GetSplitPackage())}};
 }
 
@@ -1375,13 +1340,6 @@ std::unique_ptr<Document> BuildEnumHeader(const AidlTypenames& typenames,
         enumerator->ValueString(enum_decl.GetBackingType(), ConstantValueDecorator));
   }
 
-  std::set<std::string> includes = {
-      "array",
-      "binder/Enums.h",
-      "string",
-  };
-  AddHeaders(enum_decl.GetBackingType(), typenames, &includes);
-
   std::vector<std::unique_ptr<Declaration>> decls1;
   decls1.push_back(std::move(generated_enum));
   decls1.push_back(std::make_unique<LiteralDecl>(GenerateEnumToString(typenames, enum_decl)));
@@ -1389,10 +1347,9 @@ std::unique_ptr<Document> BuildEnumHeader(const AidlTypenames& typenames,
   std::vector<std::unique_ptr<Declaration>> decls2;
   decls2.push_back(std::make_unique<LiteralDecl>(GenerateEnumValues(enum_decl, {""})));
 
-  return unique_ptr<Document>{
-      new CppHeader{vector<string>(includes.begin(), includes.end()),
-                    Append(NestInNamespaces(std::move(decls1), enum_decl.GetSplitPackage()),
-                           NestInNamespaces(std::move(decls2), {"android", "internal"}))}};
+  return unique_ptr<Document>(
+      new Document({}, Append(NestInNamespaces(std::move(decls1), enum_decl.GetSplitPackage()),
+                              NestInNamespaces(std::move(decls2), {"android", "internal"}))));
 }
 
 }  // namespace internals
@@ -1424,9 +1381,77 @@ bool ValidateOutputFilePath(const string& output_file, const Options& options,
   return true;
 }
 
+// Collect all includes for the type's header. Nested types are visited as well via VisitTopDown.
+void GenerateHeaderIncludes(CodeWriter& out, const AidlDefinedType& defined_type,
+                            const AidlTypenames& typenames, const Options& options) {
+  struct Visitor : AidlVisitor {
+    const AidlTypenames& typenames;
+    const Options& options;
+    std::set<std::string> includes;
+    Visitor(const AidlTypenames& typenames, const Options& options)
+        : typenames(typenames), options(options) {}
+
+    // Collect includes for each type reference including built-in type
+    void Visit(const AidlTypeSpecifier& type) override {
+      cpp::AddHeaders(type, typenames, &includes);
+    }
+
+    // Collect implementation-specific includes for each type definition
+    void Visit(const AidlInterface&) override {
+      includes.insert(kIBinderHeader);        // IBinder
+      includes.insert(kIInterfaceHeader);     // IInterface
+      includes.insert(kStatusHeader);         // Status
+      includes.insert(kStrongPointerHeader);  // sp<>
+
+      if (options.GenTraces()) {
+        includes.insert(kTraceHeader);
+      }
+    }
+
+    void Visit(const AidlStructuredParcelable&) override {
+      AddParcelableCommonHeaders();
+      includes.insert("tuple");  // std::tie in comparison operators
+    }
+
+    void Visit(const AidlUnionDecl&) override {
+      AddParcelableCommonHeaders();
+      includes.insert(std::begin(UnionWriter::headers), std::end(UnionWriter::headers));
+    }
+
+    void Visit(const AidlEnumDeclaration&) override {
+      includes.insert("array");           // used in enum_values
+      includes.insert("binder/Enums.h");  // provides enum_range
+      includes.insert("string");          // toString() returns std::string
+    }
+
+    void AddParcelableCommonHeaders() {
+      includes.insert(kParcelHeader);                 // Parcel in readFromParcel/writeToParcel
+      includes.insert(kStatusHeader);                 // Status
+      includes.insert(kString16Header);               // String16 in getParcelableDescriptor
+      includes.insert("android/binder_to_string.h");  // toString()
+    }
+  } v(typenames, options);
+  VisitTopDown(v, defined_type);
+
+  for (const auto& path : v.includes) {
+    out << "#include <" << path << ">\n";
+  }
+  out << "\n";
+  if (v.includes.count("cassert")) {
+    // TODO(b/31559095) bionic on host should define __assert2
+    out << "#ifndef __BIONIC__\n#define __assert2(a,b,c,d) ((void)0)\n#endif\n\n";
+  }
+}
+
 // TODO(b/182508839) should emit nested types recursively
 void GenerateHeader(CodeWriter& out, const AidlDefinedType& defined_type,
                     const AidlTypenames& typenames, const Options& options) {
+  if (auto parcelable = AidlCast<AidlParcelable>(defined_type); parcelable) {
+    out << "#error TODO(b/111362593) parcelables do not have headers";
+    return;
+  }
+  out << "#pragma once\n\n";
+  GenerateHeaderIncludes(out, defined_type, typenames, options);
   if (auto iface = AidlCast<AidlInterface>(defined_type); iface) {
     BuildInterfaceHeader(typenames, *iface, options)->Write(&out);
   } else if (auto parcelable = AidlCast<AidlStructuredParcelable>(defined_type); parcelable) {
@@ -1441,8 +1466,6 @@ void GenerateHeader(CodeWriter& out, const AidlDefinedType& defined_type,
     }
   } else if (auto enum_decl = AidlCast<AidlEnumDeclaration>(defined_type); enum_decl) {
     BuildEnumHeader(typenames, *enum_decl)->Write(&out);
-  } else if (auto parcelable = AidlCast<AidlParcelable>(defined_type); parcelable) {
-    out << "#error TODO(b/111362593) parcelables do not have headers";
   } else {
     AIDL_FATAL(defined_type) << "Unrecognized type sent for CPP generation.";
   }
