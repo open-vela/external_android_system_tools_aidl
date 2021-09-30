@@ -16,13 +16,9 @@
 #endif
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 namespace unions {
-
 class EnumUnion : public ::android::Parcelable {
 public:
   inline bool operator!=(const EnumUnion& rhs) const {
@@ -113,11 +109,7 @@ public:
 private:
   std::variant<::android::aidl::tests::IntEnum, ::android::aidl::tests::LongEnum> _value;
 };  // class EnumUnion
-
 }  // namespace unions
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
