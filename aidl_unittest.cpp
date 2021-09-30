@@ -1619,6 +1619,18 @@ TEST_F(AidlTest, RejectUnstructuredParcelableAsNestedTypes) {
               HasSubstr("Unstructured parcelables should be at the root scope"));
 }
 
+TEST_F(AidlTest, RejectGenericTypeWithNestedTypes) {
+  const string input_path = "p/Foo.aidl";
+  const string input =
+      "package p;\n"
+      "parcelable Foo<T> {\n"
+      "  parcelable Bar {}\n"
+      "}";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse(input_path, input, typenames_, Options::Language::CPP));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Generic types can't have nested types."));
+}
+
 TEST_F(AidlTest, HandleSyntaxErrorsInNestedDecl) {
   const string input_path = "p/IFoo.aidl";
   const string input =
