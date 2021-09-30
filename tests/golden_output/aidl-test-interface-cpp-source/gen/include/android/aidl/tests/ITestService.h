@@ -7,6 +7,7 @@
 #include <android/aidl/tests/IOldName.h>
 #include <android/aidl/tests/IntEnum.h>
 #include <android/aidl/tests/LongEnum.h>
+#include <android/aidl/tests/RecursiveList.h>
 #include <android/aidl/tests/StructuredParcelable.h>
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
@@ -20,11 +21,8 @@
 #include <vector>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 class ITestService : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(TestService)
@@ -155,6 +153,7 @@ public:
   virtual ::android::binder::Status ReverseUtf8CppStringList(const ::std::optional<::std::vector<::std::optional<::std::string>>>& input, ::std::optional<::std::vector<::std::optional<::std::string>>>* repeated, ::std::optional<::std::vector<::std::optional<::std::string>>>* _aidl_return) = 0;
   virtual ::android::binder::Status GetCallback(bool return_null, ::android::sp<::android::aidl::tests::INamedCallback>* _aidl_return) = 0;
   virtual ::android::binder::Status FillOutStructuredParcelable(::android::aidl::tests::StructuredParcelable* parcel) = 0;
+  virtual ::android::binder::Status ReverseList(const ::android::aidl::tests::RecursiveList& list, ::android::aidl::tests::RecursiveList* _aidl_return) = 0;
   virtual ::android::binder::Status GetOldNameInterface(::android::sp<::android::aidl::tests::IOldName>* _aidl_return) = 0;
   virtual ::android::binder::Status GetNewNameInterface(::android::sp<::android::aidl::tests::INewName>* _aidl_return) = 0;
   virtual ::android::binder::Status GetCppJavaTests(::android::sp<::android::IBinder>* _aidl_return) = 0;
@@ -307,6 +306,9 @@ public:
   ::android::binder::Status FillOutStructuredParcelable(::android::aidl::tests::StructuredParcelable*) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
+  ::android::binder::Status ReverseList(const ::android::aidl::tests::RecursiveList&, ::android::aidl::tests::RecursiveList*) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
   ::android::binder::Status GetOldNameInterface(::android::sp<::android::aidl::tests::IOldName>*) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
@@ -320,9 +322,6 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
 };  // class ITestServiceDefault
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android

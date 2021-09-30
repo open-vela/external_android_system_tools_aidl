@@ -159,6 +159,7 @@ TypeInfo ParcelableTypeInfo(const AidlParcelable& type, const AidlTypeSpecifier&
     }
     clazz += base::StringPrintf("<%s>", base::Join(type_params, ", ").c_str());
   }
+  const std::string nullable = typeSpec.IsHeapNullable() ? "std::unique_ptr" : "std::optional";
   return TypeInfo{
       .raw =
           TypeInfo::Aspect{
@@ -174,7 +175,7 @@ TypeInfo ParcelableTypeInfo(const AidlParcelable& type, const AidlTypeSpecifier&
           .write_func = StandardWrite("::ndk::AParcel_writeVector"),
       }),
       .nullable = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
-          .cpp_name = "std::optional<" + clazz + ">",
+          .cpp_name = nullable + "<" + clazz + ">",
           .value_is_cheap = false,
           .read_func = StandardRead("::ndk::AParcel_readNullableParcelable"),
           .write_func = StandardWrite("::ndk::AParcel_writeNullableParcelable"),
@@ -364,9 +365,9 @@ static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlType
     AIDL_FATAL_IF(type_param->IsGeneric(), aidl) << "AIDL doesn't support nested type parameter";
 
     AidlTypeSpecifier array_type =
-        AidlTypeSpecifier(AIDL_LOCATION_HERE, type_param->GetUnresolvedName(), true /* isArray */,
+        AidlTypeSpecifier(AIDL_LOCATION_HERE, type_param->GetName(), true /* isArray */,
                           nullptr /* type_params */, aidl.GetComments());
-    if (!(array_type.Resolve(types) && array_type.CheckValid(types))) {
+    if (!(array_type.Resolve(types, nullptr) && array_type.CheckValid(types))) {
       AIDL_FATAL(aidl) << "The type parameter is wrong.";
     }
     return GetTypeAspect(types, array_type);

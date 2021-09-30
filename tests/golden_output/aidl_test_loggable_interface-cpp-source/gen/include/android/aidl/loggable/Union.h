@@ -16,11 +16,8 @@
 #endif
 
 namespace android {
-
 namespace aidl {
-
 namespace loggable {
-
 class Union : public ::android::Parcelable {
 public:
   inline bool operator!=(const Union& rhs) const {
@@ -51,10 +48,6 @@ public:
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, Union>;
 
   Union() : _value(std::in_place_index<num>, int32_t(43)) { }
-  Union(const Union&) = default;
-  Union(Union&&) = default;
-  Union& operator=(const Union&) = default;
-  Union& operator=(Union&&) = default;
 
   template <typename _Tp, typename = std::enable_if_t<_not_self<_Tp>>>
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -115,9 +108,6 @@ public:
 private:
   std::variant<int32_t, ::std::string> _value;
 };  // class Union
-
 }  // namespace loggable
-
 }  // namespace aidl
-
 }  // namespace android

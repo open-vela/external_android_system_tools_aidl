@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <algorithm>
 #include <iostream>
 #include <set>
@@ -30,13 +31,14 @@
 
 #include <android-base/parsedouble.h>
 #include <android-base/parseint.h>
+#include <android-base/result.h>
 #include <android-base/strings.h>
 
+#include "aidl.h"
 #include "aidl_language_y.h"
 #include "comments.h"
 #include "logging.h"
-
-#include "aidl.h"
+#include "permission/parser.h"
 
 #ifdef _WIN32
 int isatty(int  fd)
@@ -46,7 +48,9 @@ int isatty(int  fd)
 #endif
 
 using android::aidl::IoDelegate;
+using android::base::Error;
 using android::base::Join;
+using android::base::Result;
 using android::base::Split;
 using std::cerr;
 using std::pair;
@@ -98,7 +102,10 @@ static const AidlTypeSpecifier kBooleanType{AIDL_LOCATION_HERE, "boolean", false
 
 const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
   static const std::vector<Schema> kSchemas{
-      {AidlAnnotation::Type::NULLABLE, "nullable", CONTEXT_TYPE_SPECIFIER, {}},
+      {AidlAnnotation::Type::NULLABLE,
+       "nullable",
+       CONTEXT_TYPE_SPECIFIER,
+       {{"heap", kBooleanType}}},
       {AidlAnnotation::Type::UTF8_IN_CPP, "utf8InCpp", CONTEXT_TYPE_SPECIFIER, {}},
       {AidlAnnotation::Type::SENSITIVE_DATA, "SensitiveData", CONTEXT_TYPE_INTERFACE, {}},
       {AidlAnnotation::Type::VINTF_STABILITY, "VintfStability", CONTEXT_TYPE, {}},
@@ -152,6 +159,10 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
        "SuppressWarnings",
        CONTEXT_TYPE | CONTEXT_MEMBER,
        {{"value", kStringArrayType, /* required= */ true}}},
+      {AidlAnnotation::Type::ENFORCE,
+       "Enforce",
+       CONTEXT_METHOD,
+       {{"condition", kStringType, /* required= */ true}}},
   };
   return kSchemas;
 }
@@ -164,9 +175,9 @@ std::string AidlAnnotation::TypeToString(Type type) {
   __builtin_unreachable();
 }
 
-AidlAnnotation* AidlAnnotation::Parse(
+std::unique_ptr<AidlAnnotation> AidlAnnotation::Parse(
     const AidlLocation& location, const string& name,
-    std::map<std::string, std::shared_ptr<AidlConstantValue>>* parameter_list,
+    std::map<std::string, std::shared_ptr<AidlConstantValue>> parameter_list,
     const Comments& comments) {
   const Schema* schema = nullptr;
   for (const Schema& a_schema : AllSchemas()) {
@@ -184,19 +195,16 @@ AidlAnnotation* AidlAnnotation::Parse(
     }
     stream << ".";
     AIDL_ERROR(location) << stream.str();
-    return nullptr;
-  }
-  if (parameter_list == nullptr) {
-    return new AidlAnnotation(location, *schema, {}, comments);
+    return {};
   }
 
-  return new AidlAnnotation(location, *schema, std::move(*parameter_list), comments);
+  return std::unique_ptr<AidlAnnotation>(
+      new AidlAnnotation(location, *schema, std::move(parameter_list), comments));
 }
 
-AidlAnnotation::AidlAnnotation(
-    const AidlLocation& location, const Schema& schema,
-    std::map<std::string, std::shared_ptr<AidlConstantValue>>&& parameters,
-    const Comments& comments)
+AidlAnnotation::AidlAnnotation(const AidlLocation& location, const Schema& schema,
+                               std::map<std::string, std::shared_ptr<AidlConstantValue>> parameters,
+                               const Comments& comments)
     : AidlNode(location, comments), schema_(schema), parameters_(std::move(parameters)) {}
 
 struct ConstReferenceFinder : AidlVisitor {
@@ -261,7 +269,26 @@ bool AidlAnnotation::CheckValid() const {
       success = false;
     }
   }
-  return success;
+  if (!success) {
+    return false;
+  }
+  // For @Enforce annotations, validates the expression.
+  if (schema_.type == AidlAnnotation::Type::ENFORCE) {
+    auto expr = EnforceExpression();
+    if (!expr.ok()) {
+      AIDL_ERROR(this) << "Unable to parse @Enforce annotation: " << expr.error();
+      return false;
+    }
+  }
+  return true;
+}
+
+Result<unique_ptr<perm::Expression>> AidlAnnotation::EnforceExpression() const {
+  auto perm_expr = ParamValue<std::string>("condition");
+  if (perm_expr.has_value()) {
+    return perm::Parser::Parse(perm_expr.value());
+  }
+  return Error() << "No condition parameter for @Enforce";
 }
 
 // Checks if the annotation is applicable to the current context.
@@ -344,6 +371,14 @@ bool AidlAnnotatable::IsNullable() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::NULLABLE);
 }
 
+bool AidlAnnotatable::IsHeapNullable() const {
+  auto annot = GetAnnotation(annotations_, AidlAnnotation::Type::NULLABLE);
+  if (annot) {
+    return annot->ParamValue<bool>("heap").value_or(false);
+  }
+  return false;
+}
+
 bool AidlAnnotatable::IsUtf8InCpp() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::UTF8_IN_CPP);
 }
@@ -382,6 +417,21 @@ std::vector<std::string> AidlAnnotatable::SuppressWarnings() const {
     auto names = annot->ParamValue<std::vector<std::string>>("value");
     AIDL_FATAL_IF(!names.has_value(), this);
     return std::move(names.value());
+  }
+  return {};
+}
+
+// Parses the @Enforce annotation expression.
+std::unique_ptr<perm::Expression> AidlAnnotatable::EnforceExpression(
+    const AidlNode& context) const {
+  auto annot = GetAnnotation(annotations_, AidlAnnotation::Type::ENFORCE);
+  if (annot) {
+    auto perm_expr = annot->EnforceExpression();
+    if (!perm_expr.ok()) {
+      // This should have been caught during validation.
+      AIDL_FATAL(context) << "Unable to parse @Enforce annotation: " << perm_expr.error();
+    }
+    return std::move(perm_expr.value());
   }
   return {};
 }
@@ -486,9 +536,15 @@ string AidlTypeSpecifier::ToString() const {
   return ret;
 }
 
-bool AidlTypeSpecifier::Resolve(const AidlTypenames& typenames) {
+// When `scope` is specified, name is resolved first based on it.
+// `scope` can be null for built-in types and fully-qualified types.
+bool AidlTypeSpecifier::Resolve(const AidlTypenames& typenames, const AidlScope* scope) {
   AIDL_FATAL_IF(IsResolved(), this);
-  AidlTypenames::ResolvedTypename result = typenames.ResolveTypename(unresolved_name_);
+  std::string name = unresolved_name_;
+  if (scope) {
+    name = scope->ResolveName(name);
+  }
+  AidlTypenames::ResolvedTypename result = typenames.ResolveTypename(name);
   if (result.is_resolved) {
     fully_qualified_name_ = result.canonical_name;
     split_name_ = Split(fully_qualified_name_, ".");
@@ -628,6 +684,12 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
     if (GetName() == "ParcelableHolder") {
       AIDL_ERROR(this) << "ParcelableHolder cannot be nullable.";
       return false;
+    }
+    if (IsHeapNullable()) {
+      if (!defined_type || IsArray() || !defined_type->AsParcelable()) {
+        AIDL_ERROR(this) << "@nullable(heap=true) is available to parcelables.";
+        return false;
+      }
     }
   }
   return true;
@@ -820,7 +882,7 @@ bool AidlCommentable::IsDeprecated() const {
 }
 
 AidlMember::AidlMember(const AidlLocation& location, const Comments& comments)
-    : AidlCommentable(location, comments) {}
+    : AidlAnnotatable(location, comments) {}
 
 AidlConstantDeclaration::AidlConstantDeclaration(const AidlLocation& location,
                                                  AidlTypeSpecifier* type, const std::string& name,
@@ -900,21 +962,33 @@ string AidlMethod::ToString() const {
 AidlDefinedType::AidlDefinedType(const AidlLocation& location, const std::string& name,
                                  const Comments& comments, const std::string& package,
                                  std::vector<std::unique_ptr<AidlMember>>* members)
-    : AidlAnnotatable(location, comments),
-      name_(name),
-      package_(package),
-      split_package_(package.empty() ? std::vector<std::string>()
-                                     : android::base::Split(package, ".")) {
+    : AidlMember(location, comments), AidlScope(this), name_(name), package_(package) {
+  // adjust name/package when name is fully qualified (for preprocessed files)
+  if (package_.empty() && name_.find('.') != std::string::npos) {
+    // Note that this logic is absolutely wrong.  Given a parcelable
+    // org.some.Foo.Bar, the class name is Foo.Bar, but this code will claim that
+    // the class is just Bar.  However, this was the way it was done in the past.
+    //
+    // See b/17415692
+    auto pos = name.rfind('.');
+    // name is the last part.
+    name_ = name.substr(pos + 1);
+    // package is the initial parts (except the last).
+    package_ = name.substr(0, pos);
+  }
   if (members) {
     for (auto& m : *members) {
-      if (auto constant = m->AsConstantDeclaration(); constant) {
+      if (auto constant = AidlCast<AidlConstantDeclaration>(*m); constant) {
         constants_.emplace_back(constant);
-      } else if (auto variable = m->AsVariableDeclaration(); variable) {
+      } else if (auto variable = AidlCast<AidlVariableDeclaration>(*m); variable) {
         variables_.emplace_back(variable);
-      } else if (auto method = m->AsMethod(); method) {
+      } else if (auto method = AidlCast<AidlMethod>(*m); method) {
         methods_.emplace_back(method);
+      } else if (auto type = AidlCast<AidlDefinedType>(*m); type) {
+        type->SetEnclosingScope(this);
+        types_.emplace_back(type);
       } else {
-        AIDL_FATAL(*m);
+        AIDL_FATAL(*m) << "Unknown member type.";
       }
       members_.push_back(m.release());
     }
@@ -936,11 +1010,51 @@ std::string AidlDefinedType::GetCanonicalName() const {
   if (package_.empty()) {
     return GetName();
   }
+  if (auto parent = GetParentType(); parent) {
+    return parent->GetCanonicalName() + "." + GetName();
+  }
   return GetPackage() + "." + GetName();
 }
 
 bool AidlDefinedType::CheckValidWithMembers(const AidlTypenames& typenames) const {
   bool success = true;
+
+  for (const auto& t : GetNestedTypes()) {
+    success = success && t->CheckValid(typenames);
+  }
+
+  if (auto parameterizable = AsParameterizable();
+      parameterizable && parameterizable->IsGeneric() && !GetNestedTypes().empty()) {
+    AIDL_ERROR(this) << "Generic types can't have nested types.";
+    return false;
+  }
+
+  std::set<std::string> nested_type_names;
+  for (const auto& t : GetNestedTypes()) {
+    bool duplicated = !nested_type_names.emplace(t->GetName()).second;
+    if (duplicated) {
+      AIDL_ERROR(t) << "Redefinition of '" << t->GetName() << "'.";
+      success = false;
+    }
+    // nested type can't have a parent name
+    if (t->GetName() == GetName()) {
+      AIDL_ERROR(t) << "Nested type '" << GetName() << "' has the same name as its parent.";
+      success = false;
+    }
+    // Having unstructured parcelables as nested types doesn't make sense because they are defined
+    // somewhere else in native languages (e.g. C++, Java...).
+    if (AidlCast<AidlParcelable>(*t)) {
+      AIDL_ERROR(t) << "'" << t->GetName()
+                    << "' is nested. Unstructured parcelables should be at the root scope.";
+      return false;
+    }
+    // For now we don't allow "interface" to be nested
+    if (AidlCast<AidlInterface>(*t)) {
+      AIDL_ERROR(t) << "'" << t->GetName()
+                    << "' is nested. Interfaces should be at the root scope.";
+      return false;
+    }
+  }
 
   for (const auto& v : GetFields()) {
     const bool field_valid = v->CheckValid(typenames);
@@ -993,6 +1107,71 @@ bool AidlDefinedType::CheckValidForGetterNames() const {
     }
   }
   return success;
+}
+
+const AidlDefinedType* AidlDefinedType::GetParentType() const {
+  AIDL_FATAL_IF(GetEnclosingScope() == nullptr, this) << "Scope is not set.";
+  return AidlCast<AidlDefinedType>(GetEnclosingScope()->GetNode());
+}
+
+// Resolve `name` in the current scope. If not found, delegate to the parent
+std::string AidlDefinedType::ResolveName(const std::string& name) const {
+  // For example, in the following, t1's type Baz means x.Foo.Bar.Baz
+  // while t2's type is y.Baz.
+  // package x;
+  // import y.Baz;
+  // parcelable Foo {
+  //   parcelable Bar {
+  //     enum Baz { ... }
+  //     Baz t1; // -> should be x.Foo.Bar.Baz
+  //   }
+  //   Baz t2; // -> should be y.Baz
+  //   Bar.Baz t3; // -> should be x.Foo.Bar.Baz
+  // }
+  AIDL_FATAL_IF(!GetEnclosingScope(), this)
+      << "Type should have an enclosing scope.(e.g. AidlDocument)";
+  if (AidlTypenames::IsBuiltinTypename(name)) {
+    return name;
+  }
+
+  const auto first_dot = name.find_first_of('.');
+  // For "Outer.Inner", we look up "Outer" in the import list.
+  const std::string class_name =
+      (first_dot == std::string::npos) ? name : name.substr(0, first_dot);
+  // Keep ".Inner", to make a fully-qualified name
+  const std::string nested_type = (first_dot == std::string::npos) ? "" : name.substr(first_dot);
+
+  // check if it is a nested type
+  for (const auto& type : GetNestedTypes()) {
+    if (type->GetName() == class_name) {
+      return type->GetCanonicalName() + nested_type;
+    }
+  }
+
+  return GetEnclosingScope()->ResolveName(name);
+}
+
+template <>
+const AidlDefinedType* AidlCast<AidlDefinedType>(const AidlNode& node) {
+  struct Visitor : AidlVisitor {
+    const AidlDefinedType* defined_type = nullptr;
+    void Visit(const AidlInterface& t) override { defined_type = &t; }
+    void Visit(const AidlEnumDeclaration& t) override { defined_type = &t; }
+    void Visit(const AidlStructuredParcelable& t) override { defined_type = &t; }
+    void Visit(const AidlUnionDecl& t) override { defined_type = &t; }
+    void Visit(const AidlParcelable& t) override { defined_type = &t; }
+  } v;
+  node.DispatchVisit(v);
+  return v.defined_type;
+}
+
+const AidlDocument& AidlDefinedType::GetDocument() const {
+  // TODO(b/182508839): resolve with nested types when we support nested types
+  auto scope = GetEnclosingScope();
+  AIDL_FATAL_IF(!scope, this) << "no scope defined.";
+  auto doc = AidlCast<AidlDocument>(scope->GetNode());
+  AIDL_FATAL_IF(!doc, this) << "scope is not a document.";
+  return *doc;
 }
 
 AidlParcelable::AidlParcelable(const AidlLocation& location, const std::string& name,
@@ -1161,33 +1340,20 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
 }
 
 // TODO: we should treat every backend all the same in future.
-bool AidlParcelable::LanguageSpecificCheckValid(const AidlTypenames& /*typenames*/,
-                                                Options::Language lang) const {
-  if (lang == Options::Language::CPP || lang == Options::Language::NDK) {
-    const AidlParcelable* unstructured_parcelable = this->AsUnstructuredParcelable();
-    if (unstructured_parcelable != nullptr) {
-      if (unstructured_parcelable->GetCppHeader().empty()) {
-        AIDL_ERROR(unstructured_parcelable)
-            << "Unstructured parcelable must have C++ header defined.";
-        return false;
-      }
+bool AidlDefinedType::LanguageSpecificCheckValid(const AidlTypenames& typenames,
+                                                 Options::Language lang) const {
+  struct Visitor : AidlVisitor {
+    Visitor(const AidlTypenames& typenames, Options::Language lang)
+        : typenames(typenames), lang(lang) {}
+    void Visit(const AidlTypeSpecifier& type) override {
+      success = success && type.LanguageSpecificCheckValid(typenames, lang);
     }
-  }
-  return true;
-}
-
-// TODO: we should treat every backend all the same in future.
-bool AidlStructuredParcelable::LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                                          Options::Language lang) const {
-  if (!AidlParcelable::LanguageSpecificCheckValid(typenames, lang)) {
-    return false;
-  }
-  for (const auto& v : this->GetFields()) {
-    if (!v->GetType().LanguageSpecificCheckValid(typenames, lang)) {
-      return false;
-    }
-  }
-  return true;
+    const AidlTypenames& typenames;
+    Options::Language lang;
+    bool success = true;
+  } v(typenames, lang);
+  VisitTopDown(v, *this);
+  return v.success;
 }
 
 AidlEnumerator::AidlEnumerator(const AidlLocation& location, const std::string& name,
@@ -1259,10 +1425,21 @@ bool AidlEnumDeclaration::Autofill(const AidlTypenames& typenames) {
     backing_type_ =
         std::make_unique<AidlTypeSpecifier>(AIDL_LOCATION_HERE, "byte", false, nullptr, Comments{});
   }
-  // Autofill() is called after type resolution, we resolve the backing type manually.
-  if (!backing_type_->Resolve(typenames)) {
-    AIDL_ERROR(this) << "Invalid backing type: " << backing_type_->GetName();
+
+  // we only support/test a few backing types, so make sure this is a supported
+  // one (otherwise boolean might work, which isn't supported/tested in all
+  // backends)
+  static std::set<string> kBackingTypes = {"byte", "int", "long"};
+  if (kBackingTypes.find(backing_type_->GetName()) == kBackingTypes.end()) {
+    AIDL_ERROR(this) << "Invalid backing type: " << backing_type_->GetName()
+                     << ". Backing type must be one of: " << Join(kBackingTypes, ", ");
+    return false;
   }
+
+  // Autofill() is called before type resolution, we resolve the backing type manually.
+  AIDL_FATAL_IF(!backing_type_->Resolve(typenames, nullptr),
+                "supporting backing types must resolve");
+
   return true;
 }
 
@@ -1345,36 +1522,6 @@ bool AidlUnionDecl::CheckValid(const AidlTypenames& typenames) const {
   return success;
 }
 
-// TODO: we should treat every backend all the same in future.
-bool AidlUnionDecl::LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                               Options::Language lang) const {
-  if (!AidlParcelable::LanguageSpecificCheckValid(typenames, lang)) {
-    return false;
-  }
-  for (const auto& v : this->GetFields()) {
-    if (!v->GetType().LanguageSpecificCheckValid(typenames, lang)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-// TODO: we should treat every backend all the same in future.
-bool AidlInterface::LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                               Options::Language lang) const {
-  for (const auto& m : this->GetMethods()) {
-    if (!m->GetType().LanguageSpecificCheckValid(typenames, lang)) {
-      return false;
-    }
-    for (const auto& arg : m->GetArguments()) {
-      if (!arg->GetType().LanguageSpecificCheckValid(typenames, lang)) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
 AidlInterface::AidlInterface(const AidlLocation& location, const std::string& name,
                              const Comments& comments, bool oneway, const std::string& package,
                              std::vector<std::unique_ptr<AidlMember>>* members)
@@ -1435,6 +1582,12 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
         AIDL_ERROR(arg) << "Argument name cannot begin with '_aidl'";
         return false;
       }
+
+      if (arg->GetType().GetName() == "void") {
+        AIDL_ERROR(arg->GetType())
+            << "'void' is an invalid type for the parameter '" << arg->GetName() << "'";
+        return false;
+      }
     }
 
     auto it = method_names.find(m->GetName());
@@ -1481,31 +1634,49 @@ AidlImport::AidlImport(const AidlLocation& location, const std::string& needed_c
                        const Comments& comments)
     : AidlNode(location, comments), needed_class_(needed_class) {}
 
-// Resolves unresolved type name to fully qualified typename to import
-// case #1: SimpleName --> import p.SimpleName
-// case #2: Outer.Inner --> import p.Outer
-// case #3: p.SimpleName --> (as is)
-std::optional<std::string> AidlDocument::ResolveName(const std::string& unresolved_name) const {
-  std::string canonical_name;
-  const auto first_dot = unresolved_name.find_first_of('.');
+AidlDocument::AidlDocument(const AidlLocation& location, const Comments& comments,
+                           std::vector<std::unique_ptr<AidlImport>> imports,
+                           std::vector<std::unique_ptr<AidlDefinedType>> defined_types,
+                           bool is_preprocessed)
+    : AidlCommentable(location, comments),
+      AidlScope(this),
+      imports_(std::move(imports)),
+      defined_types_(std::move(defined_types)),
+      is_preprocessed_(is_preprocessed) {
+  for (const auto& t : defined_types_) {
+    t->SetEnclosingScope(this);
+  }
+}
+
+// Resolves type name in the current document.
+// - built-in types
+// - imported types
+// - top-level type
+std::string AidlDocument::ResolveName(const std::string& name) const {
+  if (AidlTypenames::IsBuiltinTypename(name)) {
+    return name;
+  }
+
+  const auto first_dot = name.find_first_of('.');
+  // For "Outer.Inner", we look up "Outer" in the import list.
   const std::string class_name =
-      (first_dot == std::string::npos) ? unresolved_name : unresolved_name.substr(0, first_dot);
+      (first_dot == std::string::npos) ? name : name.substr(0, first_dot);
+  // Keep ".Inner", to make a fully-qualified name
+  const std::string nested_type = (first_dot == std::string::npos) ? "" : name.substr(first_dot);
+
   for (const auto& import : Imports()) {
-    const auto& fq_name = import->GetNeededClass();
-    const auto last_dot = fq_name.find_last_of('.');
-    const std::string imported_type_name =
-        (last_dot == std::string::npos) ? fq_name : fq_name.substr(last_dot + 1);
-    if (imported_type_name == class_name) {
-      if (canonical_name != "" && canonical_name != fq_name) {
-        AIDL_ERROR(import) << "Ambiguous type: " << canonical_name << " vs. " << fq_name;
-        return {};
-      }
-      canonical_name = fq_name;
+    if (import->SimpleName() == class_name) {
+      return import->GetNeededClass() + nested_type;
     }
   }
-  // if not found, use unresolved_name as it is
-  if (canonical_name == "") {
-    return unresolved_name;
+
+  // check if it is a top-level type.
+  for (const auto& type : DefinedTypes()) {
+    if (type->GetName() == class_name) {
+      return type->GetCanonicalName() + nested_type;
+    }
   }
-  return canonical_name;
+
+  // name itself might be fully-qualified name.
+  return name;
 }
