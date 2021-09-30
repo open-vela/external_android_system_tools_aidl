@@ -226,6 +226,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		ImportsWithoutVersion: i.properties.ImportsWithoutVersion,
 		Stability:             i.properties.Stability,
 		Min_sdk_version:       i.minSdkVersion(langJava),
+		Platform_apis:         proptools.Bool(i.properties.Backend.Java.Platform_apis),
 		Lang:                  langJava,
 		BaseName:              i.ModuleBase.Name(),
 		Version:               i.versionForAidlGenRule(version),
