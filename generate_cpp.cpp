@@ -220,13 +220,6 @@ std::vector<unique_ptr<Declaration>> NestInNamespaces(vector<unique_ptr<Declarat
   return decls;
 }
 
-std::vector<unique_ptr<Declaration>> NestInNamespaces(unique_ptr<Declaration> decl,
-                                                      const vector<string>& package) {
-  vector<unique_ptr<Declaration>> decls;
-  decls.push_back(std::move(decl));
-  return NestInNamespaces(std::move(decls), package);
-}
-
 unique_ptr<Declaration> DefineClientTransaction(const AidlTypenames& typenames,
                                                 const AidlInterface& interface,
                                                 const AidlMethod& method, const Options& options) {
@@ -533,8 +526,8 @@ void BuildConstantDefinitions(const AidlDefinedType& type, const AidlTypenames& 
   }
 }
 
-void BuildConstantDeclarations(const AidlDefinedType& type, const AidlTypenames& typenames,
-                               unique_ptr<ClassDecl>& cls) {
+void GenerateConstantDeclarations(CodeWriter& out, const AidlDefinedType& type,
+                                  const AidlTypenames& typenames) {
   std::vector<std::unique_ptr<Declaration>> string_constants;
   unique_ptr<Enum> byte_constant_enum{new Enum{"", "int8_t", false}};
   unique_ptr<Enum> int_constant_enum{new Enum{"", "int32_t", false}};
@@ -563,17 +556,17 @@ void BuildConstantDeclarations(const AidlDefinedType& type, const AidlTypenames&
     }
   }
   if (byte_constant_enum->HasValues()) {
-    cls->AddPublic(std::move(byte_constant_enum));
+    byte_constant_enum->Write(&out);
   }
   if (int_constant_enum->HasValues()) {
-    cls->AddPublic(std::move(int_constant_enum));
+    int_constant_enum->Write(&out);
   }
   if (long_constant_enum->HasValues()) {
-    cls->AddPublic(std::move(long_constant_enum));
+    long_constant_enum->Write(&out);
   }
   if (!string_constants.empty()) {
     for (auto& string_constant : string_constants) {
-      cls->AddPublic(std::move(string_constant));
+      string_constant->Write(&out);
     }
   }
 }
@@ -965,49 +958,49 @@ void GenerateServerHeader(CodeWriter& out, const AidlInterface& interface,
   LeaveNamespace(out, interface);
 }
 
-unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
-                                          const AidlInterface& interface, const Options& options) {
+void GenerateInterfaceClassDecl(CodeWriter& out, const AidlInterface& interface,
+                                const AidlTypenames& typenames, const Options& options) {
   const string i_name = ClassName(interface, ClassNames::INTERFACE);
-  const string attribute = GetDeprecatedAttribute(interface);
-  unique_ptr<ClassDecl> if_class{new ClassDecl{i_name, "::android::IInterface", {}, attribute}};
-  if_class->AddPublic(unique_ptr<Declaration>{new MacroDecl{
-      "DECLARE_META_INTERFACE",
-      ArgList{vector<string>{ClassName(interface, ClassNames::BASE)}}}});
 
+  EnterNamespace(out, interface);
+  out << "class";
+  GenerateDeprecated(out, interface);
+  out << " " << i_name << " : public ::android::IInterface {\n";
+  out << "public:\n";
+  out.Indent();
+  out << "DECLARE_META_INTERFACE(" << ClassName(interface, ClassNames::BASE) << ")\n";
   if (options.Version() > 0) {
-    std::ostringstream code;
-    code << "const int32_t VERSION = " << options.Version() << ";\n";
-
-    if_class->AddPublic(unique_ptr<Declaration>(new LiteralDecl(code.str())));
+    out << "const int32_t VERSION = " << std::to_string(options.Version()) << ";\n";
   }
   if (!options.Hash().empty()) {
-    std::ostringstream code;
-    code << "const std::string HASH = \"" << options.Hash() << "\";\n";
-
-    if_class->AddPublic(unique_ptr<Declaration>(new LiteralDecl(code.str())));
+    out << "const std::string HASH = \"" << options.Hash() << "\";\n";
   }
-
-  BuildConstantDeclarations(interface, typenames, if_class);
-
-  if (!interface.GetMethods().empty()) {
-    for (const auto& method : interface.GetMethods()) {
-      if (method->IsUserDefined()) {
-        // Each method gets an enum entry and pure virtual declaration.
-        if_class->AddPublic(BuildMethodDecl(*method, typenames, true));
-      } else {
-        if_class->AddPublic(BuildMetaMethodDecl(*method, typenames, options, true));
-      }
+  GenerateConstantDeclarations(out, interface, typenames);
+  for (const auto& method : interface.GetMethods()) {
+    if (method->IsUserDefined()) {
+      // Each method gets an enum entry and pure virtual declaration.
+      BuildMethodDecl(*method, typenames, true)->Write(&out);
+    } else {
+      BuildMetaMethodDecl(*method, typenames, options, true)->Write(&out);
     }
   }
+  out.Dedent();
+  out << "};  // class " << i_name << "\n";
+  out << "\n";
 
   // Implement the default impl class.
-  vector<unique_ptr<Declaration>> method_decls;
+  const string default_impl = ClassName(interface, ClassNames::DEFAULT_IMPL);
+  out << "class";
+  GenerateDeprecated(out, interface);
+  out << " " << default_impl << " : public " << i_name << " {\n";
+  out << "public:\n";
+  out.Indent();
   // onAsBinder returns nullptr as this interface is not associated with a
   // real binder.
-  method_decls.emplace_back(
-      new LiteralDecl("::android::IBinder* onAsBinder() override {\n"
-                      "  return nullptr;\n"
-                      "}\n"));
+  out << "::android::IBinder* onAsBinder() override {\n"
+      << "  return nullptr;\n"
+      << "}\n";
+
   // Each interface method by default returns UNKNOWN_TRANSACTION with is
   // the same status that is returned by transact() when the method is
   // not implemented in the server side. In other words, these default
@@ -1015,45 +1008,25 @@ unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
   // impl class without having to override all methods in an interface.
   for (const auto& method : interface.GetMethods()) {
     if (method->IsUserDefined()) {
-      std::ostringstream code;
-      code << "::android::binder::Status " << method->GetName()
-           << BuildArgList(typenames, *method, true, true).ToString() << " override";
-      GenerateDeprecated(code, *method);
-      code << " {\n"
-           << "  return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);\n"
-           << "}\n";
-      method_decls.emplace_back(new LiteralDecl(code.str()));
-    } else {
-      if (method->GetName() == kGetInterfaceVersion && options.Version() > 0) {
-        std::ostringstream code;
-        code << "int32_t " << kGetInterfaceVersion << "() override {\n"
-             << "  return 0;\n"
-             << "}\n";
-        method_decls.emplace_back(new LiteralDecl(code.str()));
-      }
-      if (method->GetName() == kGetInterfaceHash && !options.Hash().empty()) {
-        std::ostringstream code;
-        code << "std::string " << kGetInterfaceHash << "() override {\n"
-             << "  return \"\";\n"
-             << "}\n";
-        method_decls.emplace_back(new LiteralDecl(code.str()));
-      }
+      out << "::android::binder::Status " << method->GetName()
+          << BuildArgList(typenames, *method, true, true).ToString() << " override";
+      GenerateDeprecated(out, *method);
+      out << " {\n"
+          << "  return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);\n"
+          << "}\n";
+    } else if (method->GetName() == kGetInterfaceVersion && options.Version() > 0) {
+      out << "int32_t " << kGetInterfaceVersion << "() override {\n"
+          << "  return 0;\n"
+          << "}\n";
+    } else if (method->GetName() == kGetInterfaceHash && !options.Hash().empty()) {
+      out << "std::string " << kGetInterfaceHash << "() override {\n"
+          << "  return \"\";\n"
+          << "}\n";
     }
   }
-
-  vector<unique_ptr<Declaration>> decls;
-  decls.emplace_back(std::move(if_class));
-  decls.emplace_back(new ClassDecl{
-      ClassName(interface, ClassNames::DEFAULT_IMPL),
-      i_name,
-      {},
-      std::move(method_decls),
-      {},
-      attribute,  // inherits the same attributes
-  });
-
-  return unique_ptr<Document>(
-      new Document({}, NestInNamespaces(std::move(decls), interface.GetSplitPackage())));
+  out.Dedent();
+  out << "};  // class " << default_impl << "\n";
+  LeaveNamespace(out, interface);
 }
 
 string GetInitializer(const AidlTypenames& typenames, const AidlVariableDeclaration& variable) {
@@ -1165,14 +1138,13 @@ void BuildWriteToParcel(const AidlUnionDecl& decl, const AidlTypenames& typename
   write_block->AddLiteral(body, /*add_semicolon=*/false);
 }
 
-void BuildParcelFields(ClassDecl& clazz, const AidlStructuredParcelable& decl,
-                       const AidlTypenames& typenames) {
+void GenerateParcelFields(CodeWriter& out, const AidlStructuredParcelable& decl,
+                          const AidlTypenames& typenames) {
   for (const auto& variable : decl.GetFields()) {
-    std::ostringstream out;
     std::string cppType = CppNameOf(variable->GetType(), typenames);
     out << cppType;
     GenerateDeprecated(out, *variable);
-    out << " " << variable->GetName().c_str();
+    out << " " << variable->GetName();
     if (variable->GetDefaultValue()) {
       out << " = " << GetInitializer(typenames, *variable);
     } else if (variable->GetType().GetName() == "ParcelableHolder") {
@@ -1183,67 +1155,62 @@ void BuildParcelFields(ClassDecl& clazz, const AidlStructuredParcelable& decl,
       }
     }
     out << ";\n";
-
-    clazz.AddPublic(std::unique_ptr<LiteralDecl>(new LiteralDecl(out.str())));
   }
 }
 
-void BuildParcelFields(ClassDecl& clazz, const AidlUnionDecl& decl,
-                       const AidlTypenames& typenames) {
+void GenerateParcelFields(CodeWriter& out, const AidlUnionDecl& decl,
+                          const AidlTypenames& typenames) {
   UnionWriter uw{decl, typenames, &CppNameOf, &ConstantValueDecorator};
-  string public_fields;
-  string private_fields;
-  uw.PublicFields(*CodeWriter::ForString(&public_fields));
-  uw.PrivateFields(*CodeWriter::ForString(&private_fields));
-  clazz.AddPublic(std::make_unique<LiteralDecl>(public_fields));
-  clazz.AddPrivate(std::make_unique<LiteralDecl>(private_fields));
+  uw.PublicFields(out);
 }
 
 template <typename ParcelableType>
-std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
-                                            const ParcelableType& parcel, const Options&) {
-  const std::vector<std::string>& type_params =
-      parcel.IsGeneric() ? parcel.GetTypeParameters() : std::vector<std::string>();
-  const std::string attribute = GetDeprecatedAttribute(parcel);
-  unique_ptr<ClassDecl> parcel_class{
-      new ClassDecl{parcel.GetName(), "::android::Parcelable", type_params, attribute}};
+void GenerateParcelClassDecl(CodeWriter& out, const ParcelableType& parcel,
+                             const AidlTypenames& typenames, const Options&) {
+  const string clazz = parcel.GetName();
 
-  string operator_code;
-  GenerateParcelableComparisonOperators(*CodeWriter::ForString(&operator_code), parcel);
-  parcel_class->AddPublic(std::make_unique<LiteralDecl>(operator_code));
+  EnterNamespace(out, parcel);
+  out << TemplateDecl(parcel);
+  out << "class";
+  GenerateDeprecated(out, parcel);
+  out << " " << clazz << " : public ::android::Parcelable {\n";
+  out << "public:\n";
+  out.Indent();
 
-  BuildParcelFields(*parcel_class, parcel, typenames);
-  BuildConstantDeclarations(parcel, typenames, parcel_class);
+  GenerateParcelableComparisonOperators(out, parcel);
+
+  GenerateParcelFields(out, parcel, typenames);
+
+  GenerateConstantDeclarations(out, parcel, typenames);
 
   if (parcel.IsVintfStability()) {
-    parcel_class->AddPublic(std::unique_ptr<LiteralDecl>(
-        new LiteralDecl("::android::Parcelable::Stability getStability() const override { return "
-                        "::android::Parcelable::Stability::STABILITY_VINTF; }\n")));
+    out << "::android::Parcelable::Stability getStability() const override { return "
+           "::android::Parcelable::Stability::STABILITY_VINTF; }\n";
   }
 
-  unique_ptr<MethodDecl> read(new MethodDecl(kAndroidStatusLiteral, "readFromParcel",
-                                             ArgList("const ::android::Parcel* _aidl_parcel"),
-                                             MethodDecl::IS_FINAL));
-  parcel_class->AddPublic(std::move(read));
-  unique_ptr<MethodDecl> write(new MethodDecl(kAndroidStatusLiteral, "writeToParcel",
-                                              ArgList("::android::Parcel* _aidl_parcel"),
-                                              MethodDecl::IS_CONST | MethodDecl::IS_FINAL));
-  parcel_class->AddPublic(std::move(write));
+  out << kAndroidStatusLiteral << " readFromParcel(const ::android::Parcel* _aidl_parcel) final;\n";
+  out << kAndroidStatusLiteral << " writeToParcel(::android::Parcel* _aidl_parcel) const final;\n";
 
-  parcel_class->AddPublic(std::unique_ptr<LiteralDecl>(
-      new LiteralDecl(StringPrintf("static const ::android::String16& getParcelableDescriptor() {\n"
-                                   "  static const ::android::StaticString16 DESCIPTOR (u\"%s\");\n"
-                                   "  return DESCIPTOR;\n"
-                                   "}\n",
-                                   parcel.GetCanonicalName().c_str()))));
+  const string canonical_name = parcel.GetCanonicalName();
+  out << "static const ::android::String16& getParcelableDescriptor() {\n"
+      << "  static const ::android::StaticString16 DESCIPTOR (u\"" << canonical_name << "\");\n"
+      << "  return DESCIPTOR;\n"
+      << "}\n";
 
-  // toString() method
-  string to_string;
-  GenerateToString(*CodeWriter::ForString(&to_string), parcel);
-  parcel_class->AddPublic(std::make_unique<LiteralDecl>(to_string));
+  GenerateToString(out, parcel);
 
-  return unique_ptr<Document>(
-      new Document({}, NestInNamespaces(std::move(parcel_class), parcel.GetSplitPackage())));
+  out.Dedent();
+
+  if (auto decl = AidlCast<AidlUnionDecl>(parcel); decl) {
+    out << "private:\n";
+    out.Indent();
+    UnionWriter uw{*decl, typenames, &CppNameOf, &ConstantValueDecorator};
+    uw.PrivateFields(out);
+    out.Dedent();
+  }
+
+  out << "};  // class " << clazz << "\n";
+  LeaveNamespace(out, parcel);
 }
 
 template <typename T>
@@ -1300,27 +1267,31 @@ std::string GenerateEnumToString(const AidlTypenames& typenames,
   return code.str();
 }
 
-std::unique_ptr<Document> BuildEnumHeader(const AidlTypenames& typenames,
-                                          const AidlEnumDeclaration& enum_decl) {
-  const std::string attribute = GetDeprecatedAttribute(enum_decl);
-  std::unique_ptr<Enum> generated_enum{new Enum{
-      enum_decl.GetName(), CppNameOf(enum_decl.GetBackingType(), typenames), true, attribute}};
+void GenerateEnumClassDecl(CodeWriter& out, const AidlEnumDeclaration& enum_decl,
+                           const AidlTypenames& typenames) {
+  const string clazz = enum_decl.GetName();
+  const string backing_type = CppNameOf(enum_decl.GetBackingType(), typenames);
+
+  EnterNamespace(out, enum_decl);
+  out << "enum class";
+  GenerateDeprecated(out, enum_decl);
+  out << " " << clazz << " : " << backing_type << " {\n";
+  out.Indent();
   for (const auto& enumerator : enum_decl.GetEnumerators()) {
-    generated_enum->AddValue(
-        enumerator->GetName(),
-        enumerator->ValueString(enum_decl.GetBackingType(), ConstantValueDecorator));
+    out << enumerator->GetName() << " = "
+        << enumerator->ValueString(enum_decl.GetBackingType(), ConstantValueDecorator) << ",\n";
   }
+  out.Dedent();
+  out << "};\n";
+  out << "\n";
+  out << GenerateEnumToString(typenames, enum_decl);
+  LeaveNamespace(out, enum_decl);
 
-  std::vector<std::unique_ptr<Declaration>> decls1;
-  decls1.push_back(std::move(generated_enum));
-  decls1.push_back(std::make_unique<LiteralDecl>(GenerateEnumToString(typenames, enum_decl)));
-
-  std::vector<std::unique_ptr<Declaration>> decls2;
-  decls2.push_back(std::make_unique<LiteralDecl>(GenerateEnumValues(enum_decl, {""})));
-
-  return unique_ptr<Document>(
-      new Document({}, Append(NestInNamespaces(std::move(decls1), enum_decl.GetSplitPackage()),
-                              NestInNamespaces(std::move(decls2), {"android", "internal"}))));
+  out << "namespace android {\n";
+  out << "namespace internal {\n";
+  out << GenerateEnumValues(enum_decl, {""});
+  out << "}  // namespace internal\n";
+  out << "}  // namespace android\n";
 }
 
 }  // namespace internals
@@ -1424,19 +1395,19 @@ void GenerateHeader(CodeWriter& out, const AidlDefinedType& defined_type,
   out << "#pragma once\n\n";
   GenerateHeaderIncludes(out, defined_type, typenames, options);
   if (auto iface = AidlCast<AidlInterface>(defined_type); iface) {
-    BuildInterfaceHeader(typenames, *iface, options)->Write(&out);
+    GenerateInterfaceClassDecl(out, *iface, typenames, options);
   } else if (auto parcelable = AidlCast<AidlStructuredParcelable>(defined_type); parcelable) {
-    BuildParcelHeader(typenames, *parcelable, options)->Write(&out);
+    GenerateParcelClassDecl(out, *parcelable, typenames, options);
     if (parcelable->IsGeneric()) {
       BuildParcelSource(typenames, *parcelable, options)->Write(&out);
     }
   } else if (auto union_decl = AidlCast<AidlUnionDecl>(defined_type); union_decl) {
-    BuildParcelHeader(typenames, *union_decl, options)->Write(&out);
+    GenerateParcelClassDecl(out, *union_decl, typenames, options);
     if (union_decl->IsGeneric()) {
       BuildParcelSource(typenames, *union_decl, options)->Write(&out);
     }
   } else if (auto enum_decl = AidlCast<AidlEnumDeclaration>(defined_type); enum_decl) {
-    BuildEnumHeader(typenames, *enum_decl)->Write(&out);
+    GenerateEnumClassDecl(out, *enum_decl, typenames);
   } else {
     AIDL_FATAL(defined_type) << "Unrecognized type sent for CPP generation.";
   }
