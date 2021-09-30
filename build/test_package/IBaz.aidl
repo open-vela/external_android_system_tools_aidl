@@ -18,7 +18,6 @@ package test_package;
 
 import some_package.IBar;
 
-@SuppressWarnings(value={"mixed-oneway", "inout-parameter", "out-array"})
 interface IBaz {
     oneway void CanYouDealWithThisBar(in IBar bar);
     void MethodAddedInVersion2();

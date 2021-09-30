@@ -27,13 +27,12 @@ int main(int argc, char** argv) {
   const std::string path = argv[1];
 
   Json::Value root;
-  Json::CharReaderBuilder builder;
+  Json::Reader reader;
 
   std::ifstream stream(path);
-  std::string errorMessage;
-  if (!Json::parseFromStream(builder, stream, &root, &errorMessage)) {
+  if (!reader.parse(stream, root)) {
     std::cerr << "Failed to read interface metadata file: " << path << std::endl
-              << errorMessage << std::endl;
+              << reader.getFormattedErrorMessages() << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -54,12 +53,6 @@ int main(int argc, char** argv) {
     std::cout << "std::vector<std::string>{" << std::endl;
     for (const Json::Value& intf : entry["hashes"]) {
       std::cout << "std::string(\"" << intf.asString() << "\")," << std::endl;
-    }
-    std::cout << "}," << std::endl;
-    std::cout << entry["has_development"].asString() << "," << std::endl;
-    std::cout << "std::vector<size_t>{" << std::endl;
-    for (const Json::Value& intf : entry["versions"]) {
-      std::cout << intf.asString() << "," << std::endl;
     }
     std::cout << "}," << std::endl;
     std::cout << "}," << std::endl;
