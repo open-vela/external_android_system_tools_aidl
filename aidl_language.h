@@ -244,6 +244,7 @@ class AidlAnnotatable : public AidlNode {
   bool IsVintfStability() const;
   bool IsStableApiParcelable(Options::Language lang) const;
   bool IsHide() const;
+  const AidlAnnotation* JavaDerive() const;
 
   void DumpAnnotations(CodeWriter* writer) const;
 
