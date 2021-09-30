@@ -14,7 +14,12 @@ enum class BackendType : int8_t {
   NDK = 2,
   RUST = 3,
 };
-
+}  // namespace tests
+}  // namespace aidl
+}  // namespace android
+namespace android {
+namespace aidl {
+namespace tests {
 [[nodiscard]] static inline std::string toString(BackendType val) {
   switch(val) {
   case BackendType::CPP:

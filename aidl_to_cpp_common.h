@@ -73,6 +73,9 @@ std::vector<T> Append(std::vector<T>&& as, std::vector<T>&& bs) {
   return appended;
 }
 
+// Returns Parent1::Parent2::Self. Namespaces are not included.
+std::string GetQualifiedName(const AidlDefinedType& type);
+
 std::string GenerateEnumValues(const AidlEnumDeclaration& enum_decl,
                                const std::vector<std::string>& enclosing_namespaces_of_enum_decl);
 std::string TemplateDecl(const AidlParcelable& defined_type);
