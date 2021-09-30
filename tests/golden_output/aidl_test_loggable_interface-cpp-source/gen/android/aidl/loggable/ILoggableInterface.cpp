@@ -1,18 +1,11 @@
 #include <android/aidl/loggable/ILoggableInterface.h>
 #include <android/aidl/loggable/BpLoggableInterface.h>
-
 namespace android {
-
 namespace aidl {
-
 namespace loggable {
-
 DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(LoggableInterface, "android.aidl.loggable.ILoggableInterface")
-
 }  // namespace loggable
-
 }  // namespace aidl
-
 }  // namespace android
 #include <android/aidl/loggable/BpLoggableInterface.h>
 #include <android/aidl/loggable/BnLoggableInterface.h>
