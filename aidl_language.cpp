@@ -882,7 +882,7 @@ bool AidlCommentable::IsDeprecated() const {
 }
 
 AidlMember::AidlMember(const AidlLocation& location, const Comments& comments)
-    : AidlCommentable(location, comments) {}
+    : AidlAnnotatable(location, comments) {}
 
 AidlConstantDeclaration::AidlConstantDeclaration(const AidlLocation& location,
                                                  AidlTypeSpecifier* type, const std::string& name,
@@ -962,7 +962,7 @@ string AidlMethod::ToString() const {
 AidlDefinedType::AidlDefinedType(const AidlLocation& location, const std::string& name,
                                  const Comments& comments, const std::string& package,
                                  std::vector<std::unique_ptr<AidlMember>>* members)
-    : AidlAnnotatable(location, comments), AidlScope(this), name_(name), package_(package) {
+    : AidlMember(location, comments), AidlScope(this), name_(name), package_(package) {
   // adjust name/package when name is fully qualified (for preprocessed files)
   if (package_.empty() && name_.find('.') != std::string::npos) {
     // Note that this logic is absolutely wrong.  Given a parcelable
@@ -978,14 +978,17 @@ AidlDefinedType::AidlDefinedType(const AidlLocation& location, const std::string
   }
   if (members) {
     for (auto& m : *members) {
-      if (auto constant = m->AsConstantDeclaration(); constant) {
+      if (auto constant = AidlCast<AidlConstantDeclaration>(*m); constant) {
         constants_.emplace_back(constant);
-      } else if (auto variable = m->AsVariableDeclaration(); variable) {
+      } else if (auto variable = AidlCast<AidlVariableDeclaration>(*m); variable) {
         variables_.emplace_back(variable);
-      } else if (auto method = m->AsMethod(); method) {
+      } else if (auto method = AidlCast<AidlMethod>(*m); method) {
         methods_.emplace_back(method);
+      } else if (auto type = AidlCast<AidlDefinedType>(*m); type) {
+        type->SetEnclosingScope(this);
+        types_.emplace_back(type);
       } else {
-        AIDL_FATAL(*m);
+        AIDL_FATAL(*m) << "Unknown member type.";
       }
       members_.push_back(m.release());
     }
@@ -1007,11 +1010,38 @@ std::string AidlDefinedType::GetCanonicalName() const {
   if (package_.empty()) {
     return GetName();
   }
+  if (auto parent = GetParentType(); parent) {
+    return parent->GetCanonicalName() + "." + GetName();
+  }
   return GetPackage() + "." + GetName();
 }
 
 bool AidlDefinedType::CheckValidWithMembers(const AidlTypenames& typenames) const {
   bool success = true;
+
+  for (const auto& t : GetNestedTypes()) {
+    success = success && t->CheckValid(typenames);
+  }
+
+  std::set<std::string> nested_type_names;
+  for (const auto& t : GetNestedTypes()) {
+    bool duplicated = !nested_type_names.emplace(t->GetName()).second;
+    if (duplicated) {
+      AIDL_ERROR(t) << "Redefinition of '" << t->GetName() << "'.";
+      success = false;
+    }
+    // nested type can't have a parent name
+    if (t->GetName() == GetName()) {
+      AIDL_ERROR(t) << "Nested type '" << GetName() << "' has the same name as its parent.";
+      success = false;
+    }
+    // For now we don't allow "interface" to be nested
+    if (AidlCast<AidlInterface>(*t)) {
+      AIDL_ERROR(t) << "'" << t->GetName()
+                    << "' is nested. Interfaces should be at the root scope.";
+      return false;
+    }
+  }
 
   for (const auto& v : GetFields()) {
     const bool field_valid = v->CheckValid(typenames);
@@ -1066,34 +1096,60 @@ bool AidlDefinedType::CheckValidForGetterNames() const {
   return success;
 }
 
+const AidlDefinedType* AidlDefinedType::GetParentType() const {
+  AIDL_FATAL_IF(GetEnclosingScope() == nullptr, this) << "Scope is not set.";
+  return AidlCast<AidlDefinedType>(GetEnclosingScope()->GetNode());
+}
+
+// Resolve `name` in the current scope. If not found, delegate to the parent
 std::string AidlDefinedType::ResolveName(const std::string& name) const {
-  // TODO(b/182508839): resolve with nested types when we support nested types
-  //
-  // For example, in the following (the syntax is TBD), t1's Type is x.Foo.Bar.Type
-  // while t2's Type is y.Type.
-  //
+  // For example, in the following, t1's type Baz means x.Foo.Bar.Baz
+  // while t2's type is y.Baz.
   // package x;
-  // import y.Type;
+  // import y.Baz;
   // parcelable Foo {
   //   parcelable Bar {
-  //     enum Type { Type1, Type2 }
-  //     Type t1;
+  //     enum Baz { ... }
+  //     Baz t1; // -> should be x.Foo.Bar.Baz
   //   }
-  //   Type t2;
+  //   Baz t2; // -> should be y.Baz
+  //   Bar.Baz t3; // -> should be x.Foo.Bar.Baz
   // }
   AIDL_FATAL_IF(!GetEnclosingScope(), this)
       << "Type should have an enclosing scope.(e.g. AidlDocument)";
+  if (AidlTypenames::IsBuiltinTypename(name)) {
+    return name;
+  }
+
+  const auto first_dot = name.find_first_of('.');
+  // For "Outer.Inner", we look up "Outer" in the import list.
+  const std::string class_name =
+      (first_dot == std::string::npos) ? name : name.substr(0, first_dot);
+  // Keep ".Inner", to make a fully-qualified name
+  const std::string nested_type = (first_dot == std::string::npos) ? "" : name.substr(first_dot);
+
+  // check if it is a nested type
+  for (const auto& type : GetNestedTypes()) {
+    if (type->GetName() == class_name) {
+      return type->GetCanonicalName() + nested_type;
+    }
+  }
+
   return GetEnclosingScope()->ResolveName(name);
 }
 
-template <typename T>
-const T* AidlCast(const AidlNode& node) {
-  struct CastVisitor : AidlVisitor {
-    const T* cast = nullptr;
-    void Visit(const T& t) override { cast = &t; }
-  } visitor;
-  node.DispatchVisit(visitor);
-  return visitor.cast;
+template <>
+const AidlDefinedType* AidlCast<AidlDefinedType>(const AidlNode& node) {
+  struct Visitor : AidlVisitor {
+    const AidlDefinedType* defined_type = nullptr;
+    void Visit(const AidlInterface& t) override { defined_type = &t; }
+    void Visit(const AidlEnumDeclaration& t) override { defined_type = &t; }
+    void Visit(const AidlStructuredParcelable& t) override { defined_type = &t; }
+    void Visit(const AidlUnionDecl& t) override { defined_type = &t; }
+    void Visit(const AidlParcelable& t) override { defined_type = &t; }
+  } v;
+  node.DispatchVisit(v);
+  return v.defined_type;
 }
 
 const AidlDocument& AidlDefinedType::GetDocument() const {
@@ -1271,14 +1327,20 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
 }
 
 // TODO: we should treat every backend all the same in future.
-bool AidlParcelable::LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                                Options::Language lang) const {
-  for (const auto& v : this->GetFields()) {
-    if (!v->GetType().LanguageSpecificCheckValid(typenames, lang)) {
-      return false;
+bool AidlDefinedType::LanguageSpecificCheckValid(const AidlTypenames& typenames,
+                                                 Options::Language lang) const {
+  struct Visitor : AidlVisitor {
+    Visitor(const AidlTypenames& typenames, Options::Language lang)
+        : typenames(typenames), lang(lang) {}
+    void Visit(const AidlTypeSpecifier& type) override {
+      success = success && type.LanguageSpecificCheckValid(typenames, lang);
     }
-  }
-  return true;
+    const AidlTypenames& typenames;
+    Options::Language lang;
+    bool success = true;
+  } v(typenames, lang);
+  VisitTopDown(v, *this);
+  return v.success;
 }
 
 AidlEnumerator::AidlEnumerator(const AidlLocation& location, const std::string& name,
@@ -1434,22 +1496,6 @@ bool AidlUnionDecl::CheckValid(const AidlTypenames& typenames) const {
   }
 
   return success;
-}
-
-// TODO: we should treat every backend all the same in future.
-bool AidlInterface::LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                               Options::Language lang) const {
-  for (const auto& m : this->GetMethods()) {
-    if (!m->GetType().LanguageSpecificCheckValid(typenames, lang)) {
-      return false;
-    }
-    for (const auto& arg : m->GetArguments()) {
-      if (!arg->GetType().LanguageSpecificCheckValid(typenames, lang)) {
-        return false;
-      }
-    }
-  }
-  return true;
 }
 
 AidlInterface::AidlInterface(const AidlLocation& location, const std::string& name,
