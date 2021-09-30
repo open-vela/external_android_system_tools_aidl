@@ -1425,10 +1425,21 @@ bool AidlEnumDeclaration::Autofill(const AidlTypenames& typenames) {
     backing_type_ =
         std::make_unique<AidlTypeSpecifier>(AIDL_LOCATION_HERE, "byte", false, nullptr, Comments{});
   }
-  // Autofill() is called after type resolution, we resolve the backing type manually.
-  if (!backing_type_->Resolve(typenames, nullptr)) {
-    AIDL_ERROR(this) << "Invalid backing type: " << backing_type_->GetName();
+
+  // we only support/test a few backing types, so make sure this is a supported
+  // one (otherwise boolean might work, which isn't supported/tested in all
+  // backends)
+  static std::set<string> kBackingTypes = {"byte", "int", "long"};
+  if (kBackingTypes.find(backing_type_->GetName()) == kBackingTypes.end()) {
+    AIDL_ERROR(this) << "Invalid backing type: " << backing_type_->GetName()
+                     << ". Backing type must be one of: " << Join(kBackingTypes, ", ");
+    return false;
   }
+
+  // Autofill() is called before type resolution, we resolve the backing type manually.
+  AIDL_FATAL_IF(!backing_type_->Resolve(typenames, nullptr),
+                "supporting backing types must resolve");
+
   return true;
 }
 
