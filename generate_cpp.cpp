@@ -1034,10 +1034,6 @@ string GetInitializer(const AidlTypenames& typenames, const AidlVariableDeclarat
   return cppType + "(" + variable.ValueString(ConstantValueDecorator) + ")";
 }
 
-void AddTypeSpecificHeaders(const AidlStructuredParcelable&, std::set<std::string>& includes) {
-  includes.insert("tuple");  // std::tie in comparison operators
-}
-
 void BuildReadFromParcel(const AidlStructuredParcelable& parcel, const AidlTypenames& typenames,
                          StatementBlock* read_block) {
   read_block->AddLiteral(
@@ -1116,10 +1112,6 @@ ParcelWriterContext GetParcelWriterContext(const AidlTypenames& typenames) {
                                ParcelWriteCastOf(type, typenames, value));
           },
   };
-}
-
-void AddTypeSpecificHeaders(const AidlUnionDecl&, std::set<std::string>& includes) {
-  includes.insert(std::begin(UnionWriter::headers), std::end(UnionWriter::headers));
 }
 
 void BuildReadFromParcel(const AidlUnionDecl& decl, const AidlTypenames& typenames,
