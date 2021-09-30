@@ -1,18 +1,11 @@
 #include <android/aidl/tests/IOldName.h>
 #include <android/aidl/tests/BpOldName.h>
-
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(OldName, "android.aidl.tests.IOldName")
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
 #include <android/aidl/tests/BpOldName.h>
 #include <android/aidl/tests/BnOldName.h>
