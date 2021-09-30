@@ -21,6 +21,7 @@
 
 #include <android-base/stringprintf.h>
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include "aidl.h"
 #include "aidl_checkapi.h"
@@ -395,6 +396,24 @@ TEST_F(AidlTest, AcceptsAnnotatedOnewayMethod) {
   EXPECT_NE(nullptr, Parse("a/IFoo.aidl", oneway_method, typenames_, Options::Language::CPP));
   typenames_.Reset();
   EXPECT_NE(nullptr, Parse("a/IFoo.aidl", oneway_method, typenames_, Options::Language::JAVA));
+}
+
+TEST_F(AidlTest, ParsesJavaDeriveAnnotation) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    @JavaDerive(toString=true) parcelable IFoo { int a; float b; })");
+  Options java_options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(java_options, io_delegate_));
+
+  string java_out;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/IFoo.java", &java_out));
+  EXPECT_THAT(java_out, testing::HasSubstr("public String toString() {"));
+
+  // Other backends shouldn't be bothered
+  Options cpp_options = Options::From("aidl --lang=cpp -o out -h out a/IFoo.aidl");
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(cpp_options, io_delegate_));
+
+  Options ndk_options = Options::From("aidl --lang=ndk -o out -h out a/IFoo.aidl");
+  EXPECT_EQ(0, ::android::aidl::compile_aidl(ndk_options, io_delegate_));
 }
 
 TEST_F(AidlTest, WritesComments) {

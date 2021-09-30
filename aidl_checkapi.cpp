@@ -48,6 +48,7 @@ static set<AidlAnnotation> get_strict_annotations(const AidlAnnotatable& node) {
   // - a new implementation might start accepting null values (add @nullable)
   static const set<std::string> kIgnoreAnnotations{
       "nullable",
+      "JavaDerive",
   };
   set<AidlAnnotation> annotations;
   for (const AidlAnnotation& annotation : node.GetAnnotations()) {
