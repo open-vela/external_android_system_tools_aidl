@@ -17,8 +17,11 @@
 #include <vector>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
+
 class StructuredParcelable : public ::android::Parcelable {
 public:
   inline bool operator!=(const StructuredParcelable& rhs) const {
@@ -164,6 +167,9 @@ public:
     return os.str();
   }
 };  // class StructuredParcelable
+
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android

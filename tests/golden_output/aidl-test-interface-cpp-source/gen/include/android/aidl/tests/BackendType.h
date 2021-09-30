@@ -6,8 +6,11 @@
 #include <string>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
+
 enum class BackendType : int8_t {
   CPP = 0,
   JAVA = 1,
@@ -29,11 +32,16 @@ enum class BackendType : int8_t {
     return std::to_string(static_cast<int8_t>(val));
   }
 }
+
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android
 namespace android {
+
 namespace internal {
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc++17-extensions"
 template <>
@@ -44,5 +52,7 @@ constexpr inline std::array<::android::aidl::tests::BackendType, 4> enum_values<
   ::android::aidl::tests::BackendType::RUST,
 };
 #pragma clang diagnostic pop
+
 }  // namespace internal
+
 }  // namespace android
