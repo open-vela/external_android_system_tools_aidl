@@ -1035,6 +1035,13 @@ bool AidlDefinedType::CheckValidWithMembers(const AidlTypenames& typenames) cons
       AIDL_ERROR(t) << "Nested type '" << GetName() << "' has the same name as its parent.";
       success = false;
     }
+    // Having unstructured parcelables as nested types doesn't make sense because they are defined
+    // somewhere else in native languages (e.g. C++, Java...).
+    if (AidlCast<AidlParcelable>(*t)) {
+      AIDL_ERROR(t) << "'" << t->GetName()
+                    << "' is nested. Unstructured parcelables should be at the root scope.";
+      return false;
+    }
     // For now we don't allow "interface" to be nested
     if (AidlCast<AidlInterface>(*t)) {
       AIDL_ERROR(t) << "'" << t->GetName()
