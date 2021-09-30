@@ -45,7 +45,6 @@ class FakeIoDelegate : public IoDelegate {
   bool FileIsReadable(const std::string& path) const override;
   std::unique_ptr<CodeWriter> GetCodeWriter(
       const std::string& file_path) const override;
-  void RemovePath(const std::string& file_path) const override;
   android::base::Result<std::vector<std::string>> ListFiles(const std::string& dir) const override;
 
   // Methods added to facilitate testing.
@@ -63,8 +62,6 @@ class FakeIoDelegate : public IoDelegate {
   const std::map<std::string, std::string>& InputFiles() const;
   const std::map<std::string, std::string>& OutputFiles() const;
 
-  bool PathWasRemoved(const std::string& path);
-
  private:
   std::map<std::string, std::string> file_contents_;
   // Normally, writing to files leaves the IoDelegate unchanged, so
@@ -75,7 +72,6 @@ class FakeIoDelegate : public IoDelegate {
   // We normally just write to strings in |written_file_contents_| but for
   // files in this list, we simulate I/O errors.
   std::set<std::string> broken_files_;
-  mutable std::set<std::string> removed_files_;
 };  // class FakeIoDelegate
 
 }  // namespace test
