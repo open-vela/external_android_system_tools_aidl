@@ -13,7 +13,12 @@ enum class ByteEnum : int8_t {
   BAR = 2,
   BAZ = 3,
 };
-
+}  // namespace tests
+}  // namespace aidl
+}  // namespace android
+namespace android {
+namespace aidl {
+namespace tests {
 [[nodiscard]] static inline std::string toString(ByteEnum val) {
   switch(val) {
   case ByteEnum::FOO:

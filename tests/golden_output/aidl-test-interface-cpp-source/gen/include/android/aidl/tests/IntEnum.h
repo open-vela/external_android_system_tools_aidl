@@ -13,7 +13,12 @@ enum class IntEnum : int32_t {
   BAR = 2000,
   BAZ = 2001,
 };
-
+}  // namespace tests
+}  // namespace aidl
+}  // namespace android
+namespace android {
+namespace aidl {
+namespace tests {
 [[nodiscard]] static inline std::string toString(IntEnum val) {
   switch(val) {
   case IntEnum::FOO:
