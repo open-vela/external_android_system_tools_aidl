@@ -18,7 +18,6 @@
 #include "fake_io_delegate.h"
 #include "options.h"
 
-#include <fuzzer/FuzzedDataProvider.h>
 #include <iostream>
 
 #ifdef FUZZ_LOG
@@ -29,6 +28,55 @@ constexpr bool kFuzzLog = false;
 
 using android::aidl::test::FakeIoDelegate;
 
+void fuzz(const std::string& langOpt, const std::string& content) {
+  // TODO: fuzz multiple files
+  // TODO: fuzz arguments
+  FakeIoDelegate io;
+  io.SetFileContents("a/path/Foo.aidl", content);
+
+  std::vector<std::string> args;
+  args.emplace_back("aidl");
+  args.emplace_back("--lang=" + langOpt);
+  args.emplace_back("-b");
+  args.emplace_back("-I .");
+  args.emplace_back("-o out");
+  // corresponding items also in aidl_parser_fuzzer.dict
+  args.emplace_back("a/path/Foo.aidl");
+
+  if (kFuzzLog) {
+    std::cout << "lang: " << langOpt << " content: " << content << std::endl;
+  }
+
+  int ret = android::aidl::compile_aidl(Options::From(args), io);
+  if (ret != 0) return;
+
+  if (kFuzzLog) {
+    for (const std::string& f : io.ListOutputFiles()) {
+      std::string output;
+      if (io.GetWrittenContents(f, &output)) {
+        std::cout << "OUTPUT " << f << ": " << std::endl;
+        std::cout << output << std::endl;
+      }
+    }
+  }
+}
+
+void fuzz(uint8_t options, const std::string& content) {
+  // keeping a byte of options we can use for various flags in the future (do
+  // not remove or add unless absolutely necessary in order to preserve the
+  // corpus).
+  (void)options;
+
+  // Process for each backend.
+  //
+  // This is unfortunate because we are parsing multiple times, but we want to
+  // check generation of content for each backend. If output fails in one
+  // backend, it's likely to fail in another.
+  fuzz("ndk", content);
+  fuzz("cpp", content);
+  fuzz("java", content);
+}
+
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   if (size <= 1) return 0;  // no use
 
@@ -38,44 +86,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   // of the language w/o hitting a stack overflow.
   if (size > 2000) return 0;
 
-  FuzzedDataProvider provider = FuzzedDataProvider(data, size);
-  FakeIoDelegate io;
-  std::vector<std::string> args;
+  uint8_t options = *data;
+  data++;
+  size--;
 
-  size_t numArgs = provider.ConsumeIntegralInRange(0, 20);
-  for (size_t i = 0; i < numArgs; i++) {
-    args.emplace_back(provider.ConsumeRandomLengthString());
-  }
-
-  while (provider.remaining_bytes() > 0) {
-    const std::string name = provider.ConsumeRandomLengthString();
-    const std::string contents = provider.ConsumeRandomLengthString();
-    io.SetFileContents(name, contents);
-  }
-
-  if (kFuzzLog) {
-    std::cout << "cmd: ";
-    for (const std::string& arg : args) {
-      std::cout << arg << " ";
-    }
-    std::cout << std::endl;
-
-    for (const auto& [f, input] : io.InputFiles()) {
-      std::cout << "INPUT " << f << ": " << input << std::endl;
-    }
-  }
-
-  int ret = android::aidl::aidl_entry(Options::From(args), io);
-
-  if (kFuzzLog) {
-    std::cout << "RET: " << ret << std::endl;
-    if (ret != 0) {
-      for (const auto& [f, output] : io.OutputFiles()) {
-        std::cout << "OUTPUT " << f << ": " << std::endl;
-        std::cout << output << std::endl;
-      }
-    }
-  }
+  std::string content(reinterpret_cast<const char*>(data), size);
+  fuzz(options, content);
 
   return 0;
 }
