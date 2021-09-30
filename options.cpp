@@ -196,7 +196,10 @@ bool Options::StabilityFromString(const std::string& stability, Stability* out_s
 static const std::map<std::string, uint32_t> codeNameToVersion = {
     {"S", 31},
     {"Tiramisu", 10000},
-    {"current", 10000},  // this is an alias for the latest in-development platform version
+    // this is an alias for the latest in-development platform version
+    {"current", 10000},
+    // this is an alias for use of all APIs, including those not in any API surface
+    {"platform_apis", 10001},
 };
 
 static Result<uint32_t> MinSdkVersionFromString(const std::string& str) {
