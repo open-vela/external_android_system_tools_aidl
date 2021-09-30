@@ -42,8 +42,6 @@ class FakeIoDelegate : public IoDelegate {
   std::unique_ptr<std::string> GetFileContents(
       const std::string& filename,
       const std::string& append_content_suffix = "") const override;
-  std::unique_ptr<LineReader> GetLineReader(
-      const std::string& file_path) const override;
   bool FileIsReadable(const std::string& path) const override;
   std::unique_ptr<CodeWriter> GetCodeWriter(
       const std::string& file_path) const override;
@@ -68,9 +66,6 @@ class FakeIoDelegate : public IoDelegate {
   bool PathWasRemoved(const std::string& path);
 
  private:
-  // Remove leading "./" from |path|.
-  std::string CleanPath(const std::string& path) const;
-
   std::map<std::string, std::string> file_contents_;
   // Normally, writing to files leaves the IoDelegate unchanged, so
   // GetCodeWriter is a const method.  However, for tests, we break this
