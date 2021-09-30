@@ -16,11 +16,8 @@
 #endif
 
 namespace android {
-
 namespace aidl {
-
 namespace loggable {
-
 class Union : public ::android::Parcelable {
 public:
   inline bool operator!=(const Union& rhs) const {
@@ -111,9 +108,6 @@ public:
 private:
   std::variant<int32_t, ::std::string> _value;
 };  // class Union
-
 }  // namespace loggable
-
 }  // namespace aidl
-
 }  // namespace android

@@ -10,11 +10,8 @@
 #include <utils/String16.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 class RecursiveList : public ::android::Parcelable {
 public:
   inline bool operator!=(const RecursiveList& rhs) const {
@@ -53,9 +50,6 @@ public:
     return os.str();
   }
 };  // class RecursiveList
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
