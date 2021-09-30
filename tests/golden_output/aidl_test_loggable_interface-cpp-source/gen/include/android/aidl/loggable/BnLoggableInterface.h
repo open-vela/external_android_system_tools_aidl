@@ -6,11 +6,8 @@
 #include <android/binder_to_string.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace loggable {
-
 class BnLoggableInterface : public ::android::BnInterface<ILoggableInterface> {
 public:
   static constexpr uint32_t TRANSACTION_LogThis = ::android::IBinder::FIRST_CALL_TRANSACTION + 0;
@@ -32,9 +29,6 @@ public:
   };
   static std::function<void(const TransactionLog&)> logFunc;
 };  // class BnLoggableInterface
-
 }  // namespace loggable
-
 }  // namespace aidl
-
 }  // namespace android

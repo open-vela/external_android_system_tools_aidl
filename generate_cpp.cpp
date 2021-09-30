@@ -865,133 +865,104 @@ unique_ptr<Document> BuildInterfaceSource(const AidlTypenames& typenames,
       NestInNamespaces(std::move(decls), interface.GetSplitPackage())}};
 }
 
-unique_ptr<Document> BuildClientHeader(const AidlTypenames& typenames,
-                                       const AidlInterface& interface, const Options& options) {
-  const string i_name = ClassName(interface, ClassNames::INTERFACE);
+void GenerateClientHeader(CodeWriter& out, const AidlInterface& interface,
+                          const AidlTypenames& typenames, const Options& options) {
   const string bp_name = ClassName(interface, ClassNames::CLIENT);
+  const string iface = ClassName(interface, ClassNames::INTERFACE);
 
-  vector<string> includes = {kIBinderHeader, kIInterfaceHeader, "utils/Errors.h",
-                             HeaderFile(interface, ClassNames::RAW, false)};
+  out << "#pragma once\n\n";
+  out << "#include <" << kIBinderHeader << ">\n";
+  out << "#include <" << kIInterfaceHeader << ">\n";
+  out << "#include <utils/Errors.h>\n";
+  out << "#include <" << HeaderFile(interface, ClassNames::RAW, false) << ">\n";
+  if (options.GenLog()) {
+    out << "#include <functional>\n";  // for std::function
+    out << "#include <android/binder_to_string.h>\n";
+  }
+  out << "\n";
+  EnterNamespace(out, interface);
+  out << "class";
+  cpp::GenerateDeprecated(out, interface);
+  out << " " << bp_name << " : public ::android::BpInterface<" << iface << "> {\n";
+  out << "public:\n";
+  out.Indent();
+  out << "explicit " << bp_name << "(const ::android::sp<::android::IBinder>& " << kImplVarName
+      << ");\n";
+  out << "virtual ~" << bp_name << "() = default;\n";
 
-  unique_ptr<ConstructorDecl> constructor{new ConstructorDecl{
-      bp_name,
-      ArgList{StringPrintf("const ::android::sp<::android::IBinder>& %s",
-                           kImplVarName)},
-      ConstructorDecl::IS_EXPLICIT
-  }};
-  unique_ptr<ConstructorDecl> destructor{new ConstructorDecl{
-      "~" + bp_name,
-      ArgList{},
-      ConstructorDecl::IS_VIRTUAL | ConstructorDecl::IS_DEFAULT}};
-
-  vector<unique_ptr<Declaration>> publics;
-  vector<unique_ptr<Declaration>> privates;
-
-  publics.push_back(std::move(constructor));
-  publics.push_back(std::move(destructor));
-
-  for (const auto& method: interface.GetMethods()) {
+  for (const auto& method : interface.GetMethods()) {
     if (method->IsUserDefined()) {
-      publics.push_back(BuildMethodDecl(*method, typenames, false));
+      BuildMethodDecl(*method, typenames, false)->Write(&out);
     } else {
-      publics.push_back(BuildMetaMethodDecl(*method, typenames, options, false));
+      BuildMetaMethodDecl(*method, typenames, options, false)->Write(&out);
     }
   }
 
   if (options.GenLog()) {
-    includes.emplace_back("functional");  // for std::function
-    includes.emplace_back("android/binder_to_string.h");
+    out << kTransactionLogStruct;
+    out << "static std::function<void(const TransactionLog&)> logFunc;\n";
+  }
+  out.Dedent();
 
-    publics.emplace_back(new LiteralDecl{kTransactionLogStruct});
-    publics.emplace_back(
-        new LiteralDecl{"static std::function<void(const TransactionLog&)> logFunc;\n"});
+  if (options.Version() > 0 || !options.Hash().empty()) {
+    out << "private:\n";
+    out.Indent();
+    if (options.Version() > 0) {
+      out << "int32_t cached_version_ = -1;\n";
+    }
+    if (!options.Hash().empty()) {
+      out << "std::string cached_hash_ = \"-1\";\n";
+      out << "std::mutex cached_hash_mutex_;\n";
+    }
+    out.Dedent();
   }
 
-  if (options.Version() > 0) {
-    privates.emplace_back(new LiteralDecl("int32_t cached_version_ = -1;\n"));
-  }
-  if (!options.Hash().empty()) {
-    privates.emplace_back(new LiteralDecl("std::string cached_hash_ = \"-1\";\n"));
-    privates.emplace_back(new LiteralDecl("std::mutex cached_hash_mutex_;\n"));
-  }
-
-  const string attribute = GetDeprecatedAttribute(interface);
-  unique_ptr<ClassDecl> bp_class{new ClassDecl{
-      bp_name,
-      "::android::BpInterface<" + i_name + ">",
-      {},
-      std::move(publics),
-      std::move(privates),
-      attribute,
-  }};
-
-  return unique_ptr<Document>{
-      new CppHeader{includes, NestInNamespaces(std::move(bp_class), interface.GetSplitPackage())}};
+  out << "};  // class " << bp_name << "\n";
+  LeaveNamespace(out, interface);
 }
 
-unique_ptr<Document> BuildServerHeader(const AidlTypenames& /* typenames */,
-                                       const AidlInterface& interface, const Options& options) {
-  const string i_name = ClassName(interface, ClassNames::INTERFACE);
+void GenerateServerHeader(CodeWriter& out, const AidlInterface& interface,
+                          const AidlTypenames& /* typenames */, const Options& options) {
   const string bn_name = ClassName(interface, ClassNames::SERVER);
+  const string iface = ClassName(interface, ClassNames::INTERFACE);
 
-  unique_ptr<ConstructorDecl> constructor{
-      new ConstructorDecl{bn_name, ArgList{}, ConstructorDecl::IS_EXPLICIT}};
-
-  unique_ptr<Declaration> on_transact{new MethodDecl{
-      kAndroidStatusLiteral, "onTransact",
-      ArgList{{StringPrintf("uint32_t %s", kCodeVarName),
-               StringPrintf("const %s& %s", kAndroidParcelLiteral,
-                            kDataVarName),
-               StringPrintf("%s* %s", kAndroidParcelLiteral, kReplyVarName),
-               StringPrintf("uint32_t %s", kFlagsVarName)}},
-      MethodDecl::IS_OVERRIDE
-  }};
-  vector<string> includes = {"binder/IInterface.h", HeaderFile(interface, ClassNames::RAW, false)};
-
-  vector<unique_ptr<Declaration>> publics;
-  vector<unique_ptr<Declaration>> privates;
-
-  for (const auto& method : interface.GetMethods()) {
-    std::ostringstream code;
-    code << "static constexpr uint32_t TRANSACTION_" << method->GetName() << " = "
-         << "::android::IBinder::FIRST_CALL_TRANSACTION + " << method->GetId() << ";\n";
-    publics.push_back(std::make_unique<LiteralDecl>(code.str()));
+  out << "#pragma once\n\n";
+  out << "#include <binder/IInterface.h>\n";
+  out << "#include <" << HeaderFile(interface, ClassNames::RAW, false) << ">\n";
+  if (options.GenLog()) {
+    out << "#include <functional>\n";  // for std::function
+    out << "#include <android/binder_to_string.h>\n";
   }
-
-  publics.push_back(std::move(constructor));
-  publics.push_back(std::move(on_transact));
-
+  out << "\n";
+  EnterNamespace(out, interface);
+  out << "class";
+  cpp::GenerateDeprecated(out, interface);
+  out << " " << bn_name << " : public "
+      << "::android::BnInterface<" << iface << "> {\n";
+  out << "public:\n";
+  out.Indent();
+  for (const auto& method : interface.GetMethods()) {
+    out << "static constexpr uint32_t TRANSACTION_" << method->GetName() << " = "
+        << "::android::IBinder::FIRST_CALL_TRANSACTION + " << std::to_string(method->GetId())
+        << ";\n";
+  }
+  out << "explicit " << bn_name << "();\n";
+  out << fmt::format("{} onTransact(uint32_t {}, const {}& {}, {}* {}, uint32_t {}) override;\n",
+                     kAndroidStatusLiteral, kCodeVarName, kAndroidParcelLiteral, kDataVarName,
+                     kAndroidParcelLiteral, kReplyVarName, kFlagsVarName);
   if (options.Version() > 0) {
-    std::ostringstream code;
-    code << "int32_t " << kGetInterfaceVersion << "() final;\n";
-    publics.emplace_back(new LiteralDecl(code.str()));
+    out << "int32_t " << kGetInterfaceVersion << "() final;\n";
   }
   if (!options.Hash().empty()) {
-    std::ostringstream code;
-    code << "std::string " << kGetInterfaceHash << "();\n";
-    publics.emplace_back(new LiteralDecl(code.str()));
+    out << "std::string " << kGetInterfaceHash << "();\n";
   }
-
   if (options.GenLog()) {
-    includes.emplace_back("functional");  // for std::function
-    includes.emplace_back("android/binder_to_string.h");
-
-    publics.emplace_back(new LiteralDecl{kTransactionLogStruct});
-    publics.emplace_back(
-        new LiteralDecl{"static std::function<void(const TransactionLog&)> logFunc;\n"});
+    out << kTransactionLogStruct;
+    out << "static std::function<void(const TransactionLog&)> logFunc;\n";
   }
-  const string attribute = GetDeprecatedAttribute(interface);
-  unique_ptr<ClassDecl> bn_class{new ClassDecl{
-      bn_name,
-      "::android::BnInterface<" + i_name + ">",
-      {},
-      std::move(publics),
-      std::move(privates),
-      attribute,
-  }};
-
-  return unique_ptr<Document>{
-      new CppHeader{includes, NestInNamespaces(std::move(bn_class), interface.GetSplitPackage())}};
+  out.Dedent();
+  out << "};  // class " << bn_name << "\n";
+  LeaveNamespace(out, interface);
 }
 
 unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
@@ -1474,7 +1445,7 @@ void GenerateHeader(CodeWriter& out, const AidlDefinedType& defined_type,
 void GenerateClientHeader(CodeWriter& out, const AidlDefinedType& defined_type,
                           const AidlTypenames& typenames, const Options& options) {
   if (auto iface = AidlCast<AidlInterface>(defined_type); iface) {
-    BuildClientHeader(typenames, *iface, options)->Write(&out);
+    GenerateClientHeader(out, *iface, typenames, options);
   } else if (auto parcelable = AidlCast<AidlStructuredParcelable>(defined_type); parcelable) {
     out << "#error TODO(b/111362593) parcelables do not have bp classes";
   } else if (auto union_decl = AidlCast<AidlUnionDecl>(defined_type); union_decl) {
@@ -1491,7 +1462,7 @@ void GenerateClientHeader(CodeWriter& out, const AidlDefinedType& defined_type,
 void GenerateServerHeader(CodeWriter& out, const AidlDefinedType& defined_type,
                           const AidlTypenames& typenames, const Options& options) {
   if (auto iface = AidlCast<AidlInterface>(defined_type); iface) {
-    BuildServerHeader(typenames, *iface, options)->Write(&out);
+    GenerateServerHeader(out, *iface, typenames, options);
   } else if (auto parcelable = AidlCast<AidlStructuredParcelable>(defined_type); parcelable) {
     out << "#error TODO(b/111362593) parcelables do not have bn classes";
   } else if (auto union_decl = AidlCast<AidlUnionDecl>(defined_type); union_decl) {
@@ -1539,8 +1510,10 @@ bool GenerateCpp(const string& output_file, const Options& options, const AidlTy
     return false;
   }
 
+  using GenFn = void (*)(CodeWriter & out, const AidlDefinedType& defined_type,
+                         const AidlTypenames& typenames, const Options& options);
   // Wrap Generate* function to handle CodeWriter for a file.
-  auto gen = [&](auto file, auto fn) {
+  auto gen = [&](auto file, GenFn fn) {
     unique_ptr<CodeWriter> writer(io_delegate.GetCodeWriter(file));
     fn(*writer, defined_type, typenames, options);
     if (!writer->Close()) {
