@@ -66,13 +66,8 @@ std::unique_ptr<CodeWriter> FakeIoDelegate::GetCodeWriter(
   if (broken_files_.count(file_path) > 0) {
     return unique_ptr<CodeWriter>(new BrokenCodeWriter);
   }
-  removed_files_.erase(file_path);
   written_file_contents_[file_path] = "";
   return CodeWriter::ForString(&written_file_contents_[file_path]);
-}
-
-void FakeIoDelegate::RemovePath(const std::string& file_path) const {
-  removed_files_.insert(file_path);
 }
 
 void FakeIoDelegate::SetFileContents(const string& filename,
@@ -148,13 +143,6 @@ const std::map<std::string, std::string>& FakeIoDelegate::InputFiles() const {
 
 const std::map<std::string, std::string>& FakeIoDelegate::OutputFiles() const {
   return written_file_contents_;
-}
-
-bool FakeIoDelegate::PathWasRemoved(const std::string& path) {
-  if (removed_files_.count(path) > 0) {
-    return true;
-  }
-  return false;
 }
 
 }  // namespace test

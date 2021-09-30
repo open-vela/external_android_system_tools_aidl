@@ -1515,10 +1515,7 @@ bool GenerateCpp(const string& output_file, const Options& options, const AidlTy
   auto gen = [&](auto file, GenFn fn) {
     unique_ptr<CodeWriter> writer(io_delegate.GetCodeWriter(file));
     fn(*writer, defined_type, typenames, options);
-    if (!writer->Close()) {
-      io_delegate.RemovePath(file);
-      return false;
-    }
+    AIDL_FATAL_IF(!writer->Close(), defined_type) << "I/O Error!";
     return true;
   };
 
