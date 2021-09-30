@@ -21,8 +21,11 @@
 #include <vector>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
+
 class ITestService : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(TestService)
@@ -322,6 +325,9 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
 };  // class ITestServiceDefault
+
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android

@@ -8,8 +8,11 @@
 #include <utils/String16.h>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
+
 template <typename T, typename U, typename B>
 class GenericStructuredParcelable : public ::android::Parcelable {
 public:
@@ -49,8 +52,11 @@ public:
     return os.str();
   }
 };  // class GenericStructuredParcelable
+
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android
 #include <android/aidl/tests/GenericStructuredParcelable.h>
 
