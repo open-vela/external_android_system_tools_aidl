@@ -43,6 +43,7 @@ using std::vector;
 using android::base::Error;
 using android::base::Result;
 using android::base::Split;
+using android::base::StartsWith;
 
 namespace android {
 namespace aidl {
@@ -105,11 +106,6 @@ unique_ptr<string> IoDelegate::GetFileContents(
   in.close();
 
   return contents;
-}
-
-unique_ptr<LineReader> IoDelegate::GetLineReader(
-    const string& file_path) const {
-  return LineReader::ReadFromFile(file_path);
 }
 
 bool IoDelegate::FileIsReadable(const string& path) const {
@@ -243,6 +239,13 @@ Result<vector<string>> IoDelegate::ListFiles(const string& dir) const {
   return result;
 }
 #endif
+
+string IoDelegate::CleanPath(const string& path) {
+  if (base::StartsWith(path, string{'.', OS_PATH_SEPARATOR})) {
+    return path.substr(2);
+  }
+  return path;
+}
 
 }  // namespace android
 }  // namespace aidl

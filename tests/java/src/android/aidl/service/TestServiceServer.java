@@ -27,6 +27,7 @@ import android.aidl.tests.IOldName;
 import android.aidl.tests.ITestService;
 import android.aidl.tests.IntEnum;
 import android.aidl.tests.LongEnum;
+import android.aidl.tests.RecursiveList;
 import android.aidl.tests.SimpleParcelable;
 import android.aidl.tests.StructuredParcelable;
 import android.aidl.tests.Union;
@@ -422,6 +423,17 @@ public class TestServiceServer extends ITestService.Stub {
     parcelable.u = Union.ns(new int[] {1, 2, 3});
     parcelable.shouldBeConstS1 = Union.s(Union.S1);
   }
+  @Override
+  public RecursiveList ReverseList(RecursiveList list) throws RemoteException {
+    RecursiveList reversed = null;
+    while (list != null) {
+      RecursiveList next = list.next;
+      list.next = reversed;
+      reversed = list;
+      list = next;
+    }
+    return reversed;
+  }
 
   private static class MyOldName extends IOldName.Stub {
     @Override
@@ -524,6 +536,24 @@ public class TestServiceServer extends ITestService.Stub {
     public void TakesAnIBinderList(List<IBinder> input) throws RemoteException {}
     @Override
     public void TakesANullableIBinderList(List<IBinder> input) throws RemoteException {}
+    @Override
+    public IBinder[] ReverseIBinderArray(IBinder[] input, IBinder[] repeated) {
+      IBinder[] reversed = new IBinder[input.length];
+      for (int i = 0; i < input.length; i++) {
+        repeated[i] = input[i];
+        reversed[i] = input[input.length - i - 1];
+      }
+      return reversed;
+    }
+    @Override
+    public IBinder[] ReverseNullableIBinderArray(IBinder[] input, IBinder[] repeated) {
+      IBinder[] reversed = new IBinder[input.length];
+      for (int i = 0; i < input.length; i++) {
+        repeated[i] = input[i];
+        reversed[i] = input[input.length - i - 1];
+      }
+      return reversed;
+    }
     @Override
     public void RepeatExtendableParcelable(ExtendableParcelable ep, ExtendableParcelable ep2)
         throws RemoteException {
