@@ -595,6 +595,15 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
     return;
   }
 
+  uint32_t rpc_version = MinSdkVersionFromString("Tiramisu").value();
+  // note: we would like to always generate (Java) code to support RPC out of
+  // the box, but doing so causes an unclear error for people trying to use RPC
+  // - now we require them to add the gen_rpc build rule and get this clear message.
+  if (gen_rpc_ && min_sdk_version_ < rpc_version) {
+    error_message_ << "RPC code requires minimum SDK version of at least " << rpc_version << endl;
+    return;
+  }
+
   AIDL_FATAL_IF(!output_dir_.empty() && output_dir_.back() != OS_PATH_SEPARATOR, output_dir_);
   AIDL_FATAL_IF(!output_header_dir_.empty() && output_header_dir_.back() != OS_PATH_SEPARATOR,
                 output_header_dir_);
