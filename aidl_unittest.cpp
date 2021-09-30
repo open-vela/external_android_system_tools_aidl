@@ -3829,6 +3829,25 @@ TEST_P(AidlTest, FailOnOutOfBoundsAutofilledEnum) {
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
+TEST_P(AidlTest, FailOnUnsupportedBackingType) {
+  AidlError error;
+  const string expected_stderr =
+      "ERROR: p/TestEnum.aidl:3.35-44: Invalid backing type: boolean. Backing type must be one of: "
+      "byte, int, long\n";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("p/TestEnum.aidl",
+                           R"(package p;
+                              @Backing(type="boolean")
+                              enum TestEnum {
+                                FOO = 0,
+                                BAR = 1,
+                              }
+                             )",
+                           typenames_, GetLanguage(), &error));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  EXPECT_EQ(AidlError::BAD_TYPE, error);
+}
+
 TEST_P(AidlTest, UnsupportedBackingAnnotationParam) {
   AidlError error;
   const string expected_stderr =
