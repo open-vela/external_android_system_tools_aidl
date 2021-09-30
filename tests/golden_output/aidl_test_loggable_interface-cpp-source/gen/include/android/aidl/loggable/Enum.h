@@ -6,11 +6,8 @@
 #include <string>
 
 namespace android {
-
 namespace aidl {
-
 namespace loggable {
-
 enum class Enum : int8_t {
   FOO = 42,
 };
@@ -23,16 +20,11 @@ enum class Enum : int8_t {
     return std::to_string(static_cast<int8_t>(val));
   }
 }
-
 }  // namespace loggable
-
 }  // namespace aidl
-
 }  // namespace android
 namespace android {
-
 namespace internal {
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc++17-extensions"
 template <>
@@ -40,7 +32,5 @@ constexpr inline std::array<::android::aidl::loggable::Enum, 1> enum_values<::an
   ::android::aidl::loggable::Enum::FOO,
 };
 #pragma clang diagnostic pop
-
 }  // namespace internal
-
 }  // namespace android
