@@ -196,11 +196,22 @@ const string GenLogAfterExecute(const string className, const AidlInterface& int
   return code;
 }
 
+// Returns Parent1::Parent2::Self. Namespaces are not included.
+string GetQualifiedName(const AidlDefinedType& type) {
+  string name = type.GetName();
+  for (auto parent = type.GetParentType(); parent; parent = parent->GetParentType()) {
+    name = parent->GetName() + "::" + name;
+  }
+  return name;
+}
+
+// enum_values template value is defined in its own namespace (android::internal or ndk::internal),
+// so the enum_decl type should be fully qualified.
 std::string GenerateEnumValues(const AidlEnumDeclaration& enum_decl,
                                const std::vector<std::string>& enclosing_namespaces_of_enum_decl) {
   const auto fq_name =
       Join(Append(enclosing_namespaces_of_enum_decl, enum_decl.GetSplitPackage()), "::") +
-      "::" + enum_decl.GetName();
+      "::" + GetQualifiedName(enum_decl);
   const auto size = enum_decl.GetEnumerators().size();
   std::ostringstream code;
   code << "#pragma clang diagnostic push\n";

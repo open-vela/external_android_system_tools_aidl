@@ -13,7 +13,12 @@ enum class LongEnum : int64_t {
   BAR = 200000000000L,
   BAZ = 200000000001L,
 };
-
+}  // namespace tests
+}  // namespace aidl
+}  // namespace android
+namespace android {
+namespace aidl {
+namespace tests {
 [[nodiscard]] static inline std::string toString(LongEnum val) {
   switch(val) {
   case LongEnum::FOO:

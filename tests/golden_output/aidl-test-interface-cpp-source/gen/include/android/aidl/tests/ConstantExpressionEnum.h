@@ -20,7 +20,12 @@ enum class ConstantExpressionEnum : int32_t {
   hexInt32_3 = 1,
   hexInt64_1 = 1,
 };
-
+}  // namespace tests
+}  // namespace aidl
+}  // namespace android
+namespace android {
+namespace aidl {
+namespace tests {
 [[nodiscard]] static inline std::string toString(ConstantExpressionEnum val) {
   switch(val) {
   case ConstantExpressionEnum::decInt32_1:
