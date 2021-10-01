@@ -317,6 +317,15 @@ filegroup {
     path: "tests",
 }
 
+filegroup {
+    name: "libaidl-integration-cpp-test-files",
+    srcs: [
+        "tests/android/aidl/tests/nested/INestedService.aidl",
+        "tests/android/aidl/tests/nested/ParcelableWithNested.aidl",
+    ],
+    path: "tests",
+}
+
 aidl_interface {
     name: "aidl-test-versioned-interface",
     local_include_dir: "tests/versioned",
@@ -347,6 +356,7 @@ cc_library_static {
     srcs: [
         ":libaidl-integration-test-files",
         ":libaidl-integration-cpp-java-test-files",
+        ":libaidl-integration-cpp-test-files",
         "tests/simple_parcelable.cpp",
     ],
 }
@@ -389,6 +399,7 @@ cc_test {
         "tests/aidl_test_client_versioned_interface.cpp",
         "tests/aidl_test_client_renamed_interface.cpp",
         "tests/aidl_test_client_loggable_interface.cpp",
+        "tests/aidl_test_client_nested.cpp",
     ],
 }
 
