@@ -562,7 +562,7 @@ func TestCreatesModulesWithNoVersions(t *testing.T) {
 
 func TestCreatesModulesWithFrozenVersions(t *testing.T) {
 	// Each version should be under aidl_api/<name>/<ver>
-	testAidlError(t, `aidl_api/foo/1`, `
+	testAidlError(t, `No sources for a previous version in aidl_api/foo/1. Was a version manually added to .bp file?`, `
 		aidl_interface {
 			name: "foo",
 			srcs: [
