@@ -859,6 +859,11 @@ func (i *aidlInterface) buildPreprocessed(ctx android.ModuleContext, version str
 	preprocessed := android.PathForModuleOut(ctx, version, "preprocessed.aidl")
 	rb := android.NewRuleBuilder(pctx, ctx)
 	srcs, root_dir := i.srcsForVersion(ctx, version)
+
+	if len(srcs) == 0 {
+		ctx.PropertyErrorf("srcs", "No sources for a previous version in %v. Was a version manually added to .bp file? This is added automatically by <module>-freeze-api.", root_dir)
+	}
+
 	paths, imports := getPaths(ctx, srcs, root_dir)
 
 	preprocessCommand := rb.Command().BuiltTool("aidl").
