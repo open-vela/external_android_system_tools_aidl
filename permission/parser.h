@@ -102,19 +102,19 @@ class Parser {
   ~Parser();
 
   void* Scanner() const { return scanner_; }
-  void SetRoot(Expression* root) { root_ = root; }
+  void SetRoot(Expression* root) { root_ = std::unique_ptr<Expression>(root); }
   void AddError(const std::string& error) { errors_.push_back(error); }
 
   static Result<std::unique_ptr<Expression>> Parse(std::string s);
 
  private:
   explicit Parser(std::string& raw_buffer);
-  Expression* GetRoot() const { return root_; }
+  std::unique_ptr<Expression> ReleaseRoot() { return std::move(root_); };
   std::string GetErrorMessage() const;
 
   void* scanner_ = nullptr;
   YY_BUFFER_STATE buffer_;
-  Expression* root_ = nullptr;
+  std::unique_ptr<Expression> root_;
   std::vector<std::string> errors_;
 };
 
