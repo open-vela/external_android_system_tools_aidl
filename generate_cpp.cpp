@@ -941,11 +941,13 @@ void GenerateServerHeader(CodeWriter& out, const AidlInterface& interface,
   LeaveNamespace(out, interface);
 }
 
+void GenerateClassDecl(CodeWriter& out, const AidlDefinedType& defined_type,
+                       const AidlTypenames& typenames, const Options& options);
+
 void GenerateInterfaceClassDecl(CodeWriter& out, const AidlInterface& interface,
                                 const AidlTypenames& typenames, const Options& options) {
   const string i_name = ClassName(interface, ClassNames::INTERFACE);
 
-  EnterNamespace(out, interface);
   out << "class";
   GenerateDeprecated(out, interface);
   out << " " << i_name << " : public ::android::IInterface {\n";
@@ -957,6 +959,10 @@ void GenerateInterfaceClassDecl(CodeWriter& out, const AidlInterface& interface,
   }
   if (!options.Hash().empty()) {
     out << "const std::string HASH = \"" << options.Hash() << "\";\n";
+  }
+  // TODO(b/201376182) consider re-ordering nested type decls.
+  for (const auto& nested : interface.GetNestedTypes()) {
+    GenerateClassDecl(out, *nested, typenames, options);
   }
   GenerateConstantDeclarations(out, interface, typenames);
   for (const auto& method : interface.GetMethods()) {
@@ -1009,7 +1015,6 @@ void GenerateInterfaceClassDecl(CodeWriter& out, const AidlInterface& interface,
   }
   out.Dedent();
   out << "};  // class " << default_impl << "\n";
-  LeaveNamespace(out, interface);
 }
 
 string GetInitializer(const AidlTypenames& typenames, const AidlVariableDeclaration& variable) {
@@ -1122,10 +1127,9 @@ void GenerateParcelFields(CodeWriter& out, const AidlUnionDecl& decl,
 
 template <typename ParcelableType>
 void GenerateParcelClassDecl(CodeWriter& out, const ParcelableType& parcel,
-                             const AidlTypenames& typenames, const Options&) {
+                             const AidlTypenames& typenames, const Options& options) {
   const string clazz = parcel.GetName();
 
-  EnterNamespace(out, parcel);
   out << TemplateDecl(parcel);
   out << "class";
   GenerateDeprecated(out, parcel);
@@ -1134,6 +1138,10 @@ void GenerateParcelClassDecl(CodeWriter& out, const ParcelableType& parcel,
   out.Indent();
 
   GenerateParcelableComparisonOperators(out, parcel);
+  // TODO(b/201376182) consider re-ordering nested type decls.
+  for (const auto& nested : parcel.GetNestedTypes()) {
+    GenerateClassDecl(out, *nested, typenames, options);
+  }
 
   GenerateParcelFields(out, parcel, typenames);
 
@@ -1166,13 +1174,12 @@ void GenerateParcelClassDecl(CodeWriter& out, const ParcelableType& parcel,
   }
 
   out << "};  // class " << clazz << "\n";
-  LeaveNamespace(out, parcel);
 }
 
 template <typename T>
 void GenerateParcelSource(CodeWriter& out, const T& parcel, const AidlTypenames& typenames,
                           const Options&) {
-  string q_name = parcel.GetName();
+  string q_name = GetQualifiedName(parcel);
   if (parcel.IsGeneric()) {
     q_name += "<" + Join(parcel.GetTypeParameters(), ",") + ">";
   }
@@ -1200,12 +1207,15 @@ void GenerateParcelSource(CodeWriter& out, const T& parcel, const AidlTypenames&
   LeaveNamespace(out, parcel);
 }
 
+// toString(enum_type) is defined in the same namespace, but not in other enclosing types.
+// So enum_decl should be partially qualified (based on namespace).
 std::string GenerateEnumToString(const AidlTypenames& typenames,
                                  const AidlEnumDeclaration& enum_decl) {
+  const auto q_name = GetQualifiedName(enum_decl);
   std::ostringstream code;
   code << "[[nodiscard]]";
   GenerateDeprecated(code, enum_decl);
-  code << " static inline std::string toString(" << enum_decl.GetName() << " val)";
+  code << " static inline std::string toString(" << q_name << " val)";
   code << " {\n";
   code << "  switch(val) {\n";
   std::set<std::string> unique_cases;
@@ -1217,7 +1227,7 @@ std::string GenerateEnumToString(const AidlTypenames& typenames,
     // enumerator with the given value is printed.
     if (unique_cases.count(c) == 0) {
       unique_cases.insert(c);
-      code << "  case " << enum_decl.GetName() << "::" << enumerator->GetName() << ":\n";
+      code << "  case " << q_name << "::" << enumerator->GetName() << ":\n";
       code << "    return \"" << enumerator->GetName() << "\";\n";
     }
   }
@@ -1234,7 +1244,6 @@ void GenerateEnumClassDecl(CodeWriter& out, const AidlEnumDeclaration& enum_decl
   const string clazz = enum_decl.GetName();
   const string backing_type = CppNameOf(enum_decl.GetBackingType(), typenames);
 
-  EnterNamespace(out, enum_decl);
   out << "enum class";
   GenerateDeprecated(out, enum_decl);
   out << " " << clazz << " : " << backing_type << " {\n";
@@ -1245,15 +1254,21 @@ void GenerateEnumClassDecl(CodeWriter& out, const AidlEnumDeclaration& enum_decl
   }
   out.Dedent();
   out << "};\n";
-  out << "\n";
-  out << GenerateEnumToString(typenames, enum_decl);
-  LeaveNamespace(out, enum_decl);
+}
 
-  out << "namespace android {\n";
-  out << "namespace internal {\n";
-  out << GenerateEnumValues(enum_decl, {""});
-  out << "}  // namespace internal\n";
-  out << "}  // namespace android\n";
+void GenerateClassDecl(CodeWriter& out, const AidlDefinedType& defined_type,
+                       const AidlTypenames& typenames, const Options& options) {
+  if (auto iface = AidlCast<AidlInterface>(defined_type); iface) {
+    GenerateInterfaceClassDecl(out, *iface, typenames, options);
+  } else if (auto parcelable = AidlCast<AidlStructuredParcelable>(defined_type); parcelable) {
+    GenerateParcelClassDecl(out, *parcelable, typenames, options);
+  } else if (auto union_decl = AidlCast<AidlUnionDecl>(defined_type); union_decl) {
+    GenerateParcelClassDecl(out, *union_decl, typenames, options);
+  } else if (auto enum_decl = AidlCast<AidlEnumDeclaration>(defined_type); enum_decl) {
+    GenerateEnumClassDecl(out, *enum_decl, typenames);
+  } else {
+    AIDL_FATAL(defined_type) << "Unrecognized type sent for CPP generation.";
+  }
 }
 
 }  // namespace internals
@@ -1347,7 +1362,44 @@ void GenerateHeaderIncludes(CodeWriter& out, const AidlDefinedType& defined_type
   }
 }
 
-// TODO(b/182508839) should emit nested types recursively
+// Generic parcelables and enum utilities should be defined in header.
+void GenerateHeaderDefinitions(CodeWriter& out, const AidlDefinedType& defined_type,
+                               const AidlTypenames& typenames, const Options& options) {
+  struct Visitor : AidlVisitor {
+    CodeWriter& out;
+    const AidlTypenames& typenames;
+    const Options& options;
+    Visitor(CodeWriter& out, const AidlTypenames& typenames, const Options& options)
+        : out(out), typenames(typenames), options(options) {}
+
+    void Visit(const AidlEnumDeclaration& enum_decl) override {
+      EnterNamespace(out, enum_decl);
+      out << GenerateEnumToString(typenames, enum_decl);
+      LeaveNamespace(out, enum_decl);
+
+      out << "namespace android {\n";
+      out << "namespace internal {\n";
+      out << GenerateEnumValues(enum_decl, {""});
+      out << "}  // namespace internal\n";
+      out << "}  // namespace android\n";
+    }
+
+    void Visit(const AidlStructuredParcelable& parcelable) override {
+      if (parcelable.IsGeneric()) {
+        GenerateParcelSource(out, parcelable, typenames, options);
+      }
+    }
+
+    void Visit(const AidlUnionDecl& union_decl) override {
+      if (union_decl.IsGeneric()) {
+        GenerateParcelSource(out, union_decl, typenames, options);
+      }
+    }
+
+  } v(out, typenames, options);
+  VisitTopDown(v, defined_type);
+}
+
 void GenerateHeader(CodeWriter& out, const AidlDefinedType& defined_type,
                     const AidlTypenames& typenames, const Options& options) {
   if (auto parcelable = AidlCast<AidlParcelable>(defined_type); parcelable) {
@@ -1356,23 +1408,11 @@ void GenerateHeader(CodeWriter& out, const AidlDefinedType& defined_type,
   }
   out << "#pragma once\n\n";
   GenerateHeaderIncludes(out, defined_type, typenames, options);
-  if (auto iface = AidlCast<AidlInterface>(defined_type); iface) {
-    GenerateInterfaceClassDecl(out, *iface, typenames, options);
-  } else if (auto parcelable = AidlCast<AidlStructuredParcelable>(defined_type); parcelable) {
-    GenerateParcelClassDecl(out, *parcelable, typenames, options);
-    if (parcelable->IsGeneric()) {
-      GenerateParcelSource(out, *parcelable, typenames, options);
-    }
-  } else if (auto union_decl = AidlCast<AidlUnionDecl>(defined_type); union_decl) {
-    GenerateParcelClassDecl(out, *union_decl, typenames, options);
-    if (union_decl->IsGeneric()) {
-      GenerateParcelSource(out, *union_decl, typenames, options);
-    }
-  } else if (auto enum_decl = AidlCast<AidlEnumDeclaration>(defined_type); enum_decl) {
-    GenerateEnumClassDecl(out, *enum_decl, typenames);
-  } else {
-    AIDL_FATAL(defined_type) << "Unrecognized type sent for CPP generation.";
-  }
+  EnterNamespace(out, defined_type);
+  // Each class decl contains its own nested types' class decls
+  GenerateClassDecl(out, defined_type, typenames, options);
+  LeaveNamespace(out, defined_type);
+  GenerateHeaderDefinitions(out, defined_type, typenames, options);
 }
 
 void GenerateClientHeader(CodeWriter& out, const AidlDefinedType& defined_type,
@@ -1412,29 +1452,48 @@ void GenerateServerHeader(CodeWriter& out, const AidlDefinedType& defined_type,
 // TODO(b/182508839) should emit nested types recursively
 void GenerateSource(CodeWriter& out, const AidlDefinedType& defined_type,
                     const AidlTypenames& typenames, const Options& options) {
-  if (auto iface = AidlCast<AidlInterface>(defined_type); iface) {
-    GenerateInterfaceSource(out, *iface, typenames, options);
-    BuildClientSource(typenames, *iface, options)->Write(&out);
-    BuildServerSource(typenames, *iface, options)->Write(&out);
-  } else if (auto parcelable = AidlCast<AidlStructuredParcelable>(defined_type); parcelable) {
-    if (!parcelable->IsGeneric()) {
-      GenerateParcelSource(out, *parcelable, typenames, options);
-    } else {
-      out << "\n";
+  struct Visitor : AidlVisitor {
+    CodeWriter& out;
+    const AidlTypenames& typenames;
+    const Options& options;
+    Visitor(CodeWriter& out, const AidlTypenames& typenames, const Options& options)
+        : out(out), typenames(typenames), options(options) {}
+
+    void Visit(const AidlInterface& interface) override {
+      GenerateInterfaceSource(out, interface, typenames, options);
+      BuildClientSource(typenames, interface, options)->Write(&out);
+      BuildServerSource(typenames, interface, options)->Write(&out);
     }
-  } else if (auto union_decl = AidlCast<AidlUnionDecl>(defined_type); union_decl) {
-    if (!union_decl->IsGeneric()) {
-      GenerateParcelSource(out, *union_decl, typenames, options);
-    } else {
-      out << "\n";
+
+    void Visit(const AidlStructuredParcelable& parcelable) override {
+      if (!parcelable.IsGeneric()) {
+        GenerateParcelSource(out, parcelable, typenames, options);
+      } else {
+        out << "\n";
+      }
     }
-  } else if (auto enum_decl = AidlCast<AidlEnumDeclaration>(defined_type); enum_decl) {
-    out << "// This file is intentionally left blank as placeholder for enum declaration.\n";
-  } else if (auto parcelable = AidlCast<AidlParcelable>(defined_type); parcelable) {
-    out << "// This file is intentionally left blank as placeholder for parcel declaration.\n";
-  } else {
-    AIDL_FATAL(defined_type) << "Unrecognized type sent for CPP generation.";
-  }
+
+    void Visit(const AidlUnionDecl& union_decl) override {
+      if (!union_decl.IsGeneric()) {
+        GenerateParcelSource(out, union_decl, typenames, options);
+      } else {
+        out << "\n";
+      }
+    }
+
+    void Visit(const AidlEnumDeclaration& enum_decl) override {
+      if (!enum_decl.GetParentType()) {
+        out << "// This file is intentionally left blank as placeholder for enum declaration.\n";
+      }
+    }
+
+    void Visit(const AidlParcelable& parcelable) override {
+      AIDL_FATAL_IF(parcelable.GetParentType(), parcelable)
+          << "Unstructured parcelable can't be nested.";
+      out << "// This file is intentionally left blank as placeholder for parcel declaration.\n";
+    }
+  } v(out, typenames, options);
+  VisitTopDown(v, defined_type);
 }
 
 bool GenerateCpp(const string& output_file, const Options& options, const AidlTypenames& typenames,
