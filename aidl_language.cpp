@@ -1023,6 +1023,12 @@ bool AidlDefinedType::CheckValidWithMembers(const AidlTypenames& typenames) cons
     success = success && t->CheckValid(typenames);
   }
 
+  if (auto parameterizable = AsParameterizable();
+      parameterizable && parameterizable->IsGeneric() && !GetNestedTypes().empty()) {
+    AIDL_ERROR(this) << "Generic types can't have nested types.";
+    return false;
+  }
+
   std::set<std::string> nested_type_names;
   for (const auto& t : GetNestedTypes()) {
     bool duplicated = !nested_type_names.emplace(t->GetName()).second;
@@ -1034,6 +1040,13 @@ bool AidlDefinedType::CheckValidWithMembers(const AidlTypenames& typenames) cons
     if (t->GetName() == GetName()) {
       AIDL_ERROR(t) << "Nested type '" << GetName() << "' has the same name as its parent.";
       success = false;
+    }
+    // Having unstructured parcelables as nested types doesn't make sense because they are defined
+    // somewhere else in native languages (e.g. C++, Java...).
+    if (AidlCast<AidlParcelable>(*t)) {
+      AIDL_ERROR(t) << "'" << t->GetName()
+                    << "' is nested. Unstructured parcelables should be at the root scope.";
+      return false;
     }
     // For now we don't allow "interface" to be nested
     if (AidlCast<AidlInterface>(*t)) {
@@ -1412,10 +1425,21 @@ bool AidlEnumDeclaration::Autofill(const AidlTypenames& typenames) {
     backing_type_ =
         std::make_unique<AidlTypeSpecifier>(AIDL_LOCATION_HERE, "byte", false, nullptr, Comments{});
   }
-  // Autofill() is called after type resolution, we resolve the backing type manually.
-  if (!backing_type_->Resolve(typenames, nullptr)) {
-    AIDL_ERROR(this) << "Invalid backing type: " << backing_type_->GetName();
+
+  // we only support/test a few backing types, so make sure this is a supported
+  // one (otherwise boolean might work, which isn't supported/tested in all
+  // backends)
+  static std::set<string> kBackingTypes = {"byte", "int", "long"};
+  if (kBackingTypes.find(backing_type_->GetName()) == kBackingTypes.end()) {
+    AIDL_ERROR(this) << "Invalid backing type: " << backing_type_->GetName()
+                     << ". Backing type must be one of: " << Join(kBackingTypes, ", ");
+    return false;
   }
+
+  // Autofill() is called before type resolution, we resolve the backing type manually.
+  AIDL_FATAL_IF(!backing_type_->Resolve(typenames, nullptr),
+                "supporting backing types must resolve");
+
   return true;
 }
 

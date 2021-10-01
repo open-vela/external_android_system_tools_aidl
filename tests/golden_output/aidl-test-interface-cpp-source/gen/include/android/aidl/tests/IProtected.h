@@ -6,11 +6,8 @@
 #include <utils/StrongPointer.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 class IProtected : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(Protected)
@@ -34,9 +31,6 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
 };  // class IProtectedDefault
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
