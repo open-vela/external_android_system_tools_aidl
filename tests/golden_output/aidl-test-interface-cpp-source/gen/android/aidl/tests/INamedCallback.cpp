@@ -1,18 +1,11 @@
 #include <android/aidl/tests/INamedCallback.h>
 #include <android/aidl/tests/BpNamedCallback.h>
-
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(NamedCallback, "android.aidl.tests.INamedCallback")
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
 #include <android/aidl/tests/BpNamedCallback.h>
 #include <android/aidl/tests/BnNamedCallback.h>

@@ -131,11 +131,10 @@ TEST_F(IoErrorHandlingTest, HandlesBadHeaderWrite) {
       StringPrintf("%s%c%s", kHeaderDir, OS_PATH_SEPARATOR,
                    kInterfaceHeaderRelPath);
   io_delegate_.AddBrokenFilePath(header_path);
-  ASSERT_FALSE(GenerateCpp(options_.OutputFile(), options_, typenames_, *interface, io_delegate_));
+  ASSERT_DEATH(GenerateCpp(options_.OutputFile(), options_, typenames_, *interface, io_delegate_),
+               "I/O Error!");
   // We should never attempt to write the C++ file if we fail writing headers.
   ASSERT_FALSE(io_delegate_.GetWrittenContents(kOutputPath, nullptr));
-  // We should remove partial results.
-  ASSERT_TRUE(io_delegate_.PathWasRemoved(header_path));
 }
 
 TEST_F(IoErrorHandlingTest, HandlesBadCppWrite) {
@@ -145,9 +144,8 @@ TEST_F(IoErrorHandlingTest, HandlesBadCppWrite) {
 
   // Simulate issues closing the cpp file.
   io_delegate_.AddBrokenFilePath(kOutputPath);
-  ASSERT_FALSE(GenerateCpp(options_.OutputFile(), options_, typenames_, *interface, io_delegate_));
-  // We should remove partial results.
-  ASSERT_TRUE(io_delegate_.PathWasRemoved(kOutputPath));
+  ASSERT_DEATH(GenerateCpp(options_.OutputFile(), options_, typenames_, *interface, io_delegate_),
+               "I/O Error!");
 }
 
 }  // namespace cpp
