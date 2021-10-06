@@ -20,7 +20,7 @@ import android.aidl.tests.nested.ParcelableWithNested;
 
 interface INestedService {
     parcelable Result {
-        ParcelableWithNested.Status status;
+        ParcelableWithNested.Status status = ParcelableWithNested.Status.OK;
     }
 
     Result flipStatus(in ParcelableWithNested p);
