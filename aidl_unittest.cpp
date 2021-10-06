@@ -4512,13 +4512,12 @@ TEST_P(AidlTest, ConstRefsCanPointToTheSameValue) {
 }
 
 TEST_P(AidlTest, UnknownConstReference) {
-  io_delegate_.SetFileContents("Foo.aidl", " parcelable Foo { UnknownType field = UNKNOWN_REF; }");
+  io_delegate_.SetFileContents("Foo.aidl", " parcelable Foo { int field = UNKNOWN_REF; }");
   auto options =
       Options::From("aidl --lang " + to_string(GetLanguage()) + " -o out -h out Foo.aidl");
   const string err =
-      "ERROR: Foo.aidl:1.18-30: Failed to resolve 'UnknownType'\n"
-      "ERROR: Foo.aidl:1.38-50: Can't find UNKNOWN_REF in Foo\n"
-      "ERROR: Foo.aidl:1.38-50: Unknown reference 'UNKNOWN_REF'\n";
+      "ERROR: Foo.aidl:1.30-42: Can't find UNKNOWN_REF in Foo\n"
+      "ERROR: Foo.aidl:1.30-42: Unknown reference 'UNKNOWN_REF'\n";
   CaptureStderr();
   EXPECT_FALSE(compile_aidl(options, io_delegate_));
   EXPECT_EQ(err, GetCapturedStderr());
