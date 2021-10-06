@@ -15,6 +15,9 @@
  */
 
 #include "parser.h"
+
+#include <queue>
+
 #include "aidl_language_y.h"
 #include "logging.h"
 
@@ -142,68 +145,17 @@ bool CheckNoRecursiveDefinition(const AidlNode& node) {
   return !v.found_cycle;
 }
 
-class ReferenceResolver : public AidlVisitor {
- public:
-  ReferenceResolver(TypeResolver& resolver, bool* success)
-      : resolver_(resolver), success_(success) {}
-
-  void Visit(const AidlTypeSpecifier& t) override {
-    // We're visiting the same node again. This can happen when two constant references
-    // point to an ancestor of this node.
-    if (t.IsResolved()) {
-      return;
-    }
-    AIDL_FATAL_IF(scope_.empty(), t) << "Can't have an unresolved type in global scope";
-
-    AidlTypeSpecifier& type = const_cast<AidlTypeSpecifier&>(t);
-    if (!resolver_(scope_.back(), &type)) {
-      AIDL_ERROR(type) << "Failed to resolve '" << type.GetUnresolvedName() << "'";
-      *success_ = false;
-    }
-
-    // require definition:
-    // - parcelable, union
-    // - T
-    // - @nullable(heap=false) T
-    // interfaces, enums, arrays, @nullable(heap=true), we don't need a full definition
-    if (scope_.back()->AsParcelable()) {
-      auto resolved = t.GetDefinedType();
-      if (resolved && resolved->AsParcelable()) {
-        if (!t.IsArray() && !t.IsHeapNullable()) {
-          VisitAll(*resolved);
-        }
-      }
-    }
+// Each Visit*() method can use Scope() to get its scope(AidlDefinedType)
+class ScopedVisitor : public AidlVisitor {
+ protected:
+  const AidlDefinedType* Scope() const {
+    AIDL_FATAL_IF(scope_.empty(), AIDL_LOCATION_HERE) << "Scope is empty";
+    return scope_.back();
   }
-
-  void Visit(const AidlConstantReference& v) override {
-    if (IsCircularReference(&v)) {
-      *success_ = false;
-      return;
-    }
-
-    if (v.GetRefType()) {
-      VisitAll(*v.GetRefType());
-    }
-
-    const AidlConstantValue* resolved = v.Resolve(scope_.back());
-    if (!resolved) {
-      AIDL_ERROR(v) << "Unknown reference '" << v.Literal() << "'";
-      *success_ = false;
-      return;
-    }
-
-    // On error, skip recursive visiting to avoid redundant messages
-    if (!*success_) {
-      return;
-    }
-    // resolve recursive references
-    PushConstRef(&v);
-    VisitAll(*resolved);
-    PopConstRef();
-  }
-
-  void VisitAll(const AidlNode& node) {
+  void PushScope(const AidlDefinedType* scope) { scope_.push_back(scope); }
+  void PopScope() { scope_.pop_back(); }
+  // Keep user defined type as a defining scope
+  void VisitScopedTopDown(const AidlNode& node) {
     std::function<void(const AidlNode&)> top_down = [&](const AidlNode& a) {
       a.DispatchVisit(*this);
       auto defined_type = AidlCast<AidlDefinedType>(a);
@@ -212,6 +164,87 @@ class ReferenceResolver : public AidlVisitor {
       if (defined_type) PopScope();
     };
     top_down(node);
+  }
+
+ private:
+  std::vector<const AidlDefinedType*> scope_ = {};
+};
+
+class TypeReferenceResolver : public ScopedVisitor {
+ public:
+  TypeReferenceResolver(TypeResolver& resolver) : resolver_(resolver) {}
+
+  void Visit(const AidlTypeSpecifier& t) override {
+    // We're visiting the same node again. This can happen when two constant references
+    // point to an ancestor of this node.
+    if (t.IsResolved()) {
+      return;
+    }
+    AidlTypeSpecifier& type = const_cast<AidlTypeSpecifier&>(t);
+    if (!resolver_(Scope(), &type)) {
+      AIDL_ERROR(type) << "Failed to resolve '" << type.GetUnresolvedName() << "'";
+      success_ = false;
+      return;
+    }
+
+    // In case a new document is imported for the type reference, enqueue it for type resolution.
+    auto resolved = t.GetDefinedType();
+    if (resolved) {
+      queue_.push(&resolved->GetDocument());
+    }
+  }
+
+  bool Resolve(const AidlDocument& document) {
+    queue_.push(&document);
+    while (!queue_.empty()) {
+      auto doc = queue_.front();
+      queue_.pop();
+      // Skip the doc if it's visited already.
+      if (!visited_.insert(doc).second) {
+        continue;
+      }
+      VisitScopedTopDown(*doc);
+    }
+    return success_;
+  }
+
+ private:
+  TypeResolver& resolver_;
+  bool success_ = true;
+  std::queue<const AidlDocument*> queue_ = {};
+  std::set<const AidlDocument*> visited_ = {};
+};
+
+class ConstantReferenceResolver : public ScopedVisitor {
+ public:
+  ConstantReferenceResolver() = default;
+
+  void Visit(const AidlConstantReference& v) override {
+    if (IsCircularReference(&v)) {
+      success_ = false;
+      return;
+    }
+
+    const AidlConstantValue* resolved = v.Resolve(Scope());
+    if (!resolved) {
+      AIDL_ERROR(v) << "Unknown reference '" << v.Literal() << "'";
+      success_ = false;
+      return;
+    }
+
+    // On error, skip recursive visiting to avoid redundant messages
+    if (!success_) {
+      return;
+    }
+    // resolve recursive references
+    PushConstRef(&v);
+    VisitScopedTopDown(*resolved);
+    PopConstRef();
+  }
+
+  bool Resolve(const AidlDocument& document) {
+    VisitScopedTopDown(document);
+    return success_;
   }
 
  private:
@@ -229,10 +262,6 @@ class ReferenceResolver : public AidlVisitor {
     stack_.pop_back();
   }
 
-  void PushScope(const AidlDefinedType* scope) { scope_.push_back(scope); }
-
-  void PopScope() { scope_.pop_back(); }
-
   bool IsCircularReference(const AidlConstantReference* ref) {
     auto it =
         std::find_if(stack_.begin(), stack_.end(), [&](const auto& elem) { return elem == ref; });
@@ -249,22 +278,24 @@ class ReferenceResolver : public AidlVisitor {
     return true;
   }
 
-  TypeResolver& resolver_;
-  bool* success_;
+  bool success_ = true;
   std::vector<const AidlConstantReference*> stack_ = {};
-  std::vector<const AidlDefinedType*> scope_ = {};
 };
 
-// Resolve "unresolved" types in the "main" document.
+// Resolve references(types/constants) in the "main" document.
 bool ResolveReferences(const AidlDocument& document, TypeResolver& type_resolver) {
-  bool success = true;
-
-  ReferenceResolver ref_resolver(type_resolver, &success);
-  ref_resolver.VisitAll(document);
-
-  success &= CheckNoRecursiveDefinition(document);
-
-  return success;
+  // Types are resolved first before resolving constant references so that every referenced document
+  // gets imported.
+  if (!TypeReferenceResolver(type_resolver).Resolve(document)) {
+    return false;
+  }
+  if (!ConstantReferenceResolver().Resolve(document)) {
+    return false;
+  }
+  if (!CheckNoRecursiveDefinition(document)) {
+    return false;
+  }
+  return true;
 }
 
 Parser::Parser(const std::string& filename, std::string& raw_buffer, bool is_preprocessed)
