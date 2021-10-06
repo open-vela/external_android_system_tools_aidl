@@ -1,16 +1,15 @@
 #pragma once
 
-#include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-#include <android/binder_enums.h>
 #ifdef BINDER_STABILITY_SUPPORT
 #include <android/binder_stability.h>
 #endif  // BINDER_STABILITY_SUPPORT
-
+#include <array>
+#include <android/binder_enums.h>
 namespace aidl {
 namespace android {
 namespace aidl {
@@ -21,14 +20,6 @@ enum class LongEnum : int64_t {
   BAZ = 200000000001L,
 };
 
-}  // namespace tests
-}  // namespace aidl
-}  // namespace android
-}  // namespace aidl
-namespace aidl {
-namespace android {
-namespace aidl {
-namespace tests {
 [[nodiscard]] static inline std::string toString(LongEnum val) {
   switch(val) {
   case LongEnum::FOO:
@@ -57,4 +48,4 @@ constexpr inline std::array<aidl::android::aidl::tests::LongEnum, 3> enum_values
 };
 #pragma clang diagnostic pop
 }  // namespace internal
-}  // namespace ndk
+}  // namespace android
