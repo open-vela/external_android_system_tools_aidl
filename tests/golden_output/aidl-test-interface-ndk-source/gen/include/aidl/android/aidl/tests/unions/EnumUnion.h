@@ -1,22 +1,22 @@
 #pragma once
-#include <android/binder_interface_utils.h>
-#include <android/binder_parcelable_utils.h>
-#include <android/binder_to_string.h>
 
 #include <cassert>
-#include <type_traits>
-#include <utility>
-#include <variant>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
+#include <type_traits>
+#include <utility>
+#include <variant>
 #include <vector>
+#include <android/binder_interface_utils.h>
+#include <android/binder_parcelable_utils.h>
+#include <android/binder_to_string.h>
+#include <aidl/android/aidl/tests/IntEnum.h>
+#include <aidl/android/aidl/tests/LongEnum.h>
 #ifdef BINDER_STABILITY_SUPPORT
 #include <android/binder_stability.h>
 #endif  // BINDER_STABILITY_SUPPORT
-#include <aidl/android/aidl/tests/IntEnum.h>
-#include <aidl/android/aidl/tests/LongEnum.h>
 
 #ifndef __BIONIC__
 #define __assert2(a,b,c,d) ((void)0)
