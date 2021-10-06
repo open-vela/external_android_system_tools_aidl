@@ -1,18 +1,19 @@
 #pragma once
 
-#include <chrono>
-#include <cstdint>
+#include <android/binder_interface_utils.h>
 #include <functional>
+#include <chrono>
+#include <sstream>
+
+#include <cstdint>
 #include <memory>
 #include <optional>
-#include <sstream>
 #include <string>
 #include <vector>
-#include <android/binder_interface_utils.h>
-#include <aidl/android/aidl/loggable/Data.h>
 #ifdef BINDER_STABILITY_SUPPORT
 #include <android/binder_stability.h>
 #endif  // BINDER_STABILITY_SUPPORT
+#include <aidl/android/aidl/loggable/Data.h>
 
 namespace aidl {
 namespace android {

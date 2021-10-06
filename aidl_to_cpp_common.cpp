@@ -75,19 +75,19 @@ string ClassName(const AidlDefinedType& defined_type, ClassNames type) {
 
 std::string HeaderFile(const AidlDefinedType& defined_type, ClassNames class_type,
                        bool use_os_sep) {
-  // For a nested type, we need to include its top-most parent type's header.
-  const AidlDefinedType* toplevel = &defined_type;
-  for (auto parent = toplevel->GetParentType(); parent;) {
-    toplevel = parent;
-    parent = toplevel->GetParentType();
+  std::string file_path = defined_type.GetPackage();
+  for (char& c : file_path) {
+    if (c == '.') {
+      c = (use_os_sep) ? OS_PATH_SEPARATOR : '/';
+    }
   }
-  AIDL_FATAL_IF(toplevel->GetParentType() != nullptr, defined_type)
-      << "Can't find a top-level decl";
+  if (!file_path.empty()) {
+    file_path += (use_os_sep) ? OS_PATH_SEPARATOR : '/';
+  }
+  file_path += ClassName(defined_type, class_type);
+  file_path += ".h";
 
-  char separator = (use_os_sep) ? OS_PATH_SEPARATOR : '/';
-  vector<string> paths = toplevel->GetSplitPackage();
-  paths.push_back(ClassName(*toplevel, class_type));
-  return Join(paths, separator) + ".h";
+  return file_path;
 }
 
 void EnterNamespace(CodeWriter& out, const AidlDefinedType& defined_type) {
