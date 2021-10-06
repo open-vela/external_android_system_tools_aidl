@@ -689,7 +689,7 @@ bool compile_aidl(const Options& options, const IoDelegate& io_delegate) {
       AIDL_FATAL_IF(defined_type == nullptr, input_file);
 
       // TODO(b/182508839) add backend support for nested types
-      if (!defined_type->GetNestedTypes().empty() && lang != Options::Language::CPP) {
+      if (!defined_type->GetNestedTypes().empty() && !options.IsCppOutput()) {
         AIDL_ERROR(defined_type) << "Nested types are not supported yet in " << to_string(lang)
                                  << " backend.";
         return false;
