@@ -18,5 +18,5 @@ package android.aidl.tests.nested;
 
 parcelable ParcelableWithNested {
     enum Status { OK, NOT_OK }
-    Status status;
+    Status status = Status.OK;
 }
