@@ -306,7 +306,8 @@ std::string GenerateAnnotations(const AidlNode& node) {
 }
 
 std::unique_ptr<android::aidl::java::Class> GenerateParcelableClass(
-    const AidlStructuredParcelable* parcel, const AidlTypenames& typenames) {
+    const AidlStructuredParcelable* parcel, const AidlTypenames& typenames,
+    const Options& options) {
   auto parcel_class = std::make_unique<Class>();
   parcel_class->comment = GenerateComments(*parcel);
   parcel_class->modifiers = PUBLIC;
@@ -314,6 +315,9 @@ std::unique_ptr<android::aidl::java::Class> GenerateParcelableClass(
   parcel_class->type = parcel->GetCanonicalName();
   parcel_class->interfaces.push_back("android.os.Parcelable");
   parcel_class->annotations = JavaAnnotationsFor(*parcel);
+  if (parcel->GetParentType()) {
+    parcel_class->modifiers |= STATIC;
+  }
 
   if (parcel->IsGeneric()) {
     parcel_class->type += "<" + base::Join(parcel->GetTypeParameters(), ",") + ">";
@@ -582,6 +586,15 @@ std::unique_ptr<android::aidl::java::Class> GenerateParcelableClass(
                                      typenames);
   parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(describe_contents));
 
+  // all the nested types
+  for (const auto& nested : parcel->GetNestedTypes()) {
+    string code;
+    auto writer = CodeWriter::ForString(&code);
+    GenerateClass(*writer, *nested, typenames, options);
+    writer->Close();
+    parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(code));
+  }
+
   return parcel_class;
 }
 
@@ -589,7 +602,11 @@ void GenerateEnumClass(CodeWriter& out, const AidlEnumDeclaration& enum_decl,
                        const AidlTypenames& typenames) {
   out << GenerateComments(enum_decl);
   out << GenerateAnnotations(enum_decl);
-  out << "public @interface " << enum_decl.GetName() << " {\n";
+  out << "public ";
+  if (enum_decl.GetParentType()) {
+    out << "static ";
+  }
+  out << "@interface " << enum_decl.GetName() << " {\n";
   out.Indent();
   for (const auto& enumerator : enum_decl.GetEnumerators()) {
     out << GenerateComments(*enumerator);
@@ -603,8 +620,8 @@ void GenerateEnumClass(CodeWriter& out, const AidlEnumDeclaration& enum_decl,
   out << "}\n";
 }
 
-void GenerateUnionClass(CodeWriter& out, const AidlUnionDecl* decl,
-                        const AidlTypenames& typenames) {
+void GenerateUnionClass(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypenames& typenames,
+                        const Options& options) {
   const string tag_type = "int";
   const AidlTypeSpecifier tag_type_specifier(AIDL_LOCATION_HERE, tag_type, false /* isArray */,
                                              nullptr /* type_params */, Comments{});
@@ -613,7 +630,11 @@ void GenerateUnionClass(CodeWriter& out, const AidlUnionDecl* decl,
   out << GenerateComments(*decl);
   out << GenerateAnnotations(*decl);
 
-  out << "public final class " + clazz + " implements android.os.Parcelable {\n";
+  out << "public ";
+  if (decl->GetParentType()) {
+    out << "static ";
+  }
+  out << "final class " + clazz + " implements android.os.Parcelable {\n";
   out.Indent();
 
   size_t tag_index = 0;
@@ -852,6 +873,11 @@ void GenerateUnionClass(CodeWriter& out, const AidlUnionDecl* decl,
     out << "}\n";
   }
 
+  // all the nested types
+  for (const auto& nested : decl->GetNestedTypes()) {
+    GenerateClass(out, *nested, typenames, options);
+  }
+
   out.Dedent();
   out << "}\n";
 }
@@ -942,7 +968,7 @@ void GenerateClass(CodeWriter& out, const AidlDefinedType& defined_type, const A
 
   if (const AidlStructuredParcelable* parcelable = defined_type.AsStructuredParcelable();
       parcelable != nullptr) {
-    GenerateParcelableClass(parcelable, types)->Write(&out);
+    GenerateParcelableClass(parcelable, types, options)->Write(&out);
   } else if (const AidlEnumDeclaration* enum_decl = defined_type.AsEnumDeclaration();
              enum_decl != nullptr) {
     GenerateEnumClass(out, *enum_decl, types);
@@ -950,7 +976,7 @@ void GenerateClass(CodeWriter& out, const AidlDefinedType& defined_type, const A
     GenerateInterfaceClass(interface, types, options)->Write(&out);
   } else if (const AidlUnionDecl* union_decl = defined_type.AsUnionDeclaration();
              union_decl != nullptr) {
-    GenerateUnionClass(out, union_decl, types);
+    GenerateUnionClass(out, union_decl, types, options);
   } else {
     AIDL_FATAL(defined_type) << "Unrecognized type sent for Java generation.";
   }
