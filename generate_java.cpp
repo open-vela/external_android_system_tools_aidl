@@ -305,74 +305,6 @@ std::string GenerateAnnotations(const AidlNode& node) {
   return result;
 }
 
-bool generate_java_interface(const string& filename, const AidlInterface* iface,
-                             const AidlTypenames& typenames, const IoDelegate& io_delegate,
-                             const Options& options) {
-  auto cl = generate_binder_interface_class(iface, typenames, options);
-
-  std::unique_ptr<Document> document =
-      std::make_unique<Document>("" /* no comment */, iface->GetPackage(), std::move(cl));
-
-  CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
-  document->Write(code_writer.get());
-
-  return true;
-}
-
-bool generate_java_parcel(const std::string& filename, const AidlStructuredParcelable* parcel,
-                          const AidlTypenames& typenames, const IoDelegate& io_delegate) {
-  auto cl = generate_parcel_class(parcel, typenames);
-
-  std::unique_ptr<Document> document =
-      std::make_unique<Document>("" /* no comment */, parcel->GetPackage(), std::move(cl));
-
-  CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
-  document->Write(code_writer.get());
-
-  return true;
-}
-
-bool generate_java_enum_declaration(const std::string& filename,
-                                    const AidlEnumDeclaration* enum_decl,
-                                    const AidlTypenames& typenames, const IoDelegate& io_delegate) {
-  CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
-  generate_enum(code_writer, enum_decl, typenames);
-  return true;
-}
-
-bool generate_java_union_declaration(const std::string& filename, const AidlUnionDecl* decl,
-                                     const AidlTypenames& typenames,
-                                     const IoDelegate& io_delegate) {
-  CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
-  generate_union(*code_writer, decl, typenames);
-  return true;
-}
-
-bool generate_java(const std::string& filename, const AidlDefinedType* defined_type,
-                   const AidlTypenames& typenames, const IoDelegate& io_delegate,
-                   const Options& options) {
-  if (const AidlStructuredParcelable* parcelable = defined_type->AsStructuredParcelable();
-      parcelable != nullptr) {
-    return generate_java_parcel(filename, parcelable, typenames, io_delegate);
-  }
-
-  if (const AidlEnumDeclaration* enum_decl = defined_type->AsEnumDeclaration();
-      enum_decl != nullptr) {
-    return generate_java_enum_declaration(filename, enum_decl, typenames, io_delegate);
-  }
-
-  if (const AidlInterface* interface = defined_type->AsInterface(); interface != nullptr) {
-    return generate_java_interface(filename, interface, typenames, io_delegate, options);
-  }
-
-  if (const AidlUnionDecl* union_decl = defined_type->AsUnionDeclaration(); union_decl != nullptr) {
-    return generate_java_union_declaration(filename, union_decl, typenames, io_delegate);
-  }
-
-  AIDL_FATAL(defined_type) << "Unrecognized type sent for Java generation.";
-  return false;
-}
-
 std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
     const AidlStructuredParcelable* parcel, const AidlTypenames& typenames) {
   auto parcel_class = std::make_unique<Class>();
@@ -653,29 +585,22 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
   return parcel_class;
 }
 
-void generate_enum(const CodeWriterPtr& code_writer, const AidlEnumDeclaration* enum_decl,
+void generate_enum(CodeWriter& out, const AidlEnumDeclaration& enum_decl,
                    const AidlTypenames& typenames) {
-  code_writer->Write(
-      "/*\n"
-      " * This file is auto-generated.  DO NOT MODIFY.\n"
-      " */\n");
-
-  code_writer->Write("package %s;\n", enum_decl->GetPackage().c_str());
-  (*code_writer) << GenerateComments(*enum_decl);
-  (*code_writer) << GenerateAnnotations(*enum_decl);
-  code_writer->Write("public @interface %s {\n", enum_decl->GetName().c_str());
-  code_writer->Indent();
-  for (const auto& enumerator : enum_decl->GetEnumerators()) {
-    (*code_writer) << GenerateComments(*enumerator);
-    (*code_writer) << GenerateAnnotations(*enumerator);
-    code_writer->Write(
-        "public static final %s %s = %s;\n",
-        JavaSignatureOf(enum_decl->GetBackingType(), typenames).c_str(),
-        enumerator->GetName().c_str(),
-        enumerator->ValueString(enum_decl->GetBackingType(), ConstantValueDecorator).c_str());
+  out << GenerateComments(enum_decl);
+  out << GenerateAnnotations(enum_decl);
+  out << "public @interface " << enum_decl.GetName() << " {\n";
+  out.Indent();
+  for (const auto& enumerator : enum_decl.GetEnumerators()) {
+    out << GenerateComments(*enumerator);
+    out << GenerateAnnotations(*enumerator);
+    out << fmt::format("public static final {} {} = {};\n",
+                       JavaSignatureOf(enum_decl.GetBackingType(), typenames),
+                       enumerator->GetName(),
+                       enumerator->ValueString(enum_decl.GetBackingType(), ConstantValueDecorator));
   }
-  code_writer->Dedent();
-  code_writer->Write("}\n");
+  out.Dedent();
+  out << "}\n";
 }
 
 void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypenames& typenames) {
@@ -684,13 +609,6 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
                                              nullptr /* type_params */, Comments{});
   const string clazz = decl->GetName();
 
-  out << "/*\n";
-  out << " * This file is auto-generated.  DO NOT MODIFY.\n";
-  out << " */\n";
-
-  if (!decl->GetPackage().empty()) {
-    out << "package " + decl->GetPackage() + ";\n";
-  }
   out << GenerateComments(*decl);
   out << GenerateAnnotations(*decl);
 
@@ -1007,6 +925,43 @@ std::vector<std::string> JavaAnnotationsFor(const AidlNode& a) {
   JavaAnnotationsVisitor visitor{result};
   a.DispatchVisit(visitor);
   return result;
+}
+
+void GenerateClass(CodeWriter& out, const AidlDefinedType& defined_type, const AidlTypenames& types,
+                   const Options& options) {
+  // Generate file header (comments and package) only if it's a root type.
+  if (defined_type.GetParentType() == nullptr) {
+    out << "/*\n";
+    out << " * This file is auto-generated.  DO NOT MODIFY.\n";
+    out << " */\n";
+    if (const auto pkg = defined_type.GetPackage(); !pkg.empty()) {
+      out << "package " << pkg << ";\n";
+    }
+  }
+
+  if (const AidlStructuredParcelable* parcelable = defined_type.AsStructuredParcelable();
+      parcelable != nullptr) {
+    generate_parcel_class(parcelable, types)->Write(&out);
+  } else if (const AidlEnumDeclaration* enum_decl = defined_type.AsEnumDeclaration();
+             enum_decl != nullptr) {
+    generate_enum(out, *enum_decl, types);
+  } else if (const AidlInterface* interface = defined_type.AsInterface(); interface != nullptr) {
+    generate_binder_interface_class(interface, types, options)->Write(&out);
+  } else if (const AidlUnionDecl* union_decl = defined_type.AsUnionDeclaration();
+             union_decl != nullptr) {
+    generate_union(out, union_decl, types);
+  } else {
+    AIDL_FATAL(defined_type) << "Unrecognized type sent for Java generation.";
+  }
+}
+
+// In Java, there's 1:1 mapping between AIDL type and Java type. So we generate a single file for
+// the type.
+void GenerateJava(const std::string& filename, const Options& options, const AidlTypenames& types,
+                  const AidlDefinedType& defined_type, const IoDelegate& io_delegate) {
+  CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
+  GenerateClass(*code_writer, defined_type, types, options);
+  AIDL_FATAL_IF(!code_writer->Close(), defined_type) << "I/O Error!";
 }
 
 }  // namespace java
