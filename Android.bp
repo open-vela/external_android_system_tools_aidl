@@ -230,6 +230,7 @@ python_test_host {
     test_config: "tests/aidl_integration_test.xml",
     target_required: [
         "aidl_test_client",
+        "aidl_test_client_ndk",
         "aidl_test_service",
         "aidl_test_java_client",
         "aidl_test_java_service",
