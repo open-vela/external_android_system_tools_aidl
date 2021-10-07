@@ -319,7 +319,7 @@ filegroup {
 }
 
 filegroup {
-    name: "libaidl-integration-cpp-test-files",
+    name: "libaidl-integration-nested-files",
     srcs: [
         "tests/android/aidl/tests/nested/INestedService.aidl",
         "tests/android/aidl/tests/nested/ParcelableWithNested.aidl",
@@ -357,7 +357,7 @@ cc_library_static {
     srcs: [
         ":libaidl-integration-test-files",
         ":libaidl-integration-cpp-java-test-files",
-        ":libaidl-integration-cpp-test-files",
+        ":libaidl-integration-nested-files",
         "tests/simple_parcelable.cpp",
     ],
 }
@@ -413,7 +413,8 @@ cc_test {
         //  client uses the latest version
         "aidl-test-versioned-interface-V2-ndk",
         "aidl-test-interface-ndk",
-        "aidl_test_loggable_interface-ndk"
+        "aidl_test_loggable_interface-ndk",
+        "aidl-test-nested-ndk",
     ],
     shared_libs: [
         "libbinder_ndk",
@@ -422,6 +423,7 @@ cc_test {
         "tests/aidl_test_client_ndk_loggable_interface.cpp",
         "tests/aidl_test_client_ndk_parcelables.cpp",
         "tests/aidl_test_client_ndk_versioned_interface.cpp",
+        "tests/aidl_test_client_ndk_nested.cpp",
     ],
 }
 
@@ -532,6 +534,20 @@ cc_test_host {
     name: "aidl-golden-test-build-hook",
     generated_sources: ["aidl-golden-test-build-hook-gen"],
     gtest: false,
+}
+
+// Testing nested types
+
+aidl_interface {
+    name: "aidl-test-nested",
+    unstable: true,
+    flags: ["-Werror"],
+    srcs: [":libaidl-integration-nested-files"],
+    backend: {
+        java: {
+            enabled: false,
+        }
+    }
 }
 
 //

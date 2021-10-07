@@ -1,15 +1,16 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
+#include <android/binder_enums.h>
 #ifdef BINDER_STABILITY_SUPPORT
 #include <android/binder_stability.h>
 #endif  // BINDER_STABILITY_SUPPORT
-#include <array>
-#include <android/binder_enums.h>
+
 namespace aidl {
 namespace android {
 namespace aidl {
@@ -21,6 +22,14 @@ enum class BackendType : int8_t {
   RUST = 3,
 };
 
+}  // namespace tests
+}  // namespace aidl
+}  // namespace android
+}  // namespace aidl
+namespace aidl {
+namespace android {
+namespace aidl {
+namespace tests {
 [[nodiscard]] static inline std::string toString(BackendType val) {
   switch(val) {
   case BackendType::CPP:
@@ -52,4 +61,4 @@ constexpr inline std::array<aidl::android::aidl::tests::BackendType, 4> enum_val
 };
 #pragma clang diagnostic pop
 }  // namespace internal
-}  // namespace android
+}  // namespace ndk
