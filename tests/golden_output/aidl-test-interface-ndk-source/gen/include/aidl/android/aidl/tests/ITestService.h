@@ -1,17 +1,13 @@
 #pragma once
 
-#include <android/binder_interface_utils.h>
-
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-#ifdef BINDER_STABILITY_SUPPORT
-#include <android/binder_stability.h>
-#endif  // BINDER_STABILITY_SUPPORT
-#include <android/binder_parcel_platform.h>
 #include <android/binder_ibinder_platform.h>
+#include <android/binder_interface_utils.h>
+#include <android/binder_parcel_platform.h>
 #include <aidl/android/aidl/tests/BackendType.h>
 #include <aidl/android/aidl/tests/ByteEnum.h>
 #include <aidl/android/aidl/tests/INamedCallback.h>
@@ -21,6 +17,9 @@
 #include <aidl/android/aidl/tests/LongEnum.h>
 #include <aidl/android/aidl/tests/RecursiveList.h>
 #include <aidl/android/aidl/tests/StructuredParcelable.h>
+#ifdef BINDER_STABILITY_SUPPORT
+#include <android/binder_stability.h>
+#endif  // BINDER_STABILITY_SUPPORT
 
 namespace aidl {
 namespace android {
