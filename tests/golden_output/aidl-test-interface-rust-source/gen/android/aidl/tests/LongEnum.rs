@@ -6,4 +6,6 @@ declare_binder_enum! { LongEnum : [i64; 3] {
   BAR = 200000000000,
   BAZ = 200000000001,
 } }
-pub(crate) mod mangled { pub use super::LongEnum as _7_android_4_aidl_5_tests_8_LongEnum; }
+pub(crate) mod mangled {
+ pub use super::LongEnum as _7_android_4_aidl_5_tests_8_LongEnum;
+}

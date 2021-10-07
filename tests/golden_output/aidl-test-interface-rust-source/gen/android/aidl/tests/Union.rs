@@ -10,7 +10,6 @@ pub enum Union {
   Be(crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum),
 }
 pub const S1: &str = "a string constant in union";
-pub(crate) mod mangled { pub use super::Union as _7_android_4_aidl_5_tests_5_Union; }
 impl Default for Union {
   fn default() -> Self {
     Self::Ns(vec!{})
@@ -97,4 +96,7 @@ binder::impl_serialize_for_parcelable!(Union);
 binder::impl_deserialize_for_parcelable!(Union);
 impl binder::parcel::ParcelableMetadata for Union {
   fn get_descriptor() -> &'static str { "android.aidl.tests.Union" }
+}
+pub(crate) mod mangled {
+ pub use super::Union as _7_android_4_aidl_5_tests_5_Union;
 }
