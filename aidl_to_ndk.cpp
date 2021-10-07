@@ -24,6 +24,7 @@
 #include <functional>
 
 using ::android::base::Join;
+using ::android::base::Split;
 
 namespace android {
 namespace aidl {
@@ -415,10 +416,10 @@ static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlType
 
 std::string NdkFullClassName(const AidlDefinedType& type, cpp::ClassNames name) {
   std::vector<std::string> pieces = {"::aidl"};
-  std::vector<std::string> package = type.GetSplitPackage();
-  pieces.insert(pieces.end(), package.begin(), package.end());
-  pieces.push_back(cpp::ClassName(type, name));
-
+  std::vector<std::string> split_name = Split(type.GetCanonicalName(), ".");
+  pieces.insert(pieces.end(), split_name.begin(), split_name.end());
+  // Override name part with cpp::ClassName(type, name)
+  pieces.back() = cpp::ClassName(type, name);
   return Join(pieces, "::");
 }
 
