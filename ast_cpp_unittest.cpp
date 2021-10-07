@@ -185,36 +185,6 @@ TEST_F(AstCppTests, GeneratesGenericHeader) {
   CompareGeneratedCode(doc, kExpectedGenericHeaderOutput);
 }
 
-TEST_F(AstCppTests, GeneratesUnscopedEnum) {
-  Enum e("Foo", "", false);
-  e.AddValue("BAR", "42");
-  e.AddValue("BAZ", "");
-
-  string expected =
-      R"(enum Foo {
-  BAR = 42,
-  BAZ,
-};
-)";
-
-  CompareGeneratedCode(e, expected);
-}
-
-TEST_F(AstCppTests, GeneratesScopedEnum) {
-  Enum e("Foo", "int32_t", true);
-  e.AddValue("BAR", "42");
-  e.AddValue("BAZ", "");
-
-  string expected =
-      R"(enum class Foo : int32_t {
-  BAR = 42,
-  BAZ,
-};
-)";
-
-  CompareGeneratedCode(e, expected);
-}
-
 TEST_F(AstCppTests, GeneratesArgList) {
   ArgList simple("foo");
   CompareGeneratedCode(simple, "(foo)");
