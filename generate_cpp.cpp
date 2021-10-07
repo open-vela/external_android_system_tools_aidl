@@ -1207,53 +1207,10 @@ void GenerateParcelSource(CodeWriter& out, const T& parcel, const AidlTypenames&
   LeaveNamespace(out, parcel);
 }
 
-// toString(enum_type) is defined in the same namespace, but not in other enclosing types.
-// So enum_decl should be partially qualified (based on namespace).
-std::string GenerateEnumToString(const AidlTypenames& typenames,
-                                 const AidlEnumDeclaration& enum_decl) {
-  const auto q_name = GetQualifiedName(enum_decl);
-  std::ostringstream code;
-  code << "[[nodiscard]]";
-  GenerateDeprecated(code, enum_decl);
-  code << " static inline std::string toString(" << q_name << " val)";
-  code << " {\n";
-  code << "  switch(val) {\n";
-  std::set<std::string> unique_cases;
-  for (const auto& enumerator : enum_decl.GetEnumerators()) {
-    std::string c = enumerator->ValueString(enum_decl.GetBackingType(), ConstantValueDecorator);
-    // Only add a case if its value has not yet been used in the switch
-    // statement. C++ does not allow multiple cases with the same value, but
-    // enums does allow this. In this scenario, the first declared
-    // enumerator with the given value is printed.
-    if (unique_cases.count(c) == 0) {
-      unique_cases.insert(c);
-      code << "  case " << q_name << "::" << enumerator->GetName() << ":\n";
-      code << "    return \"" << enumerator->GetName() << "\";\n";
-    }
-  }
-  code << "  default:\n";
-  code << "    return std::to_string(static_cast<"
-       << CppNameOf(enum_decl.GetBackingType(), typenames) << ">(val));\n";
-  code << "  }\n";
-  code << "}\n";
-  return code.str();
-}
-
 void GenerateEnumClassDecl(CodeWriter& out, const AidlEnumDeclaration& enum_decl,
                            const AidlTypenames& typenames) {
-  const string clazz = enum_decl.GetName();
-  const string backing_type = CppNameOf(enum_decl.GetBackingType(), typenames);
-
-  out << "enum class";
-  GenerateDeprecated(out, enum_decl);
-  out << " " << clazz << " : " << backing_type << " {\n";
-  out.Indent();
-  for (const auto& enumerator : enum_decl.GetEnumerators()) {
-    out << enumerator->GetName() << " = "
-        << enumerator->ValueString(enum_decl.GetBackingType(), ConstantValueDecorator) << ",\n";
-  }
-  out.Dedent();
-  out << "};\n";
+  cpp::GenerateEnumClassDecl(out, enum_decl, CppNameOf(enum_decl.GetBackingType(), typenames),
+                             ConstantValueDecorator);
 }
 
 void GenerateClassDecl(CodeWriter& out, const AidlDefinedType& defined_type,
@@ -1373,8 +1330,9 @@ void GenerateHeaderDefinitions(CodeWriter& out, const AidlDefinedType& defined_t
         : out(out), typenames(typenames), options(options) {}
 
     void Visit(const AidlEnumDeclaration& enum_decl) override {
+      const auto backing_type = CppNameOf(enum_decl.GetBackingType(), typenames);
       EnterNamespace(out, enum_decl);
-      out << GenerateEnumToString(typenames, enum_decl);
+      out << GenerateEnumToString(enum_decl, backing_type);
       LeaveNamespace(out, enum_decl);
 
       out << "namespace android {\n";
