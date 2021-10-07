@@ -19,8 +19,7 @@ enum class __attribute__((deprecated("test"))) DeprecatedEnum : int32_t {
 namespace android {
 namespace aidl {
 namespace tests {
-[[nodiscard]] static inline std::string toString(DeprecatedEnum val) __attribute__((deprecated("test")));
-[[nodiscard]] static inline std::string toString(DeprecatedEnum val) {
+[[nodiscard]] __attribute__((deprecated("test"))) static inline std::string toString(DeprecatedEnum val) {
   switch(val) {
   case DeprecatedEnum::A:
     return "A";
