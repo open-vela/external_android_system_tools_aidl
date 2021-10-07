@@ -382,9 +382,8 @@ static void GenerateSourceIncludes(CodeWriter& out, const AidlTypenames& types,
   });
 }
 
-template <typename TypeWithConstants>
 static void GenerateConstantDeclarations(CodeWriter& out, const AidlTypenames& types,
-                                         const TypeWithConstants& type) {
+                                         const AidlDefinedType& type) {
   for (const auto& constant : type.GetConstantDeclarations()) {
     const AidlTypeSpecifier& type = constant->GetType();
 
@@ -401,8 +400,7 @@ static void GenerateConstantDeclarations(CodeWriter& out, const AidlTypenames& t
   }
 }
 
-template <typename TypeWithConstants>
-static void GenerateConstantDefinitions(CodeWriter& out, const TypeWithConstants& interface,
+static void GenerateConstantDefinitions(CodeWriter& out, const AidlDefinedType& interface,
                                         const std::string& clazz,
                                         const std::string& tmpl_decl = "") {
   for (const auto& constant : interface.GetConstantDeclarations()) {

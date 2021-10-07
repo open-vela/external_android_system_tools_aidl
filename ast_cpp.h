@@ -86,33 +86,6 @@ class ClassDecl : public Declaration {
   std::vector<std::unique_ptr<Declaration>> private_members_;
 };  // class ClassDecl
 
-class Enum : public Declaration {
- public:
-  Enum(const std::string& name, const std::string& base_type, bool is_class,
-       const std::string& attributes = "");
-  virtual ~Enum() = default;
-
-  bool HasValues() const { return !fields_.empty(); }
-  void Write(CodeWriter* to) const override;
-
-  void AddValue(const std::string& key, const std::string& value,
-                const std::string& attribute = "");
-
- private:
-  struct EnumField {
-    EnumField(const std::string& k, const std::string& v, const std::string& a);
-    const std::string key;
-    const std::string value;
-    const std::string attribute;
-  };
-
-  std::string enum_name_;
-  std::string underlying_type_;
-  std::string attributes_;
-  bool is_class_;
-  std::vector<EnumField> fields_;
-};  // class Enum
-
 class ArgList : public AstNode {
  public:
   ArgList() = default;
