@@ -1449,7 +1449,6 @@ void GenerateServerHeader(CodeWriter& out, const AidlDefinedType& defined_type,
   }
 }
 
-// TODO(b/182508839) should emit nested types recursively
 void GenerateSource(CodeWriter& out, const AidlDefinedType& defined_type,
                     const AidlTypenames& typenames, const Options& options) {
   struct Visitor : AidlVisitor {
