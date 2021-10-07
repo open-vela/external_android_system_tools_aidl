@@ -93,11 +93,9 @@ public:
   ::std::optional<::android::aidl::tests::Union> u;
   ::std::optional<::android::aidl::tests::Union> shouldBeConstS1;
   ::android::aidl::tests::IntEnum defaultWithFoo = ::android::aidl::tests::IntEnum(::android::aidl::tests::IntEnum::FOO);
-  enum  : int32_t {
-    BIT0 = 1,
-    BIT1 = 2,
-    BIT2 = 4,
-  };
+  enum : int32_t { BIT0 = 1 };
+  enum : int32_t { BIT1 = 2 };
+  enum : int32_t { BIT2 = 4 };
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
   static const ::android::String16& getParcelableDescriptor() {
