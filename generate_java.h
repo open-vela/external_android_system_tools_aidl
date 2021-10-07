@@ -31,6 +31,9 @@ void GenerateJava(const std::string& filename, const Options& options,
                   const AidlTypenames& typenames, const AidlDefinedType& defined_type,
                   const IoDelegate& io_delegate);
 
+void GenerateClass(CodeWriter& out, const AidlDefinedType& defined_type, const AidlTypenames& types,
+                   const Options& options);
+
 std::unique_ptr<android::aidl::java::Class> GenerateInterfaceClass(const AidlInterface* iface,
                                                                    const AidlTypenames& typenames,
                                                                    const Options& options);
