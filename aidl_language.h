@@ -964,6 +964,7 @@ class AidlDefinedType : public AidlMember, public AidlScope {
         const_cast<const AidlDefinedType*>(this)->AsUnstructuredParcelable());
   }
   const AidlDefinedType* GetParentType() const;
+  const AidlDefinedType* GetRootType() const;
   const std::vector<std::unique_ptr<AidlDefinedType>>& GetNestedTypes() const { return types_; }
   const std::vector<std::unique_ptr<AidlVariableDeclaration>>& GetFields() const {
     return variables_;
