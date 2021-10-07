@@ -44,15 +44,15 @@ namespace {
 using android::aidl::java::CodeGeneratorContext;
 using android::aidl::java::ConstantValueDecorator;
 
-inline string getter_name(const AidlVariableDeclaration& variable) {
+inline string GetterName(const AidlVariableDeclaration& variable) {
   return "get" + variable.GetCapitalizedName();
 }
-inline string setter_name(const AidlVariableDeclaration& variable) {
+inline string SetterName(const AidlVariableDeclaration& variable) {
   return "set" + variable.GetCapitalizedName();
 }
 
 // clang-format off
-const map<string, string> contents_describers {
+const map<string, string> kContentsDescribers {
   {"FileDescriptor", R"(if (_v instanceof java.io.FileDescriptor) {
   return android.os.Parcelable.CONTENTS_FILE_DESCRIPTOR;
 })"},
@@ -85,7 +85,7 @@ void GenerateDescribeContentsHelper(CodeWriter& out, const set<string>& describe
   out.Indent();
   out << "if (_v == null) return 0;\n";
   for (const auto& d : describers) {
-    out << contents_describers.at(d) << "\n";
+    out << kContentsDescribers.at(d) << "\n";
   }
   out << "return 0;\n";
   out.Dedent();
@@ -168,7 +168,7 @@ void GenerateParcelableDescribeContents(CodeWriter& out, const AidlUnionDecl& de
     if (CanDescribeContents(f->GetType(), types, &describers)) {
       out << "case " << f->GetName() << ":\n";
       out.Indent();
-      out << "_mask |= describeContents(" << getter_name(*f) << "());\n";
+      out << "_mask |= describeContents(" << GetterName(*f) << "());\n";
       out << "break;\n";
       out.Dedent();
     }
@@ -216,7 +216,7 @@ void GenerateToString(CodeWriter& out, const AidlUnionDecl& parcel,
         .writer = out,
         .typenames = typenames,
         .type = field->GetType(),
-        .var = getter_name(*field) + "()",
+        .var = GetterName(*field) + "()",
     };
     out << "case " << field->GetName() << ": return \"" << parcel.GetCanonicalName() << "."
         << field->GetName() << "(\" + (";
@@ -305,7 +305,7 @@ std::string GenerateAnnotations(const AidlNode& node) {
   return result;
 }
 
-std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
+std::unique_ptr<android::aidl::java::Class> GenerateParcelableClass(
     const AidlStructuredParcelable* parcel, const AidlTypenames& typenames) {
   auto parcel_class = std::make_unique<Class>();
   parcel_class->comment = GenerateComments(*parcel);
@@ -361,7 +361,7 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
         out << " = " << variable->ValueString(ConstantValueDecorator);
       }
       out << ";\n";
-      out << "public Builder " << setter_name(*variable) << "("
+      out << "public Builder " << SetterName(*variable) << "("
           << JavaSignatureOf(variable->GetType(), typenames) << " " << variable->GetName()
           << ") {\n"
           << "  "
@@ -538,7 +538,7 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
     }
     CreateFromParcelFor(context);
     if (parcel->IsJavaOnlyImmutable()) {
-      context.writer.Write("%s.%s(%s);\n", builder_variable.c_str(), setter_name(*field).c_str(),
+      context.writer.Write("%s.%s(%s);\n", builder_variable.c_str(), SetterName(*field).c_str(),
                            field_variable_name.c_str());
     }
     writer->Close();
@@ -562,7 +562,7 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
   parcel_class->elements.push_back(read_or_create_method);
 
   string constants;
-  generate_constant_declarations(*CodeWriter::ForString(&constants), *parcel);
+  GenerateConstantDeclarations(*CodeWriter::ForString(&constants), *parcel);
   parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(constants));
 
   if (parcel->JavaDerive("toString")) {
@@ -585,8 +585,8 @@ std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
   return parcel_class;
 }
 
-void generate_enum(CodeWriter& out, const AidlEnumDeclaration& enum_decl,
-                   const AidlTypenames& typenames) {
+void GenerateEnumClass(CodeWriter& out, const AidlEnumDeclaration& enum_decl,
+                       const AidlTypenames& typenames) {
   out << GenerateComments(enum_decl);
   out << GenerateAnnotations(enum_decl);
   out << "public @interface " << enum_decl.GetName() << " {\n";
@@ -603,7 +603,8 @@ void generate_enum(CodeWriter& out, const AidlEnumDeclaration& enum_decl,
   out << "}\n";
 }
 
-void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypenames& typenames) {
+void GenerateUnionClass(CodeWriter& out, const AidlUnionDecl* decl,
+                        const AidlTypenames& typenames) {
   const string tag_type = "int";
   const AidlTypeSpecifier tag_type_specifier(AIDL_LOCATION_HERE, tag_type, false /* isArray */,
                                              nullptr /* type_params */, Comments{});
@@ -687,7 +688,7 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
     if (variable->GetType().IsGeneric()) {
       out << "@SuppressWarnings(\"unchecked\")\n";
     }
-    out << "public " + var_type + " " + getter_name(*variable) + "() {\n";
+    out << "public " + var_type + " " + GetterName(*variable) + "() {\n";
     out.Indent();
     out << "_assertTag(" + var_name + ");\n";
     out << "return (" + var_type + ") _value;\n";
@@ -696,7 +697,7 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
 
     // setter
     if (!decl->IsJavaOnlyImmutable()) {
-      out << "public void " + setter_name(*variable) + "(" + var_type + " _value) {\n";
+      out << "public void " + SetterName(*variable) + "(" + var_type + " _value) {\n";
       out.Indent();
       out << "_set(" + var_name + ", _value);\n";
       out.Dedent();
@@ -751,7 +752,7 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   for (const auto& variable : decl->GetFields()) {
     out << "case " + variable->GetName() + ":\n";
     out.Indent();
-    out << write_to_parcel(variable->GetType(), getter_name(*variable) + "()", "_aidl_parcel");
+    out << write_to_parcel(variable->GetType(), GetterName(*variable) + "()", "_aidl_parcel");
     out << "break;\n";
     out.Dedent();
   }
@@ -810,7 +811,7 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
   out.Dedent();
   out << "}\n\n";
 
-  generate_constant_declarations(out, *decl);
+  GenerateConstantDeclarations(out, *decl);
 
   GenerateParcelableDescribeContents(out, *decl, typenames);
   out << "\n";
@@ -859,7 +860,7 @@ std::string dump_location(const AidlNode& method) {
   return method.PrintLocation();
 }
 
-std::string generate_java_unsupportedappusage_parameters(const AidlAnnotation& a) {
+std::string GenerateJavaUnsupportedAppUsageParameters(const AidlAnnotation& a) {
   const std::map<std::string, std::string> params = a.AnnotationParams(ConstantValueDecorator);
   std::vector<string> parameters_decl;
   for (const auto& name_and_param : params) {
@@ -871,7 +872,7 @@ std::string generate_java_unsupportedappusage_parameters(const AidlAnnotation& a
   return "(" + Join(parameters_decl, ", ") + ")";
 }
 
-std::vector<std::string> generate_java_annotations(const AidlAnnotatable& a) {
+std::vector<std::string> GenerateJavaAnnotations(const AidlAnnotatable& a) {
   std::vector<std::string> result;
   if (a.IsHide()) {
     result.emplace_back("@android.annotation.Hide");
@@ -880,7 +881,7 @@ std::vector<std::string> generate_java_annotations(const AidlAnnotatable& a) {
   const AidlAnnotation* unsupported_app_usage = a.UnsupportedAppUsage();
   if (unsupported_app_usage != nullptr) {
     result.emplace_back("@android.compat.annotation.UnsupportedAppUsage" +
-                        generate_java_unsupportedappusage_parameters(*unsupported_app_usage));
+                        GenerateJavaUnsupportedAppUsageParameters(*unsupported_app_usage));
   }
 
   for (const auto& annotation : a.GetAnnotations()) {
@@ -894,7 +895,7 @@ std::vector<std::string> generate_java_annotations(const AidlAnnotatable& a) {
 
 struct JavaAnnotationsVisitor : AidlVisitor {
   JavaAnnotationsVisitor(std::vector<std::string>& result) : result(result) {}
-  void Visit(const AidlTypeSpecifier& t) override { result = generate_java_annotations(t); }
+  void Visit(const AidlTypeSpecifier& t) override { result = GenerateJavaAnnotations(t); }
   void Visit(const AidlInterface& t) override { ForDefinedType(t); }
   void Visit(const AidlParcelable& t) override { ForDefinedType(t); }
   void Visit(const AidlStructuredParcelable& t) override { ForDefinedType(t); }
@@ -906,14 +907,14 @@ struct JavaAnnotationsVisitor : AidlVisitor {
   std::vector<std::string>& result;
 
   void ForDefinedType(const AidlDefinedType& t) {
-    result = generate_java_annotations(t);
+    result = GenerateJavaAnnotations(t);
     if (t.IsDeprecated()) {
       result.push_back("@Deprecated");
     }
   }
   template <typename Member>
   void ForMember(const Member& t) {
-    result = generate_java_annotations(t.GetType());
+    result = GenerateJavaAnnotations(t.GetType());
     if (t.IsDeprecated()) {
       result.push_back("@Deprecated");
     }
@@ -941,15 +942,15 @@ void GenerateClass(CodeWriter& out, const AidlDefinedType& defined_type, const A
 
   if (const AidlStructuredParcelable* parcelable = defined_type.AsStructuredParcelable();
       parcelable != nullptr) {
-    generate_parcel_class(parcelable, types)->Write(&out);
+    GenerateParcelableClass(parcelable, types)->Write(&out);
   } else if (const AidlEnumDeclaration* enum_decl = defined_type.AsEnumDeclaration();
              enum_decl != nullptr) {
-    generate_enum(out, *enum_decl, types);
+    GenerateEnumClass(out, *enum_decl, types);
   } else if (const AidlInterface* interface = defined_type.AsInterface(); interface != nullptr) {
-    generate_binder_interface_class(interface, types, options)->Write(&out);
+    GenerateInterfaceClass(interface, types, options)->Write(&out);
   } else if (const AidlUnionDecl* union_decl = defined_type.AsUnionDeclaration();
              union_decl != nullptr) {
-    generate_union(out, union_decl, types);
+    GenerateUnionClass(out, union_decl, types);
   } else {
     AIDL_FATAL(defined_type) << "Unrecognized type sent for Java generation.";
   }
