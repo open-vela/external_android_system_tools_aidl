@@ -289,18 +289,6 @@ class CppJavaTests : public BnCppJavaTests {
     }
     return Status::ok();
   }
-
-  ::android::binder::Status RepeatExtendableParcelable(
-      const ::android::aidl::tests::extension::ExtendableParcelable& ep,
-      ::android::aidl::tests::extension::ExtendableParcelable* ep2) {
-    ep2->a = ep.a;
-    ep2->b = ep.b;
-    std::shared_ptr<android::aidl::tests::extension::MyExt> myExt;
-    ep.ext.getParcelable(&myExt);
-    ep2->ext.setParcelable(myExt);
-
-    return Status::ok();
-  }
 };
 
 class NativeService : public BnTestService {
@@ -607,6 +595,18 @@ class NativeService : public BnTestService {
 
     parcelable->u = Union::make<Union::ns>({1, 2, 3});
     parcelable->shouldBeConstS1 = Union::S1();
+    return Status::ok();
+  }
+
+  ::android::binder::Status RepeatExtendableParcelable(
+      const ::android::aidl::tests::extension::ExtendableParcelable& ep,
+      ::android::aidl::tests::extension::ExtendableParcelable* ep2) {
+    ep2->a = ep.a;
+    ep2->b = ep.b;
+    std::shared_ptr<android::aidl::tests::extension::MyExt> myExt;
+    ep.ext.getParcelable(&myExt);
+    ep2->ext.setParcelable(myExt);
+
     return Status::ok();
   }
 

@@ -25,6 +25,7 @@ import android.aidl.tests.IntEnum;
 import android.aidl.tests.LongEnum;
 import android.aidl.tests.RecursiveList;
 import android.aidl.tests.StructuredParcelable;
+import android.aidl.tests.extension.ExtendableParcelable;
 
 @SuppressWarnings(value={"inout-parameter", "mixed-oneway", "out-array"})
 @SensitiveData
@@ -149,6 +150,8 @@ interface ITestService {
     // Since this paracelable has clearly defined default values, it would be
     // inefficient to use an IPC to fill it out in practice.
     void FillOutStructuredParcelable(inout StructuredParcelable parcel);
+
+    void RepeatExtendableParcelable(in ExtendableParcelable ep, out ExtendableParcelable ep2);
 
     RecursiveList ReverseList(in RecursiveList list);
 

@@ -21,8 +21,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import android.aidl.tests.BackendType;
-import android.aidl.tests.ITestService;
 import android.aidl.tests.nested.INestedService;
 import android.aidl.tests.nested.ParcelableWithNested;
 import android.os.IBinder;
@@ -36,13 +34,7 @@ import org.junit.runners.JUnit4;
 public class NestedTypesTests {
   @Test
   public void testUseNestedTypes() throws RemoteException {
-    IBinder binder = ServiceManager.waitForService(ITestService.class.getName());
-    assertNotNull(binder);
-    ITestService testService = ITestService.Stub.asInterface(binder);
-    // TODO(b/201729533) enable test when Rust backend supports nested types
-    assumeTrue(testService.getBackendType() != BackendType.RUST);
-
-    binder = ServiceManager.waitForService(INestedService.class.getName());
+    IBinder binder = ServiceManager.waitForService(INestedService.class.getName());
     assertNotNull(binder);
     INestedService nestedService = INestedService.Stub.asInterface(binder);
     assertNotNull(nestedService);

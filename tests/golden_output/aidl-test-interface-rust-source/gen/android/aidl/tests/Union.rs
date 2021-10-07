@@ -10,27 +10,14 @@ pub enum Union {
   Be(crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum),
 }
 pub const S1: &str = "a string constant in union";
-pub(crate) mod mangled { pub use super::Union as _7_android_4_aidl_5_tests_5_Union; }
 impl Default for Union {
   fn default() -> Self {
     Self::Ns(vec!{})
   }
 }
-impl binder::parcel::Serialize for Union {
-  fn serialize(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    <Self as binder::parcel::SerializeOption>::serialize_option(Some(self), parcel)
-  }
-}
-impl binder::parcel::SerializeArray for Union {}
-impl binder::parcel::SerializeOption for Union {
-  fn serialize_option(this: Option<&Self>, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    let this = if let Some(this) = this {
-      parcel.write(&1i32)?;
-      this
-    } else {
-      return parcel.write(&0i32);
-    };
-    match this {
+impl binder::parcel::Parcelable for Union {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    match self {
       Self::Ns(v) => {
         parcel.write(&0i32)?;
         parcel.write(v)
@@ -61,10 +48,7 @@ impl binder::parcel::SerializeOption for Union {
       }
     }
   }
-}
-binder::impl_deserialize_for_parcelable!(Union);
-impl Union {
-  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
     let tag: i32 = parcel.read()?;
     match tag {
       0 => {
@@ -107,4 +91,12 @@ impl Union {
       }
     }
   }
+}
+binder::impl_serialize_for_parcelable!(Union);
+binder::impl_deserialize_for_parcelable!(Union);
+impl binder::parcel::ParcelableMetadata for Union {
+  fn get_descriptor() -> &'static str { "android.aidl.tests.Union" }
+}
+pub(crate) mod mangled {
+ pub use super::Union as _7_android_4_aidl_5_tests_5_Union;
 }

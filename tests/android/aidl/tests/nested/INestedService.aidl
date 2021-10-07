@@ -19,6 +19,7 @@ package android.aidl.tests.nested;
 import android.aidl.tests.nested.ParcelableWithNested;
 
 interface INestedService {
+    @RustDerive(PartialEq=true)
     parcelable Result {
         ParcelableWithNested.Status status = ParcelableWithNested.Status.OK;
     }
