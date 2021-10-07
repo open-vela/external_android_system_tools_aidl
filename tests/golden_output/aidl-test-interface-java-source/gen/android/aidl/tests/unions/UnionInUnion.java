@@ -2,6 +2,7 @@
  * This file is auto-generated.  DO NOT MODIFY.
  */
 package android.aidl.tests.unions;
+
 public final class UnionInUnion implements android.os.Parcelable {
   // tags for union fields
   public final static int first = 0;  // android.aidl.tests.unions.EnumUnion first;
