@@ -721,8 +721,8 @@ bool compile_aidl(const Options& options, const IoDelegate& io_delegate) {
           // Legacy behavior. For parcelable declarations in Java, don't generate output file.
           success = true;
         } else {
-          success = java::generate_java(output_file_name, defined_type.get(), typenames,
-                                        io_delegate, options);
+          java::GenerateJava(output_file_name, options, typenames, *defined_type, io_delegate);
+          success = true;
         }
       } else if (lang == Options::Language::RUST) {
         success = rust::GenerateRust(output_file_name, defined_type.get(), typenames, io_delegate,
