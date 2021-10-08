@@ -352,18 +352,7 @@ std::string CppHeaderForType(const AidlDefinedType& defined_type) {
         << "Parcelable " << unstructured->GetCanonicalName() << " has no C++ header defined.";
     return cpp_header;
   }
-  // For a nested type, we need to include its top-most parent type's header.
-  const AidlDefinedType* toplevel = &defined_type;
-  for (auto parent = toplevel->GetParentType(); parent;) {
-    toplevel = parent;
-    parent = toplevel->GetParentType();
-  }
-  AIDL_FATAL_IF(toplevel->GetParentType() != nullptr, defined_type)
-      << "Can't find a top-level decl";
-
-  vector<string> name = toplevel->GetSplitPackage();
-  name.push_back(toplevel->GetName());
-  return Join(name, '/') + ".h";
+  return HeaderFile(defined_type, ClassNames::RAW, /*use_os_sep=*/false);
 }
 
 }  // namespace cpp
