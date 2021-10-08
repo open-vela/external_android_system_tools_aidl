@@ -30,9 +30,12 @@ namespace java {
 void GenerateJava(const std::string& filename, const Options& options,
                   const AidlTypenames& typenames, const AidlDefinedType& defined_type,
                   const IoDelegate& io_delegate);
-std::unique_ptr<android::aidl::java::Class> generate_binder_interface_class(
-    const AidlInterface* iface, const AidlTypenames& typenames, const Options& options);
-void generate_constant_declarations(CodeWriter& out, const AidlDefinedType& type);
+
+std::unique_ptr<android::aidl::java::Class> GenerateInterfaceClass(const AidlInterface* iface,
+                                                                   const AidlTypenames& typenames,
+                                                                   const Options& options);
+
+void GenerateConstantDeclarations(CodeWriter& out, const AidlDefinedType& type);
 
 std::string GenerateComments(const AidlCommentable& node);
 
