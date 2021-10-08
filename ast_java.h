@@ -338,20 +338,6 @@ struct Class : public ClassElement {
   void Write(CodeWriter* to) const override;
 };
 
-class Document : public AstNode {
- public:
-  Document(const std::string& comment,
-           const std::string& package,
-           std::unique_ptr<Class> clazz);
-  virtual ~Document() = default;
-  void Write(CodeWriter* to) const override;
-
- private:
-  std::string comment_;
-  std::string package_;
-  std::unique_ptr<Class> clazz_;
-};
-
 extern std::shared_ptr<Expression> NULL_VALUE;
 extern std::shared_ptr<Expression> THIS_VALUE;
 extern std::shared_ptr<Expression> SUPER_VALUE;
