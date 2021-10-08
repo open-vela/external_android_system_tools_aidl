@@ -519,45 +519,17 @@ void GenerateConstantDefinitions(CodeWriter& out, const AidlDefinedType& type,
 
 void GenerateConstantDeclarations(CodeWriter& out, const AidlDefinedType& type,
                                   const AidlTypenames& typenames) {
-  std::vector<std::unique_ptr<Declaration>> string_constants;
-  unique_ptr<Enum> byte_constant_enum{new Enum{"", "int8_t", false}};
-  unique_ptr<Enum> int_constant_enum{new Enum{"", "int32_t", false}};
-  unique_ptr<Enum> long_constant_enum{new Enum{"", "int64_t", false}};
   for (const auto& constant : type.GetConstantDeclarations()) {
     const AidlTypeSpecifier& type = constant->GetType();
-    const AidlConstantValue& value = constant->GetValue();
-
-    const string attribute = GetDeprecatedAttribute(*constant);
+    const auto cpp_type = CppNameOf(type, typenames);
     if (type.Signature() == "String") {
-      std::string cppType = CppNameOf(constant->GetType(), typenames);
-      unique_ptr<Declaration> getter(new MethodDecl("const " + cppType + "&", constant->GetName(),
-                                                    {}, MethodDecl::IS_STATIC, attribute));
-      string_constants.push_back(std::move(getter));
-    } else if (type.Signature() == "byte") {
-      byte_constant_enum->AddValue(constant->GetName(),
-                                   constant->ValueString(ConstantValueDecorator), attribute);
-    } else if (type.Signature() == "int") {
-      int_constant_enum->AddValue(constant->GetName(),
-                                  constant->ValueString(ConstantValueDecorator), attribute);
-    } else if (type.Signature() == "long") {
-      long_constant_enum->AddValue(constant->GetName(),
-                                   constant->ValueString(ConstantValueDecorator), attribute);
+      out << "static const " << cpp_type << "& " << constant->GetName() << "()";
+      cpp::GenerateDeprecated(out, *constant);
+      out << ";\n";
     } else {
-      AIDL_FATAL(value) << "Unrecognized constant type: " << type.Signature();
-    }
-  }
-  if (byte_constant_enum->HasValues()) {
-    byte_constant_enum->Write(&out);
-  }
-  if (int_constant_enum->HasValues()) {
-    int_constant_enum->Write(&out);
-  }
-  if (long_constant_enum->HasValues()) {
-    long_constant_enum->Write(&out);
-  }
-  if (!string_constants.empty()) {
-    for (auto& string_constant : string_constants) {
-      string_constant->Write(&out);
+      out << "enum : " << cpp_type << " { " << constant->GetName();
+      cpp::GenerateDeprecated(out, *constant);
+      out << " = " << constant->ValueString(ConstantValueDecorator) << " };\n";
     }
   }
 }
