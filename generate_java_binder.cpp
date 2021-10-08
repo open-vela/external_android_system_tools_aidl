@@ -1250,6 +1250,15 @@ std::unique_ptr<Class> GenerateInterfaceClass(const AidlInterface* iface,
     GenerateMethods(*iface, *item, interface.get(), stub, proxy, item->GetId(), typenames, options);
   }
 
+  // all the nested types
+  for (const auto& nested : iface->GetNestedTypes()) {
+    string code;
+    auto writer = CodeWriter::ForString(&code);
+    GenerateClass(*writer, *nested, typenames, options);
+    writer->Close();
+    interface->elements.push_back(std::make_shared<LiteralClassElement>(code));
+  }
+
   // additional static methods for the default impl set/get to the
   // stub class. Can't add them to the interface as the generated java files
   // may be compiled with Java < 1.7 where static interface method isn't
