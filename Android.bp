@@ -194,11 +194,7 @@ cc_fuzz {
 
     fuzz_config: {
         cc: [
-            "devinmoore@google.com",
-            "smoreland@google.com",
-            "jiyong@google.com",
-            "jeongik@google.com",
-            "jooyung@google.com",
+            "aidl-bugs@google.com",
         ],
     },
 
