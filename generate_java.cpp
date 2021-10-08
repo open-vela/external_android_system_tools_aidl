@@ -690,7 +690,6 @@ void generate_union(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypena
 
   if (!decl->GetPackage().empty()) {
     out << "package " + decl->GetPackage() + ";\n";
-    out << "\n";
   }
   out << GenerateComments(*decl);
   out << GenerateAnnotations(*decl);
