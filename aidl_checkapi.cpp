@@ -86,11 +86,11 @@ static vector<string> get_strict_annotations(const AidlAnnotatable& node) {
       AidlAnnotation::Type::SUPPRESS_WARNINGS,
   };
   vector<string> annotations;
-  for (const AidlAnnotation& annotation : node.GetAnnotations()) {
-    if (kIgnoreAnnotations.find(annotation.GetType()) != kIgnoreAnnotations.end()) {
+  for (const auto& annotation : node.GetAnnotations()) {
+    if (kIgnoreAnnotations.find(annotation->GetType()) != kIgnoreAnnotations.end()) {
       continue;
     }
-    auto annotation_string = annotation.ToString();
+    auto annotation_string = annotation->ToString();
     // adding @Deprecated (with optional args) is okay
     if (StartsWith(annotation_string, "@JavaPassthrough(annotation=\"@Deprecated")) {
       continue;
