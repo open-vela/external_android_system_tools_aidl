@@ -381,8 +381,8 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
                     vector<unique_ptr<AidlTypeSpecifier>>* type_params, const Comments& comments);
   virtual ~AidlTypeSpecifier() = default;
 
-  // Copy of this type which is not an array.
-  const AidlTypeSpecifier& ArrayBase() const;
+  // View of this type which is not an array.
+  void ViewAsArrayBase(std::function<void(const AidlTypeSpecifier&)> func) const;
 
   // Returns the full-qualified name of the base type.
   // int -> int
@@ -447,10 +447,9 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
 
   const string unresolved_name_;
   string fully_qualified_name_;
-  bool is_array_;
+  mutable bool is_array_;
   vector<string> split_name_;
   const AidlDefinedType* defined_type_ = nullptr;  // set when Resolve() for defined types
-  mutable shared_ptr<AidlTypeSpecifier> array_base_;
 };
 
 // Returns the universal value unaltered.
