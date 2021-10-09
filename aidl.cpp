@@ -688,8 +688,8 @@ bool compile_aidl(const Options& options, const IoDelegate& io_delegate) {
     for (const auto& defined_type : typenames.MainDocument().DefinedTypes()) {
       AIDL_FATAL_IF(defined_type == nullptr, input_file);
 
-      // TODO(b/182508839) add backend support for nested types
-      if (!defined_type->GetNestedTypes().empty() && !options.IsCppOutput()) {
+      // TODO(b/182508839) add Rust backend support for nested types
+      if (!defined_type->GetNestedTypes().empty() && lang == Options::Language::RUST) {
         AIDL_ERROR(defined_type) << "Nested types are not supported yet in " << to_string(lang)
                                  << " backend.";
         return false;
@@ -721,8 +721,8 @@ bool compile_aidl(const Options& options, const IoDelegate& io_delegate) {
           // Legacy behavior. For parcelable declarations in Java, don't generate output file.
           success = true;
         } else {
-          success = java::generate_java(output_file_name, defined_type.get(), typenames,
-                                        io_delegate, options);
+          java::GenerateJava(output_file_name, options, typenames, *defined_type, io_delegate);
+          success = true;
         }
       } else if (lang == Options::Language::RUST) {
         success = rust::GenerateRust(output_file_name, defined_type.get(), typenames, io_delegate,

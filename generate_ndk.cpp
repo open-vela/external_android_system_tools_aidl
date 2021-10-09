@@ -82,9 +82,6 @@ void GenerateParcelSource(CodeWriter& out, const AidlTypenames& types,
 // Source for union
 void GenerateParcelSource(CodeWriter& out, const AidlTypenames& types,
                           const AidlUnionDecl& defined_type, const Options& options);
-
-std::string GenerateEnumToString(const AidlTypenames& typenames,
-                                 const AidlEnumDeclaration& enum_decl);
 }  // namespace internals
 
 using namespace internals;
@@ -147,8 +144,9 @@ void GenerateHeaderDefinitions(CodeWriter& out, const AidlTypenames& types,
         : out(out), types(types), options(options) {}
 
     void Visit(const AidlEnumDeclaration& enum_decl) override {
+      const auto backing_type = NdkNameOf(types, enum_decl.GetBackingType(), StorageMode::STACK);
       EnterNdkNamespace(out, enum_decl);
-      out << GenerateEnumToString(types, enum_decl);
+      out << cpp::GenerateEnumToString(enum_decl, backing_type);
       LeaveNdkNamespace(out, enum_decl);
 
       out << "namespace ndk {\n";
@@ -384,9 +382,8 @@ static void GenerateSourceIncludes(CodeWriter& out, const AidlTypenames& types,
   });
 }
 
-template <typename TypeWithConstants>
 static void GenerateConstantDeclarations(CodeWriter& out, const AidlTypenames& types,
-                                         const TypeWithConstants& type) {
+                                         const AidlDefinedType& type) {
   for (const auto& constant : type.GetConstantDeclarations()) {
     const AidlTypeSpecifier& type = constant->GetType();
 
@@ -403,8 +400,7 @@ static void GenerateConstantDeclarations(CodeWriter& out, const AidlTypenames& t
   }
 }
 
-template <typename TypeWithConstants>
-static void GenerateConstantDefinitions(CodeWriter& out, const TypeWithConstants& interface,
+static void GenerateConstantDefinitions(CodeWriter& out, const AidlDefinedType& interface,
                                         const std::string& clazz,
                                         const std::string& tmpl_decl = "") {
   for (const auto& constant : interface.GetConstantDeclarations()) {
@@ -1309,53 +1305,11 @@ void GenerateParcelSource(CodeWriter& out, const AidlTypenames& types,
   LeaveNdkNamespace(out, defined_type);
 }
 
-std::string GenerateEnumToString(const AidlTypenames& typenames,
-                                 const AidlEnumDeclaration& enum_decl) {
-  const auto q_name = GetQualifiedName(enum_decl);
-  std::ostringstream code;
-  const std::string signature =
-      "[[nodiscard]] static inline std::string toString(" + q_name + " val)";
-  if (enum_decl.IsDeprecated()) {
-    code << signature;
-    cpp::GenerateDeprecated(code, enum_decl);
-    code << ";\n";
-  }
-  code << signature << " {\n";
-  code << "  switch(val) {\n";
-  std::set<std::string> unique_cases;
-  for (const auto& enumerator : enum_decl.GetEnumerators()) {
-    std::string c = enumerator->ValueString(enum_decl.GetBackingType(), ConstantValueDecorator);
-    // Only add a case if its value has not yet been used in the switch
-    // statement. C++ does not allow multiple cases with the same value, but
-    // enums does allow this. In this scenario, the first declared
-    // enumerator with the given value is printed.
-    if (unique_cases.count(c) == 0) {
-      unique_cases.insert(c);
-      code << "  case " << q_name << "::" << enumerator->GetName() << ":\n";
-      code << "    return \"" << enumerator->GetName() << "\";\n";
-    }
-  }
-  code << "  default:\n";
-  code << "    return std::to_string(static_cast<"
-       << NdkNameOf(typenames, enum_decl.GetBackingType(), StorageMode::STACK) << ">(val));\n";
-  code << "  }\n";
-  code << "}\n";
-  return code.str();
-}
-
 void GenerateEnumClassDecl(CodeWriter& out, const AidlTypenames& types,
                            const AidlEnumDeclaration& enum_decl, const Options&) {
-  out << "enum class";
-  cpp::GenerateDeprecated(out, enum_decl);
-  out << " " << enum_decl.GetName() << " : "
-      << NdkNameOf(types, enum_decl.GetBackingType(), StorageMode::STACK) << " {\n";
-  out.Indent();
-  for (const auto& enumerator : enum_decl.GetEnumerators()) {
-    out << enumerator->GetName() << " = "
-        << enumerator->ValueString(enum_decl.GetBackingType(), ConstantValueDecorator) << ",\n";
-  }
-  out.Dedent();
-  out << "};\n";
+  cpp::GenerateEnumClassDecl(out, enum_decl,
+                             NdkNameOf(types, enum_decl.GetBackingType(), StorageMode::STACK),
+                             ConstantValueDecorator);
   out << "\n";
 }
 

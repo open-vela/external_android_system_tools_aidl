@@ -44,7 +44,8 @@ TEST_F(AidlTest, NestedService) {
   BackendType backendType;
   auto status = service->getBackendType(&backendType);
   EXPECT_TRUE(status.isOk());
-  if (backendType != BackendType::CPP) GTEST_SKIP();
+  // TODO(b/201729533) enable test when Rust backend supports nested types
+  if (backendType == BackendType::RUST) GTEST_SKIP();
 
   sp<INestedService> nestedService;
   EXPECT_EQ(android::OK, android::getService(INestedService::descriptor, &nestedService));

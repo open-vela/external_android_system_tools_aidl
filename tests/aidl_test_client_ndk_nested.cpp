@@ -48,7 +48,8 @@ TEST_F(AidlTest, NestedService) {
   BackendType backendType;
   auto status = getService<ITestService>()->getBackendType(&backendType);
   EXPECT_TRUE(status.isOk());
-  if (backendType != BackendType::CPP) GTEST_SKIP();
+  // TODO(b/201729533) enable test when Rust backend supports nested types
+  if (backendType == BackendType::RUST) GTEST_SKIP();
 
   auto nestedService = getService<INestedService>();
   ASSERT_NE(nullptr, nestedService);
