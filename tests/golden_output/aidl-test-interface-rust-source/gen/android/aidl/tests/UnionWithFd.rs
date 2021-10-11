@@ -10,9 +10,21 @@ impl Default for UnionWithFd {
     Self::Num(0)
   }
 }
-impl binder::parcel::Parcelable for UnionWithFd {
-  fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    match self {
+impl binder::parcel::Serialize for UnionWithFd {
+  fn serialize(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    <Self as binder::parcel::SerializeOption>::serialize_option(Some(self), parcel)
+  }
+}
+impl binder::parcel::SerializeArray for UnionWithFd {}
+impl binder::parcel::SerializeOption for UnionWithFd {
+  fn serialize_option(this: Option<&Self>, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    let this = if let Some(this) = this {
+      parcel.write(&1i32)?;
+      this
+    } else {
+      return parcel.write(&0i32);
+    };
+    match this {
       Self::Num(v) => {
         parcel.write(&0i32)?;
         parcel.write(v)
@@ -24,7 +36,10 @@ impl binder::parcel::Parcelable for UnionWithFd {
       }
     }
   }
-  fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+}
+binder::impl_deserialize_for_parcelable!(UnionWithFd);
+impl UnionWithFd {
+  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
     let tag: i32 = parcel.read()?;
     match tag {
       0 => {
@@ -42,9 +57,4 @@ impl binder::parcel::Parcelable for UnionWithFd {
       }
     }
   }
-}
-binder::impl_serialize_for_parcelable!(UnionWithFd);
-binder::impl_deserialize_for_parcelable!(UnionWithFd);
-impl binder::parcel::ParcelableMetadata for UnionWithFd {
-  fn get_descriptor() -> &'static str { "android.aidl.tests.UnionWithFd" }
 }

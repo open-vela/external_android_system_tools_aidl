@@ -16,9 +16,21 @@ impl Default for Union {
     Self::Ns(vec!{})
   }
 }
-impl binder::parcel::Parcelable for Union {
-  fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    match self {
+impl binder::parcel::Serialize for Union {
+  fn serialize(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    <Self as binder::parcel::SerializeOption>::serialize_option(Some(self), parcel)
+  }
+}
+impl binder::parcel::SerializeArray for Union {}
+impl binder::parcel::SerializeOption for Union {
+  fn serialize_option(this: Option<&Self>, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    let this = if let Some(this) = this {
+      parcel.write(&1i32)?;
+      this
+    } else {
+      return parcel.write(&0i32);
+    };
+    match this {
       Self::Ns(v) => {
         parcel.write(&0i32)?;
         parcel.write(v)
@@ -49,7 +61,10 @@ impl binder::parcel::Parcelable for Union {
       }
     }
   }
-  fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+}
+binder::impl_deserialize_for_parcelable!(Union);
+impl Union {
+  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
     let tag: i32 = parcel.read()?;
     match tag {
       0 => {
@@ -92,9 +107,4 @@ impl binder::parcel::Parcelable for Union {
       }
     }
   }
-}
-binder::impl_serialize_for_parcelable!(Union);
-binder::impl_deserialize_for_parcelable!(Union);
-impl binder::parcel::ParcelableMetadata for Union {
-  fn get_descriptor() -> &'static str { "android.aidl.tests.Union" }
 }

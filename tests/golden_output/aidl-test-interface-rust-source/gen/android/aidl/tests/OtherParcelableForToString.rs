@@ -11,14 +11,29 @@ impl Default for OtherParcelableForToString {
     }
   }
 }
-impl binder::parcel::Parcelable for OtherParcelableForToString {
-  fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+impl binder::parcel::Serialize for OtherParcelableForToString {
+  fn serialize(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    <Self as binder::parcel::SerializeOption>::serialize_option(Some(self), parcel)
+  }
+}
+impl binder::parcel::SerializeArray for OtherParcelableForToString {}
+impl binder::parcel::SerializeOption for OtherParcelableForToString {
+  fn serialize_option(this: Option<&Self>, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    let this = if let Some(this) = this {
+      parcel.write(&1i32)?;
+      this
+    } else {
+      return parcel.write(&0i32);
+    };
     parcel.sized_write(|subparcel| {
-      subparcel.write(&self.field)?;
+      subparcel.write(&this.field)?;
       Ok(())
     })
   }
-  fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+}
+binder::impl_deserialize_for_parcelable!(OtherParcelableForToString);
+impl OtherParcelableForToString {
+  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
     parcel.sized_read(|subparcel| {
       if subparcel.has_more_data() {
         self.field = subparcel.read()?;
@@ -26,9 +41,4 @@ impl binder::parcel::Parcelable for OtherParcelableForToString {
       Ok(())
     })
   }
-}
-binder::impl_serialize_for_parcelable!(OtherParcelableForToString);
-binder::impl_deserialize_for_parcelable!(OtherParcelableForToString);
-impl binder::parcel::ParcelableMetadata for OtherParcelableForToString {
-  fn get_descriptor() -> &'static str { "android.aidl.tests.OtherParcelableForToString" }
 }
