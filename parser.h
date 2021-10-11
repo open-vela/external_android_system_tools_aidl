@@ -88,7 +88,7 @@ class Parser {
   // fully-qualified type names are allowed only in preprocessed files
   void CheckValidTypeName(const AidlToken& token, const AidlLocation& loc);
 
-  void SetPackage(const AidlPackage& package);
+  void SetPackage(const std::string& package);
   const std::string& Package() const { return package_; }
 
   void MakeDocument(const AidlLocation& location, const Comments& comments,

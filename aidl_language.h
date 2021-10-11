@@ -81,7 +81,6 @@ bool ParseFloating(std::string_view sv, double* parsed);
 bool ParseFloating(std::string_view sv, float* parsed);
 
 class AidlDocument;
-class AidlPackage;
 class AidlImport;
 class AidlInterface;
 class AidlParcelable;
@@ -121,7 +120,6 @@ class AidlVisitor {
   virtual void Visit(const AidlBinaryConstExpression&) {}
   virtual void Visit(const AidlAnnotation&) {}
   virtual void Visit(const AidlImport&) {}
-  virtual void Visit(const AidlPackage&) {}
 };
 
 class AidlScope {
@@ -1162,20 +1160,6 @@ class AidlInterface final : public AidlDefinedType {
   bool CheckValid(const AidlTypenames& typenames) const override;
   std::string GetDescriptor() const;
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
-};
-
-class AidlPackage : public AidlNode {
- public:
-  AidlPackage(const AidlLocation& location, const std::string& name, const Comments& comments)
-      : AidlNode(location, comments), name_(name) {}
-  virtual ~AidlPackage() = default;
-  void TraverseChildren(std::function<void(const AidlNode&)>) const {}
-  void DispatchVisit(AidlVisitor& v) const { v.Visit(*this); }
-
-  const std::string& GetName() const { return name_; }
-
- private:
-  std::string name_;
 };
 
 class AidlImport : public AidlNode {
