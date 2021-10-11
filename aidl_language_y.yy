@@ -92,6 +92,7 @@ AidlLocation loc(const yy::parser::location_type& l) {
     std::vector<std::string>* type_params;
     std::vector<std::unique_ptr<AidlImport>>* imports;
     AidlImport* import;
+    AidlPackage* package;
     std::vector<std::unique_ptr<AidlDefinedType>>* declarations;
 }
 
@@ -177,13 +178,14 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %type<constant_value_list> constant_value_non_empty_list
 %type<imports> imports
 %type<import> import
+%type<package> package
 %type<declarations> decls
-%type<token> identifier error qualified_name optional_package
+%type<token> identifier error qualified_name
 
 %%
 
 document
- : optional_package imports decls {
+ : package imports decls {
     Comments comments;
     if ($1) {
       comments = $1->GetComments();
@@ -207,13 +209,14 @@ identifier
  | CPP_HEADER
  ;
 
-optional_package
+package
  : {
     $$ = nullptr;
  }
  | PACKAGE qualified_name ';' {
-    ps->SetPackage($2->GetText());
-    $$ = $1; // for comments
+    $$ = new AidlPackage(loc(@1, @3), $2->GetText(), $1->GetComments());
+    ps->SetPackage(*$$);
+    delete $1;
     delete $2;
   }
  ;
