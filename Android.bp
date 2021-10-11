@@ -299,6 +299,7 @@ filegroup {
         "tests/android/aidl/tests/StructuredParcelable.aidl",
         "tests/android/aidl/tests/Union.aidl",
         "tests/android/aidl/tests/UnionWithFd.aidl",
+        "tests/android/aidl/tests/extension/*.aidl",
         "tests/android/aidl/tests/unions/*.aidl",
     ],
     path: "tests",
@@ -309,7 +310,6 @@ filegroup {
     srcs: [
         "tests/android/aidl/tests/ICppJavaTests.aidl",
         "tests/android/aidl/tests/SimpleParcelable.aidl",
-        "tests/android/aidl/tests/extension/*.aidl",
     ],
     path: "tests",
 }
@@ -613,7 +613,14 @@ rust_test {
     rustlibs: [
         "aidl-test-interface-rust",
         "aidl-test-versioned-interface-V2-rust",
+        "aidl_test_nonvintf_parcelable-V1-rust",
+        "aidl_test_unstable_parcelable-rust",
+        "aidl_test_vintf_parcelable-V1-rust",
         "liblibc",
+        // We need to import binder_rs directly
+        // for a few internal types like Parcel
+        // and traits like Parcelable
+        "libbinder_rs",
     ],
     prefer_rlib: true,
     compile_multilib: "both",
