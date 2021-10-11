@@ -253,7 +253,7 @@ void GenerateServerTransaction(CodeWriter& out, const AidlMethod& method,
         // any None, return UNEXPECTED_NULL (this is what libbinder_ndk does)
         out << "if " << arg_name << ".iter().any(Option::is_none) { "
             << "return Err(binder::StatusCode::UNEXPECTED_NULL); }\n";
-      } else if (!arg->IsIn() && TypeNeedsOption(arg_type, typenames)) {
+      } else if (!arg->IsIn() && !TypeHasDefault(arg_type, typenames)) {
         // Unwrap out-only arguments that we wrapped in Option<T>
         out << "let " << arg_name << " = " << arg_name
             << ".ok_or(binder::StatusCode::UNEXPECTED_NULL)?;\n";
@@ -528,21 +528,11 @@ void GenerateParcelDefault(CodeWriter& out, const AidlStructuredParcelable* parc
   out << "Self {\n";
   out.Indent();
   for (const auto& variable : parcel->GetFields()) {
-    out << variable->GetName() << ": ";
     if (variable->GetDefaultValue()) {
-      out << variable->ValueString(ConstantValueDecorator);
-    } else if (variable->GetType().GetName() == "ParcelableHolder") {
-      out << "binder::parcel::ParcelableHolder::new(";
-      if (parcel->IsVintfStability()) {
-        out << "binder::Stability::Vintf";
-      } else {
-        out << "binder::Stability::Local";
-      }
-      out << ")";
+      out << variable->GetName() << ": " << variable->ValueString(ConstantValueDecorator) << ",\n";
     } else {
-      out << "Default::default()";
+      out << variable->GetName() << ": Default::default(),\n";
     }
-    out << ",\n";
   }
   out.Dedent();
   out << "}\n";
@@ -557,7 +547,7 @@ void GenerateParcelSerializeBody(CodeWriter& out, const AidlStructuredParcelable
   out << "parcel.sized_write(|subparcel| {\n";
   out.Indent();
   for (const auto& variable : parcel->GetFields()) {
-    if (TypeNeedsOption(variable->GetType(), typenames)) {
+    if (!TypeHasDefault(variable->GetType(), typenames)) {
       out << "let __field_ref = self." << variable->GetName()
           << ".as_ref().ok_or(binder::StatusCode::UNEXPECTED_NULL)?;\n";
       out << "subparcel.write(__field_ref)?;\n";
@@ -578,7 +568,7 @@ void GenerateParcelDeserializeBody(CodeWriter& out, const AidlStructuredParcelab
   for (const auto& variable : parcel->GetFields()) {
     out << "if subparcel.has_more_data() {\n";
     out.Indent();
-    if (TypeNeedsOption(variable->GetType(), typenames)) {
+    if (!TypeHasDefault(variable->GetType(), typenames)) {
       out << "self." << variable->GetName() << " = Some(subparcel.read()?);\n";
     } else {
       out << "self." << variable->GetName() << " = subparcel.read()?;\n";
@@ -638,7 +628,7 @@ void GenerateParcelSerializeBody(CodeWriter& out, const AidlUnionDecl* parcel,
     out << "Self::" << variable->GetCapitalizedName() << "(v) => {\n";
     out.Indent();
     out << "parcel.write(&" << std::to_string(tag++) << "i32)?;\n";
-    if (TypeNeedsOption(variable->GetType(), typenames)) {
+    if (!TypeHasDefault(variable->GetType(), typenames)) {
       out << "let __field_ref = v.as_ref().ok_or(binder::StatusCode::UNEXPECTED_NULL)?;\n";
       out << "parcel.write(__field_ref)\n";
     } else {
@@ -663,7 +653,7 @@ void GenerateParcelDeserializeBody(CodeWriter& out, const AidlUnionDecl* parcel,
     out << std::to_string(tag++) << " => {\n";
     out.Indent();
     out << "let value: " << field_type << " = ";
-    if (TypeNeedsOption(variable->GetType(), typenames)) {
+    if (!TypeHasDefault(variable->GetType(), typenames)) {
       out << "Some(parcel.read()?);\n";
     } else {
       out << "parcel.read()?;\n";
@@ -709,21 +699,6 @@ void GenerateParcelableTrait(CodeWriter& out, const ParcelableType* parcel,
 }
 
 template <typename ParcelableType>
-void GenerateMetadataTrait(CodeWriter& out, const ParcelableType* parcel) {
-  out << "impl binder::parcel::ParcelableMetadata for " << parcel->GetName() << " {\n";
-  out.Indent();
-
-  out << "fn get_descriptor() -> &'static str { \"" << parcel->GetCanonicalName() << "\" }\n";
-
-  if (parcel->IsVintfStability()) {
-    out << "fn get_stability(&self) -> binder::Stability { binder::Stability::Vintf }\n";
-  }
-
-  out.Dedent();
-  out << "}\n";
-}
-
-template <typename ParcelableType>
 bool GenerateRustParcel(const string& filename, const ParcelableType* parcel,
                         const AidlTypenames& typenames, const IoDelegate& io_delegate) {
   CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
@@ -751,7 +726,6 @@ bool GenerateRustParcel(const string& filename, const ParcelableType* parcel,
   GenerateMangledAlias(*code_writer, parcel);
   GenerateParcelDefault(*code_writer, parcel);
   GenerateParcelableTrait(*code_writer, parcel, typenames);
-  GenerateMetadataTrait(*code_writer, parcel);
   return true;
 }
 
