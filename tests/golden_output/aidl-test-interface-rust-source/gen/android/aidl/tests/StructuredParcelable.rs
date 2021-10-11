@@ -344,3 +344,6 @@ impl binder::parcel::Parcelable for StructuredParcelable {
 }
 binder::impl_serialize_for_parcelable!(StructuredParcelable);
 binder::impl_deserialize_for_parcelable!(StructuredParcelable);
+impl binder::parcel::ParcelableMetadata for StructuredParcelable {
+  fn get_descriptor() -> &'static str { "android.aidl.tests.StructuredParcelable" }
+}

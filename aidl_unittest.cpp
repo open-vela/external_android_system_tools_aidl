@@ -1955,16 +1955,8 @@ TEST_P(AidlTest, ExtensionTest) {
       "  ParcelableHolder extension;\n"
       "  ParcelableHolder extension2;\n"
       "}";
-  if (GetLanguage() == Options::Language::RUST) {
-    EXPECT_EQ(nullptr, Parse("a/Data.aidl", extendable_parcelable, typenames_, GetLanguage()));
-    EXPECT_EQ(
-        "ERROR: a/Data.aidl:2.1-19: The Rust backend does not support ParcelableHolder "
-        "yet.\n",
-        GetCapturedStderr());
-  } else {
-    EXPECT_NE(nullptr, Parse("a/Data.aidl", extendable_parcelable, typenames_, GetLanguage()));
-    EXPECT_EQ("", GetCapturedStderr());
-  }
+  EXPECT_NE(nullptr, Parse("a/Data.aidl", extendable_parcelable, typenames_, GetLanguage()));
+  EXPECT_EQ("", GetCapturedStderr());
 }
 TEST_P(AidlTest, ParcelableHolderAsReturnType) {
   CaptureStderr();
@@ -1975,14 +1967,6 @@ TEST_P(AidlTest, ParcelableHolderAsReturnType) {
   EXPECT_EQ(nullptr,
             Parse("a/IFoo.aidl", parcelableholder_return_interface, typenames_, GetLanguage()));
 
-  if (GetLanguage() == Options::Language::RUST) {
-    EXPECT_EQ(
-        "ERROR: a/IFoo.aidl:2.19-23: ParcelableHolder cannot be a return type\n"
-        "ERROR: a/IFoo.aidl:2.1-19: The Rust backend does not support ParcelableHolder "
-        "yet.\n",
-        GetCapturedStderr());
-    return;
-  }
   EXPECT_EQ("ERROR: a/IFoo.aidl:2.19-23: ParcelableHolder cannot be a return type\n",
             GetCapturedStderr());
 }
@@ -1996,14 +1980,6 @@ TEST_P(AidlTest, ParcelableHolderAsArgumentType) {
   EXPECT_EQ(nullptr,
             Parse("a/IFoo.aidl", extendable_parcelable_arg_interface, typenames_, GetLanguage()));
 
-  if (GetLanguage() == Options::Language::RUST) {
-    EXPECT_EQ(
-        "ERROR: a/IFoo.aidl:2.31-34: ParcelableHolder cannot be an argument type\n"
-        "ERROR: a/IFoo.aidl:2.14-31: The Rust backend does not support ParcelableHolder "
-        "yet.\n",
-        GetCapturedStderr());
-    return;
-  }
   EXPECT_EQ("ERROR: a/IFoo.aidl:2.31-34: ParcelableHolder cannot be an argument type\n",
             GetCapturedStderr());
 }
@@ -2014,14 +1990,6 @@ TEST_P(AidlTest, RejectNullableParcelableHolderField) {
   const string expected_stderr = "ERROR: Foo.aidl:1.27-44: ParcelableHolder cannot be nullable.\n";
   CaptureStderr();
   EXPECT_FALSE(compile_aidl(options, io_delegate_));
-  if (GetLanguage() == Options::Language::RUST) {
-    EXPECT_EQ(
-        "ERROR: Foo.aidl:1.27-44: ParcelableHolder cannot be nullable.\n"
-        "ERROR: Foo.aidl:1.27-44: The Rust backend does not support ParcelableHolder "
-        "yet.\n",
-        GetCapturedStderr());
-    return;
-  }
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
