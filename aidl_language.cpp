@@ -1281,11 +1281,6 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
     AIDL_ERROR(this) << "The " << to_string(lang) << " backend does not support array of IBinder";
     return false;
   }
-  if (lang == Options::Language::RUST && GetName() == "ParcelableHolder") {
-    // TODO(b/146611855): Remove it when Rust backend supports ParcelableHolder
-    AIDL_ERROR(this) << "The Rust backend does not support ParcelableHolder yet.";
-    return false;
-  }
   if ((lang == Options::Language::NDK || lang == Options::Language::RUST) && IsArray() &&
       IsNullable()) {
     if (GetName() == "ParcelFileDescriptor") {
