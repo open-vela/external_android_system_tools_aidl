@@ -29,3 +29,6 @@ impl binder::parcel::Parcelable for OtherParcelableForToString {
 }
 binder::impl_serialize_for_parcelable!(OtherParcelableForToString);
 binder::impl_deserialize_for_parcelable!(OtherParcelableForToString);
+impl binder::parcel::ParcelableMetadata for OtherParcelableForToString {
+  fn get_descriptor() -> &'static str { "android.aidl.tests.OtherParcelableForToString" }
+}

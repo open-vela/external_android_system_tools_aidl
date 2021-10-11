@@ -44,3 +44,6 @@ impl binder::parcel::Parcelable for EnumUnion {
 }
 binder::impl_serialize_for_parcelable!(EnumUnion);
 binder::impl_deserialize_for_parcelable!(EnumUnion);
+impl binder::parcel::ParcelableMetadata for EnumUnion {
+  fn get_descriptor() -> &'static str { "android.aidl.tests.unions.EnumUnion" }
+}
