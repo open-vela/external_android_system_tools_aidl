@@ -95,3 +95,6 @@ impl binder::parcel::Parcelable for Union {
 }
 binder::impl_serialize_for_parcelable!(Union);
 binder::impl_deserialize_for_parcelable!(Union);
+impl binder::parcel::ParcelableMetadata for Union {
+  fn get_descriptor() -> &'static str { "android.aidl.tests.Union" }
+}

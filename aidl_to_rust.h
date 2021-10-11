@@ -70,7 +70,7 @@ std::string TakeReference(ReferenceMode ref_mode, const std::string& name);
 
 bool TypeIsInterface(const AidlTypeSpecifier& type, const AidlTypenames& typenames);
 
-bool TypeHasDefault(const AidlTypeSpecifier& type, const AidlTypenames& typenames);
+bool TypeNeedsOption(const AidlTypeSpecifier& type, const AidlTypenames& typenames);
 
 }  // namespace rust
 }  // namespace aidl
