@@ -17,6 +17,7 @@
 #include <aidl/android/aidl/tests/LongEnum.h>
 #include <aidl/android/aidl/tests/RecursiveList.h>
 #include <aidl/android/aidl/tests/StructuredParcelable.h>
+#include <aidl/android/aidl/tests/extension/ExtendableParcelable.h>
 #ifdef BINDER_STABILITY_SUPPORT
 #include <android/binder_stability.h>
 #endif  // BINDER_STABILITY_SUPPORT
@@ -152,11 +153,12 @@ public:
   static constexpr uint32_t TRANSACTION_ReverseUtf8CppStringList = FIRST_CALL_TRANSACTION + 44;
   static constexpr uint32_t TRANSACTION_GetCallback = FIRST_CALL_TRANSACTION + 45;
   static constexpr uint32_t TRANSACTION_FillOutStructuredParcelable = FIRST_CALL_TRANSACTION + 46;
-  static constexpr uint32_t TRANSACTION_ReverseList = FIRST_CALL_TRANSACTION + 47;
-  static constexpr uint32_t TRANSACTION_GetOldNameInterface = FIRST_CALL_TRANSACTION + 48;
-  static constexpr uint32_t TRANSACTION_GetNewNameInterface = FIRST_CALL_TRANSACTION + 49;
-  static constexpr uint32_t TRANSACTION_GetCppJavaTests = FIRST_CALL_TRANSACTION + 50;
-  static constexpr uint32_t TRANSACTION_getBackendType = FIRST_CALL_TRANSACTION + 51;
+  static constexpr uint32_t TRANSACTION_RepeatExtendableParcelable = FIRST_CALL_TRANSACTION + 47;
+  static constexpr uint32_t TRANSACTION_ReverseList = FIRST_CALL_TRANSACTION + 48;
+  static constexpr uint32_t TRANSACTION_GetOldNameInterface = FIRST_CALL_TRANSACTION + 49;
+  static constexpr uint32_t TRANSACTION_GetNewNameInterface = FIRST_CALL_TRANSACTION + 50;
+  static constexpr uint32_t TRANSACTION_GetCppJavaTests = FIRST_CALL_TRANSACTION + 51;
+  static constexpr uint32_t TRANSACTION_getBackendType = FIRST_CALL_TRANSACTION + 52;
 
   static std::shared_ptr<ITestService> fromBinder(const ::ndk::SpAIBinder& binder);
   static binder_status_t writeToParcel(AParcel* parcel, const std::shared_ptr<ITestService>& instance);
@@ -210,6 +212,7 @@ public:
   virtual ::ndk::ScopedAStatus ReverseUtf8CppStringList(const std::vector<std::string>& in_input, std::vector<std::string>* out_repeated, std::vector<std::string>* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus GetCallback(bool in_return_null, std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus FillOutStructuredParcelable(::aidl::android::aidl::tests::StructuredParcelable* in_parcel) = 0;
+  virtual ::ndk::ScopedAStatus RepeatExtendableParcelable(const ::aidl::android::aidl::tests::extension::ExtendableParcelable& in_ep, ::aidl::android::aidl::tests::extension::ExtendableParcelable* out_ep2) = 0;
   virtual ::ndk::ScopedAStatus ReverseList(const ::aidl::android::aidl::tests::RecursiveList& in_list, ::aidl::android::aidl::tests::RecursiveList* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus GetOldNameInterface(std::shared_ptr<::aidl::android::aidl::tests::IOldName>* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus GetNewNameInterface(std::shared_ptr<::aidl::android::aidl::tests::INewName>* _aidl_return) = 0;
@@ -267,6 +270,7 @@ public:
   ::ndk::ScopedAStatus ReverseUtf8CppStringList(const std::vector<std::string>& in_input, std::vector<std::string>* out_repeated, std::vector<std::string>* _aidl_return) override;
   ::ndk::ScopedAStatus GetCallback(bool in_return_null, std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>* _aidl_return) override;
   ::ndk::ScopedAStatus FillOutStructuredParcelable(::aidl::android::aidl::tests::StructuredParcelable* in_parcel) override;
+  ::ndk::ScopedAStatus RepeatExtendableParcelable(const ::aidl::android::aidl::tests::extension::ExtendableParcelable& in_ep, ::aidl::android::aidl::tests::extension::ExtendableParcelable* out_ep2) override;
   ::ndk::ScopedAStatus ReverseList(const ::aidl::android::aidl::tests::RecursiveList& in_list, ::aidl::android::aidl::tests::RecursiveList* _aidl_return) override;
   ::ndk::ScopedAStatus GetOldNameInterface(std::shared_ptr<::aidl::android::aidl::tests::IOldName>* _aidl_return) override;
   ::ndk::ScopedAStatus GetNewNameInterface(std::shared_ptr<::aidl::android::aidl::tests::INewName>* _aidl_return) override;
