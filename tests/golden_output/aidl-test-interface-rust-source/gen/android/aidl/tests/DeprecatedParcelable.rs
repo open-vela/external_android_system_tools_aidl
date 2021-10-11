@@ -24,3 +24,6 @@ impl binder::parcel::Parcelable for DeprecatedParcelable {
 }
 binder::impl_serialize_for_parcelable!(DeprecatedParcelable);
 binder::impl_deserialize_for_parcelable!(DeprecatedParcelable);
+impl binder::parcel::ParcelableMetadata for DeprecatedParcelable {
+  fn get_descriptor() -> &'static str { "android.aidl.tests.DeprecatedParcelable" }
+}
