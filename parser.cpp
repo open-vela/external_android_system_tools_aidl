@@ -83,12 +83,12 @@ void Parser::CheckValidTypeName(const AidlToken& token, const AidlLocation& loc)
   }
 }
 
-void Parser::SetPackage(const AidlPackage& package) {
+void Parser::SetPackage(const std::string& package) {
   if (is_preprocessed_) {
     AIDL_ERROR(package) << "Preprocessed file can't declare package.";
     AddError();
   }
-  package_ = package.GetName();
+  package_ = package;
 }
 
 bool CheckNoRecursiveDefinition(const AidlNode& node) {
