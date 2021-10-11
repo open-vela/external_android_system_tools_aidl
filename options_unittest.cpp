@@ -492,5 +492,16 @@ TEST(OptionsTest, RejectOldMinSdkVersion) {
   EXPECT_THAT(GetCapturedStderr(), testing::HasSubstr("Min SDK version should at least be 23"));
 }
 
+TEST(OptionsTest, RejectRpcOnOldSdkVersion) {
+  const char* args[] = {
+      "aidl", "--lang=java", "--rpc", "--min_sdk_version=23", "--out=out", "input.aidl", nullptr,
+  };
+  CaptureStderr();
+  auto options = GetOptions(args);
+  EXPECT_FALSE(options->Ok());
+  EXPECT_THAT(GetCapturedStderr(),
+              testing::HasSubstr("RPC code requires minimum SDK version of at least"));
+}
+
 }  // namespace aidl
 }  // namespace android
