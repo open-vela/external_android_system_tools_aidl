@@ -35,6 +35,3 @@ impl binder::parcel::Parcelable for RecursiveList {
 }
 binder::impl_serialize_for_parcelable!(RecursiveList);
 binder::impl_deserialize_for_parcelable!(RecursiveList);
-impl binder::parcel::ParcelableMetadata for RecursiveList {
-  fn get_descriptor() -> &'static str { "android.aidl.tests.RecursiveList" }
-}
