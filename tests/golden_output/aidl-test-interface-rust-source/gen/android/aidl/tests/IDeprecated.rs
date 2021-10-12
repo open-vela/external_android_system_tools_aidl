@@ -29,6 +29,7 @@ use lazy_static::lazy_static;
 lazy_static! {
   static ref DEFAULT_IMPL: std::sync::Mutex<IDeprecatedDefaultRef> = std::sync::Mutex::new(None);
 }
+pub(crate) mod mangled { pub use super::IDeprecated as _7_android_4_aidl_5_tests_11_IDeprecated; }
 impl IDeprecated for BpDeprecated {
 }
 impl IDeprecated for binder::Binder<BnDeprecated> {
@@ -37,7 +38,4 @@ fn on_transact(_aidl_service: &dyn IDeprecated, _aidl_code: binder::TransactionC
   match _aidl_code {
     _ => Err(binder::StatusCode::UNKNOWN_TRANSACTION)
   }
-}
-pub(crate) mod mangled {
- pub use super::IDeprecated as _7_android_4_aidl_5_tests_11_IDeprecated;
 }

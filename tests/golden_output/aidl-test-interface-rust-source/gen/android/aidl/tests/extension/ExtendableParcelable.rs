@@ -7,6 +7,7 @@ pub struct ExtendableParcelable {
   pub c: i64,
   pub ext2: binder::parcel::ParcelableHolder,
 }
+pub(crate) mod mangled { pub use super::ExtendableParcelable as _7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable; }
 impl Default for ExtendableParcelable {
   fn default() -> Self {
     Self {
@@ -54,7 +55,4 @@ binder::impl_serialize_for_parcelable!(ExtendableParcelable);
 binder::impl_deserialize_for_parcelable!(ExtendableParcelable);
 impl binder::parcel::ParcelableMetadata for ExtendableParcelable {
   fn get_descriptor() -> &'static str { "android.aidl.tests.extension.ExtendableParcelable" }
-}
-pub(crate) mod mangled {
- pub use super::ExtendableParcelable as _7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable;
 }
