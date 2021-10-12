@@ -1272,3 +1272,68 @@ template <typename T>
 T* AidlCast(AidlNode& node) {
   return const_cast<T*>(AidlCast<T>(const_cast<const AidlNode&>(node)));
 }
+
+template <typename AidlNodeType>
+vector<const AidlNodeType*> Collect(const AidlNode& root) {
+  vector<const AidlNodeType*> result;
+  std::function<void(const AidlNode&)> top_down = [&](const AidlNode& n) {
+    if (auto cast = AidlCast<AidlNodeType>(n); cast) {
+      result.push_back(cast);
+    }
+    n.TraverseChildren(top_down);
+  };
+  top_down(root);
+  return result;
+}
+
+template <typename VisitFn>
+bool TopologicalVisit(const vector<unique_ptr<AidlDefinedType>>& nested_types, VisitFn visit) {
+  // 1. Maps deeply nested types to one of nested_types
+  map<const AidlDefinedType*, const AidlDefinedType*> roots;
+  for (const auto& nested : nested_types) {
+    for (const auto& t : Collect<AidlDefinedType>(*nested)) {
+      roots[t] = nested.get();
+    }
+  }
+  // 2. Collect sibling types referenced within each nested type.
+  map<const AidlDefinedType*, vector<const AidlDefinedType*>> required_types;
+  for (const auto& nested : nested_types) {
+    for (const auto& t : Collect<AidlTypeSpecifier>(*nested)) {
+      if (auto defined_type = t->GetDefinedType(); defined_type) {
+        auto sibling = roots[defined_type];
+        if (sibling && sibling != nested.get()) {
+          required_types[nested.get()].push_back(sibling);
+        }
+      }
+    }
+  };
+  // 3. Run DFS
+  enum { NOT_STARTED = 0, STARTED = 1, FINISHED = 2 };
+  map<const AidlDefinedType*, int> visited;
+  std::function<bool(const AidlDefinedType&)> dfs = [&](const AidlDefinedType& type) {
+    if (visited[&type] == FINISHED) {
+      return true;
+    } else if (visited[&type] == STARTED) {
+      return false;
+    } else {
+      visited[&type] = STARTED;
+      // Visit every required dep first
+      for (const auto& dep_type : required_types[&type]) {
+        if (!dfs(*dep_type)) {
+          return false;
+        }
+      }
+      visited[&type] = FINISHED;
+      visit(type);
+      return true;
+    }
+  };
+
+  for (const auto& type : nested_types) {
+    if (!dfs(*type)) {
+      return false;
+    }
+  }
+
+  return true;
+}
