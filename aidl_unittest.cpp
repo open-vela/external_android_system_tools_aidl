@@ -1753,6 +1753,84 @@ TEST_F(AidlTest, HeaderForNestedTypeShouldPointToTopMostParent) {
   EXPECT_EQ("p/IFoo.h", cpp::CppHeaderForType(*result));
 }
 
+TEST_F(AidlTest, ReorderNestedTypesForCppOutput) {
+  const string input_path = "p/IFoo.aidl";
+  const string input = R"(
+    package p;
+    interface IFoo {
+      // partial orderings for [A, D, G]:
+      //   D - A
+      //   A - G
+      parcelable A {
+        // partial orderings for [B, C]:
+        //   C - B
+        parcelable B {
+          C c;
+          D.E d;
+        }
+        parcelable C {}
+      }
+      parcelable D {
+        // partial orderings for [E, F]:
+        //   F - E
+        parcelable E {
+          F f;
+        }
+        parcelable F {}
+      }
+      parcelable G {
+        A.B b;
+      }
+    }
+  )";
+  Options options = Options::From("aidl --lang cpp -I. -oout -hout p/IFoo.aidl");
+  io_delegate_.SetFileContents(input_path, input);
+  CaptureStderr();
+  EXPECT_TRUE(compile_aidl(options, io_delegate_));
+  EXPECT_EQ(GetCapturedStderr(), "");
+
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/p/IFoo.h", &code));
+  // check partial orderings: a should comes before b
+  EXPECT_LE(code.find("class D"), code.find("class A"));
+  EXPECT_LE(code.find("class A"), code.find("class G"));
+  EXPECT_LE(code.find("class C"), code.find("class B"));
+  EXPECT_LE(code.find("class F"), code.find("class E"));
+}
+
+TEST_F(AidlTest, RejectsNestedTypesWithCyclicDeps) {
+  const string input_path = "p/IFoo.aidl";
+  const string input = R"(
+    package p;
+    interface IFoo {
+      // Cycles:
+      //   D - A
+      //   A - G
+      //   G - D
+      parcelable A {
+        parcelable B {
+          C c;
+        }
+      }
+      parcelable C {
+        parcelable D {
+          E e;
+        }
+      }
+      parcelable E {
+        parcelable F {
+          A a;
+        }
+      }
+    }
+  )";
+  Options options = Options::From("aidl --lang cpp -I. -oout -hout p/IFoo.aidl");
+  io_delegate_.SetFileContents(input_path, input);
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("IFoo has nested types with cyclic references."));
+}
+
 TEST_F(AidlTest, CppNameOf_GenericType) {
   const string input_path = "p/Wrapper.aidl";
   const string input = "package p; parcelable Wrapper<T> {}";
