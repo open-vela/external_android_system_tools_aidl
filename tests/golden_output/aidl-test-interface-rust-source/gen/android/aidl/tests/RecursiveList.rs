@@ -4,7 +4,6 @@ pub struct RecursiveList {
   pub value: i32,
   pub next: Option<Box<crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList>>,
 }
-pub(crate) mod mangled { pub use super::RecursiveList as _7_android_4_aidl_5_tests_13_RecursiveList; }
 impl Default for RecursiveList {
   fn default() -> Self {
     Self {
@@ -37,4 +36,7 @@ binder::impl_serialize_for_parcelable!(RecursiveList);
 binder::impl_deserialize_for_parcelable!(RecursiveList);
 impl binder::parcel::ParcelableMetadata for RecursiveList {
   fn get_descriptor() -> &'static str { "android.aidl.tests.RecursiveList" }
+}
+pub(crate) mod mangled {
+ pub use super::RecursiveList as _7_android_4_aidl_5_tests_13_RecursiveList;
 }

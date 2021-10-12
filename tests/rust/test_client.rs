@@ -32,6 +32,9 @@ use aidl_test_interface::aidl::android::aidl::tests::{
 use aidl_test_interface::aidl::android::aidl::tests::unions::{
     EnumUnion::EnumUnion,
 };
+use aidl_test_nested::aidl::android::aidl::tests::nested::{
+    INestedService, ParcelableWithNested,
+};
 use aidl_test_interface::binder;
 use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::{
     IFooInterface, IFooInterface::BpFooInterface, BazUnion::BazUnion, Foo::Foo,
@@ -997,4 +1000,19 @@ fn test_renamed_interface_new_as_old() {
         let real_name = old_name.unwrap().RealName();
         assert_eq!(real_name.as_ref().map(String::as_str), Ok("NewName"));
     });
+}
+
+#[test]
+fn test_nested_type() {
+    let service: binder::Strong<dyn INestedService::INestedService> =
+        binder::get_interface(<INestedService::BpNestedService as INestedService::INestedService>::get_descriptor())
+            .expect("did not get binder service");
+
+    let p = ParcelableWithNested::ParcelableWithNested {
+        status: ParcelableWithNested::Status::Status::OK,
+    };
+    let ret = service.flipStatus(&p);
+    assert_eq!(ret, Ok(INestedService::Result::Result {
+        status: ParcelableWithNested::Status::Status::NOT_OK,
+    }));
 }

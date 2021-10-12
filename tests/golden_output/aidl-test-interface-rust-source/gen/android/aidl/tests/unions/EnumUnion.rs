@@ -4,7 +4,6 @@ pub enum EnumUnion {
   IntEnum(crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum),
   LongEnum(crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum),
 }
-pub(crate) mod mangled { pub use super::EnumUnion as _7_android_4_aidl_5_tests_6_unions_9_EnumUnion; }
 impl Default for EnumUnion {
   fn default() -> Self {
     Self::IntEnum(crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum::FOO)
@@ -46,4 +45,7 @@ binder::impl_serialize_for_parcelable!(EnumUnion);
 binder::impl_deserialize_for_parcelable!(EnumUnion);
 impl binder::parcel::ParcelableMetadata for EnumUnion {
   fn get_descriptor() -> &'static str { "android.aidl.tests.unions.EnumUnion" }
+}
+pub(crate) mod mangled {
+ pub use super::EnumUnion as _7_android_4_aidl_5_tests_6_unions_9_EnumUnion;
 }
