@@ -186,7 +186,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 				Cflags:                    append(addCflags, "-Wextra", "-Wall", "-Werror", "-Wextra-semi"),
 				Apex_available:            commonProperties.Apex_available,
 				Min_sdk_version:           i.minSdkVersion(lang),
-				UseApexNameMacro:          true,
 				Target:                    targetProp,
 				Tidy:                      proptools.BoolPtr(true),
 				// Do the tidy check only for the generated headers

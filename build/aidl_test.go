@@ -25,7 +25,6 @@ import (
 	"github.com/google/blueprint/proptools"
 
 	"android/soong/android"
-	"android/soong/apex"
 	"android/soong/cc"
 	"android/soong/genrule"
 	"android/soong/java"
@@ -156,7 +155,6 @@ func _testAidl(t *testing.T, bp string, customizers ...android.FixturePreparer) 
 	preparers = append(preparers, customizers...)
 
 	preparers = append(preparers,
-		apex.PrepareForTestWithApexBuildComponents,
 		rust.PrepareForTestWithRustBuildComponents,
 		android.FixtureRegisterWithContext(func(ctx android.RegistrationContext) {
 			ctx.RegisterModuleType("aidl_interface", aidlInterfaceFactory)
@@ -1021,38 +1019,6 @@ func TestUnstableVndkModule(t *testing.T) {
 			},
 		}
 	`)
-}
-
-func TestCcModuleWithApexNameMacro(t *testing.T) {
-	ctx, _ := testAidl(t, `
-		aidl_interface {
-			name: "myiface",
-			srcs: ["IFoo.aidl"],
-			backend: {
-				ndk: {
-					apex_available: ["myapex"],
-				},
-			},
-		}
-		apex {
-			name: "myapex",
-			key: "myapex.key",
-			native_shared_libs: ["myiface-V1-ndk_platform"],
-			updatable: false,
-		}
-		apex_key {
-			name: "myapex.key",
-			public_key: "testkey.avbpubkey",
-			private_key: "testkey.pem",
-		}
-	`, withFiles(map[string][]byte{
-		"system/sepolicy/apex/myapex-file_contexts": nil,
-	}))
-
-	ccRule := ctx.ModuleForTests("myiface-V1-ndk_platform", "android_arm64_armv8-a_static_myapex").Rule("cc")
-	assertContains(t, ccRule.Args["cFlags"], "-D__ANDROID_APEX__")
-	assertContains(t, ccRule.Args["cFlags"], "-D__ANDROID_APEX_NAME__='\"myapex\"'")
-	assertContains(t, ccRule.Args["cFlags"], "-D__ANDROID_APEX_MYAPEX__")
 }
 
 func TestSrcsAvailable(t *testing.T) {
