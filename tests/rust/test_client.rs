@@ -29,11 +29,11 @@ use aidl_test_interface::aidl::android::aidl::tests::{
     extension::MyExt::MyExt, extension::MyExt2::MyExt2,
     extension::MyExtLike::MyExtLike,
 };
+use aidl_test_interface::aidl::android::aidl::tests::nested::{
+    INestedService, ParcelableWithNested,
+};
 use aidl_test_interface::aidl::android::aidl::tests::unions::{
     EnumUnion::EnumUnion,
-};
-use aidl_test_nested::aidl::android::aidl::tests::nested::{
-    INestedService, ParcelableWithNested,
 };
 use aidl_test_interface::binder;
 use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::{
