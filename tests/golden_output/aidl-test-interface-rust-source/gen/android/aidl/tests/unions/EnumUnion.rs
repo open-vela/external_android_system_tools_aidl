@@ -10,21 +10,9 @@ impl Default for EnumUnion {
     Self::IntEnum(crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum::FOO)
   }
 }
-impl binder::parcel::Serialize for EnumUnion {
-  fn serialize(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    <Self as binder::parcel::SerializeOption>::serialize_option(Some(self), parcel)
-  }
-}
-impl binder::parcel::SerializeArray for EnumUnion {}
-impl binder::parcel::SerializeOption for EnumUnion {
-  fn serialize_option(this: Option<&Self>, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    let this = if let Some(this) = this {
-      parcel.write(&1i32)?;
-      this
-    } else {
-      return parcel.write(&0i32);
-    };
-    match this {
+impl binder::parcel::Parcelable for EnumUnion {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    match self {
       Self::IntEnum(v) => {
         parcel.write(&0i32)?;
         parcel.write(v)
@@ -35,10 +23,7 @@ impl binder::parcel::SerializeOption for EnumUnion {
       }
     }
   }
-}
-binder::impl_deserialize_for_parcelable!(EnumUnion);
-impl EnumUnion {
-  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
     let tag: i32 = parcel.read()?;
     match tag {
       0 => {
@@ -57,3 +42,5 @@ impl EnumUnion {
     }
   }
 }
+binder::impl_serialize_for_parcelable!(EnumUnion);
+binder::impl_deserialize_for_parcelable!(EnumUnion);
