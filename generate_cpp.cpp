@@ -916,12 +916,6 @@ void GenerateServerHeader(CodeWriter& out, const AidlInterface& interface,
 void GenerateClassDecl(CodeWriter& out, const AidlDefinedType& defined_type,
                        const AidlTypenames& typenames, const Options& options);
 
-void GenerateNestedTypeDecls(CodeWriter& out, const AidlDefinedType& type,
-                             const AidlTypenames& typenames, const Options& options) {
-  auto visit = [&](const auto& nested) { GenerateClassDecl(out, nested, typenames, options); };
-  AIDL_FATAL_IF(!TopologicalVisit(type.GetNestedTypes(), visit), type) << "Cycle detected.";
-}
-
 void GenerateInterfaceClassDecl(CodeWriter& out, const AidlInterface& interface,
                                 const AidlTypenames& typenames, const Options& options) {
   const string i_name = ClassName(interface, ClassNames::INTERFACE);
@@ -938,7 +932,10 @@ void GenerateInterfaceClassDecl(CodeWriter& out, const AidlInterface& interface,
   if (!options.Hash().empty()) {
     out << "const std::string HASH = \"" << options.Hash() << "\";\n";
   }
-  GenerateNestedTypeDecls(out, interface, typenames, options);
+  // TODO(b/201376182) consider re-ordering nested type decls.
+  for (const auto& nested : interface.GetNestedTypes()) {
+    GenerateClassDecl(out, *nested, typenames, options);
+  }
   GenerateConstantDeclarations(out, interface, typenames);
   for (const auto& method : interface.GetMethods()) {
     if (method->IsUserDefined()) {
@@ -1120,8 +1117,13 @@ void GenerateParcelClassDecl(CodeWriter& out, const ParcelableType& parcel,
   out.Indent();
 
   GenerateParcelableComparisonOperators(out, parcel);
-  GenerateNestedTypeDecls(out, parcel, typenames, options);
+  // TODO(b/201376182) consider re-ordering nested type decls.
+  for (const auto& nested : parcel.GetNestedTypes()) {
+    GenerateClassDecl(out, *nested, typenames, options);
+  }
+
   GenerateParcelFields(out, parcel, typenames);
+
   GenerateConstantDeclarations(out, parcel, typenames);
 
   if (parcel.IsVintfStability()) {
