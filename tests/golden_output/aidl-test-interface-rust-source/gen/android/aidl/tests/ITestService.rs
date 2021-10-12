@@ -368,7 +368,6 @@ pub const A54: i32 = 1;
 pub const A55: i32 = 1;
 pub const A56: i32 = 1;
 pub const A57: i32 = 1;
-pub(crate) mod mangled { pub use super::ITestService as _7_android_4_aidl_5_tests_12_ITestService; }
 impl ITestService for BpTestService {
   fn UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<i32> {
     let _aidl_reply = self.binder.transact(transactions::UnimplementedMethod, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
@@ -2017,4 +2016,7 @@ fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::Transaction
     }
     _ => Err(binder::StatusCode::UNKNOWN_TRANSACTION)
   }
+}
+pub(crate) mod mangled {
+ pub use super::ITestService as _7_android_4_aidl_5_tests_12_ITestService;
 }

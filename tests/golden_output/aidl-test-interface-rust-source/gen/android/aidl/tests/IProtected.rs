@@ -43,7 +43,6 @@ use lazy_static::lazy_static;
 lazy_static! {
   static ref DEFAULT_IMPL: std::sync::Mutex<IProtectedDefaultRef> = std::sync::Mutex::new(None);
 }
-pub(crate) mod mangled { pub use super::IProtected as _7_android_4_aidl_5_tests_10_IProtected; }
 impl IProtected for BpProtected {
   fn PermissionProtected(&self) -> binder::public_api::Result<()> {
     let _aidl_reply = self.binder.transact(transactions::PermissionProtected, binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
@@ -127,4 +126,7 @@ fn on_transact(_aidl_service: &dyn IProtected, _aidl_code: binder::TransactionCo
     }
     _ => Err(binder::StatusCode::UNKNOWN_TRANSACTION)
   }
+}
+pub(crate) mod mangled {
+ pub use super::IProtected as _7_android_4_aidl_5_tests_10_IProtected;
 }
