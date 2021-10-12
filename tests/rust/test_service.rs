@@ -26,11 +26,11 @@ use aidl_test_interface::aidl::android::aidl::tests::{
     extension::ExtendableParcelable::ExtendableParcelable,
     extension::MyExt::MyExt,
 };
+use aidl_test_interface::aidl::android::aidl::tests::nested::{
+    INestedService, ParcelableWithNested,
+};
 use aidl_test_interface::binder::{
     self, BinderFeatures, Interface, ParcelFileDescriptor, SpIBinder,
-};
-use aidl_test_nested::aidl::android::aidl::tests::nested::{
-    INestedService, ParcelableWithNested,
 };
 use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::{
     BazUnion::BazUnion, Foo::Foo, IFooInterface, IFooInterface::BnFooInterface,
