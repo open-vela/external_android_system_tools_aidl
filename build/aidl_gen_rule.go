@@ -68,6 +68,7 @@ type aidlGenProperties struct {
 	ImportsWithoutVersion []string
 	Stability             *string
 	Min_sdk_version       *string
+	Platform_apis         bool
 	Lang                  string // target language [java|cpp|ndk|rust]
 	BaseName              string
 	GenLog                bool
@@ -188,9 +189,13 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 	if g.properties.Stability != nil {
 		optionalFlags = append(optionalFlags, "--stability", *g.properties.Stability)
 	}
-	minSdkVer := g.properties.Min_sdk_version
-	if minSdkVer != nil {
-		optionalFlags = append(optionalFlags, "--min_sdk_version "+*minSdkVer)
+	if g.properties.Platform_apis {
+		optionalFlags = append(optionalFlags, "--min_sdk_version platform_apis")
+	} else {
+		minSdkVer := g.properties.Min_sdk_version
+		if minSdkVer != nil {
+			optionalFlags = append(optionalFlags, "--min_sdk_version "+*minSdkVer)
+		}
 	}
 	optionalFlags = append(optionalFlags, wrap("-p", g.deps.preprocessed.Strings(), "")...)
 

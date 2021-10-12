@@ -196,7 +196,10 @@ bool Options::StabilityFromString(const std::string& stability, Stability* out_s
 static const std::map<std::string, uint32_t> codeNameToVersion = {
     {"S", 31},
     {"Tiramisu", 10000},
-    {"current", 10000},  // this is an alias for the latest in-development platform version
+    // this is an alias for the latest in-development platform version
+    {"current", 10000},
+    // this is an alias for use of all APIs, including those not in any API surface
+    {"platform_apis", 10001},
 };
 
 static Result<uint32_t> MinSdkVersionFromString(const std::string& str) {
@@ -589,6 +592,15 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
     min_sdk_version_ = default_ver;
   } else if (min_sdk_version_ < default_ver) {
     error_message_ << "Min SDK version should at least be " << default_ver << "." << endl;
+    return;
+  }
+
+  uint32_t rpc_version = MinSdkVersionFromString("Tiramisu").value();
+  // note: we would like to always generate (Java) code to support RPC out of
+  // the box, but doing so causes an unclear error for people trying to use RPC
+  // - now we require them to add the gen_rpc build rule and get this clear message.
+  if (gen_rpc_ && min_sdk_version_ < rpc_version) {
+    error_message_ << "RPC code requires minimum SDK version of at least " << rpc_version << endl;
     return;
   }
 
