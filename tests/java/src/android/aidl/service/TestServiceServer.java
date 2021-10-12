@@ -442,6 +442,16 @@ public class TestServiceServer extends ITestService.Stub {
     parcelable.shouldBeConstS1 = Union.s(Union.S1);
   }
   @Override
+  public void RepeatExtendableParcelable(ExtendableParcelable ep, ExtendableParcelable ep2)
+      throws RemoteException {
+    ep2.a = ep.a;
+    ep2.b = ep.b;
+    // no way to copy currently w/o unparceling
+    ep2.ext.setParcelable(ep.ext.getParcelable(MyExt.class));
+    ep2.c = ep.c;
+    ep2.ext2.setParcelable(null);
+  }
+  @Override
   public RecursiveList ReverseList(RecursiveList list) throws RemoteException {
     RecursiveList reversed = null;
     while (list != null) {
@@ -571,16 +581,6 @@ public class TestServiceServer extends ITestService.Stub {
         reversed[i] = input[input.length - i - 1];
       }
       return reversed;
-    }
-    @Override
-    public void RepeatExtendableParcelable(ExtendableParcelable ep, ExtendableParcelable ep2)
-        throws RemoteException {
-      ep2.a = ep.a;
-      ep2.b = ep.b;
-      // no way to copy currently w/o unparceling
-      ep2.ext.setParcelable(ep.ext.getParcelable(MyExt.class));
-      ep2.c = ep.c;
-      ep2.ext2.setParcelable(null);
     }
   }
 
