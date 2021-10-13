@@ -549,11 +549,8 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
       bool success = true;
 
       for (const auto& value : values_) {
-        string value_string;
-        type.ViewAsArrayBase([&](const AidlTypeSpecifier& base) {
-          value_string = value->ValueString(base, decorator);
-        });
-
+        const AidlTypeSpecifier& array_base = type.ArrayBase();
+        const string value_string = value->ValueString(array_base, decorator);
         if (value_string.empty()) {
           success = false;
           break;
