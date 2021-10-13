@@ -114,7 +114,7 @@ std::string GetRustName(const AidlTypeSpecifier& type, const AidlTypenames& type
       return "u8";
     } else if (element_type_name == "String" && mode == StorageMode::UNSIZED_ARGUMENT) {
       return "str";
-    } else if (element_type_name == "ParcelFileDescriptor") {
+    } else if (element_type_name == "ParcelFileDescriptor" || element_type_name == "IBinder") {
       if (type.IsArray() && mode == StorageMode::DEFAULT_VALUE) {
         // Out-arguments of ParcelFileDescriptors arrays need to
         // be Vec<Option<ParcelFileDescriptor>> so resize_out_vec
@@ -163,7 +163,7 @@ std::string RustNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typen
       element_mode = StorageMode::VALUE;
     }
     rust_name = GetRustName(type, typenames, element_mode);
-    if (type.IsNullable() && rust_name == "String") {
+    if (type.IsNullable() && (rust_name == "String" || rust_name == "binder::SpIBinder")) {
       // The mapping for nullable string arrays is
       // optional<vector<optional<string>>> in the NDK,
       // so we do the same

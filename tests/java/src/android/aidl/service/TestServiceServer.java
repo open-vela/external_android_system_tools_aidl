@@ -462,7 +462,24 @@ public class TestServiceServer extends ITestService.Stub {
     }
     return reversed;
   }
-
+  @Override
+  public IBinder[] ReverseIBinderArray(IBinder[] input, IBinder[] repeated) {
+    IBinder[] reversed = new IBinder[input.length];
+    for (int i = 0; i < input.length; i++) {
+      repeated[i] = input[i];
+      reversed[i] = input[input.length - i - 1];
+    }
+    return reversed;
+  }
+  @Override
+  public IBinder[] ReverseNullableIBinderArray(IBinder[] input, IBinder[] repeated) {
+    IBinder[] reversed = new IBinder[input.length];
+    for (int i = 0; i < input.length; i++) {
+      repeated[i] = input[i];
+      reversed[i] = input[input.length - i - 1];
+    }
+    return reversed;
+  }
   private static class MyOldName extends IOldName.Stub {
     @Override
     public String RealName() {
@@ -564,24 +581,6 @@ public class TestServiceServer extends ITestService.Stub {
     public void TakesAnIBinderList(List<IBinder> input) throws RemoteException {}
     @Override
     public void TakesANullableIBinderList(List<IBinder> input) throws RemoteException {}
-    @Override
-    public IBinder[] ReverseIBinderArray(IBinder[] input, IBinder[] repeated) {
-      IBinder[] reversed = new IBinder[input.length];
-      for (int i = 0; i < input.length; i++) {
-        repeated[i] = input[i];
-        reversed[i] = input[input.length - i - 1];
-      }
-      return reversed;
-    }
-    @Override
-    public IBinder[] ReverseNullableIBinderArray(IBinder[] input, IBinder[] repeated) {
-      IBinder[] reversed = new IBinder[input.length];
-      for (int i = 0; i < input.length; i++) {
-        repeated[i] = input[i];
-        reversed[i] = input[input.length - i - 1];
-      }
-      return reversed;
-    }
   }
 
   @Override

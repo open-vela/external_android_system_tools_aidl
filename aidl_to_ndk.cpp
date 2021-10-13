@@ -303,14 +303,24 @@ static map<std::string, TypeInfo> kNdkTypeInfoMap = {
                  .read_func = StandardRead("::ndk::AParcel_readRequiredStrongBinder"),
                  .write_func = StandardRead("::ndk::AParcel_writeRequiredStrongBinder"),
              },
-         .array = nullptr,
+         .array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
+             .cpp_name = "std::vector<::ndk::SpAIBinder>",
+             .value_is_cheap = false,
+             .read_func = StandardRead("::ndk::AParcel_readVector"),
+             .write_func = StandardWrite("::ndk::AParcel_writeVector"),
+         }),
          .nullable = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
              .cpp_name = "::ndk::SpAIBinder",
              .value_is_cheap = false,
              .read_func = StandardRead("::ndk::AParcel_readNullableStrongBinder"),
              .write_func = StandardRead("::ndk::AParcel_writeNullableStrongBinder"),
          }),
-         .nullable_array = nullptr,
+         .nullable_array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
+             .cpp_name = "std::optional<std::vector<::ndk::SpAIBinder>>",
+             .value_is_cheap = false,
+             .read_func = StandardRead("::ndk::AParcel_readVector"),
+             .write_func = StandardWrite("::ndk::AParcel_writeVector"),
+         }),
      }},
     {"ParcelFileDescriptor",
      TypeInfo{

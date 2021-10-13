@@ -172,6 +172,10 @@ interface ITestService {
 
     RecursiveList ReverseList(in RecursiveList list);
 
+    IBinder[] ReverseIBinderArray(in IBinder[] input, out IBinder[] repeated);
+    @nullable IBinder[] ReverseNullableIBinderArray(
+            in @nullable IBinder[] input, out @nullable IBinder[] repeated);
+
     // All these constant expressions should be equal to 1
     const int A1 = (~(-1)) == 0;
     const int A2 = ~~(1 << 31) == (1 << 31);

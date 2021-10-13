@@ -326,6 +326,25 @@ impl ITestService::ITestService for TestService {
         Ok(reversed.unwrap())
     }
 
+    fn ReverseIBinderArray(
+        &self,
+        input: &[SpIBinder],
+        repeated: &mut Vec<Option<SpIBinder>>,
+    ) -> binder::Result<Vec<SpIBinder>> {
+        *repeated = input.iter().cloned().map(Some).collect();
+        Ok(input.iter().rev().cloned().collect())
+    }
+
+    fn ReverseNullableIBinderArray(
+        &self,
+        input: Option<&[Option<SpIBinder>]>,
+        repeated: &mut Option<Vec<Option<SpIBinder>>>,
+    ) -> binder::Result<Option<Vec<Option<SpIBinder>>>> {
+        let input = input.expect("input is null");
+        *repeated = Some(input.to_vec());
+        Ok(Some(input.iter().rev().cloned().collect()))
+    }
+
     fn GetOldNameInterface(&self) -> binder::Result<binder::Strong<dyn IOldName::IOldName>> {
         Ok(IOldName::BnOldName::new_binder(
             OldName,
