@@ -1056,6 +1056,13 @@ bool AidlDefinedType::CheckValidWithMembers(const AidlTypenames& typenames) cons
     }
   }
 
+  if (!TopologicalVisit(GetNestedTypes(), [](auto&) {})) {
+    AIDL_ERROR(this) << GetName()
+                     << " has nested types with cyclic references. C++ and NDK backends don't "
+                        "support cyclic references.";
+    return false;
+  }
+
   for (const auto& v : GetFields()) {
     const bool field_valid = v->CheckValid(typenames);
     success = success && field_valid;
