@@ -74,7 +74,7 @@ AidlLocation loc(const yy::parser::location_type& l) {
     AidlAnnotation* annotation;
     AidlAnnotationParameter* param;
     std::map<std::string, std::shared_ptr<AidlConstantValue>>* param_list;
-    std::vector<AidlAnnotation>* annotation_list;
+    std::vector<std::unique_ptr<AidlAnnotation>>* annotation_list;
     AidlTypeSpecifier* type;
     AidlArgument* arg;
     AidlArgument::Direction direction;
@@ -272,7 +272,7 @@ decl
 
     if ($1->size() > 0 && $$ != nullptr) {
       // copy comments from annotation to decl
-      $$->SetComments($1->begin()->GetComments());
+      $$->SetComments($1->begin()->get()->GetComments());
       $$->Annotate(std::move(*$1));
     }
 
@@ -553,7 +553,7 @@ constant_value_non_empty_list
 constant_decl
  : annotation_list CONST type identifier '=' const_expr ';' {
     if ($1->size() > 0) {
-      $3->SetComments($1->begin()->GetComments());
+      $3->SetComments($1->begin()->get()->GetComments());
     } else {
       $3->SetComments($2->GetComments());
     }
@@ -618,7 +618,7 @@ method_decl
     delete $2;
   }
  | annotation_list ONEWAY type identifier '(' arg_list ')' ';' {
-    const auto& comments = ($1->size() > 0) ? $1->begin()->GetComments() : $2->GetComments();
+    const auto& comments = ($1->size() > 0) ? $1->begin()->get()->GetComments() : $2->GetComments();
     $$ = new AidlMethod(loc(@4), true, $3, $4->GetText(), $6, comments);
     $3->Annotate(std::move(*$1));
     delete $1;
@@ -636,7 +636,7 @@ method_decl
     delete $7;
   }
  | annotation_list ONEWAY type identifier '(' arg_list ')' '=' INTVALUE ';' {
-    const auto& comments = ($1->size() > 0) ? $1->begin()->GetComments() : $2->GetComments();
+    const auto& comments = ($1->size() > 0) ? $1->begin()->get()->GetComments() : $2->GetComments();
     int32_t serial = 0;
     if (!android::base::ParseInt($9->GetText(), &serial)) {
         AIDL_ERROR(loc(@9)) << "Could not parse int value: " << $9->GetText();
@@ -680,7 +680,7 @@ non_array_type
  : annotation_list qualified_name {
     $$ = new AidlTypeSpecifier(loc(@2), $2->GetText(), false, nullptr, $2->GetComments());
     if (!$1->empty()) {
-      $$->SetComments($1->begin()->GetComments());
+      $$->SetComments($1->begin()->get()->GetComments());
       $$->Annotate(std::move(*$1));
     }
     delete $1;
@@ -736,12 +736,11 @@ type_args
 
 annotation_list
  :
-  { $$ = new std::vector<AidlAnnotation>(); }
+  { $$ = new std::vector<std::unique_ptr<AidlAnnotation>>(); }
  | annotation_list annotation
   {
     if ($2 != nullptr) {
-      $1->emplace_back(std::move(*$2));
-      delete $2;
+      $1->emplace_back(std::unique_ptr<AidlAnnotation>($2));
     }
     $$ = $1;
   };
