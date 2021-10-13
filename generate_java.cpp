@@ -97,12 +97,7 @@ void GenerateDescribeContentsHelper(CodeWriter& out, const set<string>& describe
 bool CanDescribeContents(const AidlTypeSpecifier& type, const AidlTypenames& types,
                          set<string>* describers) {
   if (type.IsArray()) {
-    bool canDescribe = false;
-    type.ViewAsArrayBase([&](const AidlTypeSpecifier& base) {
-      canDescribe = CanDescribeContents(base, types, describers);
-    });
-
-    if (canDescribe) {
+    if (CanDescribeContents(type.ArrayBase(), types, describers)) {
       describers->insert("Array");
       return true;
     }
@@ -295,7 +290,11 @@ namespace aidl {
 namespace java {
 
 std::string GenerateComments(const AidlCommentable& node) {
-  return FormatCommentsForJava(node.GetComments());
+  std::string comments = FormatCommentsForJava(node.GetComments());
+  if (!comments.empty() && comments.back() != '\n') {
+    comments += '\n';
+  }
+  return comments;
 }
 
 std::string GenerateAnnotations(const AidlNode& node) {
@@ -912,8 +911,8 @@ std::vector<std::string> GenerateJavaAnnotations(const AidlAnnotatable& a) {
   }
 
   for (const auto& annotation : a.GetAnnotations()) {
-    if (annotation->GetType() == AidlAnnotation::Type::JAVA_PASSTHROUGH) {
-      result.emplace_back(annotation->ParamValue<std::string>("annotation").value());
+    if (annotation.GetType() == AidlAnnotation::Type::JAVA_PASSTHROUGH) {
+      result.emplace_back(annotation.ParamValue<std::string>("annotation").value());
     }
   }
 
