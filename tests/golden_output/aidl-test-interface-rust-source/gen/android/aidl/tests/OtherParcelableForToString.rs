@@ -3,7 +3,6 @@
 pub struct OtherParcelableForToString {
   pub field: String,
 }
-pub(crate) mod mangled { pub use super::OtherParcelableForToString as _7_android_4_aidl_5_tests_26_OtherParcelableForToString; }
 impl Default for OtherParcelableForToString {
   fn default() -> Self {
     Self {
@@ -31,4 +30,7 @@ binder::impl_serialize_for_parcelable!(OtherParcelableForToString);
 binder::impl_deserialize_for_parcelable!(OtherParcelableForToString);
 impl binder::parcel::ParcelableMetadata for OtherParcelableForToString {
   fn get_descriptor() -> &'static str { "android.aidl.tests.OtherParcelableForToString" }
+}
+pub(crate) mod mangled {
+ pub use super::OtherParcelableForToString as _7_android_4_aidl_5_tests_26_OtherParcelableForToString;
 }

@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-#include <android/aidl/tests/nested/BpNestedService.h>
-#include <android/aidl/tests/nested/INestedService.h>
-
 #include "aidl_test_client.h"
 
-#include <android/aidl/tests/BackendType.h>
+#include <android/aidl/tests/nested/INestedService.h>
 #include <binder/IServiceManager.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -28,12 +25,10 @@
 using android::IBinder;
 using android::sp;
 using android::String16;
-using android::aidl::tests::nested::BpNestedService;
 using android::aidl::tests::nested::INestedService;
 using android::aidl::tests::nested::ParcelableWithNested;
 using NestedResult = android::aidl::tests::nested::INestedService::Result;
 using NestedStatus = android::aidl::tests::nested::ParcelableWithNested::Status;
-using android::aidl::tests::BackendType;
 using std::optional;
 using std::pair;
 using std::string;
@@ -41,12 +36,6 @@ using std::vector;
 using testing::Eq;
 
 TEST_F(AidlTest, NestedService) {
-  BackendType backendType;
-  auto status = service->getBackendType(&backendType);
-  EXPECT_TRUE(status.isOk());
-  // TODO(b/201729533) enable test when Rust backend supports nested types
-  if (backendType == BackendType::RUST) GTEST_SKIP();
-
   sp<INestedService> nestedService;
   EXPECT_EQ(android::OK, android::getService(INestedService::descriptor, &nestedService));
   ASSERT_NE(nullptr, nestedService);
@@ -55,7 +44,7 @@ TEST_F(AidlTest, NestedService) {
   p.status = NestedStatus::OK;
   NestedResult r;
   // OK -> NOT_OK
-  status = nestedService->flipStatus(p, &r);
+  auto status = nestedService->flipStatus(p, &r);
   EXPECT_TRUE(status.isOk());
   EXPECT_EQ(r.status, NestedStatus::NOT_OK);
 

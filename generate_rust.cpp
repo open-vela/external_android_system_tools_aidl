@@ -33,6 +33,7 @@
 #include "logging.h"
 
 using android::base::Join;
+using android::base::Split;
 using std::ostringstream;
 using std::shared_ptr;
 using std::string;
@@ -47,14 +48,39 @@ static constexpr const char kArgumentPrefix[] = "_arg_";
 static constexpr const char kGetInterfaceVersion[] = "getInterfaceVersion";
 static constexpr const char kGetInterfaceHash[] = "getInterfaceHash";
 
-void GenerateMangledAlias(CodeWriter& out, const AidlDefinedType* type) {
-  ostringstream alias;
-  for (const auto& component : type->GetSplitPackage()) {
-    alias << "_" << component.size() << "_" << component;
-  }
-  alias << "_" << type->GetName().size() << "_" << type->GetName();
-  out << "pub(crate) mod mangled { pub use super::" << type->GetName() << " as " << alias.str()
-      << "; }\n";
+void GenerateMangledAliases(CodeWriter& out, const AidlDefinedType& type) {
+  struct Visitor : AidlVisitor {
+    CodeWriter& out;
+    Visitor(CodeWriter& out) : out(out) {}
+    void Visit(const AidlStructuredParcelable& type) override { VisitType(type); }
+    void Visit(const AidlInterface& type) override { VisitType(type); }
+    void Visit(const AidlEnumDeclaration& type) override { VisitType(type); }
+    void Visit(const AidlUnionDecl& type) override { VisitType(type); }
+    void VisitType(const AidlDefinedType& type) {
+      out << " pub use " << Qname(type) << " as " << Mangled(type) << ";\n";
+    }
+    // Return a mangled name for a type (including AIDL package)
+    string Mangled(const AidlDefinedType& type) const {
+      ostringstream alias;
+      for (const auto& component : Split(type.GetCanonicalName(), ".")) {
+        alias << "_" << component.size() << "_" << component;
+      }
+      return alias.str();
+    }
+    // Return a fully qualified name for a type in the current file (excluding AIDL package)
+    string Qname(const AidlDefinedType& type) const { return Module(type) + "::" + type.GetName(); }
+    // Return a module name for a type (relative to the file)
+    string Module(const AidlDefinedType& type) const {
+      if (type.GetParentType()) {
+        return Module(*type.GetParentType()) + "::" + type.GetName();
+      } else {
+        return "super";
+      }
+    }
+  } v(out);
+  out << "pub(crate) mod mangled {\n";
+  VisitTopDown(v, type);
+  out << "}\n";
 }
 
 string BuildArg(const AidlArgument& arg, const AidlTypenames& typenames) {
@@ -348,15 +374,8 @@ void GenerateConstantDeclarations(CodeWriter& out, const TypeWithConstants& type
   }
 }
 
-bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
-                           const AidlTypenames& typenames, const IoDelegate& io_delegate,
-                           const Options& options) {
-  CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
-
-  // Forbid the use of unsafe in auto-generated code.
-  // Unsafe code should only be allowed in libbinder_rs.
-  *code_writer << "#![forbid(unsafe_code)]\n";
-
+void GenerateRustInterface(CodeWriter* code_writer, const AidlInterface* iface,
+                           const AidlTypenames& typenames, const Options& options) {
   *code_writer << "#![allow(non_upper_case_globals)]\n";
   *code_writer << "#![allow(non_snake_case)]\n";
   // Import IBinderInternal for transact()
@@ -478,8 +497,6 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
   // Emit the interface constants
   GenerateConstantDeclarations(*code_writer, *iface, typenames);
 
-  GenerateMangledAlias(*code_writer, iface);
-
   // Emit VERSION and HASH
   // These need to be top-level item constants instead of associated consts
   // because the latter are incompatible with trait objects, see
@@ -502,8 +519,6 @@ bool GenerateRustInterface(const string& filename, const AidlInterface* iface,
 
   // Generate the server-side methods
   GenerateServerItems(*code_writer, iface, typenames);
-
-  return true;
 }
 
 void GenerateParcelBody(CodeWriter& out, const AidlStructuredParcelable* parcel,
@@ -724,14 +739,8 @@ void GenerateMetadataTrait(CodeWriter& out, const ParcelableType* parcel) {
 }
 
 template <typename ParcelableType>
-bool GenerateRustParcel(const string& filename, const ParcelableType* parcel,
-                        const AidlTypenames& typenames, const IoDelegate& io_delegate) {
-  CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
-
-  // Forbid the use of unsafe in auto-generated code.
-  // Unsafe code should only be allowed in libbinder_rs.
-  *code_writer << "#![forbid(unsafe_code)]\n";
-
+void GenerateRustParcel(CodeWriter* code_writer, const ParcelableType* parcel,
+                        const AidlTypenames& typenames) {
   // Debug is always derived because all Rust AIDL types implement it
   // ParcelFileDescriptor doesn't support any of the others because
   // it's a newtype over std::fs::File which only implements Debug
@@ -748,21 +757,13 @@ bool GenerateRustParcel(const string& filename, const ParcelableType* parcel,
   *code_writer << "#[derive(" << Join(derives, ", ") << ")]\n";
   GenerateParcelBody(*code_writer, parcel, typenames);
   GenerateConstantDeclarations(*code_writer, *parcel, typenames);
-  GenerateMangledAlias(*code_writer, parcel);
   GenerateParcelDefault(*code_writer, parcel);
   GenerateParcelableTrait(*code_writer, parcel, typenames);
   GenerateMetadataTrait(*code_writer, parcel);
-  return true;
 }
 
-bool GenerateRustEnumDeclaration(const string& filename, const AidlEnumDeclaration* enum_decl,
-                                 const AidlTypenames& typenames, const IoDelegate& io_delegate) {
-  CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
-
-  // Forbid the use of unsafe in auto-generated code.
-  // Unsafe code should only be allowed in libbinder_rs.
-  *code_writer << "#![forbid(unsafe_code)]\n";
-
+void GenerateRustEnumDeclaration(CodeWriter* code_writer, const AidlEnumDeclaration* enum_decl,
+                                 const AidlTypenames& typenames) {
   const auto& aidl_backing_type = enum_decl->GetBackingType();
   auto backing_type = RustNameOf(aidl_backing_type, typenames, StorageMode::VALUE);
 
@@ -778,35 +779,45 @@ bool GenerateRustEnumDeclaration(const string& filename, const AidlEnumDeclarati
   }
   code_writer->Dedent();
   *code_writer << "} }\n";
-
-  GenerateMangledAlias(*code_writer, enum_decl);
-
-  return true;
 }
 
-bool GenerateRust(const string& filename, const AidlDefinedType* defined_type,
-                  const AidlTypenames& typenames, const IoDelegate& io_delegate,
-                  const Options& options) {
-  if (const AidlStructuredParcelable* parcelable = defined_type->AsStructuredParcelable();
+void GenerateClass(CodeWriter* code_writer, const AidlDefinedType& defined_type,
+                   const AidlTypenames& types, const Options& options) {
+  if (const AidlStructuredParcelable* parcelable = defined_type.AsStructuredParcelable();
       parcelable != nullptr) {
-    return GenerateRustParcel(filename, parcelable, typenames, io_delegate);
+    GenerateRustParcel(code_writer, parcelable, types);
+  } else if (const AidlEnumDeclaration* enum_decl = defined_type.AsEnumDeclaration();
+             enum_decl != nullptr) {
+    GenerateRustEnumDeclaration(code_writer, enum_decl, types);
+  } else if (const AidlInterface* interface = defined_type.AsInterface(); interface != nullptr) {
+    GenerateRustInterface(code_writer, interface, types, options);
+  } else if (const AidlUnionDecl* union_decl = defined_type.AsUnionDeclaration();
+             union_decl != nullptr) {
+    GenerateRustParcel(code_writer, union_decl, types);
+  } else {
+    AIDL_FATAL(defined_type) << "Unrecognized type sent for Rust generation.";
   }
 
-  if (const AidlUnionDecl* parcelable = defined_type->AsUnionDeclaration(); parcelable != nullptr) {
-    return GenerateRustParcel(filename, parcelable, typenames, io_delegate);
+  for (const auto& nested : defined_type.GetNestedTypes()) {
+    (*code_writer) << "pub mod " << nested->GetName() << " {\n";
+    code_writer->Indent();
+    GenerateClass(code_writer, *nested, types, options);
+    code_writer->Dedent();
+    (*code_writer) << "}\n";
   }
+}
 
-  if (const AidlEnumDeclaration* enum_decl = defined_type->AsEnumDeclaration();
-      enum_decl != nullptr) {
-    return GenerateRustEnumDeclaration(filename, enum_decl, typenames, io_delegate);
-  }
+void GenerateRust(const string& filename, const Options& options, const AidlTypenames& types,
+                  const AidlDefinedType& defined_type, const IoDelegate& io_delegate) {
+  CodeWriterPtr code_writer = io_delegate.GetCodeWriter(filename);
 
-  if (const AidlInterface* interface = defined_type->AsInterface(); interface != nullptr) {
-    return GenerateRustInterface(filename, interface, typenames, io_delegate, options);
-  }
+  // Forbid the use of unsafe in auto-generated code.
+  // Unsafe code should only be allowed in libbinder_rs.
+  *code_writer << "#![forbid(unsafe_code)]\n";
+  GenerateClass(code_writer.get(), defined_type, types, options);
+  GenerateMangledAliases(*code_writer, defined_type);
 
-  AIDL_FATAL(filename) << "Unrecognized type sent for Rust generation.";
-  return false;
+  AIDL_FATAL_IF(!code_writer->Close(), defined_type) << "I/O Error!";
 }
 
 }  // namespace rust
