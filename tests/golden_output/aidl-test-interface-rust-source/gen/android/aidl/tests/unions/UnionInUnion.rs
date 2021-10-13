@@ -4,7 +4,6 @@ pub enum UnionInUnion {
   First(crate::mangled::_7_android_4_aidl_5_tests_6_unions_9_EnumUnion),
   Second(i32),
 }
-pub(crate) mod mangled { pub use super::UnionInUnion as _7_android_4_aidl_5_tests_6_unions_12_UnionInUnion; }
 impl Default for UnionInUnion {
   fn default() -> Self {
     Self::First(Default::default())
@@ -46,4 +45,7 @@ binder::impl_serialize_for_parcelable!(UnionInUnion);
 binder::impl_deserialize_for_parcelable!(UnionInUnion);
 impl binder::parcel::ParcelableMetadata for UnionInUnion {
   fn get_descriptor() -> &'static str { "android.aidl.tests.unions.UnionInUnion" }
+}
+pub(crate) mod mangled {
+ pub use super::UnionInUnion as _7_android_4_aidl_5_tests_6_unions_12_UnionInUnion;
 }

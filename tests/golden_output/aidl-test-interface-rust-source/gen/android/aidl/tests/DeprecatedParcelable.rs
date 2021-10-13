@@ -3,7 +3,6 @@
 #[deprecated = "test"]
 pub struct DeprecatedParcelable {
 }
-pub(crate) mod mangled { pub use super::DeprecatedParcelable as _7_android_4_aidl_5_tests_20_DeprecatedParcelable; }
 impl Default for DeprecatedParcelable {
   fn default() -> Self {
     Self {
@@ -26,4 +25,7 @@ binder::impl_serialize_for_parcelable!(DeprecatedParcelable);
 binder::impl_deserialize_for_parcelable!(DeprecatedParcelable);
 impl binder::parcel::ParcelableMetadata for DeprecatedParcelable {
   fn get_descriptor() -> &'static str { "android.aidl.tests.DeprecatedParcelable" }
+}
+pub(crate) mod mangled {
+ pub use super::DeprecatedParcelable as _7_android_4_aidl_5_tests_20_DeprecatedParcelable;
 }

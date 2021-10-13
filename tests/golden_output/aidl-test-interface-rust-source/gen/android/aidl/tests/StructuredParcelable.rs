@@ -58,7 +58,6 @@ pub struct StructuredParcelable {
 pub const BIT0: i32 = 1;
 pub const BIT1: i32 = 2;
 pub const BIT2: i32 = 4;
-pub(crate) mod mangled { pub use super::StructuredParcelable as _7_android_4_aidl_5_tests_20_StructuredParcelable; }
 impl Default for StructuredParcelable {
   fn default() -> Self {
     Self {
@@ -346,4 +345,7 @@ binder::impl_serialize_for_parcelable!(StructuredParcelable);
 binder::impl_deserialize_for_parcelable!(StructuredParcelable);
 impl binder::parcel::ParcelableMetadata for StructuredParcelable {
   fn get_descriptor() -> &'static str { "android.aidl.tests.StructuredParcelable" }
+}
+pub(crate) mod mangled {
+ pub use super::StructuredParcelable as _7_android_4_aidl_5_tests_20_StructuredParcelable;
 }

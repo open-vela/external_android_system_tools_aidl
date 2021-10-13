@@ -7,4 +7,6 @@ declare_binder_enum! { BackendType : [i8; 4] {
   NDK = 2,
   RUST = 3,
 } }
-pub(crate) mod mangled { pub use super::BackendType as _7_android_4_aidl_5_tests_11_BackendType; }
+pub(crate) mod mangled {
+ pub use super::BackendType as _7_android_4_aidl_5_tests_11_BackendType;
+}

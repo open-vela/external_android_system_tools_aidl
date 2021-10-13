@@ -29,6 +29,9 @@ use aidl_test_interface::aidl::android::aidl::tests::{
 use aidl_test_interface::binder::{
     self, BinderFeatures, Interface, ParcelFileDescriptor, SpIBinder,
 };
+use aidl_test_nested::aidl::android::aidl::tests::nested::{
+    INestedService, ParcelableWithNested,
+};
 use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::{
     BazUnion::BazUnion, Foo::Foo, IFooInterface, IFooInterface::BnFooInterface,
     IFooInterface::BpFooInterface,
@@ -367,6 +370,24 @@ impl IFooInterface::IFooInterface for FooInterface {
     }
 }
 
+struct NestedService;
+
+impl Interface for NestedService {}
+
+impl INestedService::INestedService for NestedService {
+    fn flipStatus(&self, p: &ParcelableWithNested::ParcelableWithNested) -> binder::Result<INestedService::Result::Result> {
+        if p.status == ParcelableWithNested::Status::Status::OK {
+            Ok(INestedService::Result::Result {
+                status: ParcelableWithNested::Status::Status::NOT_OK,
+            })
+        } else {
+            Ok(INestedService::Result::Result {
+                status: ParcelableWithNested::Status::Status::OK,
+            })
+        }
+    }
+}
+
 fn main() {
     binder::ProcessState::set_thread_pool_max_thread_count(0);
     binder::ProcessState::start_thread_pool();
@@ -379,6 +400,11 @@ fn main() {
     let versioned_service = BnFooInterface::new_binder(FooInterface, BinderFeatures::default());
     binder::add_service(versioned_service_name, versioned_service.as_binder())
         .expect("Could not register service");
+
+    let nested_service_name = <INestedService::BpNestedService as INestedService::INestedService>::get_descriptor();
+    let nested_service = INestedService::BnNestedService::new_binder(NestedService, BinderFeatures::default());
+    binder::add_service(nested_service_name, nested_service.as_binder())
+            .expect("Could not register service");
 
     binder::ProcessState::join_thread_pool();
 }
