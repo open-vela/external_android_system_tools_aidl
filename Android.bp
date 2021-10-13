@@ -541,6 +541,11 @@ aidl_interface {
     unstable: true,
     flags: ["-Werror"],
     srcs: [":libaidl-integration-nested-files"],
+    backend: {
+        rust: {
+            enabled: true,
+        },
+    },
 }
 
 //
@@ -612,6 +617,7 @@ rust_test {
     ],
     rustlibs: [
         "aidl-test-interface-rust",
+        "aidl-test-nested-rust",
         "aidl-test-versioned-interface-V2-rust",
         "aidl_test_nonvintf_parcelable-V1-rust",
         "aidl_test_unstable_parcelable-rust",
@@ -643,6 +649,7 @@ rust_test {
     ],
     rustlibs: [
         "aidl-test-interface-rust",
+        "aidl-test-nested-rust",
         "aidl-test-versioned-interface-V1-rust",
         "liblibc",
     ],
