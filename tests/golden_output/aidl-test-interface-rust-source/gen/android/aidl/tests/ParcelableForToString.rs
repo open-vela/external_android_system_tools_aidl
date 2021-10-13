@@ -55,51 +55,36 @@ impl Default for ParcelableForToString {
     }
   }
 }
-impl binder::parcel::Serialize for ParcelableForToString {
-  fn serialize(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    <Self as binder::parcel::SerializeOption>::serialize_option(Some(self), parcel)
-  }
-}
-impl binder::parcel::SerializeArray for ParcelableForToString {}
-impl binder::parcel::SerializeOption for ParcelableForToString {
-  fn serialize_option(this: Option<&Self>, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    let this = if let Some(this) = this {
-      parcel.write(&1i32)?;
-      this
-    } else {
-      return parcel.write(&0i32);
-    };
+impl binder::parcel::Parcelable for ParcelableForToString {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
     parcel.sized_write(|subparcel| {
-      subparcel.write(&this.intValue)?;
-      subparcel.write(&this.intArray)?;
-      subparcel.write(&this.longValue)?;
-      subparcel.write(&this.longArray)?;
-      subparcel.write(&this.doubleValue)?;
-      subparcel.write(&this.doubleArray)?;
-      subparcel.write(&this.floatValue)?;
-      subparcel.write(&this.floatArray)?;
-      subparcel.write(&this.byteValue)?;
-      subparcel.write(&this.byteArray)?;
-      subparcel.write(&this.booleanValue)?;
-      subparcel.write(&this.booleanArray)?;
-      subparcel.write(&this.stringValue)?;
-      subparcel.write(&this.stringArray)?;
-      subparcel.write(&this.stringList)?;
-      subparcel.write(&this.parcelableValue)?;
-      subparcel.write(&this.parcelableArray)?;
-      subparcel.write(&this.enumValue)?;
-      subparcel.write(&this.enumArray)?;
-      subparcel.write(&this.nullArray)?;
-      subparcel.write(&this.nullList)?;
-      subparcel.write(&this.parcelableGeneric)?;
-      subparcel.write(&this.unionValue)?;
+      subparcel.write(&self.intValue)?;
+      subparcel.write(&self.intArray)?;
+      subparcel.write(&self.longValue)?;
+      subparcel.write(&self.longArray)?;
+      subparcel.write(&self.doubleValue)?;
+      subparcel.write(&self.doubleArray)?;
+      subparcel.write(&self.floatValue)?;
+      subparcel.write(&self.floatArray)?;
+      subparcel.write(&self.byteValue)?;
+      subparcel.write(&self.byteArray)?;
+      subparcel.write(&self.booleanValue)?;
+      subparcel.write(&self.booleanArray)?;
+      subparcel.write(&self.stringValue)?;
+      subparcel.write(&self.stringArray)?;
+      subparcel.write(&self.stringList)?;
+      subparcel.write(&self.parcelableValue)?;
+      subparcel.write(&self.parcelableArray)?;
+      subparcel.write(&self.enumValue)?;
+      subparcel.write(&self.enumArray)?;
+      subparcel.write(&self.nullArray)?;
+      subparcel.write(&self.nullList)?;
+      subparcel.write(&self.parcelableGeneric)?;
+      subparcel.write(&self.unionValue)?;
       Ok(())
     })
   }
-}
-binder::impl_deserialize_for_parcelable!(ParcelableForToString);
-impl ParcelableForToString {
-  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
     parcel.sized_read(|subparcel| {
       if subparcel.has_more_data() {
         self.intValue = subparcel.read()?;
@@ -173,4 +158,9 @@ impl ParcelableForToString {
       Ok(())
     })
   }
+}
+binder::impl_serialize_for_parcelable!(ParcelableForToString);
+binder::impl_deserialize_for_parcelable!(ParcelableForToString);
+impl binder::parcel::ParcelableMetadata for ParcelableForToString {
+  fn get_descriptor() -> &'static str { "android.aidl.tests.ParcelableForToString" }
 }

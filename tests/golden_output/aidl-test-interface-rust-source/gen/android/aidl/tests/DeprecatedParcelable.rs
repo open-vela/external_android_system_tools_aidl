@@ -10,30 +10,20 @@ impl Default for DeprecatedParcelable {
     }
   }
 }
-impl binder::parcel::Serialize for DeprecatedParcelable {
-  fn serialize(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    <Self as binder::parcel::SerializeOption>::serialize_option(Some(self), parcel)
-  }
-}
-impl binder::parcel::SerializeArray for DeprecatedParcelable {}
-impl binder::parcel::SerializeOption for DeprecatedParcelable {
-  fn serialize_option(this: Option<&Self>, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
-    let this = if let Some(this) = this {
-      parcel.write(&1i32)?;
-      this
-    } else {
-      return parcel.write(&0i32);
-    };
+impl binder::parcel::Parcelable for DeprecatedParcelable {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
     parcel.sized_write(|subparcel| {
       Ok(())
     })
   }
-}
-binder::impl_deserialize_for_parcelable!(DeprecatedParcelable);
-impl DeprecatedParcelable {
-  fn deserialize_parcelable(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
     parcel.sized_read(|subparcel| {
       Ok(())
     })
   }
+}
+binder::impl_serialize_for_parcelable!(DeprecatedParcelable);
+binder::impl_deserialize_for_parcelable!(DeprecatedParcelable);
+impl binder::parcel::ParcelableMetadata for DeprecatedParcelable {
+  fn get_descriptor() -> &'static str { "android.aidl.tests.DeprecatedParcelable" }
 }
