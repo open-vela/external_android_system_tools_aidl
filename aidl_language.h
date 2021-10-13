@@ -144,10 +144,9 @@ class AidlNode {
  public:
   AidlNode(const AidlLocation& location, const Comments& comments = {});
 
+  AidlNode(const AidlNode&) = default;
   virtual ~AidlNode() = default;
 
-  AidlNode(AidlNode&) = delete;
-  AidlNode& operator=(AidlNode&) = delete;
   AidlNode(AidlNode&&) = delete;
   AidlNode& operator=(AidlNode&&) = delete;
 
@@ -188,6 +187,9 @@ class AidlParameterizable {
   }
 
   virtual const AidlNode& AsAidlNode() const = 0;
+
+ protected:
+  AidlParameterizable(const AidlParameterizable&);
 
  private:
   unique_ptr<std::vector<T>> type_params_;
@@ -257,6 +259,7 @@ class AidlAnnotation : public AidlNode {
       std::map<std::string, std::shared_ptr<AidlConstantValue>> parameter_list,
       const Comments& comments);
 
+  AidlAnnotation(const AidlAnnotation&) = default;
   AidlAnnotation(AidlAnnotation&&) = default;
   virtual ~AidlAnnotation() = default;
   bool CheckValid() const;
@@ -325,9 +328,11 @@ class AidlAnnotatable : public AidlCommentable {
  public:
   AidlAnnotatable(const AidlLocation& location, const Comments& comments);
 
+  AidlAnnotatable(const AidlAnnotatable&) = default;
+  AidlAnnotatable(AidlAnnotatable&&) = default;
   virtual ~AidlAnnotatable() = default;
 
-  void Annotate(vector<std::unique_ptr<AidlAnnotation>>&& annotations) {
+  void Annotate(vector<AidlAnnotation>&& annotations) {
     for (auto& annotation : annotations) {
       annotations_.emplace_back(std::move(annotation));
     }
@@ -355,16 +360,16 @@ class AidlAnnotatable : public AidlCommentable {
   // e.g) "@JavaDerive(toString=true) @RustDerive(Clone=true, Copy=true)"
   std::string ToString() const;
 
-  const vector<std::unique_ptr<AidlAnnotation>>& GetAnnotations() const { return annotations_; }
+  const vector<AidlAnnotation>& GetAnnotations() const { return annotations_; }
   bool CheckValid(const AidlTypenames&) const;
   void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override {
     for (const auto& annot : GetAnnotations()) {
-      traverse(*annot);
+      traverse(annot);
     }
   }
 
  private:
-  vector<std::unique_ptr<AidlAnnotation>> annotations_;
+  vector<AidlAnnotation> annotations_;
 };
 
 // AidlTypeSpecifier represents a reference to either a built-in type,
@@ -376,8 +381,8 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
                     vector<unique_ptr<AidlTypeSpecifier>>* type_params, const Comments& comments);
   virtual ~AidlTypeSpecifier() = default;
 
-  // View of this type which is not an array.
-  void ViewAsArrayBase(std::function<void(const AidlTypeSpecifier&)> func) const;
+  // Copy of this type which is not an array.
+  const AidlTypeSpecifier& ArrayBase() const;
 
   // Returns the full-qualified name of the base type.
   // int -> int
@@ -438,11 +443,14 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 
  private:
+  AidlTypeSpecifier(const AidlTypeSpecifier&) = default;
+
   const string unresolved_name_;
   string fully_qualified_name_;
-  mutable bool is_array_;
+  bool is_array_;
   vector<string> split_name_;
   const AidlDefinedType* defined_type_ = nullptr;  // set when Resolve() for defined types
+  mutable shared_ptr<AidlTypeSpecifier> array_base_;
 };
 
 // Returns the universal value unaltered.
