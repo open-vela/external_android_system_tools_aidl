@@ -309,7 +309,7 @@ bool ValidateAnnotationContext(const AidlDocument& doc) {
 
     void Check(const AidlAnnotatable& annotatable, AidlAnnotation::TargetContext context) {
       for (const auto& annot : annotatable.GetAnnotations()) {
-        if (!annot.CheckContext(context)) {
+        if (!annot->CheckContext(context)) {
           success = false;
         }
       }

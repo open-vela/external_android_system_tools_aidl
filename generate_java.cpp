@@ -912,8 +912,8 @@ std::vector<std::string> GenerateJavaAnnotations(const AidlAnnotatable& a) {
   }
 
   for (const auto& annotation : a.GetAnnotations()) {
-    if (annotation.GetType() == AidlAnnotation::Type::JAVA_PASSTHROUGH) {
-      result.emplace_back(annotation.ParamValue<std::string>("annotation").value());
+    if (annotation->GetType() == AidlAnnotation::Type::JAVA_PASSTHROUGH) {
+      result.emplace_back(annotation->ParamValue<std::string>("annotation").value());
     }
   }
 
