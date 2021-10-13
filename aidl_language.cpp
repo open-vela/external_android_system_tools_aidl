@@ -500,16 +500,14 @@ AidlTypeSpecifier::AidlTypeSpecifier(const AidlLocation& location, const string&
       is_array_(is_array),
       split_name_(Split(unresolved_name, ".")) {}
 
-const AidlTypeSpecifier& AidlTypeSpecifier::ArrayBase() const {
+void AidlTypeSpecifier::ViewAsArrayBase(std::function<void(const AidlTypeSpecifier&)> func) const {
   AIDL_FATAL_IF(!is_array_, this);
   // Declaring array of generic type cannot happen, it is grammar error.
   AIDL_FATAL_IF(IsGeneric(), this);
 
-  if (!array_base_) {
-    array_base_.reset(new AidlTypeSpecifier(*this));
-    array_base_->is_array_ = false;
-  }
-  return *array_base_;
+  is_array_ = false;
+  func(*this);
+  is_array_ = true;
 }
 
 string AidlTypeSpecifier::Signature() const {
@@ -1204,8 +1202,6 @@ AidlParcelable::AidlParcelable(const AidlLocation& location, const std::string& 
 template <typename T>
 AidlParameterizable<T>::AidlParameterizable(const AidlParameterizable& other) {
   // Copying is not supported if it has type parameters.
-  // It doesn't make a problem because only ArrayBase() makes a copy,
-  // and it can be called only if a type is not generic.
   AIDL_FATAL_IF(other.IsGeneric(), AIDL_LOCATION_HERE);
 }
 
