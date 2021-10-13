@@ -352,13 +352,13 @@ void AidlAnnotation::TraverseChildren(std::function<void(const AidlNode&)> trave
   }
 }
 
-static const AidlAnnotation* GetAnnotation(const vector<AidlAnnotation>& annotations,
-                                           AidlAnnotation::Type type) {
+static const AidlAnnotation* GetAnnotation(
+    const vector<std::unique_ptr<AidlAnnotation>>& annotations, AidlAnnotation::Type type) {
   for (const auto& a : annotations) {
-    if (a.GetType() == type) {
-      AIDL_FATAL_IF(a.Repeatable(), a)
+    if (a->GetType() == type) {
+      AIDL_FATAL_IF(a->Repeatable(), a)
           << "Trying to get a single annotation when it is repeatable.";
-      return &a;
+      return a.get();
     }
   }
   return nullptr;
@@ -463,16 +463,17 @@ std::string AidlAnnotatable::GetDescriptor() const {
 
 bool AidlAnnotatable::CheckValid(const AidlTypenames&) const {
   for (const auto& annotation : GetAnnotations()) {
-    if (!annotation.CheckValid()) {
+    if (!annotation->CheckValid()) {
       return false;
     }
   }
 
   std::map<AidlAnnotation::Type, AidlLocation> declared;
   for (const auto& annotation : GetAnnotations()) {
-    const auto& [iter, inserted] = declared.emplace(annotation.GetType(), annotation.GetLocation());
-    if (!inserted && !annotation.Repeatable()) {
-      AIDL_ERROR(this) << "'" << annotation.GetName()
+    const auto& [iter, inserted] =
+        declared.emplace(annotation->GetType(), annotation->GetLocation());
+    if (!inserted && !annotation->Repeatable()) {
+      AIDL_ERROR(this) << "'" << annotation->GetName()
                        << "' is repeated, but not allowed. Previous location: " << iter->second;
       return false;
     }
@@ -484,7 +485,7 @@ bool AidlAnnotatable::CheckValid(const AidlTypenames&) const {
 string AidlAnnotatable::ToString() const {
   vector<string> ret;
   for (const auto& a : annotations_) {
-    ret.emplace_back(a.ToString());
+    ret.emplace_back(a->ToString());
   }
   std::sort(ret.begin(), ret.end());
   return Join(ret, " ");
@@ -1198,11 +1199,6 @@ AidlParcelable::AidlParcelable(const AidlLocation& location, const std::string& 
   if (cpp_header_.length() >= 2) {
     cpp_header_ = cpp_header_.substr(1, cpp_header_.length() - 2);
   }
-}
-template <typename T>
-AidlParameterizable<T>::AidlParameterizable(const AidlParameterizable& other) {
-  // Copying is not supported if it has type parameters.
-  AIDL_FATAL_IF(other.IsGeneric(), AIDL_LOCATION_HERE);
 }
 
 template <typename T>
