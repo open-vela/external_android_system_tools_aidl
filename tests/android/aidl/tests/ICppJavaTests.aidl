@@ -45,7 +45,4 @@ interface ICppJavaTests {
 
     void TakesAnIBinderList(in List<IBinder> input);
     void TakesANullableIBinderList(in @nullable List<IBinder> input);
-    IBinder[] ReverseIBinderArray(in IBinder[] input, out IBinder[] repeated);
-    @nullable IBinder[] ReverseNullableIBinderArray(
-            in @nullable IBinder[] input, out @nullable IBinder[] repeated);
 }

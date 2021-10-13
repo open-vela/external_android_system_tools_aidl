@@ -222,6 +222,14 @@ public interface ITestService extends android.os.IInterface
     {
       return null;
     }
+    @Override public android.os.IBinder[] ReverseIBinderArray(android.os.IBinder[] input, android.os.IBinder[] repeated) throws android.os.RemoteException
+    {
+      return null;
+    }
+    @Override public android.os.IBinder[] ReverseNullableIBinderArray(android.os.IBinder[] input, android.os.IBinder[] repeated) throws android.os.RemoteException
+    {
+      return null;
+    }
     @Override public android.aidl.tests.IOldName GetOldNameInterface() throws android.os.RemoteException
     {
       return null;
@@ -907,6 +915,42 @@ public interface ITestService extends android.os.IInterface
           else {
             reply.writeInt(0);
           }
+          break;
+        }
+        case TRANSACTION_ReverseIBinderArray:
+        {
+          android.os.IBinder[] _arg0;
+          _arg0 = data.createBinderArray();
+          android.os.IBinder[] _arg1;
+          int _arg1_length = data.readInt();
+          if ((_arg1_length<0)) {
+            _arg1 = null;
+          }
+          else {
+            _arg1 = new android.os.IBinder[_arg1_length];
+          }
+          android.os.IBinder[] _result = this.ReverseIBinderArray(_arg0, _arg1);
+          reply.writeNoException();
+          reply.writeBinderArray(_result);
+          reply.writeBinderArray(_arg1);
+          break;
+        }
+        case TRANSACTION_ReverseNullableIBinderArray:
+        {
+          android.os.IBinder[] _arg0;
+          _arg0 = data.createBinderArray();
+          android.os.IBinder[] _arg1;
+          int _arg1_length = data.readInt();
+          if ((_arg1_length<0)) {
+            _arg1 = null;
+          }
+          else {
+            _arg1 = new android.os.IBinder[_arg1_length];
+          }
+          android.os.IBinder[] _result = this.ReverseNullableIBinderArray(_arg0, _arg1);
+          reply.writeNoException();
+          reply.writeBinderArray(_result);
+          reply.writeBinderArray(_arg1);
           break;
         }
         case TRANSACTION_GetOldNameInterface:
@@ -2293,6 +2337,68 @@ public interface ITestService extends android.os.IInterface
         }
         return _result;
       }
+      @Override public android.os.IBinder[] ReverseIBinderArray(android.os.IBinder[] input, android.os.IBinder[] repeated) throws android.os.RemoteException
+      {
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
+        _data.markSensitive();
+        android.os.Parcel _reply = android.os.Parcel.obtain();
+        android.os.IBinder[] _result;
+        try {
+          _data.writeInterfaceToken(DESCRIPTOR);
+          _data.writeBinderArray(input);
+          if ((repeated==null)) {
+            _data.writeInt(-1);
+          }
+          else {
+            _data.writeInt(repeated.length);
+          }
+          boolean _status = mRemote.transact(Stub.TRANSACTION_ReverseIBinderArray, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
+          if (!_status) {
+            if (getDefaultImpl() != null) {
+              return getDefaultImpl().ReverseIBinderArray(input, repeated);
+            }
+          }
+          _reply.readException();
+          _result = _reply.createBinderArray();
+          _reply.readBinderArray(repeated);
+        }
+        finally {
+          _reply.recycle();
+          _data.recycle();
+        }
+        return _result;
+      }
+      @Override public android.os.IBinder[] ReverseNullableIBinderArray(android.os.IBinder[] input, android.os.IBinder[] repeated) throws android.os.RemoteException
+      {
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
+        _data.markSensitive();
+        android.os.Parcel _reply = android.os.Parcel.obtain();
+        android.os.IBinder[] _result;
+        try {
+          _data.writeInterfaceToken(DESCRIPTOR);
+          _data.writeBinderArray(input);
+          if ((repeated==null)) {
+            _data.writeInt(-1);
+          }
+          else {
+            _data.writeInt(repeated.length);
+          }
+          boolean _status = mRemote.transact(Stub.TRANSACTION_ReverseNullableIBinderArray, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
+          if (!_status) {
+            if (getDefaultImpl() != null) {
+              return getDefaultImpl().ReverseNullableIBinderArray(input, repeated);
+            }
+          }
+          _reply.readException();
+          _result = _reply.createBinderArray();
+          _reply.readBinderArray(repeated);
+        }
+        finally {
+          _reply.recycle();
+          _data.recycle();
+        }
+        return _result;
+      }
       @Override public android.aidl.tests.IOldName GetOldNameInterface() throws android.os.RemoteException
       {
         android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
@@ -2437,10 +2543,12 @@ public interface ITestService extends android.os.IInterface
     static final int TRANSACTION_FillOutStructuredParcelable = (android.os.IBinder.FIRST_CALL_TRANSACTION + 46);
     static final int TRANSACTION_RepeatExtendableParcelable = (android.os.IBinder.FIRST_CALL_TRANSACTION + 47);
     static final int TRANSACTION_ReverseList = (android.os.IBinder.FIRST_CALL_TRANSACTION + 48);
-    static final int TRANSACTION_GetOldNameInterface = (android.os.IBinder.FIRST_CALL_TRANSACTION + 49);
-    static final int TRANSACTION_GetNewNameInterface = (android.os.IBinder.FIRST_CALL_TRANSACTION + 50);
-    static final int TRANSACTION_GetCppJavaTests = (android.os.IBinder.FIRST_CALL_TRANSACTION + 51);
-    static final int TRANSACTION_getBackendType = (android.os.IBinder.FIRST_CALL_TRANSACTION + 52);
+    static final int TRANSACTION_ReverseIBinderArray = (android.os.IBinder.FIRST_CALL_TRANSACTION + 49);
+    static final int TRANSACTION_ReverseNullableIBinderArray = (android.os.IBinder.FIRST_CALL_TRANSACTION + 50);
+    static final int TRANSACTION_GetOldNameInterface = (android.os.IBinder.FIRST_CALL_TRANSACTION + 51);
+    static final int TRANSACTION_GetNewNameInterface = (android.os.IBinder.FIRST_CALL_TRANSACTION + 52);
+    static final int TRANSACTION_GetCppJavaTests = (android.os.IBinder.FIRST_CALL_TRANSACTION + 53);
+    static final int TRANSACTION_getBackendType = (android.os.IBinder.FIRST_CALL_TRANSACTION + 54);
     public static boolean setDefaultImpl(android.aidl.tests.ITestService impl) {
       // Only one user of this interface can use this function
       // at a time. This is a heuristic to detect if two different
@@ -2616,6 +2724,8 @@ public interface ITestService extends android.os.IInterface
   public void FillOutStructuredParcelable(android.aidl.tests.StructuredParcelable parcel) throws android.os.RemoteException;
   public void RepeatExtendableParcelable(android.aidl.tests.extension.ExtendableParcelable ep, android.aidl.tests.extension.ExtendableParcelable ep2) throws android.os.RemoteException;
   public android.aidl.tests.RecursiveList ReverseList(android.aidl.tests.RecursiveList list) throws android.os.RemoteException;
+  public android.os.IBinder[] ReverseIBinderArray(android.os.IBinder[] input, android.os.IBinder[] repeated) throws android.os.RemoteException;
+  public android.os.IBinder[] ReverseNullableIBinderArray(android.os.IBinder[] input, android.os.IBinder[] repeated) throws android.os.RemoteException;
   public android.aidl.tests.IOldName GetOldNameInterface() throws android.os.RemoteException;
   public android.aidl.tests.INewName GetNewNameInterface() throws android.os.RemoteException;
   // Retrieve the ICppJavaTests if the server supports it
