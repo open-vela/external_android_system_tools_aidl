@@ -1845,9 +1845,8 @@ TEST_F(AidlTest, CppNameOf_GenericType) {
   };
 
   auto set_nullable = [](std::unique_ptr<AidlTypeSpecifier>&& type) {
-    std::vector<std::unique_ptr<AidlAnnotation>> annotations;
-    annotations.emplace_back(std::unique_ptr<AidlAnnotation>(
-        AidlAnnotation::Parse(AIDL_LOCATION_HERE, "nullable", {}, {})));
+    std::vector<AidlAnnotation> annotations;
+    annotations.emplace_back(*AidlAnnotation::Parse(AIDL_LOCATION_HERE, "nullable", {}, {}));
     type->Annotate(std::move(annotations));
     return std::move(type);
   };
@@ -4631,18 +4630,22 @@ TEST_F(AidlTest, FormatCommentsForJava) {
       {{{"/*\n"
          " * Hello, world!\n"
          " */"}},
-       "/** Hello, world! */\n"},
-      {{{"/* @hide */"}}, "/** @hide */\n"},
+       "/**\n"
+       " * Hello, world!\n"
+       " */"},
+      {{{"/* @hide */"}}, "/** @hide */"},
       {{{"/**\n"
          "   @param foo ...\n"
          "*/"}},
-       "/** @param foo ... */\n"},
-      {{{"/* @hide */"}, {"/* @hide */"}}, "/* @hide */\n/** @hide */\n"},
+       "/**\n"
+       "   @param foo ...\n"
+       "*/"},
+      {{{"/* @hide */"}, {"/* @hide */"}}, "/* @hide *//** @hide */"},
       {{{"/* @deprecated first */"}, {"/* @deprecated second */"}},
-       "/* @deprecated first */\n/** @deprecated second */\n"},
-      {{{"/* @deprecated */"}, {"/** @param foo */"}}, "/* @deprecated */\n/** @param foo */\n"},
+       "/* @deprecated first *//** @deprecated second */"},
+      {{{"/* @deprecated */"}, {"/** @param foo */"}}, "/* @deprecated *//** @param foo */"},
       // Line comments are printed as they are
-      {{{"/* @deprecated */"}, {"// line comments\n"}}, "/* @deprecated */\n// line comments\n"},
+      {{{"/* @deprecated */"}, {"// line comments\n"}}, "/* @deprecated */// line comments\n"},
   };
   for (const auto& [input, formatted] : testcases) {
     EXPECT_EQ(formatted, FormatCommentsForJava(input));
