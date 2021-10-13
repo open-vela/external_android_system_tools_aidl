@@ -97,7 +97,12 @@ void GenerateDescribeContentsHelper(CodeWriter& out, const set<string>& describe
 bool CanDescribeContents(const AidlTypeSpecifier& type, const AidlTypenames& types,
                          set<string>* describers) {
   if (type.IsArray()) {
-    if (CanDescribeContents(type.ArrayBase(), types, describers)) {
+    bool canDescribe = false;
+    type.ViewAsArrayBase([&](const AidlTypeSpecifier& base) {
+      canDescribe = CanDescribeContents(base, types, describers);
+    });
+
+    if (canDescribe) {
       describers->insert("Array");
       return true;
     }
