@@ -75,6 +75,24 @@ bool IsJavaKeyword(const char* str) {
 }
 }  // namespace
 
+AidlNode::~AidlNode() {
+  if (!visited_) {
+    unvisited_locations_.push_back(location_);
+  }
+}
+
+void AidlNode::ClearUnvisitedNodes() {
+  unvisited_locations_.clear();
+}
+
+const std::vector<AidlLocation>& AidlNode::GetLocationsOfUnvisitedNodes() {
+  return unvisited_locations_;
+}
+
+void AidlNode::MarkVisited() const {
+  visited_ = true;
+}
+
 AidlNode::AidlNode(const AidlLocation& location, const Comments& comments)
     : location_(location), comments_(comments) {}
 
@@ -90,6 +108,8 @@ std::string AidlNode::PrintLocation() const {
      << location_.end_.line << ":" << location_.end_.column;
   return ss.str();
 }
+
+std::vector<AidlLocation> AidlNode::unvisited_locations_;
 
 static const AidlTypeSpecifier kStringType{AIDL_LOCATION_HERE, "String", false, nullptr,
                                            Comments{}};
@@ -1430,7 +1450,6 @@ bool AidlEnumDeclaration::Autofill(const AidlTypenames& typenames) {
                      << ". Backing type must be one of: " << Join(kBackingTypes, ", ");
     return false;
   }
-
   return true;
 }
 
