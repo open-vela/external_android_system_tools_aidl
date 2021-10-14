@@ -251,6 +251,7 @@ std::unique_ptr<AidlTypeSpecifier> AidlTypenames::MakeResolvedType(const AidlLoc
   std::unique_ptr<AidlTypeSpecifier> type(
       new AidlTypeSpecifier(location, name, is_array, nullptr, {}));
   AIDL_FATAL_IF(!type->Resolve(*this, nullptr), type) << "Can't make unknown type: " << name;
+  type->MarkVisited();
   return type;
 }
 
