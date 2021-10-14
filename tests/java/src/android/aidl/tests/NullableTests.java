@@ -96,11 +96,9 @@ public class NullableTests {
 
     @Test
     public void testReverseIBinderArray() throws RemoteException {
-      assumeTrue(mCppJavaTests != null);
-
       IBinder[] input = {new Binder(), new Binder()};
       IBinder[] repeated = new IBinder[input.length];
-      IBinder[] reversed = mCppJavaTests.ReverseIBinderArray(input, repeated);
+      IBinder[] reversed = mService.ReverseIBinderArray(input, repeated);
 
       assertThat(repeated, is(input));
       assertThat(reversed.length, is(input.length));
@@ -112,11 +110,9 @@ public class NullableTests {
 
     @Test
     public void testReverseNullableIBinderArray() throws RemoteException {
-      assumeTrue(mCppJavaTests != null);
-
       IBinder[] input = {new Binder(), null};
       IBinder[] repeated = new IBinder[input.length];
-      IBinder[] reversed = mCppJavaTests.ReverseNullableIBinderArray(input, repeated);
+      IBinder[] reversed = mService.ReverseNullableIBinderArray(input, repeated);
 
       assertThat(repeated, is(input));
       assertThat(reversed.length, is(input.length));
