@@ -543,9 +543,6 @@ class AidlArgument : public AidlVariableDeclaration {
   // e.g) "in @utf8InCpp String[] names"
   std::string ToString() const;
 
-  void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override {
-    traverse(GetType());
-  }
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 
  private:
