@@ -144,7 +144,7 @@ class AidlNode {
  public:
   AidlNode(const AidlLocation& location, const Comments& comments = {});
 
-  virtual ~AidlNode() = default;
+  virtual ~AidlNode();
 
   AidlNode(AidlNode&) = delete;
   AidlNode& operator=(AidlNode&) = delete;
@@ -163,11 +163,19 @@ class AidlNode {
   const Comments& GetComments() const { return comments_; }
   void SetComments(const Comments& comments) { comments_ = comments; }
 
+  static void ClearUnvisitedNodes();
+  static const std::vector<AidlLocation>& GetLocationsOfUnvisitedNodes();
+  void MarkVisited() const;
+
  private:
   std::string PrintLine() const;
   std::string PrintLocation() const;
   const AidlLocation location_;
   Comments comments_;
+
+  // make sure we are able to abort if types are not visited
+  mutable bool visited_ = false;
+  static std::vector<AidlLocation> unvisited_locations_;
 };
 
 // unique_ptr<AidlTypeSpecifier> for type arugment,
@@ -1221,17 +1229,20 @@ std::optional<T> AidlAnnotation::ParamValue(const std::string& param_name) const
   return it->second->EvaluatedValue<T>();
 }
 
-// Utility to make a visitor to visit AST tree in top-down order
+// Utilities to make a visitor to visit AST tree in top-down order
 // Given:       foo
 //              / \
 //            bar baz
 // VisitTopDown(v, foo) makes v visit foo -> bar -> baz.
-inline void VisitTopDown(AidlVisitor& v, const AidlNode& node) {
+inline void VisitTopDown(std::function<void(const AidlNode&)> v, const AidlNode& node) {
   std::function<void(const AidlNode&)> top_down = [&](const AidlNode& n) {
-    n.DispatchVisit(v);
+    v(n);
     n.TraverseChildren(top_down);
   };
   top_down(node);
+}
+inline void VisitTopDown(AidlVisitor& v, const AidlNode& node) {
+  VisitTopDown([&](const AidlNode& n) { n.DispatchVisit(v); }, node);
 }
 
 // Utility to make a visitor to visit AST tree in bottom-up order
