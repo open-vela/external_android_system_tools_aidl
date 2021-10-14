@@ -33,12 +33,13 @@ extern char kTransactionLogStruct[];
 
 // These roughly correspond to the various class names in the C++ hierarchy:
 enum class ClassNames {
-  BASE,          // Foo (not a real class, but useful in some circumstances).
-  CLIENT,        // BpFoo
-  SERVER,        // BnFoo
-  INTERFACE,     // IFoo
-  DEFAULT_IMPL,  // IFooDefault
-  RAW,           // (as shown in the file)
+  BASE,            // Foo (not a real class, but useful in some circumstances).
+  CLIENT,          // BpFoo
+  SERVER,          // BnFoo
+  INTERFACE,       // IFoo
+  DEFAULT_IMPL,    // IFooDefault
+  RAW,             // (as shown in the file)
+  DELEGATOR_IMPL,  // IFooDelegator
 };
 
 string ClassName(const AidlDefinedType& defined_type, ClassNames type);
