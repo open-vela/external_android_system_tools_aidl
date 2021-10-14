@@ -624,8 +624,8 @@ void GenerateEnumClass(CodeWriter& out, const AidlEnumDeclaration& enum_decl,
 void GenerateUnionClass(CodeWriter& out, const AidlUnionDecl* decl, const AidlTypenames& typenames,
                         const Options& options) {
   const string tag_type = "int";
-  const AidlTypeSpecifier tag_type_specifier(AIDL_LOCATION_HERE, tag_type, false /* isArray */,
-                                             nullptr /* type_params */, Comments{});
+  auto tag_type_specifier =
+      typenames.MakeResolvedType(AIDL_LOCATION_HERE, tag_type, /* isArray */ false);
   const string clazz = decl->GetName();
 
   out << GenerateComments(*decl);
@@ -769,7 +769,7 @@ void GenerateUnionClass(CodeWriter& out, const AidlUnionDecl* decl, const AidlTy
   out << "@Override\n";
   out << "public final void writeToParcel(android.os.Parcel _aidl_parcel, int _aidl_flag) {\n";
   out.Indent();
-  out << write_to_parcel(tag_type_specifier, "_tag", "_aidl_parcel");
+  out << write_to_parcel(*tag_type_specifier, "_tag", "_aidl_parcel");
   out << "switch (_tag) {\n";
   for (const auto& variable : decl->GetFields()) {
     out << "case " + variable->GetName() + ":\n";
@@ -811,7 +811,7 @@ void GenerateUnionClass(CodeWriter& out, const AidlUnionDecl* decl, const AidlTy
   }
   out.Indent();
   out << tag_type + " _aidl_tag;\n";
-  out << read_from_parcel(tag_type_specifier, "_aidl_tag", "_aidl_parcel");
+  out << read_from_parcel(*tag_type_specifier, "_aidl_tag", "_aidl_parcel");
   out << "switch (_aidl_tag) {\n";
   for (const auto& variable : decl->GetFields()) {
     auto var_name = variable->GetName();

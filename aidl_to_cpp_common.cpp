@@ -408,11 +408,9 @@ void UnionWriter::PrivateFields(CodeWriter& out) const {
 }
 
 void UnionWriter::PublicFields(CodeWriter& out) const {
-  AidlTypeSpecifier tag_type(AIDL_LOCATION_HERE, "int", /* is_array= */ false,
-                             /* type_params= */ nullptr, Comments{});
-  tag_type.Resolve(typenames, nullptr);
+  auto tag_type = typenames.MakeResolvedType(AIDL_LOCATION_HERE, "int", /* is_array= */ false);
 
-  out << "enum Tag : " << name_of(tag_type, typenames) << " {\n";
+  out << "enum Tag : " << name_of(*tag_type, typenames) << " {\n";
   bool is_first = true;
   for (const auto& f : decl.GetFields()) {
     out << "  " << f->GetName();
@@ -483,9 +481,7 @@ void set(_Tp&&... _args) {{
 }
 
 void UnionWriter::ReadFromParcel(CodeWriter& out, const ParcelWriterContext& ctx) const {
-  AidlTypeSpecifier tag_type(AIDL_LOCATION_HERE, "int", /* is_array= */ false,
-                             /* type_params= */ nullptr, Comments{});
-  tag_type.Resolve(typenames, nullptr);
+  auto tag_type = typenames.MakeResolvedType(AIDL_LOCATION_HERE, "int", /* is_array= */ false);
 
   const string tag = "_aidl_tag";
   const string value = "_aidl_value";
@@ -499,7 +495,7 @@ void UnionWriter::ReadFromParcel(CodeWriter& out, const ParcelWriterContext& ctx
   };
 
   out << fmt::format("{} {};\n", ctx.status_type, status);
-  read_var(tag, tag_type);
+  read_var(tag, *tag_type);
   out << fmt::format("switch ({}) {{\n", tag);
   for (const auto& variable : decl.GetFields()) {
     out << fmt::format("case {}: {{\n", variable->GetName());
@@ -527,16 +523,14 @@ void UnionWriter::ReadFromParcel(CodeWriter& out, const ParcelWriterContext& ctx
 }
 
 void UnionWriter::WriteToParcel(CodeWriter& out, const ParcelWriterContext& ctx) const {
-  AidlTypeSpecifier tag_type(AIDL_LOCATION_HERE, "int", /* is_array= */ false,
-                             /* type_params= */ nullptr, Comments{});
-  tag_type.Resolve(typenames, nullptr);
+  auto tag_type = typenames.MakeResolvedType(AIDL_LOCATION_HERE, "int", /* is_array= */ false);
 
   const string tag = "_aidl_tag";
   const string value = "_aidl_value";
   const string status = "_aidl_ret_status";
 
   out << fmt::format("{} {} = ", ctx.status_type, status);
-  ctx.write_func(out, "getTag()", tag_type);
+  ctx.write_func(out, "getTag()", *tag_type);
   out << ";\n";
   out << fmt::format("if ({} != {}) return {};\n", status, ctx.status_ok, status);
   out << "switch (getTag()) {\n";

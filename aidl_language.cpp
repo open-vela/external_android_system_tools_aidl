@@ -1415,12 +1415,10 @@ bool AidlEnumDeclaration::Autofill(const AidlTypenames& typenames) {
       return false;
     }
     auto type = annot->ParamValue<std::string>("type").value();
-    backing_type_ =
-        std::make_unique<AidlTypeSpecifier>(annot->GetLocation(), type, false, nullptr, Comments{});
+    backing_type_ = typenames.MakeResolvedType(annot->GetLocation(), type, false);
   } else {
     // Default to byte type for enums.
-    backing_type_ =
-        std::make_unique<AidlTypeSpecifier>(AIDL_LOCATION_HERE, "byte", false, nullptr, Comments{});
+    backing_type_ = typenames.MakeResolvedType(GetLocation(), "byte", false);
   }
 
   // we only support/test a few backing types, so make sure this is a supported
@@ -1432,10 +1430,6 @@ bool AidlEnumDeclaration::Autofill(const AidlTypenames& typenames) {
                      << ". Backing type must be one of: " << Join(kBackingTypes, ", ");
     return false;
   }
-
-  // Autofill() is called before type resolution, we resolve the backing type manually.
-  AIDL_FATAL_IF(!backing_type_->Resolve(typenames, nullptr),
-                "supporting backing types must resolve");
 
   return true;
 }

@@ -557,23 +557,19 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     if (interface != nullptr) {
       // add the meta-method 'int getInterfaceVersion()' if version is specified.
       if (options.Version() > 0) {
-        AidlTypeSpecifier* ret =
-            new AidlTypeSpecifier(AIDL_LOCATION_HERE, "int", false, nullptr, Comments{});
-        ret->Resolve(*typenames, nullptr);
+        auto ret = typenames->MakeResolvedType(AIDL_LOCATION_HERE, "int", false);
         vector<unique_ptr<AidlArgument>>* args = new vector<unique_ptr<AidlArgument>>();
         auto method = std::make_unique<AidlMethod>(
-            AIDL_LOCATION_HERE, false, ret, "getInterfaceVersion", args, Comments{},
+            AIDL_LOCATION_HERE, false, ret.release(), "getInterfaceVersion", args, Comments{},
             kGetInterfaceVersionId, false /* is_user_defined */);
         interface->AddMethod(std::move(method));
       }
       // add the meta-method 'string getInterfaceHash()' if hash is specified.
       if (!options.Hash().empty()) {
-        AidlTypeSpecifier* ret =
-            new AidlTypeSpecifier(AIDL_LOCATION_HERE, "String", false, nullptr, Comments{});
-        ret->Resolve(*typenames, nullptr);
+        auto ret = typenames->MakeResolvedType(AIDL_LOCATION_HERE, "String", false);
         vector<unique_ptr<AidlArgument>>* args = new vector<unique_ptr<AidlArgument>>();
         auto method = std::make_unique<AidlMethod>(
-            AIDL_LOCATION_HERE, false, ret, kGetInterfaceHash, args, Comments{},
+            AIDL_LOCATION_HERE, false, ret.release(), kGetInterfaceHash, args, Comments{},
             kGetInterfaceHashId, false /* is_user_defined */);
         interface->AddMethod(std::move(method));
       }
