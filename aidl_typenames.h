@@ -35,6 +35,7 @@ using std::vector;
 class AidlDefinedType;
 class AidlEnumDeclaration;
 class AidlInterface;
+class AidlLocation;
 class AidlParcelable;
 class AidlTypeSpecifier;
 class AidlDocument;
@@ -72,6 +73,8 @@ class AidlTypenames final {
     const AidlDefinedType* defined_type;
   };
   ResolvedTypename ResolveTypename(const string& type_name) const;
+  std::unique_ptr<AidlTypeSpecifier> MakeResolvedType(const AidlLocation& location,
+                                                      const string& name, bool is_array) const;
   ArgumentAspect GetArgumentAspect(const AidlTypeSpecifier& type) const;
   bool CanBeJavaOnlyImmutable(const AidlTypeSpecifier& type) const;
   bool CanBeFixedSize(const AidlTypeSpecifier& type) const;
