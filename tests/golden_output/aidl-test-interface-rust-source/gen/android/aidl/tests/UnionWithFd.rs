@@ -4,7 +4,6 @@ pub enum UnionWithFd {
   Num(i32),
   Pfd(Option<binder::parcel::ParcelFileDescriptor>),
 }
-pub(crate) mod mangled { pub use super::UnionWithFd as _7_android_4_aidl_5_tests_11_UnionWithFd; }
 impl Default for UnionWithFd {
   fn default() -> Self {
     Self::Num(0)
@@ -47,4 +46,7 @@ binder::impl_serialize_for_parcelable!(UnionWithFd);
 binder::impl_deserialize_for_parcelable!(UnionWithFd);
 impl binder::parcel::ParcelableMetadata for UnionWithFd {
   fn get_descriptor() -> &'static str { "android.aidl.tests.UnionWithFd" }
+}
+pub(crate) mod mangled {
+ pub use super::UnionWithFd as _7_android_4_aidl_5_tests_11_UnionWithFd;
 }

@@ -25,7 +25,6 @@ pub struct ParcelableForToString {
   pub parcelableGeneric: i32,
   pub unionValue: crate::mangled::_7_android_4_aidl_5_tests_5_Union,
 }
-pub(crate) mod mangled { pub use super::ParcelableForToString as _7_android_4_aidl_5_tests_21_ParcelableForToString; }
 impl Default for ParcelableForToString {
   fn default() -> Self {
     Self {
@@ -163,4 +162,7 @@ binder::impl_serialize_for_parcelable!(ParcelableForToString);
 binder::impl_deserialize_for_parcelable!(ParcelableForToString);
 impl binder::parcel::ParcelableMetadata for ParcelableForToString {
   fn get_descriptor() -> &'static str { "android.aidl.tests.ParcelableForToString" }
+}
+pub(crate) mod mangled {
+ pub use super::ParcelableForToString as _7_android_4_aidl_5_tests_21_ParcelableForToString;
 }

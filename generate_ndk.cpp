@@ -134,6 +134,13 @@ void GenerateHeaderIncludes(CodeWriter& out, const AidlTypenames& types,
 void GenerateClassDecl(CodeWriter& out, const AidlTypenames& types,
                        const AidlDefinedType& defined_type, const Options& options);
 
+void GenerateNestedTypeDecls(CodeWriter& out, const AidlTypenames& types,
+                             const AidlDefinedType& defined_type, const Options& options) {
+  auto visit = [&](const auto& nested) { GenerateClassDecl(out, types, nested, options); };
+  AIDL_FATAL_IF(!TopologicalVisit(defined_type.GetNestedTypes(), visit), defined_type)
+      << "Cycle detected.";
+}
+
 void GenerateHeaderDefinitions(CodeWriter& out, const AidlTypenames& types,
                                const AidlDefinedType& defined_type, const Options& options) {
   struct Visitor : AidlVisitor {
@@ -998,9 +1005,7 @@ void GenerateInterfaceClassDecl(CodeWriter& out, const AidlTypenames& types,
   out << clazz << "();\n";
   out << "virtual ~" << clazz << "();\n";
   out << "\n";
-  for (const auto& nested : defined_type.GetNestedTypes()) {
-    GenerateClassDecl(out, types, *nested, options);
-  }
+  GenerateNestedTypeDecls(out, types, defined_type, options);
   GenerateConstantDeclarations(out, types, defined_type);
   if (options.Version() > 0) {
     out << "static const int32_t " << kVersion << " = " << std::to_string(options.Version())
@@ -1079,9 +1084,7 @@ void GenerateParcelClassDecl(CodeWriter& out, const AidlTypenames& types,
   }
   out << "static const char* descriptor;\n";
   out << "\n";
-  for (const auto& nested : defined_type.GetNestedTypes()) {
-    GenerateClassDecl(out, types, *nested, options);
-  }
+  GenerateNestedTypeDecls(out, types, defined_type, options);
   for (const auto& variable : defined_type.GetFields()) {
     out << NdkNameOf(types, variable->GetType(), StorageMode::STACK);
     cpp::GenerateDeprecated(out, *variable);
@@ -1223,9 +1226,7 @@ void GenerateParcelClassDecl(CodeWriter& out, const AidlTypenames& types,
   }
   out << "static const char* descriptor;\n";
   out << "\n";
-  for (const auto& nested : defined_type.GetNestedTypes()) {
-    GenerateClassDecl(out, types, *nested, options);
-  }
+  GenerateNestedTypeDecls(out, types, defined_type, options);
   uw.PublicFields(out);
 
   out << "binder_status_t readFromParcel(const AParcel* _parcel);\n";

@@ -144,9 +144,10 @@ class AidlNode {
  public:
   AidlNode(const AidlLocation& location, const Comments& comments = {});
 
-  AidlNode(const AidlNode&) = default;
   virtual ~AidlNode() = default;
 
+  AidlNode(AidlNode&) = delete;
+  AidlNode& operator=(AidlNode&) = delete;
   AidlNode(AidlNode&&) = delete;
   AidlNode& operator=(AidlNode&&) = delete;
 
@@ -187,9 +188,6 @@ class AidlParameterizable {
   }
 
   virtual const AidlNode& AsAidlNode() const = 0;
-
- protected:
-  AidlParameterizable(const AidlParameterizable&);
 
  private:
   unique_ptr<std::vector<T>> type_params_;
@@ -259,7 +257,6 @@ class AidlAnnotation : public AidlNode {
       std::map<std::string, std::shared_ptr<AidlConstantValue>> parameter_list,
       const Comments& comments);
 
-  AidlAnnotation(const AidlAnnotation&) = default;
   AidlAnnotation(AidlAnnotation&&) = default;
   virtual ~AidlAnnotation() = default;
   bool CheckValid() const;
@@ -328,11 +325,9 @@ class AidlAnnotatable : public AidlCommentable {
  public:
   AidlAnnotatable(const AidlLocation& location, const Comments& comments);
 
-  AidlAnnotatable(const AidlAnnotatable&) = default;
-  AidlAnnotatable(AidlAnnotatable&&) = default;
   virtual ~AidlAnnotatable() = default;
 
-  void Annotate(vector<AidlAnnotation>&& annotations) {
+  void Annotate(vector<std::unique_ptr<AidlAnnotation>>&& annotations) {
     for (auto& annotation : annotations) {
       annotations_.emplace_back(std::move(annotation));
     }
@@ -360,16 +355,16 @@ class AidlAnnotatable : public AidlCommentable {
   // e.g) "@JavaDerive(toString=true) @RustDerive(Clone=true, Copy=true)"
   std::string ToString() const;
 
-  const vector<AidlAnnotation>& GetAnnotations() const { return annotations_; }
+  const vector<std::unique_ptr<AidlAnnotation>>& GetAnnotations() const { return annotations_; }
   bool CheckValid(const AidlTypenames&) const;
   void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override {
     for (const auto& annot : GetAnnotations()) {
-      traverse(annot);
+      traverse(*annot);
     }
   }
 
  private:
-  vector<AidlAnnotation> annotations_;
+  vector<std::unique_ptr<AidlAnnotation>> annotations_;
 };
 
 // AidlTypeSpecifier represents a reference to either a built-in type,
@@ -381,8 +376,8 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
                     vector<unique_ptr<AidlTypeSpecifier>>* type_params, const Comments& comments);
   virtual ~AidlTypeSpecifier() = default;
 
-  // Copy of this type which is not an array.
-  const AidlTypeSpecifier& ArrayBase() const;
+  // View of this type which is not an array.
+  void ViewAsArrayBase(std::function<void(const AidlTypeSpecifier&)> func) const;
 
   // Returns the full-qualified name of the base type.
   // int -> int
@@ -443,14 +438,11 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 
  private:
-  AidlTypeSpecifier(const AidlTypeSpecifier&) = default;
-
   const string unresolved_name_;
   string fully_qualified_name_;
-  bool is_array_;
+  mutable bool is_array_;
   vector<string> split_name_;
   const AidlDefinedType* defined_type_ = nullptr;  // set when Resolve() for defined types
-  mutable shared_ptr<AidlTypeSpecifier> array_base_;
 };
 
 // Returns the universal value unaltered.
@@ -1271,4 +1263,69 @@ const AidlDefinedType* AidlCast<AidlDefinedType>(const AidlNode& node);
 template <typename T>
 T* AidlCast(AidlNode& node) {
   return const_cast<T*>(AidlCast<T>(const_cast<const AidlNode&>(node)));
+}
+
+template <typename AidlNodeType>
+vector<const AidlNodeType*> Collect(const AidlNode& root) {
+  vector<const AidlNodeType*> result;
+  std::function<void(const AidlNode&)> top_down = [&](const AidlNode& n) {
+    if (auto cast = AidlCast<AidlNodeType>(n); cast) {
+      result.push_back(cast);
+    }
+    n.TraverseChildren(top_down);
+  };
+  top_down(root);
+  return result;
+}
+
+template <typename VisitFn>
+bool TopologicalVisit(const vector<unique_ptr<AidlDefinedType>>& nested_types, VisitFn visit) {
+  // 1. Maps deeply nested types to one of nested_types
+  map<const AidlDefinedType*, const AidlDefinedType*> roots;
+  for (const auto& nested : nested_types) {
+    for (const auto& t : Collect<AidlDefinedType>(*nested)) {
+      roots[t] = nested.get();
+    }
+  }
+  // 2. Collect sibling types referenced within each nested type.
+  map<const AidlDefinedType*, vector<const AidlDefinedType*>> required_types;
+  for (const auto& nested : nested_types) {
+    for (const auto& t : Collect<AidlTypeSpecifier>(*nested)) {
+      if (auto defined_type = t->GetDefinedType(); defined_type) {
+        auto sibling = roots[defined_type];
+        if (sibling && sibling != nested.get()) {
+          required_types[nested.get()].push_back(sibling);
+        }
+      }
+    }
+  };
+  // 3. Run DFS
+  enum { NOT_STARTED = 0, STARTED = 1, FINISHED = 2 };
+  map<const AidlDefinedType*, int> visited;
+  std::function<bool(const AidlDefinedType&)> dfs = [&](const AidlDefinedType& type) {
+    if (visited[&type] == FINISHED) {
+      return true;
+    } else if (visited[&type] == STARTED) {
+      return false;
+    } else {
+      visited[&type] = STARTED;
+      // Visit every required dep first
+      for (const auto& dep_type : required_types[&type]) {
+        if (!dfs(*dep_type)) {
+          return false;
+        }
+      }
+      visited[&type] = FINISHED;
+      visit(type);
+      return true;
+    }
+  };
+
+  for (const auto& type : nested_types) {
+    if (!dfs(*type)) {
+      return false;
+    }
+  }
+
+  return true;
 }

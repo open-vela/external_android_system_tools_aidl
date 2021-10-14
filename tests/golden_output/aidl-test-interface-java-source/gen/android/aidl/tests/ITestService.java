@@ -2,6 +2,7 @@
  * This file is auto-generated.  DO NOT MODIFY.
  */
 package android.aidl.tests;
+/** interface comment */
 public interface ITestService extends android.os.IInterface
 {
   /** Default implementation for ITestService. */
@@ -23,9 +24,9 @@ public interface ITestService extends android.os.IInterface
       return 0;
     }
     /**
-         * @deprecated to make sure we have something in system/tools/aidl which does a compile check
-         *     of deprecated and make sure this is reflected in goldens
-         */
+     * @deprecated to make sure we have something in system/tools/aidl which does a compile check
+     *     of deprecated and make sure this is reflected in goldens
+     */
     @Override public void Deprecated() throws android.os.RemoteException
     {
     }
@@ -204,6 +205,7 @@ public interface ITestService extends android.os.IInterface
     {
       return null;
     }
+    /** comment before annotation */
     @Override public android.aidl.tests.INamedCallback GetCallback(boolean return_null) throws android.os.RemoteException
     {
       return null;
@@ -993,9 +995,9 @@ public interface ITestService extends android.os.IInterface
         return _result;
       }
       /**
-           * @deprecated to make sure we have something in system/tools/aidl which does a compile check
-           *     of deprecated and make sure this is reflected in goldens
-           */
+       * @deprecated to make sure we have something in system/tools/aidl which does a compile check
+       *     of deprecated and make sure this is reflected in goldens
+       */
       @Override public void Deprecated() throws android.os.RemoteException
       {
         android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
@@ -2167,6 +2169,7 @@ public interface ITestService extends android.os.IInterface
         }
         return _result;
       }
+      /** comment before annotation */
       @Override public android.aidl.tests.INamedCallback GetCallback(boolean return_null) throws android.os.RemoteException
       {
         android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
@@ -2457,6 +2460,10 @@ public interface ITestService extends android.os.IInterface
   }
   public static final java.lang.String DESCRIPTOR = "android$aidl$tests$ITestService".replace('$', '.');
   // Test that constants are accessible
+  /** extra doc comment */
+  // extra line comment
+  /* extra regular comment */
+  /** const comment */
   public static final int TEST_CONSTANT = 42;
   public static final int TEST_CONSTANT2 = -42;
   public static final int TEST_CONSTANT3 = 42;
@@ -2547,9 +2554,9 @@ public interface ITestService extends android.os.IInterface
   // methods to be added and removed.
   public int UnimplementedMethod(int arg) throws android.os.RemoteException;
   /**
-       * @deprecated to make sure we have something in system/tools/aidl which does a compile check
-       *     of deprecated and make sure this is reflected in goldens
-       */
+   * @deprecated to make sure we have something in system/tools/aidl which does a compile check
+   *     of deprecated and make sure this is reflected in goldens
+   */
   @Deprecated
   public void Deprecated() throws android.os.RemoteException;
   public void TestOneway() throws android.os.RemoteException;
@@ -2602,6 +2609,7 @@ public interface ITestService extends android.os.IInterface
   public java.lang.String[] ReverseUtf8CppString(java.lang.String[] input, java.lang.String[] repeated) throws android.os.RemoteException;
   public java.lang.String[] ReverseNullableUtf8CppString(java.lang.String[] input, java.lang.String[] repeated) throws android.os.RemoteException;
   public java.util.List<java.lang.String> ReverseUtf8CppStringList(java.util.List<java.lang.String> input, java.util.List<java.lang.String> repeated) throws android.os.RemoteException;
+  /** comment before annotation */
   public android.aidl.tests.INamedCallback GetCallback(boolean return_null) throws android.os.RemoteException;
   // Since this paracelable has clearly defined default values, it would be
   // inefficient to use an IPC to fill it out in practice.
