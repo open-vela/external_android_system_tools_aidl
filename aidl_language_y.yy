@@ -223,12 +223,15 @@ imports
  | imports import
   {
     $$ = $1;
+    // dedup while parsing
     auto it = std::find_if($$->begin(), $$->end(), [&](const auto& i) {
       return $2->GetNeededClass() == i->GetNeededClass();
     });
     if (it == $$->end()) {
       $$->emplace_back($2);
     } else {
+      // remove duplicate node
+      $2->MarkVisited();
       delete $2;
     }
   }
