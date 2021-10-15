@@ -62,6 +62,8 @@ pub trait ITestService: binder::Interface + Send {
   fn FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<()>;
   fn RepeatExtendableParcelable(&self, _arg_ep: &crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable) -> binder::public_api::Result<()>;
   fn ReverseList(&self, _arg_list: &crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList>;
+  fn ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>) -> binder::public_api::Result<Vec<binder::SpIBinder>>;
+  fn ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::public_api::Result<Option<Vec<Option<binder::SpIBinder>>>>;
   fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>>;
   fn GetNewNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>>;
   fn GetCppJavaTests(&self) -> binder::public_api::Result<Option<binder::SpIBinder>>;
@@ -221,6 +223,12 @@ pub trait ITestServiceDefault: Send + Sync {
   fn ReverseList(&self, _arg_list: &crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
+  fn ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>) -> binder::public_api::Result<Vec<binder::SpIBinder>> {
+    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
+  }
+  fn ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::public_api::Result<Option<Vec<Option<binder::SpIBinder>>>> {
+    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
+  }
   fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
@@ -284,10 +292,12 @@ pub mod transactions {
   pub const FillOutStructuredParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 46;
   pub const RepeatExtendableParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 47;
   pub const ReverseList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 48;
-  pub const GetOldNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 49;
-  pub const GetNewNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 50;
-  pub const GetCppJavaTests: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 51;
-  pub const getBackendType: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 52;
+  pub const ReverseIBinderArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 49;
+  pub const ReverseNullableIBinderArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 50;
+  pub const GetOldNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 51;
+  pub const GetNewNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 52;
+  pub const GetCppJavaTests: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 53;
+  pub const getBackendType: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 54;
 }
 pub type ITestServiceDefaultRef = Option<std::sync::Arc<dyn ITestServiceDefault>>;
 use lazy_static::lazy_static;
@@ -1224,6 +1234,44 @@ impl ITestService for BpTestService {
     let _aidl_return: crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
+  fn ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>) -> binder::public_api::Result<Vec<binder::SpIBinder>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseIBinderArray, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      _aidl_data.write_slice_size(Some(_arg_repeated))?;
+      Ok(())
+    });
+    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
+      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
+        return _aidl_default_impl.ReverseIBinderArray(_arg_input, _arg_repeated);
+      }
+    }
+    let _aidl_reply = _aidl_reply?;
+    let _aidl_status: binder::Status = _aidl_reply.read()?;
+    if !_aidl_status.is_ok() { return Err(_aidl_status); }
+    let _aidl_return: Vec<binder::SpIBinder> = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
+    Ok(_aidl_return)
+  }
+  fn ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::public_api::Result<Option<Vec<Option<binder::SpIBinder>>>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseNullableIBinderArray, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_input)?;
+      _aidl_data.write_slice_size(_arg_repeated.as_deref())?;
+      Ok(())
+    });
+    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
+      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
+        return _aidl_default_impl.ReverseNullableIBinderArray(_arg_input, _arg_repeated);
+      }
+    }
+    let _aidl_reply = _aidl_reply?;
+    let _aidl_status: binder::Status = _aidl_reply.read()?;
+    if !_aidl_status.is_ok() { return Err(_aidl_status); }
+    let _aidl_return: Option<Vec<Option<binder::SpIBinder>>> = _aidl_reply.read()?;
+    _aidl_reply.read_onto(_arg_repeated)?;
+    Ok(_aidl_return)
+  }
   fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> {
     let _aidl_reply = self.binder.transact(transactions::GetOldNameInterface, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
@@ -1339,6 +1387,8 @@ impl ITestService for binder::Binder<BnTestService> {
   fn FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<()> { self.0.FillOutStructuredParcelable(_arg_parcel) }
   fn RepeatExtendableParcelable(&self, _arg_ep: &crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable) -> binder::public_api::Result<()> { self.0.RepeatExtendableParcelable(_arg_ep, _arg_ep2) }
   fn ReverseList(&self, _arg_list: &crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList> { self.0.ReverseList(_arg_list) }
+  fn ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>) -> binder::public_api::Result<Vec<binder::SpIBinder>> { self.0.ReverseIBinderArray(_arg_input, _arg_repeated) }
+  fn ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::public_api::Result<Option<Vec<Option<binder::SpIBinder>>>> { self.0.ReverseNullableIBinderArray(_arg_input, _arg_repeated) }
   fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> { self.0.GetOldNameInterface() }
   fn GetNewNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> { self.0.GetNewNameInterface() }
   fn GetCppJavaTests(&self) -> binder::public_api::Result<Option<binder::SpIBinder>> { self.0.GetCppJavaTests() }
@@ -1965,6 +2015,36 @@ fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::Transaction
         Ok(_aidl_return) => {
           _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
           _aidl_reply.write(_aidl_return)?;
+        }
+        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
+      }
+      Ok(())
+    }
+    transactions::ReverseIBinderArray => {
+      let _arg_input: Vec<binder::SpIBinder> = _aidl_data.read()?;
+      let mut _arg_repeated: Vec<Option<binder::SpIBinder>> = Default::default();
+      _aidl_data.resize_out_vec(&mut _arg_repeated)?;
+      let _aidl_return = _aidl_service.ReverseIBinderArray(&_arg_input, &mut _arg_repeated);
+      match &_aidl_return {
+        Ok(_aidl_return) => {
+          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
+          _aidl_reply.write(_aidl_return)?;
+          _aidl_reply.write(&_arg_repeated)?;
+        }
+        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
+      }
+      Ok(())
+    }
+    transactions::ReverseNullableIBinderArray => {
+      let _arg_input: Option<Vec<Option<binder::SpIBinder>>> = _aidl_data.read()?;
+      let mut _arg_repeated: Option<Vec<Option<binder::SpIBinder>>> = Default::default();
+      _aidl_data.resize_nullable_out_vec(&mut _arg_repeated)?;
+      let _aidl_return = _aidl_service.ReverseNullableIBinderArray(_arg_input.as_deref(), &mut _arg_repeated);
+      match &_aidl_return {
+        Ok(_aidl_return) => {
+          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
+          _aidl_reply.write(_aidl_return)?;
+          _aidl_reply.write(&_arg_repeated)?;
         }
         Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
       }

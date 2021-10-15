@@ -782,8 +782,8 @@ std::string AidlVariableDeclaration::ValueString(const ConstantValueDecorator& d
 void AidlVariableDeclaration::TraverseChildren(
     std::function<void(const AidlNode&)> traverse) const {
   traverse(GetType());
-  if (IsDefaultUserSpecified()) {
-    traverse(*GetDefaultValue());
+  if (auto default_value = GetDefaultValue(); default_value) {
+    traverse(*default_value);
   }
 }
 
@@ -1275,11 +1275,6 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
     }
   }
 
-  if ((lang == Options::Language::NDK || lang == Options::Language::RUST) && IsArray() &&
-      GetName() == "IBinder") {
-    AIDL_ERROR(this) << "The " << to_string(lang) << " backend does not support array of IBinder";
-    return false;
-  }
   if ((lang == Options::Language::NDK || lang == Options::Language::RUST) && IsArray() &&
       IsNullable()) {
     if (GetName() == "ParcelFileDescriptor") {

@@ -2107,6 +2107,7 @@ TEST_F(AidlTest, ConstantsWithAnnotations) {
 TEST_F(AidlTest, ApiDump) {
   io_delegate_.SetFileContents(
       "foo/bar/IFoo.aidl",
+      "// comment\n"
       "package foo.bar;\n"
       "import foo.bar.Data;\n"
       "// commented /* @hide */\n"
@@ -2126,6 +2127,7 @@ TEST_F(AidlTest, ApiDump) {
       "    const String STR = \"Hello\";\n"
       "}\n");
   io_delegate_.SetFileContents("foo/bar/Data.aidl",
+                               "// comment\n"
                                "package foo.bar;\n"
                                "import foo.bar.IFoo;\n"
                                "/* @hide*/\n"
@@ -2147,7 +2149,7 @@ TEST_F(AidlTest, ApiDump) {
   ASSERT_TRUE(result);
   string actual;
   EXPECT_TRUE(io_delegate_.GetWrittenContents("dump/foo/bar/IFoo.aidl", &actual));
-  EXPECT_EQ(string(kPreamble).append(R"(package foo.bar;
+  EXPECT_EQ(string("// comment\n").append(string(kPreamble)).append(R"(package foo.bar;
 interface IFoo {
   /**
    * @hide
@@ -2167,7 +2169,7 @@ interface IFoo {
             actual);
 
   EXPECT_TRUE(io_delegate_.GetWrittenContents("dump/foo/bar/Data.aidl", &actual));
-  EXPECT_EQ(string(kPreamble).append(R"(package foo.bar;
+  EXPECT_EQ(string("// comment\n").append(string(kPreamble)).append(R"(package foo.bar;
 /* @hide */
 parcelable Data {
   int x = 10;
@@ -4755,8 +4757,8 @@ const std::map<std::string, std::string> kArraySupportExpectations = {
     {"rust_StringArray", "Can only have one dimensional arrays."},
     {"cpp_IBinder", ""},
     {"java_IBinder", ""},
-    {"ndk_IBinder", "The ndk backend does not support array of IBinder"},
-    {"rust_IBinder", "The rust backend does not support array of IBinder"},
+    {"ndk_IBinder", ""},
+    {"rust_IBinder", ""},
     {"cpp_ParcelFileDescriptor", ""},
     {"java_ParcelFileDescriptor", ""},
     {"ndk_ParcelFileDescriptor", ""},
