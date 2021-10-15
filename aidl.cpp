@@ -591,6 +591,10 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     }
   }
 
+  for (const auto& doc : typenames->AllDocuments()) {
+    VisitTopDown([](const AidlNode& n) { n.MarkVisited(); }, *doc);
+  }
+
   if (!ValidateAnnotationContext(*document)) {
     return AidlError::BAD_TYPE;
   }
@@ -754,6 +758,7 @@ bool dump_mappings(const Options& options, const IoDelegate& io_delegate) {
 
 int aidl_entry(const Options& options, const IoDelegate& io_delegate) {
   AidlErrorLog::clearError();
+  AidlNode::ClearUnvisitedNodes();
 
   bool success = false;
   if (options.Ok()) {
@@ -788,6 +793,17 @@ int aidl_entry(const Options& options, const IoDelegate& io_delegate) {
   AIDL_FATAL_IF(success == reportedError, AIDL_LOCATION_HERE)
       << "Compiler returned success " << success << " but did" << (reportedError ? "" : " not")
       << " emit error logs";
+
+  if (success) {
+    auto locations = AidlNode::GetLocationsOfUnvisitedNodes();
+    if (!locations.empty()) {
+      for (const auto& location : locations) {
+        AIDL_ERROR(location) << "AidlNode at location was not visited!";
+      }
+      AIDL_FATAL(AIDL_LOCATION_HERE)
+          << "The AIDL AST was not processed fully. Please report an issue.";
+    }
+  }
 
   return success ? 0 : 1;
 }
