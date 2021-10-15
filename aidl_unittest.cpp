@@ -4685,125 +4685,181 @@ struct TypeParam {
 };
 
 const TypeParam kTypeParams[] = {
-    {"primitive", "int"},   {"primitiveArray", "int[]"},
-    {"String", "String"},   {"StringArray", "String[]"},
-    {"IBinder", "IBinder"}, {"ParcelFileDescriptor", "ParcelFileDescriptor"},
-    {"parcelable", "Foo"},  {"enum", "a.Enum"},
-    {"union", "a.Union"},   {"interface", "a.IBar"},
+    {"primitive", "int"},    {"primitiveArray", "int[]"},
+    {"String", "String"},    {"StringArray", "String[]"},
+    {"IBinder", "IBinder"},  {"ParcelFileDescriptor", "ParcelFileDescriptor"},
+    {"parcelable", "a.Foo"}, {"enum", "a.Enum"},
+    {"union", "a.Union"},    {"interface", "a.IBar"},
 };
 
-const std::map<std::string, std::string> kListSupportExpectations = {
-    {"cpp_primitive", "A generic type cannot have any primitive type parameters."},
-    {"java_primitive", "A generic type cannot have any primitive type parameters."},
-    {"ndk_primitive", "A generic type cannot have any primitive type parameters."},
-    {"rust_primitive", "A generic type cannot have any primitive type parameters."},
-    {"cpp_primitiveArray", "List of arrays is not supported."},
-    {"java_primitiveArray", "List of arrays is not supported."},
-    {"ndk_primitiveArray", "List of arrays is not supported."},
-    {"rust_primitiveArray", "List of arrays is not supported."},
-    {"cpp_String", ""},
-    {"java_String", ""},
-    {"ndk_String", ""},
-    {"rust_String", ""},
-    {"cpp_StringArray", "List of arrays is not supported."},
-    {"java_StringArray", "List of arrays is not supported."},
-    {"ndk_StringArray", "List of arrays is not supported."},
-    {"rust_StringArray", "List of arrays is not supported."},
-    {"cpp_IBinder", ""},
-    {"java_IBinder", ""},
-    {"ndk_IBinder", ""},
-    {"rust_IBinder", ""},
-    {"cpp_ParcelFileDescriptor", ""},
-    {"java_ParcelFileDescriptor", ""},
-    {"ndk_ParcelFileDescriptor", ""},
-    {"rust_ParcelFileDescriptor", ""},
-    {"cpp_interface", "List<a.IBar> is not supported."},
-    {"java_interface", "List<a.IBar> is not supported."},
-    {"ndk_interface", "List<a.IBar> is not supported."},
-    {"rust_interface", "List<a.IBar> is not supported."},
-    {"cpp_parcelable", ""},
-    {"java_parcelable", ""},
-    {"ndk_parcelable", ""},
-    {"rust_parcelable", ""},
-    {"cpp_enum", "A generic type cannot have any primitive type parameters."},
-    {"java_enum", "A generic type cannot have any primitive type parameters."},
-    {"ndk_enum", "A generic type cannot have any primitive type parameters."},
-    {"rust_enum", "A generic type cannot have any primitive type parameters."},
-    {"cpp_union", ""},
-    {"java_union", ""},
-    {"ndk_union", ""},
-    {"rust_union", ""},
+struct ExpectedResult {
+  string expected_error;
+  string expected_error_for_nullable;
 };
 
-const std::map<std::string, std::string> kArraySupportExpectations = {
-    {"cpp_primitive", ""},
-    {"java_primitive", ""},
-    {"ndk_primitive", ""},
-    {"rust_primitive", ""},
-    {"cpp_primitiveArray", "Can only have one dimensional arrays."},
-    {"java_primitiveArray", "Can only have one dimensional arrays."},
-    {"ndk_primitiveArray", "Can only have one dimensional arrays."},
-    {"rust_primitiveArray", "Can only have one dimensional arrays."},
-    {"cpp_String", ""},
-    {"java_String", ""},
-    {"ndk_String", ""},
-    {"rust_String", ""},
-    {"cpp_StringArray", "Can only have one dimensional arrays."},
-    {"java_StringArray", "Can only have one dimensional arrays."},
-    {"ndk_StringArray", "Can only have one dimensional arrays."},
-    {"rust_StringArray", "Can only have one dimensional arrays."},
-    {"cpp_IBinder", ""},
-    {"java_IBinder", ""},
-    {"ndk_IBinder", ""},
-    {"rust_IBinder", ""},
-    {"cpp_ParcelFileDescriptor", ""},
-    {"java_ParcelFileDescriptor", ""},
-    {"ndk_ParcelFileDescriptor", ""},
-    {"rust_ParcelFileDescriptor", ""},
-    {"cpp_interface", "Binder type cannot be an array"},
-    {"java_interface", "Binder type cannot be an array"},
-    {"ndk_interface", "Binder type cannot be an array"},
-    {"rust_interface", "Binder type cannot be an array"},
-    {"cpp_parcelable", ""},
-    {"java_parcelable", ""},
-    {"ndk_parcelable", ""},
-    {"rust_parcelable", ""},
-    {"cpp_enum", ""},
-    {"java_enum", ""},
-    {"ndk_enum", ""},
-    {"rust_enum", ""},
-    {"cpp_union", ""},
-    {"java_union", ""},
-    {"ndk_union", ""},
-    {"rust_union", ""},
+const std::map<std::string, ExpectedResult> kListSupportExpectations = {
+    {"cpp_primitive", {"A generic type cannot", "A generic type cannot"}},
+    {"java_primitive", {"A generic type cannot", "A generic type cannot"}},
+    {"ndk_primitive", {"A generic type cannot", "A generic type cannot"}},
+    {"rust_primitive", {"A generic type cannot", "A generic type cannot"}},
+    {"cpp_primitiveArray", {"List of arrays is not supported", "List of arrays is not supported"}},
+    {"java_primitiveArray", {"List of arrays is not supported", "List of arrays is not supported"}},
+    {"ndk_primitiveArray", {"List of arrays is not supported", "List of arrays is not supported"}},
+    {"rust_primitiveArray", {"List of arrays is not supported", "List of arrays is not supported"}},
+    {"cpp_String", {"", ""}},
+    {"java_String", {"", ""}},
+    {"ndk_String", {"", ""}},
+    {"rust_String", {"", ""}},
+    {"cpp_StringArray", {"List of arrays is not supported", "List of arrays is not supported"}},
+    {"java_StringArray", {"List of arrays is not supported", "List of arrays is not supported"}},
+    {"ndk_StringArray", {"List of arrays is not supported", "List of arrays is not supported"}},
+    {"rust_StringArray", {"List of arrays is not supported", "List of arrays is not supported"}},
+    {"cpp_IBinder", {"", ""}},
+    {"java_IBinder", {"", ""}},
+    {"ndk_IBinder", {"", ""}},
+    {"rust_IBinder", {"", ""}},
+    {"cpp_ParcelFileDescriptor", {"", ""}},
+    {"java_ParcelFileDescriptor", {"", ""}},
+    {"ndk_ParcelFileDescriptor", {"", ""}},
+    {"rust_ParcelFileDescriptor", {"", ""}},
+    {"cpp_interface", {"List<a.IBar> is not supported", "List<a.IBar> is not supported"}},
+    {"java_interface", {"List<a.IBar> is not supported", "List<a.IBar> is not supported"}},
+    {"ndk_interface", {"List<a.IBar> is not supported", "List<a.IBar> is not supported"}},
+    {"rust_interface", {"List<a.IBar> is not supported", "List<a.IBar> is not supported"}},
+    {"cpp_parcelable", {"", ""}},
+    {"java_parcelable", {"", ""}},
+    {"ndk_parcelable", {"", ""}},
+    {"rust_parcelable", {"", ""}},
+    {"cpp_enum", {"A generic type cannot", "A generic type cannot"}},
+    {"java_enum", {"A generic type cannot", "A generic type cannot"}},
+    {"ndk_enum", {"A generic type cannot", "A generic type cannot"}},
+    {"rust_enum", {"A generic type cannot", "A generic type cannot"}},
+    {"cpp_union", {"", ""}},
+    {"java_union", {"", ""}},
+    {"ndk_union", {"", ""}},
+    {"rust_union", {"", ""}},
 };
 
-class AidlTypeParamTest : public testing::TestWithParam<std::tuple<Options::Language, TypeParam>> {
+const std::map<std::string, ExpectedResult> kArraySupportExpectations = {
+    {"cpp_primitive", {"", ""}},
+    {"java_primitive", {"", ""}},
+    {"ndk_primitive", {"", ""}},
+    {"rust_primitive", {"", ""}},
+    {"cpp_primitiveArray", {"Can only have one dimensional", "Can only have one dimensional"}},
+    {"java_primitiveArray", {"Can only have one dimensional", "Can only have one dimensional"}},
+    {"ndk_primitiveArray", {"Can only have one dimensional", "Can only have one dimensional"}},
+    {"rust_primitiveArray", {"Can only have one dimensional", "Can only have one dimensional"}},
+    {"cpp_String", {"", ""}},
+    {"java_String", {"", ""}},
+    {"ndk_String", {"", ""}},
+    {"rust_String", {"", ""}},
+    {"cpp_StringArray", {"Can only have one dimensional", "Can only have one dimensional"}},
+    {"java_StringArray", {"Can only have one dimensional", "Can only have one dimensional"}},
+    {"ndk_StringArray", {"Can only have one dimensional", "Can only have one dimensional"}},
+    {"rust_StringArray", {"Can only have one dimensional", "Can only have one dimensional"}},
+    {"cpp_IBinder", {"", ""}},
+    {"java_IBinder", {"", ""}},
+    {"ndk_IBinder", {"", ""}},
+    {"rust_IBinder", {"", ""}},
+    {"cpp_ParcelFileDescriptor", {"", ""}},
+    {"java_ParcelFileDescriptor", {"", ""}},
+    {"ndk_ParcelFileDescriptor", {"", ""}},
+    {"rust_ParcelFileDescriptor", {"", ""}},
+    {"cpp_interface", {"Binder type cannot be an array", "Binder type cannot be an array"}},
+    {"java_interface", {"Binder type cannot be an array", "Binder type cannot be an array"}},
+    {"ndk_interface", {"Binder type cannot be an array", "Binder type cannot be an array"}},
+    {"rust_interface", {"Binder type cannot be an array", "Binder type cannot be an array"}},
+    {"cpp_parcelable", {"", ""}},
+    {"java_parcelable", {"", ""}},
+    {"ndk_parcelable", {"", ""}},
+    {"rust_parcelable", {"", ""}},
+    {"cpp_enum", {"", ""}},
+    {"java_enum", {"", ""}},
+    {"ndk_enum", {"", ""}},
+    {"rust_enum", {"", ""}},
+    {"cpp_union", {"", ""}},
+    {"java_union", {"", ""}},
+    {"ndk_union", {"", ""}},
+    {"rust_union", {"", ""}},
+};
+
+const std::map<std::string, ExpectedResult> kFieldSupportExpectations = {
+    {"cpp_primitive", {"", "cannot get nullable annotation"}},
+    {"java_primitive", {"", "cannot get nullable annotation"}},
+    {"ndk_primitive", {"", "cannot get nullable annotation"}},
+    {"rust_primitive", {"", "cannot get nullable annotation"}},
+    {"cpp_primitiveArray", {"", ""}},
+    {"java_primitiveArray", {"", ""}},
+    {"ndk_primitiveArray", {"", ""}},
+    {"rust_primitiveArray", {"", ""}},
+    {"cpp_String", {"", ""}},
+    {"java_String", {"", ""}},
+    {"ndk_String", {"", ""}},
+    {"rust_String", {"", ""}},
+    {"cpp_StringArray", {"", ""}},
+    {"java_StringArray", {"", ""}},
+    {"ndk_StringArray", {"", ""}},
+    {"rust_StringArray", {"", ""}},
+    {"cpp_IBinder", {"", ""}},
+    {"java_IBinder", {"", ""}},
+    {"ndk_IBinder", {"", ""}},
+    {"rust_IBinder", {"", ""}},
+    {"cpp_ParcelFileDescriptor", {"", ""}},
+    {"java_ParcelFileDescriptor", {"", ""}},
+    {"ndk_ParcelFileDescriptor", {"", ""}},
+    {"rust_ParcelFileDescriptor", {"", ""}},
+    {"cpp_interface", {"", ""}},
+    {"java_interface", {"", ""}},
+    {"ndk_interface", {"", ""}},
+    {"rust_interface", {"", ""}},
+    {"cpp_parcelable", {"", ""}},
+    {"java_parcelable", {"", ""}},
+    {"ndk_parcelable", {"", ""}},
+    {"rust_parcelable", {"", ""}},
+    {"cpp_enum", {"", "cannot get nullable annotation"}},
+    {"java_enum", {"", "cannot get nullable annotation"}},
+    {"ndk_enum", {"", "cannot get nullable annotation"}},
+    {"rust_enum", {"", "cannot get nullable annotation"}},
+    {"cpp_union", {"", ""}},
+    {"java_union", {"", ""}},
+    {"ndk_union", {"", ""}},
+    {"rust_union", {"", ""}},
+};
+
+class AidlTypeParamTest
+    : public testing::TestWithParam<std::tuple<Options::Language, TypeParam, bool>> {
  public:
   void Run(const std::string& generic_type_decl,
-           const std::map<std::string, std::string>& expectations) {
+           const std::map<std::string, ExpectedResult>& expectations) {
     const auto& param = GetParam();
     const auto& lang = to_string(std::get<0>(param));
     const auto& kind = std::get<1>(param).kind;
+    const bool nullable = std::get<2>(param);
 
     FakeIoDelegate io;
     io.SetFileContents("a/IBar.aidl", "package a; interface IBar { }");
     io.SetFileContents("a/Enum.aidl", "package a; enum Enum { A }");
     io.SetFileContents("a/Union.aidl", "package a; union Union { int a; }");
+    io.SetFileContents("a/Foo.aidl", "package a; parcelable Foo { int a; }");
     std::string decl = fmt::format(generic_type_decl, std::get<1>(param).literal);
-    io.SetFileContents("a/Foo.aidl", "package a; parcelable Foo { " + decl + " f; }");
+    if (nullable) {
+      decl = "@nullable " + decl;
+    }
+    io.SetFileContents("a/Target.aidl", "package a; parcelable Target { " + decl + " f; }");
 
     const auto options =
-        Options::From(fmt::format("aidl -I . --lang={} a/Foo.aidl -o out -h out", lang));
+        Options::From(fmt::format("aidl -I . --lang={} a/Target.aidl -o out -h out", lang));
     CaptureStderr();
     compile_aidl(options, io);
     auto it = expectations.find(lang + "_" + kind);
-    EXPECT_TRUE(it != expectations.end());
+    ASSERT_TRUE(it != expectations.end()) << "missing expectation for " << lang << "_" << kind;
     const string err = GetCapturedStderr();
-    if (it->second.empty()) {
+    const string expected_error =
+        nullable ? it->second.expected_error_for_nullable : it->second.expected_error;
+    if (expected_error.empty()) {
       EXPECT_EQ("", err);
     } else {
-      EXPECT_THAT(err, testing::HasSubstr(it->second));
+      EXPECT_THAT(err, testing::HasSubstr(expected_error));
     }
   }
 };
@@ -4812,9 +4868,13 @@ INSTANTIATE_TEST_SUITE_P(
     AidlTestSuite, AidlTypeParamTest,
     testing::Combine(testing::Values(Options::Language::CPP, Options::Language::JAVA,
                                      Options::Language::NDK, Options::Language::RUST),
-                     testing::ValuesIn(kTypeParams)),
-    [](const testing::TestParamInfo<std::tuple<Options::Language, TypeParam>>& info) {
-      return to_string(std::get<0>(info.param)) + "_" + std::get<1>(info.param).kind;
+                     testing::ValuesIn(kTypeParams), testing::Values(true, false)),
+    [](const testing::TestParamInfo<std::tuple<Options::Language, TypeParam, bool>>& info) {
+      string name = to_string(std::get<0>(info.param)) + "_" + std::get<1>(info.param).kind;
+      if (std::get<2>(info.param)) {
+        name += "_nullable";
+      }
+      return name;
     });
 
 TEST_P(AidlTypeParamTest, ListSupportedTypes) {
@@ -4823,6 +4883,10 @@ TEST_P(AidlTypeParamTest, ListSupportedTypes) {
 
 TEST_P(AidlTypeParamTest, ArraySupportedTypes) {
   Run("{}[]", kArraySupportExpectations);
+}
+
+TEST_P(AidlTypeParamTest, ParcelableFieldTypes) {
+  Run("{}", kFieldSupportExpectations);
 }
 
 }  // namespace aidl

@@ -103,7 +103,7 @@ std::string GetRustName(const AidlTypeSpecifier& type, const AidlTypenames& type
       {"ParcelFileDescriptor", "binder::parcel::ParcelFileDescriptor"},
       {"ParcelableHolder", "binder::parcel::ParcelableHolder"},
   };
-
+  const bool is_vector = type.IsArray() || typenames.IsList(type);
   // If the type is an array/List<T>, get the inner element type
   AIDL_FATAL_IF(typenames.IsList(type) && type.GetTypeParameters().size() != 1, type);
   const auto& element_type = type.IsGeneric() ? (*type.GetTypeParameters().at(0)) : type;
@@ -115,7 +115,7 @@ std::string GetRustName(const AidlTypeSpecifier& type, const AidlTypenames& type
     } else if (element_type_name == "String" && mode == StorageMode::UNSIZED_ARGUMENT) {
       return "str";
     } else if (element_type_name == "ParcelFileDescriptor" || element_type_name == "IBinder") {
-      if (type.IsArray() && mode == StorageMode::DEFAULT_VALUE) {
+      if (is_vector && mode == StorageMode::DEFAULT_VALUE) {
         // Out-arguments of ParcelFileDescriptors arrays need to
         // be Vec<Option<ParcelFileDescriptor>> so resize_out_vec
         // can initialize all elements to None (it requires Default
@@ -151,6 +151,21 @@ std::string ConstantValueDecoratorRef(const AidlTypeSpecifier& type, const std::
   return rust_value;
 }
 
+bool UsesOptionInNullableVector(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
+  AIDL_FATAL_IF(!type.IsArray() && !typenames.IsList(type), type) << "not a vector";
+  AIDL_FATAL_IF(typenames.IsList(type) && type.GetTypeParameters().size() != 1, type)
+      << "List should have a single type arg.";
+
+  const auto& element_type = type.IsArray() ? type : *type.GetTypeParameters().at(0);
+  if (typenames.IsPrimitiveTypename(element_type.GetName())) {
+    return false;
+  }
+  if (typenames.GetEnumDeclaration(element_type)) {
+    return false;
+  }
+  return true;
+}
+
 std::string RustNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
                        StorageMode mode) {
   std::string rust_name;
@@ -163,11 +178,14 @@ std::string RustNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typen
       element_mode = StorageMode::VALUE;
     }
     rust_name = GetRustName(type, typenames, element_mode);
-    if (type.IsNullable() && (rust_name == "String" || rust_name == "binder::SpIBinder")) {
+    if (type.IsNullable() && UsesOptionInNullableVector(type, typenames)) {
       // The mapping for nullable string arrays is
       // optional<vector<optional<string>>> in the NDK,
       // so we do the same
-      rust_name = "Option<" + rust_name + ">";
+      // However, we don't need to when GetRustName() already wraps it with Option.
+      if (!base::StartsWith(rust_name, "Option<")) {
+        rust_name = "Option<" + rust_name + ">";
+      }
     }
     if (mode == StorageMode::UNSIZED_ARGUMENT) {
       rust_name = "[" + rust_name + "]";

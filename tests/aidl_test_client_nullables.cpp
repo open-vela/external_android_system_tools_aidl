@@ -95,10 +95,8 @@ TEST_F(RepeatNullableTest, stringArray) {
 }
 
 TEST_F(RepeatNullableTest, parcelable) {
-  auto input = std::make_optional<StructuredParcelable>();
-  input->f = 42;
-
-  std::optional<StructuredParcelable> output;
+  auto input = std::make_optional<ITestService::Empty>();
+  std::optional<ITestService::Empty> output;
   auto status = service->RepeatNullableParcelable(input, &output);
   ASSERT_TRUE(status.isOk());
   ASSERT_TRUE(output.has_value());
@@ -108,6 +106,20 @@ TEST_F(RepeatNullableTest, parcelable) {
   status = service->RepeatNullableParcelable(input, &output);
   ASSERT_TRUE(status.isOk());
   ASSERT_FALSE(output.has_value());
+}
+
+TEST_F(RepeatNullableTest, parcelableArray) {
+  std::vector<std::optional<ITestService::Empty>> input;
+  input.push_back(ITestService::Empty());
+  input.push_back(std::nullopt);
+  DoTest(&ITestService::RepeatNullableParcelableArray, std::make_optional(input));
+}
+
+TEST_F(RepeatNullableTest, parcelableList) {
+  std::vector<std::optional<ITestService::Empty>> input;
+  input.push_back(ITestService::Empty());
+  input.push_back(std::nullopt);
+  DoTest(&ITestService::RepeatNullableParcelableList, std::make_optional(input));
 }
 
 TEST_F(AidlTest, nullBinder) {

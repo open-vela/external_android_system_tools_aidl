@@ -29,6 +29,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,6 +64,20 @@ public class NullableTests {
         if (mService.getBackendType() != BackendType.JAVA) {
           fail("NullPointerException was expected, but wasn't thrown");
         }
+    }
+
+    @Test
+    public void testRepeatNullableParcelableArray() throws RemoteException {
+      ITestService.Empty[] input = {new ITestService.Empty(), null};
+      assertThat(mService.RepeatNullableParcelableArray(input), is(input));
+      assertThat(mService.RepeatNullableParcelableArray(null), is(nullValue()));
+    }
+
+    @Test
+    public void testRepeatNullableParcelableList() throws RemoteException {
+      List<ITestService.Empty> input = Arrays.asList(new ITestService.Empty(), null);
+      assertThat(mService.RepeatNullableParcelableList(input), is(input));
+      assertThat(mService.RepeatNullableParcelableList(null), is(nullValue()));
     }
 
     @Test

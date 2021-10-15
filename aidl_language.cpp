@@ -1285,24 +1285,7 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
 }
 
 // TODO: we should treat every backend all the same in future.
-bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                                   Options::Language lang) const {
-  if ((lang == Options::Language::NDK || lang == Options::Language::RUST) && IsArray() &&
-      IsNullable()) {
-    if (GetName() == "ParcelFileDescriptor") {
-      AIDL_ERROR(this) << "The " << to_string(lang)
-                       << " backend does not support nullable array of ParcelFileDescriptor";
-      return false;
-    }
-
-    const auto defined_type = typenames.TryGetDefinedType(GetName());
-    if (defined_type != nullptr && defined_type->AsParcelable() != nullptr) {
-      AIDL_ERROR(this) << "The " << to_string(lang)
-                       << " backend does not support nullable array of parcelable";
-      return false;
-    }
-  }
-
+bool AidlTypeSpecifier::LanguageSpecificCheckValid(Options::Language lang) const {
   if (this->GetName() == "FileDescriptor" &&
       (lang == Options::Language::NDK || lang == Options::Language::RUST)) {
     AIDL_ERROR(this) << "FileDescriptor isn't supported by the " << to_string(lang) << " backend.";
@@ -1324,18 +1307,15 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
 }
 
 // TODO: we should treat every backend all the same in future.
-bool AidlDefinedType::LanguageSpecificCheckValid(const AidlTypenames& typenames,
-                                                 Options::Language lang) const {
+bool AidlDefinedType::LanguageSpecificCheckValid(Options::Language lang) const {
   struct Visitor : AidlVisitor {
-    Visitor(const AidlTypenames& typenames, Options::Language lang)
-        : typenames(typenames), lang(lang) {}
+    Visitor(Options::Language lang) : lang(lang) {}
     void Visit(const AidlTypeSpecifier& type) override {
-      success = success && type.LanguageSpecificCheckValid(typenames, lang);
+      success = success && type.LanguageSpecificCheckValid(lang);
     }
-    const AidlTypenames& typenames;
     Options::Language lang;
     bool success = true;
-  } v(typenames, lang);
+  } v(lang);
   VisitTopDown(v, *this);
   return v.success;
 }

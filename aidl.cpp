@@ -514,7 +514,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
         valid_type = false;
       }
 
-      if (!defined_type->LanguageSpecificCheckValid(*typenames, options.TargetLanguage())) {
+      if (!defined_type->LanguageSpecificCheckValid(options.TargetLanguage())) {
         valid_type = false;
       }
 
@@ -610,7 +610,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   }
 
   typenames->IterateTypes([&](const AidlDefinedType& type) {
-    if (!type.LanguageSpecificCheckValid(*typenames, options.TargetLanguage())) {
+    if (!type.LanguageSpecificCheckValid(options.TargetLanguage())) {
       err = AidlError::BAD_TYPE;
     }
 

@@ -135,8 +135,15 @@ interface ITestService {
     @nullable String RepeatNullableString(in @nullable String input);
     @nullable List<String> RepeatNullableStringList(
             in @nullable List<String> input);
-    @nullable StructuredParcelable RepeatNullableParcelable(
-            in @nullable StructuredParcelable input);
+
+    // Small empty parcelable for nullability check
+    @JavaDerive(equals=true)
+    @RustDerive(Clone=true, PartialEq=true)
+    parcelable Empty {}
+    @nullable Empty RepeatNullableParcelable(in @nullable Empty input);
+    @nullable Empty[] RepeatNullableParcelableArray(in @nullable Empty[] input);
+    @nullable List<Empty> RepeatNullableParcelableList(
+            in @nullable List<Empty> input);
 
     void TakesAnIBinder(in IBinder input);
     void TakesANullableIBinder(in @nullable IBinder input);
@@ -253,5 +260,21 @@ interface ITestService {
         @nullable IBinder[] nullable_binder_array;
         List<IBinder> binder_list;
         @nullable List<IBinder> nullable_binder_list;
+
+        // ParcelFileDescriptor
+        ParcelFileDescriptor pfd;
+        @nullable ParcelFileDescriptor nullable_pfd;
+        ParcelFileDescriptor[] pfd_array;
+        @nullable ParcelFileDescriptor[] nullable_pfd_array;
+        List<ParcelFileDescriptor> pfd_list;
+        @nullable List<ParcelFileDescriptor> nullable_pfd_list;
+
+        // parcelable
+        Empty parcel;
+        @nullable Empty nullable_parcel;
+        Empty[] parcel_array;
+        @nullable Empty[] nullable_parcel_array;
+        List<Empty> parcel_list;
+        @nullable List<Empty> nullable_parcel_list;
     }
 }
