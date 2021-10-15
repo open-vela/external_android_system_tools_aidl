@@ -49,7 +49,9 @@ public:
   ::android::binder::Status RepeatNullableLongEnumArray(const ::std::optional<::std::vector<::android::aidl::tests::LongEnum>>& input, ::std::optional<::std::vector<::android::aidl::tests::LongEnum>>* _aidl_return) override;
   ::android::binder::Status RepeatNullableString(const ::std::optional<::android::String16>& input, ::std::optional<::android::String16>* _aidl_return) override;
   ::android::binder::Status RepeatNullableStringList(const ::std::optional<::std::vector<::std::optional<::android::String16>>>& input, ::std::optional<::std::vector<::std::optional<::android::String16>>>* _aidl_return) override;
-  ::android::binder::Status RepeatNullableParcelable(const ::std::optional<::android::aidl::tests::StructuredParcelable>& input, ::std::optional<::android::aidl::tests::StructuredParcelable>* _aidl_return) override;
+  ::android::binder::Status RepeatNullableParcelable(const ::std::optional<::android::aidl::tests::ITestService::Empty>& input, ::std::optional<::android::aidl::tests::ITestService::Empty>* _aidl_return) override;
+  ::android::binder::Status RepeatNullableParcelableArray(const ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>& input, ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>* _aidl_return) override;
+  ::android::binder::Status RepeatNullableParcelableList(const ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>& input, ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>* _aidl_return) override;
   ::android::binder::Status TakesAnIBinder(const ::android::sp<::android::IBinder>& input) override;
   ::android::binder::Status TakesANullableIBinder(const ::android::sp<::android::IBinder>& input) override;
   ::android::binder::Status TakesAnIBinderList(const ::std::vector<::android::sp<::android::IBinder>>& input) override;

@@ -352,7 +352,17 @@ public class TestServiceServer extends ITestService.Stub {
     return input;
   }
   @Override
-  public StructuredParcelable RepeatNullableParcelable(StructuredParcelable input)
+  public ITestService.Empty RepeatNullableParcelable(ITestService.Empty input)
+      throws RemoteException {
+    return input;
+  }
+  @Override
+  public List<ITestService.Empty> RepeatNullableParcelableList(List<ITestService.Empty> input)
+      throws RemoteException {
+    return input;
+  }
+  @Override
+  public ITestService.Empty[] RepeatNullableParcelableArray(ITestService.Empty[] input)
       throws RemoteException {
     return input;
   }

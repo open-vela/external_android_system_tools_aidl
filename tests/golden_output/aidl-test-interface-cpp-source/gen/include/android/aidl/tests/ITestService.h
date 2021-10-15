@@ -5,6 +5,7 @@
 #include <android/aidl/tests/INamedCallback.h>
 #include <android/aidl/tests/INewName.h>
 #include <android/aidl/tests/IOldName.h>
+#include <android/aidl/tests/ITestService.h>
 #include <android/aidl/tests/IntEnum.h>
 #include <android/aidl/tests/LongEnum.h>
 #include <android/aidl/tests/RecursiveList.h>
@@ -30,25 +31,59 @@ namespace tests {
 class ITestService : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(TestService)
+  class Empty : public ::android::Parcelable {
+  public:
+    inline bool operator!=(const Empty&) const {
+      return std::tie() != std::tie();
+    }
+    inline bool operator<(const Empty&) const {
+      return std::tie() < std::tie();
+    }
+    inline bool operator<=(const Empty&) const {
+      return std::tie() <= std::tie();
+    }
+    inline bool operator==(const Empty&) const {
+      return std::tie() == std::tie();
+    }
+    inline bool operator>(const Empty&) const {
+      return std::tie() > std::tie();
+    }
+    inline bool operator>=(const Empty&) const {
+      return std::tie() >= std::tie();
+    }
+
+    ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
+    ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
+    static const ::android::String16& getParcelableDescriptor() {
+      static const ::android::StaticString16 DESCIPTOR (u"android.aidl.tests.ITestService.Empty");
+      return DESCIPTOR;
+    }
+    inline std::string toString() const {
+      std::ostringstream os;
+      os << "Empty{";
+      os << "}";
+      return os.str();
+    }
+  };  // class Empty
   class CompilerChecks : public ::android::Parcelable {
   public:
     inline bool operator!=(const CompilerChecks& rhs) const {
-      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) != std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list, pfd, nullable_pfd, pfd_array, nullable_pfd_array, pfd_list, nullable_pfd_list, parcel, nullable_parcel, parcel_array, nullable_parcel_array, parcel_list, nullable_parcel_list) != std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list, rhs.pfd, rhs.nullable_pfd, rhs.pfd_array, rhs.nullable_pfd_array, rhs.pfd_list, rhs.nullable_pfd_list, rhs.parcel, rhs.nullable_parcel, rhs.parcel_array, rhs.nullable_parcel_array, rhs.parcel_list, rhs.nullable_parcel_list);
     }
     inline bool operator<(const CompilerChecks& rhs) const {
-      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) < std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list, pfd, nullable_pfd, pfd_array, nullable_pfd_array, pfd_list, nullable_pfd_list, parcel, nullable_parcel, parcel_array, nullable_parcel_array, parcel_list, nullable_parcel_list) < std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list, rhs.pfd, rhs.nullable_pfd, rhs.pfd_array, rhs.nullable_pfd_array, rhs.pfd_list, rhs.nullable_pfd_list, rhs.parcel, rhs.nullable_parcel, rhs.parcel_array, rhs.nullable_parcel_array, rhs.parcel_list, rhs.nullable_parcel_list);
     }
     inline bool operator<=(const CompilerChecks& rhs) const {
-      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) <= std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list, pfd, nullable_pfd, pfd_array, nullable_pfd_array, pfd_list, nullable_pfd_list, parcel, nullable_parcel, parcel_array, nullable_parcel_array, parcel_list, nullable_parcel_list) <= std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list, rhs.pfd, rhs.nullable_pfd, rhs.pfd_array, rhs.nullable_pfd_array, rhs.pfd_list, rhs.nullable_pfd_list, rhs.parcel, rhs.nullable_parcel, rhs.parcel_array, rhs.nullable_parcel_array, rhs.parcel_list, rhs.nullable_parcel_list);
     }
     inline bool operator==(const CompilerChecks& rhs) const {
-      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) == std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list, pfd, nullable_pfd, pfd_array, nullable_pfd_array, pfd_list, nullable_pfd_list, parcel, nullable_parcel, parcel_array, nullable_parcel_array, parcel_list, nullable_parcel_list) == std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list, rhs.pfd, rhs.nullable_pfd, rhs.pfd_array, rhs.nullable_pfd_array, rhs.pfd_list, rhs.nullable_pfd_list, rhs.parcel, rhs.nullable_parcel, rhs.parcel_array, rhs.nullable_parcel_array, rhs.parcel_list, rhs.nullable_parcel_list);
     }
     inline bool operator>(const CompilerChecks& rhs) const {
-      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) > std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list, pfd, nullable_pfd, pfd_array, nullable_pfd_array, pfd_list, nullable_pfd_list, parcel, nullable_parcel, parcel_array, nullable_parcel_array, parcel_list, nullable_parcel_list) > std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list, rhs.pfd, rhs.nullable_pfd, rhs.pfd_array, rhs.nullable_pfd_array, rhs.pfd_list, rhs.nullable_pfd_list, rhs.parcel, rhs.nullable_parcel, rhs.parcel_array, rhs.nullable_parcel_array, rhs.parcel_list, rhs.nullable_parcel_list);
     }
     inline bool operator>=(const CompilerChecks& rhs) const {
-      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) >= std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list, pfd, nullable_pfd, pfd_array, nullable_pfd_array, pfd_list, nullable_pfd_list, parcel, nullable_parcel, parcel_array, nullable_parcel_array, parcel_list, nullable_parcel_list) >= std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list, rhs.pfd, rhs.nullable_pfd, rhs.pfd_array, rhs.nullable_pfd_array, rhs.pfd_list, rhs.nullable_pfd_list, rhs.parcel, rhs.nullable_parcel, rhs.parcel_array, rhs.nullable_parcel_array, rhs.parcel_list, rhs.nullable_parcel_list);
     }
 
     ::android::sp<::android::IBinder> binder;
@@ -57,6 +92,18 @@ public:
     ::std::optional<::std::vector<::android::sp<::android::IBinder>>> nullable_binder_array;
     ::std::vector<::android::sp<::android::IBinder>> binder_list;
     ::std::optional<::std::vector<::android::sp<::android::IBinder>>> nullable_binder_list;
+    ::android::os::ParcelFileDescriptor pfd;
+    ::std::optional<::android::os::ParcelFileDescriptor> nullable_pfd;
+    ::std::vector<::android::os::ParcelFileDescriptor> pfd_array;
+    ::std::optional<::std::vector<::std::optional<::android::os::ParcelFileDescriptor>>> nullable_pfd_array;
+    ::std::vector<::android::os::ParcelFileDescriptor> pfd_list;
+    ::std::optional<::std::vector<::std::optional<::android::os::ParcelFileDescriptor>>> nullable_pfd_list;
+    ::android::aidl::tests::ITestService::Empty parcel;
+    ::std::optional<::android::aidl::tests::ITestService::Empty> nullable_parcel;
+    ::std::vector<::android::aidl::tests::ITestService::Empty> parcel_array;
+    ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>> nullable_parcel_array;
+    ::std::vector<::android::aidl::tests::ITestService::Empty> parcel_list;
+    ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>> nullable_parcel_list;
     ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
     ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
     static const ::android::String16& getParcelableDescriptor() {
@@ -72,6 +119,18 @@ public:
       os << ", nullable_binder_array: " << ::android::internal::ToString(nullable_binder_array);
       os << ", binder_list: " << ::android::internal::ToString(binder_list);
       os << ", nullable_binder_list: " << ::android::internal::ToString(nullable_binder_list);
+      os << ", pfd: " << ::android::internal::ToString(pfd);
+      os << ", nullable_pfd: " << ::android::internal::ToString(nullable_pfd);
+      os << ", pfd_array: " << ::android::internal::ToString(pfd_array);
+      os << ", nullable_pfd_array: " << ::android::internal::ToString(nullable_pfd_array);
+      os << ", pfd_list: " << ::android::internal::ToString(pfd_list);
+      os << ", nullable_pfd_list: " << ::android::internal::ToString(nullable_pfd_list);
+      os << ", parcel: " << ::android::internal::ToString(parcel);
+      os << ", nullable_parcel: " << ::android::internal::ToString(nullable_parcel);
+      os << ", parcel_array: " << ::android::internal::ToString(parcel_array);
+      os << ", nullable_parcel_array: " << ::android::internal::ToString(nullable_parcel_array);
+      os << ", parcel_list: " << ::android::internal::ToString(parcel_list);
+      os << ", nullable_parcel_list: " << ::android::internal::ToString(nullable_parcel_list);
       os << "}";
       return os.str();
     }
@@ -187,7 +246,9 @@ public:
   virtual ::android::binder::Status RepeatNullableLongEnumArray(const ::std::optional<::std::vector<::android::aidl::tests::LongEnum>>& input, ::std::optional<::std::vector<::android::aidl::tests::LongEnum>>* _aidl_return) = 0;
   virtual ::android::binder::Status RepeatNullableString(const ::std::optional<::android::String16>& input, ::std::optional<::android::String16>* _aidl_return) = 0;
   virtual ::android::binder::Status RepeatNullableStringList(const ::std::optional<::std::vector<::std::optional<::android::String16>>>& input, ::std::optional<::std::vector<::std::optional<::android::String16>>>* _aidl_return) = 0;
-  virtual ::android::binder::Status RepeatNullableParcelable(const ::std::optional<::android::aidl::tests::StructuredParcelable>& input, ::std::optional<::android::aidl::tests::StructuredParcelable>* _aidl_return) = 0;
+  virtual ::android::binder::Status RepeatNullableParcelable(const ::std::optional<::android::aidl::tests::ITestService::Empty>& input, ::std::optional<::android::aidl::tests::ITestService::Empty>* _aidl_return) = 0;
+  virtual ::android::binder::Status RepeatNullableParcelableArray(const ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>& input, ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>* _aidl_return) = 0;
+  virtual ::android::binder::Status RepeatNullableParcelableList(const ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>& input, ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>* _aidl_return) = 0;
   virtual ::android::binder::Status TakesAnIBinder(const ::android::sp<::android::IBinder>& input) = 0;
   virtual ::android::binder::Status TakesANullableIBinder(const ::android::sp<::android::IBinder>& input) = 0;
   virtual ::android::binder::Status TakesAnIBinderList(const ::std::vector<::android::sp<::android::IBinder>>& input) = 0;
@@ -325,7 +386,13 @@ public:
   ::android::binder::Status RepeatNullableStringList(const ::std::optional<::std::vector<::std::optional<::android::String16>>>&, ::std::optional<::std::vector<::std::optional<::android::String16>>>*) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
-  ::android::binder::Status RepeatNullableParcelable(const ::std::optional<::android::aidl::tests::StructuredParcelable>&, ::std::optional<::android::aidl::tests::StructuredParcelable>*) override {
+  ::android::binder::Status RepeatNullableParcelable(const ::std::optional<::android::aidl::tests::ITestService::Empty>&, ::std::optional<::android::aidl::tests::ITestService::Empty>*) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status RepeatNullableParcelableArray(const ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>&, ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>*) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status RepeatNullableParcelableList(const ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>&, ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>*) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status TakesAnIBinder(const ::android::sp<::android::IBinder>&) override {

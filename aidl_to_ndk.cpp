@@ -181,7 +181,12 @@ TypeInfo ParcelableTypeInfo(const AidlParcelable& type, const AidlTypeSpecifier&
           .read_func = StandardRead("::ndk::AParcel_readNullableParcelable"),
           .write_func = StandardWrite("::ndk::AParcel_writeNullableParcelable"),
       }),
-      .nullable_array = nullptr,
+      .nullable_array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
+          .cpp_name = "std::optional<std::vector<std::optional<" + clazz + ">>>",
+          .value_is_cheap = false,
+          .read_func = StandardRead("::ndk::AParcel_readVector"),
+          .write_func = StandardWrite("::ndk::AParcel_writeVector"),
+      }),
   };
 }
 
@@ -343,7 +348,12 @@ static map<std::string, TypeInfo> kNdkTypeInfoMap = {
              .read_func = StandardRead("::ndk::AParcel_readNullableParcelFileDescriptor"),
              .write_func = StandardRead("::ndk::AParcel_writeNullableParcelFileDescriptor"),
          }),
-         .nullable_array = nullptr,
+         .nullable_array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
+             .cpp_name = "std::optional<std::vector<::ndk::ScopedFileDescriptor>>",
+             .value_is_cheap = false,
+             .read_func = StandardRead("::ndk::AParcel_readVector"),
+             .write_func = StandardWrite("::ndk::AParcel_writeVector"),
+         }),
      }},
     {"ParcelableHolder",
      TypeInfo{
