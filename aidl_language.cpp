@@ -1308,19 +1308,6 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
     AIDL_ERROR(this) << "FileDescriptor isn't supported by the " << to_string(lang) << " backend.";
     return false;
   }
-  if (this->IsGeneric()) {
-    if (this->GetName() == "List") {
-      if (lang == Options::Language::NDK) {
-        const AidlTypeSpecifier& contained_type = *GetTypeParameters()[0];
-        const string& contained_type_name = contained_type.GetName();
-        if (contained_type_name == "IBinder") {
-          AIDL_ERROR(this) << "List<" << contained_type_name
-                           << "> is not supported. List in NDK doesn't support IBinder.";
-          return false;
-        }
-      }
-    }
-  }
 
   if (lang != Options::Language::JAVA) {
     if (this->GetName() == "List" && !this->IsGeneric()) {

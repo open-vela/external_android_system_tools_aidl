@@ -53,6 +53,8 @@ public:
   ::ndk::ScopedAStatus RepeatNullableParcelable(const std::optional<::aidl::android::aidl::tests::StructuredParcelable>& in_input, std::optional<::aidl::android::aidl::tests::StructuredParcelable>* _aidl_return) override;
   ::ndk::ScopedAStatus TakesAnIBinder(const ::ndk::SpAIBinder& in_input) override;
   ::ndk::ScopedAStatus TakesANullableIBinder(const ::ndk::SpAIBinder& in_input) override;
+  ::ndk::ScopedAStatus TakesAnIBinderList(const std::vector<::ndk::SpAIBinder>& in_input) override;
+  ::ndk::ScopedAStatus TakesANullableIBinderList(const std::optional<std::vector<::ndk::SpAIBinder>>& in_input) override;
   ::ndk::ScopedAStatus RepeatUtf8CppString(const std::string& in_token, std::string* _aidl_return) override;
   ::ndk::ScopedAStatus RepeatNullableUtf8CppString(const std::optional<std::string>& in_token, std::optional<std::string>* _aidl_return) override;
   ::ndk::ScopedAStatus ReverseUtf8CppString(const std::vector<std::string>& in_input, std::vector<std::string>* out_repeated, std::vector<std::string>* _aidl_return) override;
