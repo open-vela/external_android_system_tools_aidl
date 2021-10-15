@@ -10,13 +10,16 @@
 #include <android/aidl/tests/RecursiveList.h>
 #include <android/aidl/tests/StructuredParcelable.h>
 #include <android/aidl/tests/extension/ExtendableParcelable.h>
+#include <android/binder_to_string.h>
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
+#include <binder/Parcel.h>
 #include <binder/ParcelFileDescriptor.h>
 #include <binder/Status.h>
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <tuple>
 #include <utils/String16.h>
 #include <utils/StrongPointer.h>
 #include <vector>
@@ -27,6 +30,52 @@ namespace tests {
 class ITestService : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(TestService)
+  class CompilerChecks : public ::android::Parcelable {
+  public:
+    inline bool operator!=(const CompilerChecks& rhs) const {
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) != std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+    }
+    inline bool operator<(const CompilerChecks& rhs) const {
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) < std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+    }
+    inline bool operator<=(const CompilerChecks& rhs) const {
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) <= std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+    }
+    inline bool operator==(const CompilerChecks& rhs) const {
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) == std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+    }
+    inline bool operator>(const CompilerChecks& rhs) const {
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) > std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+    }
+    inline bool operator>=(const CompilerChecks& rhs) const {
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) >= std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+    }
+
+    ::android::sp<::android::IBinder> binder;
+    ::android::sp<::android::IBinder> nullable_binder;
+    ::std::vector<::android::sp<::android::IBinder>> binder_array;
+    ::std::optional<::std::vector<::android::sp<::android::IBinder>>> nullable_binder_array;
+    ::std::vector<::android::sp<::android::IBinder>> binder_list;
+    ::std::optional<::std::vector<::android::sp<::android::IBinder>>> nullable_binder_list;
+    ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
+    ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
+    static const ::android::String16& getParcelableDescriptor() {
+      static const ::android::StaticString16 DESCIPTOR (u"android.aidl.tests.ITestService.CompilerChecks");
+      return DESCIPTOR;
+    }
+    inline std::string toString() const {
+      std::ostringstream os;
+      os << "CompilerChecks{";
+      os << "binder: " << ::android::internal::ToString(binder);
+      os << ", nullable_binder: " << ::android::internal::ToString(nullable_binder);
+      os << ", binder_array: " << ::android::internal::ToString(binder_array);
+      os << ", nullable_binder_array: " << ::android::internal::ToString(nullable_binder_array);
+      os << ", binder_list: " << ::android::internal::ToString(binder_list);
+      os << ", nullable_binder_list: " << ::android::internal::ToString(nullable_binder_list);
+      os << "}";
+      return os.str();
+    }
+  };  // class CompilerChecks
   enum : int32_t { TEST_CONSTANT = 42 };
   enum : int32_t { TEST_CONSTANT2 = -42 };
   enum : int32_t { TEST_CONSTANT3 = 42 };
@@ -141,6 +190,8 @@ public:
   virtual ::android::binder::Status RepeatNullableParcelable(const ::std::optional<::android::aidl::tests::StructuredParcelable>& input, ::std::optional<::android::aidl::tests::StructuredParcelable>* _aidl_return) = 0;
   virtual ::android::binder::Status TakesAnIBinder(const ::android::sp<::android::IBinder>& input) = 0;
   virtual ::android::binder::Status TakesANullableIBinder(const ::android::sp<::android::IBinder>& input) = 0;
+  virtual ::android::binder::Status TakesAnIBinderList(const ::std::vector<::android::sp<::android::IBinder>>& input) = 0;
+  virtual ::android::binder::Status TakesANullableIBinderList(const ::std::optional<::std::vector<::android::sp<::android::IBinder>>>& input) = 0;
   virtual ::android::binder::Status RepeatUtf8CppString(const ::std::string& token, ::std::string* _aidl_return) = 0;
   virtual ::android::binder::Status RepeatNullableUtf8CppString(const ::std::optional<::std::string>& token, ::std::optional<::std::string>* _aidl_return) = 0;
   virtual ::android::binder::Status ReverseUtf8CppString(const ::std::vector<::std::string>& input, ::std::vector<::std::string>* repeated, ::std::vector<::std::string>* _aidl_return) = 0;
@@ -281,6 +332,12 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status TakesANullableIBinder(const ::android::sp<::android::IBinder>&) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status TakesAnIBinderList(const ::std::vector<::android::sp<::android::IBinder>>&) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status TakesANullableIBinderList(const ::std::optional<::std::vector<::android::sp<::android::IBinder>>>&) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status RepeatUtf8CppString(const ::std::string&, ::std::string*) override {
