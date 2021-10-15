@@ -52,6 +52,8 @@ public:
   ::android::binder::Status RepeatNullableParcelable(const ::std::optional<::android::aidl::tests::StructuredParcelable>& input, ::std::optional<::android::aidl::tests::StructuredParcelable>* _aidl_return) override;
   ::android::binder::Status TakesAnIBinder(const ::android::sp<::android::IBinder>& input) override;
   ::android::binder::Status TakesANullableIBinder(const ::android::sp<::android::IBinder>& input) override;
+  ::android::binder::Status TakesAnIBinderList(const ::std::vector<::android::sp<::android::IBinder>>& input) override;
+  ::android::binder::Status TakesANullableIBinderList(const ::std::optional<::std::vector<::android::sp<::android::IBinder>>>& input) override;
   ::android::binder::Status RepeatUtf8CppString(const ::std::string& token, ::std::string* _aidl_return) override;
   ::android::binder::Status RepeatNullableUtf8CppString(const ::std::optional<::std::string>& token, ::std::optional<::std::string>* _aidl_return) override;
   ::android::binder::Status ReverseUtf8CppString(const ::std::vector<::std::string>& input, ::std::vector<::std::string>* repeated, ::std::vector<::std::string>* _aidl_return) override;
