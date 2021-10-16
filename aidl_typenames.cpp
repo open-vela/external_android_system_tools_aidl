@@ -245,6 +245,16 @@ AidlTypenames::ResolvedTypename AidlTypenames::ResolveTypename(const string& typ
   }
 }
 
+std::unique_ptr<AidlTypeSpecifier> AidlTypenames::MakeResolvedType(const AidlLocation& location,
+                                                                   const string& name,
+                                                                   bool is_array) const {
+  std::unique_ptr<AidlTypeSpecifier> type(
+      new AidlTypeSpecifier(location, name, is_array, nullptr, {}));
+  AIDL_FATAL_IF(!type->Resolve(*this, nullptr), type) << "Can't make unknown type: " << name;
+  type->MarkVisited();
+  return type;
+}
+
 // Only immutable Parcelable, primitive type, and String, and List, Map, array of the types can be
 // immutable.
 bool AidlTypenames::CanBeJavaOnlyImmutable(const AidlTypeSpecifier& type) const {

@@ -557,23 +557,19 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     if (interface != nullptr) {
       // add the meta-method 'int getInterfaceVersion()' if version is specified.
       if (options.Version() > 0) {
-        AidlTypeSpecifier* ret =
-            new AidlTypeSpecifier(AIDL_LOCATION_HERE, "int", false, nullptr, Comments{});
-        ret->Resolve(*typenames, nullptr);
+        auto ret = typenames->MakeResolvedType(AIDL_LOCATION_HERE, "int", false);
         vector<unique_ptr<AidlArgument>>* args = new vector<unique_ptr<AidlArgument>>();
         auto method = std::make_unique<AidlMethod>(
-            AIDL_LOCATION_HERE, false, ret, "getInterfaceVersion", args, Comments{},
+            AIDL_LOCATION_HERE, false, ret.release(), "getInterfaceVersion", args, Comments{},
             kGetInterfaceVersionId, false /* is_user_defined */);
         interface->AddMethod(std::move(method));
       }
       // add the meta-method 'string getInterfaceHash()' if hash is specified.
       if (!options.Hash().empty()) {
-        AidlTypeSpecifier* ret =
-            new AidlTypeSpecifier(AIDL_LOCATION_HERE, "String", false, nullptr, Comments{});
-        ret->Resolve(*typenames, nullptr);
+        auto ret = typenames->MakeResolvedType(AIDL_LOCATION_HERE, "String", false);
         vector<unique_ptr<AidlArgument>>* args = new vector<unique_ptr<AidlArgument>>();
         auto method = std::make_unique<AidlMethod>(
-            AIDL_LOCATION_HERE, false, ret, kGetInterfaceHash, args, Comments{},
+            AIDL_LOCATION_HERE, false, ret.release(), kGetInterfaceHash, args, Comments{},
             kGetInterfaceHashId, false /* is_user_defined */);
         interface->AddMethod(std::move(method));
       }
@@ -593,6 +589,10 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
         return AidlError::BAD_TYPE;
       }
     }
+  }
+
+  for (const auto& doc : typenames->AllDocuments()) {
+    VisitTopDown([](const AidlNode& n) { n.MarkVisited(); }, *doc);
   }
 
   if (!ValidateAnnotationContext(*document)) {
@@ -758,6 +758,7 @@ bool dump_mappings(const Options& options, const IoDelegate& io_delegate) {
 
 int aidl_entry(const Options& options, const IoDelegate& io_delegate) {
   AidlErrorLog::clearError();
+  AidlNode::ClearUnvisitedNodes();
 
   bool success = false;
   if (options.Ok()) {
@@ -792,6 +793,17 @@ int aidl_entry(const Options& options, const IoDelegate& io_delegate) {
   AIDL_FATAL_IF(success == reportedError, AIDL_LOCATION_HERE)
       << "Compiler returned success " << success << " but did" << (reportedError ? "" : " not")
       << " emit error logs";
+
+  if (success) {
+    auto locations = AidlNode::GetLocationsOfUnvisitedNodes();
+    if (!locations.empty()) {
+      for (const auto& location : locations) {
+        AIDL_ERROR(location) << "AidlNode at location was not visited!";
+      }
+      AIDL_FATAL(AIDL_LOCATION_HERE)
+          << "The AIDL AST was not processed fully. Please report an issue.";
+    }
+  }
 
   return success ? 0 : 1;
 }
