@@ -80,10 +80,12 @@ public class NullableTests {
 
     @Test
     public void testExpectNpeWithNullBinderList() throws RemoteException {
+        assumeTrue(mCppJavaTests != null);
+
         List<IBinder> listWithNulls = new ArrayList<IBinder>();
         listWithNulls.add(null);
         try {
-          mService.TakesAnIBinderList(listWithNulls);
+            mCppJavaTests.TakesAnIBinderList(listWithNulls);
         } catch (NullPointerException ex) {
             return;
         }
