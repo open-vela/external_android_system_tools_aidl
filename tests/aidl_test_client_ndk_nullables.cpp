@@ -39,71 +39,7 @@ struct AidlTest : testing::Test {
   }
   std::shared_ptr<ITestService> service;
   BackendType backend;
-
-  template <typename T>
-  void DoTest(ndk::ScopedAStatus (ITestService::*func)(const std::optional<T>&, std::optional<T>*),
-              std::optional<T> input) {
-    std::optional<T> output;
-    auto status = (*service.*func)(input, &output);
-    ASSERT_TRUE(status.isOk());
-    ASSERT_TRUE(output.has_value());
-    ASSERT_THAT(*output, Eq(*input));
-
-    input.reset();
-    status = (*service.*func)(input, &output);
-    ASSERT_TRUE(status.isOk());
-    ASSERT_FALSE(output.has_value());
-  }
 };
-
-TEST_F(AidlTest, parcelableArray) {
-  std::vector<std::optional<ITestService::Empty>> input;
-  input.push_back(ITestService::Empty());
-  input.push_back(std::nullopt);
-  DoTest(&ITestService::RepeatNullableParcelableArray, std::make_optional(input));
-}
-
-TEST_F(AidlTest, parcelableList) {
-  std::vector<std::optional<ITestService::Empty>> input;
-  input.push_back(ITestService::Empty());
-  input.push_back(std::nullopt);
-  DoTest(&ITestService::RepeatNullableParcelableList, std::make_optional(input));
-}
-
-TEST_F(AidlTest, nullBinder) {
-  auto status = service->TakesAnIBinder(nullptr);
-  ASSERT_THAT(status.getStatus(), Eq(STATUS_UNEXPECTED_NULL)) << status.getDescription();
-  // Note that NDK backend checks null before transaction while C++ backends doesn't.
-}
-
-TEST_F(AidlTest, binderListWithNull) {
-  std::vector<ndk::SpAIBinder> input{service->asBinder(), nullptr};
-  auto status = service->TakesAnIBinderList(input);
-  ASSERT_THAT(status.getStatus(), Eq(STATUS_UNEXPECTED_NULL));
-  // Note that NDK backend checks null before transaction while C++ backends doesn't.
-}
-
-TEST_F(AidlTest, nonNullBinder) {
-  auto status = service->TakesAnIBinder(service->asBinder());
-  ASSERT_TRUE(status.isOk());
-}
-
-TEST_F(AidlTest, binderListWithoutNull) {
-  std::vector<ndk::SpAIBinder> input{service->asBinder()};
-  auto status = service->TakesAnIBinderList(input);
-  ASSERT_TRUE(status.isOk());
-}
-
-TEST_F(AidlTest, nullBinderToAnnotatedMethod) {
-  auto status = service->TakesANullableIBinder(nullptr);
-  ASSERT_TRUE(status.isOk());
-}
-
-TEST_F(AidlTest, binderListWithNullToAnnotatedMethod) {
-  std::vector<ndk::SpAIBinder> input{service->asBinder(), nullptr};
-  auto status = service->TakesANullableIBinderList(input);
-  ASSERT_TRUE(status.isOk());
-}
 
 TEST_F(AidlTest, binderArray) {
   std::vector<ndk::SpAIBinder> repeated;

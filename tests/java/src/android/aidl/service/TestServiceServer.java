@@ -352,17 +352,7 @@ public class TestServiceServer extends ITestService.Stub {
     return input;
   }
   @Override
-  public ITestService.Empty RepeatNullableParcelable(ITestService.Empty input)
-      throws RemoteException {
-    return input;
-  }
-  @Override
-  public List<ITestService.Empty> RepeatNullableParcelableList(List<ITestService.Empty> input)
-      throws RemoteException {
-    return input;
-  }
-  @Override
-  public ITestService.Empty[] RepeatNullableParcelableArray(ITestService.Empty[] input)
+  public StructuredParcelable RepeatNullableParcelable(StructuredParcelable input)
       throws RemoteException {
     return input;
   }
@@ -374,15 +364,6 @@ public class TestServiceServer extends ITestService.Stub {
   public void TakesANullableIBinder(IBinder input) throws RemoteException {
     // do nothing
   }
-  @Override
-  public void TakesAnIBinderList(List<IBinder> input) throws RemoteException {
-    // do nothing
-  }
-  @Override
-  public void TakesANullableIBinderList(List<IBinder> input) throws RemoteException {
-    // do nothing
-  }
-
   @Override
   public String RepeatUtf8CppString(String token) throws RemoteException {
     return token;
@@ -596,6 +577,10 @@ public class TestServiceServer extends ITestService.Stub {
       }
       return reversed;
     }
+    @Override
+    public void TakesAnIBinderList(List<IBinder> input) throws RemoteException {}
+    @Override
+    public void TakesANullableIBinderList(List<IBinder> input) throws RemoteException {}
   }
 
   @Override

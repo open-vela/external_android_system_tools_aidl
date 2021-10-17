@@ -20,7 +20,7 @@ use ::binder::{Parcel, parcel::Parcelable};
 use aidl_test_interface::aidl::android::aidl::tests::INewName::{self, BpNewName};
 use aidl_test_interface::aidl::android::aidl::tests::IOldName::{self, BpOldName};
 use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
-    self, BpTestService, ITestServiceDefault, ITestServiceDefaultRef, Empty::Empty,
+    self, BpTestService, ITestServiceDefault, ITestServiceDefaultRef,
 };
 use aidl_test_interface::aidl::android::aidl::tests::{
     BackendType::BackendType, ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum,
@@ -425,7 +425,10 @@ test_nullable! {
 
 #[test]
 fn test_nullable_parcelable() {
-    let value = Empty {};
+    let value = StructuredParcelable::StructuredParcelable{
+        f: 42,
+        ..Default::default()
+    };
 
     let service = get_test_service();
     let value = Some(value);
@@ -434,24 +437,6 @@ fn test_nullable_parcelable() {
 
     let result = service.RepeatNullableParcelable(None);
     assert_eq!(result, Ok(None));
-}
-
-test_nullable! {
-    test_nullable_parcelable_array,
-    RepeatNullableParcelableArray,
-    vec![
-        Some(Empty {}),
-        None,
-    ]
-}
-
-test_nullable! {
-    test_nullable_parcelable_list,
-    RepeatNullableParcelableList,
-    vec![
-        Some(Empty {}),
-        None,
-    ]
 }
 
 #[test]
@@ -1030,34 +1015,6 @@ fn test_nested_type() {
     assert_eq!(ret, Ok(INestedService::Result::Result {
         status: ParcelableWithNested::Status::Status::NOT_OK,
     }));
-}
-
-#[test]
-fn test_nonnull_binder() {
-    let service = get_test_service();
-    let result = service.TakesAnIBinder(&service.as_binder());
-    assert!(result.is_ok());
-}
-
-#[test]
-fn test_binder_list_without_null() {
-    let service = get_test_service();
-    let result = service.TakesAnIBinderList(&[service.as_binder()]);
-    assert!(result.is_ok());
-}
-
-#[test]
-fn test_null_binder_to_annotated_method() {
-    let service = get_test_service();
-    let result = service.TakesANullableIBinder(None);
-    assert!(result.is_ok());
-}
-
-#[test]
-fn test_binder_list_with_null_to_annotated_method() {
-    let service = get_test_service();
-    let result = service.TakesANullableIBinderList(Some(&[Some(service.as_binder()), None]));
-    assert!(result.is_ok());
 }
 
 #[test]
