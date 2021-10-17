@@ -684,8 +684,9 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
       AIDL_ERROR(this) << "Binder type cannot be an array";
       return false;
     }
-    if (GetName() == "ParcelableHolder") {
-      AIDL_ERROR(this) << "Arrays of ParcelableHolder are not supported.";
+    if (GetName() == "ParcelableHolder" || GetName() == "List" || GetName() == "Map" ||
+        GetName() == "CharSequence") {
+      AIDL_ERROR(this) << "Arrays of " << GetName() << " are not supported.";
       return false;
     }
   }
@@ -1286,15 +1287,6 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
 // TODO: we should treat every backend all the same in future.
 bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typenames,
                                                    Options::Language lang) const {
-  if (IsGeneric()) {
-    const auto& types = GetTypeParameters();
-    for (const auto& arg : types) {
-      if (!arg->LanguageSpecificCheckValid(typenames, lang)) {
-        return false;
-      }
-    }
-  }
-
   if ((lang == Options::Language::NDK || lang == Options::Language::RUST) && IsArray() &&
       IsNullable()) {
     if (GetName() == "ParcelFileDescriptor") {
@@ -1310,6 +1302,7 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
       return false;
     }
   }
+
   if (this->GetName() == "FileDescriptor" &&
       (lang == Options::Language::NDK || lang == Options::Language::RUST)) {
     AIDL_ERROR(this) << "FileDescriptor isn't supported by the " << to_string(lang) << " backend.";
@@ -1320,25 +1313,12 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typename
       if (lang == Options::Language::NDK) {
         const AidlTypeSpecifier& contained_type = *GetTypeParameters()[0];
         const string& contained_type_name = contained_type.GetName();
-        if (typenames.GetInterface(contained_type)) {
-          AIDL_ERROR(this) << "List<" << contained_type_name
-                           << "> is not supported. List in NDK doesn't support interface.";
-          return false;
-        }
         if (contained_type_name == "IBinder") {
           AIDL_ERROR(this) << "List<" << contained_type_name
                            << "> is not supported. List in NDK doesn't support IBinder.";
           return false;
         }
       }
-    }
-  }
-
-  if (this->IsArray()) {
-    if (this->GetName() == "List" || this->GetName() == "Map" ||
-        this->GetName() == "CharSequence") {
-      AIDL_ERROR(this) << this->GetName() << "[] is not supported.";
-      return false;
     }
   }
 
