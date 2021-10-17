@@ -1285,11 +1285,41 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
 }
 
 // TODO: we should treat every backend all the same in future.
-bool AidlTypeSpecifier::LanguageSpecificCheckValid(Options::Language lang) const {
+bool AidlTypeSpecifier::LanguageSpecificCheckValid(const AidlTypenames& typenames,
+                                                   Options::Language lang) const {
+  if ((lang == Options::Language::NDK || lang == Options::Language::RUST) && IsArray() &&
+      IsNullable()) {
+    if (GetName() == "ParcelFileDescriptor") {
+      AIDL_ERROR(this) << "The " << to_string(lang)
+                       << " backend does not support nullable array of ParcelFileDescriptor";
+      return false;
+    }
+
+    const auto defined_type = typenames.TryGetDefinedType(GetName());
+    if (defined_type != nullptr && defined_type->AsParcelable() != nullptr) {
+      AIDL_ERROR(this) << "The " << to_string(lang)
+                       << " backend does not support nullable array of parcelable";
+      return false;
+    }
+  }
+
   if (this->GetName() == "FileDescriptor" &&
       (lang == Options::Language::NDK || lang == Options::Language::RUST)) {
     AIDL_ERROR(this) << "FileDescriptor isn't supported by the " << to_string(lang) << " backend.";
     return false;
+  }
+  if (this->IsGeneric()) {
+    if (this->GetName() == "List") {
+      if (lang == Options::Language::NDK) {
+        const AidlTypeSpecifier& contained_type = *GetTypeParameters()[0];
+        const string& contained_type_name = contained_type.GetName();
+        if (contained_type_name == "IBinder") {
+          AIDL_ERROR(this) << "List<" << contained_type_name
+                           << "> is not supported. List in NDK doesn't support IBinder.";
+          return false;
+        }
+      }
+    }
   }
 
   if (lang != Options::Language::JAVA) {
@@ -1307,15 +1337,18 @@ bool AidlTypeSpecifier::LanguageSpecificCheckValid(Options::Language lang) const
 }
 
 // TODO: we should treat every backend all the same in future.
-bool AidlDefinedType::LanguageSpecificCheckValid(Options::Language lang) const {
+bool AidlDefinedType::LanguageSpecificCheckValid(const AidlTypenames& typenames,
+                                                 Options::Language lang) const {
   struct Visitor : AidlVisitor {
-    Visitor(Options::Language lang) : lang(lang) {}
+    Visitor(const AidlTypenames& typenames, Options::Language lang)
+        : typenames(typenames), lang(lang) {}
     void Visit(const AidlTypeSpecifier& type) override {
-      success = success && type.LanguageSpecificCheckValid(lang);
+      success = success && type.LanguageSpecificCheckValid(typenames, lang);
     }
+    const AidlTypenames& typenames;
     Options::Language lang;
     bool success = true;
-  } v(lang);
+  } v(typenames, lang);
   VisitTopDown(v, *this);
   return v.success;
 }

@@ -260,6 +260,15 @@ class CppJavaTests : public BnCppJavaTests {
     std::reverse(_aidl_return->begin(), _aidl_return->end());
     return Status::ok();
   }
+
+  Status TakesAnIBinderList(const vector<sp<IBinder>>& input) override {
+    (void)input;
+    return Status::ok();
+  }
+  Status TakesANullableIBinderList(const optional<vector<sp<IBinder>>>& input) {
+    (void)input;
+    return Status::ok();
+  }
 };
 
 class NativeService : public BnTestService {
@@ -476,20 +485,8 @@ class NativeService : public BnTestService {
     return RepeatNullable(input, _aidl_return);
   }
 
-  Status RepeatNullableParcelable(const optional<ITestService::Empty>& input,
-                                  optional<ITestService::Empty>* _aidl_return) {
-    return RepeatNullable(input, _aidl_return);
-  }
-
-  Status RepeatNullableParcelableList(
-      const optional<vector<optional<ITestService::Empty>>>& input,
-      optional<vector<optional<ITestService::Empty>>>* _aidl_return) {
-    return RepeatNullable(input, _aidl_return);
-  }
-
-  Status RepeatNullableParcelableArray(
-      const optional<vector<optional<ITestService::Empty>>>& input,
-      optional<vector<optional<ITestService::Empty>>>* _aidl_return) {
+  Status RepeatNullableParcelable(const optional<StructuredParcelable>& input,
+                                  optional<StructuredParcelable>* _aidl_return) {
     return RepeatNullable(input, _aidl_return);
   }
 
@@ -498,14 +495,6 @@ class NativeService : public BnTestService {
     return Status::ok();
   }
   Status TakesANullableIBinder(const sp<IBinder>& input) {
-    (void)input;
-    return Status::ok();
-  }
-  Status TakesAnIBinderList(const vector<sp<IBinder>>& input) override {
-    (void)input;
-    return Status::ok();
-  }
-  Status TakesANullableIBinderList(const optional<vector<sp<IBinder>>>& input) {
     (void)input;
     return Status::ok();
   }
