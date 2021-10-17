@@ -1986,10 +1986,13 @@ TEST_F(AidlTest, NoJavaOutputForParcelableDeclaration) {
 }
 
 TEST_P(AidlTest, RejectsListArray) {
-  const string input = "package a; parcelable Foo { List<String>[] lists; }";
+  const string expected_stderr = "ERROR: a/Foo.aidl:2.1-7: List[] is not supported.\n";
+  const string list_array_parcelable =
+      "package a; parcelable Foo {\n"
+      "  List[] lists; }";
   CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", input, typenames_, GetLanguage()));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Arrays of List are not supported"));
+  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", list_array_parcelable, typenames_, GetLanguage()));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
 TEST_P(AidlTest, RejectsPrimitiveListInStableAidl) {
