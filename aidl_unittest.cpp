@@ -4711,7 +4711,7 @@ const std::map<std::string, std::string> kListSupportExpectations = {
     {"rust_StringArray", "List of arrays is not supported."},
     {"cpp_IBinder", ""},
     {"java_IBinder", ""},
-    {"ndk_IBinder", "List<IBinder> is not supported. List in NDK doesn't support IBinder."},
+    {"ndk_IBinder", ""},
     {"rust_IBinder", ""},
     {"cpp_ParcelFileDescriptor", ""},
     {"java_ParcelFileDescriptor", ""},
