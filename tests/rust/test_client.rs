@@ -1018,6 +1018,34 @@ fn test_nested_type() {
 }
 
 #[test]
+fn test_nonnull_binder() {
+    let service = get_test_service();
+    let result = service.TakesAnIBinder(&service.as_binder());
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_binder_list_without_null() {
+    let service = get_test_service();
+    let result = service.TakesAnIBinderList(&[service.as_binder()]);
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_null_binder_to_annotated_method() {
+    let service = get_test_service();
+    let result = service.TakesANullableIBinder(None);
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_binder_list_with_null_to_annotated_method() {
+    let service = get_test_service();
+    let result = service.TakesANullableIBinderList(Some(&[Some(service.as_binder()), None]));
+    assert!(result.is_ok());
+}
+
+#[test]
 fn test_binder_array() {
     let service = get_test_service();
     let callback = service
