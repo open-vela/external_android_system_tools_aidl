@@ -229,6 +229,14 @@ impl ITestService::ITestService for TestService {
         Ok(())
     }
 
+    fn TakesAnIBinderList(&self, _: &[SpIBinder]) -> binder::Result<()> {
+        Ok(())
+    }
+
+    fn TakesANullableIBinderList(&self, _: Option<&[Option<SpIBinder>]>) -> binder::Result<()> {
+        Ok(())
+    }
+
     fn ReverseNullableUtf8CppString(
         &self,
         input: Option<&[Option<String>]>,
