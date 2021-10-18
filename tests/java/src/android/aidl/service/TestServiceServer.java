@@ -365,15 +365,6 @@ public class TestServiceServer extends ITestService.Stub {
     // do nothing
   }
   @Override
-  public void TakesAnIBinderList(List<IBinder> input) throws RemoteException {
-    // do nothing
-  }
-  @Override
-  public void TakesANullableIBinderList(List<IBinder> input) throws RemoteException {
-    // do nothing
-  }
-
-  @Override
   public String RepeatUtf8CppString(String token) throws RemoteException {
     return token;
   }
@@ -586,6 +577,10 @@ public class TestServiceServer extends ITestService.Stub {
       }
       return reversed;
     }
+    @Override
+    public void TakesAnIBinderList(List<IBinder> input) throws RemoteException {}
+    @Override
+    public void TakesANullableIBinderList(List<IBinder> input) throws RemoteException {}
   }
 
   @Override
