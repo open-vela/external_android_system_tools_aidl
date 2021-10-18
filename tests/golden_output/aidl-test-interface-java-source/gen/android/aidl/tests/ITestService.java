@@ -184,6 +184,12 @@ public interface ITestService extends android.os.IInterface
     @Override public void TakesANullableIBinder(android.os.IBinder input) throws android.os.RemoteException
     {
     }
+    @Override public void TakesAnIBinderList(java.util.List<android.os.IBinder> input) throws android.os.RemoteException
+    {
+    }
+    @Override public void TakesANullableIBinderList(java.util.List<android.os.IBinder> input) throws android.os.RemoteException
+    {
+    }
     // Test utf8 decoding from utf16 wire format
     @Override public java.lang.String RepeatUtf8CppString(java.lang.String token) throws android.os.RemoteException
     {
@@ -777,6 +783,22 @@ public interface ITestService extends android.os.IInterface
           android.os.IBinder _arg0;
           _arg0 = data.readStrongBinder();
           this.TakesANullableIBinder(_arg0);
+          reply.writeNoException();
+          break;
+        }
+        case TRANSACTION_TakesAnIBinderList:
+        {
+          java.util.List<android.os.IBinder> _arg0;
+          _arg0 = data.createBinderArrayList();
+          this.TakesAnIBinderList(_arg0);
+          reply.writeNoException();
+          break;
+        }
+        case TRANSACTION_TakesANullableIBinderList:
+        {
+          java.util.List<android.os.IBinder> _arg0;
+          _arg0 = data.createBinderArrayList();
+          this.TakesANullableIBinderList(_arg0);
           reply.writeNoException();
           break;
         }
@@ -2077,6 +2099,50 @@ public interface ITestService extends android.os.IInterface
           _data.recycle();
         }
       }
+      @Override public void TakesAnIBinderList(java.util.List<android.os.IBinder> input) throws android.os.RemoteException
+      {
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
+        _data.markSensitive();
+        android.os.Parcel _reply = android.os.Parcel.obtain();
+        try {
+          _data.writeInterfaceToken(DESCRIPTOR);
+          _data.writeBinderList(input);
+          boolean _status = mRemote.transact(Stub.TRANSACTION_TakesAnIBinderList, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
+          if (!_status) {
+            if (getDefaultImpl() != null) {
+              getDefaultImpl().TakesAnIBinderList(input);
+              return;
+            }
+          }
+          _reply.readException();
+        }
+        finally {
+          _reply.recycle();
+          _data.recycle();
+        }
+      }
+      @Override public void TakesANullableIBinderList(java.util.List<android.os.IBinder> input) throws android.os.RemoteException
+      {
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
+        _data.markSensitive();
+        android.os.Parcel _reply = android.os.Parcel.obtain();
+        try {
+          _data.writeInterfaceToken(DESCRIPTOR);
+          _data.writeBinderList(input);
+          boolean _status = mRemote.transact(Stub.TRANSACTION_TakesANullableIBinderList, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
+          if (!_status) {
+            if (getDefaultImpl() != null) {
+              getDefaultImpl().TakesANullableIBinderList(input);
+              return;
+            }
+          }
+          _reply.readException();
+        }
+        finally {
+          _reply.recycle();
+          _data.recycle();
+        }
+      }
       // Test utf8 decoding from utf16 wire format
       @Override public java.lang.String RepeatUtf8CppString(java.lang.String token) throws android.os.RemoteException
       {
@@ -2534,21 +2600,23 @@ public interface ITestService extends android.os.IInterface
     static final int TRANSACTION_RepeatNullableParcelable = (android.os.IBinder.FIRST_CALL_TRANSACTION + 37);
     static final int TRANSACTION_TakesAnIBinder = (android.os.IBinder.FIRST_CALL_TRANSACTION + 38);
     static final int TRANSACTION_TakesANullableIBinder = (android.os.IBinder.FIRST_CALL_TRANSACTION + 39);
-    static final int TRANSACTION_RepeatUtf8CppString = (android.os.IBinder.FIRST_CALL_TRANSACTION + 40);
-    static final int TRANSACTION_RepeatNullableUtf8CppString = (android.os.IBinder.FIRST_CALL_TRANSACTION + 41);
-    static final int TRANSACTION_ReverseUtf8CppString = (android.os.IBinder.FIRST_CALL_TRANSACTION + 42);
-    static final int TRANSACTION_ReverseNullableUtf8CppString = (android.os.IBinder.FIRST_CALL_TRANSACTION + 43);
-    static final int TRANSACTION_ReverseUtf8CppStringList = (android.os.IBinder.FIRST_CALL_TRANSACTION + 44);
-    static final int TRANSACTION_GetCallback = (android.os.IBinder.FIRST_CALL_TRANSACTION + 45);
-    static final int TRANSACTION_FillOutStructuredParcelable = (android.os.IBinder.FIRST_CALL_TRANSACTION + 46);
-    static final int TRANSACTION_RepeatExtendableParcelable = (android.os.IBinder.FIRST_CALL_TRANSACTION + 47);
-    static final int TRANSACTION_ReverseList = (android.os.IBinder.FIRST_CALL_TRANSACTION + 48);
-    static final int TRANSACTION_ReverseIBinderArray = (android.os.IBinder.FIRST_CALL_TRANSACTION + 49);
-    static final int TRANSACTION_ReverseNullableIBinderArray = (android.os.IBinder.FIRST_CALL_TRANSACTION + 50);
-    static final int TRANSACTION_GetOldNameInterface = (android.os.IBinder.FIRST_CALL_TRANSACTION + 51);
-    static final int TRANSACTION_GetNewNameInterface = (android.os.IBinder.FIRST_CALL_TRANSACTION + 52);
-    static final int TRANSACTION_GetCppJavaTests = (android.os.IBinder.FIRST_CALL_TRANSACTION + 53);
-    static final int TRANSACTION_getBackendType = (android.os.IBinder.FIRST_CALL_TRANSACTION + 54);
+    static final int TRANSACTION_TakesAnIBinderList = (android.os.IBinder.FIRST_CALL_TRANSACTION + 40);
+    static final int TRANSACTION_TakesANullableIBinderList = (android.os.IBinder.FIRST_CALL_TRANSACTION + 41);
+    static final int TRANSACTION_RepeatUtf8CppString = (android.os.IBinder.FIRST_CALL_TRANSACTION + 42);
+    static final int TRANSACTION_RepeatNullableUtf8CppString = (android.os.IBinder.FIRST_CALL_TRANSACTION + 43);
+    static final int TRANSACTION_ReverseUtf8CppString = (android.os.IBinder.FIRST_CALL_TRANSACTION + 44);
+    static final int TRANSACTION_ReverseNullableUtf8CppString = (android.os.IBinder.FIRST_CALL_TRANSACTION + 45);
+    static final int TRANSACTION_ReverseUtf8CppStringList = (android.os.IBinder.FIRST_CALL_TRANSACTION + 46);
+    static final int TRANSACTION_GetCallback = (android.os.IBinder.FIRST_CALL_TRANSACTION + 47);
+    static final int TRANSACTION_FillOutStructuredParcelable = (android.os.IBinder.FIRST_CALL_TRANSACTION + 48);
+    static final int TRANSACTION_RepeatExtendableParcelable = (android.os.IBinder.FIRST_CALL_TRANSACTION + 49);
+    static final int TRANSACTION_ReverseList = (android.os.IBinder.FIRST_CALL_TRANSACTION + 50);
+    static final int TRANSACTION_ReverseIBinderArray = (android.os.IBinder.FIRST_CALL_TRANSACTION + 51);
+    static final int TRANSACTION_ReverseNullableIBinderArray = (android.os.IBinder.FIRST_CALL_TRANSACTION + 52);
+    static final int TRANSACTION_GetOldNameInterface = (android.os.IBinder.FIRST_CALL_TRANSACTION + 53);
+    static final int TRANSACTION_GetNewNameInterface = (android.os.IBinder.FIRST_CALL_TRANSACTION + 54);
+    static final int TRANSACTION_GetCppJavaTests = (android.os.IBinder.FIRST_CALL_TRANSACTION + 55);
+    static final int TRANSACTION_getBackendType = (android.os.IBinder.FIRST_CALL_TRANSACTION + 56);
     public static boolean setDefaultImpl(android.aidl.tests.ITestService impl) {
       // Only one user of this interface can use this function
       // at a time. This is a heuristic to detect if two different
@@ -2711,6 +2779,8 @@ public interface ITestService extends android.os.IInterface
   public android.aidl.tests.StructuredParcelable RepeatNullableParcelable(android.aidl.tests.StructuredParcelable input) throws android.os.RemoteException;
   public void TakesAnIBinder(android.os.IBinder input) throws android.os.RemoteException;
   public void TakesANullableIBinder(android.os.IBinder input) throws android.os.RemoteException;
+  public void TakesAnIBinderList(java.util.List<android.os.IBinder> input) throws android.os.RemoteException;
+  public void TakesANullableIBinderList(java.util.List<android.os.IBinder> input) throws android.os.RemoteException;
   // Test utf8 decoding from utf16 wire format
   public java.lang.String RepeatUtf8CppString(java.lang.String token) throws android.os.RemoteException;
   public java.lang.String RepeatNullableUtf8CppString(java.lang.String token) throws android.os.RemoteException;
@@ -2731,4 +2801,71 @@ public interface ITestService extends android.os.IInterface
   // Retrieve the ICppJavaTests if the server supports it
   public android.os.IBinder GetCppJavaTests() throws android.os.RemoteException;
   public byte getBackendType() throws android.os.RemoteException;
+  public static class CompilerChecks implements android.os.Parcelable
+  {
+    // IBinder
+    public android.os.IBinder binder;
+    public android.os.IBinder nullable_binder;
+    public android.os.IBinder[] binder_array;
+    public android.os.IBinder[] nullable_binder_array;
+    public java.util.List<android.os.IBinder> binder_list;
+    public java.util.List<android.os.IBinder> nullable_binder_list;
+    public static final android.os.Parcelable.Creator<CompilerChecks> CREATOR = new android.os.Parcelable.Creator<CompilerChecks>() {
+      @Override
+      public CompilerChecks createFromParcel(android.os.Parcel _aidl_source) {
+        CompilerChecks _aidl_out = new CompilerChecks();
+        _aidl_out.readFromParcel(_aidl_source);
+        return _aidl_out;
+      }
+      @Override
+      public CompilerChecks[] newArray(int _aidl_size) {
+        return new CompilerChecks[_aidl_size];
+      }
+    };
+    @Override public final void writeToParcel(android.os.Parcel _aidl_parcel, int _aidl_flag)
+    {
+      int _aidl_start_pos = _aidl_parcel.dataPosition();
+      _aidl_parcel.writeInt(0);
+      _aidl_parcel.writeStrongBinder(binder);
+      _aidl_parcel.writeStrongBinder(nullable_binder);
+      _aidl_parcel.writeBinderArray(binder_array);
+      _aidl_parcel.writeBinderArray(nullable_binder_array);
+      _aidl_parcel.writeBinderList(binder_list);
+      _aidl_parcel.writeBinderList(nullable_binder_list);
+      int _aidl_end_pos = _aidl_parcel.dataPosition();
+      _aidl_parcel.setDataPosition(_aidl_start_pos);
+      _aidl_parcel.writeInt(_aidl_end_pos - _aidl_start_pos);
+      _aidl_parcel.setDataPosition(_aidl_end_pos);
+    }
+    public final void readFromParcel(android.os.Parcel _aidl_parcel)
+    {
+      int _aidl_start_pos = _aidl_parcel.dataPosition();
+      int _aidl_parcelable_size = _aidl_parcel.readInt();
+      try {
+        if (_aidl_parcelable_size < 0) return;
+        if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
+        binder = _aidl_parcel.readStrongBinder();
+        if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
+        nullable_binder = _aidl_parcel.readStrongBinder();
+        if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
+        binder_array = _aidl_parcel.createBinderArray();
+        if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
+        nullable_binder_array = _aidl_parcel.createBinderArray();
+        if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
+        binder_list = _aidl_parcel.createBinderArrayList();
+        if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
+        nullable_binder_list = _aidl_parcel.createBinderArrayList();
+      } finally {
+        if (_aidl_start_pos > (Integer.MAX_VALUE - _aidl_parcelable_size)) {
+          throw new android.os.BadParcelableException("Overflow in the size of parcelable");
+        }
+        _aidl_parcel.setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+      }
+    }
+    @Override
+    public int describeContents() {
+      int _mask = 0;
+      return _mask;
+    }
+  }
 }

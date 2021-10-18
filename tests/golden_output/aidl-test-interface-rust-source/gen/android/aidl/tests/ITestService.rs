@@ -53,6 +53,8 @@ pub trait ITestService: binder::Interface + Send {
   fn RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>>;
   fn TakesAnIBinder(&self, _arg_input: &binder::SpIBinder) -> binder::public_api::Result<()>;
   fn TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>) -> binder::public_api::Result<()>;
+  fn TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder]) -> binder::public_api::Result<()>;
+  fn TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>) -> binder::public_api::Result<()>;
   fn RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<String>;
   fn RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>) -> binder::public_api::Result<Option<String>>;
   fn ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>>;
@@ -196,6 +198,12 @@ pub trait ITestServiceDefault: Send + Sync {
   fn TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>) -> binder::public_api::Result<()> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
+  fn TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder]) -> binder::public_api::Result<()> {
+    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
+  }
+  fn TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>) -> binder::public_api::Result<()> {
+    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
+  }
   fn RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<String> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
@@ -283,21 +291,23 @@ pub mod transactions {
   pub const RepeatNullableParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 37;
   pub const TakesAnIBinder: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 38;
   pub const TakesANullableIBinder: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 39;
-  pub const RepeatUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 40;
-  pub const RepeatNullableUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 41;
-  pub const ReverseUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 42;
-  pub const ReverseNullableUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 43;
-  pub const ReverseUtf8CppStringList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 44;
-  pub const GetCallback: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 45;
-  pub const FillOutStructuredParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 46;
-  pub const RepeatExtendableParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 47;
-  pub const ReverseList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 48;
-  pub const ReverseIBinderArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 49;
-  pub const ReverseNullableIBinderArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 50;
-  pub const GetOldNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 51;
-  pub const GetNewNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 52;
-  pub const GetCppJavaTests: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 53;
-  pub const getBackendType: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 54;
+  pub const TakesAnIBinderList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 40;
+  pub const TakesANullableIBinderList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 41;
+  pub const RepeatUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 42;
+  pub const RepeatNullableUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 43;
+  pub const ReverseUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 44;
+  pub const ReverseNullableUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 45;
+  pub const ReverseUtf8CppStringList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 46;
+  pub const GetCallback: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 47;
+  pub const FillOutStructuredParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 48;
+  pub const RepeatExtendableParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 49;
+  pub const ReverseList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 50;
+  pub const ReverseIBinderArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 51;
+  pub const ReverseNullableIBinderArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 52;
+  pub const GetOldNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 53;
+  pub const GetNewNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 54;
+  pub const GetCppJavaTests: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 55;
+  pub const getBackendType: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 56;
 }
 pub type ITestServiceDefaultRef = Option<std::sync::Arc<dyn ITestServiceDefault>>;
 use lazy_static::lazy_static;
@@ -1076,6 +1086,38 @@ impl ITestService for BpTestService {
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
   }
+  fn TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder]) -> binder::public_api::Result<()> {
+    let _aidl_reply = self.binder.transact(transactions::TakesAnIBinderList, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      Ok(())
+    });
+    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
+      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
+        return _aidl_default_impl.TakesAnIBinderList(_arg_input);
+      }
+    }
+    let _aidl_reply = _aidl_reply?;
+    let _aidl_status: binder::Status = _aidl_reply.read()?;
+    if !_aidl_status.is_ok() { return Err(_aidl_status); }
+    Ok(())
+  }
+  fn TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>) -> binder::public_api::Result<()> {
+    let _aidl_reply = self.binder.transact(transactions::TakesANullableIBinderList, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_input)?;
+      Ok(())
+    });
+    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
+      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
+        return _aidl_default_impl.TakesANullableIBinderList(_arg_input);
+      }
+    }
+    let _aidl_reply = _aidl_reply?;
+    let _aidl_status: binder::Status = _aidl_reply.read()?;
+    if !_aidl_status.is_ok() { return Err(_aidl_status); }
+    Ok(())
+  }
   fn RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<String> {
     let _aidl_reply = self.binder.transact(transactions::RepeatUtf8CppString, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
       _aidl_data.mark_sensitive();
@@ -1378,6 +1420,8 @@ impl ITestService for binder::Binder<BnTestService> {
   fn RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>> { self.0.RepeatNullableParcelable(_arg_input) }
   fn TakesAnIBinder(&self, _arg_input: &binder::SpIBinder) -> binder::public_api::Result<()> { self.0.TakesAnIBinder(_arg_input) }
   fn TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>) -> binder::public_api::Result<()> { self.0.TakesANullableIBinder(_arg_input) }
+  fn TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder]) -> binder::public_api::Result<()> { self.0.TakesAnIBinderList(_arg_input) }
+  fn TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>) -> binder::public_api::Result<()> { self.0.TakesANullableIBinderList(_arg_input) }
   fn RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<String> { self.0.RepeatUtf8CppString(_arg_token) }
   fn RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>) -> binder::public_api::Result<Option<String>> { self.0.RepeatNullableUtf8CppString(_arg_token) }
   fn ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> { self.0.ReverseUtf8CppString(_arg_input, _arg_repeated) }
@@ -1903,6 +1947,28 @@ fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::Transaction
       }
       Ok(())
     }
+    transactions::TakesAnIBinderList => {
+      let _arg_input: Vec<binder::SpIBinder> = _aidl_data.read()?;
+      let _aidl_return = _aidl_service.TakesAnIBinderList(&_arg_input);
+      match &_aidl_return {
+        Ok(_aidl_return) => {
+          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
+        }
+        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
+      }
+      Ok(())
+    }
+    transactions::TakesANullableIBinderList => {
+      let _arg_input: Option<Vec<Option<binder::SpIBinder>>> = _aidl_data.read()?;
+      let _aidl_return = _aidl_service.TakesANullableIBinderList(_arg_input.as_deref());
+      match &_aidl_return {
+        Ok(_aidl_return) => {
+          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
+        }
+        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
+      }
+      Ok(())
+    }
     transactions::RepeatUtf8CppString => {
       let _arg_token: String = _aidl_data.read()?;
       let _aidl_return = _aidl_service.RepeatUtf8CppString(&_arg_token);
@@ -2097,6 +2163,72 @@ fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::Transaction
     _ => Err(binder::StatusCode::UNKNOWN_TRANSACTION)
   }
 }
+pub mod CompilerChecks {
+  #[derive(Debug)]
+  pub struct CompilerChecks {
+    pub binder: Option<binder::SpIBinder>,
+    pub nullable_binder: Option<binder::SpIBinder>,
+    pub binder_array: Vec<binder::SpIBinder>,
+    pub nullable_binder_array: Option<Vec<Option<binder::SpIBinder>>>,
+    pub binder_list: Vec<binder::SpIBinder>,
+    pub nullable_binder_list: Option<Vec<Option<binder::SpIBinder>>>,
+  }
+  impl Default for CompilerChecks {
+    fn default() -> Self {
+      Self {
+        binder: Default::default(),
+        nullable_binder: Default::default(),
+        binder_array: Default::default(),
+        nullable_binder_array: Default::default(),
+        binder_list: Default::default(),
+        nullable_binder_list: Default::default(),
+      }
+    }
+  }
+  impl binder::parcel::Parcelable for CompilerChecks {
+    fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+      parcel.sized_write(|subparcel| {
+        let __field_ref = self.binder.as_ref().ok_or(binder::StatusCode::UNEXPECTED_NULL)?;
+        subparcel.write(__field_ref)?;
+        subparcel.write(&self.nullable_binder)?;
+        subparcel.write(&self.binder_array)?;
+        subparcel.write(&self.nullable_binder_array)?;
+        subparcel.write(&self.binder_list)?;
+        subparcel.write(&self.nullable_binder_list)?;
+        Ok(())
+      })
+    }
+    fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+      parcel.sized_read(|subparcel| {
+        if subparcel.has_more_data() {
+          self.binder = Some(subparcel.read()?);
+        }
+        if subparcel.has_more_data() {
+          self.nullable_binder = subparcel.read()?;
+        }
+        if subparcel.has_more_data() {
+          self.binder_array = subparcel.read()?;
+        }
+        if subparcel.has_more_data() {
+          self.nullable_binder_array = subparcel.read()?;
+        }
+        if subparcel.has_more_data() {
+          self.binder_list = subparcel.read()?;
+        }
+        if subparcel.has_more_data() {
+          self.nullable_binder_list = subparcel.read()?;
+        }
+        Ok(())
+      })
+    }
+  }
+  binder::impl_serialize_for_parcelable!(CompilerChecks);
+  binder::impl_deserialize_for_parcelable!(CompilerChecks);
+  impl binder::parcel::ParcelableMetadata for CompilerChecks {
+    fn get_descriptor() -> &'static str { "android.aidl.tests.ITestService.CompilerChecks" }
+  }
+}
 pub(crate) mod mangled {
  pub use super::ITestService as _7_android_4_aidl_5_tests_12_ITestService;
+ pub use super::CompilerChecks::CompilerChecks as _7_android_4_aidl_5_tests_12_ITestService_14_CompilerChecks;
 }
