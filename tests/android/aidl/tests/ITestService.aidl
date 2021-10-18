@@ -140,6 +140,8 @@ interface ITestService {
 
     void TakesAnIBinder(in IBinder input);
     void TakesANullableIBinder(in @nullable IBinder input);
+    void TakesAnIBinderList(in List<IBinder> input);
+    void TakesANullableIBinderList(in @nullable List<IBinder> input);
 
     // Test utf8 decoding from utf16 wire format
     @utf8InCpp String RepeatUtf8CppString(@utf8InCpp String token);
@@ -242,4 +244,14 @@ interface ITestService {
     @nullable IBinder GetCppJavaTests();
 
     BackendType getBackendType();
+
+    parcelable CompilerChecks {
+        // IBinder
+        IBinder binder;
+        @nullable IBinder nullable_binder;
+        IBinder[] binder_array;
+        @nullable IBinder[] nullable_binder_array;
+        List<IBinder> binder_list;
+        @nullable List<IBinder> nullable_binder_list;
+    }
 }
