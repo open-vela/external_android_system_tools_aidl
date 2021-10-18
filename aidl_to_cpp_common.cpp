@@ -66,6 +66,8 @@ string ClassName(const AidlDefinedType& defined_type, ClassNames type) {
       return "I" + base_name + "Default";
     case ClassNames::BASE:
       return base_name;
+    case ClassNames::DELEGATOR_IMPL:
+      return "I" + base_name + "Delegator";
     case ClassNames::RAW:
       [[fallthrough]];
     default:
