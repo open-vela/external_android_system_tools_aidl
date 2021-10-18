@@ -42,4 +42,7 @@ interface ICppJavaTests {
     FileDescriptor RepeatFileDescriptor(in FileDescriptor read);
     FileDescriptor[] ReverseFileDescriptorArray(
             in FileDescriptor[] input, out FileDescriptor[] repeated);
+
+    void TakesAnIBinderList(in List<IBinder> input);
+    void TakesANullableIBinderList(in @nullable List<IBinder> input);
 }
