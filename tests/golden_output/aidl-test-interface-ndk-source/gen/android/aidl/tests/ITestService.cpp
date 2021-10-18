@@ -741,8 +741,8 @@ static binder_status_t _aidl_onTransact(AIBinder* _aidl_binder, transaction_code
       break;
     }
     case (FIRST_CALL_TRANSACTION + 36 /*RepeatNullableStringList*/): {
-      std::vector<std::string> in_input;
-      std::vector<std::string> _aidl_return;
+      std::optional<std::vector<std::optional<std::string>>> in_input;
+      std::optional<std::vector<std::optional<std::string>>> _aidl_return;
 
       _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
@@ -891,9 +891,9 @@ static binder_status_t _aidl_onTransact(AIBinder* _aidl_binder, transaction_code
       break;
     }
     case (FIRST_CALL_TRANSACTION + 44 /*ReverseUtf8CppStringList*/): {
-      std::vector<std::string> in_input;
-      std::vector<std::string> out_repeated;
-      std::vector<std::string> _aidl_return;
+      std::optional<std::vector<std::optional<std::string>>> in_input;
+      std::optional<std::vector<std::optional<std::string>>> out_repeated;
+      std::optional<std::vector<std::optional<std::string>>> _aidl_return;
 
       _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
@@ -2634,7 +2634,7 @@ BpTestService::~BpTestService() {}
   _aidl_status_return:
   return _aidl_status;
 }
-::ndk::ScopedAStatus BpTestService::RepeatNullableStringList(const std::vector<std::string>& in_input, std::vector<std::string>* _aidl_return) {
+::ndk::ScopedAStatus BpTestService::RepeatNullableStringList(const std::optional<std::vector<std::optional<std::string>>>& in_input, std::optional<std::vector<std::optional<std::string>>>* _aidl_return) {
   binder_status_t _aidl_ret_status = STATUS_OK;
   ::ndk::ScopedAStatus _aidl_status;
   ::ndk::ScopedAParcel _aidl_in;
@@ -2968,7 +2968,7 @@ BpTestService::~BpTestService() {}
   _aidl_status_return:
   return _aidl_status;
 }
-::ndk::ScopedAStatus BpTestService::ReverseUtf8CppStringList(const std::vector<std::string>& in_input, std::vector<std::string>* out_repeated, std::vector<std::string>* _aidl_return) {
+::ndk::ScopedAStatus BpTestService::ReverseUtf8CppStringList(const std::optional<std::vector<std::optional<std::string>>>& in_input, std::optional<std::vector<std::optional<std::string>>>* out_repeated, std::optional<std::vector<std::optional<std::string>>>* _aidl_return) {
   binder_status_t _aidl_ret_status = STATUS_OK;
   ::ndk::ScopedAStatus _aidl_status;
   ::ndk::ScopedAParcel _aidl_in;
@@ -3655,7 +3655,7 @@ std::shared_ptr<ITestService> ITestService::default_impl = nullptr;
   _aidl_status.set(AStatus_fromStatus(STATUS_UNKNOWN_TRANSACTION));
   return _aidl_status;
 }
-::ndk::ScopedAStatus ITestServiceDefault::RepeatNullableStringList(const std::vector<std::string>& /*in_input*/, std::vector<std::string>* /*_aidl_return*/) {
+::ndk::ScopedAStatus ITestServiceDefault::RepeatNullableStringList(const std::optional<std::vector<std::optional<std::string>>>& /*in_input*/, std::optional<std::vector<std::optional<std::string>>>* /*_aidl_return*/) {
   ::ndk::ScopedAStatus _aidl_status;
   _aidl_status.set(AStatus_fromStatus(STATUS_UNKNOWN_TRANSACTION));
   return _aidl_status;
@@ -3695,7 +3695,7 @@ std::shared_ptr<ITestService> ITestService::default_impl = nullptr;
   _aidl_status.set(AStatus_fromStatus(STATUS_UNKNOWN_TRANSACTION));
   return _aidl_status;
 }
-::ndk::ScopedAStatus ITestServiceDefault::ReverseUtf8CppStringList(const std::vector<std::string>& /*in_input*/, std::vector<std::string>* /*out_repeated*/, std::vector<std::string>* /*_aidl_return*/) {
+::ndk::ScopedAStatus ITestServiceDefault::ReverseUtf8CppStringList(const std::optional<std::vector<std::optional<std::string>>>& /*in_input*/, std::optional<std::vector<std::optional<std::string>>>* /*out_repeated*/, std::optional<std::vector<std::optional<std::string>>>* /*_aidl_return*/) {
   ::ndk::ScopedAStatus _aidl_status;
   _aidl_status.set(AStatus_fromStatus(STATUS_UNKNOWN_TRANSACTION));
   return _aidl_status;
