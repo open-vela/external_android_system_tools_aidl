@@ -121,8 +121,10 @@ TEST_F(AidlTest, nullBinder) {
 }
 
 TEST_F(AidlTest, binderListWithNull) {
+  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
+
   std::vector<sp<IBinder>> input{new BBinder(), nullptr};
-  auto status = service->TakesAnIBinderList(input);
+  auto status = cpp_java_tests->TakesAnIBinderList(input);
 
   if (backend == BackendType::JAVA) {
     ASSERT_TRUE(status.isOk()) << status;
@@ -138,8 +140,10 @@ TEST_F(AidlTest, nonNullBinder) {
 }
 
 TEST_F(AidlTest, binderListWithoutNull) {
+  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
+
   std::vector<sp<IBinder>> input{new BBinder(), new BBinder()};
-  auto status = service->TakesAnIBinderList(input);
+  auto status = cpp_java_tests->TakesAnIBinderList(input);
   ASSERT_TRUE(status.isOk());
 }
 
@@ -149,8 +153,10 @@ TEST_F(AidlTest, nullBinderToAnnotatedMethod) {
 }
 
 TEST_F(AidlTest, binderListWithNullToAnnotatedMethod) {
+  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
+
   std::vector<sp<IBinder>> input{new BBinder(), nullptr};
-  auto status = service->TakesANullableIBinderList(input);
+  auto status = cpp_java_tests->TakesANullableIBinderList(input);
   ASSERT_TRUE(status.isOk());
 }
 
@@ -197,8 +203,10 @@ TEST_F(AidlTest, nonNullBinderToAnnotatedMethod) {
 }
 
 TEST_F(AidlTest, binderListWithoutNullToAnnotatedMethod) {
+  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
+
   std::vector<sp<IBinder>> input{new BBinder(), new BBinder()};
-  auto status = service->TakesANullableIBinderList(input);
+  auto status = cpp_java_tests->TakesANullableIBinderList(input);
   ASSERT_TRUE(status.isOk());
 }
 
