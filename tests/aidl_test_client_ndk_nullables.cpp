@@ -41,6 +41,41 @@ struct AidlTest : testing::Test {
   BackendType backend;
 };
 
+TEST_F(AidlTest, nullBinder) {
+  auto status = service->TakesAnIBinder(nullptr);
+  ASSERT_THAT(status.getStatus(), Eq(STATUS_UNEXPECTED_NULL)) << status.getDescription();
+  // Note that NDK backend checks null before transaction while C++ backends doesn't.
+}
+
+TEST_F(AidlTest, binderListWithNull) {
+  std::vector<ndk::SpAIBinder> input{service->asBinder(), nullptr};
+  auto status = service->TakesAnIBinderList(input);
+  ASSERT_THAT(status.getStatus(), Eq(STATUS_UNEXPECTED_NULL));
+  // Note that NDK backend checks null before transaction while C++ backends doesn't.
+}
+
+TEST_F(AidlTest, nonNullBinder) {
+  auto status = service->TakesAnIBinder(service->asBinder());
+  ASSERT_TRUE(status.isOk());
+}
+
+TEST_F(AidlTest, binderListWithoutNull) {
+  std::vector<ndk::SpAIBinder> input{service->asBinder()};
+  auto status = service->TakesAnIBinderList(input);
+  ASSERT_TRUE(status.isOk());
+}
+
+TEST_F(AidlTest, nullBinderToAnnotatedMethod) {
+  auto status = service->TakesANullableIBinder(nullptr);
+  ASSERT_TRUE(status.isOk());
+}
+
+TEST_F(AidlTest, binderListWithNullToAnnotatedMethod) {
+  std::vector<ndk::SpAIBinder> input{service->asBinder(), nullptr};
+  auto status = service->TakesANullableIBinderList(input);
+  ASSERT_TRUE(status.isOk());
+}
+
 TEST_F(AidlTest, binderArray) {
   std::vector<ndk::SpAIBinder> repeated;
   if (backend == BackendType::JAVA) {
