@@ -27,14 +27,11 @@ import android.aidl.tests.IOldName;
 import android.aidl.tests.ITestService;
 import android.aidl.tests.IntEnum;
 import android.aidl.tests.LongEnum;
-import android.aidl.tests.RecursiveList;
 import android.aidl.tests.SimpleParcelable;
 import android.aidl.tests.StructuredParcelable;
 import android.aidl.tests.Union;
 import android.aidl.tests.extension.ExtendableParcelable;
 import android.aidl.tests.extension.MyExt;
-import android.aidl.tests.nested.INestedService;
-import android.aidl.tests.nested.ParcelableWithNested;
 import android.aidl.versioned.tests.BazUnion;
 import android.aidl.versioned.tests.Foo;
 import android.aidl.versioned.tests.IFooInterface;
@@ -60,9 +57,6 @@ public class TestServiceServer extends ITestService.Stub {
 
     FooInterface foo = new FooInterface();
     ServiceManager.addService(IFooInterface.class.getName(), foo);
-
-    NestedService nested = new NestedService();
-    ServiceManager.addService(INestedService.class.getName(), nested);
 
     Binder.joinThreadPool();
   }
@@ -92,19 +86,6 @@ public class TestServiceServer extends ITestService.Stub {
     @Override
     public final String getInterfaceHash() {
       return IFooInterface.HASH;
-    }
-  }
-
-  private static class NestedService extends INestedService.Stub {
-    @Override
-    public final Result flipStatus(ParcelableWithNested p) {
-      Result result = new Result();
-      if (p.status == ParcelableWithNested.Status.OK) {
-        result.status = ParcelableWithNested.Status.NOT_OK;
-      } else {
-        result.status = ParcelableWithNested.Status.OK;
-      }
-      return result;
     }
   }
 
@@ -365,15 +346,6 @@ public class TestServiceServer extends ITestService.Stub {
     // do nothing
   }
   @Override
-  public void TakesAnIBinderList(List<IBinder> input) throws RemoteException {
-    // do nothing
-  }
-  @Override
-  public void TakesANullableIBinderList(List<IBinder> input) throws RemoteException {
-    // do nothing
-  }
-
-  @Override
   public String RepeatUtf8CppString(String token) throws RemoteException {
     return token;
   }
@@ -450,45 +422,7 @@ public class TestServiceServer extends ITestService.Stub {
     parcelable.u = Union.ns(new int[] {1, 2, 3});
     parcelable.shouldBeConstS1 = Union.s(Union.S1);
   }
-  @Override
-  public void RepeatExtendableParcelable(ExtendableParcelable ep, ExtendableParcelable ep2)
-      throws RemoteException {
-    ep2.a = ep.a;
-    ep2.b = ep.b;
-    // no way to copy currently w/o unparceling
-    ep2.ext.setParcelable(ep.ext.getParcelable(MyExt.class));
-    ep2.c = ep.c;
-    ep2.ext2.setParcelable(null);
-  }
-  @Override
-  public RecursiveList ReverseList(RecursiveList list) throws RemoteException {
-    RecursiveList reversed = null;
-    while (list != null) {
-      RecursiveList next = list.next;
-      list.next = reversed;
-      reversed = list;
-      list = next;
-    }
-    return reversed;
-  }
-  @Override
-  public IBinder[] ReverseIBinderArray(IBinder[] input, IBinder[] repeated) {
-    IBinder[] reversed = new IBinder[input.length];
-    for (int i = 0; i < input.length; i++) {
-      repeated[i] = input[i];
-      reversed[i] = input[input.length - i - 1];
-    }
-    return reversed;
-  }
-  @Override
-  public IBinder[] ReverseNullableIBinderArray(IBinder[] input, IBinder[] repeated) {
-    IBinder[] reversed = new IBinder[input.length];
-    for (int i = 0; i < input.length; i++) {
-      repeated[i] = input[i];
-      reversed[i] = input[input.length - i - 1];
-    }
-    return reversed;
-  }
+
   private static class MyOldName extends IOldName.Stub {
     @Override
     public String RealName() {
@@ -585,6 +519,20 @@ public class TestServiceServer extends ITestService.Stub {
         reversed[i] = input[input.length - i - 1];
       }
       return reversed;
+    }
+    @Override
+    public void TakesAnIBinderList(List<IBinder> input) throws RemoteException {}
+    @Override
+    public void TakesANullableIBinderList(List<IBinder> input) throws RemoteException {}
+    @Override
+    public void RepeatExtendableParcelable(ExtendableParcelable ep, ExtendableParcelable ep2)
+        throws RemoteException {
+      ep2.a = ep.a;
+      ep2.b = ep.b;
+      // no way to copy currently w/o unparceling
+      ep2.ext.setParcelable(ep.ext.getParcelable(MyExt.class));
+      ep2.c = ep.c;
+      ep2.ext2.setParcelable(null);
     }
   }
 

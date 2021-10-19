@@ -16,45 +16,24 @@
 
 //! Test Rust client for the AIDL compiler.
 
-use ::binder::{Parcel, parcel::Parcelable};
 use aidl_test_interface::aidl::android::aidl::tests::INewName::{self, BpNewName};
 use aidl_test_interface::aidl::android::aidl::tests::IOldName::{self, BpOldName};
 use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
     self, BpTestService, ITestServiceDefault, ITestServiceDefaultRef,
 };
 use aidl_test_interface::aidl::android::aidl::tests::{
-    BackendType::BackendType, ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum,
-    RecursiveList::RecursiveList, StructuredParcelable, Union,
-    extension::ExtendableParcelable::ExtendableParcelable,
-    extension::MyExt::MyExt, extension::MyExt2::MyExt2,
-    extension::MyExtLike::MyExtLike,
-};
-use aidl_test_interface::aidl::android::aidl::tests::nested::{
-    INestedService, ParcelableWithNested,
+    BackendType::BackendType, ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable, Union,
 };
 use aidl_test_interface::aidl::android::aidl::tests::unions::{
     EnumUnion::EnumUnion,
 };
 use aidl_test_interface::binder;
 use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::{
-    IFooInterface, IFooInterface::BpFooInterface, BazUnion::BazUnion, Foo::Foo,
-};
-use aidl_test_nonvintf_parcelable::aidl::android::aidl::tests::nonvintf::{
-    NonVintfExtendableParcelable::NonVintfExtendableParcelable,
-    NonVintfParcelable::NonVintfParcelable,
-};
-use aidl_test_unstable_parcelable::aidl::android::aidl::tests::unstable::{
-    UnstableExtendableParcelable::UnstableExtendableParcelable,
-    UnstableParcelable::UnstableParcelable,
-};
-use aidl_test_vintf_parcelable::aidl::android::aidl::tests::vintf::{
-    VintfExtendableParcelable::VintfExtendableParcelable,
-    VintfParcelable::VintfParcelable,
+    IFooInterface, IFooInterface::BpFooInterface, BazUnion::BazUnion,
 };
 use std::fs::File;
 use std::io::{Read, Write};
 use std::os::unix::io::FromRawFd;
-use std::rc::Rc;
 use std::sync::Arc;
 
 fn get_test_service() -> binder::Strong<dyn ITestService::ITestService> {
@@ -181,7 +160,7 @@ fn test_repeat_string() {
         ITestService::STRING_TEST_CONSTANT2.into(),
     ];
     for input in &inputs {
-        let result = service.RepeatString(input);
+        let result = service.RepeatString(&input);
         assert_eq!(result.as_ref(), Ok(input));
     }
 }
@@ -190,7 +169,7 @@ macro_rules! test_reverse_array {
     ($test:ident, $func:ident, $array:expr) => {
         #[test]
         fn $test() {
-            let mut array = $array.to_vec();
+            let mut array = $array;
 
             // Java needs initial values here (can't resize arrays)
             let mut repeated = vec![Default::default(); array.len()];
@@ -227,11 +206,6 @@ test_reverse_array! {
     test_array_byte_enum,
     ReverseByteEnum,
     vec![ByteEnum::FOO, ByteEnum::BAR, ByteEnum::BAR]
-}
-test_reverse_array! {
-    test_array_byte_enum_values,
-    ReverseByteEnum,
-    ByteEnum::enum_values()
 }
 test_reverse_array! {
     test_array_byte_enum_v2,
@@ -364,6 +338,12 @@ fn test_parcel_file_descriptor_array() {
 #[test]
 fn test_service_specific_exception() {
     let service = get_test_service();
+
+    let backend = service.getBackendType().expect("error getting backend type");
+    if backend == BackendType::JAVA {
+        // TODO(b/178861468): not correctly thrown from Java
+        return;
+    }
 
     for i in -1..2 {
         let result = service.ThrowServiceException(i);
@@ -539,11 +519,11 @@ fn test_parcelable() {
     assert_eq!(parcelable.byteDefaultsToFour, 4);
     assert_eq!(parcelable.intDefaultsToFive, 5);
     assert_eq!(parcelable.longDefaultsToNegativeSeven, -7);
-    assert!(parcelable.booleanDefaultsToTrue);
+    assert_eq!(parcelable.booleanDefaultsToTrue, true);
     assert_eq!(parcelable.charDefaultsToC, 'C' as u16);
     assert_eq!(parcelable.floatDefaultsToPi, 3.14f32);
     assert_eq!(parcelable.doubleWithDefault, -3.14e17f64);
-    assert!(!parcelable.boolDefault);
+    assert_eq!(parcelable.boolDefault, false);
     assert_eq!(parcelable.byteDefault, 0);
     assert_eq!(parcelable.intDefault, 0);
     assert_eq!(parcelable.longDefault, 0);
@@ -592,240 +572,6 @@ fn test_parcelable() {
 
     assert_eq!(parcelable.u, Some(Union::Union::Ns(vec![1, 2, 3])));
     assert_eq!(parcelable.shouldBeConstS1, Some(Union::Union::S(Union::S1.to_string())))
-}
-
-#[test]
-fn test_repeat_extendable_parcelable() {
-    let service = get_test_service();
-
-    let ext = Rc::new(MyExt {
-        a: 42,
-        b: "EXT".into(),
-    });
-    let mut ep = ExtendableParcelable {
-        a: 1,
-        b: "a".into(),
-        c: 42,
-        ..Default::default()
-    };
-    ep.ext.set_parcelable(Rc::clone(&ext))
-        .expect("error setting parcelable");
-
-    let mut ep2 = ExtendableParcelable::default();
-    let result = service.RepeatExtendableParcelable(&ep, &mut ep2);
-    assert_eq!(result, Ok(()));
-    assert_eq!(ep2.a, ep.a);
-    assert_eq!(ep2.b, ep.b);
-
-    let ret_ext = ep2.ext.get_parcelable::<MyExt>()
-        .expect("error getting parcelable");
-    assert!(ret_ext.is_some());
-
-    let ret_ext = ret_ext.unwrap();
-    assert_eq!(ret_ext.a, ext.a);
-    assert_eq!(ret_ext.b, ext.b);
-}
-
-macro_rules! test_parcelable_holder_stability {
-    ($test:ident, $holder:path, $parcelable:path) => {
-        #[test]
-        fn $test() {
-            let mut holder = <$holder>::default();
-            let parcelable = Rc::new(<$parcelable>::default());
-            let result = holder.ext.set_parcelable(Rc::clone(&parcelable));
-            assert_eq!(result, Ok(()));
-
-            let parcelable2 = holder.ext.get_parcelable::<$parcelable>()
-                .unwrap()
-                .unwrap();
-            assert!(Rc::ptr_eq(&parcelable, &parcelable2));
-        }
-    }
-}
-
-test_parcelable_holder_stability!{
-    test_vintf_parcelable_holder_can_contain_vintf_parcelable,
-    VintfExtendableParcelable,
-    VintfParcelable
-}
-test_parcelable_holder_stability!{
-    test_stable_parcelable_holder_can_contain_vintf_parcelable,
-    NonVintfExtendableParcelable,
-    VintfParcelable
-}
-test_parcelable_holder_stability!{
-    test_stable_parcelable_holder_can_contain_non_vintf_parcelable,
-    NonVintfExtendableParcelable,
-    NonVintfParcelable
-}
-test_parcelable_holder_stability!{
-    test_stable_parcelable_holder_can_contain_unstable_parcelable,
-    NonVintfExtendableParcelable,
-    UnstableParcelable
-}
-test_parcelable_holder_stability!{
-    test_unstable_parcelable_holder_can_contain_vintf_parcelable,
-    UnstableExtendableParcelable,
-    VintfParcelable
-}
-test_parcelable_holder_stability!{
-    test_unstable_parcelable_holder_can_contain_non_vintf_parcelable,
-    UnstableExtendableParcelable,
-    NonVintfParcelable
-}
-test_parcelable_holder_stability!{
-    test_unstable_parcelable_holder_can_contain_unstable_parcelable,
-    UnstableExtendableParcelable,
-    UnstableParcelable
-}
-
-#[test]
-fn test_vintf_parcelable_holder_cannot_contain_not_vintf_parcelable() {
-    let mut holder = VintfExtendableParcelable::default();
-    let parcelable = Rc::new(NonVintfParcelable::default());
-    let result = holder.ext.set_parcelable(Rc::clone(&parcelable));
-    assert_eq!(result, Err(binder::StatusCode::BAD_VALUE));
-
-    let parcelable2 = holder.ext.get_parcelable::<NonVintfParcelable>();
-    assert!(parcelable2.unwrap().is_none());
-}
-
-#[test]
-fn test_vintf_parcelable_holder_cannot_contain_unstable_parcelable() {
-    let mut holder = VintfExtendableParcelable::default();
-    let parcelable = Rc::new(UnstableParcelable::default());
-    let result = holder.ext.set_parcelable(Rc::clone(&parcelable));
-    assert_eq!(result, Err(binder::StatusCode::BAD_VALUE));
-
-    let parcelable2 = holder.ext.get_parcelable::<UnstableParcelable>();
-    assert!(parcelable2.unwrap().is_none());
-}
-
-#[test]
-fn test_read_write_extension() {
-    let ext = Rc::new(MyExt {
-        a: 42,
-        b: "EXT".into(),
-    });
-    let ext2 = Rc::new(MyExt2 {
-        a: 42,
-        b: MyExt {
-            a: 24,
-            b: "INEXT".into(),
-        },
-        c: "EXT2".into(),
-    });
-
-    let mut ep = ExtendableParcelable {
-        a: 1,
-        b: "a".into(),
-        c: 42,
-        ..Default::default()
-    };
-
-    ep.ext.set_parcelable(Rc::clone(&ext))
-        .unwrap();
-    ep.ext2.set_parcelable(Rc::clone(&ext2))
-        .unwrap();
-
-    let ext_like = ep.ext.get_parcelable::<MyExtLike>();
-    assert_eq!(ext_like.unwrap_err(), binder::StatusCode::BAD_VALUE);
-
-    let actual_ext = ep.ext.get_parcelable::<MyExt>();
-    assert!(actual_ext.unwrap().is_some());
-    let actual_ext2 = ep.ext2.get_parcelable::<MyExt2>();
-    assert!(actual_ext2.unwrap().is_some());
-
-    check_extension_content(&ep, &ext, &ext2);
-
-    let mut parcel = Parcel::new();
-    ep.write_to_parcel(&mut parcel).unwrap();
-
-    unsafe {
-        parcel.set_data_position(0).unwrap();
-    }
-    let mut ep1 = ExtendableParcelable::default();
-    ep1.read_from_parcel(&parcel).unwrap();
-
-    unsafe {
-        parcel.set_data_position(0).unwrap();
-    }
-    ep1.write_to_parcel(&mut parcel).unwrap();
-
-    unsafe {
-        parcel.set_data_position(0).unwrap();
-    }
-    let mut ep2 = ExtendableParcelable::default();
-    ep2.read_from_parcel(&parcel).unwrap();
-
-    let ext_like = ep2.ext.get_parcelable::<MyExtLike>();
-    assert!(ext_like.unwrap().is_none());
-
-    let actual_ext = ep2.ext.get_parcelable::<MyExt>();
-    assert!(actual_ext.unwrap().is_some());
-
-    let new_ext2 = Rc::new(MyExt2 {
-        a: 79,
-        b: MyExt {
-            a: 42,
-            b: "INNEWEXT".into(),
-        },
-        c: "NEWEXT2".into(),
-    });
-    ep2.ext2.set_parcelable(Rc::clone(&new_ext2))
-        .unwrap();
-
-    check_extension_content(&ep1, &ext, &ext2);
-    check_extension_content(&ep2, &ext, &new_ext2);
-}
-
-fn check_extension_content(
-    ep: &ExtendableParcelable,
-    ext: &MyExt,
-    ext2: &MyExt2,
-) {
-    assert_eq!(ep.a, 1);
-    assert_eq!(ep.b, "a");
-    assert_eq!(ep.c, 42);
-
-    let actual_ext = ep.ext.get_parcelable::<MyExt>()
-        .unwrap()
-        .unwrap();
-    assert_eq!(ext.a, actual_ext.a);
-    assert_eq!(ext.b, actual_ext.b);
-
-    let actual_ext2 = ep.ext2.get_parcelable::<MyExt2>()
-        .unwrap()
-        .unwrap();
-    assert_eq!(ext2.a, actual_ext2.a);
-    assert_eq!(ext2.b.a, actual_ext2.b.a);
-    assert_eq!(ext2.b.b, actual_ext2.b.b);
-    assert_eq!(ext2.c, actual_ext2.c);
-}
-
-#[test]
-fn test_reverse_recursive_list() {
-    let service = get_test_service();
-
-    let mut head = None;
-    for n in 0..10 {
-        let node = RecursiveList{
-            value: n,
-            next: head
-        };
-        head = Some(Box::new(node));
-    }
-    // head = [9, 8, .., 0]
-    let result = service.ReverseList(head.as_ref().unwrap());
-    assert!(result.is_ok());
-
-    // reversed should be [0, 1, ... 9]
-    let mut reversed: Option<&RecursiveList> = result.as_ref().ok();
-    for n in 0..10 {
-        assert_eq!(reversed.map(|inner| inner.value), Some(n));
-        reversed = reversed.unwrap().next.as_ref().map(|n| n.as_ref());
-    }
-    assert!(reversed.is_none())
 }
 
 #[test]
@@ -928,12 +674,10 @@ fn test_read_data_correctly_after_parcelable_with_new_field() {
             .expect("did not get binder service");
 
     let in_foo = Default::default();
-    let mut inout_foo = Foo { intDefault42: 0 };
-    let mut out_foo = Foo { intDefault42: 0 };
+    let mut inout_foo = Default::default();
+    let mut out_foo = Default::default();
     let ret = service.ignoreParcelablesAndRepeatInt(&in_foo, &mut inout_foo, &mut out_foo, 43);
     assert_eq!(ret, Ok(43));
-    assert_eq!(inout_foo.intDefault42, 0);
-    assert_eq!(out_foo.intDefault42, 0);
 }
 
 fn test_renamed_interface<F>(f: F)
@@ -1001,79 +745,3 @@ fn test_renamed_interface_new_as_old() {
         assert_eq!(real_name.as_ref().map(String::as_str), Ok("NewName"));
     });
 }
-
-#[test]
-fn test_nested_type() {
-    let service: binder::Strong<dyn INestedService::INestedService> =
-        binder::get_interface(<INestedService::BpNestedService as INestedService::INestedService>::get_descriptor())
-            .expect("did not get binder service");
-
-    let p = ParcelableWithNested::ParcelableWithNested {
-        status: ParcelableWithNested::Status::Status::OK,
-    };
-    let ret = service.flipStatus(&p);
-    assert_eq!(ret, Ok(INestedService::Result::Result {
-        status: ParcelableWithNested::Status::Status::NOT_OK,
-    }));
-}
-
-#[test]
-fn test_nonnull_binder() {
-    let service = get_test_service();
-    let result = service.TakesAnIBinder(&service.as_binder());
-    assert!(result.is_ok());
-}
-
-#[test]
-fn test_binder_list_without_null() {
-    let service = get_test_service();
-    let result = service.TakesAnIBinderList(&[service.as_binder()]);
-    assert!(result.is_ok());
-}
-
-#[test]
-fn test_null_binder_to_annotated_method() {
-    let service = get_test_service();
-    let result = service.TakesANullableIBinder(None);
-    assert!(result.is_ok());
-}
-
-#[test]
-fn test_binder_list_with_null_to_annotated_method() {
-    let service = get_test_service();
-    let result = service.TakesANullableIBinderList(Some(&[Some(service.as_binder()), None]));
-    assert!(result.is_ok());
-}
-
-#[test]
-fn test_binder_array() {
-    let service = get_test_service();
-    let callback = service
-        .GetCallback(false)
-        .expect("error calling GetCallback")
-        .expect("expected Some from GetCallback");
-
-    let mut array = vec![service.as_binder(), callback.as_binder()];
-
-    // Java needs initial values here (can't resize arrays)
-    let mut repeated = vec![Default::default(); array.len()];
-
-    let result = service.ReverseIBinderArray(&array, &mut repeated);
-    assert_eq!(repeated.into_iter().collect::<Option<Vec<_>>>().as_ref(), Some(&array));
-    array.reverse();
-    assert_eq!(result, Ok(array));
-}
-
-#[test]
-fn test_nullable_binder_array() {
-    let service = get_test_service();
-    let mut array = vec![Some(service.as_binder()), None];
-
-    // Java needs initial values here (can't resize arrays)
-    let mut repeated = Some(vec![Default::default(); array.len()]);
-
-    let result = service.ReverseNullableIBinderArray(Some(&array[..]), &mut repeated);
-    assert_eq!(repeated.as_ref(), Some(&array));
-    array.reverse();
-    assert_eq!(result, Ok(Some(array)));
-  }

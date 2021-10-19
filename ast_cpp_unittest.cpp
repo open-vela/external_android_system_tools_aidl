@@ -32,7 +32,9 @@ namespace {
 
 // clang-format off
 const char kExpectedHeaderOutput[] =
-    R"(#include <string>
+    R"(#pragma once
+
+#include <string>
 #include <memory>
 
 namespace android {
@@ -56,7 +58,9 @@ public:
 )";
 
 const char kExpectedGenericHeaderOutput[] =
-    R"(#include <string>
+    R"(#pragma once
+
+#include <string>
 #include <memory>
 
 namespace android {
@@ -157,8 +161,8 @@ TEST_F(AstCppTests, GeneratesHeader) {
   vector<unique_ptr<Declaration>> test_ns_globals;
   test_ns_globals.push_back(std::move(android_ns));
 
-  Document doc{{"string", "memory"}, std::move(test_ns_globals)};
-  CompareGeneratedCode(doc, kExpectedHeaderOutput);
+  CppHeader cpp_header{{"string", "memory"}, std::move(test_ns_globals)};
+  CompareGeneratedCode(cpp_header, kExpectedHeaderOutput);
 }
 
 TEST_F(AstCppTests, GeneratesGenericHeader) {
@@ -181,8 +185,38 @@ TEST_F(AstCppTests, GeneratesGenericHeader) {
   vector<unique_ptr<Declaration>> test_ns_globals;
   test_ns_globals.push_back(std::move(android_ns));
 
-  Document doc{{"string", "memory"}, std::move(test_ns_globals)};
-  CompareGeneratedCode(doc, kExpectedGenericHeaderOutput);
+  CppHeader cpp_header{{"string", "memory"}, std::move(test_ns_globals)};
+  CompareGeneratedCode(cpp_header, kExpectedGenericHeaderOutput);
+}
+
+TEST_F(AstCppTests, GeneratesUnscopedEnum) {
+  Enum e("Foo", "", false);
+  e.AddValue("BAR", "42");
+  e.AddValue("BAZ", "");
+
+  string expected =
+      R"(enum Foo {
+  BAR = 42,
+  BAZ,
+};
+)";
+
+  CompareGeneratedCode(e, expected);
+}
+
+TEST_F(AstCppTests, GeneratesScopedEnum) {
+  Enum e("Foo", "int32_t", true);
+  e.AddValue("BAR", "42");
+  e.AddValue("BAZ", "");
+
+  string expected =
+      R"(enum class Foo : int32_t {
+  BAR = 42,
+  BAZ,
+};
+)";
+
+  CompareGeneratedCode(e, expected);
 }
 
 TEST_F(AstCppTests, GeneratesArgList) {

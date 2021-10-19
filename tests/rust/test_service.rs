@@ -21,13 +21,8 @@ use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
 };
 use aidl_test_interface::aidl::android::aidl::tests::{
     BackendType::BackendType, ByteEnum::ByteEnum, ConstantExpressionEnum::ConstantExpressionEnum,
-    INamedCallback, INewName, IOldName, IntEnum::IntEnum, LongEnum::LongEnum,
-    RecursiveList::RecursiveList, StructuredParcelable,Union,
-    extension::ExtendableParcelable::ExtendableParcelable,
-    extension::MyExt::MyExt,
-};
-use aidl_test_interface::aidl::android::aidl::tests::nested::{
-    INestedService, ParcelableWithNested,
+    INamedCallback, INewName, IOldName, IntEnum::IntEnum, LongEnum::LongEnum, StructuredParcelable,
+    Union,
 };
 use aidl_test_interface::binder::{
     self, BinderFeatures, Interface, ParcelFileDescriptor, SpIBinder,
@@ -229,14 +224,6 @@ impl ITestService::ITestService for TestService {
         Ok(())
     }
 
-    fn TakesAnIBinderList(&self, _: &[SpIBinder]) -> binder::Result<()> {
-        Ok(())
-    }
-
-    fn TakesANullableIBinderList(&self, _: Option<&[Option<SpIBinder>]>) -> binder::Result<()> {
-        Ok(())
-    }
-
     fn ReverseNullableUtf8CppString(
         &self,
         input: Option<&[Option<String>]>,
@@ -302,57 +289,6 @@ impl ITestService::ITestService for TestService {
         Ok(())
     }
 
-    fn RepeatExtendableParcelable(
-        &self,
-        ep: &ExtendableParcelable,
-        ep2: &mut ExtendableParcelable,
-    ) -> binder::Result<()> {
-        ep2.a = ep.a;
-        ep2.b = ep.b.clone();
-
-        let my_ext = ep.ext.get_parcelable::<MyExt>()?;
-        if let Some(my_ext) = my_ext {
-            ep2.ext.set_parcelable(my_ext)?;
-        } else {
-            ep2.ext.reset();
-        }
-
-        Ok(())
-    }
-
-    fn ReverseList(&self, list: &RecursiveList) -> binder::Result<RecursiveList> {
-        let mut reversed: Option<RecursiveList> = None;
-        let mut cur: Option<&RecursiveList> = Some(list);
-        while let Some(node) = cur {
-            reversed = Some(RecursiveList{
-                value: node.value,
-                next: reversed.map(Box::new),
-            });
-            cur = node.next.as_ref().map(|n| n.as_ref());
-        };
-        // `list` is always not empty, so is `reversed`.
-        Ok(reversed.unwrap())
-    }
-
-    fn ReverseIBinderArray(
-        &self,
-        input: &[SpIBinder],
-        repeated: &mut Vec<Option<SpIBinder>>,
-    ) -> binder::Result<Vec<SpIBinder>> {
-        *repeated = input.iter().cloned().map(Some).collect();
-        Ok(input.iter().rev().cloned().collect())
-    }
-
-    fn ReverseNullableIBinderArray(
-        &self,
-        input: Option<&[Option<SpIBinder>]>,
-        repeated: &mut Option<Vec<Option<SpIBinder>>>,
-    ) -> binder::Result<Option<Vec<Option<SpIBinder>>>> {
-        let input = input.expect("input is null");
-        *repeated = Some(input.to_vec());
-        Ok(Some(input.iter().rev().cloned().collect()))
-    }
-
     fn GetOldNameInterface(&self) -> binder::Result<binder::Strong<dyn IOldName::IOldName>> {
         Ok(IOldName::BnOldName::new_binder(
             OldName,
@@ -397,24 +333,6 @@ impl IFooInterface::IFooInterface for FooInterface {
     }
 }
 
-struct NestedService;
-
-impl Interface for NestedService {}
-
-impl INestedService::INestedService for NestedService {
-    fn flipStatus(&self, p: &ParcelableWithNested::ParcelableWithNested) -> binder::Result<INestedService::Result::Result> {
-        if p.status == ParcelableWithNested::Status::Status::OK {
-            Ok(INestedService::Result::Result {
-                status: ParcelableWithNested::Status::Status::NOT_OK,
-            })
-        } else {
-            Ok(INestedService::Result::Result {
-                status: ParcelableWithNested::Status::Status::OK,
-            })
-        }
-    }
-}
-
 fn main() {
     binder::ProcessState::set_thread_pool_max_thread_count(0);
     binder::ProcessState::start_thread_pool();
@@ -427,11 +345,6 @@ fn main() {
     let versioned_service = BnFooInterface::new_binder(FooInterface, BinderFeatures::default());
     binder::add_service(versioned_service_name, versioned_service.as_binder())
         .expect("Could not register service");
-
-    let nested_service_name = <INestedService::BpNestedService as INestedService::INestedService>::get_descriptor();
-    let nested_service = INestedService::BnNestedService::new_binder(NestedService, BinderFeatures::default());
-    binder::add_service(nested_service_name, nested_service.as_binder())
-            .expect("Could not register service");
 
     binder::ProcessState::join_thread_pool();
 }

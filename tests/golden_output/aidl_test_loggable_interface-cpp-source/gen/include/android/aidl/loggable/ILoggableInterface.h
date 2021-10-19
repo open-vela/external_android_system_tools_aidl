@@ -13,8 +13,11 @@
 #include <vector>
 
 namespace android {
+
 namespace aidl {
+
 namespace loggable {
+
 class ILoggableInterface : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(LoggableInterface)
@@ -30,6 +33,9 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
 };  // class ILoggableInterfaceDefault
+
 }  // namespace loggable
+
 }  // namespace aidl
+
 }  // namespace android

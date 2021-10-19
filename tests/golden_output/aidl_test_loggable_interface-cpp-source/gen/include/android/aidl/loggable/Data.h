@@ -11,8 +11,11 @@
 #include <utils/String16.h>
 
 namespace android {
+
 namespace aidl {
+
 namespace loggable {
+
 class Data : public ::android::Parcelable {
 public:
   inline bool operator!=(const Data& rhs) const {
@@ -55,6 +58,9 @@ public:
     return os.str();
   }
 };  // class Data
+
 }  // namespace loggable
+
 }  // namespace aidl
+
 }  // namespace android

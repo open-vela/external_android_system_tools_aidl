@@ -16,24 +16,24 @@
 
 package android.aidl.tests;
 
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.core.IsNull.notNullValue;
 
-import android.os.Binder;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.junit.runner.RunWith;
 
 @RunWith(JUnit4.class)
 public class NullableTests {
@@ -80,44 +80,18 @@ public class NullableTests {
 
     @Test
     public void testExpectNpeWithNullBinderList() throws RemoteException {
+        assumeTrue(mCppJavaTests != null);
+
         List<IBinder> listWithNulls = new ArrayList<IBinder>();
         listWithNulls.add(null);
         try {
-          mService.TakesAnIBinderList(listWithNulls);
+            mCppJavaTests.TakesAnIBinderList(listWithNulls);
         } catch (NullPointerException ex) {
             return;
         }
         if (mService.getBackendType() != BackendType.JAVA) {
           fail("NullPointerException was expected, but wasn't thrown");
         }
-    }
-
-    @Test
-    public void testReverseIBinderArray() throws RemoteException {
-      IBinder[] input = {new Binder(), new Binder()};
-      IBinder[] repeated = new IBinder[input.length];
-      IBinder[] reversed = mService.ReverseIBinderArray(input, repeated);
-
-      assertThat(repeated, is(input));
-      assertThat(reversed.length, is(input.length));
-      for (int i = 0; i < input.length; ++i) {
-        int j = reversed.length - (1 + i);
-        assertThat(reversed[j], is(input[i]));
-      }
-    }
-
-    @Test
-    public void testReverseNullableIBinderArray() throws RemoteException {
-      IBinder[] input = {new Binder(), null};
-      IBinder[] repeated = new IBinder[input.length];
-      IBinder[] reversed = mService.ReverseNullableIBinderArray(input, repeated);
-
-      assertThat(repeated, is(input));
-      assertThat(reversed.length, is(input.length));
-      for (int i = 0; i < input.length; ++i) {
-        int j = reversed.length - (1 + i);
-        assertThat(reversed[j], is(input[i]));
-      }
     }
 
     @Test
