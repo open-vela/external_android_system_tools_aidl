@@ -21,17 +21,28 @@ type nameProperties struct {
 type hostProperties struct {
 	Cflags []string
 }
-type perTargetProperties struct {
+
+type darwinProperties struct {
 	Enabled *bool
 }
 
+type imageProperties struct {
+	Shared_libs         []string
+	Header_libs         []string
+	Exclude_shared_libs []string
+	Cflags              []string
+}
+
 type ccTargetProperties struct {
-	Host   hostProperties
-	Darwin perTargetProperties
+	Host     hostProperties
+	Darwin   darwinProperties
+	Platform imageProperties
+	Vendor   imageProperties
+	Product  imageProperties
 }
 
 type rustTargetProperties struct {
-	Darwin perTargetProperties
+	Darwin darwinProperties
 }
 
 type ccProperties struct {
@@ -56,7 +67,6 @@ type ccProperties struct {
 	Stem                      *string
 	Apex_available            []string
 	Min_sdk_version           *string
-	UseApexNameMacro          bool
 	Target                    ccTargetProperties
 	Tidy                      *bool
 	Tidy_flags                []string

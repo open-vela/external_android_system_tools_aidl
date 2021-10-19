@@ -33,12 +33,13 @@ extern char kTransactionLogStruct[];
 
 // These roughly correspond to the various class names in the C++ hierarchy:
 enum class ClassNames {
-  BASE,          // Foo (not a real class, but useful in some circumstances).
-  CLIENT,        // BpFoo
-  SERVER,        // BnFoo
-  INTERFACE,     // IFoo
-  DEFAULT_IMPL,  // IFooDefault
-  RAW,           // (as shown in the file)
+  BASE,            // Foo (not a real class, but useful in some circumstances).
+  CLIENT,          // BpFoo
+  SERVER,          // BnFoo
+  INTERFACE,       // IFoo
+  DEFAULT_IMPL,    // IFooDefault
+  RAW,             // (as shown in the file)
+  DELEGATOR_IMPL,  // IFooDelegator
 };
 
 string ClassName(const AidlDefinedType& defined_type, ClassNames type);
@@ -73,6 +74,13 @@ std::vector<T> Append(std::vector<T>&& as, std::vector<T>&& bs) {
   return appended;
 }
 
+// Returns Parent1::Parent2::Self. Namespaces are not included.
+std::string GetQualifiedName(const AidlDefinedType& type);
+
+void GenerateEnumClassDecl(CodeWriter& out, const AidlEnumDeclaration& enum_decl,
+                           const std::string& backing_type, ::ConstantValueDecorator decorator);
+std::string GenerateEnumToString(const AidlEnumDeclaration& enum_decl,
+                                 const std::string& backing_type);
 std::string GenerateEnumValues(const AidlEnumDeclaration& enum_decl,
                                const std::vector<std::string>& enclosing_namespaces_of_enum_decl);
 std::string TemplateDecl(const AidlParcelable& defined_type);

@@ -101,8 +101,9 @@ std::string GetRustName(const AidlTypeSpecifier& type, const AidlTypenames& type
       {"String", "String"},
       {"IBinder", "binder::SpIBinder"},
       {"ParcelFileDescriptor", "binder::parcel::ParcelFileDescriptor"},
+      {"ParcelableHolder", "binder::parcel::ParcelableHolder"},
   };
-
+  const bool is_vector = type.IsArray() || typenames.IsList(type);
   // If the type is an array/List<T>, get the inner element type
   AIDL_FATAL_IF(typenames.IsList(type) && type.GetTypeParameters().size() != 1, type);
   const auto& element_type = type.IsGeneric() ? (*type.GetTypeParameters().at(0)) : type;
@@ -113,8 +114,8 @@ std::string GetRustName(const AidlTypeSpecifier& type, const AidlTypenames& type
       return "u8";
     } else if (element_type_name == "String" && mode == StorageMode::UNSIZED_ARGUMENT) {
       return "str";
-    } else if (element_type_name == "ParcelFileDescriptor") {
-      if (type.IsArray() && mode == StorageMode::DEFAULT_VALUE) {
+    } else if (element_type_name == "ParcelFileDescriptor" || element_type_name == "IBinder") {
+      if (is_vector && mode == StorageMode::DEFAULT_VALUE) {
         // Out-arguments of ParcelFileDescriptors arrays need to
         // be Vec<Option<ParcelFileDescriptor>> so resize_out_vec
         // can initialize all elements to None (it requires Default
@@ -150,6 +151,21 @@ std::string ConstantValueDecoratorRef(const AidlTypeSpecifier& type, const std::
   return rust_value;
 }
 
+bool UsesOptionInNullableVector(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
+  AIDL_FATAL_IF(!type.IsArray() && !typenames.IsList(type), type) << "not a vector";
+  AIDL_FATAL_IF(typenames.IsList(type) && type.GetTypeParameters().size() != 1, type)
+      << "List should have a single type arg.";
+
+  const auto& element_type = type.IsArray() ? type : *type.GetTypeParameters().at(0);
+  if (typenames.IsPrimitiveTypename(element_type.GetName())) {
+    return false;
+  }
+  if (typenames.GetEnumDeclaration(element_type)) {
+    return false;
+  }
+  return true;
+}
+
 std::string RustNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
                        StorageMode mode) {
   std::string rust_name;
@@ -162,11 +178,14 @@ std::string RustNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typen
       element_mode = StorageMode::VALUE;
     }
     rust_name = GetRustName(type, typenames, element_mode);
-    if (type.IsNullable() && rust_name == "String") {
+    if (type.IsNullable() && UsesOptionInNullableVector(type, typenames)) {
       // The mapping for nullable string arrays is
       // optional<vector<optional<string>>> in the NDK,
       // so we do the same
-      rust_name = "Option<" + rust_name + ">";
+      // However, we don't need to when GetRustName() already wraps it with Option.
+      if (!base::StartsWith(rust_name, "Option<")) {
+        rust_name = "Option<" + rust_name + ">";
+      }
     }
     if (mode == StorageMode::UNSIZED_ARGUMENT) {
       rust_name = "[" + rust_name + "]";
@@ -186,10 +205,14 @@ std::string RustNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typen
   if (type.IsNullable() ||
       // Some types don't implement Default, so we wrap them
       // in Option, which defaults to None
-      (!TypeHasDefault(type, typenames) &&
+      (TypeNeedsOption(type, typenames) &&
        (mode == StorageMode::DEFAULT_VALUE || mode == StorageMode::OUT_ARGUMENT ||
         mode == StorageMode::PARCELABLE_FIELD))) {
-    rust_name = "Option<" + rust_name + ">";
+    if (type.IsHeapNullable()) {
+      rust_name = "Option<Box<" + rust_name + ">>";
+    } else {
+      rust_name = "Option<" + rust_name + ">";
+    }
   }
 
   if (mode == StorageMode::OUT_ARGUMENT || mode == StorageMode::INOUT_ARGUMENT) {
@@ -271,30 +294,35 @@ bool TypeIsInterface(const AidlTypeSpecifier& type, const AidlTypenames& typenam
   return definedType != nullptr && definedType->AsInterface() != nullptr;
 }
 
-bool TypeHasDefault(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
+bool TypeNeedsOption(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
   if (type.IsArray() || typenames.IsList(type)) {
-    return true;
+    return false;
   }
 
   // Already an Option<T>
   if (type.IsNullable()) {
-    return true;
+    return false;
   }
 
   const string& aidl_name = type.GetName();
   if (aidl_name == "IBinder") {
-    return false;
+    return true;
   }
   if (aidl_name == "ParcelFileDescriptor") {
+    return true;
+  }
+  if (aidl_name == "ParcelableHolder") {
+    // ParcelableHolder never needs an Option because we always
+    // call its new() constructor directly instead of default()
     return false;
   }
 
   // Strong<dyn IFoo> values don't implement Default
   if (TypeIsInterface(type, typenames)) {
-    return false;
+    return true;
   }
 
-  return true;
+  return false;
 }
 
 }  // namespace rust

@@ -34,6 +34,7 @@ using android::aidl::tests::IntEnum;
 using android::aidl::tests::ITestService;
 using android::aidl::tests::OtherParcelableForToString;
 using android::aidl::tests::ParcelableForToString;
+using android::aidl::tests::RecursiveList;
 using android::aidl::tests::SimpleParcelable;
 using android::aidl::tests::StructuredParcelable;
 using android::aidl::tests::Union;
@@ -515,4 +516,27 @@ TEST_F(AidlTest, ParcelableToString) {
       "}";
 
   EXPECT_EQ(expected, p.toString());
+}
+
+TEST_F(AidlTest, ReverseRecursiveList) {
+  std::unique_ptr<RecursiveList> head;
+  for (int i = 0; i < 10; i++) {
+    auto node = std::make_unique<RecursiveList>();
+    node->value = i;
+    node->next = std::move(head);
+    head = std::move(node);
+  }
+  // head: [9, 8, ... 0]
+
+  RecursiveList reversed;
+  auto status = service->ReverseList(*head, &reversed);
+  ASSERT_TRUE(status.isOk()) << status.toString8();
+
+  // reversed should be [0, 1, .. 9]
+  RecursiveList* cur = &reversed;
+  for (int i = 0; i < 10; i++) {
+    EXPECT_EQ(i, cur->value);
+    cur = cur->next.get();
+  }
+  EXPECT_EQ(nullptr, cur);
 }

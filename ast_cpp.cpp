@@ -98,45 +98,6 @@ void ClassDecl::AddPrivate(std::unique_ptr<Declaration> member) {
   private_members_.push_back(std::move(member));
 }
 
-Enum::EnumField::EnumField(const string& k, const string& v, const string& a)
-    : key(k), value(v), attribute(a) {}
-
-Enum::Enum(const string& name, const string& base_type, bool is_class,
-           const std::string& attributes)
-    : enum_name_(name), underlying_type_(base_type), attributes_(attributes), is_class_(is_class) {}
-
-void Enum::Write(CodeWriter* to) const {
-  to->Write("enum ");
-  if (is_class_) {
-    to->Write("class ");
-  }
-  if (!attributes_.empty()) {
-    to->Write("%s ", attributes_.c_str());
-  }
-  if (underlying_type_.empty()) {
-    to->Write("%s {\n", enum_name_.c_str());
-  } else {
-    to->Write("%s : %s {\n", enum_name_.c_str(), underlying_type_.c_str());
-  }
-  to->Indent();
-  for (const auto& field : fields_) {
-    to->Write("%s", field.key.c_str());
-    if (!field.attribute.empty()) {
-      to->Write(" %s", field.attribute.c_str());
-    }
-    if (!field.value.empty()) {
-      to->Write(" = %s", field.value.c_str());
-    }
-    to->Write(",\n");
-  }
-  to->Dedent();
-  to->Write("};\n");
-}
-
-void Enum::AddValue(const string& key, const string& value, const string& attribute) {
-  fields_.emplace_back(key, value, attribute);
-}
-
 ArgList::ArgList(const std::string& single_argument)
     : ArgList(vector<string>{single_argument}) {}
 
@@ -473,21 +434,13 @@ void Document::Write(CodeWriter* to) const {
   for (const auto& include : include_list_) {
     to->Write("#include <%s>\n", include.c_str());
   }
-  to->Write("\n");
+  if (!include_list_.empty()) {
+    to->Write("\n");
+  }
 
   for (const auto& declaration : declarations_) {
     declaration->Write(to);
   }
-}
-
-CppHeader::CppHeader(const std::vector<std::string>& include_list,
-                     std::vector<std::unique_ptr<Declaration>> declarations)
-    : Document(include_list, std::move(declarations)) {}
-
-void CppHeader::Write(CodeWriter* to) const {
-  to->Write("#pragma once\n\n");
-
-  Document::Write(to);
 }
 
 CppSource::CppSource(const std::vector<std::string>& include_list,
