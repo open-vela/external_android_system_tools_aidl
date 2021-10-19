@@ -1,4 +1,3 @@
-#![forbid(unsafe_code)]
 #![allow(non_upper_case_globals)]
 #![allow(non_snake_case)]
 #[allow(unused_imports)] use binder::IBinderInternal;
@@ -33,6 +32,7 @@ use lazy_static::lazy_static;
 lazy_static! {
   static ref DEFAULT_IMPL: std::sync::Mutex<IOldNameDefaultRef> = std::sync::Mutex::new(None);
 }
+pub(crate) mod mangled { pub use super::IOldName as _7_android_4_aidl_5_tests_8_IOldName; }
 impl IOldName for BpOldName {
   fn RealName(&self) -> binder::public_api::Result<String> {
     let _aidl_reply = self.binder.transact(transactions::RealName, binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
@@ -68,7 +68,4 @@ fn on_transact(_aidl_service: &dyn IOldName, _aidl_code: binder::TransactionCode
     }
     _ => Err(binder::StatusCode::UNKNOWN_TRANSACTION)
   }
-}
-pub(crate) mod mangled {
- pub use super::IOldName as _7_android_4_aidl_5_tests_8_IOldName;
 }

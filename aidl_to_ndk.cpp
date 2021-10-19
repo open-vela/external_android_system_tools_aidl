@@ -24,7 +24,6 @@
 #include <functional>
 
 using ::android::base::Join;
-using ::android::base::Split;
 
 namespace android {
 namespace aidl {
@@ -160,7 +159,6 @@ TypeInfo ParcelableTypeInfo(const AidlParcelable& type, const AidlTypeSpecifier&
     }
     clazz += base::StringPrintf("<%s>", base::Join(type_params, ", ").c_str());
   }
-  const std::string nullable = typeSpec.IsHeapNullable() ? "std::unique_ptr" : "std::optional";
   return TypeInfo{
       .raw =
           TypeInfo::Aspect{
@@ -176,7 +174,7 @@ TypeInfo ParcelableTypeInfo(const AidlParcelable& type, const AidlTypeSpecifier&
           .write_func = StandardWrite("::ndk::AParcel_writeVector"),
       }),
       .nullable = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
-          .cpp_name = nullable + "<" + clazz + ">",
+          .cpp_name = "std::optional<" + clazz + ">",
           .value_is_cheap = false,
           .read_func = StandardRead("::ndk::AParcel_readNullableParcelable"),
           .write_func = StandardWrite("::ndk::AParcel_writeNullableParcelable"),
@@ -303,24 +301,14 @@ static map<std::string, TypeInfo> kNdkTypeInfoMap = {
                  .read_func = StandardRead("::ndk::AParcel_readRequiredStrongBinder"),
                  .write_func = StandardRead("::ndk::AParcel_writeRequiredStrongBinder"),
              },
-         .array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
-             .cpp_name = "std::vector<::ndk::SpAIBinder>",
-             .value_is_cheap = false,
-             .read_func = StandardRead("::ndk::AParcel_readVector"),
-             .write_func = StandardWrite("::ndk::AParcel_writeVector"),
-         }),
+         .array = nullptr,
          .nullable = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
              .cpp_name = "::ndk::SpAIBinder",
              .value_is_cheap = false,
              .read_func = StandardRead("::ndk::AParcel_readNullableStrongBinder"),
              .write_func = StandardRead("::ndk::AParcel_writeNullableStrongBinder"),
          }),
-         .nullable_array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
-             .cpp_name = "std::optional<std::vector<::ndk::SpAIBinder>>",
-             .value_is_cheap = false,
-             .read_func = StandardRead("::ndk::AParcel_readVector"),
-             .write_func = StandardWrite("::ndk::AParcel_writeVector"),
-         }),
+         .nullable_array = nullptr,
      }},
     {"ParcelFileDescriptor",
      TypeInfo{
@@ -360,29 +348,6 @@ static map<std::string, TypeInfo> kNdkTypeInfoMap = {
      }},
 };
 
-static TypeInfo GetTypeInfo(const AidlTypenames& types, const AidlTypeSpecifier& aidl) {
-  auto& aidl_name = aidl.GetName();
-
-  if (AidlTypenames::IsBuiltinTypename(aidl_name)) {
-    auto it = kNdkTypeInfoMap.find(aidl_name);
-    AIDL_FATAL_IF(it == kNdkTypeInfoMap.end(), aidl_name);
-    return it->second;
-  }
-  const AidlDefinedType* type = types.TryGetDefinedType(aidl_name);
-  AIDL_FATAL_IF(type == nullptr, aidl_name) << "Unrecognized type.";
-
-  if (const AidlInterface* intf = type->AsInterface(); intf != nullptr) {
-    return InterfaceTypeInfo(*intf);
-  } else if (const AidlParcelable* parcelable = type->AsParcelable(); parcelable != nullptr) {
-    return ParcelableTypeInfo(*parcelable, aidl, types);
-  } else if (const AidlEnumDeclaration* enum_decl = type->AsEnumDeclaration();
-             enum_decl != nullptr) {
-    return EnumDeclarationTypeInfo(*enum_decl);
-  } else {
-    AIDL_FATAL(aidl_name) << "Unrecognized type";
-  }
-}
-
 static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlTypeSpecifier& aidl) {
   AIDL_FATAL_IF(!aidl.IsResolved(), aidl) << aidl.ToString();
   auto& aidl_name = aidl.GetName();
@@ -394,16 +359,40 @@ static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlType
     AIDL_FATAL_IF(!aidl.IsGeneric(), aidl) << "List must be generic type.";
     AIDL_FATAL_IF(aidl.GetTypeParameters().size() != 1, aidl)
         << "List can accept only one type parameter.";
-    const auto& type_param = *aidl.GetTypeParameters()[0];
+    const auto& type_param = aidl.GetTypeParameters()[0];
     // TODO(b/136048684) AIDL doesn't support nested type parameter yet.
-    AIDL_FATAL_IF(type_param.IsGeneric(), aidl) << "AIDL doesn't support nested type parameter";
+    AIDL_FATAL_IF(type_param->IsGeneric(), aidl) << "AIDL doesn't support nested type parameter";
 
-    info = GetTypeInfo(types, type_param);
-  } else {
-    info = GetTypeInfo(types, aidl);
+    AidlTypeSpecifier array_type =
+        AidlTypeSpecifier(AIDL_LOCATION_HERE, type_param->GetUnresolvedName(), true /* isArray */,
+                          nullptr /* type_params */, aidl.GetComments());
+    if (!(array_type.Resolve(types) && array_type.CheckValid(types))) {
+      AIDL_FATAL(aidl) << "The type parameter is wrong.";
+    }
+    return GetTypeAspect(types, array_type);
   }
 
-  if (aidl.IsArray() || aidl_name == "List") {
+  if (AidlTypenames::IsBuiltinTypename(aidl_name)) {
+    auto it = kNdkTypeInfoMap.find(aidl_name);
+    AIDL_FATAL_IF(it == kNdkTypeInfoMap.end(), aidl_name);
+    info = it->second;
+  } else {
+    const AidlDefinedType* type = types.TryGetDefinedType(aidl_name);
+    AIDL_FATAL_IF(type == nullptr, aidl_name) << "Unrecognized type.";
+
+    if (const AidlInterface* intf = type->AsInterface(); intf != nullptr) {
+      info = InterfaceTypeInfo(*intf);
+    } else if (const AidlParcelable* parcelable = type->AsParcelable(); parcelable != nullptr) {
+      info = ParcelableTypeInfo(*parcelable, aidl, types);
+    } else if (const AidlEnumDeclaration* enum_decl = type->AsEnumDeclaration();
+               enum_decl != nullptr) {
+      info = EnumDeclarationTypeInfo(*enum_decl);
+    } else {
+      AIDL_FATAL(aidl_name) << "Unrecognized type";
+    }
+  }
+
+  if (aidl.IsArray()) {
     if (aidl.IsNullable()) {
       AIDL_FATAL_IF(info.nullable_array == nullptr, aidl)
           << "Unsupported type in NDK Backend: " << aidl.ToString();
@@ -425,10 +414,10 @@ static TypeInfo::Aspect GetTypeAspect(const AidlTypenames& types, const AidlType
 
 std::string NdkFullClassName(const AidlDefinedType& type, cpp::ClassNames name) {
   std::vector<std::string> pieces = {"::aidl"};
-  std::vector<std::string> split_name = Split(type.GetCanonicalName(), ".");
-  pieces.insert(pieces.end(), split_name.begin(), split_name.end());
-  // Override name part with cpp::ClassName(type, name)
-  pieces.back() = cpp::ClassName(type, name);
+  std::vector<std::string> package = type.GetSplitPackage();
+  pieces.insert(pieces.end(), package.begin(), package.end());
+  pieces.push_back(cpp::ClassName(type, name));
+
   return Join(pieces, "::");
 }
 

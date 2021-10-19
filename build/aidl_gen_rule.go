@@ -65,15 +65,13 @@ var (
 type aidlGenProperties struct {
 	Srcs                  []string `android:"path"`
 	AidlRoot              string   // base directory for the input aidl file
+	IsToT                 bool
 	ImportsWithoutVersion []string
 	Stability             *string
-	Min_sdk_version       *string
-	Platform_apis         bool
 	Lang                  string // target language [java|cpp|ndk|rust]
 	BaseName              string
 	GenLog                bool
 	Version               string
-	GenRpc                bool
 	GenTrace              bool
 	Unstable              *bool
 	Visibility            []string
@@ -85,11 +83,10 @@ type aidlGenRule struct {
 
 	properties aidlGenProperties
 
-	deps           deps
 	implicitInputs android.Paths
 	importFlags    string
 
-	// A frozen aidl_interface always have a hash file
+	// TODO(b/149952131): always have a hash file
 	hashFile android.Path
 
 	genOutDir     android.ModuleGenPath
@@ -101,11 +98,6 @@ type aidlGenRule struct {
 var _ android.SourceFileProducer = (*aidlGenRule)(nil)
 var _ genrule.SourceFileGenerator = (*aidlGenRule)(nil)
 
-func (g *aidlGenRule) getImports(ctx android.ModuleContext) map[string]string {
-	iface := ctx.GetDirectDepWithTag(g.properties.BaseName, interfaceDep).(*aidlInterface)
-	return iface.getImports(g.properties.Version)
-}
-
 func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	srcs, imports := getPaths(ctx, g.properties.Srcs, g.properties.AidlRoot)
 
@@ -113,14 +105,12 @@ func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 		return
 	}
 
-	g.deps = getDeps(ctx, g.getImports(ctx))
-
 	genDirTimestamp := android.PathForModuleGen(ctx, "timestamp") // $out/gen/timestamp
 	g.implicitInputs = append(g.implicitInputs, genDirTimestamp)
-	g.implicitInputs = append(g.implicitInputs, g.deps.implicits...)
-	g.implicitInputs = append(g.implicitInputs, g.deps.preprocessed...)
 
-	imports = append(imports, g.deps.imports...)
+	importPaths, implicits := getImportsFromDeps(ctx, g.properties.IsToT)
+	imports = append(imports, importPaths...)
+
 	g.importFlags = strings.Join(wrap("-I", imports, ""), " ")
 
 	g.genOutDir = android.PathForModuleGen(ctx)
@@ -133,9 +123,10 @@ func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 
 	// This is to clean genOutDir before generating any file
 	ctx.Build(pctx, android.BuildParams{
-		Rule:   aidlDirPrepareRule,
-		Inputs: srcs,
-		Output: genDirTimestamp,
+		Rule:      aidlDirPrepareRule,
+		Implicits: implicits,
+		Inputs:    srcs,
+		Output:    genDirTimestamp,
 		Args: map[string]string{
 			"outDir": g.genOutDir.String(),
 		},
@@ -150,8 +141,7 @@ func (g *aidlGenRule) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 }
 
 func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContext, src android.Path) (android.WritablePath, android.Paths) {
-	relPath := src.Rel()
-	baseDir := strings.TrimSuffix(strings.TrimSuffix(src.String(), relPath), "/")
+	baseDir := getBaseDir(ctx, src, android.PathForModuleSrc(ctx, g.properties.AidlRoot))
 
 	var ext string
 	if g.properties.Lang == langJava {
@@ -161,6 +151,7 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 	} else {
 		ext = "cpp"
 	}
+	relPath, _ := filepath.Rel(baseDir, src.String())
 	outFile := android.PathForModuleGen(ctx, pathtools.ReplaceExtension(relPath, ext))
 	implicits := g.implicitInputs
 
@@ -169,10 +160,10 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 		optionalFlags = append(optionalFlags, "--version "+g.properties.Version)
 
 		hash := "notfrozen"
-		if !strings.HasPrefix(baseDir, ctx.Config().SoongOutDir()) {
+		if !strings.HasPrefix(baseDir, ctx.Config().BuildDir()) {
 			hashFile := android.ExistentPathForSource(ctx, baseDir, ".hash")
 			if hashFile.Valid() {
-				hash = "$$(tail -1 '" + hashFile.Path().String() + "')"
+				hash = "$$(read -r <" + hashFile.Path().String() + " hash extra; printf '%s' \"$$hash\")"
 				implicits = append(implicits, hashFile.Path())
 
 				g.hashFile = hashFile.Path()
@@ -180,24 +171,12 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 		}
 		optionalFlags = append(optionalFlags, "--hash "+hash)
 	}
-	if g.properties.GenRpc {
-		optionalFlags = append(optionalFlags, "--rpc")
-	}
 	if g.properties.GenTrace {
 		optionalFlags = append(optionalFlags, "-t")
 	}
 	if g.properties.Stability != nil {
 		optionalFlags = append(optionalFlags, "--stability", *g.properties.Stability)
 	}
-	if g.properties.Platform_apis {
-		optionalFlags = append(optionalFlags, "--min_sdk_version platform_apis")
-	} else {
-		minSdkVer := g.properties.Min_sdk_version
-		if minSdkVer != nil {
-			optionalFlags = append(optionalFlags, "--min_sdk_version "+*minSdkVer)
-		}
-	}
-	optionalFlags = append(optionalFlags, wrap("-p", g.deps.preprocessed.Strings(), "")...)
 
 	var headers android.WritablePaths
 	if g.properties.Lang == langJava {
