@@ -1986,13 +1986,10 @@ TEST_F(AidlTest, NoJavaOutputForParcelableDeclaration) {
 }
 
 TEST_P(AidlTest, RejectsListArray) {
-  const string expected_stderr = "ERROR: a/Foo.aidl:2.1-7: List[] is not supported.\n";
-  const string list_array_parcelable =
-      "package a; parcelable Foo {\n"
-      "  List[] lists; }";
+  const string input = "package a; parcelable Foo { List<String>[] lists; }";
   CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", list_array_parcelable, typenames_, GetLanguage()));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", input, typenames_, GetLanguage()));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Arrays of List are not supported"));
 }
 
 TEST_P(AidlTest, RejectsPrimitiveListInStableAidl) {
@@ -4714,7 +4711,7 @@ const std::map<std::string, std::string> kListSupportExpectations = {
     {"rust_StringArray", "List of arrays is not supported."},
     {"cpp_IBinder", ""},
     {"java_IBinder", ""},
-    {"ndk_IBinder", "List<IBinder> is not supported. List in NDK doesn't support IBinder."},
+    {"ndk_IBinder", ""},
     {"rust_IBinder", ""},
     {"cpp_ParcelFileDescriptor", ""},
     {"java_ParcelFileDescriptor", ""},

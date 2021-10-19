@@ -8,6 +8,8 @@
 #include <android/binder_ibinder_platform.h>
 #include <android/binder_interface_utils.h>
 #include <android/binder_parcel_platform.h>
+#include <android/binder_parcelable_utils.h>
+#include <android/binder_to_string.h>
 #include <aidl/android/aidl/tests/BackendType.h>
 #include <aidl/android/aidl/tests/ByteEnum.h>
 #include <aidl/android/aidl/tests/INamedCallback.h>
@@ -32,6 +34,54 @@ public:
   ITestService();
   virtual ~ITestService();
 
+  class CompilerChecks {
+  public:
+    typedef std::false_type fixed_size;
+    static const char* descriptor;
+
+    ::ndk::SpAIBinder binder;
+    ::ndk::SpAIBinder nullable_binder;
+    std::vector<::ndk::SpAIBinder> binder_array;
+    std::optional<std::vector<::ndk::SpAIBinder>> nullable_binder_array;
+    std::vector<::ndk::SpAIBinder> binder_list;
+    std::optional<std::vector<::ndk::SpAIBinder>> nullable_binder_list;
+
+    binder_status_t readFromParcel(const AParcel* parcel);
+    binder_status_t writeToParcel(AParcel* parcel) const;
+
+    inline bool operator!=(const CompilerChecks& rhs) const {
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) != std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+    }
+    inline bool operator<(const CompilerChecks& rhs) const {
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) < std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+    }
+    inline bool operator<=(const CompilerChecks& rhs) const {
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) <= std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+    }
+    inline bool operator==(const CompilerChecks& rhs) const {
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) == std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+    }
+    inline bool operator>(const CompilerChecks& rhs) const {
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) > std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+    }
+    inline bool operator>=(const CompilerChecks& rhs) const {
+      return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list) >= std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list);
+    }
+
+    static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::STABILITY_LOCAL;
+    inline std::string toString() const {
+      std::ostringstream os;
+      os << "CompilerChecks{";
+      os << "binder: " << ::android::internal::ToString(binder);
+      os << ", nullable_binder: " << ::android::internal::ToString(nullable_binder);
+      os << ", binder_array: " << ::android::internal::ToString(binder_array);
+      os << ", nullable_binder_array: " << ::android::internal::ToString(nullable_binder_array);
+      os << ", binder_list: " << ::android::internal::ToString(binder_list);
+      os << ", nullable_binder_list: " << ::android::internal::ToString(nullable_binder_list);
+      os << "}";
+      return os.str();
+    }
+  };
   enum : int32_t { TEST_CONSTANT = 42 };
   enum : int32_t { TEST_CONSTANT2 = -42 };
   enum : int32_t { TEST_CONSTANT3 = 42 };
@@ -146,21 +196,23 @@ public:
   static constexpr uint32_t TRANSACTION_RepeatNullableParcelable = FIRST_CALL_TRANSACTION + 37;
   static constexpr uint32_t TRANSACTION_TakesAnIBinder = FIRST_CALL_TRANSACTION + 38;
   static constexpr uint32_t TRANSACTION_TakesANullableIBinder = FIRST_CALL_TRANSACTION + 39;
-  static constexpr uint32_t TRANSACTION_RepeatUtf8CppString = FIRST_CALL_TRANSACTION + 40;
-  static constexpr uint32_t TRANSACTION_RepeatNullableUtf8CppString = FIRST_CALL_TRANSACTION + 41;
-  static constexpr uint32_t TRANSACTION_ReverseUtf8CppString = FIRST_CALL_TRANSACTION + 42;
-  static constexpr uint32_t TRANSACTION_ReverseNullableUtf8CppString = FIRST_CALL_TRANSACTION + 43;
-  static constexpr uint32_t TRANSACTION_ReverseUtf8CppStringList = FIRST_CALL_TRANSACTION + 44;
-  static constexpr uint32_t TRANSACTION_GetCallback = FIRST_CALL_TRANSACTION + 45;
-  static constexpr uint32_t TRANSACTION_FillOutStructuredParcelable = FIRST_CALL_TRANSACTION + 46;
-  static constexpr uint32_t TRANSACTION_RepeatExtendableParcelable = FIRST_CALL_TRANSACTION + 47;
-  static constexpr uint32_t TRANSACTION_ReverseList = FIRST_CALL_TRANSACTION + 48;
-  static constexpr uint32_t TRANSACTION_ReverseIBinderArray = FIRST_CALL_TRANSACTION + 49;
-  static constexpr uint32_t TRANSACTION_ReverseNullableIBinderArray = FIRST_CALL_TRANSACTION + 50;
-  static constexpr uint32_t TRANSACTION_GetOldNameInterface = FIRST_CALL_TRANSACTION + 51;
-  static constexpr uint32_t TRANSACTION_GetNewNameInterface = FIRST_CALL_TRANSACTION + 52;
-  static constexpr uint32_t TRANSACTION_GetCppJavaTests = FIRST_CALL_TRANSACTION + 53;
-  static constexpr uint32_t TRANSACTION_getBackendType = FIRST_CALL_TRANSACTION + 54;
+  static constexpr uint32_t TRANSACTION_TakesAnIBinderList = FIRST_CALL_TRANSACTION + 40;
+  static constexpr uint32_t TRANSACTION_TakesANullableIBinderList = FIRST_CALL_TRANSACTION + 41;
+  static constexpr uint32_t TRANSACTION_RepeatUtf8CppString = FIRST_CALL_TRANSACTION + 42;
+  static constexpr uint32_t TRANSACTION_RepeatNullableUtf8CppString = FIRST_CALL_TRANSACTION + 43;
+  static constexpr uint32_t TRANSACTION_ReverseUtf8CppString = FIRST_CALL_TRANSACTION + 44;
+  static constexpr uint32_t TRANSACTION_ReverseNullableUtf8CppString = FIRST_CALL_TRANSACTION + 45;
+  static constexpr uint32_t TRANSACTION_ReverseUtf8CppStringList = FIRST_CALL_TRANSACTION + 46;
+  static constexpr uint32_t TRANSACTION_GetCallback = FIRST_CALL_TRANSACTION + 47;
+  static constexpr uint32_t TRANSACTION_FillOutStructuredParcelable = FIRST_CALL_TRANSACTION + 48;
+  static constexpr uint32_t TRANSACTION_RepeatExtendableParcelable = FIRST_CALL_TRANSACTION + 49;
+  static constexpr uint32_t TRANSACTION_ReverseList = FIRST_CALL_TRANSACTION + 50;
+  static constexpr uint32_t TRANSACTION_ReverseIBinderArray = FIRST_CALL_TRANSACTION + 51;
+  static constexpr uint32_t TRANSACTION_ReverseNullableIBinderArray = FIRST_CALL_TRANSACTION + 52;
+  static constexpr uint32_t TRANSACTION_GetOldNameInterface = FIRST_CALL_TRANSACTION + 53;
+  static constexpr uint32_t TRANSACTION_GetNewNameInterface = FIRST_CALL_TRANSACTION + 54;
+  static constexpr uint32_t TRANSACTION_GetCppJavaTests = FIRST_CALL_TRANSACTION + 55;
+  static constexpr uint32_t TRANSACTION_getBackendType = FIRST_CALL_TRANSACTION + 56;
 
   static std::shared_ptr<ITestService> fromBinder(const ::ndk::SpAIBinder& binder);
   static binder_status_t writeToParcel(AParcel* parcel, const std::shared_ptr<ITestService>& instance);
@@ -203,15 +255,17 @@ public:
   virtual ::ndk::ScopedAStatus RepeatNullableIntEnumArray(const std::optional<std::vector<::aidl::android::aidl::tests::IntEnum>>& in_input, std::optional<std::vector<::aidl::android::aidl::tests::IntEnum>>* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus RepeatNullableLongEnumArray(const std::optional<std::vector<::aidl::android::aidl::tests::LongEnum>>& in_input, std::optional<std::vector<::aidl::android::aidl::tests::LongEnum>>* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus RepeatNullableString(const std::optional<std::string>& in_input, std::optional<std::string>* _aidl_return) = 0;
-  virtual ::ndk::ScopedAStatus RepeatNullableStringList(const std::vector<std::string>& in_input, std::vector<std::string>* _aidl_return) = 0;
+  virtual ::ndk::ScopedAStatus RepeatNullableStringList(const std::optional<std::vector<std::optional<std::string>>>& in_input, std::optional<std::vector<std::optional<std::string>>>* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus RepeatNullableParcelable(const std::optional<::aidl::android::aidl::tests::StructuredParcelable>& in_input, std::optional<::aidl::android::aidl::tests::StructuredParcelable>* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus TakesAnIBinder(const ::ndk::SpAIBinder& in_input) = 0;
   virtual ::ndk::ScopedAStatus TakesANullableIBinder(const ::ndk::SpAIBinder& in_input) = 0;
+  virtual ::ndk::ScopedAStatus TakesAnIBinderList(const std::vector<::ndk::SpAIBinder>& in_input) = 0;
+  virtual ::ndk::ScopedAStatus TakesANullableIBinderList(const std::optional<std::vector<::ndk::SpAIBinder>>& in_input) = 0;
   virtual ::ndk::ScopedAStatus RepeatUtf8CppString(const std::string& in_token, std::string* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus RepeatNullableUtf8CppString(const std::optional<std::string>& in_token, std::optional<std::string>* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus ReverseUtf8CppString(const std::vector<std::string>& in_input, std::vector<std::string>* out_repeated, std::vector<std::string>* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus ReverseNullableUtf8CppString(const std::optional<std::vector<std::optional<std::string>>>& in_input, std::optional<std::vector<std::optional<std::string>>>* out_repeated, std::optional<std::vector<std::optional<std::string>>>* _aidl_return) = 0;
-  virtual ::ndk::ScopedAStatus ReverseUtf8CppStringList(const std::vector<std::string>& in_input, std::vector<std::string>* out_repeated, std::vector<std::string>* _aidl_return) = 0;
+  virtual ::ndk::ScopedAStatus ReverseUtf8CppStringList(const std::optional<std::vector<std::optional<std::string>>>& in_input, std::optional<std::vector<std::optional<std::string>>>* out_repeated, std::optional<std::vector<std::optional<std::string>>>* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus GetCallback(bool in_return_null, std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus FillOutStructuredParcelable(::aidl::android::aidl::tests::StructuredParcelable* in_parcel) = 0;
   virtual ::ndk::ScopedAStatus RepeatExtendableParcelable(const ::aidl::android::aidl::tests::extension::ExtendableParcelable& in_ep, ::aidl::android::aidl::tests::extension::ExtendableParcelable* out_ep2) = 0;
@@ -263,15 +317,17 @@ public:
   ::ndk::ScopedAStatus RepeatNullableIntEnumArray(const std::optional<std::vector<::aidl::android::aidl::tests::IntEnum>>& in_input, std::optional<std::vector<::aidl::android::aidl::tests::IntEnum>>* _aidl_return) override;
   ::ndk::ScopedAStatus RepeatNullableLongEnumArray(const std::optional<std::vector<::aidl::android::aidl::tests::LongEnum>>& in_input, std::optional<std::vector<::aidl::android::aidl::tests::LongEnum>>* _aidl_return) override;
   ::ndk::ScopedAStatus RepeatNullableString(const std::optional<std::string>& in_input, std::optional<std::string>* _aidl_return) override;
-  ::ndk::ScopedAStatus RepeatNullableStringList(const std::vector<std::string>& in_input, std::vector<std::string>* _aidl_return) override;
+  ::ndk::ScopedAStatus RepeatNullableStringList(const std::optional<std::vector<std::optional<std::string>>>& in_input, std::optional<std::vector<std::optional<std::string>>>* _aidl_return) override;
   ::ndk::ScopedAStatus RepeatNullableParcelable(const std::optional<::aidl::android::aidl::tests::StructuredParcelable>& in_input, std::optional<::aidl::android::aidl::tests::StructuredParcelable>* _aidl_return) override;
   ::ndk::ScopedAStatus TakesAnIBinder(const ::ndk::SpAIBinder& in_input) override;
   ::ndk::ScopedAStatus TakesANullableIBinder(const ::ndk::SpAIBinder& in_input) override;
+  ::ndk::ScopedAStatus TakesAnIBinderList(const std::vector<::ndk::SpAIBinder>& in_input) override;
+  ::ndk::ScopedAStatus TakesANullableIBinderList(const std::optional<std::vector<::ndk::SpAIBinder>>& in_input) override;
   ::ndk::ScopedAStatus RepeatUtf8CppString(const std::string& in_token, std::string* _aidl_return) override;
   ::ndk::ScopedAStatus RepeatNullableUtf8CppString(const std::optional<std::string>& in_token, std::optional<std::string>* _aidl_return) override;
   ::ndk::ScopedAStatus ReverseUtf8CppString(const std::vector<std::string>& in_input, std::vector<std::string>* out_repeated, std::vector<std::string>* _aidl_return) override;
   ::ndk::ScopedAStatus ReverseNullableUtf8CppString(const std::optional<std::vector<std::optional<std::string>>>& in_input, std::optional<std::vector<std::optional<std::string>>>* out_repeated, std::optional<std::vector<std::optional<std::string>>>* _aidl_return) override;
-  ::ndk::ScopedAStatus ReverseUtf8CppStringList(const std::vector<std::string>& in_input, std::vector<std::string>* out_repeated, std::vector<std::string>* _aidl_return) override;
+  ::ndk::ScopedAStatus ReverseUtf8CppStringList(const std::optional<std::vector<std::optional<std::string>>>& in_input, std::optional<std::vector<std::optional<std::string>>>* out_repeated, std::optional<std::vector<std::optional<std::string>>>* _aidl_return) override;
   ::ndk::ScopedAStatus GetCallback(bool in_return_null, std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>* _aidl_return) override;
   ::ndk::ScopedAStatus FillOutStructuredParcelable(::aidl::android::aidl::tests::StructuredParcelable* in_parcel) override;
   ::ndk::ScopedAStatus RepeatExtendableParcelable(const ::aidl::android::aidl::tests::extension::ExtendableParcelable& in_ep, ::aidl::android::aidl::tests::extension::ExtendableParcelable* out_ep2) override;
