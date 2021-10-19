@@ -16,11 +16,8 @@
 #endif
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 class UnionWithFd : public ::android::Parcelable {
 public:
   inline bool operator!=(const UnionWithFd& rhs) const {
@@ -51,10 +48,6 @@ public:
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, UnionWithFd>;
 
   UnionWithFd() : _value(std::in_place_index<num>, int32_t(0)) { }
-  UnionWithFd(const UnionWithFd&) = default;
-  UnionWithFd(UnionWithFd&&) = default;
-  UnionWithFd& operator=(const UnionWithFd&) = default;
-  UnionWithFd& operator=(UnionWithFd&&) = default;
 
   template <typename _Tp, typename = std::enable_if_t<_not_self<_Tp>>>
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -115,9 +108,6 @@ public:
 private:
   std::variant<int32_t, ::android::os::ParcelFileDescriptor> _value;
 };  // class UnionWithFd
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android

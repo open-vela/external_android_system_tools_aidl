@@ -46,6 +46,9 @@ public interface INamedCallback extends android.os.IInterface
     @Override public boolean onTransact(int code, android.os.Parcel data, android.os.Parcel reply, int flags) throws android.os.RemoteException
     {
       java.lang.String descriptor = DESCRIPTOR;
+      if (code >= android.os.IBinder.FIRST_CALL_TRANSACTION && code <= android.os.IBinder.LAST_CALL_TRANSACTION) {
+        data.enforceInterface(descriptor);
+      }
       switch (code)
       {
         case INTERFACE_TRANSACTION:
@@ -58,17 +61,17 @@ public interface INamedCallback extends android.os.IInterface
       {
         case TRANSACTION_GetName:
         {
-          data.enforceInterface(descriptor);
           java.lang.String _result = this.GetName();
           reply.writeNoException();
           reply.writeString(_result);
-          return true;
+          break;
         }
         default:
         {
           return super.onTransact(code, data, reply, flags);
         }
       }
+      return true;
     }
     private static class Proxy implements android.aidl.tests.INamedCallback
     {
@@ -87,7 +90,7 @@ public interface INamedCallback extends android.os.IInterface
       }
       @Override public java.lang.String GetName() throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         android.os.Parcel _reply = android.os.Parcel.obtain();
         java.lang.String _result;
         try {
