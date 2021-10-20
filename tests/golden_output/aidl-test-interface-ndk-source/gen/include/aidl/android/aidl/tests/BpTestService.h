@@ -50,7 +50,9 @@ public:
   ::ndk::ScopedAStatus RepeatNullableLongEnumArray(const std::optional<std::vector<::aidl::android::aidl::tests::LongEnum>>& in_input, std::optional<std::vector<::aidl::android::aidl::tests::LongEnum>>* _aidl_return) override;
   ::ndk::ScopedAStatus RepeatNullableString(const std::optional<std::string>& in_input, std::optional<std::string>* _aidl_return) override;
   ::ndk::ScopedAStatus RepeatNullableStringList(const std::optional<std::vector<std::optional<std::string>>>& in_input, std::optional<std::vector<std::optional<std::string>>>* _aidl_return) override;
-  ::ndk::ScopedAStatus RepeatNullableParcelable(const std::optional<::aidl::android::aidl::tests::StructuredParcelable>& in_input, std::optional<::aidl::android::aidl::tests::StructuredParcelable>* _aidl_return) override;
+  ::ndk::ScopedAStatus RepeatNullableParcelable(const std::optional<::aidl::android::aidl::tests::ITestService::Empty>& in_input, std::optional<::aidl::android::aidl::tests::ITestService::Empty>* _aidl_return) override;
+  ::ndk::ScopedAStatus RepeatNullableParcelableArray(const std::optional<std::vector<std::optional<::aidl::android::aidl::tests::ITestService::Empty>>>& in_input, std::optional<std::vector<std::optional<::aidl::android::aidl::tests::ITestService::Empty>>>* _aidl_return) override;
+  ::ndk::ScopedAStatus RepeatNullableParcelableList(const std::optional<std::vector<std::optional<::aidl::android::aidl::tests::ITestService::Empty>>>& in_input, std::optional<std::vector<std::optional<::aidl::android::aidl::tests::ITestService::Empty>>>* _aidl_return) override;
   ::ndk::ScopedAStatus TakesAnIBinder(const ::ndk::SpAIBinder& in_input) override;
   ::ndk::ScopedAStatus TakesANullableIBinder(const ::ndk::SpAIBinder& in_input) override;
   ::ndk::ScopedAStatus TakesAnIBinderList(const std::vector<::ndk::SpAIBinder>& in_input) override;

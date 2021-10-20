@@ -17,7 +17,7 @@
 //! Test Rust service for the AIDL compiler.
 
 use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
-    self, BnTestService, BpTestService,
+    self, BnTestService, BpTestService, Empty::Empty,
 };
 use aidl_test_interface::aidl::android::aidl::tests::{
     BackendType::BackendType, ByteEnum::ByteEnum, ConstantExpressionEnum::ConstantExpressionEnum,
@@ -216,10 +216,13 @@ impl ITestService::ITestService for TestService {
 
     fn RepeatNullableParcelable(
         &self,
-        input: Option<&StructuredParcelable::StructuredParcelable>,
-    ) -> binder::Result<Option<StructuredParcelable::StructuredParcelable>> {
+        input: Option<&Empty>,
+    ) -> binder::Result<Option<Empty>> {
         Ok(input.cloned())
     }
+
+    impl_repeat_nullable! {RepeatNullableParcelableArray, Option<Empty>}
+    impl_repeat_nullable! {RepeatNullableParcelableList, Option<Empty>}
 
     fn TakesAnIBinder(&self, _: &SpIBinder) -> binder::Result<()> {
         Ok(())

@@ -431,7 +431,7 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   bool Resolve(const AidlTypenames& typenames, const AidlScope* scope);
 
   bool CheckValid(const AidlTypenames& typenames) const;
-  bool LanguageSpecificCheckValid(const AidlTypenames& typenames, Options::Language lang) const;
+  bool LanguageSpecificCheckValid(Options::Language lang) const;
   const AidlNode& AsAidlNode() const override { return *this; }
 
   const AidlDefinedType* GetDefinedType() const;
@@ -924,7 +924,7 @@ class AidlDefinedType : public AidlMember, public AidlScope {
   virtual const AidlInterface* AsInterface() const { return nullptr; }
   virtual const AidlParameterizable<std::string>* AsParameterizable() const { return nullptr; }
   virtual bool CheckValid(const AidlTypenames& typenames) const;
-  bool LanguageSpecificCheckValid(const AidlTypenames& typenames, Options::Language lang) const;
+  bool LanguageSpecificCheckValid(Options::Language lang) const;
   AidlStructuredParcelable* AsStructuredParcelable() {
     return const_cast<AidlStructuredParcelable*>(
         const_cast<const AidlDefinedType*>(this)->AsStructuredParcelable());
