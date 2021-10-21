@@ -86,15 +86,18 @@ func _testAidl(t *testing.T, bp string, customizers ...android.FixturePreparer) 
 		}
 		cc_library {
 			name: "libbinder",
+			recovery_available: true,
 		}
 		cc_library {
 			name: "libutils",
+			recovery_available: true,
 		}
 		cc_library {
 			name: "libcutils",
 		}
 		cc_library {
 			name: "libbinder_ndk",
+			recovery_available: true,
 			stubs: {
 				versions: ["29"],
 			}
@@ -1019,6 +1022,18 @@ func TestUnstableVndkModule(t *testing.T) {
 			},
 		}
 	`)
+}
+
+func TestRecoveryAvailable(t *testing.T) {
+	ctx, _ := testAidl(t, `
+		aidl_interface {
+			name: "myiface",
+			recovery_available: true,
+			srcs: ["IFoo.aidl"],
+		}
+	`)
+	ctx.ModuleForTests("myiface-V1-ndk", "android_recovery_arm64_armv8-a_shared")
+	ctx.ModuleForTests("myiface-V1-cpp", "android_recovery_arm64_armv8-a_shared")
 }
 
 func TestSrcsAvailable(t *testing.T) {

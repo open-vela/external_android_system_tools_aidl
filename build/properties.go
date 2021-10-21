@@ -53,6 +53,7 @@ type ccProperties struct {
 	Vendor_available          *bool
 	Odm_available             *bool
 	Product_available         *bool
+	Recovery_available        *bool
 	Host_supported            *bool
 	Generated_sources         []string
 	Generated_headers         []string
