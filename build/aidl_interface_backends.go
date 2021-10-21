@@ -143,6 +143,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 	vendorAvailable := i.properties.Vendor_available
 	odmAvailable := i.properties.Odm_available
 	productAvailable := i.properties.Product_available
+	recoveryAvailable := i.properties.Recovery_available
 	if lang == langCpp {
 		// Vendor and product modules cannot use the libbinder (cpp) backend of AIDL in a
 		// way that is stable. So, in order to prevent accidental usage of these library by
@@ -171,6 +172,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 				Vendor_available:          vendorAvailable,
 				Odm_available:             odmAvailable,
 				Product_available:         productAvailable,
+				Recovery_available:        recoveryAvailable,
 				Host_supported:            hostSupported,
 				Defaults:                  []string{"aidl-cpp-module-defaults"},
 				Double_loadable:           i.properties.Double_loadable,

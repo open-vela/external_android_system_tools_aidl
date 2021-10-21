@@ -324,6 +324,9 @@ type aidlInterfaceProperties struct {
 	// Whether the library can be installed on the product image.
 	Product_available *bool
 
+	// Whether the library can be installed on the recovery image.
+	Recovery_available *bool
+
 	// Whether the library can be loaded multiple times into the same process
 	Double_loadable *bool
 
