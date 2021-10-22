@@ -553,7 +553,7 @@ public class TestServiceClient {
 
     @Test
     public void testReverseUtf8StringArray() throws RemoteException {
-        String[] input = (String[])utf8_queries.toArray();
+        String[] input = utf8_queries.toArray(new String[0]);
         String echoed[] = new String[input.length];
 
         String[] reversed = service.ReverseUtf8CppString(input, echoed);
@@ -576,7 +576,7 @@ public class TestServiceClient {
                 null,
                 // Java doesn't handle unicode code points above U+FFFF well.
                 new String(Character.toChars(0x1F701)) + "\u03A9");
-        String[] input = (String[])utf8_queries_and_nulls.toArray();
+        String[] input = utf8_queries_and_nulls.toArray(new String[0]);
         String echoed[] = new String[input.length];
 
         String[] reversed = service.ReverseNullableUtf8CppString(input, echoed);
