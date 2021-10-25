@@ -669,6 +669,9 @@ public class TestServiceClient {
         assertThat(p.int32_max, is(Integer.MAX_VALUE));
         assertThat(p.int64_max, is(Long.MAX_VALUE));
         assertThat(p.hexInt32_neg_1, is(-1));
+        for (int ndx = 0; ndx < p.int8_1.length; ndx++) {
+          assertThat(p.int8_1[ndx], is((byte) 1));
+        }
         for (int ndx = 0; ndx < p.int32_1.length; ndx++) {
             assertThat(p.int32_1[ndx], is(1));
         }
@@ -728,6 +731,7 @@ public class TestServiceClient {
             + "int64_max: 9223372036854775807, "
             + "hexInt32_neg_1: -1, "
             + "ibinder: null, "
+            + "int8_1: [1, 1, 1, 1, 1], "
             + "int32_1: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, "
             + "1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, "
             + "1, 1, 1, 1], "
