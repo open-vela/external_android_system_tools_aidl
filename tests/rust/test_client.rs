@@ -578,6 +578,9 @@ fn test_parcelable() {
     assert_eq!(parcelable.int32_max, i32::MAX);
     assert_eq!(parcelable.int64_max, i64::MAX);
     assert_eq!(parcelable.hexInt32_neg_1, -1);
+    for i in parcelable.int8_1 {
+        assert_eq!(i, 1);
+    }
     for i in parcelable.int32_1 {
         assert_eq!(i, 1);
     }

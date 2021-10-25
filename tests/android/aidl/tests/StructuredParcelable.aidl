@@ -72,6 +72,14 @@ parcelable StructuredParcelable {
     @nullable IBinder ibinder;
 
     // Constant expressions that evaluate to 1
+    byte[] int8_1 = {
+            1,
+            0xffu8 + 1 == 0,
+            255u8 + 1 == 0,
+            0x80u8 == -128,
+            // u8 type is reinterpreted as a signed type
+            0x80u8 / 2 == -0x40u8,
+    };
     int[] int32_1 = {
             (~(-1)) == 0,
             ~~(1 << 31) == (1 << 31),
