@@ -296,6 +296,10 @@ TEST_F(AidlTest, ConfirmStructuredParcelables) {
   EXPECT_EQ(parcelable.int64_max, INT64_MAX);
   EXPECT_EQ(parcelable.hexInt32_neg_1, -1);
 
+  for (size_t ndx = 0; ndx < parcelable.int8_1.size(); ndx++) {
+    EXPECT_EQ(parcelable.int8_1[ndx], 1) << ndx;
+  }
+
   for (size_t ndx = 0; ndx < parcelable.int32_1.size(); ndx++) {
     EXPECT_EQ(parcelable.int32_1[ndx], 1) << ndx;
   }

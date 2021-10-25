@@ -1251,7 +1251,7 @@ TEST_P(AidlTest, FailOnDuplicateConstantNames) {
 TEST_P(AidlTest, FailOnTooBigConstant) {
   AidlError error;
   const string expected_stderr =
-      "ERROR: p/IFoo.aidl:3.48-52: Invalid type specifier for an int32 literal: byte\n";
+      "ERROR: p/IFoo.aidl:3.48-52: Invalid type specifier for an int32 literal: byte (256)\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("p/IFoo.aidl",
                            R"(package p;
@@ -3829,7 +3829,7 @@ TEST_F(AidlOutputPathTest, NoOutDirWithNoOutputFile) {
 TEST_P(AidlTest, FailOnOutOfBoundsInt32MaxConstInt) {
   AidlError error;
   const string expected_stderr =
-      "ERROR: p/IFoo.aidl:3.58-69: Invalid type specifier for an int64 literal: int\n";
+      "ERROR: p/IFoo.aidl:3.58-69: Invalid type specifier for an int64 literal: int (2147483650)\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("p/IFoo.aidl",
                            R"(package p;
@@ -3845,7 +3845,8 @@ TEST_P(AidlTest, FailOnOutOfBoundsInt32MaxConstInt) {
 TEST_P(AidlTest, FailOnOutOfBoundsInt32MinConstInt) {
   AidlError error;
   const string expected_stderr =
-      "ERROR: p/IFoo.aidl:3.58-60: Invalid type specifier for an int64 literal: int\n";
+      "ERROR: p/IFoo.aidl:3.58-60: Invalid type specifier for an int64 literal: int "
+      "(-2147483650)\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("p/IFoo.aidl",
                            R"(package p;
@@ -3893,7 +3894,7 @@ TEST_P(AidlTest, FailOnOutOfBoundsInt64MinConstInt) {
 TEST_P(AidlTest, FailOnOutOfBoundsAutofilledEnum) {
   AidlError error;
   const string expected_stderr =
-      "ERROR: p/TestEnum.aidl:5.1-36: Invalid type specifier for an int32 literal: byte\n"
+      "ERROR: p/TestEnum.aidl:5.1-36: Invalid type specifier for an int32 literal: byte (FOO+1)\n"
       "ERROR: p/TestEnum.aidl:5.1-36: Enumerator type differs from enum backing type.\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("p/TestEnum.aidl",

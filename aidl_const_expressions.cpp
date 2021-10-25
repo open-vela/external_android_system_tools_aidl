@@ -378,8 +378,15 @@ bool AidlConstantValue::ParseIntegral(const string& value, int64_t* parsed_value
     return false;
   }
 
-  const bool isLong = EndsWith(value, 'l') || EndsWith(value, 'L');
-  const std::string value_substr = isLong ? value.substr(0, value.size() - 1) : value;
+  std::string_view value_view = value;
+  const bool is_byte = ConsumeSuffix(&value_view, "u8");
+  const bool is_long = ConsumeSuffix(&value_view, "l") || ConsumeSuffix(&value_view, "L");
+  const std::string value_substr = std::string(value_view);
+
+  *parsed_value = 0;
+  *parsed_type = Type::ERROR;
+
+  if (is_byte && is_long) return false;
 
   if (IsHex(value)) {
     // AIDL considers 'const int foo = 0xffffffff' as -1, but if we want to
@@ -393,28 +400,38 @@ bool AidlConstantValue::ParseIntegral(const string& value, int64_t* parsed_value
     // Note, for historical consistency, we need to consider small hex values
     // as an integral type. Recognizing them as INT8 could break some files,
     // even though it would simplify this code.
-    if (uint32_t rawValue32;
-        !isLong && android::base::ParseUint<uint32_t>(value_substr, &rawValue32)) {
-      *parsed_value = static_cast<int32_t>(rawValue32);
+    if (is_byte) {
+      uint8_t raw_value8;
+      if (!android::base::ParseUint<uint8_t>(value_substr, &raw_value8)) {
+        return false;
+      }
+      *parsed_value = static_cast<int8_t>(raw_value8);
+      *parsed_type = Type::INT8;
+    } else if (uint32_t raw_value32;
+               !is_long && android::base::ParseUint<uint32_t>(value_substr, &raw_value32)) {
+      *parsed_value = static_cast<int32_t>(raw_value32);
       *parsed_type = Type::INT32;
-    } else if (uint64_t rawValue64; android::base::ParseUint<uint64_t>(value_substr, &rawValue64)) {
-      *parsed_value = static_cast<int64_t>(rawValue64);
+    } else if (uint64_t raw_value64;
+               android::base::ParseUint<uint64_t>(value_substr, &raw_value64)) {
+      *parsed_value = static_cast<int64_t>(raw_value64);
       *parsed_type = Type::INT64;
     } else {
-      *parsed_value = 0;
-      *parsed_type = Type::ERROR;
       return false;
     }
     return true;
   }
 
   if (!android::base::ParseInt<int64_t>(value_substr, parsed_value)) {
-    *parsed_value = 0;
-    *parsed_type = Type::ERROR;
     return false;
   }
 
-  if (isLong) {
+  if (is_byte) {
+    if (*parsed_value > UINT8_MAX || *parsed_value < 0) {
+      return false;
+    }
+    *parsed_value = static_cast<int8_t>(*parsed_value);
+    *parsed_type = Type::INT8;
+  } else if (is_long) {
     *parsed_type = Type::INT64;
   } else {
     // guess literal type.
@@ -595,7 +612,8 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
   }
 
   AIDL_FATAL_IF(err == 0, this);
-  AIDL_ERROR(this) << "Invalid type specifier for " << ToString(final_type_) << ": " << type_string;
+  AIDL_ERROR(this) << "Invalid type specifier for " << ToString(final_type_) << ": " << type_string
+                   << " (" << value_ << ")";
   return "";
 }
 
