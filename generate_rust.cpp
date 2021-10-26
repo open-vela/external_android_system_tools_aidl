@@ -979,18 +979,24 @@ void GenerateRustEnumDeclaration(CodeWriter* code_writer, const AidlEnumDeclarat
   const auto& aidl_backing_type = enum_decl->GetBackingType();
   auto backing_type = RustNameOf(aidl_backing_type, typenames, StorageMode::VALUE, Lifetime::NONE);
 
-  // TODO(b/177860423) support "deprecated" for enum types
   *code_writer << "#![allow(non_upper_case_globals)]\n";
   *code_writer << "use binder::declare_binder_enum;\n";
-  *code_writer << "declare_binder_enum! { " << enum_decl->GetName() << " : [" << backing_type
-               << "; " << std::to_string(enum_decl->GetEnumerators().size()) << "] {\n";
+  *code_writer << "declare_binder_enum! {\n";
+  code_writer->Indent();
+
+  GenerateDeprecated(*code_writer, *enum_decl);
+  *code_writer << enum_decl->GetName() << " : [" << backing_type << "; "
+               << std::to_string(enum_decl->GetEnumerators().size()) << "] {\n";
   code_writer->Indent();
   for (const auto& enumerator : enum_decl->GetEnumerators()) {
     auto value = enumerator->GetValue()->ValueString(aidl_backing_type, ConstantValueDecorator);
     *code_writer << enumerator->GetName() << " = " << value << ",\n";
   }
   code_writer->Dedent();
-  *code_writer << "} }\n";
+  *code_writer << "}\n";
+
+  code_writer->Dedent();
+  *code_writer << "}\n";
 }
 
 void GenerateClass(CodeWriter* code_writer, const AidlDefinedType& defined_type,
