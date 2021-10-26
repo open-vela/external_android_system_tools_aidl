@@ -54,6 +54,7 @@ use aidl_test_vintf_parcelable::aidl::android::aidl::tests::vintf::{
 use std::fs::File;
 use std::io::{Read, Write};
 use std::os::unix::io::FromRawFd;
+use std::rc::Rc;
 use std::sync::Arc;
 
 fn get_test_service() -> binder::Strong<dyn ITestService::ITestService> {
@@ -612,7 +613,7 @@ fn test_parcelable() {
 fn test_repeat_extendable_parcelable() {
     let service = get_test_service();
 
-    let ext = Arc::new(MyExt {
+    let ext = Rc::new(MyExt {
         a: 42,
         b: "EXT".into(),
     });
@@ -622,7 +623,7 @@ fn test_repeat_extendable_parcelable() {
         c: 42,
         ..Default::default()
     };
-    ep.ext.set_parcelable(Arc::clone(&ext))
+    ep.ext.set_parcelable(Rc::clone(&ext))
         .expect("error setting parcelable");
 
     let mut ep2 = ExtendableParcelable::default();
@@ -645,14 +646,14 @@ macro_rules! test_parcelable_holder_stability {
         #[test]
         fn $test() {
             let mut holder = <$holder>::default();
-            let parcelable = Arc::new(<$parcelable>::default());
-            let result = holder.ext.set_parcelable(Arc::clone(&parcelable));
+            let parcelable = Rc::new(<$parcelable>::default());
+            let result = holder.ext.set_parcelable(Rc::clone(&parcelable));
             assert_eq!(result, Ok(()));
 
             let parcelable2 = holder.ext.get_parcelable::<$parcelable>()
                 .unwrap()
                 .unwrap();
-            assert!(Arc::ptr_eq(&parcelable, &parcelable2));
+            assert!(Rc::ptr_eq(&parcelable, &parcelable2));
         }
     }
 }
@@ -696,8 +697,8 @@ test_parcelable_holder_stability!{
 #[test]
 fn test_vintf_parcelable_holder_cannot_contain_not_vintf_parcelable() {
     let mut holder = VintfExtendableParcelable::default();
-    let parcelable = Arc::new(NonVintfParcelable::default());
-    let result = holder.ext.set_parcelable(Arc::clone(&parcelable));
+    let parcelable = Rc::new(NonVintfParcelable::default());
+    let result = holder.ext.set_parcelable(Rc::clone(&parcelable));
     assert_eq!(result, Err(binder::StatusCode::BAD_VALUE));
 
     let parcelable2 = holder.ext.get_parcelable::<NonVintfParcelable>();
@@ -707,8 +708,8 @@ fn test_vintf_parcelable_holder_cannot_contain_not_vintf_parcelable() {
 #[test]
 fn test_vintf_parcelable_holder_cannot_contain_unstable_parcelable() {
     let mut holder = VintfExtendableParcelable::default();
-    let parcelable = Arc::new(UnstableParcelable::default());
-    let result = holder.ext.set_parcelable(Arc::clone(&parcelable));
+    let parcelable = Rc::new(UnstableParcelable::default());
+    let result = holder.ext.set_parcelable(Rc::clone(&parcelable));
     assert_eq!(result, Err(binder::StatusCode::BAD_VALUE));
 
     let parcelable2 = holder.ext.get_parcelable::<UnstableParcelable>();
@@ -717,11 +718,11 @@ fn test_vintf_parcelable_holder_cannot_contain_unstable_parcelable() {
 
 #[test]
 fn test_read_write_extension() {
-    let ext = Arc::new(MyExt {
+    let ext = Rc::new(MyExt {
         a: 42,
         b: "EXT".into(),
     });
-    let ext2 = Arc::new(MyExt2 {
+    let ext2 = Rc::new(MyExt2 {
         a: 42,
         b: MyExt {
             a: 24,
@@ -737,9 +738,9 @@ fn test_read_write_extension() {
         ..Default::default()
     };
 
-    ep.ext.set_parcelable(Arc::clone(&ext))
+    ep.ext.set_parcelable(Rc::clone(&ext))
         .unwrap();
-    ep.ext2.set_parcelable(Arc::clone(&ext2))
+    ep.ext2.set_parcelable(Rc::clone(&ext2))
         .unwrap();
 
     let ext_like = ep.ext.get_parcelable::<MyExtLike>();
@@ -778,7 +779,7 @@ fn test_read_write_extension() {
     let actual_ext = ep2.ext.get_parcelable::<MyExt>();
     assert!(actual_ext.unwrap().is_some());
 
-    let new_ext2 = Arc::new(MyExt2 {
+    let new_ext2 = Rc::new(MyExt2 {
         a: 79,
         b: MyExt {
             a: 42,
@@ -786,7 +787,7 @@ fn test_read_write_extension() {
         },
         c: "NEWEXT2".into(),
     });
-    ep2.ext2.set_parcelable(Arc::clone(&new_ext2))
+    ep2.ext2.set_parcelable(Rc::clone(&new_ext2))
         .unwrap();
 
     check_extension_content(&ep1, &ext, &ext2);
