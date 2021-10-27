@@ -34,6 +34,7 @@ pub struct StructuredParcelable {
   pub int64_max: i64,
   pub hexInt32_neg_1: i32,
   pub ibinder: Option<binder::SpIBinder>,
+  pub int8_1: Vec<u8>,
   pub int32_1: Vec<i32>,
   pub int64_1: Vec<i64>,
   pub hexInt32_pos_1: i32,
@@ -94,6 +95,7 @@ impl Default for StructuredParcelable {
       int64_max: 9223372036854775807,
       hexInt32_neg_1: -1,
       ibinder: Default::default(),
+      int8_1: vec!{1, 1, 1, 1, 1},
       int32_1: vec!{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
       int64_1: vec!{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
       hexInt32_pos_1: 1,
@@ -153,6 +155,7 @@ impl binder::parcel::Parcelable for StructuredParcelable {
       subparcel.write(&self.int64_max)?;
       subparcel.write(&self.hexInt32_neg_1)?;
       subparcel.write(&self.ibinder)?;
+      subparcel.write(&self.int8_1)?;
       subparcel.write(&self.int32_1)?;
       subparcel.write(&self.int64_1)?;
       subparcel.write(&self.hexInt32_pos_1)?;
@@ -276,6 +279,9 @@ impl binder::parcel::Parcelable for StructuredParcelable {
       }
       if subparcel.has_more_data() {
         self.ibinder = subparcel.read()?;
+      }
+      if subparcel.has_more_data() {
+        self.int8_1 = subparcel.read()?;
       }
       if subparcel.has_more_data() {
         self.int32_1 = subparcel.read()?;
