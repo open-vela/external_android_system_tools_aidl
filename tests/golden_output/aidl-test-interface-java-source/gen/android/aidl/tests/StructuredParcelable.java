@@ -40,6 +40,7 @@ public class StructuredParcelable implements android.os.Parcelable
   public int hexInt32_neg_1 = -1;
   public android.os.IBinder ibinder;
   // Constant expressions that evaluate to 1
+  public byte[] int8_1 = {1, 1, 1, 1, 1};
   public int[] int32_1 = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
   public long[] int64_1 = {1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L};
   public int hexInt32_pos_1 = 1;
@@ -110,6 +111,7 @@ public class StructuredParcelable implements android.os.Parcelable
     _aidl_parcel.writeLong(int64_max);
     _aidl_parcel.writeInt(hexInt32_neg_1);
     _aidl_parcel.writeStrongBinder(ibinder);
+    _aidl_parcel.writeByteArray(int8_1);
     _aidl_parcel.writeIntArray(int32_1);
     _aidl_parcel.writeLongArray(int64_1);
     _aidl_parcel.writeInt(hexInt32_pos_1);
@@ -220,6 +222,8 @@ public class StructuredParcelable implements android.os.Parcelable
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       ibinder = _aidl_parcel.readStrongBinder();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
+      int8_1 = _aidl_parcel.createByteArray();
+      if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       int32_1 = _aidl_parcel.createIntArray();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       int64_1 = _aidl_parcel.createLongArray();
@@ -315,6 +319,7 @@ public class StructuredParcelable implements android.os.Parcelable
     _aidl_sj.add("int64_max: " + (int64_max));
     _aidl_sj.add("hexInt32_neg_1: " + (hexInt32_neg_1));
     _aidl_sj.add("ibinder: " + (java.util.Objects.toString(ibinder)));
+    _aidl_sj.add("int8_1: " + (java.util.Arrays.toString(int8_1)));
     _aidl_sj.add("int32_1: " + (java.util.Arrays.toString(int32_1)));
     _aidl_sj.add("int64_1: " + (java.util.Arrays.toString(int64_1)));
     _aidl_sj.add("hexInt32_pos_1: " + (hexInt32_pos_1));
@@ -376,6 +381,7 @@ public class StructuredParcelable implements android.os.Parcelable
     if (!java.util.Objects.deepEquals(int64_max, that.int64_max)) return false;
     if (!java.util.Objects.deepEquals(hexInt32_neg_1, that.hexInt32_neg_1)) return false;
     if (!java.util.Objects.deepEquals(ibinder, that.ibinder)) return false;
+    if (!java.util.Objects.deepEquals(int8_1, that.int8_1)) return false;
     if (!java.util.Objects.deepEquals(int32_1, that.int32_1)) return false;
     if (!java.util.Objects.deepEquals(int64_1, that.int64_1)) return false;
     if (!java.util.Objects.deepEquals(hexInt32_pos_1, that.hexInt32_pos_1)) return false;
@@ -401,7 +407,7 @@ public class StructuredParcelable implements android.os.Parcelable
 
   @Override
   public int hashCode() {
-    return java.util.Arrays.deepHashCode(java.util.Arrays.asList(shouldContainThreeFs, f, shouldBeJerry, shouldBeByteBar, shouldBeIntBar, shouldBeLongBar, shouldContainTwoByteFoos, shouldContainTwoIntFoos, shouldContainTwoLongFoos, stringDefaultsToFoo, byteDefaultsToFour, intDefaultsToFive, longDefaultsToNegativeSeven, booleanDefaultsToTrue, charDefaultsToC, floatDefaultsToPi, doubleWithDefault, arrayDefaultsTo123, arrayDefaultsToEmpty, boolDefault, byteDefault, intDefault, longDefault, floatDefault, doubleDefault, checkDoubleFromFloat, checkStringArray1, checkStringArray2, int32_min, int32_max, int64_max, hexInt32_neg_1, ibinder, int32_1, int64_1, hexInt32_pos_1, hexInt64_pos_1, const_exprs_1, const_exprs_2, const_exprs_3, const_exprs_4, const_exprs_5, const_exprs_6, const_exprs_7, const_exprs_8, const_exprs_9, const_exprs_10, addString1, addString2, shouldSetBit0AndBit2, u, shouldBeConstS1, defaultWithFoo).toArray());
+    return java.util.Arrays.deepHashCode(java.util.Arrays.asList(shouldContainThreeFs, f, shouldBeJerry, shouldBeByteBar, shouldBeIntBar, shouldBeLongBar, shouldContainTwoByteFoos, shouldContainTwoIntFoos, shouldContainTwoLongFoos, stringDefaultsToFoo, byteDefaultsToFour, intDefaultsToFive, longDefaultsToNegativeSeven, booleanDefaultsToTrue, charDefaultsToC, floatDefaultsToPi, doubleWithDefault, arrayDefaultsTo123, arrayDefaultsToEmpty, boolDefault, byteDefault, intDefault, longDefault, floatDefault, doubleDefault, checkDoubleFromFloat, checkStringArray1, checkStringArray2, int32_min, int32_max, int64_max, hexInt32_neg_1, ibinder, int8_1, int32_1, int64_1, hexInt32_pos_1, hexInt64_pos_1, const_exprs_1, const_exprs_2, const_exprs_3, const_exprs_4, const_exprs_5, const_exprs_6, const_exprs_7, const_exprs_8, const_exprs_9, const_exprs_10, addString1, addString2, shouldSetBit0AndBit2, u, shouldBeConstS1, defaultWithFoo).toArray());
   }
   @Override
   public int describeContents() {
