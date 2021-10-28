@@ -50,6 +50,4 @@ TEST(PermParser, ParseIncorrectExpression) {
   EXPECT_THAT(ret, Not(Ok()));
   ret = perm::Parser::Parse("");
   EXPECT_THAT(ret, Not(Ok()));
-  ret = perm::Parser::Parse("permission=m=");
-  EXPECT_THAT(ret, Not(Ok()));
 }

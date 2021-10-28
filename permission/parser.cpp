@@ -57,7 +57,7 @@ Result<std::unique_ptr<Expression>> Parser::Parse(std::string s) {
   if (p.parse() != 0) {
     return Error() << "Unable to parse the expression: " << parser.GetErrorMessage();
   }
-  return parser.ReleaseRoot();
+  return std::unique_ptr<Expression>(parser.GetRoot());
 }
 
 std::string Parser::GetErrorMessage() const {
