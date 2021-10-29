@@ -71,6 +71,7 @@ AidlLocation loc(const yy::parser::location_type& l) {
     AidlToken* token;
     char character;
     std::string *str;
+    std::vector<std::unique_ptr<AidlToken>> *token_list;
     AidlAnnotation* annotation;
     AidlAnnotationParameter* param;
     std::map<std::string, std::shared_ptr<AidlConstantValue>>* param_list;
@@ -90,8 +91,6 @@ AidlLocation loc(const yy::parser::location_type& l) {
     AidlDefinedType* declaration;
     std::vector<std::unique_ptr<AidlTypeSpecifier>>* type_args;
     std::vector<std::string>* type_params;
-    std::vector<std::unique_ptr<AidlImport>>* imports;
-    AidlImport* import;
     std::vector<std::unique_ptr<AidlDefinedType>>* declarations;
 }
 
@@ -175,10 +174,9 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %type<const_expr> const_expr
 %type<constant_value_list> constant_value_list
 %type<constant_value_list> constant_value_non_empty_list
-%type<imports> imports
-%type<import> import
+%type<token_list> imports
 %type<declarations> decls
-%type<token> identifier error qualified_name optional_package
+%type<token> import identifier error qualified_name optional_package
 
 %%
 
@@ -190,7 +188,12 @@ document
     } else if (!$2->empty()) {
       comments = $2->front()->GetComments();
     }
-    ps->MakeDocument(loc(@1), comments, std::move(*$2), std::move(*$3));
+    // dedup imports
+    std::set<std::string> imports;
+    for (const auto& import : *$2) {
+      imports.insert(import->GetText());
+    }
+    ps->MakeDocument(loc(@1), comments, std::move(imports), std::move(*$3));
     delete $1;
     delete $2;
     delete $3;
@@ -219,26 +222,17 @@ optional_package
  ;
 
 imports
- : { $$ = new std::vector<std::unique_ptr<AidlImport>>(); }
+ : { $$ = new std::vector<std::unique_ptr<AidlToken>>(); }
  | imports import
   {
     $$ = $1;
-    // dedup while parsing
-    auto it = std::find_if($$->begin(), $$->end(), [&](const auto& i) {
-      return $2->GetNeededClass() == i->GetNeededClass();
-    });
-    if (it == $$->end()) {
-      $$->emplace_back($2);
-    } else {
-      // remove duplicate node
-      $2->MarkVisited();
-      delete $2;
-    }
+    $$->emplace_back($2);
   }
 
 import
  : IMPORT qualified_name ';' {
-    $$ = new AidlImport(loc(@2), $2->GetText(), $1->GetComments());
+    // carry the comments before "import" token
+    $$ = new AidlToken($2->GetText(), $1->GetComments());
     delete $1;
     delete $2;
   };

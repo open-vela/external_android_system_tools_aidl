@@ -1594,12 +1594,8 @@ std::string AidlInterface::GetDescriptor() const {
   return GetCanonicalName();
 }
 
-AidlImport::AidlImport(const AidlLocation& location, const std::string& needed_class,
-                       const Comments& comments)
-    : AidlNode(location, comments), needed_class_(needed_class) {}
-
 AidlDocument::AidlDocument(const AidlLocation& location, const Comments& comments,
-                           std::vector<std::unique_ptr<AidlImport>> imports,
+                           std::set<string> imports,
                            std::vector<std::unique_ptr<AidlDefinedType>> defined_types,
                            bool is_preprocessed)
     : AidlCommentable(location, comments),
@@ -1629,8 +1625,8 @@ std::string AidlDocument::ResolveName(const std::string& name) const {
   const std::string nested_type = (first_dot == std::string::npos) ? "" : name.substr(first_dot);
 
   for (const auto& import : Imports()) {
-    if (import->SimpleName() == class_name) {
-      return import->GetNeededClass() + nested_type;
+    if (SimpleName(import) == class_name) {
+      return import + nested_type;
     }
   }
 
