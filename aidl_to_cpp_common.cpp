@@ -22,7 +22,6 @@
 #include <set>
 #include <unordered_map>
 
-#include "ast_cpp.h"
 #include "comments.h"
 #include "logging.h"
 #include "os.h"

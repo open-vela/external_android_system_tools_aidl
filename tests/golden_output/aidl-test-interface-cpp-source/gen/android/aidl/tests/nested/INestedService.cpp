@@ -15,11 +15,8 @@ DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(NestedService, "android.aidl.tes
 #include <android-base/macros.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 namespace nested {
 
 BpNestedService::BpNestedService(const ::android::sp<::android::IBinder>& _aidl_impl)
@@ -64,22 +61,16 @@ BpNestedService::BpNestedService(const ::android::sp<::android::IBinder>& _aidl_
 }
 
 }  // namespace nested
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
 #include <android/aidl/tests/nested/BnNestedService.h>
 #include <binder/Parcel.h>
 #include <binder/Stability.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 namespace nested {
 
 BnNestedService::BnNestedService()
@@ -129,11 +120,8 @@ BnNestedService::BnNestedService()
 }
 
 }  // namespace nested
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
 #include <android/aidl/tests/nested/INestedService.h>
 
