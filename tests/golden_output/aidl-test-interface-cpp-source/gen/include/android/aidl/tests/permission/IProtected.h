@@ -8,6 +8,7 @@
 namespace android {
 namespace aidl {
 namespace tests {
+namespace permission {
 class IProtected : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(Protected)
@@ -31,6 +32,7 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
 };  // class IProtectedDefault
+}  // namespace permission
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android

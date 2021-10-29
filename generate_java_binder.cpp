@@ -523,19 +523,33 @@ class PermissionVisitor : public perm::Visitor {
   std::shared_ptr<Expression> result_;
 };
 
-static void GeneratePermissionChecks(const AidlMethod& method,
+static void GeneratePermissionChecks(const AidlInterface& iface, const AidlMethod& method,
                                      std::shared_ptr<StatementBlock> addTo) {
-  auto expr = method.GetType().EnforceExpression(method);
-  if (expr) {
-    auto ifstatement = std::make_shared<IfStatement>();
-    auto permissionExpression = PermissionVisitor::Evaluate(*expr.get());
-    ifstatement->expression = std::make_shared<Comparison>(permissionExpression, "!=", TRUE_VALUE);
-    ifstatement->statements = std::make_shared<StatementBlock>();
-    ifstatement->statements->Add(std::make_shared<LiteralStatement>(android::base::StringPrintf(
-        "throw new SecurityException(\"Access denied, requires: %s\");\n",
-        expr->ToString().c_str())));
-    addTo->Add(ifstatement);
+  std::unique_ptr<perm::Expression> combinedPermExpr;
+  auto ifacePermExpr = iface.EnforceExpression();
+  auto methodPermExpr = method.GetType().EnforceExpression();
+  if (ifacePermExpr) {
+    if (methodPermExpr) {
+      auto andPermExpr = std::make_unique<perm::AndQuantifier>();
+      andPermExpr->Append(std::move(ifacePermExpr));
+      andPermExpr->Append(std::move(methodPermExpr));
+      combinedPermExpr = std::move(andPermExpr);
+    } else {
+      combinedPermExpr = std::move(ifacePermExpr);
+    }
+  } else if (methodPermExpr) {
+    combinedPermExpr = std::move(methodPermExpr);
+  } else {
+    return;
   }
+  auto ifstatement = std::make_shared<IfStatement>();
+  auto combinedExpr = PermissionVisitor::Evaluate(*combinedPermExpr.get());
+  ifstatement->expression = std::make_shared<Comparison>(combinedExpr, "!=", TRUE_VALUE);
+  ifstatement->statements = std::make_shared<StatementBlock>();
+  ifstatement->statements->Add(std::make_shared<LiteralStatement>(
+      android::base::StringPrintf("throw new SecurityException(\"Access denied, requires: %s\");\n",
+                                  combinedPermExpr->ToString().c_str())));
+  addTo->Add(ifstatement);
 }
 
 static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& method, bool oneway,
@@ -565,7 +579,7 @@ static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& metho
             std::make_shared<LiteralExpression>("android.os.Trace.TRACE_TAG_AIDL")}));
   }
 
-  GeneratePermissionChecks(method, statements);
+  GeneratePermissionChecks(iface, method, statements);
 
   auto realCall = std::make_shared<MethodCall>(THIS_VALUE, method.GetName());
 

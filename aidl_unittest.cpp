@@ -3792,6 +3792,29 @@ TEST_F(AidlTest, InvalidEnforceCondition) {
               HasSubstr("ERROR: a/IFoo.aidl:3.1-38: Unable to parse @Enforce annotation"));
 }
 
+TEST_F(AidlTest, InterfaceEnforceCondition) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    @Enforce(condition="permission = INTERNET")
+    interface IFoo {
+        void Protected();
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  EXPECT_TRUE(compile_aidl(options, io_delegate_));
+}
+
+TEST_F(AidlTest, InterfaceAndMethodEnforceCondition) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    @Enforce(condition="permission = INTERNET")
+    interface IFoo {
+        @Enforce(condition="uid = SYSTEM_UID")
+        void Protected();
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  EXPECT_TRUE(compile_aidl(options, io_delegate_));
+}
+
 class AidlOutputPathTest : public AidlTest {
  protected:
   void SetUp() override {

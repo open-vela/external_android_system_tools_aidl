@@ -14,6 +14,7 @@ namespace aidl {
 namespace android {
 namespace aidl {
 namespace tests {
+namespace permission {
 class IProtected : public ::ndk::ICInterface {
 public:
   static const char* descriptor;
@@ -43,6 +44,7 @@ public:
   ::ndk::SpAIBinder asBinder() override;
   bool isRemote() override;
 };
+}  // namespace permission
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android
