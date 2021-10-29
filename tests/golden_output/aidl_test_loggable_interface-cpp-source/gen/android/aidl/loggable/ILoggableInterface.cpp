@@ -15,7 +15,9 @@ DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(LoggableInterface, "android.aidl
 #include <functional>
 
 namespace android {
+
 namespace aidl {
+
 namespace loggable {
 
 BpLoggableInterface::BpLoggableInterface(const ::android::sp<::android::IBinder>& _aidl_impl)
@@ -237,7 +239,9 @@ std::function<void(const BpLoggableInterface::TransactionLog&)> BpLoggableInterf
 }
 
 }  // namespace loggable
+
 }  // namespace aidl
+
 }  // namespace android
 #include <android/aidl/loggable/BnLoggableInterface.h>
 #include <binder/Parcel.h>
@@ -246,7 +250,9 @@ std::function<void(const BpLoggableInterface::TransactionLog&)> BpLoggableInterf
 #include <functional>
 
 namespace android {
+
 namespace aidl {
+
 namespace loggable {
 
 BnLoggableInterface::BnLoggableInterface()
@@ -491,6 +497,9 @@ BnLoggableInterface::BnLoggableInterface()
 }
 
 std::function<void(const BnLoggableInterface::TransactionLog&)> BnLoggableInterface::logFunc;
+
 }  // namespace loggable
+
 }  // namespace aidl
+
 }  // namespace android

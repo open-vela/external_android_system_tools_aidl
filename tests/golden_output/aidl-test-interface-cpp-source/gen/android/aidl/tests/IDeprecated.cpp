@@ -13,7 +13,9 @@ DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(Deprecated, "android.aidl.tests.
 #include <android-base/macros.h>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
 
 BpDeprecated::BpDeprecated(const ::android::sp<::android::IBinder>& _aidl_impl)
@@ -21,14 +23,18 @@ BpDeprecated::BpDeprecated(const ::android::sp<::android::IBinder>& _aidl_impl)
 }
 
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android
 #include <android/aidl/tests/BnDeprecated.h>
 #include <binder/Parcel.h>
 #include <binder/Stability.h>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
 
 BnDeprecated::BnDeprecated()
@@ -57,5 +63,7 @@ BnDeprecated::BnDeprecated()
 #pragma clang diagnostic pop
 
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android
