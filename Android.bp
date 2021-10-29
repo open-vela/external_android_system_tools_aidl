@@ -287,7 +287,6 @@ filegroup {
         "tests/android/aidl/tests/INamedCallback.aidl",
         "tests/android/aidl/tests/INewName.aidl",
         "tests/android/aidl/tests/IOldName.aidl",
-        "tests/android/aidl/tests/IProtected.aidl",
         "tests/android/aidl/tests/ITestService.aidl",
         "tests/android/aidl/tests/IntEnum.aidl",
         "tests/android/aidl/tests/LongEnum.aidl",
@@ -298,8 +297,9 @@ filegroup {
         "tests/android/aidl/tests/Union.aidl",
         "tests/android/aidl/tests/UnionWithFd.aidl",
         "tests/android/aidl/tests/extension/*.aidl",
-        "tests/android/aidl/tests/unions/*.aidl",
         "tests/android/aidl/tests/nested/*.aidl",
+        "tests/android/aidl/tests/permission/*.aidl",
+        "tests/android/aidl/tests/unions/*.aidl",
     ],
     path: "tests",
 }

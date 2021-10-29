@@ -1,20 +1,23 @@
-#include <android/aidl/tests/IProtected.h>
-#include <android/aidl/tests/BpProtected.h>
+#include <android/aidl/tests/permission/IProtected.h>
+#include <android/aidl/tests/permission/BpProtected.h>
 namespace android {
 namespace aidl {
 namespace tests {
-DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(Protected, "android.aidl.tests.IProtected")
+namespace permission {
+DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(Protected, "android.aidl.tests.permission.IProtected")
+}  // namespace permission
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android
-#include <android/aidl/tests/BpProtected.h>
-#include <android/aidl/tests/BnProtected.h>
+#include <android/aidl/tests/permission/BpProtected.h>
+#include <android/aidl/tests/permission/BnProtected.h>
 #include <binder/Parcel.h>
 #include <android-base/macros.h>
 
 namespace android {
 namespace aidl {
 namespace tests {
+namespace permission {
 
 BpProtected::BpProtected(const ::android::sp<::android::IBinder>& _aidl_impl)
     : BpInterface<IProtected>(_aidl_impl){
@@ -107,16 +110,18 @@ BpProtected::BpProtected(const ::android::sp<::android::IBinder>& _aidl_impl)
   return _aidl_status;
 }
 
+}  // namespace permission
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android
-#include <android/aidl/tests/BnProtected.h>
+#include <android/aidl/tests/permission/BnProtected.h>
 #include <binder/Parcel.h>
 #include <binder/Stability.h>
 
 namespace android {
 namespace aidl {
 namespace tests {
+namespace permission {
 
 BnProtected::BnProtected()
 {
@@ -186,6 +191,7 @@ BnProtected::BnProtected()
   return _aidl_ret_status;
 }
 
+}  // namespace permission
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android

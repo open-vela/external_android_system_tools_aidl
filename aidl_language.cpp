@@ -181,7 +181,7 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
        {{"value", kStringArrayType, /* required= */ true}}},
       {AidlAnnotation::Type::ENFORCE,
        "Enforce",
-       CONTEXT_METHOD,
+       CONTEXT_TYPE_INTERFACE | CONTEXT_METHOD,
        {{"condition", kStringType, /* required= */ true}}},
   };
   return kSchemas;
@@ -442,14 +442,13 @@ std::vector<std::string> AidlAnnotatable::SuppressWarnings() const {
 }
 
 // Parses the @Enforce annotation expression.
-std::unique_ptr<perm::Expression> AidlAnnotatable::EnforceExpression(
-    const AidlNode& context) const {
+std::unique_ptr<perm::Expression> AidlAnnotatable::EnforceExpression() const {
   auto annot = GetAnnotation(annotations_, AidlAnnotation::Type::ENFORCE);
   if (annot) {
     auto perm_expr = annot->EnforceExpression();
     if (!perm_expr.ok()) {
       // This should have been caught during validation.
-      AIDL_FATAL(context) << "Unable to parse @Enforce annotation: " << perm_expr.error();
+      AIDL_FATAL(this) << "Unable to parse @Enforce annotation: " << perm_expr.error();
     }
     return std::move(perm_expr.value());
   }

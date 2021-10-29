@@ -1,12 +1,13 @@
 #include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/tests/BpProtected.h>
-#include <aidl/android/aidl/tests/BnProtected.h>
-#include <aidl/android/aidl/tests/IProtected.h>
+#include <aidl/android/aidl/tests/permission/BpProtected.h>
+#include <aidl/android/aidl/tests/permission/BnProtected.h>
+#include <aidl/android/aidl/tests/permission/IProtected.h>
 
 namespace aidl {
 namespace android {
 namespace aidl {
 namespace tests {
+namespace permission {
 static binder_status_t _aidl_onTransact(AIBinder* _aidl_binder, transaction_code_t _aidl_code, const AParcel* _aidl_in, AParcel* _aidl_out) {
   (void)_aidl_in;
   (void)_aidl_out;
@@ -165,7 +166,7 @@ BnProtected::~BnProtected() {}
   return ::ndk::SpAIBinder(binder);
 }
 // Source for IProtected
-const char* IProtected::descriptor = "android.aidl.tests.IProtected";
+const char* IProtected::descriptor = "android.aidl.tests.permission.IProtected";
 IProtected::IProtected() {}
 IProtected::~IProtected() {}
 
@@ -225,6 +226,7 @@ std::shared_ptr<IProtected> IProtected::default_impl = nullptr;
 bool IProtectedDefault::isRemote() {
   return false;
 }
+}  // namespace permission
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android
