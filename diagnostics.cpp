@@ -262,8 +262,7 @@ struct DiagnoseImports : DiagnosticsVisitor {
   void Visit(const AidlDocument& doc) override {
     auto collide_with_decls = [&](const auto& import) {
       for (const auto& type : doc.DefinedTypes()) {
-        if (type->GetCanonicalName() != import->GetNeededClass() &&
-            type->GetName() == import->SimpleName()) {
+        if (type->GetCanonicalName() != import && type->GetName() == SimpleName(import)) {
           return true;
         }
       }
@@ -273,13 +272,13 @@ struct DiagnoseImports : DiagnosticsVisitor {
     std::set<std::string> imported_names;
     for (const auto& import : doc.Imports()) {
       if (collide_with_decls(import)) {
-        diag.Report(import->GetLocation(), DiagnosticID::unique_import)
-            << import->SimpleName() << " is already defined in this file.";
+        diag.Report(doc.GetLocation(), DiagnosticID::unique_import)
+            << SimpleName(import) << " is already defined in this file.";
       }
-      auto [_, inserted] = imported_names.insert(import->SimpleName());
+      auto [_, inserted] = imported_names.insert(SimpleName(import));
       if (!inserted) {
-        diag.Report(import->GetLocation(), DiagnosticID::unique_import)
-            << import->SimpleName() << " is already imported.";
+        diag.Report(doc.GetLocation(), DiagnosticID::unique_import)
+            << SimpleName(import) << " is already imported.";
       }
     }
   }

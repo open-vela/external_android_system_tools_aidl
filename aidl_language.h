@@ -81,7 +81,6 @@ bool ParseFloating(std::string_view sv, double* parsed);
 bool ParseFloating(std::string_view sv, float* parsed);
 
 class AidlDocument;
-class AidlImport;
 class AidlInterface;
 class AidlParcelable;
 class AidlStructuredParcelable;
@@ -119,7 +118,6 @@ class AidlVisitor {
   virtual void Visit(const AidlUnaryConstExpression&) {}
   virtual void Visit(const AidlBinaryConstExpression&) {}
   virtual void Visit(const AidlAnnotation&) {}
-  virtual void Visit(const AidlImport&) {}
 };
 
 class AidlScope {
@@ -1163,32 +1161,15 @@ class AidlInterface final : public AidlDefinedType {
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 };
 
-class AidlImport : public AidlNode {
- public:
-  AidlImport(const AidlLocation& location, const std::string& needed_class,
-             const Comments& comments);
-  virtual ~AidlImport() = default;
-
-  // non-copyable, non-movable
-  AidlImport(const AidlImport&) = delete;
-  AidlImport(AidlImport&&) = delete;
-  AidlImport& operator=(const AidlImport&) = delete;
-  AidlImport& operator=(AidlImport&&) = delete;
-
-  const std::string& GetNeededClass() const { return needed_class_; }
-  std::string SimpleName() const { return needed_class_.substr(needed_class_.rfind('.') + 1); }
-  void TraverseChildren(std::function<void(const AidlNode&)>) const {}
-  void DispatchVisit(AidlVisitor& v) const { v.Visit(*this); }
-
- private:
-  std::string needed_class_;
-};
+inline std::string SimpleName(const std::string& qualified_name) {
+  return qualified_name.substr(qualified_name.rfind('.') + 1);
+}
 
 // AidlDocument models an AIDL file
 class AidlDocument : public AidlCommentable, public AidlScope {
  public:
   AidlDocument(const AidlLocation& location, const Comments& comments,
-               std::vector<std::unique_ptr<AidlImport>> imports,
+               std::set<std::string> imports,
                std::vector<std::unique_ptr<AidlDefinedType>> defined_types, bool is_preprocessed);
   ~AidlDocument() = default;
 
@@ -1199,16 +1180,13 @@ class AidlDocument : public AidlCommentable, public AidlScope {
   AidlDocument& operator=(AidlDocument&&) = delete;
 
   std::string ResolveName(const std::string& name) const override;
-  const std::vector<std::unique_ptr<AidlImport>>& Imports() const { return imports_; }
+  const std::set<std::string>& Imports() const { return imports_; }
   const std::vector<std::unique_ptr<AidlDefinedType>>& DefinedTypes() const {
     return defined_types_;
   }
   bool IsPreprocessed() const { return is_preprocessed_; }
 
   void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override {
-    for (const auto& i : Imports()) {
-      traverse(*i);
-    }
     for (const auto& t : DefinedTypes()) {
       traverse(*t);
     }
@@ -1216,7 +1194,7 @@ class AidlDocument : public AidlCommentable, public AidlScope {
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 
  private:
-  const std::vector<std::unique_ptr<AidlImport>> imports_;
+  const std::set<std::string> imports_;
   const std::vector<std::unique_ptr<AidlDefinedType>> defined_types_;
   bool is_preprocessed_;
 };
