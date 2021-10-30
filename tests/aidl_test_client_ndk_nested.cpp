@@ -24,13 +24,17 @@
 #include <aidl/android/aidl/tests/nested/INestedService.h>
 #include <aidl/android/aidl/tests/nested/ParcelableWithNested.h>
 
+#include <optional>
+
 using aidl::android::aidl::tests::nested::INestedService;
 using aidl::android::aidl::tests::nested::ParcelableWithNested;
 using NestedResult = aidl::android::aidl::tests::nested::INestedService::Result;
 using NestedStatus = aidl::android::aidl::tests::nested::ParcelableWithNested::Status;
+using std::optional;
 using std::shared_ptr;
 using std::vector;
 using testing::Eq;
+using testing::Optional;
 
 struct AidlTest : testing::Test {
   template <typename T>
@@ -51,6 +55,19 @@ TEST_F(AidlTest, NestedService) {
   auto status = nestedService->flipStatus(p, &r);
   EXPECT_TRUE(status.isOk());
   EXPECT_EQ(r.status, NestedStatus::NOT_OK);
+
+  // NOT_OK -> OK with callback (nested interface)
+  struct Callback : INestedService::BnCallback {
+    optional<ParcelableWithNested::Status> result;
+    ndk::ScopedAStatus done(ParcelableWithNested::Status st) override {
+      result = st;
+      return ndk::ScopedAStatus::ok();
+    }
+  };
+  auto cb = ndk::SharedRefBase::make<Callback>();
+  status = nestedService->flipStatusWithCallback(r.status, cb);
+  EXPECT_TRUE(status.isOk());
+  EXPECT_THAT(cb->result, Optional(NestedStatus::OK));
 
   // android::enum_ranges<>
   vector<NestedStatus> values{ndk::enum_range<NestedStatus>().begin(),

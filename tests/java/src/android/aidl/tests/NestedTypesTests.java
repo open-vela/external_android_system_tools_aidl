@@ -39,9 +39,22 @@ public class NestedTypesTests {
     INestedService nestedService = INestedService.Stub.asInterface(binder);
     assertNotNull(nestedService);
 
+    // OK -> NOT_OK
     ParcelableWithNested p = new ParcelableWithNested();
     p.status = ParcelableWithNested.Status.OK;
     INestedService.Result result = nestedService.flipStatus(p);
     assertThat(result, is(ParcelableWithNested.Status.NOT_OK));
+
+    // NOT_OK -> OK with nested callback interface
+    class Callback extends INestedService.ICallback.Stub {
+      byte received = ParcelableWithNested.Status.NOT_OK;
+      @Override
+      public void done(byte st) {
+        received = st;
+      }
+    }
+    Callback cb = new Callback();
+    nestedService.flipStatusWithCallback(p.status, cb);
+    assertThat(cb.received, is(ParcelableWithNested.Status.OK));
   }
 }

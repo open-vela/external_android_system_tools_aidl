@@ -14,6 +14,7 @@ public:
   explicit BpNestedService(const ::android::sp<::android::IBinder>& _aidl_impl);
   virtual ~BpNestedService() = default;
   ::android::binder::Status flipStatus(const ::android::aidl::tests::nested::ParcelableWithNested& p, ::android::aidl::tests::nested::INestedService::Result* _aidl_return) override;
+  ::android::binder::Status flipStatusWithCallback(::android::aidl::tests::nested::ParcelableWithNested::Status status, const ::android::sp<::android::aidl::tests::nested::INestedService::ICallback>& cb) override;
 };  // class BpNestedService
 }  // namespace nested
 }  // namespace tests
