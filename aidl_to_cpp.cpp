@@ -222,8 +222,8 @@ std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::str
   return raw_value;
 };
 
-std::string GetTransactionIdFor(const AidlInterface& iface, const AidlMethod& method) {
-  return ClassName(iface, ClassNames::SERVER) + "::TRANSACTION_" + method.GetName();
+std::string GetTransactionIdFor(const std::string& clazz, const AidlMethod& method) {
+  return clazz + "::TRANSACTION_" + method.GetName();
 }
 
 std::string CppNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
