@@ -13,9 +13,7 @@ DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(Protected, "android.aidl.tests.I
 #include <android-base/macros.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
 
 BpProtected::BpProtected(const ::android::sp<::android::IBinder>& _aidl_impl)
@@ -110,18 +108,14 @@ BpProtected::BpProtected(const ::android::sp<::android::IBinder>& _aidl_impl)
 }
 
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
 #include <android/aidl/tests/BnProtected.h>
 #include <binder/Parcel.h>
 #include <binder/Stability.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
 
 BnProtected::BnProtected()
@@ -193,7 +187,5 @@ BnProtected::BnProtected()
 }
 
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
