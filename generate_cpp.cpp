@@ -163,7 +163,8 @@ void GenerateClientTransaction(CodeWriter& out, const AidlTypenames& typenames,
                                const AidlInterface& interface, const AidlMethod& method,
                                const Options& options) {
   const string i_name = ClassName(interface, ClassNames::INTERFACE);
-  const string bp_name = ClassName(interface, ClassNames::CLIENT);
+  const string bp_name = GetQualifiedName(interface, ClassNames::CLIENT);
+  const string bn_name = GetQualifiedName(interface, ClassNames::SERVER);
 
   GenerateMethodDecl(out, typenames, method, bp_name);
   out << " {\n";
@@ -225,7 +226,7 @@ void GenerateClientTransaction(CodeWriter& out, const AidlTypenames& typenames,
   if (interface.IsSensitiveData()) flags.push_back("::android::IBinder::FLAG_CLEAR_BUF");
 
   out.Write("%s = remote()->transact(%s, %s, &%s, %s);\n", kAndroidStatusVarName,
-            GetTransactionIdFor(interface, method).c_str(), kDataVarName, kReplyVarName,
+            GetTransactionIdFor(bn_name, method).c_str(), kDataVarName, kReplyVarName,
             flags.empty() ? "0" : Join(flags, " | ").c_str());
 
   // If the method is not implemented in the remote side, try to call the
@@ -303,20 +304,20 @@ void GenerateClientTransaction(CodeWriter& out, const AidlTypenames& typenames,
 void GenerateClientMetaTransaction(CodeWriter& out, const AidlInterface& interface,
                                    const AidlMethod& method, const Options& options) {
   AIDL_FATAL_IF(method.IsUserDefined(), method);
+  const string bp_name = GetQualifiedName(interface, ClassNames::CLIENT);
+  const string bn_name = GetQualifiedName(interface, ClassNames::SERVER);
   if (method.GetName() == kGetInterfaceVersion && options.Version() > 0) {
-    const string iface = ClassName(interface, ClassNames::INTERFACE);
-    const string proxy = ClassName(interface, ClassNames::CLIENT);
     // Note: race condition can happen here, but no locking is required
     // because 1) writing an interger is atomic and 2) this transaction
     // will always return the same value, i.e., competing threads will
     // give write the same value to cached_version_.
-    out << "int32_t " << proxy << "::" << kGetInterfaceVersion << "() {\n"
+    out << "int32_t " << bp_name << "::" << kGetInterfaceVersion << "() {\n"
         << "  if (cached_version_ == -1) {\n"
         << "    ::android::Parcel data;\n"
         << "    ::android::Parcel reply;\n"
         << "    data.writeInterfaceToken(getInterfaceDescriptor());\n"
         << "    ::android::status_t err = remote()->transact("
-        << GetTransactionIdFor(interface, method) << ", data, &reply);\n"
+        << GetTransactionIdFor(bn_name, method) << ", data, &reply);\n"
         << "    if (err == ::android::OK) {\n"
         << "      ::android::binder::Status _aidl_status;\n"
         << "      err = _aidl_status.readFromParcel(reply);\n"
@@ -330,16 +331,14 @@ void GenerateClientMetaTransaction(CodeWriter& out, const AidlInterface& interfa
     out << "\n";
   }
   if (method.GetName() == kGetInterfaceHash && !options.Hash().empty()) {
-    const string iface = ClassName(interface, ClassNames::INTERFACE);
-    const string proxy = ClassName(interface, ClassNames::CLIENT);
-    out << "std::string " << proxy << "::" << kGetInterfaceHash << "() {\n"
+    out << "std::string " << bp_name << "::" << kGetInterfaceHash << "() {\n"
         << "  std::lock_guard<std::mutex> lockGuard(cached_hash_mutex_);\n"
         << "  if (cached_hash_ == \"-1\") {\n"
         << "    ::android::Parcel data;\n"
         << "    ::android::Parcel reply;\n"
         << "    data.writeInterfaceToken(getInterfaceDescriptor());\n"
         << "    ::android::status_t err = remote()->transact("
-        << GetTransactionIdFor(interface, method) << ", data, &reply);\n"
+        << GetTransactionIdFor(bn_name, method) << ", data, &reply);\n"
         << "    if (err == ::android::OK) {\n"
         << "      ::android::binder::Status _aidl_status;\n"
         << "      err = _aidl_status.readFromParcel(reply);\n"
@@ -370,20 +369,22 @@ void GenerateClientSource(CodeWriter& out, const AidlInterface& interface,
   }
   out << "\n";
 
+  const string i_name = ClassName(interface, ClassNames::INTERFACE);
+  const string bp_name = ClassName(interface, ClassNames::CLIENT);
+  const string q_name = GetQualifiedName(interface, ClassNames::CLIENT);
+
   EnterNamespace(out, interface);
   out << "\n";
 
   // The constructor just passes the IBinder instance up to the super
   // class.
-  const string i_name = ClassName(interface, ClassNames::INTERFACE);
-  const string bp_name = ClassName(interface, ClassNames::CLIENT);
-  out << bp_name << "::" << bp_name << "(const ::android::sp<::android::IBinder>& _aidl_impl)\n";
+  out << q_name << "::" << bp_name << "(const ::android::sp<::android::IBinder>& _aidl_impl)\n";
   out << "    : BpInterface<" + i_name + ">(_aidl_impl){\n";
   out << "}\n";
   out << "\n";
 
   if (options.GenLog()) {
-    out << "std::function<void(const " + bp_name + "::TransactionLog&)> " << bp_name
+    out << "std::function<void(const " + q_name + "::TransactionLog&)> " << q_name
         << "::logFunc;\n";
     out << "\n";
   }
@@ -440,7 +441,7 @@ void GenerateConstantDeclarations(CodeWriter& out, const AidlDefinedType& type,
 void GenerateServerTransaction(CodeWriter& out, const AidlInterface& interface,
                                const AidlMethod& method, const AidlTypenames& typenames,
                                const Options& options) {
-  const string bn_name = ClassName(interface, ClassNames::SERVER);
+  const string bn_name = GetQualifiedName(interface, ClassNames::SERVER);
 
   // Declare all the parameters now.  In the common case, we expect no errors
   // in serialization.
@@ -546,9 +547,10 @@ void GenerateServerMetaTransaction(CodeWriter& out, const AidlInterface& interfa
 
 }  // namespace
 
-void GenerateOnTransact(CodeWriter& out, const AidlInterface& interface,
-                        const AidlTypenames& typenames, const Options& options) {
+void GenerateServerOnTransact(CodeWriter& out, const AidlInterface& interface,
+                              const AidlTypenames& typenames, const Options& options) {
   const string bn_name = ClassName(interface, ClassNames::SERVER);
+  const string q_name = GetQualifiedName(interface, ClassNames::SERVER);
 
   bool deprecated = interface.IsDeprecated() ||
                     std::any_of(interface.GetMethods().begin(), interface.GetMethods().end(),
@@ -560,7 +562,7 @@ void GenerateOnTransact(CodeWriter& out, const AidlInterface& interface,
   }
 
   out.Write("%s %s::onTransact(uint32_t %s, const %s& %s, %s* %s, uint32_t %s) {\n",
-            kAndroidStatusLiteral, bn_name.c_str(), kCodeVarName, kAndroidParcelLiteral,
+            kAndroidStatusLiteral, q_name.c_str(), kCodeVarName, kAndroidParcelLiteral,
             kDataVarName, kAndroidParcelLiteral, kReplyVarName, kFlagsVarName);
   out.Indent();
   // Declare the status_t variable
@@ -571,7 +573,7 @@ void GenerateOnTransact(CodeWriter& out, const AidlInterface& interface,
 
   // The switch statement has a case statement for each transaction code.
   for (const auto& method : interface.GetMethods()) {
-    out.Write("case %s:\n", GetTransactionIdFor(interface, *method).c_str());
+    out.Write("case %s:\n", GetTransactionIdFor(bn_name, *method).c_str());
     out << "{\n";
     out.Indent();
     if (method->IsUserDefined()) {
@@ -629,13 +631,15 @@ void GenerateServerSource(CodeWriter& out, const AidlInterface& interface,
   }
   out << "\n";
 
+  const string i_name = ClassName(interface, ClassNames::INTERFACE);
   const string bn_name = ClassName(interface, ClassNames::SERVER);
+  const string q_name = GetQualifiedName(interface, ClassNames::SERVER);
 
   EnterNamespace(out, interface);
   out << "\n";
 
   // constructor
-  out.Write("%s::%s()\n", bn_name.c_str(), bn_name.c_str());
+  out.Write("%s::%s()\n", q_name.c_str(), bn_name.c_str());
   out << "{\n";
   out.Indent();
   if (interface.IsVintfStability()) {
@@ -647,20 +651,20 @@ void GenerateServerSource(CodeWriter& out, const AidlInterface& interface,
   out << "}\n";
   out << "\n";
 
-  GenerateOnTransact(out, interface, typenames, options);
+  GenerateServerOnTransact(out, interface, typenames, options);
 
   if (options.Version() > 0) {
-    out << "int32_t " << bn_name << "::" << kGetInterfaceVersion << "() {\n"
-        << "  return " << ClassName(interface, ClassNames::INTERFACE) << "::VERSION;\n"
+    out << "int32_t " << q_name << "::" << kGetInterfaceVersion << "() {\n"
+        << "  return " << i_name << "::VERSION;\n"
         << "}\n";
   }
   if (!options.Hash().empty()) {
-    out << "std::string " << bn_name << "::" << kGetInterfaceHash << "() {\n"
-        << "  return " << ClassName(interface, ClassNames::INTERFACE) << "::HASH;\n"
+    out << "std::string " << q_name << "::" << kGetInterfaceHash << "() {\n"
+        << "  return " << i_name << "::HASH;\n"
         << "}\n";
   }
   if (options.GenLog()) {
-    out << "std::function<void(const " + bn_name + "::TransactionLog&)> " << bn_name
+    out << "std::function<void(const " + q_name + "::TransactionLog&)> " << q_name
         << "::logFunc;\n";
   }
 
@@ -674,8 +678,14 @@ void GenerateInterfaceSource(CodeWriter& out, const AidlInterface& interface,
 
   EnterNamespace(out, interface);
 
-  out << fmt::format("DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE({}, \"{}\")\n",
-                     ClassName(interface, ClassNames::BASE), interface.GetDescriptor());
+  if (auto parent = interface.GetParentType(); parent) {
+    out << fmt::format("DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_NESTED_INTERFACE({}, {}, \"{}\")\n",
+                       GetQualifiedName(*parent), ClassName(interface, ClassNames::BASE),
+                       interface.GetDescriptor());
+  } else {
+    out << fmt::format("DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE({}, \"{}\")\n",
+                       ClassName(interface, ClassNames::BASE), interface.GetDescriptor());
+  }
 
   GenerateConstantDefinitions(out, interface, typenames, /*template_decl=*/"",
                               ClassName(interface, ClassNames::INTERFACE));
@@ -683,22 +693,11 @@ void GenerateInterfaceSource(CodeWriter& out, const AidlInterface& interface,
   LeaveNamespace(out, interface);
 }
 
-void GenerateClientHeader(CodeWriter& out, const AidlInterface& interface,
-                          const AidlTypenames& typenames, const Options& options) {
+void GenerateClientClassDecl(CodeWriter& out, const AidlInterface& interface,
+                             const AidlTypenames& typenames, const Options& options) {
   const string bp_name = ClassName(interface, ClassNames::CLIENT);
   const string iface = ClassName(interface, ClassNames::INTERFACE);
 
-  out << "#pragma once\n\n";
-  out << "#include <" << kIBinderHeader << ">\n";
-  out << "#include <" << kIInterfaceHeader << ">\n";
-  out << "#include <utils/Errors.h>\n";
-  out << "#include <" << HeaderFile(interface, ClassNames::RAW, false) << ">\n";
-  if (options.GenLog()) {
-    out << "#include <functional>\n";  // for std::function
-    out << "#include <android/binder_to_string.h>\n";
-  }
-  out << "\n";
-  EnterNamespace(out, interface);
   out << "class";
   GenerateDeprecated(out, interface);
   out << " " << bp_name << " : public ::android::BpInterface<" << iface << "> {\n";
@@ -741,16 +740,14 @@ void GenerateClientHeader(CodeWriter& out, const AidlInterface& interface,
   }
 
   out << "};  // class " << bp_name << "\n";
-  LeaveNamespace(out, interface);
 }
 
-void GenerateServerHeader(CodeWriter& out, const AidlInterface& interface,
+void GenerateClientHeader(CodeWriter& out, const AidlInterface& interface,
                           const AidlTypenames& typenames, const Options& options) {
-  const string bn_name = ClassName(interface, ClassNames::SERVER);
-  const string iface = ClassName(interface, ClassNames::INTERFACE);
-
   out << "#pragma once\n\n";
-  out << "#include <binder/IInterface.h>\n";
+  out << "#include <" << kIBinderHeader << ">\n";
+  out << "#include <" << kIInterfaceHeader << ">\n";
+  out << "#include <utils/Errors.h>\n";
   out << "#include <" << HeaderFile(interface, ClassNames::RAW, false) << ">\n";
   if (options.GenLog()) {
     out << "#include <functional>\n";  // for std::function
@@ -758,6 +755,15 @@ void GenerateServerHeader(CodeWriter& out, const AidlInterface& interface,
   }
   out << "\n";
   EnterNamespace(out, interface);
+  GenerateClientClassDecl(out, interface, typenames, options);
+  LeaveNamespace(out, interface);
+}
+
+void GenerateServerClassDecl(CodeWriter& out, const AidlInterface& interface,
+                             const AidlTypenames& typenames, const Options& options) {
+  const string bn_name = ClassName(interface, ClassNames::SERVER);
+  const string iface = ClassName(interface, ClassNames::INTERFACE);
+
   out << "class";
   GenerateDeprecated(out, interface);
   out << " " << bn_name << " : public "
@@ -839,7 +845,20 @@ void GenerateServerHeader(CodeWriter& out, const AidlInterface& interface,
   out << "::android::sp<" << iface << "> " << kDelegateImplVarName << ";\n";
   out.Dedent();
   out << "};  // class " << d_name << "\n";
+}
 
+void GenerateServerHeader(CodeWriter& out, const AidlInterface& interface,
+                          const AidlTypenames& typenames, const Options& options) {
+  out << "#pragma once\n\n";
+  out << "#include <binder/IInterface.h>\n";
+  out << "#include <" << HeaderFile(interface, ClassNames::RAW, false) << ">\n";
+  if (options.GenLog()) {
+    out << "#include <functional>\n";  // for std::function
+    out << "#include <android/binder_to_string.h>\n";
+  }
+  out << "\n";
+  EnterNamespace(out, interface);
+  GenerateServerClassDecl(out, interface, typenames, options);
   LeaveNamespace(out, interface);
 }
 
@@ -925,6 +944,14 @@ void GenerateInterfaceClassDecl(CodeWriter& out, const AidlInterface& interface,
   }
   out.Dedent();
   out << "};  // class " << default_impl << "\n";
+
+  // When an interface is nested, every class should be defined together here
+  // because we don't have separate headers for them.
+  // (e.g. IFoo, IFooDefault, BpFoo, BnFoo, IFooDelegator)
+  if (interface.GetParentType()) {
+    GenerateClientClassDecl(out, interface, typenames, options);
+    GenerateServerClassDecl(out, interface, typenames, options);
+  }
 }
 
 string GetInitializer(const AidlTypenames& typenames, const AidlVariableDeclaration& variable) {
@@ -1185,7 +1212,7 @@ void GenerateHeaderIncludes(CodeWriter& out, const AidlDefinedType& defined_type
     }
 
     // Collect implementation-specific includes for each type definition
-    void Visit(const AidlInterface&) override {
+    void Visit(const AidlInterface& iface) override {
       includes.insert(kIBinderHeader);        // IBinder
       includes.insert(kIInterfaceHeader);     // IInterface
       includes.insert(kStatusHeader);         // Status
@@ -1193,6 +1220,15 @@ void GenerateHeaderIncludes(CodeWriter& out, const AidlDefinedType& defined_type
 
       if (options.GenTraces()) {
         includes.insert(kTraceHeader);
+      }
+
+      // For a nested interface, client/server classes are declared the same header as well.
+      if (iface.GetParentType()) {
+        // client/server class provides logFunc when gen_log is on
+        if (options.GenLog()) {
+          includes.insert("functional");                  // std::function for logFunc
+          includes.insert("android/binder_to_string.h");  // Generic ToString helper
+        }
       }
     }
 
