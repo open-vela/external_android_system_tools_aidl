@@ -13,9 +13,7 @@ DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(NamedCallback, "android.aidl.tes
 #include <android-base/macros.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
 
 BpNamedCallback::BpNamedCallback(const ::android::sp<::android::IBinder>& _aidl_impl)
@@ -56,18 +54,14 @@ BpNamedCallback::BpNamedCallback(const ::android::sp<::android::IBinder>& _aidl_
 }
 
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
 #include <android/aidl/tests/BnNamedCallback.h>
 #include <binder/Parcel.h>
 #include <binder/Stability.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
 
 BnNamedCallback::BnNamedCallback()
@@ -112,7 +106,5 @@ BnNamedCallback::BnNamedCallback()
 }
 
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android

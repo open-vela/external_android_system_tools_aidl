@@ -88,7 +88,6 @@ cc_library_static {
         "aidl_to_rust.cpp",
         "aidl_typenames.cpp",
         "aidl.cpp",
-        "ast_cpp.cpp",
         "ast_java.cpp",
         "code_writer.cpp",
         "comments.cpp",
@@ -156,7 +155,6 @@ cc_test {
 
     srcs: [
         "aidl_unittest.cpp",
-        "ast_cpp_unittest.cpp",
         "ast_java_unittest.cpp",
         "code_writer_unittest.cpp",
         "diagnostics_unittest.cpp",
