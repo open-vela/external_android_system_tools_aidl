@@ -198,12 +198,12 @@ const string GenLogAfterExecute(const string className, const AidlInterface& int
 }
 
 // Returns Parent1::Parent2::Self. Namespaces are not included.
-string GetQualifiedName(const AidlDefinedType& type) {
-  string name = type.GetName();
+string GetQualifiedName(const AidlDefinedType& type, ClassNames class_names) {
+  string q_name = ClassName(type, class_names);
   for (auto parent = type.GetParentType(); parent; parent = parent->GetParentType()) {
-    name = parent->GetName() + "::" + name;
+    q_name = parent->GetName() + "::" + q_name;
   }
-  return name;
+  return q_name;
 }
 
 // Generates enum's class declaration. This should be called in a proper scope. For example, in its

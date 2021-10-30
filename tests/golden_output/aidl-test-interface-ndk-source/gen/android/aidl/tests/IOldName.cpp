@@ -7,7 +7,7 @@ namespace aidl {
 namespace android {
 namespace aidl {
 namespace tests {
-static binder_status_t _aidl_onTransact(AIBinder* _aidl_binder, transaction_code_t _aidl_code, const AParcel* _aidl_in, AParcel* _aidl_out) {
+static binder_status_t _aidl_android_aidl_tests_IOldName_onTransact(AIBinder* _aidl_binder, transaction_code_t _aidl_code, const AParcel* _aidl_in, AParcel* _aidl_out) {
   (void)_aidl_in;
   (void)_aidl_out;
   binder_status_t _aidl_ret_status = STATUS_UNKNOWN_TRANSACTION;
@@ -31,7 +31,7 @@ static binder_status_t _aidl_onTransact(AIBinder* _aidl_binder, transaction_code
   return _aidl_ret_status;
 }
 
-static AIBinder_Class* _g_aidl_clazz = ::ndk::ICInterface::defineClass(IOldName::descriptor, _aidl_onTransact);
+static AIBinder_Class* _g_aidl_android_aidl_tests_IOldName_clazz = ::ndk::ICInterface::defineClass(IOldName::descriptor, _aidl_android_aidl_tests_IOldName_onTransact);
 
 BpOldName::BpOldName(const ::ndk::SpAIBinder& binder) : BpCInterface(binder) {}
 BpOldName::~BpOldName() {}
@@ -77,7 +77,7 @@ BpOldName::~BpOldName() {}
 BnOldName::BnOldName() {}
 BnOldName::~BnOldName() {}
 ::ndk::SpAIBinder BnOldName::createBinder() {
-  AIBinder* binder = AIBinder_new(_g_aidl_clazz, static_cast<void*>(this));
+  AIBinder* binder = AIBinder_new(_g_aidl_android_aidl_tests_IOldName_clazz, static_cast<void*>(this));
   #ifdef BINDER_STABILITY_SUPPORT
   AIBinder_markCompilationUnitStability(binder);
   #endif  // BINDER_STABILITY_SUPPORT
@@ -90,7 +90,7 @@ IOldName::~IOldName() {}
 
 
 std::shared_ptr<IOldName> IOldName::fromBinder(const ::ndk::SpAIBinder& binder) {
-  if (!AIBinder_associateClass(binder.get(), _g_aidl_clazz)) { return nullptr; }
+  if (!AIBinder_associateClass(binder.get(), _g_aidl_android_aidl_tests_IOldName_clazz)) { return nullptr; }
   std::shared_ptr<::ndk::ICInterface> interface = ::ndk::ICInterface::asInterface(binder.get());
   if (interface) {
     return std::static_pointer_cast<IOldName>(interface);
