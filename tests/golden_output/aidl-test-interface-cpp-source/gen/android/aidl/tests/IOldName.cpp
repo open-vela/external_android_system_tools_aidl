@@ -13,9 +13,7 @@ DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(OldName, "android.aidl.tests.IOl
 #include <android-base/macros.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
 
 BpOldName::BpOldName(const ::android::sp<::android::IBinder>& _aidl_impl)
@@ -56,18 +54,14 @@ BpOldName::BpOldName(const ::android::sp<::android::IBinder>& _aidl_impl)
 }
 
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
 #include <android/aidl/tests/BnOldName.h>
 #include <binder/Parcel.h>
 #include <binder/Stability.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
 
 BnOldName::BnOldName()
@@ -112,7 +106,5 @@ BnOldName::BnOldName()
 }
 
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android

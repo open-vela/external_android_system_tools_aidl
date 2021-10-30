@@ -25,9 +25,7 @@ const ::std::string& ITestService::STRING_TEST_CONSTANT_UTF8() {
 #include <android-base/macros.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
 
 BpTestService::BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl)
@@ -2358,18 +2356,14 @@ BpTestService::BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl
 }
 
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
 #include <android/aidl/tests/BnTestService.h>
 #include <binder/Parcel.h>
 #include <binder/Stability.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
 
 BnTestService::BnTestService()
@@ -4018,9 +4012,7 @@ BnTestService::BnTestService()
 #pragma clang diagnostic pop
 
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
 #include <android/aidl/tests/ITestService.h>
 
