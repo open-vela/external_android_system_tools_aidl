@@ -423,15 +423,15 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
   vector<string> import_paths;
   ImportResolver import_resolver{io_delegate, input_file_name, options.ImportDirs()};
   for (const auto& import : document->Imports()) {
-    if (typenames->IsIgnorableImport(import->GetNeededClass())) {
+    if (typenames->IsIgnorableImport(import)) {
       // There are places in the Android tree where an import doesn't resolve,
       // but we'll pick the type up through the preprocessed types.
       // This seems like an error, but legacy support demands we support it...
       continue;
     }
-    string import_path = import_resolver.FindImportFile(import->GetNeededClass());
+    string import_path = import_resolver.FindImportFile(import);
     if (import_path.empty()) {
-      AIDL_ERROR(input_file_name) << "Couldn't find import for class " << import->GetNeededClass();
+      AIDL_ERROR(input_file_name) << "Couldn't find import for class " << import;
       err = AidlError::BAD_IMPORT;
       continue;
     }
@@ -440,8 +440,7 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
 
     auto imported_doc = Parser::Parse(import_path, io_delegate, *typenames);
     if (imported_doc == nullptr) {
-      AIDL_ERROR(import_path) << "error while importing " << import_path << " for "
-                              << import->GetNeededClass();
+      AIDL_ERROR(import_path) << "error while importing " << import_path << " for " << import;
       err = AidlError::BAD_IMPORT;
       continue;
     }
