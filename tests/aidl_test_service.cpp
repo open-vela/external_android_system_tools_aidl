@@ -735,14 +735,6 @@ class NestedService : public BnNestedService {
     }
     return Status::ok();
   }
-  virtual Status flipStatusWithCallback(ParcelableWithNested::Status status,
-                                        const sp<INestedService::ICallback>& cb) {
-    if (status == ParcelableWithNested::Status::OK) {
-      return cb->done(ParcelableWithNested::Status::NOT_OK);
-    } else {
-      return cb->done(ParcelableWithNested::Status::OK);
-    }
-  }
 };
 
 int Run() {
