@@ -4,14 +4,14 @@
 #[allow(unused_imports)] use binder::IBinderInternal;
 use binder::declare_binder_interface;
 declare_binder_interface! {
-  IProtected["android.aidl.tests.IProtected"] {
+  IProtected["android.aidl.tests.permission.IProtected"] {
     native: BnProtected(on_transact),
     proxy: BpProtected {
     },
   }
 }
 pub trait IProtected: binder::Interface + Send {
-  fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.IProtected" }
+  fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.permission.IProtected" }
   fn PermissionProtected(&self) -> binder::public_api::Result<()>;
   fn MultiplePermissions(&self) -> binder::public_api::Result<()>;
   fn MultiplePermissions2(&self) -> binder::public_api::Result<()>;
@@ -128,5 +128,5 @@ fn on_transact(_aidl_service: &dyn IProtected, _aidl_code: binder::TransactionCo
   }
 }
 pub(crate) mod mangled {
- pub use super::IProtected as _7_android_4_aidl_5_tests_10_IProtected;
+ pub use super::IProtected as _7_android_4_aidl_5_tests_10_permission_10_IProtected;
 }
