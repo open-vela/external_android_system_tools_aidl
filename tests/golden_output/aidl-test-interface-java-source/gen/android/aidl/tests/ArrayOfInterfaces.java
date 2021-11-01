@@ -205,6 +205,7 @@ public class ArrayOfInterfaces implements android.os.Parcelable
             }
             android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _arg7;
             _arg7 = data.createInterfaceArray(android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface);
+            data.enforceNoDataAvail();
             android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _result = this.methodWithInterfaces(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7);
             reply.writeNoException();
             reply.writeInterfaceArray(_result);
