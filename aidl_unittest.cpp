@@ -1627,19 +1627,6 @@ TEST_F(AidlTest, RejectsNestedTypesWithParentsName) {
   EXPECT_THAT(GetCapturedStderr(), HasSubstr("Nested type 'Foo' has the same name as its parent."));
 }
 
-TEST_F(AidlTest, RejectsInterfaceAsNestedTypes) {
-  const string input_path = "p/IFoo.aidl";
-  const string input =
-      "package p;\n"
-      "interface IFoo {\n"
-      "  interface ICallback { void done(); }\n"
-      "  void doTask(ICallback cb);\n"
-      "}";
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse(input_path, input, typenames_, Options::Language::CPP));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Interfaces should be at the root scope"));
-}
-
 TEST_F(AidlTest, RejectUnstructuredParcelableAsNestedTypes) {
   const string input_path = "p/IFoo.aidl";
   const string input =
