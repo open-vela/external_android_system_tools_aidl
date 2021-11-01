@@ -415,6 +415,81 @@ class NativeService : public BnTestService {
     return status;
   }
 
+  Status GetInterfaceArray(const vector<String16>& names,
+                           vector<sp<INamedCallback>>* _aidl_return) override {
+    vector<sp<INamedCallback>> services(names.size());
+    for (size_t i = 0; i < names.size(); i++) {
+      if (auto st = GetOtherTestService(names[i], &services[i]); !st.isOk()) {
+        return st;
+      }
+    }
+    *_aidl_return = std::move(services);
+    return Status::ok();
+  }
+
+  Status VerifyNamesWithInterfaceArray(const vector<sp<INamedCallback>>& services,
+                                       const vector<String16>& names, bool* _aidl_ret) override {
+    if (services.size() == names.size()) {
+      for (size_t i = 0; i < services.size(); i++) {
+        if (auto st = VerifyName(services[i], names[i], _aidl_ret); !st.isOk() || !*_aidl_ret) {
+          return st;
+        }
+      }
+      *_aidl_ret = true;
+    } else {
+      *_aidl_ret = false;
+    }
+    return Status::ok();
+  }
+
+  Status GetNullableInterfaceArray(const optional<vector<optional<String16>>>& names,
+                                   optional<vector<sp<INamedCallback>>>* _aidl_ret) override {
+    vector<sp<INamedCallback>> services;
+    if (names.has_value()) {
+      for (const auto& name : *names) {
+        if (name.has_value()) {
+          sp<INamedCallback> ret;
+          if (auto st = GetOtherTestService(*name, &ret); !st.isOk()) {
+            return st;
+          }
+          services.push_back(std::move(ret));
+        } else {
+          services.emplace_back();
+        }
+      }
+    }
+    *_aidl_ret = std::move(services);
+    return Status::ok();
+  }
+
+  Status VerifyNamesWithNullableInterfaceArray(const optional<vector<sp<INamedCallback>>>& services,
+                                               const optional<vector<optional<String16>>>& names,
+                                               bool* _aidl_ret) override {
+    if (services.has_value() && names.has_value()) {
+      if (services->size() == names->size()) {
+        for (size_t i = 0; i < services->size(); i++) {
+          if (services->at(i).get() && names->at(i).has_value()) {
+            if (auto st = VerifyName(services->at(i), names->at(i).value(), _aidl_ret);
+                !st.isOk() || !*_aidl_ret) {
+              return st;
+            }
+          } else if (services->at(i).get() || names->at(i).has_value()) {
+            *_aidl_ret = false;
+            return Status::ok();
+          } else {
+            // ok if service=null && name=null
+          }
+        }
+        *_aidl_ret = true;
+      } else {
+        *_aidl_ret = false;
+      }
+    } else {
+      *_aidl_ret = services.has_value() == names.has_value();
+    }
+    return Status::ok();
+  }
+
   Status ReverseStringList(const vector<String16>& input,
                            vector<String16>* repeated,
                            vector<String16>* _aidl_return) override {
