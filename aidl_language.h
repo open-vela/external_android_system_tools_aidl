@@ -354,7 +354,7 @@ class AidlAnnotatable : public AidlCommentable {
   const AidlAnnotation* RustDerive() const;
   const AidlAnnotation* BackingType() const;
   std::vector<std::string> SuppressWarnings() const;
-  std::unique_ptr<perm::Expression> EnforceExpression(const AidlNode&) const;
+  std::unique_ptr<perm::Expression> EnforceExpression() const;
 
   // ToString is for dumping AIDL.
   // Returns string representation of annotations.
