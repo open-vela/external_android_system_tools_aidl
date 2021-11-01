@@ -25,4 +25,9 @@ interface INestedService {
     }
 
     Result flipStatus(in ParcelableWithNested p);
+
+    interface ICallback {
+        void done(ParcelableWithNested.Status status);
+    }
+    void flipStatusWithCallback(ParcelableWithNested.Status status, ICallback cb);
 }

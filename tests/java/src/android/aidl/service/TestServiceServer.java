@@ -106,6 +106,14 @@ public class TestServiceServer extends ITestService.Stub {
       }
       return result;
     }
+    @Override
+    public final void flipStatusWithCallback(byte st, ICallback cb) throws RemoteException {
+      if (st == ParcelableWithNested.Status.OK) {
+        cb.done(ParcelableWithNested.Status.NOT_OK);
+      } else {
+        cb.done(ParcelableWithNested.Status.OK);
+      }
+    }
   }
 
   @Override
