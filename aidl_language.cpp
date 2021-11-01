@@ -1122,12 +1122,6 @@ bool AidlDefinedType::CheckValidWithMembers(const AidlTypenames& typenames) cons
                     << "' is nested. Unstructured parcelables should be at the root scope.";
       return false;
     }
-    // For now we don't allow "interface" to be nested
-    if (AidlCast<AidlInterface>(*t)) {
-      AIDL_ERROR(t) << "'" << t->GetName()
-                    << "' is nested. Interfaces should be at the root scope.";
-      return false;
-    }
   }
 
   if (!TopologicalVisit(GetNestedTypes(), [](auto&) {})) {
