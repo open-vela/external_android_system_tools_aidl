@@ -1,11 +1,11 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
  */
-package android.aidl.tests;
+package android.aidl.tests.permission;
 public interface IProtected extends android.os.IInterface
 {
   /** Default implementation for IProtected. */
-  public static class Default implements android.aidl.tests.IProtected
+  public static class Default implements android.aidl.tests.permission.IProtected
   {
     @Override public void PermissionProtected() throws android.os.RemoteException
     {
@@ -22,7 +22,7 @@ public interface IProtected extends android.os.IInterface
     }
   }
   /** Local-side IPC implementation stub class. */
-  public static abstract class Stub extends android.os.Binder implements android.aidl.tests.IProtected
+  public static abstract class Stub extends android.os.Binder implements android.aidl.tests.permission.IProtected
   {
     /** Construct the stub at attach it to the interface. */
     public Stub()
@@ -30,19 +30,19 @@ public interface IProtected extends android.os.IInterface
       this.attachInterface(this, DESCRIPTOR);
     }
     /**
-     * Cast an IBinder object into an android.aidl.tests.IProtected interface,
+     * Cast an IBinder object into an android.aidl.tests.permission.IProtected interface,
      * generating a proxy if needed.
      */
-    public static android.aidl.tests.IProtected asInterface(android.os.IBinder obj)
+    public static android.aidl.tests.permission.IProtected asInterface(android.os.IBinder obj)
     {
       if ((obj==null)) {
         return null;
       }
       android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);
-      if (((iin!=null)&&(iin instanceof android.aidl.tests.IProtected))) {
-        return ((android.aidl.tests.IProtected)iin);
+      if (((iin!=null)&&(iin instanceof android.aidl.tests.permission.IProtected))) {
+        return ((android.aidl.tests.permission.IProtected)iin);
       }
-      return new android.aidl.tests.IProtected.Stub.Proxy(obj);
+      return new android.aidl.tests.permission.IProtected.Stub.Proxy(obj);
     }
     @Override public android.os.IBinder asBinder()
     {
@@ -98,7 +98,7 @@ public interface IProtected extends android.os.IInterface
       }
       return true;
     }
-    private static class Proxy implements android.aidl.tests.IProtected
+    private static class Proxy implements android.aidl.tests.permission.IProtected
     {
       private android.os.IBinder mRemote;
       Proxy(android.os.IBinder remote)
@@ -173,12 +173,12 @@ public interface IProtected extends android.os.IInterface
           _data.recycle();
         }
       }
-      public static android.aidl.tests.IProtected sDefaultImpl;
+      public static android.aidl.tests.permission.IProtected sDefaultImpl;
     }
     static final int TRANSACTION_PermissionProtected = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
     static final int TRANSACTION_MultiplePermissions = (android.os.IBinder.FIRST_CALL_TRANSACTION + 1);
     static final int TRANSACTION_MultiplePermissions2 = (android.os.IBinder.FIRST_CALL_TRANSACTION + 2);
-    public static boolean setDefaultImpl(android.aidl.tests.IProtected impl) {
+    public static boolean setDefaultImpl(android.aidl.tests.permission.IProtected impl) {
       // Only one user of this interface can use this function
       // at a time. This is a heuristic to detect if two different
       // users in the same process use this function.
@@ -191,11 +191,11 @@ public interface IProtected extends android.os.IInterface
       }
       return false;
     }
-    public static android.aidl.tests.IProtected getDefaultImpl() {
+    public static android.aidl.tests.permission.IProtected getDefaultImpl() {
       return Stub.Proxy.sDefaultImpl;
     }
   }
-  public static final java.lang.String DESCRIPTOR = "android$aidl$tests$IProtected".replace('$', '.');
+  public static final java.lang.String DESCRIPTOR = "android$aidl$tests$permission$IProtected".replace('$', '.');
   public void PermissionProtected() throws android.os.RemoteException;
   public void MultiplePermissions() throws android.os.RemoteException;
   public void MultiplePermissions2() throws android.os.RemoteException;
