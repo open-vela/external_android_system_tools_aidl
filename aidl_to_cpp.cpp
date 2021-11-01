@@ -279,11 +279,6 @@ std::string ParcelWriteCastOf(const AidlTypeSpecifier& type, const AidlTypenames
                         CppNameOf(enum_decl->GetBackingType(), typenames).c_str(),
                         variable_name.c_str());
   }
-
-  if (typenames.GetInterface(type) != nullptr) {
-    return GetRawCppName(type) + "::asBinder(" + variable_name + ")";
-  }
-
   return variable_name;
 }
 
