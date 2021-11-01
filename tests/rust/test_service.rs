@@ -416,6 +416,17 @@ impl INestedService::INestedService for NestedService {
             })
         }
     }
+    fn flipStatusWithCallback(
+        &self,
+        st: ParcelableWithNested::Status::Status,
+        cb: &binder::Strong<dyn INestedService::ICallback::ICallback>,
+    ) -> binder::Result<()> {
+        if st == ParcelableWithNested::Status::Status::OK {
+            cb.done(ParcelableWithNested::Status::Status::NOT_OK)
+        } else {
+            cb.done(ParcelableWithNested::Status::Status::OK)
+        }
+    }
 }
 
 fn main() {
