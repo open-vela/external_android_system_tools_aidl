@@ -1,4 +1,4 @@
-package android.aidl.tests;
+package android.aidl.tests.permission;
 
 interface IProtected {
     @Enforce(condition="permission = READ_PHONE_STATE") void PermissionProtected();
