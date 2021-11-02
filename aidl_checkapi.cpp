@@ -428,7 +428,7 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
 
   // We don't check impoted types.
   auto get_types_in = [](const AidlTypenames& tns, const std::string& location) {
-    std::vector<AidlDefinedType*> types;
+    std::vector<const AidlDefinedType*> types;
     for (const auto& type : tns.AllDefinedTypes()) {
       if (StartsWith(type->GetLocation().GetFile(), location)) {
         types.push_back(type);
@@ -436,8 +436,10 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
     }
     return types;
   };
-  std::vector<AidlDefinedType*> old_types = get_types_in(*old_tns, options.InputFiles().at(0));
-  std::vector<AidlDefinedType*> new_types = get_types_in(*new_tns, options.InputFiles().at(1));
+  std::vector<const AidlDefinedType*> old_types =
+      get_types_in(*old_tns, options.InputFiles().at(0));
+  std::vector<const AidlDefinedType*> new_types =
+      get_types_in(*new_tns, options.InputFiles().at(1));
 
   bool compatible = true;
 
@@ -456,7 +458,7 @@ bool check_api(const Options& options, const IoDelegate& io_delegate) {
     }
   }
 
-  map<string, AidlDefinedType*> new_map;
+  map<string, const AidlDefinedType*> new_map;
   for (const auto t : new_types) {
     new_map.emplace(t->GetCanonicalName(), t);
   }
