@@ -236,7 +236,9 @@ class AidlAnnotation : public AidlNode {
     DESCRIPTOR,
     RUST_DERIVE,
     SUPPRESS_WARNINGS,
-    ENFORCE,
+    PERMISSION_ENFORCE,
+    PERMISSION_NONE,
+    PERMISSION_MANUAL
   };
 
   using TargetContext = uint16_t;
@@ -355,6 +357,8 @@ class AidlAnnotatable : public AidlCommentable {
   const AidlAnnotation* BackingType() const;
   std::vector<std::string> SuppressWarnings() const;
   std::unique_ptr<perm::Expression> EnforceExpression() const;
+  bool IsPermissionManual() const;
+  bool IsPermissionNone() const;
 
   // ToString is for dumping AIDL.
   // Returns string representation of annotations.
@@ -1157,6 +1161,7 @@ class AidlInterface final : public AidlDefinedType {
   std::string GetPreprocessDeclarationName() const override { return "interface"; }
 
   bool CheckValid(const AidlTypenames& typenames) const override;
+  bool CheckValidPermissionAnnotations(const AidlMethod& m) const;
   std::string GetDescriptor() const;
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 };
