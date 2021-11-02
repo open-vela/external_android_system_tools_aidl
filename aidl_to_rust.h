@@ -42,6 +42,11 @@ enum class ReferenceMode {
   AS_DEREF,
 };
 
+enum class Lifetime {
+  NONE,
+  A,
+};
+
 inline bool IsReference(ReferenceMode ref_mode) {
   switch (ref_mode) {
     case ReferenceMode::REF:
@@ -57,10 +62,19 @@ std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::str
 
 std::string ConstantValueDecoratorRef(const AidlTypeSpecifier& type, const std::string& raw_value);
 
+// Returns "'lifetime_name " including the initial apostrophe and the trailing space.
+// Returns empty string for NONE.
+std::string RustLifetimeName(Lifetime lifetime);
+
+// Returns "<'lifetime_name>" or empty string for NONE.
+std::string RustLifetimeGeneric(Lifetime lifetime);
+
 // Returns the Rust type signature of the AIDL type spec
 // This includes generic type parameters with array modifiers.
+//
+// The lifetime argument is used to annotate all references.
 std::string RustNameOf(const AidlTypeSpecifier& aidl, const AidlTypenames& typenames,
-                       StorageMode mode);
+                       StorageMode mode, Lifetime lifetime);
 
 StorageMode ArgumentStorageMode(const AidlArgument& arg, const AidlTypenames& typenames);
 
