@@ -219,12 +219,16 @@ const AidlDefinedType* AidlTypenames::TryGetDefinedType(const string& type_name)
   return nullptr;
 }
 
-std::vector<AidlDefinedType*> AidlTypenames::AllDefinedTypes() const {
-  std::vector<AidlDefinedType*> res;
-  for (const auto& d : AllDocuments()) {
-    for (const auto& t : d->DefinedTypes()) {
-      res.push_back(t.get());
-    }
+std::vector<const AidlDefinedType*> AidlTypenames::AllDefinedTypes() const {
+  std::vector<const AidlDefinedType*> res;
+  for (const auto& doc : AllDocuments()) {
+    VisitTopDown(
+        [&](const AidlNode& node) {
+          if (auto defined_type = AidlCast<AidlDefinedType>(node); defined_type) {
+            res.push_back(defined_type);
+          }
+        },
+        *doc);
   }
   return res;
 }
