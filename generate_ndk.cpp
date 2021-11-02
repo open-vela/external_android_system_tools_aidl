@@ -180,10 +180,6 @@ void GenerateHeaderDefinitions(CodeWriter& out, const AidlTypenames& types,
 
 void GenerateHeader(CodeWriter& out, const AidlTypenames& types,
                     const AidlDefinedType& defined_type, const Options& options) {
-  if (auto parcelable = AidlCast<AidlParcelable>(defined_type); parcelable) {
-    out << "#error TODO(b/111362593) parcelables do not have headers";
-    return;
-  }
   out << "#pragma once\n\n";
   GenerateHeaderIncludes(out, types, defined_type, options);
   EnterNdkNamespace(out, defined_type);
@@ -202,8 +198,6 @@ void GenerateClientHeader(CodeWriter& out, const AidlTypenames& types,
     out << "#error TODO(b/111362593) defined_types do not have bp classes\n";
   } else if (auto enum_decl = AidlCast<AidlEnumDeclaration>(defined_type); enum_decl) {
     out << "#error TODO(b/111362593) enums do not have bp classes\n";
-  } else if (auto parcelable = AidlCast<AidlParcelable>(defined_type); parcelable) {
-    out << "#error TODO(b/111362593) defined_types do not have bp classes\n";
   } else {
     AIDL_FATAL(defined_type) << "Unrecognized type sent for NDK generation.";
   }
@@ -219,8 +213,6 @@ void GenerateServerHeader(CodeWriter& out, const AidlTypenames& types,
     out << "#error TODO(b/111362593) defined_types do not have bn classes\n";
   } else if (auto enum_decl = AidlCast<AidlEnumDeclaration>(defined_type); enum_decl) {
     out << "#error TODO(b/111362593) enums do not have bn classes\n";
-  } else if (auto parcelable = AidlCast<AidlParcelable>(defined_type); parcelable) {
-    out << "#error TODO(b/111362593) parcelables do not have bn classes\n";
   } else {
     AIDL_FATAL(defined_type) << "Unrecognized type sent for CPP generation.";
   }
@@ -256,12 +248,6 @@ void GenerateSource(CodeWriter& out, const AidlTypenames& types,
         out << "// This file is intentionally left blank as placeholder for enum declaration.\n";
       }
     }
-
-    void Visit(const AidlParcelable& parcelable) override {
-      AIDL_FATAL_IF(parcelable.GetParentType(), parcelable)
-          << "Unstructured parcelable can't be nested.";
-      out << "// This file is intentionally left blank as placeholder for parcel declaration.\n";
-    }
   } v(out, types, options);
   VisitTopDown(v, defined_type);
 }
@@ -290,11 +276,7 @@ void GenerateHeaderIncludes(CodeWriter& out, const AidlTypenames& types,
     void Visit(const AidlTypeSpecifier& type) override {
       auto defined = type.GetDefinedType();
       if (!defined) return;
-      if (auto unstructured = defined->AsUnstructuredParcelable(); unstructured) {
-        includes.insert(unstructured->GetCppHeader());
-      } else {
-        includes.insert(NdkHeaderFile(*defined, ClassNames::RAW, false /*use_os_sep*/));
-      }
+      includes.insert(NdkHeaderFile(*defined, ClassNames::RAW, false /*use_os_sep*/));
     }
 
     // Collect implementation-specific includes for each type definition
