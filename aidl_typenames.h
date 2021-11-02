@@ -65,7 +65,7 @@ class AidlTypenames final {
   static bool IsPrimitiveTypename(const string& type_name);
   bool IsParcelable(const string& type_name) const;
   const AidlDefinedType* TryGetDefinedType(const string& type_name) const;
-  std::vector<AidlDefinedType*> AllDefinedTypes() const;
+  std::vector<const AidlDefinedType*> AllDefinedTypes() const;
 
   struct ResolvedTypename {
     std::string canonical_name;
