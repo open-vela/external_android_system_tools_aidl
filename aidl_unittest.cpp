@@ -3845,6 +3845,67 @@ TEST_F(AidlTest, InterfaceAndMethodEnforceCondition) {
   EXPECT_TRUE(compile_aidl(options, io_delegate_));
 }
 
+TEST_F(AidlTest, NoPermissionInterfaceEnforceMethod) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    @NoPermissionRequired
+    interface IFoo {
+        @Enforce(condition="permission = INTERNET")
+        void Protected();
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(),
+              HasSubstr("The interface IFoo is annotated as requiring no permission"));
+}
+
+TEST_F(AidlTest, ManualPermissionInterfaceEnforceMethod) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    @PermissionManuallyEnforced
+    interface IFoo {
+        @Enforce(condition="permission = INTERNET")
+        void Protected();
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(options, io_delegate_));
+  EXPECT_THAT(
+      GetCapturedStderr(),
+      HasSubstr("The interface IFoo is annotated as manually implementing permission checks"));
+}
+
+TEST_F(AidlTest, EnforceInterfaceNoPermissionsMethod) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    @Enforce(condition="permission = INTERNET")
+    interface IFoo {
+        @NoPermissionRequired
+        void Protected();
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(),
+              HasSubstr("The interface IFoo enforces permissions using annotations"));
+}
+
+TEST_F(AidlTest, EnforceInterfaceManualPermissionMethod) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    @Enforce(condition="permission = INTERNET")
+    interface IFoo {
+        @PermissionManuallyEnforced
+        void Protected();
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(),
+              HasSubstr("The interface IFoo enforces permissions using annotations"));
+}
+
 class AidlOutputPathTest : public AidlTest {
  protected:
   void SetUp() override {

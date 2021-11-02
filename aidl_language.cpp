@@ -179,10 +179,18 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
        "SuppressWarnings",
        CONTEXT_TYPE | CONTEXT_MEMBER,
        {{"value", kStringArrayType, /* required= */ true}}},
-      {AidlAnnotation::Type::ENFORCE,
+      {AidlAnnotation::Type::PERMISSION_ENFORCE,
        "Enforce",
        CONTEXT_TYPE_INTERFACE | CONTEXT_METHOD,
        {{"condition", kStringType, /* required= */ true}}},
+      {AidlAnnotation::Type::PERMISSION_MANUAL,
+       "PermissionManuallyEnforced",
+       CONTEXT_TYPE_INTERFACE | CONTEXT_METHOD,
+       {}},
+      {AidlAnnotation::Type::PERMISSION_NONE,
+       "NoPermissionRequired",
+       CONTEXT_TYPE_INTERFACE | CONTEXT_METHOD,
+       {}},
   };
   return kSchemas;
 }
@@ -293,7 +301,7 @@ bool AidlAnnotation::CheckValid() const {
     return false;
   }
   // For @Enforce annotations, validates the expression.
-  if (schema_.type == AidlAnnotation::Type::ENFORCE) {
+  if (schema_.type == AidlAnnotation::Type::PERMISSION_ENFORCE) {
     auto expr = EnforceExpression();
     if (!expr.ok()) {
       AIDL_ERROR(this) << "Unable to parse @Enforce annotation: " << expr.error();
@@ -443,7 +451,7 @@ std::vector<std::string> AidlAnnotatable::SuppressWarnings() const {
 
 // Parses the @Enforce annotation expression.
 std::unique_ptr<perm::Expression> AidlAnnotatable::EnforceExpression() const {
-  auto annot = GetAnnotation(annotations_, AidlAnnotation::Type::ENFORCE);
+  auto annot = GetAnnotation(annotations_, AidlAnnotation::Type::PERMISSION_ENFORCE);
   if (annot) {
     auto perm_expr = annot->EnforceExpression();
     if (!perm_expr.ok()) {
@@ -453,6 +461,14 @@ std::unique_ptr<perm::Expression> AidlAnnotatable::EnforceExpression() const {
     return std::move(perm_expr.value());
   }
   return {};
+}
+
+bool AidlAnnotatable::IsPermissionManual() const {
+  return GetAnnotation(annotations_, AidlAnnotation::Type::PERMISSION_MANUAL);
+}
+
+bool AidlAnnotatable::IsPermissionNone() const {
+  return GetAnnotation(annotations_, AidlAnnotation::Type::PERMISSION_NONE);
 }
 
 bool AidlAnnotatable::IsStableApiParcelable(Options::Language lang) const {
@@ -1564,6 +1580,10 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
       AIDL_ERROR(m) << " method " << m->Signature() << " is reserved for internal use.";
       return false;
     }
+
+    if (!CheckValidPermissionAnnotations(*m.get())) {
+      return false;
+    }
   }
 
   bool success = true;
@@ -1577,6 +1597,31 @@ bool AidlInterface::CheckValid(const AidlTypenames& typenames) const {
     success = success && constant->CheckValid(typenames);
   }
   return success;
+}
+
+bool AidlInterface::CheckValidPermissionAnnotations(const AidlMethod& m) const {
+  if (IsPermissionNone() || IsPermissionManual()) {
+    if (m.GetType().IsPermissionNone() || m.GetType().IsPermissionManual() ||
+        m.GetType().EnforceExpression()) {
+      std::string interface_annotation = IsPermissionNone()
+                                             ? "requiring no permission"
+                                             : "manually implementing permission checks";
+      AIDL_ERROR(m) << "The interface " << GetName() << " is annotated as " << interface_annotation
+                    << " but the method " << m.GetName() << " is also annotated.\n"
+                    << "Consider distributing the annotation to each method.";
+      return false;
+    }
+  } else if (EnforceExpression()) {
+    if (m.GetType().IsPermissionNone() || m.GetType().IsPermissionManual()) {
+      AIDL_ERROR(m) << "The interface " << GetName()
+                    << " enforces permissions using annotations"
+                       " but the method "
+                    << m.GetName() << " is also annotated.\n"
+                    << "Consider distributing the annotation to each method.";
+      return false;
+    }
+  }
+  return true;
 }
 
 std::string AidlInterface::GetDescriptor() const {
