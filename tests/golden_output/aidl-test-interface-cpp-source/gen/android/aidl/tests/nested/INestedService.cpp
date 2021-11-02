@@ -229,7 +229,7 @@ namespace nested {
 }  // namespace aidl
 }  // namespace android
 #include <android/aidl/tests/nested/INestedService.h>
-#include <android/aidl/tests/nested/BpNestedService.h>
+#include <android/aidl/tests/nested/INestedService.h>
 namespace android {
 namespace aidl {
 namespace tests {
@@ -239,8 +239,8 @@ DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_NESTED_INTERFACE(INestedService, Callback,
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android
-#include <android/aidl/tests/nested/BpNestedService.h>
-#include <android/aidl/tests/nested/BnNestedService.h>
+#include <android/aidl/tests/nested/INestedService.h>
+#include <android/aidl/tests/nested/INestedService.h>
 #include <binder/Parcel.h>
 #include <android-base/macros.h>
 
@@ -290,7 +290,7 @@ INestedService::BpCallback::BpCallback(const ::android::sp<::android::IBinder>& 
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android
-#include <android/aidl/tests/nested/BnNestedService.h>
+#include <android/aidl/tests/nested/INestedService.h>
 #include <binder/Parcel.h>
 #include <binder/Stability.h>
 
