@@ -1,13 +1,14 @@
 #include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/tests/BpProtected.h>
-#include <aidl/android/aidl/tests/BnProtected.h>
-#include <aidl/android/aidl/tests/IProtected.h>
+#include <aidl/android/aidl/tests/permission/BpProtected.h>
+#include <aidl/android/aidl/tests/permission/BnProtected.h>
+#include <aidl/android/aidl/tests/permission/IProtected.h>
 
 namespace aidl {
 namespace android {
 namespace aidl {
 namespace tests {
-static binder_status_t _aidl_onTransact(AIBinder* _aidl_binder, transaction_code_t _aidl_code, const AParcel* _aidl_in, AParcel* _aidl_out) {
+namespace permission {
+static binder_status_t _aidl_android_aidl_tests_permission_IProtected_onTransact(AIBinder* _aidl_binder, transaction_code_t _aidl_code, const AParcel* _aidl_in, AParcel* _aidl_out) {
   (void)_aidl_in;
   (void)_aidl_out;
   binder_status_t _aidl_ret_status = STATUS_UNKNOWN_TRANSACTION;
@@ -47,7 +48,7 @@ static binder_status_t _aidl_onTransact(AIBinder* _aidl_binder, transaction_code
   return _aidl_ret_status;
 }
 
-static AIBinder_Class* _g_aidl_clazz = ::ndk::ICInterface::defineClass(IProtected::descriptor, _aidl_onTransact);
+static AIBinder_Class* _g_aidl_android_aidl_tests_permission_IProtected_clazz = ::ndk::ICInterface::defineClass(IProtected::descriptor, _aidl_android_aidl_tests_permission_IProtected_onTransact);
 
 BpProtected::BpProtected(const ::ndk::SpAIBinder& binder) : BpCInterface(binder) {}
 BpProtected::~BpProtected() {}
@@ -158,20 +159,20 @@ BpProtected::~BpProtected() {}
 BnProtected::BnProtected() {}
 BnProtected::~BnProtected() {}
 ::ndk::SpAIBinder BnProtected::createBinder() {
-  AIBinder* binder = AIBinder_new(_g_aidl_clazz, static_cast<void*>(this));
+  AIBinder* binder = AIBinder_new(_g_aidl_android_aidl_tests_permission_IProtected_clazz, static_cast<void*>(this));
   #ifdef BINDER_STABILITY_SUPPORT
   AIBinder_markCompilationUnitStability(binder);
   #endif  // BINDER_STABILITY_SUPPORT
   return ::ndk::SpAIBinder(binder);
 }
 // Source for IProtected
-const char* IProtected::descriptor = "android.aidl.tests.IProtected";
+const char* IProtected::descriptor = "android.aidl.tests.permission.IProtected";
 IProtected::IProtected() {}
 IProtected::~IProtected() {}
 
 
 std::shared_ptr<IProtected> IProtected::fromBinder(const ::ndk::SpAIBinder& binder) {
-  if (!AIBinder_associateClass(binder.get(), _g_aidl_clazz)) { return nullptr; }
+  if (!AIBinder_associateClass(binder.get(), _g_aidl_android_aidl_tests_permission_IProtected_clazz)) { return nullptr; }
   std::shared_ptr<::ndk::ICInterface> interface = ::ndk::ICInterface::asInterface(binder.get());
   if (interface) {
     return std::static_pointer_cast<IProtected>(interface);
@@ -225,6 +226,7 @@ std::shared_ptr<IProtected> IProtected::default_impl = nullptr;
 bool IProtectedDefault::isRemote() {
   return false;
 }
+}  // namespace permission
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android
