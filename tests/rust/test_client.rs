@@ -35,7 +35,7 @@ use aidl_test_interface::aidl::android::aidl::tests::nested::{
 use aidl_test_interface::aidl::android::aidl::tests::unions::{
     EnumUnion::EnumUnion,
 };
-use aidl_test_interface::binder;
+use aidl_test_interface::binder::{self, BinderFeatures, Interface};
 use aidl_test_versioned_interface::aidl::android::aidl::versioned::tests::{
     IFooInterface, IFooInterface::BpFooInterface, BazUnion::BazUnion, Foo::Foo,
 };
@@ -54,7 +54,7 @@ use aidl_test_vintf_parcelable::aidl::android::aidl::tests::vintf::{
 use std::fs::File;
 use std::io::{Read, Write};
 use std::os::unix::io::FromRawFd;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 fn get_test_service() -> binder::Strong<dyn ITestService::ITestService> {
     binder::get_interface(<BpTestService as ITestService::ITestService>::get_descriptor())
@@ -1019,6 +1019,20 @@ fn test_renamed_interface_new_as_old() {
     });
 }
 
+#[derive(Debug, Default)]
+struct Callback {
+    received: Arc<Mutex<Option<ParcelableWithNested::Status::Status>>>,
+}
+
+impl Interface for Callback {}
+
+impl INestedService::ICallback::ICallback for Callback {
+    fn done(&self, st: ParcelableWithNested::Status::Status) -> binder::Result<()> {
+        *self.received.lock().unwrap() = Some(st);
+        Ok(())
+    }
+}
+
 #[test]
 fn test_nested_type() {
     let service: binder::Strong<dyn INestedService::INestedService> =
@@ -1028,10 +1042,21 @@ fn test_nested_type() {
     let p = ParcelableWithNested::ParcelableWithNested {
         status: ParcelableWithNested::Status::Status::OK,
     };
+    // OK -> NOT_OK
     let ret = service.flipStatus(&p);
     assert_eq!(ret, Ok(INestedService::Result::Result {
         status: ParcelableWithNested::Status::Status::NOT_OK,
     }));
+    let received = Arc::new(Mutex::new(None));
+    // NOT_OK -> OK with nested callback interface
+    let cb = INestedService::ICallback::BnCallback::new_binder(
+        Callback{ received: Arc::clone(&received) },
+        BinderFeatures::default(),
+    );
+    let ret = service.flipStatusWithCallback(ParcelableWithNested::Status::Status::NOT_OK, &cb);
+    assert_eq!(ret, Ok(()));
+    let received = received.lock().unwrap();
+    assert_eq!(*received, Some(ParcelableWithNested::Status::Status::OK))
 }
 
 #[test]
