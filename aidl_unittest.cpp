@@ -2910,6 +2910,22 @@ TEST_F(AidlTestCompatibleChanges, CompatibleExplicitDefaults) {
   EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
 }
 
+TEST_F(AidlTestCompatibleChanges, NewNestedTypes) {
+  io_delegate_.SetFileContents("old/p/Data.aidl",
+                               "package p;\n"
+                               "parcelable Data {\n"
+                               "  int n;\n"
+                               "}");
+  io_delegate_.SetFileContents("new/p/Data.aidl",
+                               "package p;\n"
+                               "parcelable Data {\n"
+                               "  enum NewEnum { N = 3 }\n"
+                               "  int n;\n"
+                               "  NewEnum e = NewEnum.N;\n"
+                               "}");
+  EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
+}
+
 class AidlTestIncompatibleChanges : public AidlTest {
  protected:
   Options options_ = Options::From("aidl --checkapi old new");
@@ -3416,6 +3432,28 @@ TEST_F(AidlTestIncompatibleChanges, FixedSizeRemovedField) {
   CaptureStderr();
   EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_F(AidlTestIncompatibleChanges, IncompatibleChangesInNestedType) {
+  const string expected_stderr =
+      "ERROR: new/p/Foo.aidl:1.33-37: Number of fields in p.Foo is reduced from 2 to 1.\n";
+  io_delegate_.SetFileContents("old/p/Foo.aidl",
+                               "package p;\n"
+                               "parcelable Foo {\n"
+                               "  interface IBar {\n"
+                               "    void foo();"
+                               "  }\n"
+                               "}");
+  io_delegate_.SetFileContents("new/p/Foo.aidl",
+                               "package p;\n"
+                               "parcelable Foo {\n"
+                               "  interface IBar {\n"
+                               "    void foo(int n);"  // incompatible: signature changed
+                               "  }\n"
+                               "}");
+  CaptureStderr();
+  EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Removed or changed method: p.Foo.IBar.foo()"));
 }
 
 TEST_P(AidlTest, RejectNonFixedSizeFromFixedSize) {
