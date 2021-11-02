@@ -406,11 +406,12 @@ cc_test {
     ],
     srcs: [
         "tests/aidl_test_client_ndk_loggable_interface.cpp",
-        "tests/aidl_test_client_ndk_parcelables.cpp",
-        "tests/aidl_test_client_ndk_versioned_interface.cpp",
         "tests/aidl_test_client_ndk_nested.cpp",
         "tests/aidl_test_client_ndk_nullables.cpp",
+        "tests/aidl_test_client_ndk_parcelables.cpp",
+        "tests/aidl_test_client_ndk_primitives_test.cpp",
         "tests/aidl_test_client_ndk_strings_test.cpp",
+        "tests/aidl_test_client_ndk_versioned_interface.cpp",
     ],
 }
 
