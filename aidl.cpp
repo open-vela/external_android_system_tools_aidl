@@ -523,14 +523,16 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
     }
 
     if (unstructured_parcelable != nullptr) {
-      bool isStable = unstructured_parcelable->IsStableApiParcelable(options.TargetLanguage());
+      auto lang = options.TargetLanguage();
+      bool isStable = unstructured_parcelable->IsStableApiParcelable(lang);
       if (options.IsStructured() && !isStable) {
         AIDL_ERROR(unstructured_parcelable)
             << "Cannot declare unstructured parcelable in a --structured interface. Parcelable "
                "must be defined in AIDL directly.";
         return AidlError::NOT_STRUCTURED;
       }
-      if (options.FailOnParcelable()) {
+      if (options.FailOnParcelable() || lang == Options::Language::NDK ||
+          lang == Options::Language::RUST) {
         AIDL_ERROR(unstructured_parcelable)
             << "Refusing to generate code with unstructured parcelables. Declared parcelables "
                "should be in their own file and/or cannot be used with --structured interfaces.";

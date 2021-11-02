@@ -375,20 +375,11 @@ TEST_P(AidlTest, RejectUnsupportedTypeAnnotations) {
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
-TEST_P(AidlTest, RejectUnsupportedParcelableAnnotations) {
-  AidlError error;
-  const string method = "package a; @nullable parcelable IFoo cpp_header \"IFoo.h\";";
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@nullable is not available."));
-  EXPECT_EQ(AidlError::BAD_TYPE, error);
-}
-
 TEST_P(AidlTest, RejectUnsupportedParcelableDefineAnnotations) {
   AidlError error;
-  const string method = "package a; @nullable parcelable IFoo { String a; String b; }";
+  const string method = "package a; @nullable parcelable Foo { String a; String b; }";
   CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
+  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, GetLanguage(), &error));
   EXPECT_THAT(GetCapturedStderr(), HasSubstr("@nullable is not available."));
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
@@ -1246,6 +1237,20 @@ TEST_P(AidlTest, FailOnDuplicateConstantNames) {
                            typenames_, GetLanguage(), &error));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
   EXPECT_EQ(AidlError::BAD_TYPE, error);
+}
+
+TEST_P(AidlTest, RejectUnstructuredParcelablesInNDKandRust) {
+  io_delegate_.SetFileContents("o/Foo.aidl", "package o; parcelable Foo cpp_header \"cpp/Foo.h\";");
+  const auto options =
+      Options::From("aidl --lang=" + to_string(GetLanguage()) + " -o out -h out -I. o/Foo.aidl");
+  const bool reject_unstructured_parcelables =
+      GetLanguage() == Options::Language::NDK || GetLanguage() == Options::Language::RUST;
+  const string expected_err = reject_unstructured_parcelables
+                                  ? "Refusing to generate code with unstructured parcelables"
+                                  : "";
+  CaptureStderr();
+  EXPECT_EQ(compile_aidl(options, io_delegate_), !reject_unstructured_parcelables);
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr(expected_err));
 }
 
 TEST_P(AidlTest, FailOnTooBigConstant) {
