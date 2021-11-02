@@ -8,6 +8,7 @@ declare_binder_interface! {
     native: BnProtectedInterface(on_transact),
     proxy: BpProtectedInterface {
     },
+    async: IProtectedInterfaceAsync,
   }
 }
 pub trait IProtectedInterface: binder::Interface + Send {
@@ -20,6 +21,11 @@ pub trait IProtectedInterface: binder::Interface + Send {
   fn setDefaultImpl(d: IProtectedInterfaceDefaultRef) -> IProtectedInterfaceDefaultRef where Self: Sized {
     std::mem::replace(&mut *DEFAULT_IMPL.lock().unwrap(), d)
   }
+}
+pub trait IProtectedInterfaceAsync<P>: binder::Interface + Send {
+  fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.permission.IProtectedInterface" }
+  fn Method1<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
+  fn Method2<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
 }
 pub trait IProtectedInterfaceDefault: Send + Sync {
   fn Method1(&self) -> binder::public_api::Result<()> {
@@ -38,34 +44,78 @@ use lazy_static::lazy_static;
 lazy_static! {
   static ref DEFAULT_IMPL: std::sync::Mutex<IProtectedInterfaceDefaultRef> = std::sync::Mutex::new(None);
 }
-impl IProtectedInterface for BpProtectedInterface {
-  fn Method1(&self) -> binder::public_api::Result<()> {
-    let _aidl_reply = self.binder.transact(transactions::Method1, binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
-      Ok(())
-    });
+impl BpProtectedInterface {
+  fn build_parcel_Method1(&self) -> binder::public_api::Result<binder::OwnedParcel> {
+    let mut aidl_data_owned = self.binder.prepare_transact()?;
+    let mut aidl_data = aidl_data_owned.borrowed();
+    Ok(aidl_data_owned)
+  }
+  fn read_response_Method1(&self, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as IProtectedInterface>::getDefaultImpl() {
         return _aidl_default_impl.Method1();
       }
     }
-    let _aidl_reply = _aidl_reply?;
+    let _aidl_reply = _aidl_reply?.into_parcel();
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
   }
-  fn Method2(&self) -> binder::public_api::Result<()> {
-    let _aidl_reply = self.binder.transact(transactions::Method2, binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
-      Ok(())
-    });
+  fn build_parcel_Method2(&self) -> binder::public_api::Result<binder::OwnedParcel> {
+    let mut aidl_data_owned = self.binder.prepare_transact()?;
+    let mut aidl_data = aidl_data_owned.borrowed();
+    Ok(aidl_data_owned)
+  }
+  fn read_response_Method2(&self, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as IProtectedInterface>::getDefaultImpl() {
         return _aidl_default_impl.Method2();
       }
     }
-    let _aidl_reply = _aidl_reply?;
+    let _aidl_reply = _aidl_reply?.into_parcel();
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
+  }
+}
+impl IProtectedInterface for BpProtectedInterface {
+  fn Method1(&self) -> binder::public_api::Result<()> {
+    let _aidl_data = self.build_parcel_Method1()?;
+    let _aidl_reply = self.binder.submit_transact(transactions::Method1, _aidl_data, binder::FLAG_PRIVATE_LOCAL);
+    self.read_response_Method1(_aidl_reply)
+  }
+  fn Method2(&self) -> binder::public_api::Result<()> {
+    let _aidl_data = self.build_parcel_Method2()?;
+    let _aidl_reply = self.binder.submit_transact(transactions::Method2, _aidl_data, binder::FLAG_PRIVATE_LOCAL);
+    self.read_response_Method2(_aidl_reply)
+  }
+}
+impl<P: binder::BinderAsyncPool> IProtectedInterfaceAsync<P> for BpProtectedInterface {
+  fn Method1<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<()>> {
+    let _aidl_data = match self.build_parcel_Method1() {
+      Ok(_aidl_data) => _aidl_data,
+      Err(err) => return Box::pin(std::future::ready(Err(err))),
+    };
+    let binder = self.binder.clone();
+    P::spawn(
+      move || binder.submit_transact(transactions::Method1, _aidl_data, binder::FLAG_PRIVATE_LOCAL),
+      move |_aidl_reply| async move {
+        self.read_response_Method1(_aidl_reply)
+      }
+    )
+  }
+  fn Method2<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<()>> {
+    let _aidl_data = match self.build_parcel_Method2() {
+      Ok(_aidl_data) => _aidl_data,
+      Err(err) => return Box::pin(std::future::ready(Err(err))),
+    };
+    let binder = self.binder.clone();
+    P::spawn(
+      move || binder.submit_transact(transactions::Method2, _aidl_data, binder::FLAG_PRIVATE_LOCAL),
+      move |_aidl_reply| async move {
+        self.read_response_Method2(_aidl_reply)
+      }
+    )
   }
 }
 impl IProtectedInterface for binder::Binder<BnProtectedInterface> {
