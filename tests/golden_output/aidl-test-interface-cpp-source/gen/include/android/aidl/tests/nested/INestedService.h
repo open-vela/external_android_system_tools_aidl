@@ -54,7 +54,46 @@ public:
       return os.str();
     }
   };  // class Result
+  class ICallback : public ::android::IInterface {
+  public:
+    DECLARE_META_INTERFACE(Callback)
+    virtual ::android::binder::Status done(::android::aidl::tests::nested::ParcelableWithNested::Status status) = 0;
+  };  // class ICallback
+
+  class ICallbackDefault : public ICallback {
+  public:
+    ::android::IBinder* onAsBinder() override {
+      return nullptr;
+    }
+    ::android::binder::Status done(::android::aidl::tests::nested::ParcelableWithNested::Status) override {
+      return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+    }
+  };  // class ICallbackDefault
+  class BpCallback : public ::android::BpInterface<ICallback> {
+  public:
+    explicit BpCallback(const ::android::sp<::android::IBinder>& _aidl_impl);
+    virtual ~BpCallback() = default;
+    ::android::binder::Status done(::android::aidl::tests::nested::ParcelableWithNested::Status status) override;
+  };  // class BpCallback
+  class BnCallback : public ::android::BnInterface<ICallback> {
+  public:
+    static constexpr uint32_t TRANSACTION_done = ::android::IBinder::FIRST_CALL_TRANSACTION + 0;
+    explicit BnCallback();
+    ::android::status_t onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) override;
+  };  // class BnCallback
+
+  class ICallbackDelegator : public BnCallback {
+  public:
+    explicit ICallbackDelegator(::android::sp<ICallback> &impl) : _aidl_delegate(impl) {}
+
+    ::android::binder::Status done(::android::aidl::tests::nested::ParcelableWithNested::Status status) override {
+      return _aidl_delegate->done(status);
+    }
+  private:
+    ::android::sp<ICallback> _aidl_delegate;
+  };  // class ICallbackDelegator
   virtual ::android::binder::Status flipStatus(const ::android::aidl::tests::nested::ParcelableWithNested& p, ::android::aidl::tests::nested::INestedService::Result* _aidl_return) = 0;
+  virtual ::android::binder::Status flipStatusWithCallback(::android::aidl::tests::nested::ParcelableWithNested::Status status, const ::android::sp<::android::aidl::tests::nested::INestedService::ICallback>& cb) = 0;
 };  // class INestedService
 
 class INestedServiceDefault : public INestedService {
@@ -63,6 +102,9 @@ public:
     return nullptr;
   }
   ::android::binder::Status flipStatus(const ::android::aidl::tests::nested::ParcelableWithNested&, ::android::aidl::tests::nested::INestedService::Result*) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status flipStatusWithCallback(::android::aidl::tests::nested::ParcelableWithNested::Status, const ::android::sp<::android::aidl::tests::nested::INestedService::ICallback>&) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
 };  // class INestedServiceDefault
