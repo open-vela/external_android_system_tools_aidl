@@ -83,63 +83,86 @@ void GenerateMangledAliases(CodeWriter& out, const AidlDefinedType& type) {
   out << "}\n";
 }
 
-string BuildArg(const AidlArgument& arg, const AidlTypenames& typenames) {
+string BuildArg(const AidlArgument& arg, const AidlTypenames& typenames, Lifetime lifetime) {
   // We pass in parameters that are not primitives by const reference.
   // Arrays get passed in as slices, which is handled in RustNameOf.
   auto arg_mode = ArgumentStorageMode(arg, typenames);
-  auto arg_type = RustNameOf(arg.GetType(), typenames, arg_mode);
+  auto arg_type = RustNameOf(arg.GetType(), typenames, arg_mode, lifetime);
   return kArgumentPrefix + arg.GetName() + ": " + arg_type;
 }
 
-string BuildMethod(const AidlMethod& method, const AidlTypenames& typenames) {
-  auto method_type = RustNameOf(method.GetType(), typenames, StorageMode::VALUE);
+enum class MethodKind {
+  // This is a normal non-async method.
+  NORMAL,
+  // This is an async function, using a Box to return it via the trait.
+  BOXED_FUTURE,
+  // This could have been a non-async method, but it returns a Future so that
+  // it would not be breaking to make the function do async stuff in the future.
+  READY_FUTURE,
+};
+
+string BuildMethod(const AidlMethod& method, const AidlTypenames& typenames,
+                   const MethodKind kind = MethodKind::NORMAL) {
+  // We need to mark the arguments with a lifetime only when returning a future that
+  // actually captures the arguments.
+  Lifetime lifetime;
+  switch (kind) {
+    case MethodKind::NORMAL:
+      lifetime = Lifetime::NONE;
+      break;
+    case MethodKind::BOXED_FUTURE:
+      lifetime = Lifetime::A;
+      break;
+    case MethodKind::READY_FUTURE:
+      lifetime = Lifetime::NONE;
+      break;
+  }
+
+  auto method_type = RustNameOf(method.GetType(), typenames, StorageMode::VALUE, lifetime);
   auto return_type = string{"binder::public_api::Result<"} + method_type + ">";
+
+  switch (kind) {
+    case MethodKind::NORMAL:
+      // Don't wrap the return type in anything.
+      break;
+    case MethodKind::BOXED_FUTURE:
+      return_type = "binder::BoxFuture<'a, " + return_type + ">";
+      break;
+    case MethodKind::READY_FUTURE:
+      return_type = "std::future::Ready<" + return_type + ">";
+      break;
+  }
+
+  string parameters = "&" + RustLifetimeName(lifetime) + "self";
+  string lifetime_str = RustLifetimeGeneric(lifetime);
+
+  for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
+    parameters += ", ";
+    parameters += BuildArg(*arg, typenames, lifetime);
+  }
+
+  return "fn " + method.GetName() + lifetime_str + "(" + parameters + ") -> " + return_type;
+}
+
+void GenerateClientMethodHelpers(CodeWriter& out, const AidlInterface& iface,
+                                 const AidlMethod& method, const AidlTypenames& typenames,
+                                 const Options& options, const std::string& default_trait_name) {
   string parameters = "&self";
   for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
     parameters += ", ";
-    parameters += BuildArg(*arg, typenames);
-  }
-  return "fn " + method.GetName() + "(" + parameters + ") -> " + return_type;
-}
-
-void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const AidlMethod& method,
-                          const AidlTypenames& typenames, const Options& options,
-                          const std::string& trait_name) {
-  // Generate the method
-  out << BuildMethod(method, typenames) << " {\n";
-  out.Indent();
-
-  if (!method.IsUserDefined()) {
-    if (method.GetName() == kGetInterfaceVersion && options.Version() > 0) {
-      // Check if the version is in the cache
-      out << "let _aidl_version = "
-             "self.cached_version.load(std::sync::atomic::Ordering::Relaxed);\n";
-      out << "if _aidl_version != -1 { return Ok(_aidl_version); }\n";
-    }
-
-    if (method.GetName() == kGetInterfaceHash && !options.Hash().empty()) {
-      out << "{\n";
-      out << "  let _aidl_hash_lock = self.cached_hash.lock().unwrap();\n";
-      out << "  if let Some(ref _aidl_hash) = *_aidl_hash_lock {\n";
-      out << "    return Ok(_aidl_hash.clone());\n";
-      out << "  }\n";
-      out << "}\n";
-    }
+    parameters += BuildArg(*arg, typenames, Lifetime::NONE);
   }
 
-  // Call transact()
-  vector<string> flags;
-  if (method.IsOneway()) flags.push_back("binder::FLAG_ONEWAY");
-  if (iface.IsSensitiveData()) flags.push_back("binder::FLAG_CLEAR_BUF");
-  flags.push_back("binder::FLAG_PRIVATE_LOCAL");
-
-  string transact_flags = flags.empty() ? "0" : Join(flags, " | ");
-  out << "let _aidl_reply = self.binder.transact("
-      << "transactions::" << method.GetName() << ", " << transact_flags << ", |_aidl_data| {\n";
+  // Generate build_parcel helper.
+  out << "fn build_parcel_" + method.GetName() + "(" + parameters +
+             ") -> binder::public_api::Result<binder::OwnedParcel> {\n";
   out.Indent();
+
+  out << "let mut aidl_data_owned = self.binder.prepare_transact()?;\n";
+  out << "let mut aidl_data = aidl_data_owned.borrowed();\n";
 
   if (iface.IsSensitiveData()) {
-    out << "_aidl_data.mark_sensitive();\n";
+    out << "aidl_data.mark_sensitive();\n";
   }
 
   // Arguments
@@ -150,24 +173,30 @@ void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const Aid
       // (unless we turned it into an Option<&T>)
       auto ref_mode = ArgumentReferenceMode(*arg, typenames);
       if (IsReference(ref_mode)) {
-        out << "_aidl_data.write(" << arg_name << ")?;\n";
+        out << "aidl_data.write(" << arg_name << ")?;\n";
       } else {
-        out << "_aidl_data.write(&" << arg_name << ")?;\n";
+        out << "aidl_data.write(&" << arg_name << ")?;\n";
       }
     } else if (arg->GetType().IsArray()) {
       // For out-only arrays, send the array size
       if (arg->GetType().IsNullable()) {
-        out << "_aidl_data.write_slice_size(" << arg_name << ".as_deref())?;\n";
+        out << "aidl_data.write_slice_size(" << arg_name << ".as_deref())?;\n";
       } else {
-        out << "_aidl_data.write_slice_size(Some(" << arg_name << "))?;\n";
+        out << "aidl_data.write_slice_size(Some(" << arg_name << "))?;\n";
       }
     }
   }
 
-  // Return Ok(()) if all the `_aidl_data.write(...)?;` calls pass
-  out << "Ok(())\n";
+  out << "Ok(aidl_data_owned)\n";
   out.Dedent();
-  out << "});\n";
+  out << "}\n";
+
+  // Generate read_response helper.
+  auto return_type = RustNameOf(method.GetType(), typenames, StorageMode::VALUE, Lifetime::NONE);
+  out << "fn read_response_" + method.GetName() + "(" + parameters +
+             ", _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<" +
+             return_type + "> {\n";
+  out.Indent();
 
   // Check for UNKNOWN_TRANSACTION and call the default impl
   if (method.IsUserDefined()) {
@@ -180,7 +209,7 @@ void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const Aid
       default_args += arg->GetName();
     }
     out << "if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {\n";
-    out << "  if let Some(_aidl_default_impl) = <Self as " << trait_name
+    out << "  if let Some(_aidl_default_impl) = <Self as " << default_trait_name
         << ">::getDefaultImpl() {\n";
     out << "    return _aidl_default_impl." << method.GetName() << "(" << default_args << ");\n";
     out << "  }\n";
@@ -188,7 +217,7 @@ void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const Aid
   }
 
   // Return all other errors
-  out << "let _aidl_reply = _aidl_reply?;\n";
+  out << "let _aidl_reply = _aidl_reply?.into_parcel();\n";
 
   string return_val = "()";
   if (!method.IsOneway()) {
@@ -198,7 +227,8 @@ void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const Aid
 
     // Return reply value
     if (method.GetType().GetName() != "void") {
-      auto return_type = RustNameOf(method.GetType(), typenames, StorageMode::VALUE);
+      auto return_type =
+          RustNameOf(method.GetType(), typenames, StorageMode::VALUE, Lifetime::NONE);
       out << "let _aidl_return: " << return_type << " = _aidl_reply.read()?;\n";
       return_val = "_aidl_return";
 
@@ -219,6 +249,129 @@ void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const Aid
 
   // Return the result
   out << "Ok(" << return_val << ")\n";
+
+  out.Dedent();
+  out << "}\n";
+}
+
+void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const AidlMethod& method,
+                          const AidlTypenames& typenames, const Options& options,
+                          const MethodKind kind) {
+  // Generate the method
+  out << BuildMethod(method, typenames, kind) << " {\n";
+  out.Indent();
+
+  if (!method.IsUserDefined()) {
+    if (method.GetName() == kGetInterfaceVersion && options.Version() > 0) {
+      // Check if the version is in the cache
+      out << "let _aidl_version = "
+             "self.cached_version.load(std::sync::atomic::Ordering::Relaxed);\n";
+      switch (kind) {
+        case MethodKind::NORMAL:
+          out << "if _aidl_version != -1 { return Ok(_aidl_version); }\n";
+          break;
+        case MethodKind::BOXED_FUTURE:
+          out << "if _aidl_version != -1 { return Box::pin(std::future::ready(Ok(_aidl_version))); "
+                 "}\n";
+          break;
+        case MethodKind::READY_FUTURE:
+          out << "if _aidl_version != -1 { return std::future::ready(Ok(_aidl_version)); }\n";
+          break;
+      }
+    }
+
+    if (method.GetName() == kGetInterfaceHash && !options.Hash().empty()) {
+      out << "{\n";
+      out << "  let _aidl_hash_lock = self.cached_hash.lock().unwrap();\n";
+      out << "  if let Some(ref _aidl_hash) = *_aidl_hash_lock {\n";
+      switch (kind) {
+        case MethodKind::NORMAL:
+          out << "    return Ok(_aidl_hash.clone());\n";
+          break;
+        case MethodKind::BOXED_FUTURE:
+          out << "    return Box::pin(std::future::ready(Ok(_aidl_hash.clone())));\n";
+          break;
+        case MethodKind::READY_FUTURE:
+          out << "    return std::future::ready(Ok(_aidl_hash.clone()));\n";
+          break;
+      }
+      out << "  }\n";
+      out << "}\n";
+    }
+  }
+
+  string build_parcel_args;
+  for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
+    if (!build_parcel_args.empty()) {
+      build_parcel_args += ", ";
+    }
+    build_parcel_args += kArgumentPrefix;
+    build_parcel_args += arg->GetName();
+  }
+
+  string read_response_args =
+      build_parcel_args.empty() ? "_aidl_reply" : build_parcel_args + ", _aidl_reply";
+
+  vector<string> flags;
+  if (method.IsOneway()) flags.push_back("binder::FLAG_ONEWAY");
+  if (iface.IsSensitiveData()) flags.push_back("binder::FLAG_CLEAR_BUF");
+  flags.push_back("binder::FLAG_PRIVATE_LOCAL");
+
+  string transact_flags = flags.empty() ? "0" : Join(flags, " | ");
+
+  switch (kind) {
+    case MethodKind::NORMAL:
+      // Prepare transaction.
+      out << "let _aidl_data = self.build_parcel_" + method.GetName() + "(" + build_parcel_args +
+                 ")?;\n";
+      // Submit transaction.
+      out << "let _aidl_reply = self.binder.submit_transact(transactions::" << method.GetName()
+          << ", _aidl_data, " << transact_flags << ");\n";
+      // Deserialize response.
+      out << "self.read_response_" + method.GetName() + "(" + read_response_args + ")\n";
+      break;
+    case MethodKind::READY_FUTURE:
+      // Prepare transaction.
+      out << "let _aidl_data = match self.build_parcel_" + method.GetName() + "(" +
+                 build_parcel_args + ") {\n";
+      out.Indent();
+      out << "Ok(_aidl_data) => _aidl_data,\n";
+      out << "Err(err) => return std::future::ready(Err(err)),\n";
+      out.Dedent();
+      out << "};\n";
+      // Submit transaction.
+      out << "let _aidl_reply = self.binder.submit_transact(transactions::" << method.GetName()
+          << ", _aidl_data, " << transact_flags << ");\n";
+      // Deserialize response.
+      out << "std::future::ready(self.read_response_" + method.GetName() + "(" +
+                 read_response_args + "))\n";
+      break;
+    case MethodKind::BOXED_FUTURE:
+      // Prepare transaction.
+      out << "let _aidl_data = match self.build_parcel_" + method.GetName() + "(" +
+                 build_parcel_args + ") {\n";
+      out.Indent();
+      out << "Ok(_aidl_data) => _aidl_data,\n";
+      out << "Err(err) => return Box::pin(std::future::ready(Err(err))),\n";
+      out.Dedent();
+      out << "};\n";
+      // Submit transaction.
+      out << "let binder = self.binder.clone();\n";
+      out << "P::spawn(\n";
+      out.Indent();
+      out << "move || binder.submit_transact(transactions::" << method.GetName() << ", _aidl_data, "
+          << transact_flags << "),\n";
+      out << "move |_aidl_reply| async move {\n";
+      out.Indent();
+      // Deserialize response.
+      out << "self.read_response_" + method.GetName() + "(" + read_response_args + ")\n";
+      out.Dedent();
+      out << "}\n";
+      out.Dedent();
+      out << ")\n";
+      break;
+  }
+
   out.Dedent();
   out << "}\n";
 }
@@ -238,7 +391,7 @@ void GenerateServerTransaction(CodeWriter& out, const AidlMethod& method,
       // We need a value we can call Default::default() on
       arg_mode = StorageMode::DEFAULT_VALUE;
     }
-    auto arg_type = RustNameOf(arg->GetType(), typenames, arg_mode);
+    auto arg_type = RustNameOf(arg->GetType(), typenames, arg_mode, Lifetime::NONE);
 
     string arg_mut = arg->IsOut() ? "mut " : "";
     string arg_init = arg->IsIn() ? "_aidl_data.read()?" : "Default::default()";
@@ -363,7 +516,7 @@ void GenerateConstantDeclarations(CodeWriter& out, const TypeWithConstants& type
       const_type = "&str";
     } else if (type.Signature() == "byte" || type.Signature() == "int" ||
                type.Signature() == "long") {
-      const_type = RustNameOf(type, typenames, StorageMode::VALUE);
+      const_type = RustNameOf(type, typenames, StorageMode::VALUE, Lifetime::NONE);
     } else {
       AIDL_FATAL(value) << "Unrecognized constant type: " << type.Signature();
     }
@@ -382,6 +535,7 @@ void GenerateRustInterface(CodeWriter* code_writer, const AidlInterface* iface,
   *code_writer << "#[allow(unused_imports)] use binder::IBinderInternal;\n";
 
   auto trait_name = ClassName(*iface, cpp::ClassNames::INTERFACE);
+  auto trait_name_async = trait_name + "Async";
   auto client_name = ClassName(*iface, cpp::ClassNames::CLIENT);
   auto server_name = ClassName(*iface, cpp::ClassNames::SERVER);
   *code_writer << "use binder::declare_binder_interface;\n";
@@ -406,14 +560,16 @@ void GenerateRustInterface(CodeWriter* code_writer, const AidlInterface* iface,
   }
   code_writer->Dedent();
   *code_writer << "},\n";
-  code_writer->Dedent();
+  *code_writer << "async: " << trait_name_async << ",\n";
   if (iface->IsVintfStability()) {
     *code_writer << "stability: binder::Stability::Vintf,\n";
   }
+  code_writer->Dedent();
   *code_writer << "}\n";
   code_writer->Dedent();
   *code_writer << "}\n";
 
+  // Emit the trait.
   GenerateDeprecated(*code_writer, *iface);
   *code_writer << "pub trait " << trait_name << ": binder::Interface + Send {\n";
   code_writer->Indent();
@@ -450,6 +606,37 @@ void GenerateRustInterface(CodeWriter* code_writer, const AidlInterface* iface,
                << " -> " << default_ref_name << " where Self: Sized {\n";
   *code_writer << "  std::mem::replace(&mut *DEFAULT_IMPL.lock().unwrap(), d)\n";
   *code_writer << "}\n";
+  code_writer->Dedent();
+  *code_writer << "}\n";
+
+  // Emit the async trait.
+  GenerateDeprecated(*code_writer, *iface);
+  *code_writer << "pub trait " << trait_name_async << "<P>: binder::Interface + Send {\n";
+  code_writer->Indent();
+  *code_writer << "fn get_descriptor() -> &'static str where Self: Sized { \""
+               << iface->GetDescriptor() << "\" }\n";
+
+  for (const auto& method : iface->GetMethods()) {
+    // Generate the method
+    GenerateDeprecated(*code_writer, *method);
+
+    MethodKind kind = method->IsOneway() ? MethodKind::READY_FUTURE : MethodKind::BOXED_FUTURE;
+
+    if (method->IsUserDefined()) {
+      *code_writer << BuildMethod(*method, typenames, kind) << ";\n";
+    } else {
+      // Generate default implementations for meta methods
+      *code_writer << BuildMethod(*method, typenames, kind) << " {\n";
+      code_writer->Indent();
+      if (method->GetName() == kGetInterfaceVersion && options.Version() > 0) {
+        *code_writer << "Box::pin(async move { Ok(VERSION) })\n";
+      } else if (method->GetName() == kGetInterfaceHash && !options.Hash().empty()) {
+        *code_writer << "Box::pin(async move { Ok(HASH.into()) })\n";
+      }
+      code_writer->Dedent();
+      *code_writer << "}\n";
+    }
+  }
   code_writer->Dedent();
   *code_writer << "}\n";
 
@@ -508,11 +695,34 @@ void GenerateRustInterface(CodeWriter* code_writer, const AidlInterface* iface,
     *code_writer << "pub const HASH: &str = \"" << options.Hash() << "\";\n";
   }
 
+  // Generate the client-side method helpers
+  //
+  // The methods in this block are not marked pub, so they are not accessible from outside the
+  // AIDL generated code.
+  *code_writer << "impl " << client_name << " {\n";
+  code_writer->Indent();
+  for (const auto& method : iface->GetMethods()) {
+    GenerateClientMethodHelpers(*code_writer, *iface, *method, typenames, options, trait_name);
+  }
+  code_writer->Dedent();
+  *code_writer << "}\n";
+
   // Generate the client-side methods
   *code_writer << "impl " << trait_name << " for " << client_name << " {\n";
   code_writer->Indent();
   for (const auto& method : iface->GetMethods()) {
-    GenerateClientMethod(*code_writer, *iface, *method, typenames, options, trait_name);
+    GenerateClientMethod(*code_writer, *iface, *method, typenames, options, MethodKind::NORMAL);
+  }
+  code_writer->Dedent();
+  *code_writer << "}\n";
+
+  // Generate the async client-side methods
+  *code_writer << "impl<P: binder::BinderAsyncPool> " << trait_name_async << "<P> for "
+               << client_name << " {\n";
+  code_writer->Indent();
+  for (const auto& method : iface->GetMethods()) {
+    MethodKind kind = method->IsOneway() ? MethodKind::READY_FUTURE : MethodKind::BOXED_FUTURE;
+    GenerateClientMethod(*code_writer, *iface, *method, typenames, options, kind);
   }
   code_writer->Dedent();
   *code_writer << "}\n";
@@ -528,7 +738,8 @@ void GenerateParcelBody(CodeWriter& out, const AidlStructuredParcelable* parcel,
   out.Indent();
   for (const auto& variable : parcel->GetFields()) {
     GenerateDeprecated(out, *variable);
-    auto field_type = RustNameOf(variable->GetType(), typenames, StorageMode::PARCELABLE_FIELD);
+    auto field_type =
+        RustNameOf(variable->GetType(), typenames, StorageMode::PARCELABLE_FIELD, Lifetime::NONE);
     out << "pub " << variable->GetName() << ": " << field_type << ",\n";
   }
   out.Dedent();
@@ -613,7 +824,8 @@ void GenerateParcelBody(CodeWriter& out, const AidlUnionDecl* parcel,
   out.Indent();
   for (const auto& variable : parcel->GetFields()) {
     GenerateDeprecated(out, *variable);
-    auto field_type = RustNameOf(variable->GetType(), typenames, StorageMode::PARCELABLE_FIELD);
+    auto field_type =
+        RustNameOf(variable->GetType(), typenames, StorageMode::PARCELABLE_FIELD, Lifetime::NONE);
     out << variable->GetCapitalizedName() << "(" << field_type << "),\n";
   }
   out.Dedent();
@@ -673,7 +885,8 @@ void GenerateParcelDeserializeBody(CodeWriter& out, const AidlUnionDecl* parcel,
   out.Indent();
   int tag = 0;
   for (const auto& variable : parcel->GetFields()) {
-    auto field_type = RustNameOf(variable->GetType(), typenames, StorageMode::PARCELABLE_FIELD);
+    auto field_type =
+        RustNameOf(variable->GetType(), typenames, StorageMode::PARCELABLE_FIELD, Lifetime::NONE);
 
     out << std::to_string(tag++) << " => {\n";
     out.Indent();
@@ -765,7 +978,7 @@ void GenerateRustParcel(CodeWriter* code_writer, const ParcelableType* parcel,
 void GenerateRustEnumDeclaration(CodeWriter* code_writer, const AidlEnumDeclaration* enum_decl,
                                  const AidlTypenames& typenames) {
   const auto& aidl_backing_type = enum_decl->GetBackingType();
-  auto backing_type = RustNameOf(aidl_backing_type, typenames, StorageMode::VALUE);
+  auto backing_type = RustNameOf(aidl_backing_type, typenames, StorageMode::VALUE, Lifetime::NONE);
 
   // TODO(b/177860423) support "deprecated" for enum types
   *code_writer << "#![allow(non_upper_case_globals)]\n";

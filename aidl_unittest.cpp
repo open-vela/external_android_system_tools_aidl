@@ -375,20 +375,11 @@ TEST_P(AidlTest, RejectUnsupportedTypeAnnotations) {
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
-TEST_P(AidlTest, RejectUnsupportedParcelableAnnotations) {
-  AidlError error;
-  const string method = "package a; @nullable parcelable IFoo cpp_header \"IFoo.h\";";
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@nullable is not available."));
-  EXPECT_EQ(AidlError::BAD_TYPE, error);
-}
-
 TEST_P(AidlTest, RejectUnsupportedParcelableDefineAnnotations) {
   AidlError error;
-  const string method = "package a; @nullable parcelable IFoo { String a; String b; }";
+  const string method = "package a; @nullable parcelable Foo { String a; String b; }";
   CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", method, typenames_, GetLanguage(), &error));
+  EXPECT_EQ(nullptr, Parse("a/Foo.aidl", method, typenames_, GetLanguage(), &error));
   EXPECT_THAT(GetCapturedStderr(), HasSubstr("@nullable is not available."));
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
@@ -1248,6 +1239,20 @@ TEST_P(AidlTest, FailOnDuplicateConstantNames) {
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
+TEST_P(AidlTest, RejectUnstructuredParcelablesInNDKandRust) {
+  io_delegate_.SetFileContents("o/Foo.aidl", "package o; parcelable Foo cpp_header \"cpp/Foo.h\";");
+  const auto options =
+      Options::From("aidl --lang=" + to_string(GetLanguage()) + " -o out -h out -I. o/Foo.aidl");
+  const bool reject_unstructured_parcelables =
+      GetLanguage() == Options::Language::NDK || GetLanguage() == Options::Language::RUST;
+  const string expected_err = reject_unstructured_parcelables
+                                  ? "Refusing to generate code with unstructured parcelables"
+                                  : "";
+  CaptureStderr();
+  EXPECT_EQ(compile_aidl(options, io_delegate_), !reject_unstructured_parcelables);
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr(expected_err));
+}
+
 TEST_P(AidlTest, FailOnTooBigConstant) {
   AidlError error;
   const string expected_stderr =
@@ -1625,19 +1630,6 @@ TEST_F(AidlTest, RejectsNestedTypesWithParentsName) {
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse(input_path, input, typenames_, Options::Language::CPP));
   EXPECT_THAT(GetCapturedStderr(), HasSubstr("Nested type 'Foo' has the same name as its parent."));
-}
-
-TEST_F(AidlTest, RejectsInterfaceAsNestedTypes) {
-  const string input_path = "p/IFoo.aidl";
-  const string input =
-      "package p;\n"
-      "interface IFoo {\n"
-      "  interface ICallback { void done(); }\n"
-      "  void doTask(ICallback cb);\n"
-      "}";
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse(input_path, input, typenames_, Options::Language::CPP));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Interfaces should be at the root scope"));
 }
 
 TEST_F(AidlTest, RejectUnstructuredParcelableAsNestedTypes) {
@@ -2918,6 +2910,22 @@ TEST_F(AidlTestCompatibleChanges, CompatibleExplicitDefaults) {
   EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
 }
 
+TEST_F(AidlTestCompatibleChanges, NewNestedTypes) {
+  io_delegate_.SetFileContents("old/p/Data.aidl",
+                               "package p;\n"
+                               "parcelable Data {\n"
+                               "  int n;\n"
+                               "}");
+  io_delegate_.SetFileContents("new/p/Data.aidl",
+                               "package p;\n"
+                               "parcelable Data {\n"
+                               "  enum NewEnum { N = 3 }\n"
+                               "  int n;\n"
+                               "  NewEnum e = NewEnum.N;\n"
+                               "}");
+  EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
+}
+
 class AidlTestIncompatibleChanges : public AidlTest {
  protected:
   Options options_ = Options::From("aidl --checkapi old new");
@@ -3424,6 +3432,28 @@ TEST_F(AidlTestIncompatibleChanges, FixedSizeRemovedField) {
   CaptureStderr();
   EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_F(AidlTestIncompatibleChanges, IncompatibleChangesInNestedType) {
+  const string expected_stderr =
+      "ERROR: new/p/Foo.aidl:1.33-37: Number of fields in p.Foo is reduced from 2 to 1.\n";
+  io_delegate_.SetFileContents("old/p/Foo.aidl",
+                               "package p;\n"
+                               "parcelable Foo {\n"
+                               "  interface IBar {\n"
+                               "    void foo();"
+                               "  }\n"
+                               "}");
+  io_delegate_.SetFileContents("new/p/Foo.aidl",
+                               "package p;\n"
+                               "parcelable Foo {\n"
+                               "  interface IBar {\n"
+                               "    void foo(int n);"  // incompatible: signature changed
+                               "  }\n"
+                               "}");
+  CaptureStderr();
+  EXPECT_FALSE(::android::aidl::check_api(options_, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Removed or changed method: p.Foo.IBar.foo()"));
 }
 
 TEST_P(AidlTest, RejectNonFixedSizeFromFixedSize) {
