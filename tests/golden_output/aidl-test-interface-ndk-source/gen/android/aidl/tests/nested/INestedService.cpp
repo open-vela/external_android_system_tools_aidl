@@ -2,8 +2,8 @@
 #include <aidl/android/aidl/tests/nested/BpNestedService.h>
 #include <aidl/android/aidl/tests/nested/BnNestedService.h>
 #include <aidl/android/aidl/tests/nested/INestedService.h>
-#include <aidl/android/aidl/tests/nested/BpNestedService.h>
-#include <aidl/android/aidl/tests/nested/BnNestedService.h>
+#include <aidl/android/aidl/tests/nested/INestedService.h>
+#include <aidl/android/aidl/tests/nested/INestedService.h>
 #include <aidl/android/aidl/tests/nested/INestedService.h>
 
 namespace aidl {
@@ -219,8 +219,8 @@ bool INestedServiceDefault::isRemote() {
 #include <aidl/android/aidl/tests/nested/BpNestedService.h>
 #include <aidl/android/aidl/tests/nested/BnNestedService.h>
 #include <aidl/android/aidl/tests/nested/INestedService.h>
-#include <aidl/android/aidl/tests/nested/BpNestedService.h>
-#include <aidl/android/aidl/tests/nested/BnNestedService.h>
+#include <aidl/android/aidl/tests/nested/INestedService.h>
+#include <aidl/android/aidl/tests/nested/INestedService.h>
 #include <aidl/android/aidl/tests/nested/INestedService.h>
 
 namespace aidl {
@@ -273,8 +273,8 @@ binder_status_t INestedService::Result::writeToParcel(AParcel* _aidl_parcel) con
 #include <aidl/android/aidl/tests/nested/BpNestedService.h>
 #include <aidl/android/aidl/tests/nested/BnNestedService.h>
 #include <aidl/android/aidl/tests/nested/INestedService.h>
-#include <aidl/android/aidl/tests/nested/BpNestedService.h>
-#include <aidl/android/aidl/tests/nested/BnNestedService.h>
+#include <aidl/android/aidl/tests/nested/INestedService.h>
+#include <aidl/android/aidl/tests/nested/INestedService.h>
 #include <aidl/android/aidl/tests/nested/INestedService.h>
 
 namespace aidl {
