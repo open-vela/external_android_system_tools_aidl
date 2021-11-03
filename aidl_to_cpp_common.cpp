@@ -79,6 +79,8 @@ std::string HeaderFile(const AidlDefinedType& defined_type, ClassNames class_typ
   // For a nested type, we need to include its top-most parent type's header.
   const AidlDefinedType* toplevel = &defined_type;
   for (auto parent = toplevel->GetParentType(); parent;) {
+    // When including the parent's header, it should be always RAW
+    class_type = ClassNames::RAW;
     toplevel = parent;
     parent = toplevel->GetParentType();
   }
