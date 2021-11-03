@@ -694,6 +694,11 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
   }
 
   if (IsArray()) {
+    const auto defined_type = typenames.TryGetDefinedType(GetName());
+    if (defined_type != nullptr && defined_type->AsInterface() != nullptr) {
+      AIDL_ERROR(this) << "Binder type cannot be an array";
+      return false;
+    }
     if (GetName() == "ParcelableHolder" || GetName() == "List" || GetName() == "Map" ||
         GetName() == "CharSequence") {
       AIDL_ERROR(this) << "Arrays of " << GetName() << " are not supported.";

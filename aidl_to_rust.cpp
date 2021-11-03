@@ -127,16 +127,11 @@ std::string GetRustName(const AidlTypeSpecifier& type, const AidlTypenames& type
     }
     return m[element_type_name];
   }
-  auto name = GetRawRustName(element_type);
   if (TypeIsInterface(element_type, typenames)) {
-    name = "binder::Strong<dyn " + name + ">";
-    if (is_vector && mode == StorageMode::DEFAULT_VALUE) {
-      // Out-arguments of interface arrays need to be Vec<Option<...>> so resize_out_vec
-      // can initialize all elements to None.
-      name = "Option<" + name + ">";
-    }
+    return "binder::Strong<dyn " + GetRawRustName(element_type) + ">";
   }
-  return name;
+
+  return GetRawRustName(element_type);
 }
 }  // namespace
 
