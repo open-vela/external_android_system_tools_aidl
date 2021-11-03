@@ -1027,6 +1027,8 @@ void GenerateRust(const string& filename, const Options& options, const AidlType
   // Forbid the use of unsafe in auto-generated code.
   // Unsafe code should only be allowed in libbinder_rs.
   *code_writer << "#![forbid(unsafe_code)]\n";
+  // Disable rustfmt on auto-generated files, including the golden outputs
+  *code_writer << "#![rustfmt::skip]\n";
   GenerateClass(code_writer.get(), defined_type, types, options);
   GenerateMangledAliases(*code_writer, defined_type);
 

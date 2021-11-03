@@ -1,4 +1,5 @@
 #![forbid(unsafe_code)]
+#![rustfmt::skip]
 #![allow(non_upper_case_globals)]
 use binder::declare_binder_enum;
 declare_binder_enum! { IntEnum : [i32; 3] {

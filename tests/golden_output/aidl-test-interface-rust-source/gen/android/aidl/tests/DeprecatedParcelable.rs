@@ -1,4 +1,5 @@
 #![forbid(unsafe_code)]
+#![rustfmt::skip]
 #[derive(Debug)]
 #[deprecated = "test"]
 pub struct DeprecatedParcelable {

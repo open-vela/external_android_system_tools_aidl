@@ -1,4 +1,5 @@
 #![forbid(unsafe_code)]
+#![rustfmt::skip]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Union {
   Ns(Vec<i32>),
