@@ -32,6 +32,7 @@
 #include "aidl_dumpapi.h"
 #include "aidl_language.h"
 #include "aidl_to_cpp.h"
+#include "aidl_to_cpp_common.h"
 #include "aidl_to_java.h"
 #include "comments.h"
 #include "logging.h"
@@ -1531,6 +1532,21 @@ TEST_F(AidlTest, UnderstandsNestedTypesViaFullyQualifiedName) {
   EXPECT_EQ(GetCapturedStderr(), "");
 
   EXPECT_TRUE(typenames_.ResolveTypename("p.IOuter.Inner").is_resolved);
+}
+
+TEST_F(AidlTest, IncludeParentsRawHeaderForNestedInterface) {
+  CaptureStderr();
+  EXPECT_NE(nullptr, Parse("p/Outer.aidl",
+                           "package p;\n"
+                           "parcelable Outer {\n"
+                           "  interface IInner {}\n"
+                           "}",
+                           typenames_, Options::Language::CPP));
+
+  EXPECT_EQ(GetCapturedStderr(), "");
+  auto resolved = typenames_.ResolveTypename("p.Outer.IInner");
+  ASSERT_TRUE(resolved.defined_type);
+  EXPECT_EQ(cpp::HeaderFile(*resolved.defined_type, cpp::ClassNames::CLIENT), "p/Outer.h");
 }
 
 TEST_F(AidlTest, UnderstandsNestedTypesViaFullyQualifiedImport) {
