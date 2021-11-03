@@ -269,6 +269,35 @@ fn test_binder_exchange() {
     assert_eq!(service.VerifyName(&got, NAME), Ok(true));
 }
 
+#[test]
+fn test_binder_array_exchange() {
+    let names = vec!["Fizz".into(), "Buzz".into()];
+    let service = get_test_service();
+    let got = service.GetInterfaceArray(&names).expect("error calling GetInterfaceArray");
+    assert_eq!(got.iter().map(|s| s.GetName()).collect::<Result<Vec<_>, _>>(), Ok(names.clone()));
+    assert_eq!(service.VerifyNamesWithInterfaceArray(&got, &names), Ok(true));
+}
+
+#[test]
+fn test_binder_nullable_array_exchange() {
+    let names = vec![Some("Fizz".into()), None, Some("Buzz".into())];
+    let service = get_test_service();
+    let got = service
+        .GetNullableInterfaceArray(Some(&names))
+        .expect("error calling GetNullableInterfaceArray");
+    assert_eq!(
+        got.as_ref().map(|arr| arr
+            .iter()
+            .map(|opt_s| opt_s.as_ref().map(|s| s.GetName().expect("error calling GetName")))
+            .collect::<Vec<_>>()),
+        Some(names.clone())
+    );
+    assert_eq!(
+        service.VerifyNamesWithNullableInterfaceArray(got.as_ref().map(|v| &v[..]), Some(&names)),
+        Ok(true)
+    );
+}
+
 fn build_pipe() -> (File, File) {
     // Safety: we get two file descriptors from pipe()
     // and pass them after checking if the function returned

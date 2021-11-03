@@ -178,6 +178,71 @@ impl ITestService::ITestService for TestService {
         service.GetName().map(|found_name| found_name == name)
     }
 
+    fn GetInterfaceArray(
+        &self,
+        names: &[String],
+    ) -> binder::Result<Vec<binder::Strong<dyn INamedCallback::INamedCallback>>> {
+        names.iter().map(|name| self.GetOtherTestService(name)).collect()
+    }
+
+    fn VerifyNamesWithInterfaceArray(
+        &self,
+        services: &[binder::Strong<dyn INamedCallback::INamedCallback>],
+        names: &[String],
+    ) -> binder::Result<bool> {
+        if services.len() == names.len() {
+            for (s, n) in services.iter().zip(names) {
+                if !self.VerifyName(s, n)? {
+                    return Ok(false);
+                }
+            }
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+
+    fn GetNullableInterfaceArray(
+        &self,
+        names: Option<&[Option<String>]>,
+    ) -> binder::Result<Option<Vec<Option<binder::Strong<dyn INamedCallback::INamedCallback>>>>>
+    {
+        if let Some(names) = names {
+            let mut services = vec![];
+            for name in names {
+                if let Some(name) = name {
+                    services.push(Some(self.GetOtherTestService(name)?));
+                } else {
+                    services.push(None);
+                }
+            }
+            Ok(Some(services))
+        } else {
+            Ok(None)
+        }
+    }
+
+    fn VerifyNamesWithNullableInterfaceArray(
+        &self,
+        services: Option<&[Option<binder::Strong<dyn INamedCallback::INamedCallback>>]>,
+        names: Option<&[Option<String>]>,
+    ) -> binder::Result<bool> {
+        if let (Some(services), Some(names)) = (services, names) {
+            for (s, n) in services.iter().zip(names) {
+                if let (Some(s), Some(n)) = (s, n) {
+                    if !self.VerifyName(s, n)? {
+                        return Ok(false);
+                    }
+                } else if s.is_some() || n.is_some() {
+                    return Ok(false);
+                }
+            }
+            Ok(true)
+        } else {
+            Ok(services.is_none() && names.is_none())
+        }
+    }
+
     fn RepeatParcelFileDescriptor(
         &self,
         read: &ParcelFileDescriptor,
