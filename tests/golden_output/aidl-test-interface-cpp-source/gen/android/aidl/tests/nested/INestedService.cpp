@@ -74,7 +74,7 @@ BpNestedService::BpNestedService(const ::android::sp<::android::IBinder>& _aidl_
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeStrongBinder(::android::aidl::tests::nested::INestedService::ICallback::asBinder(cb));
+  _aidl_ret_status = _aidl_data.writeStrongBinder(cb);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }

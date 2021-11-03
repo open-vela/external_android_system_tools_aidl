@@ -384,7 +384,25 @@ bool WriteToParcelFor(const CodeGeneratorContext& c) {
     const AidlDefinedType* t = c.typenames.TryGetDefinedType(c.type.GetName());
     AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName();
     if (t->AsInterface() != nullptr) {
-      if (!c.type.IsArray()) {
+      if (c.type.IsArray()) {
+        c.writer << "{\n";
+        c.writer.Indent();
+        c.writer << "android.os.IBinder[] _binder_arr = null;\n";
+        c.writer << "if (" << c.var << " != null) {\n";
+        c.writer.Indent();
+        c.writer << "_binder_arr = new android.os.IBinder[" << c.var << ".length];\n";
+        c.writer << "for (int i = 0; i < " << c.var << ".length; i++) {\n";
+        c.writer.Indent();
+        c.writer << "_binder_arr[i] = (" << c.var << "[i] != null) ? " << c.var
+                 << "[i].asBinder() : null;\n";
+        c.writer.Dedent();
+        c.writer << "}\n";
+        c.writer.Dedent();
+        c.writer << "}\n";
+        c.writer << c.parcel << ".writeBinderArray(_binder_arr);\n";
+        c.writer.Dedent();
+        c.writer << "}\n";
+      } else {
         // Why don't we use writeStrongInterface which does the exact same thing?
         // Keeping below code just not to break unit tests.
         c.writer << c.parcel << ".writeStrongBinder((((" << c.var << "!=null))?"
@@ -615,8 +633,29 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
     const AidlDefinedType* t = c.typenames.TryGetDefinedType(c.type.GetName());
     AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName();
     if (t->AsInterface() != nullptr) {
-      if (!c.type.IsArray()) {
-        c.writer << c.var << " = " << c.type.GetName() << ".Stub.asInterface(" << c.parcel
+      auto name = c.type.GetName();
+      if (c.type.IsArray()) {
+        c.writer << "{\n";
+        c.writer.Indent();
+        c.writer << "android.os.IBinder[] _binder_arr = " << c.parcel << ".createBinderArray();\n";
+        c.writer << "if (_binder_arr != null) {\n";
+        c.writer.Indent();
+        c.writer << c.var << " = new " << name << "[_binder_arr.length];\n";
+        c.writer << "for (int i = 0; i < _binder_arr.length; i++) {\n";
+        c.writer.Indent();
+        c.writer << c.var << "[i] = " << name << ".Stub.asInterface(_binder_arr[i]);\n";
+        c.writer.Dedent();
+        c.writer << "}\n";
+        c.writer.Dedent();
+        c.writer << "} else {\n";
+        c.writer.Indent();
+        c.writer << c.var << " = null;\n";
+        c.writer.Dedent();
+        c.writer << "}\n";
+        c.writer.Dedent();
+        c.writer << "}\n";
+      } else {
+        c.writer << c.var << " = " << name << ".Stub.asInterface(" << c.parcel
                  << ".readStrongBinder());\n";
       }
     } else if (t->AsParcelable() != nullptr) {
@@ -765,6 +804,21 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
         c.writer.Dedent();
         c.writer << "}\n";
       }
+    } else if (t->AsInterface()) {
+      AIDL_FATAL_IF(!c.type.IsArray(), c.type) << "readFromParcel(interface) doesn't make sense.";
+      auto name = c.type.GetName();
+      c.writer << "{\n";
+      c.writer.Indent();
+      c.writer << "android.os.IBinder[] _binder_arr = new android.os.IBinder[" << c.var
+               << ".length];\n";
+      c.writer << c.parcel << ".readBinderArray(_binder_arr);\n";
+      c.writer << "for (int i = 0; i < _binder_arr.length; i++) {\n";
+      c.writer.Indent();
+      c.writer << c.var << "[i] = " << name << ".Stub.asInterface(_binder_arr[i]);\n";
+      c.writer.Dedent();
+      c.writer << "}\n";
+      c.writer.Dedent();
+      c.writer << "}\n";
     }
   }
   return true;
