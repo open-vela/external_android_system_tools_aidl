@@ -1,4 +1,5 @@
 #![forbid(unsafe_code)]
+#![rustfmt::skip]
 #[derive(Debug)]
 pub struct MyExt2 {
   pub a: i32,
