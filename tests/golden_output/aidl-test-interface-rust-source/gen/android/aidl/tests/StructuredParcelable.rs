@@ -1,4 +1,5 @@
 #![forbid(unsafe_code)]
+#![rustfmt::skip]
 #[derive(Debug, Clone, PartialEq)]
 pub struct StructuredParcelable {
   pub shouldContainThreeFs: Vec<i32>,
