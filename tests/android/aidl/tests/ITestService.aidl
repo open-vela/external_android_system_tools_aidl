@@ -116,6 +116,12 @@ interface ITestService {
     // Test that clients can send and receive Binders.
     INamedCallback GetOtherTestService(String name);
     boolean VerifyName(INamedCallback service, String name);
+    INamedCallback[] GetInterfaceArray(in String[] names);
+    boolean VerifyNamesWithInterfaceArray(in INamedCallback[] services, in String[] names);
+    @nullable INamedCallback[] GetNullableInterfaceArray(
+            in @nullable String[] names);
+    boolean VerifyNamesWithNullableInterfaceArray(
+            in @nullable INamedCallback[] services, in @nullable String[] names);
 
     // Test that List<T> types work correctly.
     List<String> ReverseStringList(in List<String> input, out List<String> repeated);
