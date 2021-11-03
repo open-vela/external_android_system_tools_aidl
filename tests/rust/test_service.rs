@@ -16,17 +16,18 @@
 
 //! Test Rust service for the AIDL compiler.
 
-use aidl_test_interface::aidl::android::aidl::tests::nested::{
-    INestedService, ParcelableWithNested,
-};
 use aidl_test_interface::aidl::android::aidl::tests::ITestService::{
     self, BnTestService, BpTestService, Empty::Empty,
 };
 use aidl_test_interface::aidl::android::aidl::tests::{
-    extension::ExtendableParcelable::ExtendableParcelable, extension::MyExt::MyExt,
     BackendType::BackendType, ByteEnum::ByteEnum, ConstantExpressionEnum::ConstantExpressionEnum,
     INamedCallback, INewName, IOldName, IntEnum::IntEnum, LongEnum::LongEnum,
-    RecursiveList::RecursiveList, StructuredParcelable, Union,
+    RecursiveList::RecursiveList, StructuredParcelable,Union,
+    extension::ExtendableParcelable::ExtendableParcelable,
+    extension::MyExt::MyExt,
+};
+use aidl_test_interface::aidl::android::aidl::tests::nested::{
+    INestedService, ParcelableWithNested,
 };
 use aidl_test_interface::binder::{
     self, BinderFeatures, Interface, ParcelFileDescriptor, SpIBinder,
@@ -213,7 +214,10 @@ impl ITestService::ITestService for TestService {
         Ok(input.map(String::from))
     }
 
-    fn RepeatNullableParcelable(&self, input: Option<&Empty>) -> binder::Result<Option<Empty>> {
+    fn RepeatNullableParcelable(
+        &self,
+        input: Option<&Empty>,
+    ) -> binder::Result<Option<Empty>> {
         Ok(input.cloned())
     }
 
@@ -323,9 +327,12 @@ impl ITestService::ITestService for TestService {
         let mut reversed: Option<RecursiveList> = None;
         let mut cur: Option<&RecursiveList> = Some(list);
         while let Some(node) = cur {
-            reversed = Some(RecursiveList { value: node.value, next: reversed.map(Box::new) });
+            reversed = Some(RecursiveList{
+                value: node.value,
+                next: reversed.map(Box::new),
+            });
             cur = node.next.as_ref().map(|n| n.as_ref());
-        }
+        };
         // `list` is always not empty, so is `reversed`.
         Ok(reversed.unwrap())
     }
@@ -350,11 +357,17 @@ impl ITestService::ITestService for TestService {
     }
 
     fn GetOldNameInterface(&self) -> binder::Result<binder::Strong<dyn IOldName::IOldName>> {
-        Ok(IOldName::BnOldName::new_binder(OldName, BinderFeatures::default()))
+        Ok(IOldName::BnOldName::new_binder(
+            OldName,
+            BinderFeatures::default(),
+        ))
     }
 
     fn GetNewNameInterface(&self) -> binder::Result<binder::Strong<dyn INewName::INewName>> {
-        Ok(INewName::BnNewName::new_binder(NewName, BinderFeatures::default()))
+        Ok(INewName::BnNewName::new_binder(
+            NewName,
+            BinderFeatures::default(),
+        ))
     }
 
     fn GetCppJavaTests(&self) -> binder::Result<Option<SpIBinder>> {
@@ -382,13 +395,7 @@ impl IFooInterface::IFooInterface for FooInterface {
     fn returnsLengthOfFooArray(&self, foos: &[Foo]) -> binder::Result<i32> {
         Ok(foos.len() as i32)
     }
-    fn ignoreParcelablesAndRepeatInt(
-        &self,
-        _in_foo: &Foo,
-        _inout_foo: &mut Foo,
-        _out_foo: &mut Foo,
-        value: i32,
-    ) -> binder::Result<i32> {
+    fn ignoreParcelablesAndRepeatInt(&self, _in_foo: &Foo, _inout_foo: &mut Foo, _out_foo: &mut Foo, value: i32) -> binder::Result<i32> {
         Ok(value)
     }
 }
@@ -398,16 +405,15 @@ struct NestedService;
 impl Interface for NestedService {}
 
 impl INestedService::INestedService for NestedService {
-    fn flipStatus(
-        &self,
-        p: &ParcelableWithNested::ParcelableWithNested,
-    ) -> binder::Result<INestedService::Result::Result> {
+    fn flipStatus(&self, p: &ParcelableWithNested::ParcelableWithNested) -> binder::Result<INestedService::Result::Result> {
         if p.status == ParcelableWithNested::Status::Status::OK {
             Ok(INestedService::Result::Result {
                 status: ParcelableWithNested::Status::Status::NOT_OK,
             })
         } else {
-            Ok(INestedService::Result::Result { status: ParcelableWithNested::Status::Status::OK })
+            Ok(INestedService::Result::Result {
+                status: ParcelableWithNested::Status::Status::OK,
+            })
         }
     }
     fn flipStatusWithCallback(
@@ -436,12 +442,10 @@ fn main() {
     binder::add_service(versioned_service_name, versioned_service.as_binder())
         .expect("Could not register service");
 
-    let nested_service_name =
-        <INestedService::BpNestedService as INestedService::INestedService>::get_descriptor();
-    let nested_service =
-        INestedService::BnNestedService::new_binder(NestedService, BinderFeatures::default());
+    let nested_service_name = <INestedService::BpNestedService as INestedService::INestedService>::get_descriptor();
+    let nested_service = INestedService::BnNestedService::new_binder(NestedService, BinderFeatures::default());
     binder::add_service(nested_service_name, nested_service.as_binder())
-        .expect("Could not register service");
+            .expect("Could not register service");
 
     binder::ProcessState::join_thread_pool();
 }
