@@ -1127,6 +1127,166 @@ BpTestService::BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl
   return _aidl_status;
 }
 
+::android::binder::Status BpTestService::GetInterfaceArray(const ::std::vector<::android::String16>& names, ::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>* _aidl_return) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markSensitive();
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeString16Vector(names);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_GetInterfaceArray, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
+     return ITestService::getDefaultImpl()->GetInterfaceArray(names, _aidl_return);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
+  }
+  _aidl_ret_status = _aidl_reply.readStrongBinderVector(_aidl_return);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
+::android::binder::Status BpTestService::VerifyNamesWithInterfaceArray(const ::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>& services, const ::std::vector<::android::String16>& names, bool* _aidl_return) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markSensitive();
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeStrongBinderVector(services);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeString16Vector(names);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_VerifyNamesWithInterfaceArray, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
+     return ITestService::getDefaultImpl()->VerifyNamesWithInterfaceArray(services, names, _aidl_return);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
+  }
+  _aidl_ret_status = _aidl_reply.readBool(_aidl_return);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
+::android::binder::Status BpTestService::GetNullableInterfaceArray(const ::std::optional<::std::vector<::std::optional<::android::String16>>>& names, ::std::optional<::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>>* _aidl_return) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markSensitive();
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeString16Vector(names);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_GetNullableInterfaceArray, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
+     return ITestService::getDefaultImpl()->GetNullableInterfaceArray(names, _aidl_return);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
+  }
+  _aidl_ret_status = _aidl_reply.readStrongBinderVector(_aidl_return);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
+::android::binder::Status BpTestService::VerifyNamesWithNullableInterfaceArray(const ::std::optional<::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>>& services, const ::std::optional<::std::vector<::std::optional<::android::String16>>>& names, bool* _aidl_return) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markSensitive();
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeStrongBinderVector(services);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeString16Vector(names);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_VerifyNamesWithNullableInterfaceArray, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
+     return ITestService::getDefaultImpl()->VerifyNamesWithNullableInterfaceArray(services, names, _aidl_return);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
+  }
+  _aidl_ret_status = _aidl_reply.readBool(_aidl_return);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
 ::android::binder::Status BpTestService::ReverseStringList(const ::std::vector<::android::String16>& input, ::std::vector<::android::String16>* repeated, ::std::vector<::android::String16>* _aidl_return) {
   ::android::Parcel _aidl_data;
   _aidl_data.markSensitive();
@@ -3143,6 +3303,120 @@ BnTestService::BnTestService()
       break;
     }
     ::android::binder::Status _aidl_status(VerifyName(in_service, in_name, &_aidl_return));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+    _aidl_ret_status = _aidl_reply->writeBool(_aidl_return);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+  }
+  break;
+  case BnTestService::TRANSACTION_GetInterfaceArray:
+  {
+    ::std::vector<::android::String16> in_names;
+    ::std::vector<::android::sp<::android::aidl::tests::INamedCallback>> _aidl_return;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readString16Vector(&in_names);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    ::android::binder::Status _aidl_status(GetInterfaceArray(in_names, &_aidl_return));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+    _aidl_ret_status = _aidl_reply->writeStrongBinderVector(_aidl_return);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+  }
+  break;
+  case BnTestService::TRANSACTION_VerifyNamesWithInterfaceArray:
+  {
+    ::std::vector<::android::sp<::android::aidl::tests::INamedCallback>> in_services;
+    ::std::vector<::android::String16> in_names;
+    bool _aidl_return;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readStrongBinderVector(&in_services);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readString16Vector(&in_names);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    ::android::binder::Status _aidl_status(VerifyNamesWithInterfaceArray(in_services, in_names, &_aidl_return));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+    _aidl_ret_status = _aidl_reply->writeBool(_aidl_return);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+  }
+  break;
+  case BnTestService::TRANSACTION_GetNullableInterfaceArray:
+  {
+    ::std::optional<::std::vector<::std::optional<::android::String16>>> in_names;
+    ::std::optional<::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>> _aidl_return;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readString16Vector(&in_names);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    ::android::binder::Status _aidl_status(GetNullableInterfaceArray(in_names, &_aidl_return));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+    _aidl_ret_status = _aidl_reply->writeStrongBinderVector(_aidl_return);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+  }
+  break;
+  case BnTestService::TRANSACTION_VerifyNamesWithNullableInterfaceArray:
+  {
+    ::std::optional<::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>> in_services;
+    ::std::optional<::std::vector<::std::optional<::android::String16>>> in_names;
+    bool _aidl_return;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readStrongBinderVector(&in_services);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readString16Vector(&in_names);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    ::android::binder::Status _aidl_status(VerifyNamesWithNullableInterfaceArray(in_services, in_names, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
