@@ -40,6 +40,10 @@ public:
   ::ndk::ScopedAStatus ReverseLongEnum(const std::vector<::aidl::android::aidl::tests::LongEnum>& in_input, std::vector<::aidl::android::aidl::tests::LongEnum>* out_repeated, std::vector<::aidl::android::aidl::tests::LongEnum>* _aidl_return) override;
   ::ndk::ScopedAStatus GetOtherTestService(const std::string& in_name, std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>* _aidl_return) override;
   ::ndk::ScopedAStatus VerifyName(const std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>& in_service, const std::string& in_name, bool* _aidl_return) override;
+  ::ndk::ScopedAStatus GetInterfaceArray(const std::vector<std::string>& in_names, std::vector<std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>>* _aidl_return) override;
+  ::ndk::ScopedAStatus VerifyNamesWithInterfaceArray(const std::vector<std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>>& in_services, const std::vector<std::string>& in_names, bool* _aidl_return) override;
+  ::ndk::ScopedAStatus GetNullableInterfaceArray(const std::optional<std::vector<std::optional<std::string>>>& in_names, std::optional<std::vector<std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>>>* _aidl_return) override;
+  ::ndk::ScopedAStatus VerifyNamesWithNullableInterfaceArray(const std::optional<std::vector<std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>>>& in_services, const std::optional<std::vector<std::optional<std::string>>>& in_names, bool* _aidl_return) override;
   ::ndk::ScopedAStatus ReverseStringList(const std::vector<std::string>& in_input, std::vector<std::string>* out_repeated, std::vector<std::string>* _aidl_return) override;
   ::ndk::ScopedAStatus RepeatParcelFileDescriptor(const ::ndk::ScopedFileDescriptor& in_read, ::ndk::ScopedFileDescriptor* _aidl_return) override;
   ::ndk::ScopedAStatus ReverseParcelFileDescriptorArray(const std::vector<::ndk::ScopedFileDescriptor>& in_input, std::vector<::ndk::ScopedFileDescriptor>* out_repeated, std::vector<::ndk::ScopedFileDescriptor>* _aidl_return) override;
