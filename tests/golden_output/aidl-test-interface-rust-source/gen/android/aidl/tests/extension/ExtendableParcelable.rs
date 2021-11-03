@@ -1,4 +1,5 @@
 #![forbid(unsafe_code)]
+#![rustfmt::skip]
 #[derive(Debug)]
 pub struct ExtendableParcelable {
   pub a: i32,
