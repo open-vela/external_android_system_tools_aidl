@@ -78,13 +78,7 @@ public final class UnionWithFd implements android.os.Parcelable {
       _aidl_parcel.writeInt(getNum());
       break;
     case pfd:
-      if ((getPfd()!=null)) {
-        _aidl_parcel.writeInt(1);
-        getPfd().writeToParcel(_aidl_parcel, 0);
-      }
-      else {
-        _aidl_parcel.writeInt(0);
-      }
+      _aidl_parcel.writeTypedObject(getPfd(), 0);
       break;
     }
   }

@@ -345,8 +345,8 @@ public class ArrayOfInterfaces implements android.os.Parcelable
           android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _result;
           try {
             _data.writeInterfaceToken(DESCRIPTOR);
-            _data.writeStrongBinder((((iface!=null))?(iface.asBinder()):(null)));
-            _data.writeStrongBinder((((nullable_iface!=null))?(nullable_iface.asBinder()):(null)));
+            _data.writeStrongInterface(iface);
+            _data.writeStrongInterface(nullable_iface);
             {
               android.os.IBinder[] _binder_arr = null;
               if (iface_array_in != null) {
@@ -497,8 +497,8 @@ public class ArrayOfInterfaces implements android.os.Parcelable
     {
       int _aidl_start_pos = _aidl_parcel.dataPosition();
       _aidl_parcel.writeInt(0);
-      _aidl_parcel.writeStrongBinder((((iface!=null))?(iface.asBinder()):(null)));
-      _aidl_parcel.writeStrongBinder((((nullable_iface!=null))?(nullable_iface.asBinder()):(null)));
+      _aidl_parcel.writeStrongInterface(iface);
+      _aidl_parcel.writeStrongInterface(nullable_iface);
       {
         android.os.IBinder[] _binder_arr = null;
         if (iface_array != null) {
@@ -702,10 +702,10 @@ public class ArrayOfInterfaces implements android.os.Parcelable
       _aidl_parcel.writeInt(_tag);
       switch (_tag) {
       case iface:
-        _aidl_parcel.writeStrongBinder((((getIface()!=null))?(getIface().asBinder()):(null)));
+        _aidl_parcel.writeStrongInterface(getIface());
         break;
       case nullable_iface:
-        _aidl_parcel.writeStrongBinder((((getNullable_iface()!=null))?(getNullable_iface().asBinder()):(null)));
+        _aidl_parcel.writeStrongInterface(getNullable_iface());
         break;
       case iface_array:
         {

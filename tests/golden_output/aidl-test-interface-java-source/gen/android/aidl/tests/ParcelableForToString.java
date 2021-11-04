@@ -53,37 +53,19 @@ public class ParcelableForToString implements android.os.Parcelable
     _aidl_parcel.writeFloatArray(floatArray);
     _aidl_parcel.writeByte(byteValue);
     _aidl_parcel.writeByteArray(byteArray);
-    _aidl_parcel.writeInt(((booleanValue)?(1):(0)));
+    _aidl_parcel.writeBoolean(booleanValue);
     _aidl_parcel.writeBooleanArray(booleanArray);
     _aidl_parcel.writeString(stringValue);
     _aidl_parcel.writeStringArray(stringArray);
     _aidl_parcel.writeStringList(stringList);
-    if ((parcelableValue!=null)) {
-      _aidl_parcel.writeInt(1);
-      parcelableValue.writeToParcel(_aidl_parcel, 0);
-    }
-    else {
-      _aidl_parcel.writeInt(0);
-    }
+    _aidl_parcel.writeTypedObject(parcelableValue, 0);
     _aidl_parcel.writeTypedArray(parcelableArray, 0);
     _aidl_parcel.writeInt(enumValue);
     _aidl_parcel.writeIntArray(enumArray);
     _aidl_parcel.writeStringArray(nullArray);
     _aidl_parcel.writeStringList(nullList);
-    if ((parcelableGeneric!=null)) {
-      _aidl_parcel.writeInt(1);
-      parcelableGeneric.writeToParcel(_aidl_parcel, 0);
-    }
-    else {
-      _aidl_parcel.writeInt(0);
-    }
-    if ((unionValue!=null)) {
-      _aidl_parcel.writeInt(1);
-      unionValue.writeToParcel(_aidl_parcel, 0);
-    }
-    else {
-      _aidl_parcel.writeInt(0);
-    }
+    _aidl_parcel.writeTypedObject(parcelableGeneric, 0);
+    _aidl_parcel.writeTypedObject(unionValue, 0);
     int _aidl_end_pos = _aidl_parcel.dataPosition();
     _aidl_parcel.setDataPosition(_aidl_start_pos);
     _aidl_parcel.writeInt(_aidl_end_pos - _aidl_start_pos);
