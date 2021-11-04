@@ -75,13 +75,7 @@ public final class UnionInUnion implements android.os.Parcelable {
     _aidl_parcel.writeInt(_tag);
     switch (_tag) {
     case first:
-      if ((getFirst()!=null)) {
-        _aidl_parcel.writeInt(1);
-        getFirst().writeToParcel(_aidl_parcel, 0);
-      }
-      else {
-        _aidl_parcel.writeInt(0);
-      }
+      _aidl_parcel.writeTypedObject(getFirst(), 0);
       break;
     case second:
       _aidl_parcel.writeInt(getSecond());
