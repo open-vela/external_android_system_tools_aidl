@@ -118,12 +118,7 @@ public interface INestedService extends android.os.IInterface
             }
           }
           _reply.readException();
-          if ((0!=_reply.readInt())) {
-            _result = android.aidl.tests.nested.INestedService.Result.CREATOR.createFromParcel(_reply);
-          }
-          else {
-            _result = null;
-          }
+          _result = _reply.readTypedObject(android.aidl.tests.nested.INestedService.Result.CREATOR);
         }
         finally {
           _reply.recycle();

@@ -98,7 +98,7 @@ public class ParcelableForToString implements android.os.Parcelable
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       byteArray = _aidl_parcel.createByteArray();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      booleanValue = (0!=_aidl_parcel.readInt());
+      booleanValue = _aidl_parcel.readBoolean();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       booleanArray = _aidl_parcel.createBooleanArray();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
@@ -108,12 +108,7 @@ public class ParcelableForToString implements android.os.Parcelable
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       stringList = _aidl_parcel.createStringArrayList();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      if ((0!=_aidl_parcel.readInt())) {
-        parcelableValue = android.aidl.tests.OtherParcelableForToString.CREATOR.createFromParcel(_aidl_parcel);
-      }
-      else {
-        parcelableValue = null;
-      }
+      parcelableValue = _aidl_parcel.readTypedObject(android.aidl.tests.OtherParcelableForToString.CREATOR);
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       parcelableArray = _aidl_parcel.createTypedArray(android.aidl.tests.OtherParcelableForToString.CREATOR);
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
@@ -125,19 +120,9 @@ public class ParcelableForToString implements android.os.Parcelable
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       nullList = _aidl_parcel.createStringArrayList();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      if ((0!=_aidl_parcel.readInt())) {
-        parcelableGeneric = android.aidl.tests.GenericStructuredParcelable.CREATOR.createFromParcel(_aidl_parcel);
-      }
-      else {
-        parcelableGeneric = null;
-      }
+      parcelableGeneric = _aidl_parcel.readTypedObject(android.aidl.tests.GenericStructuredParcelable.CREATOR);
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      if ((0!=_aidl_parcel.readInt())) {
-        unionValue = android.aidl.tests.Union.CREATOR.createFromParcel(_aidl_parcel);
-      }
-      else {
-        unionValue = null;
-      }
+      unionValue = _aidl_parcel.readTypedObject(android.aidl.tests.Union.CREATOR);
     } finally {
       if (_aidl_start_pos > (Integer.MAX_VALUE - _aidl_parcelable_size)) {
         throw new android.os.BadParcelableException("Overflow in the size of parcelable");

@@ -188,7 +188,7 @@ void GenerateParcelableDescribeContents(CodeWriter& out, const AidlUnionDecl& de
 }
 
 void GenerateToString(CodeWriter& out, const AidlStructuredParcelable& parcel,
-                      const AidlTypenames& typenames) {
+                      const AidlTypenames& typenames, const Options& options) {
   out << "@Override\n";
   out << "public String toString() {\n";
   out.Indent();
@@ -200,6 +200,7 @@ void GenerateToString(CodeWriter& out, const AidlStructuredParcelable& parcel,
         .typenames = typenames,
         .type = field->GetType(),
         .var = field->GetName(),
+        .min_sdk_version = options.GetMinSdkVersion(),
     };
     out << "_aidl_sj.add(\"" << field->GetName() << ": \" + (";
     ToStringFor(ctx);
@@ -210,8 +211,8 @@ void GenerateToString(CodeWriter& out, const AidlStructuredParcelable& parcel,
   out << "}\n";
 }
 
-void GenerateToString(CodeWriter& out, const AidlUnionDecl& parcel,
-                      const AidlTypenames& typenames) {
+void GenerateToString(CodeWriter& out, const AidlUnionDecl& parcel, const AidlTypenames& typenames,
+                      const Options& options) {
   out << "@Override\n";
   out << "public String toString() {\n";
   out.Indent();
@@ -222,6 +223,7 @@ void GenerateToString(CodeWriter& out, const AidlUnionDecl& parcel,
         .typenames = typenames,
         .type = field->GetType(),
         .var = GetterName(*field) + "()",
+        .min_sdk_version = options.GetMinSdkVersion(),
     };
     out << "case " << field->GetName() << ": return \"" << parcel.GetCanonicalName() << "."
         << field->GetName() << "(\" + (";
@@ -535,6 +537,7 @@ std::unique_ptr<android::aidl::java::Class> GenerateParcelableClass(
         .type = field->GetType(),
         .parcel = parcel_variable->name,
         .var = field_variable_name,
+        .min_sdk_version = options.GetMinSdkVersion(),
         .is_classloader_created = &is_classloader_created,
     };
     context.writer.Indent();
@@ -573,7 +576,7 @@ std::unique_ptr<android::aidl::java::Class> GenerateParcelableClass(
 
   if (parcel->JavaDerive("toString")) {
     string to_string;
-    GenerateToString(*CodeWriter::ForString(&to_string), *parcel, typenames);
+    GenerateToString(*CodeWriter::ForString(&to_string), *parcel, typenames, options);
     parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(to_string));
   }
 
@@ -589,13 +592,14 @@ std::unique_ptr<android::aidl::java::Class> GenerateParcelableClass(
   parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(describe_contents));
 
   // all the nested types
+  string code;
+  auto writer = CodeWriter::ForString(&code);
   for (const auto& nested : parcel->GetNestedTypes()) {
-    string code;
-    auto writer = CodeWriter::ForString(&code);
     GenerateClass(*writer, *nested, typenames, options);
-    writer->Close();
-    parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(code));
   }
+  GenerateParcelHelpers(*writer, *parcel, options);
+  writer->Close();
+  parcel_class->elements.push_back(std::make_shared<LiteralClassElement>(code));
 
   return parcel_class;
 }
@@ -796,6 +800,7 @@ void GenerateUnionClass(CodeWriter& out, const AidlUnionDecl* decl, const AidlTy
         .type = type,
         .parcel = parcel,
         .var = name,
+        .min_sdk_version = options.GetMinSdkVersion(),
         .is_classloader_created = &is_classloader_created,
     };
     CreateFromParcelFor(context);
@@ -840,7 +845,7 @@ void GenerateUnionClass(CodeWriter& out, const AidlUnionDecl* decl, const AidlTy
   GenerateParcelableDescribeContents(out, *decl, typenames);
   out << "\n";
   if (decl->JavaDerive("toString")) {
-    GenerateToString(out, *decl, typenames);
+    GenerateToString(out, *decl, typenames, options);
   }
 
   if (decl->JavaDerive("equals")) {
@@ -880,6 +885,7 @@ void GenerateUnionClass(CodeWriter& out, const AidlUnionDecl* decl, const AidlTy
   for (const auto& nested : decl->GetNestedTypes()) {
     GenerateClass(out, *nested, typenames, options);
   }
+  GenerateParcelHelpers(out, *decl, options);
 
   out.Dedent();
   out << "}\n";
