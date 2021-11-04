@@ -484,8 +484,7 @@ TEST(OptionsTest, RejectInvalidMinSdkVersion) {
 
 TEST(OptionsTest, RejectOldMinSdkVersion) {
   const char* args[] = {
-      "aidl",       "--lang=cpp", "--min_sdk_version=22", "--out=out", "--header_out=out",
-      "input.aidl", nullptr,
+      "aidl", "--lang=java", "--min_sdk_version=22", "--out=out", "input.aidl", nullptr,
   };
   CaptureStderr();
   auto options = GetOptions(args);

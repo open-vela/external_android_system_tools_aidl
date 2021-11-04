@@ -348,10 +348,10 @@ public interface ITestService extends android.os.IInterface
         case TRANSACTION_RepeatBoolean:
         {
           boolean _arg0;
-          _arg0 = data.readBoolean();
+          _arg0 = (0!=data.readInt());
           boolean _result = this.RepeatBoolean(_arg0);
           reply.writeNoException();
-          reply.writeBoolean(_result);
+          reply.writeInt(((_result)?(1):(0)));
           break;
         }
         case TRANSACTION_RepeatByte:
@@ -648,7 +648,7 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.readString();
           android.aidl.tests.INamedCallback _result = this.GetOtherTestService(_arg0);
           reply.writeNoException();
-          reply.writeStrongInterface(_result);
+          reply.writeStrongBinder((((_result!=null))?(_result.asBinder()):(null)));
           break;
         }
         case TRANSACTION_VerifyName:
@@ -659,7 +659,7 @@ public interface ITestService extends android.os.IInterface
           _arg1 = data.readString();
           boolean _result = this.VerifyName(_arg0, _arg1);
           reply.writeNoException();
-          reply.writeBoolean(_result);
+          reply.writeInt(((_result)?(1):(0)));
           break;
         }
         case TRANSACTION_GetInterfaceArray:
@@ -698,7 +698,7 @@ public interface ITestService extends android.os.IInterface
           _arg1 = data.createStringArray();
           boolean _result = this.VerifyNamesWithInterfaceArray(_arg0, _arg1);
           reply.writeNoException();
-          reply.writeBoolean(_result);
+          reply.writeInt(((_result)?(1):(0)));
           break;
         }
         case TRANSACTION_GetNullableInterfaceArray:
@@ -737,7 +737,7 @@ public interface ITestService extends android.os.IInterface
           _arg1 = data.createStringArray();
           boolean _result = this.VerifyNamesWithNullableInterfaceArray(_arg0, _arg1);
           reply.writeNoException();
-          reply.writeBoolean(_result);
+          reply.writeInt(((_result)?(1):(0)));
           break;
         }
         case TRANSACTION_ReverseStringList:
@@ -755,10 +755,21 @@ public interface ITestService extends android.os.IInterface
         case TRANSACTION_RepeatParcelFileDescriptor:
         {
           android.os.ParcelFileDescriptor _arg0;
-          _arg0 = data.readTypedObject(android.os.ParcelFileDescriptor.CREATOR);
+          if ((0!=data.readInt())) {
+            _arg0 = android.os.ParcelFileDescriptor.CREATOR.createFromParcel(data);
+          }
+          else {
+            _arg0 = null;
+          }
           android.os.ParcelFileDescriptor _result = this.RepeatParcelFileDescriptor(_arg0);
           reply.writeNoException();
-          reply.writeTypedObject(_result, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+          if ((_result!=null)) {
+            reply.writeInt(1);
+            _result.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+          }
+          else {
+            reply.writeInt(0);
+          }
           break;
         }
         case TRANSACTION_ReverseParcelFileDescriptorArray:
@@ -844,10 +855,21 @@ public interface ITestService extends android.os.IInterface
         case TRANSACTION_RepeatNullableParcelable:
         {
           android.aidl.tests.ITestService.Empty _arg0;
-          _arg0 = data.readTypedObject(android.aidl.tests.ITestService.Empty.CREATOR);
+          if ((0!=data.readInt())) {
+            _arg0 = android.aidl.tests.ITestService.Empty.CREATOR.createFromParcel(data);
+          }
+          else {
+            _arg0 = null;
+          }
           android.aidl.tests.ITestService.Empty _result = this.RepeatNullableParcelable(_arg0);
           reply.writeNoException();
-          reply.writeTypedObject(_result, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+          if ((_result!=null)) {
+            reply.writeInt(1);
+            _result.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+          }
+          else {
+            reply.writeInt(0);
+          }
           break;
         }
         case TRANSACTION_RepeatNullableParcelableArray:
@@ -969,39 +991,72 @@ public interface ITestService extends android.os.IInterface
         case TRANSACTION_GetCallback:
         {
           boolean _arg0;
-          _arg0 = data.readBoolean();
+          _arg0 = (0!=data.readInt());
           android.aidl.tests.INamedCallback _result = this.GetCallback(_arg0);
           reply.writeNoException();
-          reply.writeStrongInterface(_result);
+          reply.writeStrongBinder((((_result!=null))?(_result.asBinder()):(null)));
           break;
         }
         case TRANSACTION_FillOutStructuredParcelable:
         {
           android.aidl.tests.StructuredParcelable _arg0;
-          _arg0 = data.readTypedObject(android.aidl.tests.StructuredParcelable.CREATOR);
+          if ((0!=data.readInt())) {
+            _arg0 = android.aidl.tests.StructuredParcelable.CREATOR.createFromParcel(data);
+          }
+          else {
+            _arg0 = null;
+          }
           this.FillOutStructuredParcelable(_arg0);
           reply.writeNoException();
-          reply.writeTypedObject(_arg0, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+          if ((_arg0!=null)) {
+            reply.writeInt(1);
+            _arg0.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+          }
+          else {
+            reply.writeInt(0);
+          }
           break;
         }
         case TRANSACTION_RepeatExtendableParcelable:
         {
           android.aidl.tests.extension.ExtendableParcelable _arg0;
-          _arg0 = data.readTypedObject(android.aidl.tests.extension.ExtendableParcelable.CREATOR);
+          if ((0!=data.readInt())) {
+            _arg0 = android.aidl.tests.extension.ExtendableParcelable.CREATOR.createFromParcel(data);
+          }
+          else {
+            _arg0 = null;
+          }
           android.aidl.tests.extension.ExtendableParcelable _arg1;
           _arg1 = new android.aidl.tests.extension.ExtendableParcelable();
           this.RepeatExtendableParcelable(_arg0, _arg1);
           reply.writeNoException();
-          reply.writeTypedObject(_arg1, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+          if ((_arg1!=null)) {
+            reply.writeInt(1);
+            _arg1.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+          }
+          else {
+            reply.writeInt(0);
+          }
           break;
         }
         case TRANSACTION_ReverseList:
         {
           android.aidl.tests.RecursiveList _arg0;
-          _arg0 = data.readTypedObject(android.aidl.tests.RecursiveList.CREATOR);
+          if ((0!=data.readInt())) {
+            _arg0 = android.aidl.tests.RecursiveList.CREATOR.createFromParcel(data);
+          }
+          else {
+            _arg0 = null;
+          }
           android.aidl.tests.RecursiveList _result = this.ReverseList(_arg0);
           reply.writeNoException();
-          reply.writeTypedObject(_result, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+          if ((_result!=null)) {
+            reply.writeInt(1);
+            _result.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+          }
+          else {
+            reply.writeInt(0);
+          }
           break;
         }
         case TRANSACTION_ReverseIBinderArray:
@@ -1044,14 +1099,14 @@ public interface ITestService extends android.os.IInterface
         {
           android.aidl.tests.IOldName _result = this.GetOldNameInterface();
           reply.writeNoException();
-          reply.writeStrongInterface(_result);
+          reply.writeStrongBinder((((_result!=null))?(_result.asBinder()):(null)));
           break;
         }
         case TRANSACTION_GetNewNameInterface:
         {
           android.aidl.tests.INewName _result = this.GetNewNameInterface();
           reply.writeNoException();
-          reply.writeStrongInterface(_result);
+          reply.writeStrongBinder((((_result!=null))?(_result.asBinder()):(null)));
           break;
         }
         case TRANSACTION_GetCppJavaTests:
@@ -1177,7 +1232,7 @@ public interface ITestService extends android.os.IInterface
         boolean _result;
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
-          _data.writeBoolean(token);
+          _data.writeInt(((token)?(1):(0)));
           boolean _status = mRemote.transact(Stub.TRANSACTION_RepeatBoolean, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
           if (!_status) {
             if (getDefaultImpl() != null) {
@@ -1808,7 +1863,7 @@ public interface ITestService extends android.os.IInterface
         boolean _result;
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
-          _data.writeStrongInterface(service);
+          _data.writeStrongBinder((((service!=null))?(service.asBinder()):(null)));
           _data.writeString(name);
           boolean _status = mRemote.transact(Stub.TRANSACTION_VerifyName, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
           if (!_status) {
@@ -1995,7 +2050,13 @@ public interface ITestService extends android.os.IInterface
         android.os.ParcelFileDescriptor _result;
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
-          _data.writeTypedObject(read, 0);
+          if ((read!=null)) {
+            _data.writeInt(1);
+            read.writeToParcel(_data, 0);
+          }
+          else {
+            _data.writeInt(0);
+          }
           boolean _status = mRemote.transact(Stub.TRANSACTION_RepeatParcelFileDescriptor, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
           if (!_status) {
             if (getDefaultImpl() != null) {
@@ -2223,7 +2284,13 @@ public interface ITestService extends android.os.IInterface
         android.aidl.tests.ITestService.Empty _result;
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
-          _data.writeTypedObject(input, 0);
+          if ((input!=null)) {
+            _data.writeInt(1);
+            input.writeToParcel(_data, 0);
+          }
+          else {
+            _data.writeInt(0);
+          }
           boolean _status = mRemote.transact(Stub.TRANSACTION_RepeatNullableParcelable, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
           if (!_status) {
             if (getDefaultImpl() != null) {
@@ -2525,7 +2592,7 @@ public interface ITestService extends android.os.IInterface
         android.aidl.tests.INamedCallback _result;
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
-          _data.writeBoolean(return_null);
+          _data.writeInt(((return_null)?(1):(0)));
           boolean _status = mRemote.transact(Stub.TRANSACTION_GetCallback, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
           if (!_status) {
             if (getDefaultImpl() != null) {
@@ -2550,7 +2617,13 @@ public interface ITestService extends android.os.IInterface
         android.os.Parcel _reply = android.os.Parcel.obtain();
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
-          _data.writeTypedObject(parcel, 0);
+          if ((parcel!=null)) {
+            _data.writeInt(1);
+            parcel.writeToParcel(_data, 0);
+          }
+          else {
+            _data.writeInt(0);
+          }
           boolean _status = mRemote.transact(Stub.TRANSACTION_FillOutStructuredParcelable, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
           if (!_status) {
             if (getDefaultImpl() != null) {
@@ -2575,7 +2648,13 @@ public interface ITestService extends android.os.IInterface
         android.os.Parcel _reply = android.os.Parcel.obtain();
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
-          _data.writeTypedObject(ep, 0);
+          if ((ep!=null)) {
+            _data.writeInt(1);
+            ep.writeToParcel(_data, 0);
+          }
+          else {
+            _data.writeInt(0);
+          }
           boolean _status = mRemote.transact(Stub.TRANSACTION_RepeatExtendableParcelable, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
           if (!_status) {
             if (getDefaultImpl() != null) {
@@ -2601,7 +2680,13 @@ public interface ITestService extends android.os.IInterface
         android.aidl.tests.RecursiveList _result;
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
-          _data.writeTypedObject(list, 0);
+          if ((list!=null)) {
+            _data.writeInt(1);
+            list.writeToParcel(_data, 0);
+          }
+          else {
+            _data.writeInt(0);
+          }
           boolean _status = mRemote.transact(Stub.TRANSACTION_ReverseList, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
           if (!_status) {
             if (getDefaultImpl() != null) {
@@ -3133,14 +3218,38 @@ public interface ITestService extends android.os.IInterface
       _aidl_parcel.writeBinderArray(nullable_binder_array);
       _aidl_parcel.writeBinderList(binder_list);
       _aidl_parcel.writeBinderList(nullable_binder_list);
-      _aidl_parcel.writeTypedObject(pfd, 0);
-      _aidl_parcel.writeTypedObject(nullable_pfd, 0);
+      if ((pfd!=null)) {
+        _aidl_parcel.writeInt(1);
+        pfd.writeToParcel(_aidl_parcel, 0);
+      }
+      else {
+        _aidl_parcel.writeInt(0);
+      }
+      if ((nullable_pfd!=null)) {
+        _aidl_parcel.writeInt(1);
+        nullable_pfd.writeToParcel(_aidl_parcel, 0);
+      }
+      else {
+        _aidl_parcel.writeInt(0);
+      }
       _aidl_parcel.writeTypedArray(pfd_array, 0);
       _aidl_parcel.writeTypedArray(nullable_pfd_array, 0);
       _aidl_parcel.writeTypedList(pfd_list);
       _aidl_parcel.writeTypedList(nullable_pfd_list);
-      _aidl_parcel.writeTypedObject(parcel, 0);
-      _aidl_parcel.writeTypedObject(nullable_parcel, 0);
+      if ((parcel!=null)) {
+        _aidl_parcel.writeInt(1);
+        parcel.writeToParcel(_aidl_parcel, 0);
+      }
+      else {
+        _aidl_parcel.writeInt(0);
+      }
+      if ((nullable_parcel!=null)) {
+        _aidl_parcel.writeInt(1);
+        nullable_parcel.writeToParcel(_aidl_parcel, 0);
+      }
+      else {
+        _aidl_parcel.writeInt(0);
+      }
       _aidl_parcel.writeTypedArray(parcel_array, 0);
       _aidl_parcel.writeTypedArray(nullable_parcel_array, 0);
       _aidl_parcel.writeTypedList(parcel_list);
