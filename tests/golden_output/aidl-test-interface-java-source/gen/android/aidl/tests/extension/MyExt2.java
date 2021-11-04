@@ -24,13 +24,7 @@ public class MyExt2 implements android.os.Parcelable
     int _aidl_start_pos = _aidl_parcel.dataPosition();
     _aidl_parcel.writeInt(0);
     _aidl_parcel.writeInt(a);
-    if ((b!=null)) {
-      _aidl_parcel.writeInt(1);
-      b.writeToParcel(_aidl_parcel, 0);
-    }
-    else {
-      _aidl_parcel.writeInt(0);
-    }
+    _aidl_parcel.writeTypedObject(b, 0);
     _aidl_parcel.writeString(c);
     int _aidl_end_pos = _aidl_parcel.dataPosition();
     _aidl_parcel.setDataPosition(_aidl_start_pos);
