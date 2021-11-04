@@ -394,19 +394,18 @@ static void GenerateNewArray(const AidlTypeSpecifier& type, const AidlTypenames&
   addTo->Add(lencheck);
 }
 
-static void GenerateWriteToParcel(std::shared_ptr<StatementBlock> addTo,
-                                  const AidlTypenames& typenames, const AidlTypeSpecifier& type,
-                                  const std::string& parcel, const std::string& var,
-                                  uint32_t min_sdk_version, bool is_return_value) {
+static void GenerateWriteToParcel(const AidlTypeSpecifier& type,
+                                  std::shared_ptr<StatementBlock> addTo,
+                                  std::shared_ptr<Variable> v, std::shared_ptr<Variable> parcel,
+                                  bool is_return_value, const AidlTypenames& typenames) {
   string code;
   CodeWriterPtr writer = CodeWriter::ForString(&code);
   CodeGeneratorContext context{
       .writer = *(writer.get()),
       .typenames = typenames,
       .type = type,
-      .parcel = parcel,
-      .var = var,
-      .min_sdk_version = min_sdk_version,
+      .parcel = parcel->name,
+      .var = v->name,
       .is_return_value = is_return_value,
   };
   WriteToParcelFor(context);
@@ -603,7 +602,6 @@ static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& metho
                                      .type = arg->GetType(),
                                      .parcel = transact_data->name,
                                      .var = v->name,
-                                     .min_sdk_version = options.GetMinSdkVersion(),
                                      .is_classloader_created = &is_classloader_created};
         CreateFromParcelFor(context);
         writer->Close();
@@ -643,17 +641,16 @@ static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& metho
     }
 
     // marshall the return value
-    GenerateWriteToParcel(statements, typenames, method.GetType(), transact_reply->name,
-                          _result->name, options.GetMinSdkVersion(), /*is_return_value=*/true);
+    GenerateWriteToParcel(method.GetType(), statements, _result, transact_reply, true, typenames);
   }
 
   // out parameters
   int i = 0;
   for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
     std::shared_ptr<Variable> v = stubArgs.Get(i++);
+
     if (arg->GetDirection() & AidlArgument::OUT_DIR) {
-      GenerateWriteToParcel(statements, typenames, arg->GetType(), transact_reply->name, v->name,
-                            options.GetMinSdkVersion(), /*is_return_value=*/true);
+      GenerateWriteToParcel(arg->GetType(), statements, v, transact_reply, true, typenames);
     }
   }
 }
@@ -792,8 +789,7 @@ static std::shared_ptr<Method> GenerateProxyMethod(const AidlInterface& iface,
           std::vector<std::shared_ptr<Expression>>{std::make_shared<FieldVariable>(v, "length")}));
       tryStatement->statements->Add(checklen);
     } else if (dir & AidlArgument::IN_DIR) {
-      GenerateWriteToParcel(tryStatement->statements, typenames, arg->GetType(), _data->name,
-                            v->name, options.GetMinSdkVersion(), /*is_return_value=*/false);
+      GenerateWriteToParcel(arg->GetType(), tryStatement->statements, v, _data, false, typenames);
     }
   }
 

@@ -65,10 +65,21 @@ public interface INestedService extends android.os.IInterface
         case TRANSACTION_flipStatus:
         {
           android.aidl.tests.nested.ParcelableWithNested _arg0;
-          _arg0 = data.readTypedObject(android.aidl.tests.nested.ParcelableWithNested.CREATOR);
+          if ((0!=data.readInt())) {
+            _arg0 = android.aidl.tests.nested.ParcelableWithNested.CREATOR.createFromParcel(data);
+          }
+          else {
+            _arg0 = null;
+          }
           android.aidl.tests.nested.INestedService.Result _result = this.flipStatus(_arg0);
           reply.writeNoException();
-          reply.writeTypedObject(_result, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+          if ((_result!=null)) {
+            reply.writeInt(1);
+            _result.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+          }
+          else {
+            reply.writeInt(0);
+          }
           break;
         }
         case TRANSACTION_flipStatusWithCallback:
@@ -110,7 +121,13 @@ public interface INestedService extends android.os.IInterface
         android.aidl.tests.nested.INestedService.Result _result;
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
-          _data.writeTypedObject(p, 0);
+          if ((p!=null)) {
+            _data.writeInt(1);
+            p.writeToParcel(_data, 0);
+          }
+          else {
+            _data.writeInt(0);
+          }
           boolean _status = mRemote.transact(Stub.TRANSACTION_flipStatus, _data, _reply, 0);
           if (!_status) {
             if (getDefaultImpl() != null) {
@@ -138,7 +155,7 @@ public interface INestedService extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeByte(status);
-          _data.writeStrongInterface(cb);
+          _data.writeStrongBinder((((cb!=null))?(cb.asBinder()):(null)));
           boolean _status = mRemote.transact(Stub.TRANSACTION_flipStatusWithCallback, _data, _reply, 0);
           if (!_status) {
             if (getDefaultImpl() != null) {

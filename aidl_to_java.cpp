@@ -201,15 +201,11 @@ static string GetFlagFor(const CodeGeneratorContext& c) {
   }
 }
 
-void WriteToParcelFor(const CodeGeneratorContext& c) {
+bool WriteToParcelFor(const CodeGeneratorContext& c) {
   static map<string, function<void(const CodeGeneratorContext&)>> method_map{
       {"boolean",
        [](const CodeGeneratorContext& c) {
-         if (c.min_sdk_version >= 29u) {
-           c.writer << c.parcel << ".writeBoolean(" << c.var << ");\n";
-         } else {
-           c.writer << c.parcel << ".writeInt(((" << c.var << ")?(1):(0)));\n";
-         }
+         c.writer << c.parcel << ".writeInt(((" << c.var << ")?(1):(0)));\n";
        }},
       {"boolean[]",
        [](const CodeGeneratorContext& c) {
@@ -308,7 +304,6 @@ void WriteToParcelFor(const CodeGeneratorContext& c) {
                *c.type.GetTypeParameters()[1].get(),
                c.parcel,
                "v",
-               c.min_sdk_version,
                c.is_return_value,
                c.is_classloader_created,
                c.filename,
@@ -341,23 +336,19 @@ void WriteToParcelFor(const CodeGeneratorContext& c) {
        }},
       {"ParcelFileDescriptor",
        [](const CodeGeneratorContext& c) {
-         if (c.min_sdk_version >= 23u) {
-           c.writer << c.parcel << ".writeTypedObject(" << c.var << ", " << GetFlagFor(c) << ");\n";
-         } else {
-           // This is same as writeTypedObject which was introduced with SDK 23.
-           // Keeping below code so that the generated code is buildable with older SDK.
-           c.writer << "if ((" << c.var << "!=null)) {\n";
-           c.writer.Indent();
-           c.writer << c.parcel << ".writeInt(1);\n";
-           c.writer << c.var << ".writeToParcel(" << c.parcel << ", " << GetFlagFor(c) << ");\n";
-           c.writer.Dedent();
-           c.writer << "}\n";
-           c.writer << "else {\n";
-           c.writer.Indent();
-           c.writer << c.parcel << ".writeInt(0);\n";
-           c.writer.Dedent();
-           c.writer << "}\n";
-         }
+         // This is same as writeTypedObject which was introduced with SDK 23.
+         // Keeping below code so that the generated code is buildable with older SDK.
+         c.writer << "if ((" << c.var << "!=null)) {\n";
+         c.writer.Indent();
+         c.writer << c.parcel << ".writeInt(1);\n";
+         c.writer << c.var << ".writeToParcel(" << c.parcel << ", " << GetFlagFor(c) << ");\n";
+         c.writer.Dedent();
+         c.writer << "}\n";
+         c.writer << "else {\n";
+         c.writer.Indent();
+         c.writer << c.parcel << ".writeInt(0);\n";
+         c.writer.Dedent();
+         c.writer << "}\n";
        }},
       {"ParcelFileDescriptor[]",
        [](const CodeGeneratorContext& c) {
@@ -412,30 +403,32 @@ void WriteToParcelFor(const CodeGeneratorContext& c) {
         c.writer.Dedent();
         c.writer << "}\n";
       } else {
-        c.writer << c.parcel << ".writeStrongInterface(" << c.var << ");\n";
+        // Why don't we use writeStrongInterface which does the exact same thing?
+        // Keeping below code just not to break unit tests.
+        c.writer << c.parcel << ".writeStrongBinder((((" << c.var << "!=null))?"
+                 << "(" << c.var << ".asBinder()):(null)));\n";
       }
     } else if (t->AsParcelable() != nullptr) {
       if (c.type.IsArray()) {
         c.writer << c.parcel << ".writeTypedArray(" << c.var << ", " << GetFlagFor(c) << ");\n";
       } else {
-        if (c.min_sdk_version >= 23u) {
-          c.writer << c.parcel << ".writeTypedObject(" << c.var << ", " << GetFlagFor(c) << ");\n";
-        } else {
-          c.writer << "if ((" << c.var << "!=null)) {\n";
-          c.writer.Indent();
-          c.writer << c.parcel << ".writeInt(1);\n";
-          c.writer << c.var << ".writeToParcel(" << c.parcel << ", " << GetFlagFor(c) << ");\n";
-          c.writer.Dedent();
-          c.writer << "}\n";
-          c.writer << "else {\n";
-          c.writer.Indent();
-          c.writer << c.parcel << ".writeInt(0);\n";
-          c.writer.Dedent();
-          c.writer << "}\n";
-        }
+        // This is same as writeTypedObject.
+        // Keeping below code just not to break tests.
+        c.writer << "if ((" << c.var << "!=null)) {\n";
+        c.writer.Indent();
+        c.writer << c.parcel << ".writeInt(1);\n";
+        c.writer << c.var << ".writeToParcel(" << c.parcel << ", " << GetFlagFor(c) << ");\n";
+        c.writer.Dedent();
+        c.writer << "}\n";
+        c.writer << "else {\n";
+        c.writer.Indent();
+        c.writer << c.parcel << ".writeInt(0);\n";
+        c.writer.Dedent();
+        c.writer << "}\n";
       }
     }
   }
+  return true;
 }
 
 // Ensures that a variable is initialized to refer to the classloader
@@ -454,11 +447,7 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
   static map<string, function<void(const CodeGeneratorContext&)>> method_map{
       {"boolean",
        [](const CodeGeneratorContext& c) {
-         if (c.min_sdk_version >= 29u) {
-           c.writer << c.var << " = " << c.parcel << ".readBoolean();\n";
-         } else {
-           c.writer << c.var << " = (0!=" << c.parcel << ".readInt());\n";
-         }
+         c.writer << c.var << " = (0!=" << c.parcel << ".readInt());\n";
        }},
       {"boolean[]",
        [](const CodeGeneratorContext& c) {
@@ -559,7 +548,6 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
                *c.type.GetTypeParameters()[1].get(),
                c.parcel,
                "v",
-               c.min_sdk_version,
                c.is_return_value,
                c.is_classloader_created,
                c.filename,
@@ -595,23 +583,19 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
        }},
       {"ParcelFileDescriptor",
        [](const CodeGeneratorContext& c) {
-         if (c.min_sdk_version >= 23u) {
-           c.writer << c.var << " = " << c.parcel
-                    << ".readTypedObject(android.os.ParcelFileDescriptor.CREATOR);\n";
-         } else {
-           c.writer << "if ((0!=" << c.parcel << ".readInt())) {\n";
-           c.writer.Indent();
-           c.writer << c.var << " = "
-                    << "android.os.ParcelFileDescriptor.CREATOR.createFromParcel(" << c.parcel
-                    << ");\n";
-           c.writer.Dedent();
-           c.writer << "}\n";
-           c.writer << "else {\n";
-           c.writer.Indent();
-           c.writer << c.var << " = null;\n";
-           c.writer.Dedent();
-           c.writer << "}\n";
-         }
+         // This is same as readTypedObject which was introduced with SDK 23.
+         // Keeping below code so that the generated code is buildable with older SDK.
+         c.writer << "if ((0!=" << c.parcel << ".readInt())) {\n";
+         c.writer.Indent();
+         c.writer << c.var << " = " << "android.os.ParcelFileDescriptor.CREATOR.createFromParcel(" << c.parcel
+                  << ");\n";
+         c.writer.Dedent();
+         c.writer << "}\n";
+         c.writer << "else {\n";
+         c.writer.Indent();
+         c.writer << c.var << " = null;\n";
+         c.writer.Dedent();
+         c.writer << "}\n";
        }},
       {"ParcelFileDescriptor[]",
        [](const CodeGeneratorContext& c) {
@@ -620,23 +604,18 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
        }},
       {"CharSequence",
        [](const CodeGeneratorContext& c) {
-         if (c.min_sdk_version >= 23u) {
-           c.writer << c.var << " = " << c.parcel
-                    << ".readTypedObject(android.text.TextUtils.CHAR_SEQUENCE_CREATOR);\n";
-         } else {
-           // We have written 0 for null CharSequence.
-           c.writer << "if (0!=" << c.parcel << ".readInt()) {\n";
-           c.writer.Indent();
-           c.writer << c.var << " = android.text.TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel("
-                    << c.parcel << ");\n";
-           c.writer.Dedent();
-           c.writer << "}\n";
-           c.writer << "else {\n";
-           c.writer.Indent();
-           c.writer << c.var << " = null;\n";
-           c.writer.Dedent();
-           c.writer << "}\n";
-         }
+         // We have written 0 for null CharSequence.
+         c.writer << "if (0!=" << c.parcel << ".readInt()) {\n";
+         c.writer.Indent();
+         c.writer << c.var << " = android.text.TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel("
+                  << c.parcel << ");\n";
+         c.writer.Dedent();
+         c.writer << "}\n";
+         c.writer << "else {\n";
+         c.writer.Indent();
+         c.writer << c.var << " = null;\n";
+         c.writer.Dedent();
+         c.writer << "}\n";
        }},
       {"ParcelableHolder",
        [](const CodeGeneratorContext& c) {
@@ -684,24 +663,19 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
         c.writer << c.var << " = " << c.parcel << ".createTypedArray("
                  << JavaNameOf(c.type, c.typenames) << ".CREATOR);\n";
       } else {
-        if (c.min_sdk_version >= 23u) {
-          c.writer << c.var << " = " << c.parcel << ".readTypedObject(" << c.type.GetName()
-                   << ".CREATOR);\n";
-        } else {
-          // This is same as readTypedObject.
-          // Keeping below code just not to break unit tests.
-          c.writer << "if ((0!=" << c.parcel << ".readInt())) {\n";
-          c.writer.Indent();
-          c.writer << c.var << " = " << c.type.GetName() << ".CREATOR.createFromParcel(" << c.parcel
-                   << ");\n";
-          c.writer.Dedent();
-          c.writer << "}\n";
-          c.writer << "else {\n";
-          c.writer.Indent();
-          c.writer << c.var << " = null;\n";
-          c.writer.Dedent();
-          c.writer << "}\n";
-        }
+        // This is same as readTypedObject.
+        // Keeping below code just not to break unit tests.
+        c.writer << "if ((0!=" << c.parcel << ".readInt())) {\n";
+        c.writer.Indent();
+        c.writer << c.var << " = " << c.type.GetName() << ".CREATOR.createFromParcel(" << c.parcel
+                 << ");\n";
+        c.writer.Dedent();
+        c.writer << "}\n";
+        c.writer << "else {\n";
+        c.writer.Indent();
+        c.writer << c.var << " = null;\n";
+        c.writer.Dedent();
+        c.writer << "}\n";
       }
     }
   }
@@ -777,7 +751,6 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
                *c.type.GetTypeParameters()[1].get(),
                c.parcel,
                "v",
-               c.min_sdk_version,
                c.is_return_value,
                c.is_classloader_created,
                c.filename,

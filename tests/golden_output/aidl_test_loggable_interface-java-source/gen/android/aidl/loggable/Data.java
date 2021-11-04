@@ -26,7 +26,13 @@ public class Data implements android.os.Parcelable
     _aidl_parcel.writeInt(0);
     _aidl_parcel.writeInt(num);
     _aidl_parcel.writeString(str);
-    _aidl_parcel.writeTypedObject(nestedUnion, 0);
+    if ((nestedUnion!=null)) {
+      _aidl_parcel.writeInt(1);
+      nestedUnion.writeToParcel(_aidl_parcel, 0);
+    }
+    else {
+      _aidl_parcel.writeInt(0);
+    }
     _aidl_parcel.writeByte(nestedEnum);
     int _aidl_end_pos = _aidl_parcel.dataPosition();
     _aidl_parcel.setDataPosition(_aidl_start_pos);
