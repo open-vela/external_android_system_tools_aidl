@@ -866,6 +866,7 @@ static std::shared_ptr<Method> GenerateProxyMethod(const AidlInterface& iface,
                                    .type = method.GetType(),
                                    .parcel = _reply->name,
                                    .var = _result->name,
+                                   .min_sdk_version = options.GetMinSdkVersion(),
                                    .is_classloader_created = &is_classloader_created};
       CreateFromParcelFor(context);
       writer->Close();
@@ -882,6 +883,7 @@ static std::shared_ptr<Method> GenerateProxyMethod(const AidlInterface& iface,
                                      .type = arg->GetType(),
                                      .parcel = _reply->name,
                                      .var = arg->GetName(),
+                                     .min_sdk_version = options.GetMinSdkVersion(),
                                      .is_classloader_created = &is_classloader_created};
         ReadFromParcelFor(context);
         writer->Close();
@@ -1269,13 +1271,14 @@ std::unique_ptr<Class> GenerateInterfaceClass(const AidlInterface* iface,
   }
 
   // all the nested types
+  string code;
+  auto writer = CodeWriter::ForString(&code);
   for (const auto& nested : iface->GetNestedTypes()) {
-    string code;
-    auto writer = CodeWriter::ForString(&code);
     GenerateClass(*writer, *nested, typenames, options);
-    writer->Close();
-    interface->elements.push_back(std::make_shared<LiteralClassElement>(code));
   }
+  GenerateParcelHelpers(*writer, *iface, options);
+  writer->Close();
+  interface->elements.push_back(std::make_shared<LiteralClassElement>(code));
 
   // additional static methods for the default impl set/get to the
   // stub class. Can't add them to the interface as the generated java files

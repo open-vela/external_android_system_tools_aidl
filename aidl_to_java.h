@@ -103,6 +103,10 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c);
 // in a parcelable
 void ToStringFor(const CodeGeneratorContext& c);
 
+// Generates create/read/write helper functions which are missing in Parcel.
+void GenerateParcelHelpers(CodeWriter& out, const AidlDefinedType& defined_type,
+                           const Options& options);
+
 }  // namespace java
 }  // namespace aidl
 }  // namespace android
