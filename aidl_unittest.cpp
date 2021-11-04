@@ -32,6 +32,7 @@
 #include "aidl_dumpapi.h"
 #include "aidl_language.h"
 #include "aidl_to_cpp.h"
+#include "aidl_to_cpp_common.h"
 #include "aidl_to_java.h"
 #include "comments.h"
 #include "logging.h"
@@ -1531,6 +1532,21 @@ TEST_F(AidlTest, UnderstandsNestedTypesViaFullyQualifiedName) {
   EXPECT_EQ(GetCapturedStderr(), "");
 
   EXPECT_TRUE(typenames_.ResolveTypename("p.IOuter.Inner").is_resolved);
+}
+
+TEST_F(AidlTest, IncludeParentsRawHeaderForNestedInterface) {
+  CaptureStderr();
+  EXPECT_NE(nullptr, Parse("p/Outer.aidl",
+                           "package p;\n"
+                           "parcelable Outer {\n"
+                           "  interface IInner {}\n"
+                           "}",
+                           typenames_, Options::Language::CPP));
+
+  EXPECT_EQ(GetCapturedStderr(), "");
+  auto resolved = typenames_.ResolveTypename("p.Outer.IInner");
+  ASSERT_TRUE(resolved.defined_type);
+  EXPECT_EQ(cpp::HeaderFile(*resolved.defined_type, cpp::ClassNames::CLIENT), "p/Outer.h");
 }
 
 TEST_F(AidlTest, UnderstandsNestedTypesViaFullyQualifiedImport) {
@@ -3843,6 +3859,67 @@ TEST_F(AidlTest, InterfaceAndMethodEnforceCondition) {
 
   Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
   EXPECT_TRUE(compile_aidl(options, io_delegate_));
+}
+
+TEST_F(AidlTest, NoPermissionInterfaceEnforceMethod) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    @NoPermissionRequired
+    interface IFoo {
+        @Enforce(condition="permission = INTERNET")
+        void Protected();
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(),
+              HasSubstr("The interface IFoo is annotated as requiring no permission"));
+}
+
+TEST_F(AidlTest, ManualPermissionInterfaceEnforceMethod) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    @PermissionManuallyEnforced
+    interface IFoo {
+        @Enforce(condition="permission = INTERNET")
+        void Protected();
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(options, io_delegate_));
+  EXPECT_THAT(
+      GetCapturedStderr(),
+      HasSubstr("The interface IFoo is annotated as manually implementing permission checks"));
+}
+
+TEST_F(AidlTest, EnforceInterfaceNoPermissionsMethod) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    @Enforce(condition="permission = INTERNET")
+    interface IFoo {
+        @NoPermissionRequired
+        void Protected();
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(),
+              HasSubstr("The interface IFoo enforces permissions using annotations"));
+}
+
+TEST_F(AidlTest, EnforceInterfaceManualPermissionMethod) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    @Enforce(condition="permission = INTERNET")
+    interface IFoo {
+        @PermissionManuallyEnforced
+        void Protected();
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(),
+              HasSubstr("The interface IFoo enforces permissions using annotations"));
 }
 
 class AidlOutputPathTest : public AidlTest {
