@@ -1096,7 +1096,7 @@ BpTestService::BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeStrongBinder(::android::aidl::tests::INamedCallback::asBinder(service));
+  _aidl_ret_status = _aidl_data.writeStrongBinder(service);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
@@ -3119,7 +3119,7 @@ BnTestService::BnTestService()
     if (!_aidl_status.isOk()) {
       break;
     }
-    _aidl_ret_status = _aidl_reply->writeStrongBinder(::android::aidl::tests::INamedCallback::asBinder(_aidl_return));
+    _aidl_ret_status = _aidl_reply->writeStrongBinder(_aidl_return);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
@@ -3760,7 +3760,7 @@ BnTestService::BnTestService()
     if (!_aidl_status.isOk()) {
       break;
     }
-    _aidl_ret_status = _aidl_reply->writeStrongBinder(::android::aidl::tests::INamedCallback::asBinder(_aidl_return));
+    _aidl_ret_status = _aidl_reply->writeStrongBinder(_aidl_return);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
@@ -3928,7 +3928,7 @@ BnTestService::BnTestService()
     if (!_aidl_status.isOk()) {
       break;
     }
-    _aidl_ret_status = _aidl_reply->writeStrongBinder(::android::aidl::tests::IOldName::asBinder(_aidl_return));
+    _aidl_ret_status = _aidl_reply->writeStrongBinder(_aidl_return);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
@@ -3949,7 +3949,7 @@ BnTestService::BnTestService()
     if (!_aidl_status.isOk()) {
       break;
     }
-    _aidl_ret_status = _aidl_reply->writeStrongBinder(::android::aidl::tests::INewName::asBinder(_aidl_return));
+    _aidl_ret_status = _aidl_reply->writeStrongBinder(_aidl_return);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
