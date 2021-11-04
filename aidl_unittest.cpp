@@ -186,21 +186,6 @@ TEST_P(AidlTest, EnumRequiresCorrectPath) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr()) << file_contents;
 }
 
-TEST_P(AidlTest, RejectsArraysOfBinders) {
-  import_paths_.emplace("");
-  io_delegate_.SetFileContents("bar/IBar.aidl",
-                               "package bar; interface IBar {}");
-  const string path = "foo/IFoo.aidl";
-  const string contents =
-      "package foo;\n"
-      "import bar.IBar;\n"
-      "interface IFoo { void f(in IBar[] input); }";
-  const string expected_stderr = "ERROR: foo/IFoo.aidl:3.27-32: Binder type cannot be an array\n";
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse(path, contents, typenames_, GetLanguage()));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
-}
-
 TEST_P(AidlTest, SupportOnlyOutParameters) {
   const string interface_list = "package a; interface IBar { void f(out List<String> bar); }";
   EXPECT_NE(nullptr, Parse("a/IBar.aidl", interface_list, typenames_, GetLanguage()));
@@ -4896,10 +4881,10 @@ const std::map<std::string, ExpectedResult> kArraySupportExpectations = {
     {"java_ParcelFileDescriptor", {"", ""}},
     {"ndk_ParcelFileDescriptor", {"", ""}},
     {"rust_ParcelFileDescriptor", {"", ""}},
-    {"cpp_interface", {"Binder type cannot be an array", "Binder type cannot be an array"}},
-    {"java_interface", {"Binder type cannot be an array", "Binder type cannot be an array"}},
-    {"ndk_interface", {"Binder type cannot be an array", "Binder type cannot be an array"}},
-    {"rust_interface", {"Binder type cannot be an array", "Binder type cannot be an array"}},
+    {"cpp_interface", {"", ""}},
+    {"java_interface", {"", ""}},
+    {"ndk_interface", {"", ""}},
+    {"rust_interface", {"", ""}},
     {"cpp_parcelable", {"", ""}},
     {"java_parcelable", {"", ""}},
     {"ndk_parcelable", {"", ""}},

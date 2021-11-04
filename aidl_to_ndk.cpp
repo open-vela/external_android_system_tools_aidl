@@ -138,14 +138,24 @@ TypeInfo InterfaceTypeInfo(const AidlInterface& type) {
               .read_func = StandardRead(clazz + "::readFromParcel"),
               .write_func = StandardWrite(clazz + "::writeToParcel"),
           },
-      .array = nullptr,
+      .array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
+          .cpp_name = "std::vector<std::shared_ptr<" + clazz + ">>",
+          .value_is_cheap = false,
+          .read_func = StandardRead("::ndk::AParcel_readVector"),
+          .write_func = StandardWrite("::ndk::AParcel_writeVector"),
+      }),
       .nullable = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
           .cpp_name = "std::shared_ptr<" + clazz + ">",
           .value_is_cheap = false,
           .read_func = StandardRead(clazz + "::readFromParcel"),
           .write_func = StandardWrite(clazz + "::writeToParcel"),
       }),
-      .nullable_array = nullptr,
+      .nullable_array = std::shared_ptr<TypeInfo::Aspect>(new TypeInfo::Aspect{
+          .cpp_name = "std::optional<std::vector<std::shared_ptr<" + clazz + ">>>",
+          .value_is_cheap = false,
+          .read_func = StandardRead("::ndk::AParcel_readVector"),
+          .write_func = StandardWrite("::ndk::AParcel_writeVector"),
+      }),
   };
 }
 
