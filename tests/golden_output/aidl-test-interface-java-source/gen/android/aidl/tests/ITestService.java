@@ -668,13 +668,13 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createStringArray();
           android.aidl.tests.INamedCallback[] _result = this.GetInterfaceArray(_arg0);
           reply.writeNoException();
-          _Parcel.writeInterfaceArray(reply, _result);
+          reply.writeInterfaceArray(_result);
           break;
         }
         case TRANSACTION_VerifyNamesWithInterfaceArray:
         {
           android.aidl.tests.INamedCallback[] _arg0;
-          _arg0 = _Parcel.createInterfaceArray(data, android.aidl.tests.INamedCallback.Stub::asInterface, android.aidl.tests.INamedCallback[]::new);
+          _arg0 = data.createInterfaceArray(android.aidl.tests.INamedCallback.Stub::asInterface, android.aidl.tests.INamedCallback[]::new);
           java.lang.String[] _arg1;
           _arg1 = data.createStringArray();
           boolean _result = this.VerifyNamesWithInterfaceArray(_arg0, _arg1);
@@ -688,13 +688,13 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createStringArray();
           android.aidl.tests.INamedCallback[] _result = this.GetNullableInterfaceArray(_arg0);
           reply.writeNoException();
-          _Parcel.writeInterfaceArray(reply, _result);
+          reply.writeInterfaceArray(_result);
           break;
         }
         case TRANSACTION_VerifyNamesWithNullableInterfaceArray:
         {
           android.aidl.tests.INamedCallback[] _arg0;
-          _arg0 = _Parcel.createInterfaceArray(data, android.aidl.tests.INamedCallback.Stub::asInterface, android.aidl.tests.INamedCallback[]::new);
+          _arg0 = data.createInterfaceArray(android.aidl.tests.INamedCallback.Stub::asInterface, android.aidl.tests.INamedCallback[]::new);
           java.lang.String[] _arg1;
           _arg1 = data.createStringArray();
           boolean _result = this.VerifyNamesWithNullableInterfaceArray(_arg0, _arg1);
@@ -1803,7 +1803,7 @@ public interface ITestService extends android.os.IInterface
             }
           }
           _reply.readException();
-          _result = _Parcel.createInterfaceArray(_reply, android.aidl.tests.INamedCallback.Stub::asInterface, android.aidl.tests.INamedCallback[]::new);
+          _result = _reply.createInterfaceArray(android.aidl.tests.INamedCallback.Stub::asInterface, android.aidl.tests.INamedCallback[]::new);
         }
         finally {
           _reply.recycle();
@@ -1819,7 +1819,7 @@ public interface ITestService extends android.os.IInterface
         boolean _result;
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
-          _Parcel.writeInterfaceArray(_data, services);
+          _data.writeInterfaceArray(services);
           _data.writeStringArray(names);
           boolean _status = mRemote.transact(Stub.TRANSACTION_VerifyNamesWithInterfaceArray, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
           if (!_status) {
@@ -1852,7 +1852,7 @@ public interface ITestService extends android.os.IInterface
             }
           }
           _reply.readException();
-          _result = _Parcel.createInterfaceArray(_reply, android.aidl.tests.INamedCallback.Stub::asInterface, android.aidl.tests.INamedCallback[]::new);
+          _result = _reply.createInterfaceArray(android.aidl.tests.INamedCallback.Stub::asInterface, android.aidl.tests.INamedCallback[]::new);
         }
         finally {
           _reply.recycle();
@@ -1868,7 +1868,7 @@ public interface ITestService extends android.os.IInterface
         boolean _result;
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
-          _Parcel.writeInterfaceArray(_data, services);
+          _data.writeInterfaceArray(services);
           _data.writeStringArray(names);
           boolean _status = mRemote.transact(Stub.TRANSACTION_VerifyNamesWithNullableInterfaceArray, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
           if (!_status) {
@@ -3146,49 +3146,6 @@ public interface ITestService extends android.os.IInterface
         return ((android.os.Parcelable) _v).describeContents();
       }
       return 0;
-    }
-  }
-  /** @hide */
-  static class _Parcel {
-    static private <T extends android.os.IInterface> T[] createInterfaceArray(
-        android.os.Parcel parcel,
-        java.util.function.Function<android.os.IBinder, T> asInterface,
-        java.util.function.IntFunction<T[]> newArray) {
-      int N = parcel.readInt();
-      if (N >= 0) {
-        T[] values = newArray.apply(N);
-        for (int i = 0; i < N; i++) {
-          values[i] = asInterface.apply(parcel.readStrongBinder());
-        }
-        return values;
-      } else {
-        return null;
-      }
-    }
-    static private <T extends android.os.IInterface> void writeInterfaceArray(android.os.Parcel parcel,
-        T[] values) {
-      if (values != null) {
-        int N = values.length;
-        parcel.writeInt(N);
-        for (int i = 0; i < N; i++) {
-          parcel.writeStrongInterface(values[i]);
-        }
-      } else {
-        parcel.writeInt(-1);
-      }
-    }
-    static private <T extends android.os.IInterface> void readInterfaceArray(
-        android.os.Parcel parcel,
-        T[] values,
-        java.util.function.Function<android.os.IBinder, T> asInterface) {
-      int N = parcel.readInt();
-      if (N == values.length) {
-        for (int i = 0; i < N; i++) {
-          values[i] = asInterface.apply(parcel.readStrongBinder());
-        }
-      } else {
-        throw new RuntimeException("bad array lengths");
-      }
     }
   }
 }
