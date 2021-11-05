@@ -199,7 +199,7 @@ public class ArrayOfInterfaces implements android.os.Parcelable
             android.aidl.tests.ArrayOfInterfaces.IEmptyInterface _arg1;
             _arg1 = android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub.asInterface(data.readStrongBinder());
             android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _arg2;
-            _arg2 = _Parcel.createInterfaceArray(data, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
+            _arg2 = data.createInterfaceArray(android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
             android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _arg3;
             int _arg3_length = data.readInt();
             if ((_arg3_length<0)) {
@@ -209,9 +209,9 @@ public class ArrayOfInterfaces implements android.os.Parcelable
               _arg3 = new android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[_arg3_length];
             }
             android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _arg4;
-            _arg4 = _Parcel.createInterfaceArray(data, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
+            _arg4 = data.createInterfaceArray(android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
             android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _arg5;
-            _arg5 = _Parcel.createInterfaceArray(data, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
+            _arg5 = data.createInterfaceArray(android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
             android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _arg6;
             int _arg6_length = data.readInt();
             if ((_arg6_length<0)) {
@@ -221,14 +221,14 @@ public class ArrayOfInterfaces implements android.os.Parcelable
               _arg6 = new android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[_arg6_length];
             }
             android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _arg7;
-            _arg7 = _Parcel.createInterfaceArray(data, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
+            _arg7 = data.createInterfaceArray(android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
             android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _result = this.methodWithInterfaces(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7);
             reply.writeNoException();
-            _Parcel.writeInterfaceArray(reply, _result);
-            _Parcel.writeInterfaceArray(reply, _arg3);
-            _Parcel.writeInterfaceArray(reply, _arg4);
-            _Parcel.writeInterfaceArray(reply, _arg6);
-            _Parcel.writeInterfaceArray(reply, _arg7);
+            reply.writeInterfaceArray(_result);
+            reply.writeInterfaceArray(_arg3);
+            reply.writeInterfaceArray(_arg4);
+            reply.writeInterfaceArray(_arg6);
+            reply.writeInterfaceArray(_arg7);
             break;
           }
           default:
@@ -262,22 +262,22 @@ public class ArrayOfInterfaces implements android.os.Parcelable
             _data.writeInterfaceToken(DESCRIPTOR);
             _data.writeStrongInterface(iface);
             _data.writeStrongInterface(nullable_iface);
-            _Parcel.writeInterfaceArray(_data, iface_array_in);
+            _data.writeInterfaceArray(iface_array_in);
             if ((iface_array_out==null)) {
               _data.writeInt(-1);
             }
             else {
               _data.writeInt(iface_array_out.length);
             }
-            _Parcel.writeInterfaceArray(_data, iface_array_inout);
-            _Parcel.writeInterfaceArray(_data, nullable_iface_array_in);
+            _data.writeInterfaceArray(iface_array_inout);
+            _data.writeInterfaceArray(nullable_iface_array_in);
             if ((nullable_iface_array_out==null)) {
               _data.writeInt(-1);
             }
             else {
               _data.writeInt(nullable_iface_array_out.length);
             }
-            _Parcel.writeInterfaceArray(_data, nullable_iface_array_inout);
+            _data.writeInterfaceArray(nullable_iface_array_inout);
             boolean _status = mRemote.transact(Stub.TRANSACTION_methodWithInterfaces, _data, _reply, 0);
             if (!_status) {
               if (getDefaultImpl() != null) {
@@ -285,11 +285,11 @@ public class ArrayOfInterfaces implements android.os.Parcelable
               }
             }
             _reply.readException();
-            _result = _Parcel.createInterfaceArray(_reply, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
-            _Parcel.readInterfaceArray(_reply, iface_array_out, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface);
-            _Parcel.readInterfaceArray(_reply, iface_array_inout, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface);
-            _Parcel.readInterfaceArray(_reply, nullable_iface_array_out, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface);
-            _Parcel.readInterfaceArray(_reply, nullable_iface_array_inout, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface);
+            _result = _reply.createInterfaceArray(android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
+            _reply.readInterfaceArray(iface_array_out, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface);
+            _reply.readInterfaceArray(iface_array_inout, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface);
+            _reply.readInterfaceArray(nullable_iface_array_out, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface);
+            _reply.readInterfaceArray(nullable_iface_array_inout, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface);
           }
           finally {
             _reply.recycle();
@@ -344,8 +344,8 @@ public class ArrayOfInterfaces implements android.os.Parcelable
       _aidl_parcel.writeInt(0);
       _aidl_parcel.writeStrongInterface(iface);
       _aidl_parcel.writeStrongInterface(nullable_iface);
-      _Parcel.writeInterfaceArray(_aidl_parcel, iface_array);
-      _Parcel.writeInterfaceArray(_aidl_parcel, nullable_iface_array);
+      _aidl_parcel.writeInterfaceArray(iface_array);
+      _aidl_parcel.writeInterfaceArray(nullable_iface_array);
       int _aidl_end_pos = _aidl_parcel.dataPosition();
       _aidl_parcel.setDataPosition(_aidl_start_pos);
       _aidl_parcel.writeInt(_aidl_end_pos - _aidl_start_pos);
@@ -362,9 +362,9 @@ public class ArrayOfInterfaces implements android.os.Parcelable
         if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
         nullable_iface = android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub.asInterface(_aidl_parcel.readStrongBinder());
         if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-        iface_array = _Parcel.createInterfaceArray(_aidl_parcel, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
+        iface_array = _aidl_parcel.createInterfaceArray(android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
         if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-        nullable_iface_array = _Parcel.createInterfaceArray(_aidl_parcel, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
+        nullable_iface_array = _aidl_parcel.createInterfaceArray(android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
       } finally {
         if (_aidl_start_pos > (Integer.MAX_VALUE - _aidl_parcelable_size)) {
           throw new android.os.BadParcelableException("Overflow in the size of parcelable");
@@ -515,10 +515,10 @@ public class ArrayOfInterfaces implements android.os.Parcelable
         _aidl_parcel.writeStrongInterface(getNullable_iface());
         break;
       case iface_array:
-        _Parcel.writeInterfaceArray(_aidl_parcel, getIface_array());
+        _aidl_parcel.writeInterfaceArray(getIface_array());
         break;
       case nullable_iface_array:
-        _Parcel.writeInterfaceArray(_aidl_parcel, getNullable_iface_array());
+        _aidl_parcel.writeInterfaceArray(getNullable_iface_array());
         break;
       }
     }
@@ -539,12 +539,12 @@ public class ArrayOfInterfaces implements android.os.Parcelable
         return; }
       case iface_array: {
         android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _aidl_value;
-        _aidl_value = _Parcel.createInterfaceArray(_aidl_parcel, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
+        _aidl_value = _aidl_parcel.createInterfaceArray(android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
         _set(_aidl_tag, _aidl_value);
         return; }
       case nullable_iface_array: {
         android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _aidl_value;
-        _aidl_value = _Parcel.createInterfaceArray(_aidl_parcel, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
+        _aidl_value = _aidl_parcel.createInterfaceArray(android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new);
         _set(_aidl_tag, _aidl_value);
         return; }
       }
@@ -604,49 +604,6 @@ public class ArrayOfInterfaces implements android.os.Parcelable
     private void _set(int _tag, Object _value) {
       this._tag = _tag;
       this._value = _value;
-    }
-  }
-  /** @hide */
-  static class _Parcel {
-    static private <T extends android.os.IInterface> T[] createInterfaceArray(
-        android.os.Parcel parcel,
-        java.util.function.Function<android.os.IBinder, T> asInterface,
-        java.util.function.IntFunction<T[]> newArray) {
-      int N = parcel.readInt();
-      if (N >= 0) {
-        T[] values = newArray.apply(N);
-        for (int i = 0; i < N; i++) {
-          values[i] = asInterface.apply(parcel.readStrongBinder());
-        }
-        return values;
-      } else {
-        return null;
-      }
-    }
-    static private <T extends android.os.IInterface> void writeInterfaceArray(android.os.Parcel parcel,
-        T[] values) {
-      if (values != null) {
-        int N = values.length;
-        parcel.writeInt(N);
-        for (int i = 0; i < N; i++) {
-          parcel.writeStrongInterface(values[i]);
-        }
-      } else {
-        parcel.writeInt(-1);
-      }
-    }
-    static private <T extends android.os.IInterface> void readInterfaceArray(
-        android.os.Parcel parcel,
-        T[] values,
-        java.util.function.Function<android.os.IBinder, T> asInterface) {
-      int N = parcel.readInt();
-      if (N == values.length) {
-        for (int i = 0; i < N; i++) {
-          values[i] = asInterface.apply(parcel.readStrongBinder());
-        }
-      } else {
-        throw new RuntimeException("bad array lengths");
-      }
     }
   }
 }

@@ -203,51 +203,6 @@ static string GetFlagFor(const CodeGeneratorContext& c) {
 
 typedef void (*ParcelHelperGenerator)(CodeWriter&, const Options&);
 
-// TODO(b/205195901) move this to Parcel.java
-static void GenerateInterfaceArrayHelper(CodeWriter& out, const Options&) {
-  out << R"(static private <T extends android.os.IInterface> T[] createInterfaceArray(
-    android.os.Parcel parcel,
-    java.util.function.Function<android.os.IBinder, T> asInterface,
-    java.util.function.IntFunction<T[]> newArray) {
-  int N = parcel.readInt();
-  if (N >= 0) {
-    T[] values = newArray.apply(N);
-    for (int i = 0; i < N; i++) {
-      values[i] = asInterface.apply(parcel.readStrongBinder());
-    }
-    return values;
-  } else {
-    return null;
-  }
-}
-static private <T extends android.os.IInterface> void writeInterfaceArray(android.os.Parcel parcel,
-    T[] values) {
-  if (values != null) {
-    int N = values.length;
-    parcel.writeInt(N);
-    for (int i = 0; i < N; i++) {
-      parcel.writeStrongInterface(values[i]);
-    }
-  } else {
-    parcel.writeInt(-1);
-  }
-}
-static private <T extends android.os.IInterface> void readInterfaceArray(
-    android.os.Parcel parcel,
-    T[] values,
-    java.util.function.Function<android.os.IBinder, T> asInterface) {
-  int N = parcel.readInt();
-  if (N == values.length) {
-    for (int i = 0; i < N; i++) {
-      values[i] = asInterface.apply(parcel.readStrongBinder());
-    }
-  } else {
-    throw new RuntimeException("bad array lengths");
-  }
-}
-)";
-}
-
 static void GenerateTypedObjectHelper(CodeWriter& out, const Options&) {
   // Note that the name is inconsistent here because Parcel.java defines readTypedObject as if it
   // "creates" a new value from a parcel. "in-place" read function is not necessary because
@@ -288,9 +243,6 @@ void GenerateParcelHelpers(CodeWriter& out, const AidlDefinedType& defined_type,
     void Visit(const AidlTypeSpecifier& type) override {
       auto name = type.GetName();
       if (auto defined_type = type.GetDefinedType(); defined_type) {
-        if (defined_type->AsInterface() != nullptr && type.IsArray()) {
-          helpers.insert(&GenerateInterfaceArrayHelper);
-        }
         if (defined_type->AsParcelable() != nullptr && !type.IsArray()) {
           // TypedObjects are supported since 23. So we don't need helpers.
           if (options.GetMinSdkVersion() < 23u) {
@@ -510,7 +462,7 @@ void WriteToParcelFor(const CodeGeneratorContext& c) {
     AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName();
     if (t->AsInterface() != nullptr) {
       if (c.type.IsArray()) {
-        c.writer << "_Parcel.writeInterfaceArray(" << c.parcel << ", " << c.var << ");\n";
+        c.writer << c.parcel << ".writeInterfaceArray(" << c.var << ");\n";
       } else {
         c.writer << c.parcel << ".writeStrongInterface(" << c.var << ");\n";
       }
@@ -729,8 +681,8 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
       if (c.type.IsArray()) {
         auto as_interface = name + ".Stub::asInterface";
         auto new_array = name + "[]::new";
-        c.writer << c.var << " = _Parcel.createInterfaceArray(" << c.parcel << ", " << as_interface
-                 << ", " << new_array << ");\n";
+        c.writer << c.var << " = " << c.parcel << ".createInterfaceArray(" << as_interface << ", "
+                 << new_array << ");\n";
       } else {
         c.writer << c.var << " = " << name << ".Stub.asInterface(" << c.parcel
                  << ".readStrongBinder());\n";
@@ -879,8 +831,7 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
     } else if (t->AsInterface()) {
       AIDL_FATAL_IF(!c.type.IsArray(), c.type) << "readFromParcel(interface) doesn't make sense.";
       auto as_interface = c.type.GetName() + ".Stub::asInterface";
-      c.writer << "_Parcel.readInterfaceArray(" << c.parcel << ", " << c.var << ", " << as_interface
-               << ");\n";
+      c.writer << c.parcel << ".readInterfaceArray(" << c.var << ", " << as_interface << ");\n";
     }
   }
   return true;
