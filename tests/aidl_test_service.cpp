@@ -490,6 +490,17 @@ class NativeService : public BnTestService {
     return Status::ok();
   }
 
+  Status GetInterfaceList(const optional<vector<optional<String16>>>& names,
+                          optional<vector<sp<INamedCallback>>>* _aidl_ret) override {
+    return GetNullableInterfaceArray(names, _aidl_ret);
+  }
+
+  Status VerifyNamesWithInterfaceList(const optional<vector<sp<INamedCallback>>>& services,
+                                      const optional<vector<optional<String16>>>& names,
+                                      bool* _aidl_ret) override {
+    return VerifyNamesWithNullableInterfaceArray(services, names, _aidl_ret);
+  }
+
   Status ReverseStringList(const vector<String16>& input,
                            vector<String16>* repeated,
                            vector<String16>* _aidl_return) override {
