@@ -29,10 +29,9 @@ using std::string;
 using std::vector;
 
 // The oldest SDK version that is supported for each backend. For non-Java backends, these are the
-// platform SDK version where the support for the backend was added. For Java backend, this should
-// ideally be 1, but is actually 23 as the generated code uses some APIs (like
-// `Parcel.writeTypedObject`) added in 23.
-constexpr uint32_t DEFAULT_SDK_VERSION_JAVA = 23;
+// platform SDK version where the support for the backend was added. For Java backend, this is 1.
+// TODO(b/205065703) switch back to DEFAULT_SDK_VERSION_JAVA = 23
+constexpr uint32_t DEFAULT_SDK_VERSION_JAVA = 1;
 constexpr uint32_t DEFAULT_SDK_VERSION_CPP = 23;
 constexpr uint32_t DEFAULT_SDK_VERSION_NDK = 29;
 constexpr uint32_t DEFAULT_SDK_VERSION_RUST = 31;

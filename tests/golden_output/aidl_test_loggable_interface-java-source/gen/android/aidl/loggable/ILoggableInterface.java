@@ -64,7 +64,7 @@ public interface ILoggableInterface extends android.os.IInterface
           try {
             android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::ILoggableInterface::LogThis::server");
             boolean _arg0;
-            _arg0 = (0!=data.readInt());
+            _arg0 = data.readBoolean();
             boolean[] _arg1;
             _arg1 = data.createBooleanArray();
             byte _arg2;
@@ -98,21 +98,11 @@ public interface ILoggableInterface extends android.os.IInterface
             java.util.List<java.lang.String> _arg16;
             _arg16 = data.createStringArrayList();
             android.aidl.loggable.Data _arg17;
-            if ((0!=data.readInt())) {
-              _arg17 = android.aidl.loggable.Data.CREATOR.createFromParcel(data);
-            }
-            else {
-              _arg17 = null;
-            }
+            _arg17 = data.readTypedObject(android.aidl.loggable.Data.CREATOR);
             android.os.IBinder _arg18;
             _arg18 = data.readStrongBinder();
             android.os.ParcelFileDescriptor _arg19;
-            if ((0!=data.readInt())) {
-              _arg19 = android.os.ParcelFileDescriptor.CREATOR.createFromParcel(data);
-            }
-            else {
-              _arg19 = null;
-            }
+            _arg19 = data.readTypedObject(android.os.ParcelFileDescriptor.CREATOR);
             android.os.ParcelFileDescriptor[] _arg20;
             _arg20 = data.createTypedArray(android.os.ParcelFileDescriptor.CREATOR);
             java.lang.String[] _result = this.LogThis(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7, _arg8, _arg9, _arg10, _arg11, _arg12, _arg13, _arg14, _arg15, _arg16, _arg17, _arg18, _arg19, _arg20);
@@ -127,13 +117,7 @@ public interface ILoggableInterface extends android.os.IInterface
             reply.writeDoubleArray(_arg13);
             reply.writeStringArray(_arg15);
             reply.writeStringList(_arg16);
-            if ((_arg19!=null)) {
-              reply.writeInt(1);
-              _arg19.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
-            }
-            else {
-              reply.writeInt(0);
-            }
+            reply.writeTypedObject(_arg19, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
             reply.writeTypedArray(_arg20, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
           }
           finally {
@@ -171,7 +155,7 @@ public interface ILoggableInterface extends android.os.IInterface
         try {
           android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::ILoggableInterface::LogThis::client");
           _data.writeInterfaceToken(DESCRIPTOR);
-          _data.writeInt(((boolValue)?(1):(0)));
+          _data.writeBoolean(boolValue);
           _data.writeBooleanArray(boolArray);
           _data.writeByte(byteValue);
           _data.writeByteArray(byteArray);
@@ -188,21 +172,9 @@ public interface ILoggableInterface extends android.os.IInterface
           _data.writeString(stringValue);
           _data.writeStringArray(stringArray);
           _data.writeStringList(listValue);
-          if ((dataValue!=null)) {
-            _data.writeInt(1);
-            dataValue.writeToParcel(_data, 0);
-          }
-          else {
-            _data.writeInt(0);
-          }
+          _data.writeTypedObject(dataValue, 0);
           _data.writeStrongBinder(binderValue);
-          if ((pfdValue!=null)) {
-            _data.writeInt(1);
-            pfdValue.writeToParcel(_data, 0);
-          }
-          else {
-            _data.writeInt(0);
-          }
+          _data.writeTypedObject(pfdValue, 0);
           _data.writeTypedArray(pfdArray, 0);
           boolean _status = mRemote.transact(Stub.TRANSACTION_LogThis, _data, _reply, 0);
           if (!_status) {
