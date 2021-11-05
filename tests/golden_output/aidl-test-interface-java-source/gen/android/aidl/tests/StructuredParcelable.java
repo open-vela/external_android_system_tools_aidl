@@ -170,7 +170,7 @@ public class StructuredParcelable implements android.os.Parcelable
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       longDefaultsToNegativeSeven = _aidl_parcel.readLong();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      booleanDefaultsToTrue = (0!=_aidl_parcel.readInt());
+      booleanDefaultsToTrue = _aidl_parcel.readBoolean();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       charDefaultsToC = (char)_aidl_parcel.readInt();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
@@ -182,7 +182,7 @@ public class StructuredParcelable implements android.os.Parcelable
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       arrayDefaultsToEmpty = _aidl_parcel.createIntArray();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      boolDefault = (0!=_aidl_parcel.readInt());
+      boolDefault = _aidl_parcel.readBoolean();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       byteDefault = _aidl_parcel.readByte();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
@@ -246,19 +246,9 @@ public class StructuredParcelable implements android.os.Parcelable
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       shouldSetBit0AndBit2 = _aidl_parcel.readInt();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      if ((0!=_aidl_parcel.readInt())) {
-        u = android.aidl.tests.Union.CREATOR.createFromParcel(_aidl_parcel);
-      }
-      else {
-        u = null;
-      }
+      u = _aidl_parcel.readTypedObject(android.aidl.tests.Union.CREATOR);
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      if ((0!=_aidl_parcel.readInt())) {
-        shouldBeConstS1 = android.aidl.tests.Union.CREATOR.createFromParcel(_aidl_parcel);
-      }
-      else {
-        shouldBeConstS1 = null;
-      }
+      shouldBeConstS1 = _aidl_parcel.readTypedObject(android.aidl.tests.Union.CREATOR);
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       defaultWithFoo = _aidl_parcel.readInt();
     } finally {
