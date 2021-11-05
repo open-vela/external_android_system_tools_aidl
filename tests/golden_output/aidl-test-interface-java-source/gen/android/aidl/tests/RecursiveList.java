@@ -38,12 +38,7 @@ public class RecursiveList implements android.os.Parcelable
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       value = _aidl_parcel.readInt();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      if ((0!=_aidl_parcel.readInt())) {
-        next = android.aidl.tests.RecursiveList.CREATOR.createFromParcel(_aidl_parcel);
-      }
-      else {
-        next = null;
-      }
+      next = _aidl_parcel.readTypedObject(android.aidl.tests.RecursiveList.CREATOR);
     } finally {
       if (_aidl_start_pos > (Integer.MAX_VALUE - _aidl_parcelable_size)) {
         throw new android.os.BadParcelableException("Overflow in the size of parcelable");

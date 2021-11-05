@@ -668,32 +668,13 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createStringArray();
           android.aidl.tests.INamedCallback[] _result = this.GetInterfaceArray(_arg0);
           reply.writeNoException();
-          {
-            android.os.IBinder[] _binder_arr = null;
-            if (_result != null) {
-              _binder_arr = new android.os.IBinder[_result.length];
-              for (int i = 0; i < _result.length; i++) {
-                _binder_arr[i] = (_result[i] != null) ? _result[i].asBinder() : null;
-              }
-            }
-            reply.writeBinderArray(_binder_arr);
-          }
+          _Parcel.writeInterfaceArray(reply, _result);
           break;
         }
         case TRANSACTION_VerifyNamesWithInterfaceArray:
         {
           android.aidl.tests.INamedCallback[] _arg0;
-          {
-            android.os.IBinder[] _binder_arr = data.createBinderArray();
-            if (_binder_arr != null) {
-              _arg0 = new android.aidl.tests.INamedCallback[_binder_arr.length];
-              for (int i = 0; i < _binder_arr.length; i++) {
-                _arg0[i] = android.aidl.tests.INamedCallback.Stub.asInterface(_binder_arr[i]);
-              }
-            } else {
-              _arg0 = null;
-            }
-          }
+          _arg0 = _Parcel.createInterfaceArray(data, android.aidl.tests.INamedCallback.Stub::asInterface, android.aidl.tests.INamedCallback[]::new);
           java.lang.String[] _arg1;
           _arg1 = data.createStringArray();
           boolean _result = this.VerifyNamesWithInterfaceArray(_arg0, _arg1);
@@ -707,32 +688,13 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createStringArray();
           android.aidl.tests.INamedCallback[] _result = this.GetNullableInterfaceArray(_arg0);
           reply.writeNoException();
-          {
-            android.os.IBinder[] _binder_arr = null;
-            if (_result != null) {
-              _binder_arr = new android.os.IBinder[_result.length];
-              for (int i = 0; i < _result.length; i++) {
-                _binder_arr[i] = (_result[i] != null) ? _result[i].asBinder() : null;
-              }
-            }
-            reply.writeBinderArray(_binder_arr);
-          }
+          _Parcel.writeInterfaceArray(reply, _result);
           break;
         }
         case TRANSACTION_VerifyNamesWithNullableInterfaceArray:
         {
           android.aidl.tests.INamedCallback[] _arg0;
-          {
-            android.os.IBinder[] _binder_arr = data.createBinderArray();
-            if (_binder_arr != null) {
-              _arg0 = new android.aidl.tests.INamedCallback[_binder_arr.length];
-              for (int i = 0; i < _binder_arr.length; i++) {
-                _arg0[i] = android.aidl.tests.INamedCallback.Stub.asInterface(_binder_arr[i]);
-              }
-            } else {
-              _arg0 = null;
-            }
-          }
+          _arg0 = _Parcel.createInterfaceArray(data, android.aidl.tests.INamedCallback.Stub::asInterface, android.aidl.tests.INamedCallback[]::new);
           java.lang.String[] _arg1;
           _arg1 = data.createStringArray();
           boolean _result = this.VerifyNamesWithNullableInterfaceArray(_arg0, _arg1);
@@ -1185,7 +1147,7 @@ public interface ITestService extends android.os.IInterface
             }
           }
           _reply.readException();
-          _result = (0!=_reply.readInt());
+          _result = _reply.readBoolean();
         }
         finally {
           _reply.recycle();
@@ -1817,7 +1779,7 @@ public interface ITestService extends android.os.IInterface
             }
           }
           _reply.readException();
-          _result = (0!=_reply.readInt());
+          _result = _reply.readBoolean();
         }
         finally {
           _reply.recycle();
@@ -1841,17 +1803,7 @@ public interface ITestService extends android.os.IInterface
             }
           }
           _reply.readException();
-          {
-            android.os.IBinder[] _binder_arr = _reply.createBinderArray();
-            if (_binder_arr != null) {
-              _result = new android.aidl.tests.INamedCallback[_binder_arr.length];
-              for (int i = 0; i < _binder_arr.length; i++) {
-                _result[i] = android.aidl.tests.INamedCallback.Stub.asInterface(_binder_arr[i]);
-              }
-            } else {
-              _result = null;
-            }
-          }
+          _result = _Parcel.createInterfaceArray(_reply, android.aidl.tests.INamedCallback.Stub::asInterface, android.aidl.tests.INamedCallback[]::new);
         }
         finally {
           _reply.recycle();
@@ -1867,16 +1819,7 @@ public interface ITestService extends android.os.IInterface
         boolean _result;
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
-          {
-            android.os.IBinder[] _binder_arr = null;
-            if (services != null) {
-              _binder_arr = new android.os.IBinder[services.length];
-              for (int i = 0; i < services.length; i++) {
-                _binder_arr[i] = (services[i] != null) ? services[i].asBinder() : null;
-              }
-            }
-            _data.writeBinderArray(_binder_arr);
-          }
+          _Parcel.writeInterfaceArray(_data, services);
           _data.writeStringArray(names);
           boolean _status = mRemote.transact(Stub.TRANSACTION_VerifyNamesWithInterfaceArray, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
           if (!_status) {
@@ -1885,7 +1828,7 @@ public interface ITestService extends android.os.IInterface
             }
           }
           _reply.readException();
-          _result = (0!=_reply.readInt());
+          _result = _reply.readBoolean();
         }
         finally {
           _reply.recycle();
@@ -1909,17 +1852,7 @@ public interface ITestService extends android.os.IInterface
             }
           }
           _reply.readException();
-          {
-            android.os.IBinder[] _binder_arr = _reply.createBinderArray();
-            if (_binder_arr != null) {
-              _result = new android.aidl.tests.INamedCallback[_binder_arr.length];
-              for (int i = 0; i < _binder_arr.length; i++) {
-                _result[i] = android.aidl.tests.INamedCallback.Stub.asInterface(_binder_arr[i]);
-              }
-            } else {
-              _result = null;
-            }
-          }
+          _result = _Parcel.createInterfaceArray(_reply, android.aidl.tests.INamedCallback.Stub::asInterface, android.aidl.tests.INamedCallback[]::new);
         }
         finally {
           _reply.recycle();
@@ -1935,16 +1868,7 @@ public interface ITestService extends android.os.IInterface
         boolean _result;
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
-          {
-            android.os.IBinder[] _binder_arr = null;
-            if (services != null) {
-              _binder_arr = new android.os.IBinder[services.length];
-              for (int i = 0; i < services.length; i++) {
-                _binder_arr[i] = (services[i] != null) ? services[i].asBinder() : null;
-              }
-            }
-            _data.writeBinderArray(_binder_arr);
-          }
+          _Parcel.writeInterfaceArray(_data, services);
           _data.writeStringArray(names);
           boolean _status = mRemote.transact(Stub.TRANSACTION_VerifyNamesWithNullableInterfaceArray, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
           if (!_status) {
@@ -1953,7 +1877,7 @@ public interface ITestService extends android.os.IInterface
             }
           }
           _reply.readException();
-          _result = (0!=_reply.readInt());
+          _result = _reply.readBoolean();
         }
         finally {
           _reply.recycle();
@@ -2003,12 +1927,7 @@ public interface ITestService extends android.os.IInterface
             }
           }
           _reply.readException();
-          if ((0!=_reply.readInt())) {
-            _result = android.os.ParcelFileDescriptor.CREATOR.createFromParcel(_reply);
-          }
-          else {
-            _result = null;
-          }
+          _result = _reply.readTypedObject(android.os.ParcelFileDescriptor.CREATOR);
         }
         finally {
           _reply.recycle();
@@ -2231,12 +2150,7 @@ public interface ITestService extends android.os.IInterface
             }
           }
           _reply.readException();
-          if ((0!=_reply.readInt())) {
-            _result = android.aidl.tests.ITestService.Empty.CREATOR.createFromParcel(_reply);
-          }
-          else {
-            _result = null;
-          }
+          _result = _reply.readTypedObject(android.aidl.tests.ITestService.Empty.CREATOR);
         }
         finally {
           _reply.recycle();
@@ -2609,12 +2523,7 @@ public interface ITestService extends android.os.IInterface
             }
           }
           _reply.readException();
-          if ((0!=_reply.readInt())) {
-            _result = android.aidl.tests.RecursiveList.CREATOR.createFromParcel(_reply);
-          }
-          else {
-            _result = null;
-          }
+          _result = _reply.readTypedObject(android.aidl.tests.RecursiveList.CREATOR);
         }
         finally {
           _reply.recycle();
@@ -3169,19 +3078,9 @@ public interface ITestService extends android.os.IInterface
         if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
         nullable_binder_list = _aidl_parcel.createBinderArrayList();
         if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-        if ((0!=_aidl_parcel.readInt())) {
-          pfd = android.os.ParcelFileDescriptor.CREATOR.createFromParcel(_aidl_parcel);
-        }
-        else {
-          pfd = null;
-        }
+        pfd = _aidl_parcel.readTypedObject(android.os.ParcelFileDescriptor.CREATOR);
         if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-        if ((0!=_aidl_parcel.readInt())) {
-          nullable_pfd = android.os.ParcelFileDescriptor.CREATOR.createFromParcel(_aidl_parcel);
-        }
-        else {
-          nullable_pfd = null;
-        }
+        nullable_pfd = _aidl_parcel.readTypedObject(android.os.ParcelFileDescriptor.CREATOR);
         if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
         pfd_array = _aidl_parcel.createTypedArray(android.os.ParcelFileDescriptor.CREATOR);
         if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
@@ -3191,19 +3090,9 @@ public interface ITestService extends android.os.IInterface
         if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
         nullable_pfd_list = _aidl_parcel.createTypedArrayList(android.os.ParcelFileDescriptor.CREATOR);
         if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-        if ((0!=_aidl_parcel.readInt())) {
-          parcel = android.aidl.tests.ITestService.Empty.CREATOR.createFromParcel(_aidl_parcel);
-        }
-        else {
-          parcel = null;
-        }
+        parcel = _aidl_parcel.readTypedObject(android.aidl.tests.ITestService.Empty.CREATOR);
         if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-        if ((0!=_aidl_parcel.readInt())) {
-          nullable_parcel = android.aidl.tests.ITestService.Empty.CREATOR.createFromParcel(_aidl_parcel);
-        }
-        else {
-          nullable_parcel = null;
-        }
+        nullable_parcel = _aidl_parcel.readTypedObject(android.aidl.tests.ITestService.Empty.CREATOR);
         if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
         parcel_array = _aidl_parcel.createTypedArray(android.aidl.tests.ITestService.Empty.CREATOR);
         if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
@@ -3257,6 +3146,49 @@ public interface ITestService extends android.os.IInterface
         return ((android.os.Parcelable) _v).describeContents();
       }
       return 0;
+    }
+  }
+  /** @hide */
+  static class _Parcel {
+    static private <T extends android.os.IInterface> T[] createInterfaceArray(
+        android.os.Parcel parcel,
+        java.util.function.Function<android.os.IBinder, T> asInterface,
+        java.util.function.IntFunction<T[]> newArray) {
+      int N = parcel.readInt();
+      if (N >= 0) {
+        T[] values = newArray.apply(N);
+        for (int i = 0; i < N; i++) {
+          values[i] = asInterface.apply(parcel.readStrongBinder());
+        }
+        return values;
+      } else {
+        return null;
+      }
+    }
+    static private <T extends android.os.IInterface> void writeInterfaceArray(android.os.Parcel parcel,
+        T[] values) {
+      if (values != null) {
+        int N = values.length;
+        parcel.writeInt(N);
+        for (int i = 0; i < N; i++) {
+          parcel.writeStrongInterface(values[i]);
+        }
+      } else {
+        parcel.writeInt(-1);
+      }
+    }
+    static private <T extends android.os.IInterface> void readInterfaceArray(
+        android.os.Parcel parcel,
+        T[] values,
+        java.util.function.Function<android.os.IBinder, T> asInterface) {
+      int N = parcel.readInt();
+      if (N == values.length) {
+        for (int i = 0; i < N; i++) {
+          values[i] = asInterface.apply(parcel.readStrongBinder());
+        }
+      } else {
+        throw new RuntimeException("bad array lengths");
+      }
     }
   }
 }

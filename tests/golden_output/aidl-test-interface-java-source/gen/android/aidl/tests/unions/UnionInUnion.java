@@ -89,12 +89,7 @@ public final class UnionInUnion implements android.os.Parcelable {
     switch (_aidl_tag) {
     case first: {
       android.aidl.tests.unions.EnumUnion _aidl_value;
-      if ((0!=_aidl_parcel.readInt())) {
-        _aidl_value = android.aidl.tests.unions.EnumUnion.CREATOR.createFromParcel(_aidl_parcel);
-      }
-      else {
-        _aidl_value = null;
-      }
+      _aidl_value = _aidl_parcel.readTypedObject(android.aidl.tests.unions.EnumUnion.CREATOR);
       _set(_aidl_tag, _aidl_value);
       return; }
     case second: {
