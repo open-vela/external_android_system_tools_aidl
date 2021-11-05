@@ -201,6 +201,133 @@ static string GetFlagFor(const CodeGeneratorContext& c) {
   }
 }
 
+typedef void (*ParcelHelperGenerator)(CodeWriter&, const Options&);
+
+// TODO(b/205195901) move this to Parcel.java
+static void GenerateInterfaceArrayHelper(CodeWriter& out, const Options&) {
+  out << R"(static private <T extends android.os.IInterface> T[] createInterfaceArray(
+    android.os.Parcel parcel,
+    java.util.function.Function<android.os.IBinder, T> asInterface,
+    java.util.function.IntFunction<T[]> newArray) {
+  int N = parcel.readInt();
+  if (N >= 0) {
+    T[] values = newArray.apply(N);
+    for (int i = 0; i < N; i++) {
+      values[i] = asInterface.apply(parcel.readStrongBinder());
+    }
+    return values;
+  } else {
+    return null;
+  }
+}
+static private <T extends android.os.IInterface> void writeInterfaceArray(android.os.Parcel parcel,
+    T[] values) {
+  if (values != null) {
+    int N = values.length;
+    parcel.writeInt(N);
+    for (int i = 0; i < N; i++) {
+      parcel.writeStrongInterface(values[i]);
+    }
+  } else {
+    parcel.writeInt(-1);
+  }
+}
+static private <T extends android.os.IInterface> void readInterfaceArray(
+    android.os.Parcel parcel,
+    T[] values,
+    java.util.function.Function<android.os.IBinder, T> asInterface) {
+  int N = parcel.readInt();
+  if (N == values.length) {
+    for (int i = 0; i < N; i++) {
+      values[i] = asInterface.apply(parcel.readStrongBinder());
+    }
+  } else {
+    throw new RuntimeException("bad array lengths");
+  }
+}
+)";
+}
+
+static void GenerateTypedObjectHelper(CodeWriter& out, const Options&) {
+  // Note that the name is inconsistent here because Parcel.java defines readTypedObject as if it
+  // "creates" a new value from a parcel. "in-place" read function is not necessary because
+  // user-defined parcelable defines its readFromParcel.
+  out << R"(static private <T> T readTypedObject(
+    android.os.Parcel parcel,
+    android.os.Parcelable.Creator<T> c) {
+  if (parcel.readInt() != 0) {
+      return c.createFromParcel(parcel);
+  } else {
+      return null;
+  }
+}
+static private <T extends android.os.Parcelable> void writeTypedObject(
+    android.os.Parcel parcel, T value, int parcelableFlags) {
+  if (value != null) {
+    parcel.writeInt(1);
+    value.writeToParcel(parcel, parcelableFlags);
+  } else {
+    parcel.writeInt(0);
+  }
+}
+)";
+}
+
+void GenerateParcelHelpers(CodeWriter& out, const AidlDefinedType& defined_type,
+                           const Options& options) {
+  // root-level type contains all necessary helpers
+  if (defined_type.GetParentType()) {
+    return;
+  }
+  // visits method parameters and parcelable fields to collect types which
+  // requires read/write/create helpers.
+  struct Visitor : AidlVisitor {
+    const Options& options;
+    set<ParcelHelperGenerator> helpers;
+    Visitor(const Options& options) : options(options) {}
+    void Visit(const AidlTypeSpecifier& type) override {
+      auto name = type.GetName();
+      if (auto defined_type = type.GetDefinedType(); defined_type) {
+        if (defined_type->AsInterface() != nullptr && type.IsArray()) {
+          helpers.insert(&GenerateInterfaceArrayHelper);
+        }
+        if (defined_type->AsParcelable() != nullptr && !type.IsArray()) {
+          // TypedObjects are supported since 23. So we don't need helpers.
+          if (options.GetMinSdkVersion() < 23u) {
+            helpers.insert(&GenerateTypedObjectHelper);
+          }
+        }
+      } else {
+        // There's parcelable-like built-in types as well.
+        if (name == "ParcelFileDescriptor" || name == "CharSequence") {
+          if (!type.IsArray()) {
+            // TypedObjects are supported since 23. So we don't need helpers.
+            if (options.GetMinSdkVersion() < 23u) {
+              helpers.insert(&GenerateTypedObjectHelper);
+            }
+          }
+        }
+      }
+    }
+  } v{options};
+
+  VisitTopDown(v, defined_type);
+  if (!v.helpers.empty()) {
+    // Nested class (_Parcel) is used to contain static helper methods because some targets are
+    // still using Java 7 which doesn't allow interfaces to have static methods.
+    // Helpers shouldn't bother API checks, but in case where AIDL types are not marked `@hide`
+    // explicitly marks the helper class as @hide.
+    out << "/** @hide */\n";
+    out << "static class _Parcel {\n";
+    out.Indent();
+    for (const auto& helper : v.helpers) {
+      helper(out, options);
+    }
+    out.Dedent();
+    out << "}\n";
+  }
+}
+
 void WriteToParcelFor(const CodeGeneratorContext& c) {
   static map<string, function<void(const CodeGeneratorContext&)>> method_map{
       {"boolean",
@@ -344,19 +471,8 @@ void WriteToParcelFor(const CodeGeneratorContext& c) {
          if (c.min_sdk_version >= 23u) {
            c.writer << c.parcel << ".writeTypedObject(" << c.var << ", " << GetFlagFor(c) << ");\n";
          } else {
-           // This is same as writeTypedObject which was introduced with SDK 23.
-           // Keeping below code so that the generated code is buildable with older SDK.
-           c.writer << "if ((" << c.var << "!=null)) {\n";
-           c.writer.Indent();
-           c.writer << c.parcel << ".writeInt(1);\n";
-           c.writer << c.var << ".writeToParcel(" << c.parcel << ", " << GetFlagFor(c) << ");\n";
-           c.writer.Dedent();
-           c.writer << "}\n";
-           c.writer << "else {\n";
-           c.writer.Indent();
-           c.writer << c.parcel << ".writeInt(0);\n";
-           c.writer.Dedent();
-           c.writer << "}\n";
+           c.writer << "_Parcel.writeTypedObject(" << c.parcel << ", " << c.var << ", "
+                    << GetFlagFor(c) << ");\n";
          }
        }},
       {"ParcelFileDescriptor[]",
@@ -394,23 +510,7 @@ void WriteToParcelFor(const CodeGeneratorContext& c) {
     AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName();
     if (t->AsInterface() != nullptr) {
       if (c.type.IsArray()) {
-        c.writer << "{\n";
-        c.writer.Indent();
-        c.writer << "android.os.IBinder[] _binder_arr = null;\n";
-        c.writer << "if (" << c.var << " != null) {\n";
-        c.writer.Indent();
-        c.writer << "_binder_arr = new android.os.IBinder[" << c.var << ".length];\n";
-        c.writer << "for (int i = 0; i < " << c.var << ".length; i++) {\n";
-        c.writer.Indent();
-        c.writer << "_binder_arr[i] = (" << c.var << "[i] != null) ? " << c.var
-                 << "[i].asBinder() : null;\n";
-        c.writer.Dedent();
-        c.writer << "}\n";
-        c.writer.Dedent();
-        c.writer << "}\n";
-        c.writer << c.parcel << ".writeBinderArray(_binder_arr);\n";
-        c.writer.Dedent();
-        c.writer << "}\n";
+        c.writer << "_Parcel.writeInterfaceArray(" << c.parcel << ", " << c.var << ");\n";
       } else {
         c.writer << c.parcel << ".writeStrongInterface(" << c.var << ");\n";
       }
@@ -421,17 +521,8 @@ void WriteToParcelFor(const CodeGeneratorContext& c) {
         if (c.min_sdk_version >= 23u) {
           c.writer << c.parcel << ".writeTypedObject(" << c.var << ", " << GetFlagFor(c) << ");\n";
         } else {
-          c.writer << "if ((" << c.var << "!=null)) {\n";
-          c.writer.Indent();
-          c.writer << c.parcel << ".writeInt(1);\n";
-          c.writer << c.var << ".writeToParcel(" << c.parcel << ", " << GetFlagFor(c) << ");\n";
-          c.writer.Dedent();
-          c.writer << "}\n";
-          c.writer << "else {\n";
-          c.writer.Indent();
-          c.writer << c.parcel << ".writeInt(0);\n";
-          c.writer.Dedent();
-          c.writer << "}\n";
+          c.writer << "_Parcel.writeTypedObject(" << c.parcel << ", " << c.var << ", "
+                   << GetFlagFor(c) << ");\n";
         }
       }
     }
@@ -599,18 +690,8 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
            c.writer << c.var << " = " << c.parcel
                     << ".readTypedObject(android.os.ParcelFileDescriptor.CREATOR);\n";
          } else {
-           c.writer << "if ((0!=" << c.parcel << ".readInt())) {\n";
-           c.writer.Indent();
-           c.writer << c.var << " = "
-                    << "android.os.ParcelFileDescriptor.CREATOR.createFromParcel(" << c.parcel
-                    << ");\n";
-           c.writer.Dedent();
-           c.writer << "}\n";
-           c.writer << "else {\n";
-           c.writer.Indent();
-           c.writer << c.var << " = null;\n";
-           c.writer.Dedent();
-           c.writer << "}\n";
+           c.writer << c.var << " = _Parcel.readTypedObject(" << c.parcel
+                    << ", android.os.ParcelFileDescriptor.CREATOR);\n";
          }
        }},
       {"ParcelFileDescriptor[]",
@@ -624,18 +705,8 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
            c.writer << c.var << " = " << c.parcel
                     << ".readTypedObject(android.text.TextUtils.CHAR_SEQUENCE_CREATOR);\n";
          } else {
-           // We have written 0 for null CharSequence.
-           c.writer << "if (0!=" << c.parcel << ".readInt()) {\n";
-           c.writer.Indent();
-           c.writer << c.var << " = android.text.TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel("
-                    << c.parcel << ");\n";
-           c.writer.Dedent();
-           c.writer << "}\n";
-           c.writer << "else {\n";
-           c.writer.Indent();
-           c.writer << c.var << " = null;\n";
-           c.writer.Dedent();
-           c.writer << "}\n";
+           c.writer << c.var << " = _Parcel.readTypedObject(" << c.parcel
+                    << ", android.text.TextUtils.CHAR_SEQUENCE_CREATOR);\n";
          }
        }},
       {"ParcelableHolder",
@@ -656,25 +727,10 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
     if (t->AsInterface() != nullptr) {
       auto name = c.type.GetName();
       if (c.type.IsArray()) {
-        c.writer << "{\n";
-        c.writer.Indent();
-        c.writer << "android.os.IBinder[] _binder_arr = " << c.parcel << ".createBinderArray();\n";
-        c.writer << "if (_binder_arr != null) {\n";
-        c.writer.Indent();
-        c.writer << c.var << " = new " << name << "[_binder_arr.length];\n";
-        c.writer << "for (int i = 0; i < _binder_arr.length; i++) {\n";
-        c.writer.Indent();
-        c.writer << c.var << "[i] = " << name << ".Stub.asInterface(_binder_arr[i]);\n";
-        c.writer.Dedent();
-        c.writer << "}\n";
-        c.writer.Dedent();
-        c.writer << "} else {\n";
-        c.writer.Indent();
-        c.writer << c.var << " = null;\n";
-        c.writer.Dedent();
-        c.writer << "}\n";
-        c.writer.Dedent();
-        c.writer << "}\n";
+        auto as_interface = name + ".Stub::asInterface";
+        auto new_array = name + "[]::new";
+        c.writer << c.var << " = _Parcel.createInterfaceArray(" << c.parcel << ", " << as_interface
+                 << ", " << new_array << ");\n";
       } else {
         c.writer << c.var << " = " << name << ".Stub.asInterface(" << c.parcel
                  << ".readStrongBinder());\n";
@@ -688,19 +744,8 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
           c.writer << c.var << " = " << c.parcel << ".readTypedObject(" << c.type.GetName()
                    << ".CREATOR);\n";
         } else {
-          // This is same as readTypedObject.
-          // Keeping below code just not to break unit tests.
-          c.writer << "if ((0!=" << c.parcel << ".readInt())) {\n";
-          c.writer.Indent();
-          c.writer << c.var << " = " << c.type.GetName() << ".CREATOR.createFromParcel(" << c.parcel
-                   << ");\n";
-          c.writer.Dedent();
-          c.writer << "}\n";
-          c.writer << "else {\n";
-          c.writer.Indent();
-          c.writer << c.var << " = null;\n";
-          c.writer.Dedent();
-          c.writer << "}\n";
+          c.writer << c.var << " = _Parcel.readTypedObject(" << c.parcel << ", " << c.type.GetName()
+                   << ".CREATOR);\n";
         }
       }
     }
@@ -833,19 +878,9 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
       }
     } else if (t->AsInterface()) {
       AIDL_FATAL_IF(!c.type.IsArray(), c.type) << "readFromParcel(interface) doesn't make sense.";
-      auto name = c.type.GetName();
-      c.writer << "{\n";
-      c.writer.Indent();
-      c.writer << "android.os.IBinder[] _binder_arr = new android.os.IBinder[" << c.var
-               << ".length];\n";
-      c.writer << c.parcel << ".readBinderArray(_binder_arr);\n";
-      c.writer << "for (int i = 0; i < _binder_arr.length; i++) {\n";
-      c.writer.Indent();
-      c.writer << c.var << "[i] = " << name << ".Stub.asInterface(_binder_arr[i]);\n";
-      c.writer.Dedent();
-      c.writer << "}\n";
-      c.writer.Dedent();
-      c.writer << "}\n";
+      auto as_interface = c.type.GetName() + ".Stub::asInterface";
+      c.writer << "_Parcel.readInterfaceArray(" << c.parcel << ", " << c.var << ", " << as_interface
+               << ");\n";
     }
   }
   return true;
