@@ -39,7 +39,7 @@ using std::string;
 using std::vector;
 
 std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value) {
-  if (type.IsArray()) {
+  if (type.IsArray() && !raw_value.empty() && raw_value[0] == '{') {
     return raw_value;
   }
   if (type.GetName() == "long") {

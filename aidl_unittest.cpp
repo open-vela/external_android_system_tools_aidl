@@ -34,6 +34,7 @@
 #include "aidl_to_cpp.h"
 #include "aidl_to_cpp_common.h"
 #include "aidl_to_java.h"
+#include "aidl_to_ndk.h"
 #include "comments.h"
 #include "logging.h"
 #include "options.h"
@@ -1407,10 +1408,47 @@ TEST_P(AidlTest, ParseNegativeConstHexValue) {
   EXPECT_EQ("-1", cpp_constants[0]->ValueString(cpp::ConstantValueDecorator));
 }
 
+TEST_F(AidlTest, ByteAndByteArrayDifferInCpp) {
+  auto type = Parse("p/Foo.aidl",
+                    R"(
+                      package p;
+                      parcelable Foo {
+                        byte a = -1;
+                        byte[] b = {-1, 1};
+                        @nullable byte[] c = {-1, 1};
+                      }
+                    )",
+                    typenames_, Options::Language::CPP);
+  ASSERT_NE(nullptr, type);
+  auto& fields = type->GetFields();
+  ASSERT_EQ(3ul, fields.size());
+  EXPECT_EQ("-1", fields[0]->ValueString(cpp::ConstantValueDecorator));
+  EXPECT_EQ("{uint8_t(-1), 1}", fields[1]->ValueString(cpp::ConstantValueDecorator));
+  EXPECT_EQ("{uint8_t(-1), 1}", fields[2]->ValueString(cpp::ConstantValueDecorator));
+}
+
+TEST_F(AidlTest, ByteAndByteArrayDifferInNdk) {
+  auto type = Parse("p/Foo.aidl",
+                    R"(
+                      package p;
+                      parcelable Foo {
+                        byte a = -1;
+                        byte[] b = {-1, 1};
+                        @nullable byte[] c = {-1, 1};
+                      }
+                    )",
+                    typenames_, Options::Language::NDK);
+  ASSERT_NE(nullptr, type);
+  auto& fields = type->GetFields();
+  ASSERT_EQ(3ul, fields.size());
+  EXPECT_EQ("-1", fields[0]->ValueString(ndk::ConstantValueDecorator));
+  EXPECT_EQ("{uint8_t(-1), 1}", fields[1]->ValueString(ndk::ConstantValueDecorator));
+  EXPECT_EQ("{uint8_t(-1), 1}", fields[2]->ValueString(ndk::ConstantValueDecorator));
+}
+
 TEST_P(AidlTest, UnderstandsNestedUnstructuredParcelables) {
-  io_delegate_.SetFileContents(
-      "p/Outer.aidl",
-      "package p; parcelable Outer.Inner cpp_header \"baz/header\";");
+  io_delegate_.SetFileContents("p/Outer.aidl",
+                               "package p; parcelable Outer.Inner cpp_header \"baz/header\";");
   import_paths_.emplace("");
   const string input_path = "p/IFoo.aidl";
   const string input = "package p; import p.Outer; interface IFoo"
@@ -4450,7 +4488,7 @@ parcelable Foo {
 
   string code;
   EXPECT_TRUE(io_delegate_.GetWrittenContents("out/p/Foo.h", &code));
-  EXPECT_THAT(code, testing::HasSubstr("::p::Enum e = ::p::Enum(::p::Enum::BAR);"));
+  EXPECT_THAT(code, testing::HasSubstr("::p::Enum e = ::p::Enum::BAR;"));
 }
 
 TEST_F(AidlTest, EnumWithDefaults_Ndk) {

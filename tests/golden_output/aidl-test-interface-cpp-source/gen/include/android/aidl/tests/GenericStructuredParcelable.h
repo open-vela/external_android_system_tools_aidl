@@ -32,8 +32,8 @@ public:
     return std::tie(a, b) >= std::tie(rhs.a, rhs.b);
   }
 
-  int32_t a = int32_t(0);
-  int32_t b = int32_t(0);
+  int32_t a = 0;
+  int32_t b = 0;
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
   static const ::android::String16& getParcelableDescriptor() {
