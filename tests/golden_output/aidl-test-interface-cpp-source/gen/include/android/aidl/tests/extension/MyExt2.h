@@ -34,7 +34,7 @@ public:
     return std::tie(a, b, c) >= std::tie(rhs.a, rhs.b, rhs.c);
   }
 
-  int32_t a = int32_t(0);
+  int32_t a = 0;
   ::android::aidl::tests::extension::MyExt b;
   ::std::string c;
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
