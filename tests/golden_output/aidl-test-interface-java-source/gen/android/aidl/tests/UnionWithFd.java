@@ -78,13 +78,7 @@ public final class UnionWithFd implements android.os.Parcelable {
       _aidl_parcel.writeInt(getNum());
       break;
     case pfd:
-      if ((getPfd()!=null)) {
-        _aidl_parcel.writeInt(1);
-        getPfd().writeToParcel(_aidl_parcel, 0);
-      }
-      else {
-        _aidl_parcel.writeInt(0);
-      }
+      _aidl_parcel.writeTypedObject(getPfd(), 0);
       break;
     }
   }
@@ -100,12 +94,7 @@ public final class UnionWithFd implements android.os.Parcelable {
       return; }
     case pfd: {
       android.os.ParcelFileDescriptor _aidl_value;
-      if ((0!=_aidl_parcel.readInt())) {
-        _aidl_value = android.os.ParcelFileDescriptor.CREATOR.createFromParcel(_aidl_parcel);
-      }
-      else {
-        _aidl_value = null;
-      }
+      _aidl_value = _aidl_parcel.readTypedObject(android.os.ParcelFileDescriptor.CREATOR);
       _set(_aidl_tag, _aidl_value);
       return; }
     }

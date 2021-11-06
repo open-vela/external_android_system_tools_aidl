@@ -65,21 +65,10 @@ public interface INestedService extends android.os.IInterface
         case TRANSACTION_flipStatus:
         {
           android.aidl.tests.nested.ParcelableWithNested _arg0;
-          if ((0!=data.readInt())) {
-            _arg0 = android.aidl.tests.nested.ParcelableWithNested.CREATOR.createFromParcel(data);
-          }
-          else {
-            _arg0 = null;
-          }
+          _arg0 = data.readTypedObject(android.aidl.tests.nested.ParcelableWithNested.CREATOR);
           android.aidl.tests.nested.INestedService.Result _result = this.flipStatus(_arg0);
           reply.writeNoException();
-          if ((_result!=null)) {
-            reply.writeInt(1);
-            _result.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
-          }
-          else {
-            reply.writeInt(0);
-          }
+          reply.writeTypedObject(_result, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
           break;
         }
         case TRANSACTION_flipStatusWithCallback:
@@ -121,13 +110,7 @@ public interface INestedService extends android.os.IInterface
         android.aidl.tests.nested.INestedService.Result _result;
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
-          if ((p!=null)) {
-            _data.writeInt(1);
-            p.writeToParcel(_data, 0);
-          }
-          else {
-            _data.writeInt(0);
-          }
+          _data.writeTypedObject(p, 0);
           boolean _status = mRemote.transact(Stub.TRANSACTION_flipStatus, _data, _reply, 0);
           if (!_status) {
             if (getDefaultImpl() != null) {
@@ -135,12 +118,7 @@ public interface INestedService extends android.os.IInterface
             }
           }
           _reply.readException();
-          if ((0!=_reply.readInt())) {
-            _result = android.aidl.tests.nested.INestedService.Result.CREATOR.createFromParcel(_reply);
-          }
-          else {
-            _result = null;
-          }
+          _result = _reply.readTypedObject(android.aidl.tests.nested.INestedService.Result.CREATOR);
         }
         finally {
           _reply.recycle();
@@ -155,7 +133,7 @@ public interface INestedService extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeByte(status);
-          _data.writeStrongBinder((((cb!=null))?(cb.asBinder()):(null)));
+          _data.writeStrongInterface(cb);
           boolean _status = mRemote.transact(Stub.TRANSACTION_flipStatusWithCallback, _data, _reply, 0);
           if (!_status) {
             if (getDefaultImpl() != null) {

@@ -91,13 +91,13 @@ public class StructuredParcelable implements android.os.Parcelable
     _aidl_parcel.writeByte(byteDefaultsToFour);
     _aidl_parcel.writeInt(intDefaultsToFive);
     _aidl_parcel.writeLong(longDefaultsToNegativeSeven);
-    _aidl_parcel.writeInt(((booleanDefaultsToTrue)?(1):(0)));
+    _aidl_parcel.writeBoolean(booleanDefaultsToTrue);
     _aidl_parcel.writeInt(((int)charDefaultsToC));
     _aidl_parcel.writeFloat(floatDefaultsToPi);
     _aidl_parcel.writeDouble(doubleWithDefault);
     _aidl_parcel.writeIntArray(arrayDefaultsTo123);
     _aidl_parcel.writeIntArray(arrayDefaultsToEmpty);
-    _aidl_parcel.writeInt(((boolDefault)?(1):(0)));
+    _aidl_parcel.writeBoolean(boolDefault);
     _aidl_parcel.writeByte(byteDefault);
     _aidl_parcel.writeInt(intDefault);
     _aidl_parcel.writeLong(longDefault);
@@ -129,20 +129,8 @@ public class StructuredParcelable implements android.os.Parcelable
     _aidl_parcel.writeString(addString1);
     _aidl_parcel.writeString(addString2);
     _aidl_parcel.writeInt(shouldSetBit0AndBit2);
-    if ((u!=null)) {
-      _aidl_parcel.writeInt(1);
-      u.writeToParcel(_aidl_parcel, 0);
-    }
-    else {
-      _aidl_parcel.writeInt(0);
-    }
-    if ((shouldBeConstS1!=null)) {
-      _aidl_parcel.writeInt(1);
-      shouldBeConstS1.writeToParcel(_aidl_parcel, 0);
-    }
-    else {
-      _aidl_parcel.writeInt(0);
-    }
+    _aidl_parcel.writeTypedObject(u, 0);
+    _aidl_parcel.writeTypedObject(shouldBeConstS1, 0);
     _aidl_parcel.writeInt(defaultWithFoo);
     int _aidl_end_pos = _aidl_parcel.dataPosition();
     _aidl_parcel.setDataPosition(_aidl_start_pos);
@@ -182,7 +170,7 @@ public class StructuredParcelable implements android.os.Parcelable
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       longDefaultsToNegativeSeven = _aidl_parcel.readLong();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      booleanDefaultsToTrue = (0!=_aidl_parcel.readInt());
+      booleanDefaultsToTrue = _aidl_parcel.readBoolean();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       charDefaultsToC = (char)_aidl_parcel.readInt();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
@@ -194,7 +182,7 @@ public class StructuredParcelable implements android.os.Parcelable
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       arrayDefaultsToEmpty = _aidl_parcel.createIntArray();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      boolDefault = (0!=_aidl_parcel.readInt());
+      boolDefault = _aidl_parcel.readBoolean();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       byteDefault = _aidl_parcel.readByte();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
@@ -258,19 +246,9 @@ public class StructuredParcelable implements android.os.Parcelable
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       shouldSetBit0AndBit2 = _aidl_parcel.readInt();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      if ((0!=_aidl_parcel.readInt())) {
-        u = android.aidl.tests.Union.CREATOR.createFromParcel(_aidl_parcel);
-      }
-      else {
-        u = null;
-      }
+      u = _aidl_parcel.readTypedObject(android.aidl.tests.Union.CREATOR);
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      if ((0!=_aidl_parcel.readInt())) {
-        shouldBeConstS1 = android.aidl.tests.Union.CREATOR.createFromParcel(_aidl_parcel);
-      }
-      else {
-        shouldBeConstS1 = null;
-      }
+      shouldBeConstS1 = _aidl_parcel.readTypedObject(android.aidl.tests.Union.CREATOR);
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       defaultWithFoo = _aidl_parcel.readInt();
     } finally {
