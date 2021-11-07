@@ -673,6 +673,28 @@ TEST_P(AidlTest, AnnotationsInMultiplePlaces) {
   ASSERT_TRUE(ret_type.IsHide());
 }
 
+TEST_P(AidlTest, AnnotationValueAttribute) {
+  const string content =
+      "package a; @Descriptor(\"descriptor_value\") interface IFoo { void f(int a); }";
+  const AidlDefinedType* defined = Parse("a/IFoo.aidl", content, typenames_, GetLanguage());
+  ASSERT_NE(nullptr, defined);
+  const AidlInterface* iface = defined->AsInterface();
+  ASSERT_NE(nullptr, iface);
+
+  ASSERT_EQ("descriptor_value", iface->GetDescriptor());
+}
+
+TEST_F(AidlTest, CheckApiForAnnotationValueAttribute) {
+  Options options = Options::From("aidl --checkapi=equal old new");
+
+  io_delegate_.SetFileContents("old/p/IFoo.aidl",
+                               "package p; @Descriptor(value=\"v1\") interface IFoo{ void foo();}");
+  io_delegate_.SetFileContents("new/p/IFoo.aidl",
+                               "package p; @Descriptor(\"v1\") interface IFoo{ void foo();}");
+
+  EXPECT_TRUE(::android::aidl::check_api(options, io_delegate_));
+}
+
 TEST_P(AidlTest, WritesComments) {
   string foo_interface =
       R"(package a;
