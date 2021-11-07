@@ -27,6 +27,7 @@
 #include "os.h"
 
 using ::android::base::Join;
+using ::android::base::Split;
 
 namespace android {
 namespace aidl {
@@ -546,6 +547,57 @@ void UnionWriter::WriteToParcel(CodeWriter& out, const ParcelWriterContext& ctx)
   out << "__assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, \"can't reach here\");\n";
 }
 
+std::string CppConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value,
+                                      bool is_ndk) {
+  AIDL_FATAL_IF(raw_value.empty(), type) << "Empty value for constants";
+
+  // apply array type only if raw_value is actually an array value(`{...}`).
+  if (type.IsArray() && raw_value[0] == '{') {
+    return raw_value;
+  }
+
+  if (AidlTypenames::IsBuiltinTypename(type.GetName())) {
+    if (type.GetName() == "boolean") {
+      return raw_value;
+    } else if (type.GetName() == "byte") {
+      // cast only if necessary
+      if (type.IsArray() && raw_value[0] == '-') {
+        return "uint8_t(" + raw_value + ")";
+      } else {
+        return raw_value;
+      }
+    } else if (type.GetName() == "char") {
+      // TODO: consider 'L'-prefix for wide char literal
+      return raw_value;
+    } else if (type.GetName() == "double") {
+      return raw_value;
+    } else if (type.GetName() == "float") {
+      return raw_value;  // raw_value has 'f' suffix
+    } else if (type.GetName() == "int") {
+      return raw_value;
+    } else if (type.GetName() == "long") {
+      return raw_value + "L";
+    } else if (type.GetName() == "String") {
+      if (is_ndk || type.IsUtf8InCpp()) {
+        return raw_value;
+      } else {
+        return "::android::String16(" + raw_value + ")";
+      }
+    }
+    AIDL_FATAL(type) << "Unknown built-in type: " << type.GetName();
+  }
+
+  auto defined_type = type.GetDefinedType();
+  AIDL_FATAL_IF(!defined_type, type) << "Invalid type for \"" << raw_value << "\"";
+  auto enum_type = defined_type->AsEnumDeclaration();
+  AIDL_FATAL_IF(!enum_type, type) << "Invalid type for \"" << raw_value << "\"";
+
+  auto cpp_type_name = "::" + Join(Split(enum_type->GetCanonicalName(), "."), "::");
+  if (is_ndk) {
+    cpp_type_name = "::aidl" + cpp_type_name;
+  }
+  return cpp_type_name + "::" + raw_value.substr(raw_value.find_last_of('.') + 1);
+}
 }  // namespace cpp
 }  // namespace aidl
 }  // namespace android
