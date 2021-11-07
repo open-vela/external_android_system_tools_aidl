@@ -254,7 +254,7 @@ func TestVintfWithoutVersionInRelease(t *testing.T) {
 	testAidlError(t, expectedError, vintfWithoutVersionBp, setTestFreezeEnv())
 
 	ctx, _ := testAidl(t, vintfWithoutVersionBp)
-	assertModulesExists(t, ctx, "foo-V1-java", "foo-V1-rust", "foo-V1-cpp", "foo-V1-ndk", "foo-V1-ndk_platform")
+	assertModulesExists(t, ctx, "foo-V1-java", "foo-V1-rust", "foo-V1-cpp", "foo-V1-ndk")
 }
 
 // Check if using unstable version in release cause an error.
@@ -540,7 +540,7 @@ func TestUnstableModules(t *testing.T) {
 		}
 	`)
 
-	assertModulesExists(t, ctx, "foo-java", "foo-rust", "foo-cpp", "foo-ndk", "foo-ndk_platform")
+	assertModulesExists(t, ctx, "foo-java", "foo-rust", "foo-cpp", "foo-ndk")
 }
 
 func TestCreatesModulesWithNoVersions(t *testing.T) {
@@ -558,7 +558,7 @@ func TestCreatesModulesWithNoVersions(t *testing.T) {
 		}
 	`)
 
-	assertModulesExists(t, ctx, "foo-V1-java", "foo-V1-rust", "foo-V1-cpp", "foo-V1-ndk", "foo-V1-ndk_platform")
+	assertModulesExists(t, ctx, "foo-V1-java", "foo-V1-rust", "foo-V1-cpp", "foo-V1-ndk")
 }
 
 func TestCreatesModulesWithFrozenVersions(t *testing.T) {
@@ -601,10 +601,10 @@ func TestCreatesModulesWithFrozenVersions(t *testing.T) {
 	}))
 
 	// For frozen version "1"
-	assertModulesExists(t, ctx, "foo-V1-java", "foo-V1-rust", "foo-V1-cpp", "foo-V1-ndk", "foo-V1-ndk_platform")
+	assertModulesExists(t, ctx, "foo-V1-java", "foo-V1-rust", "foo-V1-cpp", "foo-V1-ndk")
 
 	// For ToT (current)
-	assertModulesExists(t, ctx, "foo-V2-java", "foo-V2-rust", "foo-V2-cpp", "foo-V2-ndk", "foo-V2-ndk_platform")
+	assertModulesExists(t, ctx, "foo-V2-java", "foo-V2-rust", "foo-V2-cpp", "foo-V2-ndk")
 }
 
 func TestErrorsWithUnsortedVersions(t *testing.T) {
@@ -752,7 +752,7 @@ func TestNativeOutputIsAlwaysVersioned(t *testing.T) {
 	assertOutput("foo-V3-cpp", nativeVariant, "foo-V3-cpp.so")
 	assertOutput("foo-V3-rust", nativeRustVariant, "libfoo_V3.dylib.so")
 
-	// skip ndk/ndk_platform since they follow the same rule with cpp
+	// skip ndk since they follow the same rule with cpp
 }
 
 func TestImports(t *testing.T) {
