@@ -958,6 +958,11 @@ void GenerateInterfaceClassDecl(CodeWriter& out, const AidlInterface& interface,
   }
 }
 
+string GetInitializer(const AidlTypenames& typenames, const AidlVariableDeclaration& variable) {
+  string cppType = CppNameOf(variable.GetType(), typenames);
+  return cppType + "(" + variable.ValueString(ConstantValueDecorator) + ")";
+}
+
 void GenerateReadFromParcel(CodeWriter& out, const AidlStructuredParcelable& parcel,
                             const AidlTypenames& typenames) {
   out << "::android::status_t _aidl_ret_status = ::android::OK;\n";
@@ -1043,19 +1048,12 @@ void GenerateParcelFields(CodeWriter& out, const AidlStructuredParcelable& decl,
     GenerateDeprecated(out, *variable);
     out << " " << variable->GetName();
     if (variable->GetDefaultValue()) {
-      out << " = " << variable->ValueString(ConstantValueDecorator);
+      out << " = " << GetInitializer(typenames, *variable);
     } else if (variable->GetType().GetName() == "ParcelableHolder") {
       if (decl.IsVintfStability()) {
         out << " { ::android::Parcelable::Stability::STABILITY_VINTF }";
       } else {
         out << " { ::android::Parcelable::Stability::STABILITY_LOCAL }";
-      }
-    } else if (auto type = variable->GetType().GetDefinedType(); type) {
-      if (auto enum_type = type->AsEnumDeclaration(); enum_type) {
-        if (!variable->GetType().IsArray()) {
-          // if an enum doesn't have explicit default value, do zero-initialization
-          out << " = " << cppType << "(0)";
-        }
       }
     }
     out << ";\n";
