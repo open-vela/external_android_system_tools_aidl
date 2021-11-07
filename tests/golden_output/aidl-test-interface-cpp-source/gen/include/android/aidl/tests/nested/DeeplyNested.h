@@ -162,7 +162,7 @@ public:
       return std::tie(e) >= std::tie(rhs.e);
     }
 
-    ::android::aidl::tests::nested::DeeplyNested::B::C::D::E e = ::android::aidl::tests::nested::DeeplyNested::B::C::D::E(::android::aidl::tests::nested::DeeplyNested::B::C::D::E::OK);
+    ::android::aidl::tests::nested::DeeplyNested::B::C::D::E e = ::android::aidl::tests::nested::DeeplyNested::B::C::D::E::OK;
     ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
     ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
     static const ::android::String16& getParcelableDescriptor() {
