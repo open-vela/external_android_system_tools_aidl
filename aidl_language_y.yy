@@ -781,6 +781,15 @@ annotation
     }
     delete $1;
   }
+ | ANNOTATION '(' const_expr ')' {
+    auto value = std::shared_ptr<AidlConstantValue>($3);
+    std::map<std::string, std::shared_ptr<AidlConstantValue>> parameter_list {{"value" , value}};
+    $$ = AidlAnnotation::Parse(loc(@1, @4), $1->GetText(), std::move(parameter_list), $1->GetComments()).release();
+    if (!$$) {
+      ps->AddError();
+    }
+    delete $1;
+  }
  | ANNOTATION '(' parameter_list ')' {
     // release() returns nullptr if unique_ptr is empty.
     $$ = AidlAnnotation::Parse(loc(@1, @4), $1->GetText(), std::move(*$3), $1->GetComments()).release();
