@@ -201,25 +201,7 @@ std::string GetCppName(const AidlTypeSpecifier& raw_type, const AidlTypenames& t
 }
 }  // namespace
 std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value) {
-  if (type.IsArray()) {
-    return raw_value;
-  }
-
-  if (type.GetName() == "long") {
-    return raw_value + "L";
-  }
-
-  if (type.GetName() == "String" && !type.IsUtf8InCpp()) {
-    return "::android::String16(" + raw_value + ")";
-  }
-
-  if (auto defined_type = type.GetDefinedType(); defined_type) {
-    auto enum_type = defined_type->AsEnumDeclaration();
-    AIDL_FATAL_IF(!enum_type, type) << "Invalid type for \"" << raw_value << "\"";
-    return GetRawCppName(type) + "::" + raw_value.substr(raw_value.find_last_of('.') + 1);
-  }
-
-  return raw_value;
+  return CppConstantValueDecorator(type, raw_value, /*is_ndk=*/false);
 };
 
 std::string GetTransactionIdFor(const std::string& clazz, const AidlMethod& method) {

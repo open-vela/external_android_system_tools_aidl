@@ -33,7 +33,7 @@ public:
     return std::tie(value, next) >= std::tie(rhs.value, rhs.next);
   }
 
-  int32_t value = int32_t(0);
+  int32_t value = 0;
   ::std::unique_ptr<::android::aidl::tests::RecursiveList> next;
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
