@@ -20,7 +20,7 @@ public:
   ::android::IBinder* onAsBinder() override {
     return nullptr;
   }
-  ::android::binder::Status RealName(::android::String16*) override {
+  ::android::binder::Status RealName(::android::String16* /*_aidl_return*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
 };  // class INewNameDefault
