@@ -1,8 +1,7 @@
-#include "aidl/android/aidl/tests/INewName.h"
-
 #include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/tests/BnNewName.h>
 #include <aidl/android/aidl/tests/BpNewName.h>
+#include <aidl/android/aidl/tests/BnNewName.h>
+#include <aidl/android/aidl/tests/INewName.h>
 
 namespace aidl {
 namespace android {

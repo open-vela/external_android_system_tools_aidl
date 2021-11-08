@@ -38,6 +38,10 @@ binder_status_t DeeplyNested::writeToParcel(AParcel* _aidl_parcel) const {
 }  // namespace aidl
 }  // namespace android
 }  // namespace aidl
+#include "aidl/android/aidl/tests/nested/DeeplyNested.h"
+
+#include <android/binder_parcel_utils.h>
+
 namespace aidl {
 namespace android {
 namespace aidl {
@@ -84,6 +88,10 @@ binder_status_t DeeplyNested::A::writeToParcel(AParcel* _aidl_parcel) const {
 }  // namespace aidl
 }  // namespace android
 }  // namespace aidl
+#include "aidl/android/aidl/tests/nested/DeeplyNested.h"
+
+#include <android/binder_parcel_utils.h>
+
 namespace aidl {
 namespace android {
 namespace aidl {
@@ -120,6 +128,10 @@ binder_status_t DeeplyNested::B::writeToParcel(AParcel* _aidl_parcel) const {
 }  // namespace aidl
 }  // namespace android
 }  // namespace aidl
+#include "aidl/android/aidl/tests/nested/DeeplyNested.h"
+
+#include <android/binder_parcel_utils.h>
+
 namespace aidl {
 namespace android {
 namespace aidl {
@@ -156,6 +168,10 @@ binder_status_t DeeplyNested::B::C::writeToParcel(AParcel* _aidl_parcel) const {
 }  // namespace aidl
 }  // namespace android
 }  // namespace aidl
+#include "aidl/android/aidl/tests/nested/DeeplyNested.h"
+
+#include <android/binder_parcel_utils.h>
+
 namespace aidl {
 namespace android {
 namespace aidl {
