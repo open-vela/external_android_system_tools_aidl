@@ -1,16 +1,17 @@
+#include "aidl/android/aidl/tests/ITestService.h"
+
 #include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/tests/BpNamedCallback.h>
 #include <aidl/android/aidl/tests/BnNamedCallback.h>
-#include <aidl/android/aidl/tests/INamedCallback.h>
-#include <aidl/android/aidl/tests/BpNewName.h>
 #include <aidl/android/aidl/tests/BnNewName.h>
-#include <aidl/android/aidl/tests/INewName.h>
-#include <aidl/android/aidl/tests/BpOldName.h>
 #include <aidl/android/aidl/tests/BnOldName.h>
-#include <aidl/android/aidl/tests/IOldName.h>
-#include <aidl/android/aidl/tests/BpTestService.h>
 #include <aidl/android/aidl/tests/BnTestService.h>
-#include <aidl/android/aidl/tests/ITestService.h>
+#include <aidl/android/aidl/tests/BpNamedCallback.h>
+#include <aidl/android/aidl/tests/BpNewName.h>
+#include <aidl/android/aidl/tests/BpOldName.h>
+#include <aidl/android/aidl/tests/BpTestService.h>
+#include <aidl/android/aidl/tests/INamedCallback.h>
+#include <aidl/android/aidl/tests/INewName.h>
+#include <aidl/android/aidl/tests/IOldName.h>
 
 namespace aidl {
 namespace android {
@@ -4272,22 +4273,6 @@ bool ITestServiceDefault::isRemote() {
 }  // namespace aidl
 }  // namespace android
 }  // namespace aidl
-#include "aidl/android/aidl/tests/ITestService.h"
-
-#include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/tests/BpNamedCallback.h>
-#include <aidl/android/aidl/tests/BnNamedCallback.h>
-#include <aidl/android/aidl/tests/INamedCallback.h>
-#include <aidl/android/aidl/tests/BpNewName.h>
-#include <aidl/android/aidl/tests/BnNewName.h>
-#include <aidl/android/aidl/tests/INewName.h>
-#include <aidl/android/aidl/tests/BpOldName.h>
-#include <aidl/android/aidl/tests/BnOldName.h>
-#include <aidl/android/aidl/tests/IOldName.h>
-#include <aidl/android/aidl/tests/BpTestService.h>
-#include <aidl/android/aidl/tests/BnTestService.h>
-#include <aidl/android/aidl/tests/ITestService.h>
-
 namespace aidl {
 namespace android {
 namespace aidl {
@@ -4322,22 +4307,6 @@ binder_status_t ITestService::Empty::writeToParcel(AParcel* _aidl_parcel) const 
 }  // namespace aidl
 }  // namespace android
 }  // namespace aidl
-#include "aidl/android/aidl/tests/ITestService.h"
-
-#include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/tests/BpNamedCallback.h>
-#include <aidl/android/aidl/tests/BnNamedCallback.h>
-#include <aidl/android/aidl/tests/INamedCallback.h>
-#include <aidl/android/aidl/tests/BpNewName.h>
-#include <aidl/android/aidl/tests/BnNewName.h>
-#include <aidl/android/aidl/tests/INewName.h>
-#include <aidl/android/aidl/tests/BpOldName.h>
-#include <aidl/android/aidl/tests/BnOldName.h>
-#include <aidl/android/aidl/tests/IOldName.h>
-#include <aidl/android/aidl/tests/BpTestService.h>
-#include <aidl/android/aidl/tests/BnTestService.h>
-#include <aidl/android/aidl/tests/ITestService.h>
-
 namespace aidl {
 namespace android {
 namespace aidl {
