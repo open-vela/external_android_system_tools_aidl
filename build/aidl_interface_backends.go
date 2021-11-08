@@ -212,15 +212,11 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		// Don't create a library for the yet-to-be-frozen version.
 		return ""
 	}
-	minSdkVersion := i.minSdkVersion(langJava)
+
 	sdkVersion := i.properties.Backend.Java.Sdk_version
 	if !proptools.Bool(i.properties.Backend.Java.Platform_apis) && sdkVersion == nil {
 		// platform apis requires no default
 		sdkVersion = proptools.StringPtr("system_current")
-	}
-	// use sdkVersion if minSdkVersion is not set
-	if sdkVersion != nil && minSdkVersion == nil {
-		minSdkVersion = proptools.StringPtr(android.SdkSpecFrom(mctx, *sdkVersion).ApiLevel.String())
 	}
 
 	mctx.CreateModule(aidlGenFactory, &nameProperties{
@@ -230,7 +226,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		AidlRoot:              aidlRoot,
 		ImportsWithoutVersion: i.properties.ImportsWithoutVersion,
 		Stability:             i.properties.Stability,
-		Min_sdk_version:       minSdkVersion,
+		Min_sdk_version:       i.minSdkVersion(langJava),
 		Platform_apis:         proptools.Bool(i.properties.Backend.Java.Platform_apis),
 		Lang:                  langJava,
 		BaseName:              i.ModuleBase.Name(),

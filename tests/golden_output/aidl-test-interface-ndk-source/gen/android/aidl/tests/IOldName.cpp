@@ -1,7 +1,8 @@
+#include "aidl/android/aidl/tests/IOldName.h"
+
 #include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/tests/BpOldName.h>
 #include <aidl/android/aidl/tests/BnOldName.h>
-#include <aidl/android/aidl/tests/IOldName.h>
+#include <aidl/android/aidl/tests/BpOldName.h>
 
 namespace aidl {
 namespace android {
