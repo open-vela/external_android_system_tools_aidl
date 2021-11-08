@@ -34,10 +34,10 @@ public:
     return std::tie(a, b, ext, c, ext2) >= std::tie(rhs.a, rhs.b, rhs.ext, rhs.c, rhs.ext2);
   }
 
-  int32_t a = int32_t(0);
+  int32_t a = 0;
   ::std::string b;
   ::android::os::ParcelableHolder ext { ::android::Parcelable::Stability::STABILITY_LOCAL };
-  int64_t c = int64_t(0L);
+  int64_t c = 0L;
   ::android::os::ParcelableHolder ext2 { ::android::Parcelable::Stability::STABILITY_LOCAL };
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;

@@ -502,7 +502,7 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
   }
 
   const AidlDefinedType* defined_type = type.GetDefinedType();
-  if (defined_type && !type.IsArray()) {
+  if (defined_type && final_type_ != Type::ARRAY) {
     const AidlEnumDeclaration* enum_type = defined_type->AsEnumDeclaration();
     if (!enum_type) {
       AIDL_ERROR(this) << "Invalid type (" << defined_type->GetCanonicalName()
@@ -566,11 +566,11 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
       bool success = true;
 
       for (const auto& value : values_) {
-        string value_string;
-        type.ViewAsArrayBase([&](const AidlTypeSpecifier& base) {
-          value_string = value->ValueString(base, decorator);
-        });
-
+        // Pass array type(T[]) as it is instead of converting it to base type(T)
+        // so that decorator can decorate the value in the context of array.
+        // In C++/NDK, 'byte[]' and 'byte' are mapped to different types. If we pass 'byte'
+        // decorator can't know the value should be treated as 'uint8_t'.
+        string value_string = value->ValueString(type, decorator);
         if (value_string.empty()) {
           success = false;
           break;

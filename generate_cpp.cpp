@@ -954,11 +954,6 @@ void GenerateInterfaceClassDecl(CodeWriter& out, const AidlInterface& interface,
   }
 }
 
-string GetInitializer(const AidlTypenames& typenames, const AidlVariableDeclaration& variable) {
-  string cppType = CppNameOf(variable.GetType(), typenames);
-  return cppType + "(" + variable.ValueString(ConstantValueDecorator) + ")";
-}
-
 void GenerateReadFromParcel(CodeWriter& out, const AidlStructuredParcelable& parcel,
                             const AidlTypenames& typenames) {
   out << "::android::status_t _aidl_ret_status = ::android::OK;\n";
@@ -1044,7 +1039,7 @@ void GenerateParcelFields(CodeWriter& out, const AidlStructuredParcelable& decl,
     GenerateDeprecated(out, *variable);
     out << " " << variable->GetName();
     if (variable->GetDefaultValue()) {
-      out << " = " << GetInitializer(typenames, *variable);
+      out << " = " << variable->ValueString(ConstantValueDecorator);
     } else if (variable->GetType().GetName() == "ParcelableHolder") {
       if (decl.IsVintfStability()) {
         out << " { ::android::Parcelable::Stability::STABILITY_VINTF }";
