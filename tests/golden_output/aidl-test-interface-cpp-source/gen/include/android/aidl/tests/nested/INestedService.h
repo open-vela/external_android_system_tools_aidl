@@ -65,7 +65,7 @@ public:
     ::android::IBinder* onAsBinder() override {
       return nullptr;
     }
-    ::android::binder::Status done(::android::aidl::tests::nested::ParcelableWithNested::Status) override {
+    ::android::binder::Status done(::android::aidl::tests::nested::ParcelableWithNested::Status /*status*/) override {
       return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
     }
   };  // class ICallbackDefault
@@ -101,10 +101,10 @@ public:
   ::android::IBinder* onAsBinder() override {
     return nullptr;
   }
-  ::android::binder::Status flipStatus(const ::android::aidl::tests::nested::ParcelableWithNested&, ::android::aidl::tests::nested::INestedService::Result*) override {
+  ::android::binder::Status flipStatus(const ::android::aidl::tests::nested::ParcelableWithNested& /*p*/, ::android::aidl::tests::nested::INestedService::Result* /*_aidl_return*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
-  ::android::binder::Status flipStatusWithCallback(::android::aidl::tests::nested::ParcelableWithNested::Status, const ::android::sp<::android::aidl::tests::nested::INestedService::ICallback>&) override {
+  ::android::binder::Status flipStatusWithCallback(::android::aidl::tests::nested::ParcelableWithNested::Status /*status*/, const ::android::sp<::android::aidl::tests::nested::INestedService::ICallback>& /*cb*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
 };  // class INestedServiceDefault
