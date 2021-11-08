@@ -1,8 +1,7 @@
-#include "aidl/android/aidl/tests/permission/IProtectedInterface.h"
-
 #include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/tests/permission/BnProtectedInterface.h>
 #include <aidl/android/aidl/tests/permission/BpProtectedInterface.h>
+#include <aidl/android/aidl/tests/permission/BnProtectedInterface.h>
+#include <aidl/android/aidl/tests/permission/IProtectedInterface.h>
 
 namespace aidl {
 namespace android {

@@ -1,8 +1,7 @@
-#include "aidl/android/aidl/tests/INamedCallback.h"
-
 #include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/tests/BnNamedCallback.h>
 #include <aidl/android/aidl/tests/BpNamedCallback.h>
+#include <aidl/android/aidl/tests/BnNamedCallback.h>
+#include <aidl/android/aidl/tests/INamedCallback.h>
 
 namespace aidl {
 namespace android {
