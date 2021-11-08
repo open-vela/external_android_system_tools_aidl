@@ -1,22 +1,21 @@
+#include "aidl/android/aidl/loggable/ILoggableInterface.h"
+
 #include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/loggable/BpLoggableInterface.h>
-#include <aidl/android/aidl/loggable/BnLoggableInterface.h>
-#include <aidl/android/aidl/loggable/ILoggableInterface.h>
 #include <android/binder_to_string.h>
+#include <aidl/android/aidl/loggable/BnLoggableInterface.h>
+#include <aidl/android/aidl/loggable/BpLoggableInterface.h>
+
+namespace {
+struct ScopedTrace {
+  inline explicit ScopedTrace(const char* name) { ATrace_beginSection(name); }
+  inline ~ScopedTrace() { ATrace_endSection(); }
+};
+}  // namespace
 
 namespace aidl {
 namespace android {
 namespace aidl {
 namespace loggable {
-class ScopedTrace {
-  public:
-  inline explicit ScopedTrace(const char* name) {
-  ATrace_beginSection(name);
-  }
-  inline ~ScopedTrace() {
-  ATrace_endSection();
-  }
-};
 static binder_status_t _aidl_android_aidl_loggable_ILoggableInterface_onTransact(AIBinder* _aidl_binder, transaction_code_t _aidl_code, const AParcel* _aidl_in, AParcel* _aidl_out) {
   (void)_aidl_in;
   (void)_aidl_out;
@@ -459,6 +458,181 @@ std::shared_ptr<ILoggableInterface> ILoggableInterface::default_impl = nullptr;
   return ::ndk::SpAIBinder();
 }
 bool ILoggableInterfaceDefault::isRemote() {
+  return false;
+}
+}  // namespace loggable
+}  // namespace aidl
+}  // namespace android
+}  // namespace aidl
+namespace aidl {
+namespace android {
+namespace aidl {
+namespace loggable {
+static binder_status_t _aidl_android_aidl_loggable_ILoggableInterface_ISub_onTransact(AIBinder* _aidl_binder, transaction_code_t _aidl_code, const AParcel* _aidl_in, AParcel* _aidl_out) {
+  (void)_aidl_in;
+  (void)_aidl_out;
+  binder_status_t _aidl_ret_status = STATUS_UNKNOWN_TRANSACTION;
+  std::shared_ptr<ILoggableInterface::BnSub> _aidl_impl = std::static_pointer_cast<ILoggableInterface::BnSub>(::ndk::ICInterface::asInterface(_aidl_binder));
+  switch (_aidl_code) {
+    case (FIRST_CALL_TRANSACTION + 0 /*Log*/): {
+      int32_t in_value;
+
+      ScopedTrace _aidl_trace("AIDL::ndk::ISub::Log::server");
+      _aidl_ret_status = AParcel_readInt32(_aidl_in, &in_value);
+      if (_aidl_ret_status != STATUS_OK) break;
+
+      ILoggableInterface::BnSub::TransactionLog _transaction_log;
+      if (ILoggableInterface::BnSub::logFunc != nullptr) {
+        _transaction_log.input_args.emplace_back("in_value", ::android::internal::ToString(in_value));
+      }
+      auto _log_start = std::chrono::steady_clock::now();
+      ::ndk::ScopedAStatus _aidl_status = _aidl_impl->Log(in_value);
+      if (ILoggableInterface::BnSub::logFunc != nullptr) {
+        auto _log_end = std::chrono::steady_clock::now();
+        _transaction_log.duration_ms = std::chrono::duration<double, std::milli>(_log_end - _log_start).count();
+        _transaction_log.interface_name = "android.aidl.loggable.ILoggableInterface.ISub";
+        _transaction_log.method_name = "Log";
+        _transaction_log.stub_address = _aidl_impl.get();
+        _transaction_log.proxy_address = nullptr;
+        _transaction_log.exception_code = AStatus_getExceptionCode(_aidl_status.get());
+        _transaction_log.exception_message = AStatus_getMessage(_aidl_status.get());
+        _transaction_log.transaction_error = AStatus_getStatus(_aidl_status.get());
+        _transaction_log.service_specific_error_code = AStatus_getServiceSpecificError(_aidl_status.get());
+        ILoggableInterface::BnSub::logFunc(_transaction_log);
+      }
+      _aidl_ret_status = AParcel_writeStatusHeader(_aidl_out, _aidl_status.get());
+      if (_aidl_ret_status != STATUS_OK) break;
+
+      if (!AStatus_isOk(_aidl_status.get())) break;
+
+      break;
+    }
+  }
+  return _aidl_ret_status;
+}
+
+static AIBinder_Class* _g_aidl_android_aidl_loggable_ILoggableInterface_ISub_clazz = ::ndk::ICInterface::defineClass(ILoggableInterface::ISub::descriptor, _aidl_android_aidl_loggable_ILoggableInterface_ISub_onTransact);
+
+ILoggableInterface::BpSub::BpSub(const ::ndk::SpAIBinder& binder) : BpCInterface(binder) {}
+ILoggableInterface::BpSub::~BpSub() {}
+std::function<void(const ILoggableInterface::BpSub::TransactionLog&)> ILoggableInterface::BpSub::logFunc;
+
+::ndk::ScopedAStatus ILoggableInterface::BpSub::Log(int32_t in_value) {
+  binder_status_t _aidl_ret_status = STATUS_OK;
+  ::ndk::ScopedAStatus _aidl_status;
+  ::ndk::ScopedAParcel _aidl_in;
+  ::ndk::ScopedAParcel _aidl_out;
+
+  ILoggableInterface::BpSub::TransactionLog _transaction_log;
+  if (ILoggableInterface::BpSub::logFunc != nullptr) {
+    _transaction_log.input_args.emplace_back("in_value", ::android::internal::ToString(in_value));
+  }
+  auto _log_start = std::chrono::steady_clock::now();
+  ScopedTrace _aidl_trace("AIDL::ndk::ISub::Log::client");
+  _aidl_ret_status = AIBinder_prepareTransaction(asBinder().get(), _aidl_in.getR());
+  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
+
+  _aidl_ret_status = AParcel_writeInt32(_aidl_in.get(), in_value);
+  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
+
+  _aidl_ret_status = AIBinder_transact(
+    asBinder().get(),
+    (FIRST_CALL_TRANSACTION + 0 /*Log*/),
+    _aidl_in.getR(),
+    _aidl_out.getR(),
+    0
+    #ifdef BINDER_STABILITY_SUPPORT
+    | FLAG_PRIVATE_LOCAL
+    #endif  // BINDER_STABILITY_SUPPORT
+    );
+  if (_aidl_ret_status == STATUS_UNKNOWN_TRANSACTION && ISub::getDefaultImpl()) {
+    _aidl_status = ISub::getDefaultImpl()->Log(in_value);
+    goto _aidl_status_return;
+  }
+  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
+
+  _aidl_ret_status = AParcel_readStatusHeader(_aidl_out.get(), _aidl_status.getR());
+  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
+
+  if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
+  _aidl_error:
+  _aidl_status.set(AStatus_fromStatus(_aidl_ret_status));
+  _aidl_status_return:
+  if (ILoggableInterface::BpSub::logFunc != nullptr) {
+    auto _log_end = std::chrono::steady_clock::now();
+    _transaction_log.duration_ms = std::chrono::duration<double, std::milli>(_log_end - _log_start).count();
+    _transaction_log.interface_name = "android.aidl.loggable.ILoggableInterface.ISub";
+    _transaction_log.method_name = "Log";
+    _transaction_log.stub_address = nullptr;
+    _transaction_log.proxy_address = static_cast<const void*>(this);
+    _transaction_log.exception_code = AStatus_getExceptionCode(_aidl_status.get());
+    _transaction_log.exception_message = AStatus_getMessage(_aidl_status.get());
+    _transaction_log.transaction_error = AStatus_getStatus(_aidl_status.get());
+    _transaction_log.service_specific_error_code = AStatus_getServiceSpecificError(_aidl_status.get());
+    ILoggableInterface::BpSub::logFunc(_transaction_log);
+  }
+  return _aidl_status;
+}
+// Source for BnSub
+ILoggableInterface::BnSub::BnSub() {}
+ILoggableInterface::BnSub::~BnSub() {}
+std::function<void(const ILoggableInterface::BnSub::TransactionLog&)> ILoggableInterface::BnSub::logFunc;
+::ndk::SpAIBinder ILoggableInterface::BnSub::createBinder() {
+  AIBinder* binder = AIBinder_new(_g_aidl_android_aidl_loggable_ILoggableInterface_ISub_clazz, static_cast<void*>(this));
+  #ifdef BINDER_STABILITY_SUPPORT
+  AIBinder_markCompilationUnitStability(binder);
+  #endif  // BINDER_STABILITY_SUPPORT
+  return ::ndk::SpAIBinder(binder);
+}
+// Source for ISub
+const char* ILoggableInterface::ISub::descriptor = "android.aidl.loggable.ILoggableInterface.ISub";
+ILoggableInterface::ISub::ISub() {}
+ILoggableInterface::ISub::~ISub() {}
+
+
+std::shared_ptr<ILoggableInterface::ISub> ILoggableInterface::ISub::fromBinder(const ::ndk::SpAIBinder& binder) {
+  if (!AIBinder_associateClass(binder.get(), _g_aidl_android_aidl_loggable_ILoggableInterface_ISub_clazz)) { return nullptr; }
+  std::shared_ptr<::ndk::ICInterface> interface = ::ndk::ICInterface::asInterface(binder.get());
+  if (interface) {
+    return std::static_pointer_cast<ISub>(interface);
+  }
+  return ::ndk::SharedRefBase::make<ILoggableInterface::BpSub>(binder);
+}
+
+binder_status_t ILoggableInterface::ISub::writeToParcel(AParcel* parcel, const std::shared_ptr<ISub>& instance) {
+  return AParcel_writeStrongBinder(parcel, instance ? instance->asBinder().get() : nullptr);
+}
+binder_status_t ILoggableInterface::ISub::readFromParcel(const AParcel* parcel, std::shared_ptr<ISub>* instance) {
+  ::ndk::SpAIBinder binder;
+  binder_status_t status = AParcel_readStrongBinder(parcel, binder.getR());
+  if (status != STATUS_OK) return status;
+  *instance = ISub::fromBinder(binder);
+  return STATUS_OK;
+}
+bool ILoggableInterface::ISub::setDefaultImpl(const std::shared_ptr<ISub>& impl) {
+  // Only one user of this interface can use this function
+  // at a time. This is a heuristic to detect if two different
+  // users in the same process use this function.
+  assert(!ISub::default_impl);
+  if (impl) {
+    ISub::default_impl = impl;
+    return true;
+  }
+  return false;
+}
+const std::shared_ptr<ILoggableInterface::ISub>& ILoggableInterface::ISub::getDefaultImpl() {
+  return ISub::default_impl;
+}
+std::shared_ptr<ILoggableInterface::ISub> ILoggableInterface::ISub::default_impl = nullptr;
+::ndk::ScopedAStatus ILoggableInterface::ISubDefault::Log(int32_t /*in_value*/) {
+  ::ndk::ScopedAStatus _aidl_status;
+  _aidl_status.set(AStatus_fromStatus(STATUS_UNKNOWN_TRANSACTION));
+  return _aidl_status;
+}
+::ndk::SpAIBinder ILoggableInterface::ISubDefault::asBinder() {
+  return ::ndk::SpAIBinder();
+}
+bool ILoggableInterface::ISubDefault::isRemote() {
   return false;
 }
 }  // namespace loggable
