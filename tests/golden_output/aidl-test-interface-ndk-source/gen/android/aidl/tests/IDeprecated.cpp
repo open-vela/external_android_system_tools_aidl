@@ -1,7 +1,8 @@
+#include "aidl/android/aidl/tests/IDeprecated.h"
+
 #include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/tests/BpDeprecated.h>
 #include <aidl/android/aidl/tests/BnDeprecated.h>
-#include <aidl/android/aidl/tests/IDeprecated.h>
+#include <aidl/android/aidl/tests/BpDeprecated.h>
 
 namespace aidl {
 namespace android {
