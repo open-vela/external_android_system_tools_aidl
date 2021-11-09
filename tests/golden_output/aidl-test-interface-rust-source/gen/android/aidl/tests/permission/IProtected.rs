@@ -52,50 +52,47 @@ lazy_static! {
   static ref DEFAULT_IMPL: std::sync::Mutex<IProtectedDefaultRef> = std::sync::Mutex::new(None);
 }
 impl BpProtected {
-  fn build_parcel_PermissionProtected(&self) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
-    Ok(aidl_data_owned)
+  fn build_parcel_PermissionProtected(&self) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
+    Ok(aidl_data)
   }
-  fn read_response_PermissionProtected(&self, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+  fn read_response_PermissionProtected(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as IProtected>::getDefaultImpl() {
         return _aidl_default_impl.PermissionProtected();
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
   }
-  fn build_parcel_MultiplePermissions(&self) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
-    Ok(aidl_data_owned)
+  fn build_parcel_MultiplePermissions(&self) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
+    Ok(aidl_data)
   }
-  fn read_response_MultiplePermissions(&self, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+  fn read_response_MultiplePermissions(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as IProtected>::getDefaultImpl() {
         return _aidl_default_impl.MultiplePermissions();
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
   }
-  fn build_parcel_MultiplePermissions2(&self) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
-    Ok(aidl_data_owned)
+  fn build_parcel_MultiplePermissions2(&self) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
+    Ok(aidl_data)
   }
-  fn read_response_MultiplePermissions2(&self, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+  fn read_response_MultiplePermissions2(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as IProtected>::getDefaultImpl() {
         return _aidl_default_impl.MultiplePermissions2();
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
@@ -164,7 +161,7 @@ impl IProtected for binder::Binder<BnProtected> {
   fn MultiplePermissions(&self) -> binder::public_api::Result<()> { self.0.MultiplePermissions() }
   fn MultiplePermissions2(&self) -> binder::public_api::Result<()> { self.0.MultiplePermissions2() }
 }
-fn on_transact(_aidl_service: &dyn IProtected, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::Parcel, _aidl_reply: &mut binder::parcel::Parcel) -> binder::Result<()> {
+fn on_transact(_aidl_service: &dyn IProtected, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::BorrowedParcel<'_>, _aidl_reply: &mut binder::parcel::BorrowedParcel<'_>) -> binder::Result<()> {
   match _aidl_code {
     transactions::PermissionProtected => {
       let _aidl_return = _aidl_service.PermissionProtected();

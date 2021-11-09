@@ -40,6 +40,7 @@
 #include "aidl_dumpapi.h"
 #include "aidl_language.h"
 #include "aidl_typenames.h"
+#include "check_valid.h"
 #include "generate_aidl_mappings.h"
 #include "generate_cpp.h"
 #include "generate_java.h"
@@ -594,6 +595,10 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
 
   for (const auto& doc : typenames->AllDocuments()) {
     VisitTopDown([](const AidlNode& n) { n.MarkVisited(); }, *doc);
+  }
+
+  if (!CheckValid(*document, options)) {
+    return AidlError::BAD_TYPE;
   }
 
   if (!ValidateAnnotationContext(*document)) {

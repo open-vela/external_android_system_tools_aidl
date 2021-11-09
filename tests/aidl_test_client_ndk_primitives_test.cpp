@@ -77,4 +77,23 @@ TEST_F(AidlTest, InterfaceExchange) {
       }
     }
   }
+  {
+    std::vector<std::optional<std::string>> names = {"Larry", std::nullopt, "Moe"};
+    std::optional<std::vector<std::shared_ptr<INamedCallback>>> got;
+    ASSERT_TRUE(service->GetInterfaceList(names, &got).isOk());
+    bool verified = false;
+    ASSERT_TRUE(service->VerifyNamesWithInterfaceList(got, names, &verified).isOk());
+    ASSERT_TRUE(verified);
+    ASSERT_TRUE(got.has_value());
+    for (size_t i = 0; i < names.size(); i++) {
+      if (names[i].has_value()) {
+        ASSERT_NE(got->at(i).get(), nullptr);
+        std::string name;
+        ASSERT_TRUE(got->at(i)->GetName(&name).isOk());
+        ASSERT_THAT(name, Eq(names[i].value()));
+      } else {
+        ASSERT_EQ(got->at(i).get(), nullptr);
+      }
+    }
+  }
 }
