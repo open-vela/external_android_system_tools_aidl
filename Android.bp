@@ -231,6 +231,10 @@ python_test_host {
         "aidl_test_java_service",
         "aidl_test_rust_client",
         "aidl_test_rust_service",
+        "aidl_test_java_client_sdk1",
+        "aidl_test_java_service_sdk1",
+        "aidl_test_java_client_sdk29",
+        "aidl_test_java_service_sdk29",
     ],
     test_suites: ["general-tests"],
     test_options: {
@@ -492,6 +496,76 @@ java_test {
     ],
     srcs: [
         "tests/java/src/android/aidl/service/**/*.java",
+    ],
+}
+
+filegroup {
+    name: "aidl-for-sdkversion-tests",
+    srcs: [
+        "tests/java/src/android/aidl/sdkversion/ITestService.aidl",
+    ],
+    path: "tests/java/src",
+}
+
+java_defaults {
+    name: "aidl_test_java_sdkversion_defaults",
+    platform_apis: true,
+    // Turn off Java optimization tools to speed up our test iterations.
+    optimize: {
+        enabled: false,
+    },
+    dex_preopt: {
+        enabled: false,
+    },
+    static_libs: [
+        "androidx.test.core",
+        "androidx.test.runner",
+    ],
+    srcs: [
+        ":aidl-for-sdkversion-tests",
+    ],
+    aidl: {
+        include_dirs: [
+            "frameworks/native/aidl/binder",
+        ],
+    },
+    test_suites: ["general-tests"],
+}
+
+
+java_test {
+    name: "aidl_test_java_client_sdk29",
+    defaults: ["aidl_test_java_sdkversion_defaults"],
+    min_sdk_version: "29",
+    srcs: [
+        "tests/java/src/android/aidl/sdkversion/tests/*.java",
+    ],
+}
+
+java_test {
+    name: "aidl_test_java_service_sdk29",
+    defaults: ["aidl_test_java_sdkversion_defaults"],
+    min_sdk_version: "29",
+    srcs: [
+        "tests/java/src/android/aidl/sdkversion/service/*.java",
+    ],
+}
+
+java_test {
+    name: "aidl_test_java_client_sdk1",
+    defaults: ["aidl_test_java_sdkversion_defaults"],
+    min_sdk_version: "1",
+    srcs: [
+        "tests/java/src/android/aidl/sdkversion/tests/*.java",
+    ],
+}
+
+java_test {
+    name: "aidl_test_java_service_sdk1",
+    defaults: ["aidl_test_java_sdkversion_defaults"],
+    min_sdk_version: "1",
+    srcs: [
+        "tests/java/src/android/aidl/sdkversion/service/*.java",
     ],
 }
 
