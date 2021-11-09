@@ -46,38 +46,36 @@ lazy_static! {
   static ref DEFAULT_IMPL: std::sync::Mutex<INestedServiceDefaultRef> = std::sync::Mutex::new(None);
 }
 impl BpNestedService {
-  fn build_parcel_flipStatus(&self, _arg_p: &crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_flipStatus(&self, _arg_p: &crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.write(_arg_p)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_flipStatus(&self, _arg_p: &crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_6_Result> {
+  fn read_response_flipStatus(&self, _arg_p: &crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_6_Result> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as INestedService>::getDefaultImpl() {
         return _aidl_default_impl.flipStatus(_arg_p);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_6_Result = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_flipStatusWithCallback(&self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status, _arg_cb: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_9_ICallback>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_flipStatusWithCallback(&self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status, _arg_cb: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_9_ICallback>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.write(&_arg_status)?;
     aidl_data.write(_arg_cb)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_flipStatusWithCallback(&self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status, _arg_cb: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_9_ICallback>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+  fn read_response_flipStatusWithCallback(&self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status, _arg_cb: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_9_ICallback>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as INestedService>::getDefaultImpl() {
         return _aidl_default_impl.flipStatusWithCallback(_arg_status, _arg_cb);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
@@ -127,7 +125,7 @@ impl INestedService for binder::Binder<BnNestedService> {
   fn flipStatus(&self, _arg_p: &crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_6_Result> { self.0.flipStatus(_arg_p) }
   fn flipStatusWithCallback(&self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status, _arg_cb: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_9_ICallback>) -> binder::public_api::Result<()> { self.0.flipStatusWithCallback(_arg_status, _arg_cb) }
 }
-fn on_transact(_aidl_service: &dyn INestedService, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::Parcel, _aidl_reply: &mut binder::parcel::Parcel) -> binder::Result<()> {
+fn on_transact(_aidl_service: &dyn INestedService, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::BorrowedParcel<'_>, _aidl_reply: &mut binder::parcel::BorrowedParcel<'_>) -> binder::Result<()> {
   match _aidl_code {
     transactions::flipStatus => {
       let _arg_p: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested = _aidl_data.read()?;
@@ -169,13 +167,13 @@ pub mod Result {
     }
   }
   impl binder::parcel::Parcelable for Result {
-    fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
       parcel.sized_write(|subparcel| {
         subparcel.write(&self.status)?;
         Ok(())
       })
     }
-    fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+    fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
       parcel.sized_read(|subparcel| {
         if subparcel.has_more_data() {
           self.status = subparcel.read()?;
@@ -231,19 +229,18 @@ pub mod ICallback {
     static ref DEFAULT_IMPL: std::sync::Mutex<ICallbackDefaultRef> = std::sync::Mutex::new(None);
   }
   impl BpCallback {
-    fn build_parcel_done(&self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status) -> binder::public_api::Result<binder::OwnedParcel> {
-      let mut aidl_data_owned = self.binder.prepare_transact()?;
-      let mut aidl_data = aidl_data_owned.borrowed();
+    fn build_parcel_done(&self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status) -> binder::public_api::Result<binder::Parcel> {
+      let mut aidl_data = self.binder.prepare_transact()?;
       aidl_data.write(&_arg_status)?;
-      Ok(aidl_data_owned)
+      Ok(aidl_data)
     }
-    fn read_response_done(&self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+    fn read_response_done(&self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
       if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
         if let Some(_aidl_default_impl) = <Self as ICallback>::getDefaultImpl() {
           return _aidl_default_impl.done(_arg_status);
         }
       }
-      let _aidl_reply = _aidl_reply?.into_parcel();
+      let _aidl_reply = _aidl_reply?;
       let _aidl_status: binder::Status = _aidl_reply.read()?;
       if !_aidl_status.is_ok() { return Err(_aidl_status); }
       Ok(())
@@ -274,7 +271,7 @@ pub mod ICallback {
   impl ICallback for binder::Binder<BnCallback> {
     fn done(&self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status) -> binder::public_api::Result<()> { self.0.done(_arg_status) }
   }
-  fn on_transact(_aidl_service: &dyn ICallback, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::Parcel, _aidl_reply: &mut binder::parcel::Parcel) -> binder::Result<()> {
+  fn on_transact(_aidl_service: &dyn ICallback, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::BorrowedParcel<'_>, _aidl_reply: &mut binder::parcel::BorrowedParcel<'_>) -> binder::Result<()> {
     match _aidl_code {
       transactions::done => {
         let _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status = _aidl_data.read()?;

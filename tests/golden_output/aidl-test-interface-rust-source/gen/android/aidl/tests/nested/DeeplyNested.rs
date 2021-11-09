@@ -10,12 +10,12 @@ impl Default for DeeplyNested {
   }
 }
 impl binder::parcel::Parcelable for DeeplyNested {
-  fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_write(|subparcel| {
       Ok(())
     })
   }
-  fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_read(|subparcel| {
       Ok(())
     })
@@ -39,13 +39,13 @@ pub mod A {
     }
   }
   impl binder::parcel::Parcelable for A {
-    fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
       parcel.sized_write(|subparcel| {
         subparcel.write(&self.e)?;
         Ok(())
       })
     }
-    fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+    fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
       parcel.sized_read(|subparcel| {
         if subparcel.has_more_data() {
           self.e = subparcel.read()?;
@@ -71,12 +71,12 @@ pub mod B {
     }
   }
   impl binder::parcel::Parcelable for B {
-    fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
       parcel.sized_write(|subparcel| {
         Ok(())
       })
     }
-    fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+    fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
       parcel.sized_read(|subparcel| {
         Ok(())
       })
@@ -98,12 +98,12 @@ pub mod B {
       }
     }
     impl binder::parcel::Parcelable for C {
-      fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+      fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
         parcel.sized_write(|subparcel| {
           Ok(())
         })
       }
-      fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+      fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
         parcel.sized_read(|subparcel| {
           Ok(())
         })
@@ -125,12 +125,12 @@ pub mod B {
         }
       }
       impl binder::parcel::Parcelable for D {
-        fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+        fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
           parcel.sized_write(|subparcel| {
             Ok(())
           })
         }
-        fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+        fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
           parcel.sized_read(|subparcel| {
             Ok(())
           })
