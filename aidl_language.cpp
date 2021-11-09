@@ -627,27 +627,19 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
                          << "'";
         return false;
       }
+      static const char* kListUsage =
+          "List<T> supports interface/parcelable/union, String, IBinder, and ParcelFileDescriptor.";
       const AidlTypeSpecifier& contained_type = *GetTypeParameters()[0];
       if (contained_type.IsArray()) {
-        AIDL_ERROR(this)
-            << "List of arrays is not supported. List<T> supports parcelable/union, String, "
-               "IBinder, and ParcelFileDescriptor.";
+        AIDL_ERROR(this) << "List of arrays is not supported. " << kListUsage;
         return false;
       }
       const string& contained_type_name = contained_type.GetName();
       if (AidlTypenames::IsBuiltinTypename(contained_type_name)) {
         if (contained_type_name != "String" && contained_type_name != "IBinder" &&
             contained_type_name != "ParcelFileDescriptor") {
-          AIDL_ERROR(this) << "List<" << contained_type_name
-                           << "> is not supported. List<T> supports parcelable/union, String, "
-                              "IBinder, and ParcelFileDescriptor.";
-          return false;
-        }
-      } else {  // Defined types
-        if (typenames.GetInterface(contained_type)) {
-          AIDL_ERROR(this) << "List<" << contained_type_name
-                           << "> is not supported. List<T> supports parcelable/union, String, "
-                              "IBinder, and ParcelFileDescriptor.";
+          AIDL_ERROR(this) << "List<" << contained_type_name << "> is not supported. "
+                           << kListUsage;
           return false;
         }
       }
