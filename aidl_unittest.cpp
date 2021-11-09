@@ -95,6 +95,7 @@ class AidlTest : public ::testing::TestWithParam<Options::Language> {
     io_delegate_.SetFileContents(path, contents);
     vector<string> args;
     args.emplace_back("aidl");
+    args.emplace_back("--min_sdk_version=current");
     args.emplace_back("--lang=" + to_string(lang));
     for (const string& s : additional_arguments) {
       args.emplace_back(s);
@@ -2087,6 +2088,7 @@ TEST_P(AidlTest, ExtensionTest) {
   EXPECT_NE(nullptr, Parse("a/Data.aidl", extendable_parcelable, typenames_, GetLanguage()));
   EXPECT_EQ("", GetCapturedStderr());
 }
+
 TEST_P(AidlTest, ParcelableHolderAsReturnType) {
   CaptureStderr();
   string parcelableholder_return_interface =
@@ -4855,6 +4857,26 @@ TEST_F(AidlTest, VoidCantBeUsedInMethodParameterType) {
   EXPECT_THAT(GetCapturedStderr(), HasSubstr("'void' is an invalid type for the parameter 'n'"));
 }
 
+TEST_F(AidlTest, InterfaceVectorIsAvailableAfterTiramisu) {
+  io_delegate_.SetFileContents("p/IFoo.aidl",
+                               "interface IFoo{\n"
+                               "  void foo(in IFoo[] n);\n"
+                               "  void bar(in List<IFoo> n);\n"
+                               "}");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(
+      Options::From("aidl --lang=java --min_sdk_version 30 -o out p/IFoo.aidl"), io_delegate_));
+  auto captured_stderr = GetCapturedStderr();
+  EXPECT_THAT(captured_stderr, HasSubstr("Array of interfaces is available since"));
+  EXPECT_THAT(captured_stderr, HasSubstr("List of interfaces is available since"));
+
+  CaptureStderr();
+  EXPECT_TRUE(
+      compile_aidl(Options::From("aidl --lang=java --min_sdk_version Tiramisu -o out p/IFoo.aidl"),
+                   io_delegate_));
+  EXPECT_EQ(GetCapturedStderr(), "");
+}
+
 struct TypeParam {
   string kind;
   string literal;
@@ -5023,8 +5045,8 @@ class AidlTypeParamTest
     }
     io.SetFileContents("a/Target.aidl", "package a; parcelable Target { " + decl + " f; }");
 
-    const auto options =
-        Options::From(fmt::format("aidl -I . --lang={} a/Target.aidl -o out -h out", lang));
+    const auto options = Options::From(fmt::format(
+        "aidl -I . --min_sdk_version current --lang={} a/Target.aidl -o out -h out", lang));
     CaptureStderr();
     compile_aidl(options, io);
     auto it = expectations.find(lang + "_" + kind);
