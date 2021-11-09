@@ -12,13 +12,13 @@ impl Default for ParcelableWithNested {
   }
 }
 impl binder::parcel::Parcelable for ParcelableWithNested {
-  fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_write(|subparcel| {
       subparcel.write(&self.status)?;
       Ok(())
     })
   }
-  fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_read(|subparcel| {
       if subparcel.has_more_data() {
         self.status = subparcel.read()?;
