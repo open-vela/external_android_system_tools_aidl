@@ -202,7 +202,7 @@ static const std::map<std::string, uint32_t> codeNameToVersion = {
     {"platform_apis", 10001},
 };
 
-static Result<uint32_t> MinSdkVersionFromString(const std::string& str) {
+Result<uint32_t> MinSdkVersionFromString(const std::string& str) {
   uint32_t num;
   if (!android::base::ParseUint(str, &num, 10000u /* max */)) {
     if (auto found = codeNameToVersion.find(str); found != codeNameToVersion.end()) {
@@ -585,6 +585,14 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
       error_message_ << "--dumpapi requires output directory. Use --out." << endl;
       return;
     }
+  }
+  if (task_ != Options::Task::COMPILE) {
+    if (min_sdk_version_ != 0) {
+      error_message_ << "--min_sdk_version is available only for compilation." << endl;
+      return;
+    }
+    // For other tasks, use "current"
+    min_sdk_version_ = MinSdkVersionFromString("current").value();
   }
 
   uint32_t default_ver = DefaultMinSdkVersionForLang(language_);
