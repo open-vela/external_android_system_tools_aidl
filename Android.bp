@@ -290,6 +290,7 @@ filegroup {
         "tests/android/aidl/tests/IOldName.aidl",
         "tests/android/aidl/tests/ITestService.aidl",
         "tests/android/aidl/tests/IntEnum.aidl",
+        "tests/android/aidl/tests/ListOfInterfaces.aidl",
         "tests/android/aidl/tests/LongEnum.aidl",
         "tests/android/aidl/tests/OtherParcelableForToString.aidl",
         "tests/android/aidl/tests/ParcelableForToString.aidl",

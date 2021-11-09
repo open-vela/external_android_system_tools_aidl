@@ -50,6 +50,7 @@ import android.util.Log;
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -342,6 +343,17 @@ public class TestServiceServer extends ITestService.Stub {
     } else {
       return true;
     }
+  }
+  @Override
+  public List<INamedCallback> GetInterfaceList(String[] names) throws RemoteException {
+    INamedCallback[] services = GetNullableInterfaceArray(names);
+    return services == null ? null : Arrays.asList(services);
+  }
+  @Override
+  public boolean VerifyNamesWithInterfaceList(List<INamedCallback> services, String[] names)
+      throws RemoteException {
+    return VerifyNamesWithNullableInterfaceArray(
+        services == null ? null : services.toArray(new INamedCallback[0]), names);
   }
   @Override
   public List<String> ReverseStringList(List<String> input, List<String> repeated)
