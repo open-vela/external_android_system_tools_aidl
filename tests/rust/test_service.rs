@@ -243,6 +243,22 @@ impl ITestService::ITestService for TestService {
         }
     }
 
+    fn GetInterfaceList(
+        &self,
+        names: Option<&[Option<String>]>,
+    ) -> binder::Result<Option<Vec<Option<binder::Strong<dyn INamedCallback::INamedCallback>>>>>
+    {
+        self.GetNullableInterfaceArray(names)
+    }
+
+    fn VerifyNamesWithInterfaceList(
+        &self,
+        services: Option<&[Option<binder::Strong<dyn INamedCallback::INamedCallback>>]>,
+        names: Option<&[Option<String>]>,
+    ) -> binder::Result<bool> {
+        self.VerifyNamesWithNullableInterfaceArray(services, names)
+    }
+
     fn RepeatParcelFileDescriptor(
         &self,
         read: &ParcelFileDescriptor,

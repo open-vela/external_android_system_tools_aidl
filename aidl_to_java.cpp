@@ -353,15 +353,19 @@ void WriteToParcelFor(const CodeGeneratorContext& c) {
       {"List",
        [](const CodeGeneratorContext& c) {
          if (c.type.IsGeneric()) {
-           const string& contained_type = c.type.GetTypeParameters().at(0)->GetName();
-           if (contained_type == "String") {
+           AIDL_FATAL_IF(c.type.GetTypeParameters().size() != 1, c.type);
+           const auto& element_type = *c.type.GetTypeParameters().at(0);
+           const auto& element_type_name = element_type.GetName();
+           if (element_type_name == "String") {
              c.writer << c.parcel << ".writeStringList(" << c.var << ");\n";
-           } else if (contained_type == "IBinder") {
+           } else if (element_type_name == "IBinder") {
              c.writer << c.parcel << ".writeBinderList(" << c.var << ");\n";
-           } else if (c.typenames.IsParcelable(contained_type)) {
+           } else if (c.typenames.IsParcelable(element_type_name)) {
              c.writer << c.parcel << ".writeTypedList(" << c.var << ");\n";
+           } else if (c.typenames.GetInterface(element_type)) {
+             c.writer << c.parcel << ".writeInterfaceList(" << c.var << ");\n";
            } else {
-             AIDL_FATAL(c.type) << "write: NOT IMPLEMENTED for " << contained_type;
+             AIDL_FATAL(c.type) << "write: NOT IMPLEMENTED for " << element_type_name;
            }
          } else {
            c.writer << c.parcel << ".writeList(" << c.var << ");\n";
@@ -566,17 +570,22 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
       {"List",
        [](const CodeGeneratorContext& c) {
          if (c.type.IsGeneric()) {
-           const string& contained_type = c.type.GetTypeParameters().at(0)->GetName();
-           if (contained_type == "String") {
+           AIDL_FATAL_IF(c.type.GetTypeParameters().size() != 1, c.type);
+           const auto& element_type = *c.type.GetTypeParameters().at(0);
+           const auto& element_type_name = element_type.GetName();
+           if (element_type_name == "String") {
              c.writer << c.var << " = " << c.parcel << ".createStringArrayList();\n";
-           } else if (contained_type == "IBinder") {
+           } else if (element_type_name == "IBinder") {
              c.writer << c.var << " = " << c.parcel << ".createBinderArrayList();\n";
-           } else if (c.typenames.IsParcelable(contained_type)) {
+           } else if (c.typenames.IsParcelable(element_type_name)) {
              c.writer << c.var << " = " << c.parcel << ".createTypedArrayList("
-                      << JavaNameOf(*(c.type.GetTypeParameters().at(0)), c.typenames)
-                      << ".CREATOR);\n";
+                      << JavaNameOf(element_type, c.typenames) << ".CREATOR);\n";
+           } else if (c.typenames.GetInterface(element_type)) {
+             auto as_interface = element_type_name + ".Stub::asInterface";
+             c.writer << c.var << " = " << c.parcel << ".createInterfaceArrayList(" << as_interface
+                      << ");\n";
            } else {
-             AIDL_FATAL(c.type) << "create: NOT IMPLEMENTED for " << contained_type;
+             AIDL_FATAL(c.type) << "create: NOT IMPLEMENTED for " << element_type_name;
            }
          } else {
            const string classloader = EnsureAndGetClassloader(const_cast<CodeGeneratorContext&>(c));
@@ -679,10 +688,10 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
     if (t->AsInterface() != nullptr) {
       auto name = c.type.GetName();
       if (c.type.IsArray()) {
-        auto as_interface = name + ".Stub::asInterface";
         auto new_array = name + "[]::new";
-        c.writer << c.var << " = " << c.parcel << ".createInterfaceArray(" << as_interface << ", "
-                 << new_array << ");\n";
+        auto as_interface = name + ".Stub::asInterface";
+        c.writer << c.var << " = " << c.parcel << ".createInterfaceArray(" << new_array << ", "
+                 << as_interface << ");\n";
       } else {
         c.writer << c.var << " = " << name << ".Stub.asInterface(" << c.parcel
                  << ".readStrongBinder());\n";
@@ -742,17 +751,23 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
       {"List",
        [](const CodeGeneratorContext& c) {
          if (c.type.IsGeneric()) {
-           const string& contained_type = c.type.GetTypeParameters().at(0)->GetName();
-           if (contained_type == "String") {
+           AIDL_FATAL_IF(c.type.GetTypeParameters().size() != 1, c.type);
+           const auto& element_type = *c.type.GetTypeParameters().at(0);
+           const auto& element_type_name = element_type.GetName();
+           if (element_type_name == "String") {
              c.writer << c.parcel << ".readStringList(" << c.var << ");\n";
-           } else if (contained_type == "IBinder") {
+           } else if (element_type_name == "IBinder") {
              c.writer << c.parcel << ".readBinderList(" << c.var << ");\n";
-           } else if (c.typenames.IsParcelable(contained_type)) {
+           } else if (c.typenames.IsParcelable(element_type_name)) {
              c.writer << c.parcel << ".readTypedList(" << c.var << ", "
                       << JavaNameOf(*(c.type.GetTypeParameters().at(0)), c.typenames)
                       << ".CREATOR);\n";
+           } else if (c.typenames.GetInterface(element_type)) {
+             auto as_interface = element_type_name + ".Stub::asInterface";
+             c.writer << c.parcel << ".readInterfaceList(" << c.var << ", " << as_interface
+                      << ");\n";
            } else {
-             AIDL_FATAL(c.type) << "read: NOT IMPLEMENTED for " << contained_type;
+             AIDL_FATAL(c.type) << "read: NOT IMPLEMENTED for " << element_type_name;
            }
          } else {
            const string classloader = EnsureAndGetClassloader(const_cast<CodeGeneratorContext&>(c));
