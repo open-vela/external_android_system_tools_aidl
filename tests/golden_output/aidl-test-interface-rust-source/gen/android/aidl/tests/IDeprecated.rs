@@ -43,7 +43,7 @@ impl<P: binder::BinderAsyncPool> IDeprecatedAsync<P> for BpDeprecated {
 }
 impl IDeprecated for binder::Binder<BnDeprecated> {
 }
-fn on_transact(_aidl_service: &dyn IDeprecated, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::Parcel, _aidl_reply: &mut binder::parcel::Parcel) -> binder::Result<()> {
+fn on_transact(_aidl_service: &dyn IDeprecated, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::BorrowedParcel<'_>, _aidl_reply: &mut binder::parcel::BorrowedParcel<'_>) -> binder::Result<()> {
   match _aidl_code {
     _ => Err(binder::StatusCode::UNKNOWN_TRANSACTION)
   }

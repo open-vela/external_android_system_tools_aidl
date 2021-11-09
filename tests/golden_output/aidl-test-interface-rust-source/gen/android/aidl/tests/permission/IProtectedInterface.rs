@@ -46,34 +46,32 @@ lazy_static! {
   static ref DEFAULT_IMPL: std::sync::Mutex<IProtectedInterfaceDefaultRef> = std::sync::Mutex::new(None);
 }
 impl BpProtectedInterface {
-  fn build_parcel_Method1(&self) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
-    Ok(aidl_data_owned)
+  fn build_parcel_Method1(&self) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
+    Ok(aidl_data)
   }
-  fn read_response_Method1(&self, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+  fn read_response_Method1(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as IProtectedInterface>::getDefaultImpl() {
         return _aidl_default_impl.Method1();
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
   }
-  fn build_parcel_Method2(&self) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
-    Ok(aidl_data_owned)
+  fn build_parcel_Method2(&self) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
+    Ok(aidl_data)
   }
-  fn read_response_Method2(&self, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+  fn read_response_Method2(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as IProtectedInterface>::getDefaultImpl() {
         return _aidl_default_impl.Method2();
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
@@ -123,7 +121,7 @@ impl IProtectedInterface for binder::Binder<BnProtectedInterface> {
   fn Method1(&self) -> binder::public_api::Result<()> { self.0.Method1() }
   fn Method2(&self) -> binder::public_api::Result<()> { self.0.Method2() }
 }
-fn on_transact(_aidl_service: &dyn IProtectedInterface, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::Parcel, _aidl_reply: &mut binder::parcel::Parcel) -> binder::Result<()> {
+fn on_transact(_aidl_service: &dyn IProtectedInterface, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::BorrowedParcel<'_>, _aidl_reply: &mut binder::parcel::BorrowedParcel<'_>) -> binder::Result<()> {
   match _aidl_code {
     transactions::Method1 => {
       let _aidl_return = _aidl_service.Method1();

@@ -16,7 +16,7 @@ impl Default for MyExt2 {
   }
 }
 impl binder::parcel::Parcelable for MyExt2 {
-  fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_write(|subparcel| {
       subparcel.write(&self.a)?;
       subparcel.write(&self.b)?;
@@ -24,7 +24,7 @@ impl binder::parcel::Parcelable for MyExt2 {
       Ok(())
     })
   }
-  fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_read(|subparcel| {
       if subparcel.has_more_data() {
         self.a = subparcel.read()?;
