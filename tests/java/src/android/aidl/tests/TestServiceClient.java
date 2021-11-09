@@ -305,6 +305,17 @@ public class TestServiceClient {
     }
 
     @Test
+    public void testInterfaceListExchange() throws RemoteException {
+      String[] names = {"Fizz", null, "Buzz"};
+      List<INamedCallback> got = service.GetInterfaceList(names);
+      assertThat(got.get(0).GetName(), is(names[0]));
+      assertNull(got.get(1));
+      assertThat(got.get(2).GetName(), is(names[2]));
+
+      assertThat(service.VerifyNamesWithInterfaceList(got, names), is(true));
+    }
+
+    @Test
     public void testListReversal() throws RemoteException {
         List<String> input = Arrays.asList("Walk", "into", "Córdoba");
         List<String> echoed = new ArrayList<String>();

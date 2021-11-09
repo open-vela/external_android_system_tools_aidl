@@ -123,6 +123,10 @@ interface ITestService {
     boolean VerifyNamesWithNullableInterfaceArray(
             in @nullable INamedCallback[] services, in @nullable String[] names);
 
+    @nullable List<INamedCallback> GetInterfaceList(in @nullable String[] names);
+    boolean VerifyNamesWithInterfaceList(in @nullable List<INamedCallback> services,
+            in @nullable String[] names);
+
     // Test that List<T> types work correctly.
     List<String> ReverseStringList(in List<String> input, out List<String> repeated);
 
