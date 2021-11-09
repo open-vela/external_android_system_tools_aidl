@@ -192,8 +192,10 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 	if g.properties.Platform_apis {
 		optionalFlags = append(optionalFlags, "--min_sdk_version platform_apis")
 	} else {
-		minSdkVer := proptools.StringDefault(g.properties.Min_sdk_version, "current")
-		optionalFlags = append(optionalFlags, "--min_sdk_version "+minSdkVer)
+		minSdkVer := g.properties.Min_sdk_version
+		if minSdkVer != nil {
+			optionalFlags = append(optionalFlags, "--min_sdk_version "+*minSdkVer)
+		}
 	}
 	optionalFlags = append(optionalFlags, wrap("-p", g.deps.preprocessed.Strings(), "")...)
 
