@@ -652,47 +652,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 31 /*GetInterfaceList*/): {
-      std::optional<std::vector<std::optional<std::string>>> in_names;
-      std::optional<std::vector<std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>>> _aidl_return;
-
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_names);
-      if (_aidl_ret_status != STATUS_OK) break;
-
-      ::ndk::ScopedAStatus _aidl_status = _aidl_impl->GetInterfaceList(in_names, &_aidl_return);
-      _aidl_ret_status = AParcel_writeStatusHeader(_aidl_out, _aidl_status.get());
-      if (_aidl_ret_status != STATUS_OK) break;
-
-      if (!AStatus_isOk(_aidl_status.get())) break;
-
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
-      if (_aidl_ret_status != STATUS_OK) break;
-
-      break;
-    }
-    case (FIRST_CALL_TRANSACTION + 32 /*VerifyNamesWithInterfaceList*/): {
-      std::optional<std::vector<std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>>> in_services;
-      std::optional<std::vector<std::optional<std::string>>> in_names;
-      bool _aidl_return;
-
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_services);
-      if (_aidl_ret_status != STATUS_OK) break;
-
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_names);
-      if (_aidl_ret_status != STATUS_OK) break;
-
-      ::ndk::ScopedAStatus _aidl_status = _aidl_impl->VerifyNamesWithInterfaceList(in_services, in_names, &_aidl_return);
-      _aidl_ret_status = AParcel_writeStatusHeader(_aidl_out, _aidl_status.get());
-      if (_aidl_ret_status != STATUS_OK) break;
-
-      if (!AStatus_isOk(_aidl_status.get())) break;
-
-      _aidl_ret_status = AParcel_writeBool(_aidl_out, _aidl_return);
-      if (_aidl_ret_status != STATUS_OK) break;
-
-      break;
-    }
-    case (FIRST_CALL_TRANSACTION + 33 /*ReverseStringList*/): {
+    case (FIRST_CALL_TRANSACTION + 31 /*ReverseStringList*/): {
       std::vector<std::string> in_input;
       std::vector<std::string> out_repeated;
       std::vector<std::string> _aidl_return;
@@ -714,7 +674,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 34 /*RepeatParcelFileDescriptor*/): {
+    case (FIRST_CALL_TRANSACTION + 32 /*RepeatParcelFileDescriptor*/): {
       ::ndk::ScopedFileDescriptor in_read;
       ::ndk::ScopedFileDescriptor _aidl_return;
 
@@ -732,7 +692,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 35 /*ReverseParcelFileDescriptorArray*/): {
+    case (FIRST_CALL_TRANSACTION + 33 /*ReverseParcelFileDescriptorArray*/): {
       std::vector<::ndk::ScopedFileDescriptor> in_input;
       std::vector<::ndk::ScopedFileDescriptor> out_repeated;
       std::vector<::ndk::ScopedFileDescriptor> _aidl_return;
@@ -757,7 +717,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 36 /*ThrowServiceException*/): {
+    case (FIRST_CALL_TRANSACTION + 34 /*ThrowServiceException*/): {
       int32_t in_code;
 
       _aidl_ret_status = AParcel_readInt32(_aidl_in, &in_code);
@@ -771,7 +731,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 37 /*RepeatNullableIntArray*/): {
+    case (FIRST_CALL_TRANSACTION + 35 /*RepeatNullableIntArray*/): {
       std::optional<std::vector<int32_t>> in_input;
       std::optional<std::vector<int32_t>> _aidl_return;
 
@@ -789,7 +749,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 38 /*RepeatNullableByteEnumArray*/): {
+    case (FIRST_CALL_TRANSACTION + 36 /*RepeatNullableByteEnumArray*/): {
       std::optional<std::vector<::aidl::android::aidl::tests::ByteEnum>> in_input;
       std::optional<std::vector<::aidl::android::aidl::tests::ByteEnum>> _aidl_return;
 
@@ -807,7 +767,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 39 /*RepeatNullableIntEnumArray*/): {
+    case (FIRST_CALL_TRANSACTION + 37 /*RepeatNullableIntEnumArray*/): {
       std::optional<std::vector<::aidl::android::aidl::tests::IntEnum>> in_input;
       std::optional<std::vector<::aidl::android::aidl::tests::IntEnum>> _aidl_return;
 
@@ -825,7 +785,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 40 /*RepeatNullableLongEnumArray*/): {
+    case (FIRST_CALL_TRANSACTION + 38 /*RepeatNullableLongEnumArray*/): {
       std::optional<std::vector<::aidl::android::aidl::tests::LongEnum>> in_input;
       std::optional<std::vector<::aidl::android::aidl::tests::LongEnum>> _aidl_return;
 
@@ -843,7 +803,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 41 /*RepeatNullableString*/): {
+    case (FIRST_CALL_TRANSACTION + 39 /*RepeatNullableString*/): {
       std::optional<std::string> in_input;
       std::optional<std::string> _aidl_return;
 
@@ -861,7 +821,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 42 /*RepeatNullableStringList*/): {
+    case (FIRST_CALL_TRANSACTION + 40 /*RepeatNullableStringList*/): {
       std::optional<std::vector<std::optional<std::string>>> in_input;
       std::optional<std::vector<std::optional<std::string>>> _aidl_return;
 
@@ -879,7 +839,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 43 /*RepeatNullableParcelable*/): {
+    case (FIRST_CALL_TRANSACTION + 41 /*RepeatNullableParcelable*/): {
       std::optional<::aidl::android::aidl::tests::ITestService::Empty> in_input;
       std::optional<::aidl::android::aidl::tests::ITestService::Empty> _aidl_return;
 
@@ -897,7 +857,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 44 /*RepeatNullableParcelableArray*/): {
+    case (FIRST_CALL_TRANSACTION + 42 /*RepeatNullableParcelableArray*/): {
       std::optional<std::vector<std::optional<::aidl::android::aidl::tests::ITestService::Empty>>> in_input;
       std::optional<std::vector<std::optional<::aidl::android::aidl::tests::ITestService::Empty>>> _aidl_return;
 
@@ -915,7 +875,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 45 /*RepeatNullableParcelableList*/): {
+    case (FIRST_CALL_TRANSACTION + 43 /*RepeatNullableParcelableList*/): {
       std::optional<std::vector<std::optional<::aidl::android::aidl::tests::ITestService::Empty>>> in_input;
       std::optional<std::vector<std::optional<::aidl::android::aidl::tests::ITestService::Empty>>> _aidl_return;
 
@@ -933,7 +893,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 46 /*TakesAnIBinder*/): {
+    case (FIRST_CALL_TRANSACTION + 44 /*TakesAnIBinder*/): {
       ::ndk::SpAIBinder in_input;
 
       _aidl_ret_status = ::ndk::AParcel_readRequiredStrongBinder(_aidl_in, &in_input);
@@ -947,7 +907,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 47 /*TakesANullableIBinder*/): {
+    case (FIRST_CALL_TRANSACTION + 45 /*TakesANullableIBinder*/): {
       ::ndk::SpAIBinder in_input;
 
       _aidl_ret_status = ::ndk::AParcel_readNullableStrongBinder(_aidl_in, &in_input);
@@ -961,7 +921,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 48 /*TakesAnIBinderList*/): {
+    case (FIRST_CALL_TRANSACTION + 46 /*TakesAnIBinderList*/): {
       std::vector<::ndk::SpAIBinder> in_input;
 
       _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
@@ -975,7 +935,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 49 /*TakesANullableIBinderList*/): {
+    case (FIRST_CALL_TRANSACTION + 47 /*TakesANullableIBinderList*/): {
       std::optional<std::vector<::ndk::SpAIBinder>> in_input;
 
       _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
@@ -989,7 +949,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 50 /*RepeatUtf8CppString*/): {
+    case (FIRST_CALL_TRANSACTION + 48 /*RepeatUtf8CppString*/): {
       std::string in_token;
       std::string _aidl_return;
 
@@ -1007,7 +967,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 51 /*RepeatNullableUtf8CppString*/): {
+    case (FIRST_CALL_TRANSACTION + 49 /*RepeatNullableUtf8CppString*/): {
       std::optional<std::string> in_token;
       std::optional<std::string> _aidl_return;
 
@@ -1025,7 +985,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 52 /*ReverseUtf8CppString*/): {
+    case (FIRST_CALL_TRANSACTION + 50 /*ReverseUtf8CppString*/): {
       std::vector<std::string> in_input;
       std::vector<std::string> out_repeated;
       std::vector<std::string> _aidl_return;
@@ -1050,7 +1010,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 53 /*ReverseNullableUtf8CppString*/): {
+    case (FIRST_CALL_TRANSACTION + 51 /*ReverseNullableUtf8CppString*/): {
       std::optional<std::vector<std::optional<std::string>>> in_input;
       std::optional<std::vector<std::optional<std::string>>> out_repeated;
       std::optional<std::vector<std::optional<std::string>>> _aidl_return;
@@ -1075,7 +1035,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 54 /*ReverseUtf8CppStringList*/): {
+    case (FIRST_CALL_TRANSACTION + 52 /*ReverseUtf8CppStringList*/): {
       std::optional<std::vector<std::optional<std::string>>> in_input;
       std::optional<std::vector<std::optional<std::string>>> out_repeated;
       std::optional<std::vector<std::optional<std::string>>> _aidl_return;
@@ -1097,7 +1057,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 55 /*GetCallback*/): {
+    case (FIRST_CALL_TRANSACTION + 53 /*GetCallback*/): {
       bool in_return_null;
       std::shared_ptr<::aidl::android::aidl::tests::INamedCallback> _aidl_return;
 
@@ -1115,7 +1075,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 56 /*FillOutStructuredParcelable*/): {
+    case (FIRST_CALL_TRANSACTION + 54 /*FillOutStructuredParcelable*/): {
       ::aidl::android::aidl::tests::StructuredParcelable in_parcel;
 
       _aidl_ret_status = ::ndk::AParcel_readParcelable(_aidl_in, &in_parcel);
@@ -1132,7 +1092,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 57 /*RepeatExtendableParcelable*/): {
+    case (FIRST_CALL_TRANSACTION + 55 /*RepeatExtendableParcelable*/): {
       ::aidl::android::aidl::tests::extension::ExtendableParcelable in_ep;
       ::aidl::android::aidl::tests::extension::ExtendableParcelable out_ep2;
 
@@ -1150,7 +1110,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 58 /*ReverseList*/): {
+    case (FIRST_CALL_TRANSACTION + 56 /*ReverseList*/): {
       ::aidl::android::aidl::tests::RecursiveList in_list;
       ::aidl::android::aidl::tests::RecursiveList _aidl_return;
 
@@ -1168,7 +1128,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 59 /*ReverseIBinderArray*/): {
+    case (FIRST_CALL_TRANSACTION + 57 /*ReverseIBinderArray*/): {
       std::vector<::ndk::SpAIBinder> in_input;
       std::vector<::ndk::SpAIBinder> out_repeated;
       std::vector<::ndk::SpAIBinder> _aidl_return;
@@ -1193,7 +1153,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 60 /*ReverseNullableIBinderArray*/): {
+    case (FIRST_CALL_TRANSACTION + 58 /*ReverseNullableIBinderArray*/): {
       std::optional<std::vector<::ndk::SpAIBinder>> in_input;
       std::optional<std::vector<::ndk::SpAIBinder>> out_repeated;
       std::optional<std::vector<::ndk::SpAIBinder>> _aidl_return;
@@ -1218,7 +1178,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 61 /*GetOldNameInterface*/): {
+    case (FIRST_CALL_TRANSACTION + 59 /*GetOldNameInterface*/): {
       std::shared_ptr<::aidl::android::aidl::tests::IOldName> _aidl_return;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->GetOldNameInterface(&_aidl_return);
@@ -1232,7 +1192,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 62 /*GetNewNameInterface*/): {
+    case (FIRST_CALL_TRANSACTION + 60 /*GetNewNameInterface*/): {
       std::shared_ptr<::aidl::android::aidl::tests::INewName> _aidl_return;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->GetNewNameInterface(&_aidl_return);
@@ -1246,7 +1206,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 63 /*GetCppJavaTests*/): {
+    case (FIRST_CALL_TRANSACTION + 61 /*GetCppJavaTests*/): {
       ::ndk::SpAIBinder _aidl_return;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->GetCppJavaTests(&_aidl_return);
@@ -1260,7 +1220,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 64 /*getBackendType*/): {
+    case (FIRST_CALL_TRANSACTION + 62 /*getBackendType*/): {
       ::aidl::android::aidl::tests::BackendType _aidl_return;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->getBackendType(&_aidl_return);
@@ -2614,91 +2574,6 @@ BpTestService::~BpTestService() {}
   _aidl_status_return:
   return _aidl_status;
 }
-::ndk::ScopedAStatus BpTestService::GetInterfaceList(const std::optional<std::vector<std::optional<std::string>>>& in_names, std::optional<std::vector<std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>>>* _aidl_return) {
-  binder_status_t _aidl_ret_status = STATUS_OK;
-  ::ndk::ScopedAStatus _aidl_status;
-  ::ndk::ScopedAParcel _aidl_in;
-  ::ndk::ScopedAParcel _aidl_out;
-
-  _aidl_ret_status = AIBinder_prepareTransaction(asBinder().get(), _aidl_in.getR());
-  AParcel_markSensitive(_aidl_in.get());
-  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
-
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_names);
-  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
-
-  _aidl_ret_status = AIBinder_transact(
-    asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 31 /*GetInterfaceList*/),
-    _aidl_in.getR(),
-    _aidl_out.getR(),
-    FLAG_CLEAR_BUF
-    #ifdef BINDER_STABILITY_SUPPORT
-    | FLAG_PRIVATE_LOCAL
-    #endif  // BINDER_STABILITY_SUPPORT
-    );
-  if (_aidl_ret_status == STATUS_UNKNOWN_TRANSACTION && ITestService::getDefaultImpl()) {
-    _aidl_status = ITestService::getDefaultImpl()->GetInterfaceList(in_names, _aidl_return);
-    goto _aidl_status_return;
-  }
-  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
-
-  _aidl_ret_status = AParcel_readStatusHeader(_aidl_out.get(), _aidl_status.getR());
-  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
-
-  if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
-  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
-
-  _aidl_error:
-  _aidl_status.set(AStatus_fromStatus(_aidl_ret_status));
-  _aidl_status_return:
-  return _aidl_status;
-}
-::ndk::ScopedAStatus BpTestService::VerifyNamesWithInterfaceList(const std::optional<std::vector<std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>>>& in_services, const std::optional<std::vector<std::optional<std::string>>>& in_names, bool* _aidl_return) {
-  binder_status_t _aidl_ret_status = STATUS_OK;
-  ::ndk::ScopedAStatus _aidl_status;
-  ::ndk::ScopedAParcel _aidl_in;
-  ::ndk::ScopedAParcel _aidl_out;
-
-  _aidl_ret_status = AIBinder_prepareTransaction(asBinder().get(), _aidl_in.getR());
-  AParcel_markSensitive(_aidl_in.get());
-  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
-
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_services);
-  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
-
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_names);
-  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
-
-  _aidl_ret_status = AIBinder_transact(
-    asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 32 /*VerifyNamesWithInterfaceList*/),
-    _aidl_in.getR(),
-    _aidl_out.getR(),
-    FLAG_CLEAR_BUF
-    #ifdef BINDER_STABILITY_SUPPORT
-    | FLAG_PRIVATE_LOCAL
-    #endif  // BINDER_STABILITY_SUPPORT
-    );
-  if (_aidl_ret_status == STATUS_UNKNOWN_TRANSACTION && ITestService::getDefaultImpl()) {
-    _aidl_status = ITestService::getDefaultImpl()->VerifyNamesWithInterfaceList(in_services, in_names, _aidl_return);
-    goto _aidl_status_return;
-  }
-  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
-
-  _aidl_ret_status = AParcel_readStatusHeader(_aidl_out.get(), _aidl_status.getR());
-  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
-
-  if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readBool(_aidl_out.get(), _aidl_return);
-  if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
-
-  _aidl_error:
-  _aidl_status.set(AStatus_fromStatus(_aidl_ret_status));
-  _aidl_status_return:
-  return _aidl_status;
-}
 ::ndk::ScopedAStatus BpTestService::ReverseStringList(const std::vector<std::string>& in_input, std::vector<std::string>* out_repeated, std::vector<std::string>* _aidl_return) {
   binder_status_t _aidl_ret_status = STATUS_OK;
   ::ndk::ScopedAStatus _aidl_status;
@@ -2714,7 +2589,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 33 /*ReverseStringList*/),
+    (FIRST_CALL_TRANSACTION + 31 /*ReverseStringList*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -2758,7 +2633,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 34 /*RepeatParcelFileDescriptor*/),
+    (FIRST_CALL_TRANSACTION + 32 /*RepeatParcelFileDescriptor*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -2802,7 +2677,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 35 /*ReverseParcelFileDescriptorArray*/),
+    (FIRST_CALL_TRANSACTION + 33 /*ReverseParcelFileDescriptorArray*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -2846,7 +2721,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 36 /*ThrowServiceException*/),
+    (FIRST_CALL_TRANSACTION + 34 /*ThrowServiceException*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -2884,7 +2759,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 37 /*RepeatNullableIntArray*/),
+    (FIRST_CALL_TRANSACTION + 35 /*RepeatNullableIntArray*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -2925,7 +2800,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 38 /*RepeatNullableByteEnumArray*/),
+    (FIRST_CALL_TRANSACTION + 36 /*RepeatNullableByteEnumArray*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -2966,7 +2841,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 39 /*RepeatNullableIntEnumArray*/),
+    (FIRST_CALL_TRANSACTION + 37 /*RepeatNullableIntEnumArray*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3007,7 +2882,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 40 /*RepeatNullableLongEnumArray*/),
+    (FIRST_CALL_TRANSACTION + 38 /*RepeatNullableLongEnumArray*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3048,7 +2923,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 41 /*RepeatNullableString*/),
+    (FIRST_CALL_TRANSACTION + 39 /*RepeatNullableString*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3089,7 +2964,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 42 /*RepeatNullableStringList*/),
+    (FIRST_CALL_TRANSACTION + 40 /*RepeatNullableStringList*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3130,7 +3005,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 43 /*RepeatNullableParcelable*/),
+    (FIRST_CALL_TRANSACTION + 41 /*RepeatNullableParcelable*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3171,7 +3046,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 44 /*RepeatNullableParcelableArray*/),
+    (FIRST_CALL_TRANSACTION + 42 /*RepeatNullableParcelableArray*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3212,7 +3087,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 45 /*RepeatNullableParcelableList*/),
+    (FIRST_CALL_TRANSACTION + 43 /*RepeatNullableParcelableList*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3253,7 +3128,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 46 /*TakesAnIBinder*/),
+    (FIRST_CALL_TRANSACTION + 44 /*TakesAnIBinder*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3291,7 +3166,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 47 /*TakesANullableIBinder*/),
+    (FIRST_CALL_TRANSACTION + 45 /*TakesANullableIBinder*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3329,7 +3204,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 48 /*TakesAnIBinderList*/),
+    (FIRST_CALL_TRANSACTION + 46 /*TakesAnIBinderList*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3367,7 +3242,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 49 /*TakesANullableIBinderList*/),
+    (FIRST_CALL_TRANSACTION + 47 /*TakesANullableIBinderList*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3405,7 +3280,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 50 /*RepeatUtf8CppString*/),
+    (FIRST_CALL_TRANSACTION + 48 /*RepeatUtf8CppString*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3446,7 +3321,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 51 /*RepeatNullableUtf8CppString*/),
+    (FIRST_CALL_TRANSACTION + 49 /*RepeatNullableUtf8CppString*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3490,7 +3365,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 52 /*ReverseUtf8CppString*/),
+    (FIRST_CALL_TRANSACTION + 50 /*ReverseUtf8CppString*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3537,7 +3412,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 53 /*ReverseNullableUtf8CppString*/),
+    (FIRST_CALL_TRANSACTION + 51 /*ReverseNullableUtf8CppString*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3581,7 +3456,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 54 /*ReverseUtf8CppStringList*/),
+    (FIRST_CALL_TRANSACTION + 52 /*ReverseUtf8CppStringList*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3625,7 +3500,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 55 /*GetCallback*/),
+    (FIRST_CALL_TRANSACTION + 53 /*GetCallback*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3666,7 +3541,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 56 /*FillOutStructuredParcelable*/),
+    (FIRST_CALL_TRANSACTION + 54 /*FillOutStructuredParcelable*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3707,7 +3582,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 57 /*RepeatExtendableParcelable*/),
+    (FIRST_CALL_TRANSACTION + 55 /*RepeatExtendableParcelable*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3748,7 +3623,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 58 /*ReverseList*/),
+    (FIRST_CALL_TRANSACTION + 56 /*ReverseList*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3792,7 +3667,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 59 /*ReverseIBinderArray*/),
+    (FIRST_CALL_TRANSACTION + 57 /*ReverseIBinderArray*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3839,7 +3714,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 60 /*ReverseNullableIBinderArray*/),
+    (FIRST_CALL_TRANSACTION + 58 /*ReverseNullableIBinderArray*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3880,7 +3755,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 61 /*GetOldNameInterface*/),
+    (FIRST_CALL_TRANSACTION + 59 /*GetOldNameInterface*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3918,7 +3793,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 62 /*GetNewNameInterface*/),
+    (FIRST_CALL_TRANSACTION + 60 /*GetNewNameInterface*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3956,7 +3831,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 63 /*GetCppJavaTests*/),
+    (FIRST_CALL_TRANSACTION + 61 /*GetCppJavaTests*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -3994,7 +3869,7 @@ BpTestService::~BpTestService() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 64 /*getBackendType*/),
+    (FIRST_CALL_TRANSACTION + 62 /*getBackendType*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     FLAG_CLEAR_BUF
@@ -4224,16 +4099,6 @@ std::shared_ptr<ITestService> ITestService::default_impl = nullptr;
   return _aidl_status;
 }
 ::ndk::ScopedAStatus ITestServiceDefault::VerifyNamesWithNullableInterfaceArray(const std::optional<std::vector<std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>>>& /*in_services*/, const std::optional<std::vector<std::optional<std::string>>>& /*in_names*/, bool* /*_aidl_return*/) {
-  ::ndk::ScopedAStatus _aidl_status;
-  _aidl_status.set(AStatus_fromStatus(STATUS_UNKNOWN_TRANSACTION));
-  return _aidl_status;
-}
-::ndk::ScopedAStatus ITestServiceDefault::GetInterfaceList(const std::optional<std::vector<std::optional<std::string>>>& /*in_names*/, std::optional<std::vector<std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>>>* /*_aidl_return*/) {
-  ::ndk::ScopedAStatus _aidl_status;
-  _aidl_status.set(AStatus_fromStatus(STATUS_UNKNOWN_TRANSACTION));
-  return _aidl_status;
-}
-::ndk::ScopedAStatus ITestServiceDefault::VerifyNamesWithInterfaceList(const std::optional<std::vector<std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>>>& /*in_services*/, const std::optional<std::vector<std::optional<std::string>>>& /*in_names*/, bool* /*_aidl_return*/) {
   ::ndk::ScopedAStatus _aidl_status;
   _aidl_status.set(AStatus_fromStatus(STATUS_UNKNOWN_TRANSACTION));
   return _aidl_status;
