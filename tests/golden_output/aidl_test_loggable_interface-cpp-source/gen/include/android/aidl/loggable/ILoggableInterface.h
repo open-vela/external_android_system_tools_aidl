@@ -26,7 +26,7 @@ public:
   ::android::IBinder* onAsBinder() override {
     return nullptr;
   }
-  ::android::binder::Status LogThis(bool, ::std::vector<bool>*, int8_t, ::std::vector<uint8_t>*, char16_t, ::std::vector<char16_t>*, int32_t, ::std::vector<int32_t>*, int64_t, ::std::vector<int64_t>*, float, ::std::vector<float>*, double, ::std::vector<double>*, const ::android::String16&, ::std::vector<::android::String16>*, ::std::vector<::android::String16>*, const ::android::aidl::loggable::Data&, const ::android::sp<::android::IBinder>&, ::std::optional<::android::os::ParcelFileDescriptor>*, ::std::vector<::android::os::ParcelFileDescriptor>*, ::std::vector<::android::String16>*) override {
+  ::android::binder::Status LogThis(bool /*boolValue*/, ::std::vector<bool>* /*boolArray*/, int8_t /*byteValue*/, ::std::vector<uint8_t>* /*byteArray*/, char16_t /*charValue*/, ::std::vector<char16_t>* /*charArray*/, int32_t /*intValue*/, ::std::vector<int32_t>* /*intArray*/, int64_t /*longValue*/, ::std::vector<int64_t>* /*longArray*/, float /*floatValue*/, ::std::vector<float>* /*floatArray*/, double /*doubleValue*/, ::std::vector<double>* /*doubleArray*/, const ::android::String16& /*stringValue*/, ::std::vector<::android::String16>* /*stringArray*/, ::std::vector<::android::String16>* /*listValue*/, const ::android::aidl::loggable::Data& /*dataValue*/, const ::android::sp<::android::IBinder>& /*binderValue*/, ::std::optional<::android::os::ParcelFileDescriptor>* /*pfdValue*/, ::std::vector<::android::os::ParcelFileDescriptor>* /*pfdArray*/, ::std::vector<::android::String16>* /*_aidl_return*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
 };  // class ILoggableInterfaceDefault

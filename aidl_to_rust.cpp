@@ -41,7 +41,7 @@ std::string GetRawRustName(const AidlTypeSpecifier& type);
 
 std::string ConstantValueDecoratorInternal(const AidlTypeSpecifier& type,
                                            const std::string& raw_value, bool by_ref) {
-  if (type.IsArray()) {
+  if (type.IsArray() && !raw_value.empty() && raw_value[0] == '{') {
     // Convert `{ ... }` to `vec!{ ... }`
     return "vec!" + raw_value;
   }

@@ -34,6 +34,7 @@
 #include "aidl_to_cpp.h"
 #include "aidl_to_cpp_common.h"
 #include "aidl_to_java.h"
+#include "aidl_to_ndk.h"
 #include "comments.h"
 #include "logging.h"
 #include "options.h"
@@ -670,6 +671,28 @@ TEST_P(AidlTest, AnnotationsInMultiplePlaces) {
   // TODO(b/151102494): these annotations should be on the method
   ASSERT_NE(nullptr, ret_type.UnsupportedAppUsage());
   ASSERT_TRUE(ret_type.IsHide());
+}
+
+TEST_P(AidlTest, AnnotationValueAttribute) {
+  const string content =
+      "package a; @Descriptor(\"descriptor_value\") interface IFoo { void f(int a); }";
+  const AidlDefinedType* defined = Parse("a/IFoo.aidl", content, typenames_, GetLanguage());
+  ASSERT_NE(nullptr, defined);
+  const AidlInterface* iface = defined->AsInterface();
+  ASSERT_NE(nullptr, iface);
+
+  ASSERT_EQ("descriptor_value", iface->GetDescriptor());
+}
+
+TEST_F(AidlTest, CheckApiForAnnotationValueAttribute) {
+  Options options = Options::From("aidl --checkapi=equal old new");
+
+  io_delegate_.SetFileContents("old/p/IFoo.aidl",
+                               "package p; @Descriptor(value=\"v1\") interface IFoo{ void foo();}");
+  io_delegate_.SetFileContents("new/p/IFoo.aidl",
+                               "package p; @Descriptor(\"v1\") interface IFoo{ void foo();}");
+
+  EXPECT_TRUE(::android::aidl::check_api(options, io_delegate_));
 }
 
 TEST_P(AidlTest, WritesComments) {
@@ -1407,10 +1430,47 @@ TEST_P(AidlTest, ParseNegativeConstHexValue) {
   EXPECT_EQ("-1", cpp_constants[0]->ValueString(cpp::ConstantValueDecorator));
 }
 
+TEST_F(AidlTest, ByteAndByteArrayDifferInCpp) {
+  auto type = Parse("p/Foo.aidl",
+                    R"(
+                      package p;
+                      parcelable Foo {
+                        byte a = -1;
+                        byte[] b = {-1, 1};
+                        @nullable byte[] c = {-1, 1};
+                      }
+                    )",
+                    typenames_, Options::Language::CPP);
+  ASSERT_NE(nullptr, type);
+  auto& fields = type->GetFields();
+  ASSERT_EQ(3ul, fields.size());
+  EXPECT_EQ("-1", fields[0]->ValueString(cpp::ConstantValueDecorator));
+  EXPECT_EQ("{uint8_t(-1), 1}", fields[1]->ValueString(cpp::ConstantValueDecorator));
+  EXPECT_EQ("{uint8_t(-1), 1}", fields[2]->ValueString(cpp::ConstantValueDecorator));
+}
+
+TEST_F(AidlTest, ByteAndByteArrayDifferInNdk) {
+  auto type = Parse("p/Foo.aidl",
+                    R"(
+                      package p;
+                      parcelable Foo {
+                        byte a = -1;
+                        byte[] b = {-1, 1};
+                        @nullable byte[] c = {-1, 1};
+                      }
+                    )",
+                    typenames_, Options::Language::NDK);
+  ASSERT_NE(nullptr, type);
+  auto& fields = type->GetFields();
+  ASSERT_EQ(3ul, fields.size());
+  EXPECT_EQ("-1", fields[0]->ValueString(ndk::ConstantValueDecorator));
+  EXPECT_EQ("{uint8_t(-1), 1}", fields[1]->ValueString(ndk::ConstantValueDecorator));
+  EXPECT_EQ("{uint8_t(-1), 1}", fields[2]->ValueString(ndk::ConstantValueDecorator));
+}
+
 TEST_P(AidlTest, UnderstandsNestedUnstructuredParcelables) {
-  io_delegate_.SetFileContents(
-      "p/Outer.aidl",
-      "package p; parcelable Outer.Inner cpp_header \"baz/header\";");
+  io_delegate_.SetFileContents("p/Outer.aidl",
+                               "package p; parcelable Outer.Inner cpp_header \"baz/header\";");
   import_paths_.emplace("");
   const string input_path = "p/IFoo.aidl";
   const string input = "package p; import p.Outer; interface IFoo"
@@ -4450,7 +4510,7 @@ parcelable Foo {
 
   string code;
   EXPECT_TRUE(io_delegate_.GetWrittenContents("out/p/Foo.h", &code));
-  EXPECT_THAT(code, testing::HasSubstr("::p::Enum e = ::p::Enum(::p::Enum::BAR);"));
+  EXPECT_THAT(code, testing::HasSubstr("::p::Enum e = ::p::Enum::BAR;"));
 }
 
 TEST_F(AidlTest, EnumWithDefaults_Ndk) {
