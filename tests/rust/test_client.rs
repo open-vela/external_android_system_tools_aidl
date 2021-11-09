@@ -298,6 +298,24 @@ fn test_binder_nullable_array_exchange() {
     );
 }
 
+#[test]
+fn test_interface_list_exchange() {
+    let names = vec![Some("Fizz".into()), None, Some("Buzz".into())];
+    let service = get_test_service();
+    let got = service.GetInterfaceList(Some(&names)).expect("error calling GetInterfaceList");
+    assert_eq!(
+        got.as_ref().map(|arr| arr
+            .iter()
+            .map(|opt_s| opt_s.as_ref().map(|s| s.GetName().expect("error calling GetName")))
+            .collect::<Vec<_>>()),
+        Some(names.clone())
+    );
+    assert_eq!(
+        service.VerifyNamesWithInterfaceList(got.as_ref().map(|v| &v[..]), Some(&names)),
+        Ok(true)
+    );
+}
+
 fn build_pipe() -> (File, File) {
     // Safety: we get two file descriptors from pipe()
     // and pass them after checking if the function returned
@@ -727,24 +745,24 @@ fn test_read_write_extension() {
     check_extension_content(&ep, &ext, &ext2);
 
     let mut parcel = Parcel::new();
-    ep.write_to_parcel(&mut parcel).unwrap();
+    ep.write_to_parcel(&mut parcel.borrowed()).unwrap();
 
     unsafe {
         parcel.set_data_position(0).unwrap();
     }
     let mut ep1 = ExtendableParcelable::default();
-    ep1.read_from_parcel(&parcel).unwrap();
+    ep1.read_from_parcel(parcel.borrowed_ref()).unwrap();
 
     unsafe {
         parcel.set_data_position(0).unwrap();
     }
-    ep1.write_to_parcel(&mut parcel).unwrap();
+    ep1.write_to_parcel(&mut parcel.borrowed()).unwrap();
 
     unsafe {
         parcel.set_data_position(0).unwrap();
     }
     let mut ep2 = ExtendableParcelable::default();
-    ep2.read_from_parcel(&parcel).unwrap();
+    ep2.read_from_parcel(parcel.borrowed_ref()).unwrap();
 
     let ext_like = ep2.ext.get_parcelable::<MyExtLike>();
     assert!(ext_like.unwrap().is_none());

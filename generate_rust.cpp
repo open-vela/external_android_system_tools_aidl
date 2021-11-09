@@ -155,11 +155,10 @@ void GenerateClientMethodHelpers(CodeWriter& out, const AidlInterface& iface,
 
   // Generate build_parcel helper.
   out << "fn build_parcel_" + method.GetName() + "(" + parameters +
-             ") -> binder::public_api::Result<binder::OwnedParcel> {\n";
+             ") -> binder::public_api::Result<binder::Parcel> {\n";
   out.Indent();
 
-  out << "let mut aidl_data_owned = self.binder.prepare_transact()?;\n";
-  out << "let mut aidl_data = aidl_data_owned.borrowed();\n";
+  out << "let mut aidl_data = self.binder.prepare_transact()?;\n";
 
   if (iface.IsSensitiveData()) {
     out << "aidl_data.mark_sensitive();\n";
@@ -187,14 +186,14 @@ void GenerateClientMethodHelpers(CodeWriter& out, const AidlInterface& iface,
     }
   }
 
-  out << "Ok(aidl_data_owned)\n";
+  out << "Ok(aidl_data)\n";
   out.Dedent();
   out << "}\n";
 
   // Generate read_response helper.
   auto return_type = RustNameOf(method.GetType(), typenames, StorageMode::VALUE, Lifetime::NONE);
   out << "fn read_response_" + method.GetName() + "(" + parameters +
-             ", _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<" +
+             ", _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<" +
              return_type + "> {\n";
   out.Indent();
 
@@ -217,7 +216,7 @@ void GenerateClientMethodHelpers(CodeWriter& out, const AidlInterface& iface,
   }
 
   // Return all other errors
-  out << "let _aidl_reply = _aidl_reply?.into_parcel();\n";
+  out << "let _aidl_reply = _aidl_reply?;\n";
 
   string return_val = "()";
   if (!method.IsOneway()) {
@@ -479,8 +478,8 @@ void GenerateServerItems(CodeWriter& out, const AidlInterface* iface,
       << trait_name
       << ", "
          "_aidl_code: binder::TransactionCode, "
-         "_aidl_data: &binder::parcel::Parcel, "
-         "_aidl_reply: &mut binder::parcel::Parcel) -> binder::Result<()> {\n";
+         "_aidl_data: &binder::parcel::BorrowedParcel<'_>, "
+         "_aidl_reply: &mut binder::parcel::BorrowedParcel<'_>) -> binder::Result<()> {\n";
   out.Indent();
   out << "match _aidl_code {\n";
   out.Indent();
@@ -915,14 +914,14 @@ void GenerateParcelableTrait(CodeWriter& out, const ParcelableType* parcel,
   out.Indent();
 
   out << "fn write_to_parcel(&self, "
-         "parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {\n";
+         "parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {\n";
   out.Indent();
   GenerateParcelSerializeBody(out, parcel, typenames);
   out.Dedent();
   out << "}\n";
 
   out << "fn read_from_parcel(&mut self, "
-         "parcel: &binder::parcel::Parcel) -> binder::Result<()> {\n";
+         "parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {\n";
   out.Indent();
   GenerateParcelDeserializeBody(out, parcel, typenames);
   out.Dedent();

@@ -121,7 +121,7 @@ impl Default for StructuredParcelable {
   }
 }
 impl binder::parcel::Parcelable for StructuredParcelable {
-  fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_write(|subparcel| {
       subparcel.write(&self.shouldContainThreeFs)?;
       subparcel.write(&self.f)?;
@@ -180,7 +180,7 @@ impl binder::parcel::Parcelable for StructuredParcelable {
       Ok(())
     })
   }
-  fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_read(|subparcel| {
       if subparcel.has_more_data() {
         self.shouldContainThreeFs = subparcel.read()?;
