@@ -19,8 +19,6 @@
 #include <string>
 #include <vector>
 
-#include <android-base/result.h>
-
 #include "diagnostics.h"
 
 namespace android {
@@ -213,7 +211,6 @@ class Options final {
 };
 
 std::string to_string(Options::Language language);
-android::base::Result<uint32_t> MinSdkVersionFromString(const std::string& str);
 
 }  // namespace aidl
 }  // namespace android
