@@ -745,24 +745,24 @@ fn test_read_write_extension() {
     check_extension_content(&ep, &ext, &ext2);
 
     let mut parcel = Parcel::new();
-    ep.write_to_parcel(&mut parcel).unwrap();
+    ep.write_to_parcel(&mut parcel.borrowed()).unwrap();
 
     unsafe {
         parcel.set_data_position(0).unwrap();
     }
     let mut ep1 = ExtendableParcelable::default();
-    ep1.read_from_parcel(&parcel).unwrap();
+    ep1.read_from_parcel(parcel.borrowed_ref()).unwrap();
 
     unsafe {
         parcel.set_data_position(0).unwrap();
     }
-    ep1.write_to_parcel(&mut parcel).unwrap();
+    ep1.write_to_parcel(&mut parcel.borrowed()).unwrap();
 
     unsafe {
         parcel.set_data_position(0).unwrap();
     }
     let mut ep2 = ExtendableParcelable::default();
-    ep2.read_from_parcel(&parcel).unwrap();
+    ep2.read_from_parcel(parcel.borrowed_ref()).unwrap();
 
     let ext_like = ep2.ext.get_parcelable::<MyExtLike>();
     assert!(ext_like.unwrap().is_none());
