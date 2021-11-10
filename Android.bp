@@ -89,6 +89,7 @@ cc_library_static {
         "aidl_typenames.cpp",
         "aidl.cpp",
         "ast_java.cpp",
+        "check_valid.cpp",
         "code_writer.cpp",
         "comments.cpp",
         "diagnostics.cpp",
