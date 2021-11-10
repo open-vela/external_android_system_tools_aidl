@@ -1,12 +1,6 @@
 #include "aidl/android/aidl/tests/ArrayOfInterfaces.h"
 
 #include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
 
 namespace aidl {
 namespace android {
@@ -42,14 +36,6 @@ binder_status_t ArrayOfInterfaces::writeToParcel(AParcel* _aidl_parcel) const {
 }  // namespace aidl
 }  // namespace android
 }  // namespace aidl
-#include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-
 namespace aidl {
 namespace android {
 namespace aidl {
@@ -128,14 +114,6 @@ bool ArrayOfInterfaces::IEmptyInterfaceDefault::isRemote() {
 }  // namespace aidl
 }  // namespace android
 }  // namespace aidl
-#include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-
 namespace aidl {
 namespace android {
 namespace aidl {
@@ -351,16 +329,6 @@ bool ArrayOfInterfaces::IMyInterfaceDefault::isRemote() {
 }  // namespace aidl
 }  // namespace android
 }  // namespace aidl
-#include "aidl/android/aidl/tests/ArrayOfInterfaces.h"
-
-#include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-
 namespace aidl {
 namespace android {
 namespace aidl {
@@ -435,16 +403,6 @@ binder_status_t ArrayOfInterfaces::MyParcelable::writeToParcel(AParcel* _aidl_pa
 }  // namespace aidl
 }  // namespace android
 }  // namespace aidl
-#include "aidl/android/aidl/tests/ArrayOfInterfaces.h"
-
-#include <android/binder_parcel_utils.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-#include <aidl/android/aidl/tests/ArrayOfInterfaces.h>
-
 namespace aidl {
 namespace android {
 namespace aidl {
