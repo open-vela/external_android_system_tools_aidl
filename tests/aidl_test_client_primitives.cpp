@@ -231,6 +231,27 @@ TEST_F(AidlPrimitiveTest, binderArray) {
       }
     }
   }
+  {
+    std::vector<std::optional<String16>> names = {String16{"Larry"}, std::nullopt, String16{"Moe"}};
+    std::optional<std::vector<sp<INamedCallback>>> got;
+    auto status = service->GetInterfaceList(names, &got);
+    ASSERT_TRUE(status.isOk());
+    bool verified = false;
+    status = service->VerifyNamesWithInterfaceList(got, names, &verified);
+    ASSERT_TRUE(status.isOk());
+    ASSERT_TRUE(verified);
+    ASSERT_TRUE(got.has_value());
+    for (int i = 0; i < 3; i++) {
+      if (names[i].has_value()) {
+        ASSERT_NE(got->at(i).get(), nullptr);
+        String16 name;
+        ASSERT_TRUE(got->at(i)->GetName(&name).isOk());
+        ASSERT_THAT(name, Eq(names[i].value()));
+      } else {
+        ASSERT_EQ(got->at(i).get(), nullptr);
+      }
+    }
+  }
   if (cpp_java_tests) {
     std::vector<sp<IBinder>> output;
     std::vector<sp<IBinder>> reversed;
