@@ -500,1259 +500,1194 @@ pub const A55: i32 = 1;
 pub const A56: i32 = 1;
 pub const A57: i32 = 1;
 impl BpTestService {
-  fn build_parcel_UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_arg)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_UnimplementedMethod(&self, _arg_arg: i32, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<i32> {
+  fn read_response_UnimplementedMethod(&self, _arg_arg: i32, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<i32> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.UnimplementedMethod(_arg_arg);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: i32 = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_Deprecated(&self) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_Deprecated(&self) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_Deprecated(&self, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+  fn read_response_Deprecated(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.Deprecated();
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
   }
-  fn build_parcel_TestOneway(&self) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_TestOneway(&self) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_TestOneway(&self, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+  fn read_response_TestOneway(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.TestOneway();
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     Ok(())
   }
-  fn build_parcel_RepeatBoolean(&self, _arg_token: bool) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatBoolean(&self, _arg_token: bool) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_token)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatBoolean(&self, _arg_token: bool, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<bool> {
+  fn read_response_RepeatBoolean(&self, _arg_token: bool, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<bool> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatBoolean(_arg_token);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: bool = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatByte(&self, _arg_token: i8) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatByte(&self, _arg_token: i8) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_token)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatByte(&self, _arg_token: i8, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<i8> {
+  fn read_response_RepeatByte(&self, _arg_token: i8, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<i8> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatByte(_arg_token);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: i8 = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatChar(&self, _arg_token: u16) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatChar(&self, _arg_token: u16) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_token)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatChar(&self, _arg_token: u16, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<u16> {
+  fn read_response_RepeatChar(&self, _arg_token: u16, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<u16> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatChar(_arg_token);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: u16 = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatInt(&self, _arg_token: i32) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatInt(&self, _arg_token: i32) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_token)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatInt(&self, _arg_token: i32, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<i32> {
+  fn read_response_RepeatInt(&self, _arg_token: i32, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<i32> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatInt(_arg_token);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: i32 = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatLong(&self, _arg_token: i64) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatLong(&self, _arg_token: i64) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_token)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatLong(&self, _arg_token: i64, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<i64> {
+  fn read_response_RepeatLong(&self, _arg_token: i64, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<i64> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatLong(_arg_token);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: i64 = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatFloat(&self, _arg_token: f32) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatFloat(&self, _arg_token: f32) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_token)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatFloat(&self, _arg_token: f32, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<f32> {
+  fn read_response_RepeatFloat(&self, _arg_token: f32, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<f32> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatFloat(_arg_token);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: f32 = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatDouble(&self, _arg_token: f64) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatDouble(&self, _arg_token: f64) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_token)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatDouble(&self, _arg_token: f64, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<f64> {
+  fn read_response_RepeatDouble(&self, _arg_token: f64, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<f64> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatDouble(_arg_token);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: f64 = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatString(&self, _arg_token: &str) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatString(&self, _arg_token: &str) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_token)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatString(&self, _arg_token: &str, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<String> {
+  fn read_response_RepeatString(&self, _arg_token: &str, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<String> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatString(_arg_token);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: String = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatByteEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatByteEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_token)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatByteEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum> {
+  fn read_response_RepeatByteEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatByteEnum(_arg_token);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatIntEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatIntEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_token)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatIntEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum> {
+  fn read_response_RepeatIntEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatIntEnum(_arg_token);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatLongEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatLongEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_token)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatLongEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum> {
+  fn read_response_RepeatLongEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatLongEnum(_arg_token);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseBoolean(&self, _arg_input: &[bool], _arg_repeated: &mut Vec<bool>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseBoolean(&self, _arg_input: &[bool], _arg_repeated: &mut Vec<bool>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
     aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseBoolean(&self, _arg_input: &[bool], _arg_repeated: &mut Vec<bool>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<bool>> {
+  fn read_response_ReverseBoolean(&self, _arg_input: &[bool], _arg_repeated: &mut Vec<bool>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<bool>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseBoolean(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<bool> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseByte(&self, _arg_input: &[u8], _arg_repeated: &mut Vec<u8>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseByte(&self, _arg_input: &[u8], _arg_repeated: &mut Vec<u8>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
     aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseByte(&self, _arg_input: &[u8], _arg_repeated: &mut Vec<u8>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<u8>> {
+  fn read_response_ReverseByte(&self, _arg_input: &[u8], _arg_repeated: &mut Vec<u8>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<u8>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseByte(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<u8> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseChar(&self, _arg_input: &[u16], _arg_repeated: &mut Vec<u16>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseChar(&self, _arg_input: &[u16], _arg_repeated: &mut Vec<u16>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
     aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseChar(&self, _arg_input: &[u16], _arg_repeated: &mut Vec<u16>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<u16>> {
+  fn read_response_ReverseChar(&self, _arg_input: &[u16], _arg_repeated: &mut Vec<u16>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<u16>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseChar(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<u16> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseInt(&self, _arg_input: &[i32], _arg_repeated: &mut Vec<i32>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseInt(&self, _arg_input: &[i32], _arg_repeated: &mut Vec<i32>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
     aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseInt(&self, _arg_input: &[i32], _arg_repeated: &mut Vec<i32>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<i32>> {
+  fn read_response_ReverseInt(&self, _arg_input: &[i32], _arg_repeated: &mut Vec<i32>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<i32>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseInt(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<i32> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseLong(&self, _arg_input: &[i64], _arg_repeated: &mut Vec<i64>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseLong(&self, _arg_input: &[i64], _arg_repeated: &mut Vec<i64>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
     aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseLong(&self, _arg_input: &[i64], _arg_repeated: &mut Vec<i64>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<i64>> {
+  fn read_response_ReverseLong(&self, _arg_input: &[i64], _arg_repeated: &mut Vec<i64>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<i64>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseLong(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<i64> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseFloat(&self, _arg_input: &[f32], _arg_repeated: &mut Vec<f32>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseFloat(&self, _arg_input: &[f32], _arg_repeated: &mut Vec<f32>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
     aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseFloat(&self, _arg_input: &[f32], _arg_repeated: &mut Vec<f32>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<f32>> {
+  fn read_response_ReverseFloat(&self, _arg_input: &[f32], _arg_repeated: &mut Vec<f32>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<f32>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseFloat(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<f32> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseDouble(&self, _arg_input: &[f64], _arg_repeated: &mut Vec<f64>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseDouble(&self, _arg_input: &[f64], _arg_repeated: &mut Vec<f64>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
     aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseDouble(&self, _arg_input: &[f64], _arg_repeated: &mut Vec<f64>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<f64>> {
+  fn read_response_ReverseDouble(&self, _arg_input: &[f64], _arg_repeated: &mut Vec<f64>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<f64>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseDouble(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<f64> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
     aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<String>> {
+  fn read_response_ReverseString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<String>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseString(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<String> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseByteEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseByteEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
     aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseByteEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>> {
+  fn read_response_ReverseByteEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseByteEnum(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseIntEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseIntEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
     aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseIntEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>> {
+  fn read_response_ReverseIntEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseIntEnum(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
     aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>> {
+  fn read_response_ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseLongEnum(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_name)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_GetOtherTestService(&self, _arg_name: &str, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> {
+  fn read_response_GetOtherTestService(&self, _arg_name: &str, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.GetOtherTestService(_arg_name);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_VerifyName(&self, _arg_service: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>, _arg_name: &str) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_VerifyName(&self, _arg_service: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>, _arg_name: &str) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_service)?;
     aidl_data.write(_arg_name)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_VerifyName(&self, _arg_service: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>, _arg_name: &str, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<bool> {
+  fn read_response_VerifyName(&self, _arg_service: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>, _arg_name: &str, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<bool> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.VerifyName(_arg_service, _arg_name);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: bool = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_GetInterfaceArray(&self, _arg_names: &[String]) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_GetInterfaceArray(&self, _arg_names: &[String]) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_names)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_GetInterfaceArray(&self, _arg_names: &[String], _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
+  fn read_response_GetInterfaceArray(&self, _arg_names: &[String], _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.GetInterfaceArray(_arg_names);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_VerifyNamesWithInterfaceArray(&self, _arg_services: &[binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>], _arg_names: &[String]) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_VerifyNamesWithInterfaceArray(&self, _arg_services: &[binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>], _arg_names: &[String]) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_services)?;
     aidl_data.write(_arg_names)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_VerifyNamesWithInterfaceArray(&self, _arg_services: &[binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>], _arg_names: &[String], _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<bool> {
+  fn read_response_VerifyNamesWithInterfaceArray(&self, _arg_services: &[binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>], _arg_names: &[String], _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<bool> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.VerifyNamesWithInterfaceArray(_arg_services, _arg_names);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: bool = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_GetNullableInterfaceArray(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_GetNullableInterfaceArray(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_names)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_GetNullableInterfaceArray(&self, _arg_names: Option<&[Option<String>]>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>> {
+  fn read_response_GetNullableInterfaceArray(&self, _arg_names: Option<&[Option<String>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.GetNullableInterfaceArray(_arg_names);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_VerifyNamesWithNullableInterfaceArray(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_VerifyNamesWithNullableInterfaceArray(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_services)?;
     aidl_data.write(&_arg_names)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_VerifyNamesWithNullableInterfaceArray(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<bool> {
+  fn read_response_VerifyNamesWithNullableInterfaceArray(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<bool> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.VerifyNamesWithNullableInterfaceArray(_arg_services, _arg_names);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: bool = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_GetInterfaceList(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_GetInterfaceList(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_names)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_GetInterfaceList(&self, _arg_names: Option<&[Option<String>]>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>> {
+  fn read_response_GetInterfaceList(&self, _arg_names: Option<&[Option<String>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.GetInterfaceList(_arg_names);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_VerifyNamesWithInterfaceList(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_VerifyNamesWithInterfaceList(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_services)?;
     aidl_data.write(&_arg_names)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_VerifyNamesWithInterfaceList(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<bool> {
+  fn read_response_VerifyNamesWithInterfaceList(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<bool> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.VerifyNamesWithInterfaceList(_arg_services, _arg_names);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: bool = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<String>> {
+  fn read_response_ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<String>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseStringList(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<String> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_read)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<binder::parcel::ParcelFileDescriptor> {
+  fn read_response_RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<binder::parcel::ParcelFileDescriptor> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatParcelFileDescriptor(_arg_read);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: binder::parcel::ParcelFileDescriptor = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseParcelFileDescriptorArray(&self, _arg_input: &[binder::parcel::ParcelFileDescriptor], _arg_repeated: &mut Vec<Option<binder::parcel::ParcelFileDescriptor>>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseParcelFileDescriptorArray(&self, _arg_input: &[binder::parcel::ParcelFileDescriptor], _arg_repeated: &mut Vec<Option<binder::parcel::ParcelFileDescriptor>>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
     aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseParcelFileDescriptorArray(&self, _arg_input: &[binder::parcel::ParcelFileDescriptor], _arg_repeated: &mut Vec<Option<binder::parcel::ParcelFileDescriptor>>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<binder::parcel::ParcelFileDescriptor>> {
+  fn read_response_ReverseParcelFileDescriptorArray(&self, _arg_input: &[binder::parcel::ParcelFileDescriptor], _arg_repeated: &mut Vec<Option<binder::parcel::ParcelFileDescriptor>>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<binder::parcel::ParcelFileDescriptor>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseParcelFileDescriptorArray(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<binder::parcel::ParcelFileDescriptor> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ThrowServiceException(&self, _arg_code: i32) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ThrowServiceException(&self, _arg_code: i32) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_code)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ThrowServiceException(&self, _arg_code: i32, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+  fn read_response_ThrowServiceException(&self, _arg_code: i32, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ThrowServiceException(_arg_code);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
   }
-  fn build_parcel_RepeatNullableIntArray(&self, _arg_input: Option<&[i32]>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatNullableIntArray(&self, _arg_input: Option<&[i32]>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_input)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatNullableIntArray(&self, _arg_input: Option<&[i32]>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<Vec<i32>>> {
+  fn read_response_RepeatNullableIntArray(&self, _arg_input: Option<&[i32]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<i32>>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableIntArray(_arg_input);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<i32>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableByteEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum]>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatNullableByteEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum]>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_input)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatNullableByteEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum]>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>> {
+  fn read_response_RepeatNullableByteEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableByteEnumArray(_arg_input);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableIntEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum]>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatNullableIntEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum]>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_input)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatNullableIntEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum]>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>> {
+  fn read_response_RepeatNullableIntEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableIntEnumArray(_arg_input);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableLongEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatNullableLongEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_input)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatNullableLongEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>> {
+  fn read_response_RepeatNullableLongEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableLongEnumArray(_arg_input);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableString(&self, _arg_input: Option<&str>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatNullableString(&self, _arg_input: Option<&str>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_input)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatNullableString(&self, _arg_input: Option<&str>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<String>> {
+  fn read_response_RepeatNullableString(&self, _arg_input: Option<&str>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<String>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableString(_arg_input);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<String> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableStringList(&self, _arg_input: Option<&[Option<String>]>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatNullableStringList(&self, _arg_input: Option<&[Option<String>]>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_input)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatNullableStringList(&self, _arg_input: Option<&[Option<String>]>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
+  fn read_response_RepeatNullableStringList(&self, _arg_input: Option<&[Option<String>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableStringList(_arg_input);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<Option<String>>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_input)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>> {
+  fn read_response_RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableParcelable(_arg_input);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableParcelableArray(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatNullableParcelableArray(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_input)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatNullableParcelableArray(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>> {
+  fn read_response_RepeatNullableParcelableArray(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableParcelableArray(_arg_input);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableParcelableList(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatNullableParcelableList(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_input)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatNullableParcelableList(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>> {
+  fn read_response_RepeatNullableParcelableList(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableParcelableList(_arg_input);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_TakesAnIBinder(&self, _arg_input: &binder::SpIBinder) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_TakesAnIBinder(&self, _arg_input: &binder::SpIBinder) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_TakesAnIBinder(&self, _arg_input: &binder::SpIBinder, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+  fn read_response_TakesAnIBinder(&self, _arg_input: &binder::SpIBinder, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.TakesAnIBinder(_arg_input);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
   }
-  fn build_parcel_TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_input)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+  fn read_response_TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.TakesANullableIBinder(_arg_input);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
   }
-  fn build_parcel_TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder]) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder]) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder], _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+  fn read_response_TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder], _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.TakesAnIBinderList(_arg_input);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
   }
-  fn build_parcel_TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_input)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+  fn read_response_TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.TakesANullableIBinderList(_arg_input);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
   }
-  fn build_parcel_RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_token)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatUtf8CppString(&self, _arg_token: &str, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<String> {
+  fn read_response_RepeatUtf8CppString(&self, _arg_token: &str, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<String> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatUtf8CppString(_arg_token);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: String = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_token)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<String>> {
+  fn read_response_RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<String>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableUtf8CppString(_arg_token);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<String> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
     aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<String>> {
+  fn read_response_ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<String>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseUtf8CppString(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<String> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseNullableUtf8CppString(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseNullableUtf8CppString(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_input)?;
     aidl_data.write_slice_size(_arg_repeated.as_deref())?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseNullableUtf8CppString(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
+  fn read_response_ReverseNullableUtf8CppString(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseNullableUtf8CppString(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<Option<String>>> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_input)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
+  fn read_response_ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseUtf8CppStringList(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<Option<String>>> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_return_null)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_GetCallback(&self, _arg_return_null: bool, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
+  fn read_response_GetCallback(&self, _arg_return_null: bool, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.GetCallback(_arg_return_null);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_parcel)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+  fn read_response_FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.FillOutStructuredParcelable(_arg_parcel);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     _aidl_reply.read_onto(_arg_parcel)?;
     Ok(())
   }
-  fn build_parcel_RepeatExtendableParcelable(&self, _arg_ep: &crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_RepeatExtendableParcelable(&self, _arg_ep: &crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_ep)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_RepeatExtendableParcelable(&self, _arg_ep: &crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<()> {
+  fn read_response_RepeatExtendableParcelable(&self, _arg_ep: &crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatExtendableParcelable(_arg_ep, _arg_ep2);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     _aidl_reply.read_onto(_arg_ep2)?;
     Ok(())
   }
-  fn build_parcel_ReverseList(&self, _arg_list: &crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseList(&self, _arg_list: &crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_list)?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseList(&self, _arg_list: &crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList> {
+  fn read_response_ReverseList(&self, _arg_list: &crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseList(_arg_list);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(_arg_input)?;
     aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Vec<binder::SpIBinder>> {
+  fn read_response_ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<binder::SpIBinder>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseIBinderArray(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<binder::SpIBinder> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
     aidl_data.write(&_arg_input)?;
     aidl_data.write_slice_size(_arg_repeated.as_deref())?;
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<Vec<Option<binder::SpIBinder>>>> {
+  fn read_response_ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<binder::SpIBinder>>>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseNullableIBinderArray(_arg_input, _arg_repeated);
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<Option<binder::SpIBinder>>> = _aidl_reply.read()?;
     _aidl_reply.read_onto(_arg_repeated)?;
     Ok(_aidl_return)
   }
-  fn build_parcel_GetOldNameInterface(&self) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_GetOldNameInterface(&self) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_GetOldNameInterface(&self, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> {
+  fn read_response_GetOldNameInterface(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.GetOldNameInterface();
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_GetNewNameInterface(&self) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_GetNewNameInterface(&self) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_GetNewNameInterface(&self, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> {
+  fn read_response_GetNewNameInterface(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.GetNewNameInterface();
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_GetCppJavaTests(&self) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_GetCppJavaTests(&self) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_GetCppJavaTests(&self, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<Option<binder::SpIBinder>> {
+  fn read_response_GetCppJavaTests(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<binder::SpIBinder>> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.GetCppJavaTests();
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<binder::SpIBinder> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_getBackendType(&self) -> binder::public_api::Result<binder::OwnedParcel> {
-    let mut aidl_data_owned = self.binder.prepare_transact()?;
-    let mut aidl_data = aidl_data_owned.borrowed();
+  fn build_parcel_getBackendType(&self) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
-    Ok(aidl_data_owned)
+    Ok(aidl_data)
   }
-  fn read_response_getBackendType(&self, _aidl_reply: binder::Result<binder::OwnedParcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType> {
+  fn read_response_getBackendType(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.getBackendType();
       }
     }
-    let _aidl_reply = _aidl_reply?.into_parcel();
+    let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: crate::mangled::_7_android_4_aidl_5_tests_11_BackendType = _aidl_reply.read()?;
@@ -2995,7 +2930,7 @@ impl ITestService for binder::Binder<BnTestService> {
   fn GetCppJavaTests(&self) -> binder::public_api::Result<Option<binder::SpIBinder>> { self.0.GetCppJavaTests() }
   fn getBackendType(&self) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType> { self.0.getBackendType() }
 }
-fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::Parcel, _aidl_reply: &mut binder::parcel::Parcel) -> binder::Result<()> {
+fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::BorrowedParcel<'_>, _aidl_reply: &mut binder::parcel::BorrowedParcel<'_>) -> binder::Result<()> {
   match _aidl_code {
     transactions::UnimplementedMethod => {
       let _arg_arg: i32 = _aidl_data.read()?;
@@ -3830,12 +3765,12 @@ pub mod Empty {
     }
   }
   impl binder::parcel::Parcelable for Empty {
-    fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
       parcel.sized_write(|subparcel| {
         Ok(())
       })
     }
-    fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+    fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
       parcel.sized_read(|subparcel| {
         Ok(())
       })
@@ -3894,7 +3829,7 @@ pub mod CompilerChecks {
     }
   }
   impl binder::parcel::Parcelable for CompilerChecks {
-    fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+    fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
       parcel.sized_write(|subparcel| {
         let __field_ref = self.binder.as_ref().ok_or(binder::StatusCode::UNEXPECTED_NULL)?;
         subparcel.write(__field_ref)?;
@@ -3919,7 +3854,7 @@ pub mod CompilerChecks {
         Ok(())
       })
     }
-    fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+    fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
       parcel.sized_read(|subparcel| {
         if subparcel.has_more_data() {
           self.binder = Some(subparcel.read()?);
