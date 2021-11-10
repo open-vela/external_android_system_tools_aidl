@@ -1379,6 +1379,22 @@ func TestAidlFlags(t *testing.T) {
 	}
 }
 
+func TestAidlModuleJavaSdkVersionDeterminesMinSdkVersion(t *testing.T) {
+	ctx, _ := testAidl(t, `
+		aidl_interface {
+			name: "myiface",
+			srcs: ["a/Foo.aidl"],
+			backend: {
+				java: {
+					sdk_version: "28",
+				},
+			},
+		}
+	`, java.FixtureWithPrebuiltApis(map[string][]string{"28": {"foo"}}))
+	params := ctx.ModuleForTests("myiface-V1-java-source", "").Output("a/Foo.java")
+	assertContains(t, params.Args["optionalFlags"], "--min_sdk_version 28")
+}
+
 func TestAidlModuleNameContainsVersion(t *testing.T) {
 	testAidlError(t, "aidl_interface should not have '-V<number> suffix", `
 		aidl_interface {
