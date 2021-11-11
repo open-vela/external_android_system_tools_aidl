@@ -114,23 +114,6 @@ public class ListOfInterfaces implements android.os.Parcelable
         {
           return DESCRIPTOR;
         }
-        public static android.aidl.tests.ListOfInterfaces.IEmptyInterface sDefaultImpl;
-      }
-      public static boolean setDefaultImpl(android.aidl.tests.ListOfInterfaces.IEmptyInterface impl) {
-        // Only one user of this interface can use this function
-        // at a time. This is a heuristic to detect if two different
-        // users in the same process use this function.
-        if (Stub.Proxy.sDefaultImpl != null) {
-          throw new IllegalStateException("setDefaultImpl() called twice");
-        }
-        if (impl != null) {
-          Stub.Proxy.sDefaultImpl = impl;
-          return true;
-        }
-        return false;
-      }
-      public static android.aidl.tests.ListOfInterfaces.IEmptyInterface getDefaultImpl() {
-        return Stub.Proxy.sDefaultImpl;
       }
     }
     public static final java.lang.String DESCRIPTOR = "android$aidl$tests$ListOfInterfaces$IEmptyInterface".replace('$', '.');
@@ -255,11 +238,6 @@ public class ListOfInterfaces implements android.os.Parcelable
             _data.writeInterfaceList(nullable_iface_list_in);
             _data.writeInterfaceList(nullable_iface_list_inout);
             boolean _status = mRemote.transact(Stub.TRANSACTION_methodWithInterfaces, _data, _reply, 0);
-            if (!_status) {
-              if (getDefaultImpl() != null) {
-                return getDefaultImpl().methodWithInterfaces(iface, nullable_iface, iface_list_in, iface_list_out, iface_list_inout, nullable_iface_list_in, nullable_iface_list_out, nullable_iface_list_inout);
-              }
-            }
             _reply.readException();
             _result = _reply.createInterfaceArrayList(android.aidl.tests.ListOfInterfaces.IEmptyInterface.Stub::asInterface);
             _reply.readInterfaceList(iface_list_out, android.aidl.tests.ListOfInterfaces.IEmptyInterface.Stub::asInterface);
@@ -273,25 +251,8 @@ public class ListOfInterfaces implements android.os.Parcelable
           }
           return _result;
         }
-        public static android.aidl.tests.ListOfInterfaces.IMyInterface sDefaultImpl;
       }
       static final int TRANSACTION_methodWithInterfaces = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
-      public static boolean setDefaultImpl(android.aidl.tests.ListOfInterfaces.IMyInterface impl) {
-        // Only one user of this interface can use this function
-        // at a time. This is a heuristic to detect if two different
-        // users in the same process use this function.
-        if (Stub.Proxy.sDefaultImpl != null) {
-          throw new IllegalStateException("setDefaultImpl() called twice");
-        }
-        if (impl != null) {
-          Stub.Proxy.sDefaultImpl = impl;
-          return true;
-        }
-        return false;
-      }
-      public static android.aidl.tests.ListOfInterfaces.IMyInterface getDefaultImpl() {
-        return Stub.Proxy.sDefaultImpl;
-      }
     }
     public static final java.lang.String DESCRIPTOR = "android$aidl$tests$ListOfInterfaces$IMyInterface".replace('$', '.');
     public java.util.List<android.aidl.tests.ListOfInterfaces.IEmptyInterface> methodWithInterfaces(android.aidl.tests.ListOfInterfaces.IEmptyInterface iface, android.aidl.tests.ListOfInterfaces.IEmptyInterface nullable_iface, java.util.List<android.aidl.tests.ListOfInterfaces.IEmptyInterface> iface_list_in, java.util.List<android.aidl.tests.ListOfInterfaces.IEmptyInterface> iface_list_out, java.util.List<android.aidl.tests.ListOfInterfaces.IEmptyInterface> iface_list_inout, java.util.List<android.aidl.tests.ListOfInterfaces.IEmptyInterface> nullable_iface_list_in, java.util.List<android.aidl.tests.ListOfInterfaces.IEmptyInterface> nullable_iface_list_out, java.util.List<android.aidl.tests.ListOfInterfaces.IEmptyInterface> nullable_iface_list_inout) throws android.os.RemoteException;

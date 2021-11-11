@@ -39,6 +39,7 @@ function _golden_test() {
   modules=(
     "aidl-test-interface-cpp-source"
     "aidl-test-interface-java-source"
+    "aidl-test-versioned-interface-V2-java-source"
     "aidl-test-interface-ndk-source"
     "aidl-test-interface-rust-source"
     "aidl_test_loggable_interface-cpp-source"
