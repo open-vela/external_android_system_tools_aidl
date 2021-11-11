@@ -56,7 +56,7 @@ impl Default for ParcelableForToString {
   }
 }
 impl binder::parcel::Parcelable for ParcelableForToString {
-  fn write_to_parcel(&self, parcel: &mut binder::parcel::Parcel) -> binder::Result<()> {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_write(|subparcel| {
       subparcel.write(&self.intValue)?;
       subparcel.write(&self.intArray)?;
@@ -84,7 +84,7 @@ impl binder::parcel::Parcelable for ParcelableForToString {
       Ok(())
     })
   }
-  fn read_from_parcel(&mut self, parcel: &binder::parcel::Parcel) -> binder::Result<()> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_read(|subparcel| {
       if subparcel.has_more_data() {
         self.intValue = subparcel.read()?;

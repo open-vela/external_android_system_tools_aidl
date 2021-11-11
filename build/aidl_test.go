@@ -851,7 +851,7 @@ func TestImports(t *testing.T) {
 
 	rustcRule := ctx.ModuleForTests("foo-V1-rust", nativeRustVariant).Rule("rustc")
 	libFlags = rustcRule.Args["libFlags"]
-	libBar = filepath.Join("out", "soong", ".intermediates", "bar.1-V1-rust", nativeRustVariant, "libbar_1_V1.dylib.so")
+	libBar = filepath.Join("out", "soong", ".intermediates", "bar.1-V1-rust", nativeRustVariant, "unstripped", "libbar_1_V1.dylib.so")
 	libBarFlag := "--extern bar_1=" + libBar
 	if !strings.Contains(libFlags, libBarFlag) {
 		t.Errorf("%q is not found in %q", libBarFlag, libFlags)
@@ -1377,6 +1377,22 @@ func TestAidlFlags(t *testing.T) {
 			})
 		}
 	}
+}
+
+func TestAidlModuleJavaSdkVersionDeterminesMinSdkVersion(t *testing.T) {
+	ctx, _ := testAidl(t, `
+		aidl_interface {
+			name: "myiface",
+			srcs: ["a/Foo.aidl"],
+			backend: {
+				java: {
+					sdk_version: "28",
+				},
+			},
+		}
+	`, java.FixtureWithPrebuiltApis(map[string][]string{"28": {"foo"}}))
+	params := ctx.ModuleForTests("myiface-V1-java-source", "").Output("a/Foo.java")
+	assertContains(t, params.Args["optionalFlags"], "--min_sdk_version 28")
 }
 
 func TestAidlModuleNameContainsVersion(t *testing.T) {
