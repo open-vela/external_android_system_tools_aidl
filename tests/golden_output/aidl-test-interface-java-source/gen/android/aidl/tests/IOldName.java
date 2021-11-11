@@ -96,11 +96,6 @@ public interface IOldName extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_RealName, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              return getDefaultImpl().RealName();
-            }
-          }
           _reply.readException();
           _result = _reply.readString();
         }
@@ -110,25 +105,8 @@ public interface IOldName extends android.os.IInterface
         }
         return _result;
       }
-      public static android.aidl.tests.IOldName sDefaultImpl;
     }
     static final int TRANSACTION_RealName = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
-    public static boolean setDefaultImpl(android.aidl.tests.IOldName impl) {
-      // Only one user of this interface can use this function
-      // at a time. This is a heuristic to detect if two different
-      // users in the same process use this function.
-      if (Stub.Proxy.sDefaultImpl != null) {
-        throw new IllegalStateException("setDefaultImpl() called twice");
-      }
-      if (impl != null) {
-        Stub.Proxy.sDefaultImpl = impl;
-        return true;
-      }
-      return false;
-    }
-    public static android.aidl.tests.IOldName getDefaultImpl() {
-      return Stub.Proxy.sDefaultImpl;
-    }
   }
   public static final java.lang.String DESCRIPTOR = "android$aidl$tests$IOldName".replace('$', '.');
   public java.lang.String RealName() throws android.os.RemoteException;

@@ -120,12 +120,6 @@ public interface IProtected extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_PermissionProtected, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              getDefaultImpl().PermissionProtected();
-              return;
-            }
-          }
           _reply.readException();
         }
         finally {
@@ -140,12 +134,6 @@ public interface IProtected extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_MultiplePermissions, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              getDefaultImpl().MultiplePermissions();
-              return;
-            }
-          }
           _reply.readException();
         }
         finally {
@@ -160,12 +148,6 @@ public interface IProtected extends android.os.IInterface
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
           boolean _status = mRemote.transact(Stub.TRANSACTION_MultiplePermissions2, _data, _reply, 0);
-          if (!_status) {
-            if (getDefaultImpl() != null) {
-              getDefaultImpl().MultiplePermissions2();
-              return;
-            }
-          }
           _reply.readException();
         }
         finally {
@@ -173,27 +155,10 @@ public interface IProtected extends android.os.IInterface
           _data.recycle();
         }
       }
-      public static android.aidl.tests.permission.IProtected sDefaultImpl;
     }
     static final int TRANSACTION_PermissionProtected = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
     static final int TRANSACTION_MultiplePermissions = (android.os.IBinder.FIRST_CALL_TRANSACTION + 1);
     static final int TRANSACTION_MultiplePermissions2 = (android.os.IBinder.FIRST_CALL_TRANSACTION + 2);
-    public static boolean setDefaultImpl(android.aidl.tests.permission.IProtected impl) {
-      // Only one user of this interface can use this function
-      // at a time. This is a heuristic to detect if two different
-      // users in the same process use this function.
-      if (Stub.Proxy.sDefaultImpl != null) {
-        throw new IllegalStateException("setDefaultImpl() called twice");
-      }
-      if (impl != null) {
-        Stub.Proxy.sDefaultImpl = impl;
-        return true;
-      }
-      return false;
-    }
-    public static android.aidl.tests.permission.IProtected getDefaultImpl() {
-      return Stub.Proxy.sDefaultImpl;
-    }
   }
   public static final java.lang.String DESCRIPTOR = "android$aidl$tests$permission$IProtected".replace('$', '.');
   public void PermissionProtected() throws android.os.RemoteException;
