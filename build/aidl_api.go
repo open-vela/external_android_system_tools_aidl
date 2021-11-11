@@ -50,13 +50,13 @@ var (
 )
 
 type aidlApiProperties struct {
-	BaseName              string
-	Srcs                  []string `android:"path"`
-	AidlRoot              string   // base directory for the input aidl file
-	Stability             *string
-	ImportsWithoutVersion []string
-	Versions              []string
-	Dumpapi               DumpApiProperties
+	BaseName  string
+	Srcs      []string `android:"path"`
+	AidlRoot  string   // base directory for the input aidl file
+	Stability *string
+	Imports   []string
+	Versions  []string
+	Dumpapi   DumpApiProperties
 }
 
 type aidlApi struct {
@@ -203,8 +203,8 @@ type deps struct {
 func getDeps(ctx android.ModuleContext, versionedImports map[string]string) deps {
 	var deps deps
 	ctx.VisitDirectDeps(func(dep android.Module) {
-		switch ctx.OtherModuleDependencyTag(dep) {
-		case importInterfaceDep:
+		switch ctx.OtherModuleDependencyTag(dep).(type) {
+		case importInterfaceDepTag:
 			iface := dep.(*aidlInterface)
 			if version, ok := versionedImports[iface.BaseModuleName()]; ok {
 				if iface.preprocessed[version] == nil {
@@ -212,10 +212,10 @@ func getDeps(ctx android.ModuleContext, versionedImports map[string]string) deps
 				}
 				deps.preprocessed = append(deps.preprocessed, iface.preprocessed[version])
 			}
-		case interfaceDep:
+		case interfaceDepTag:
 			iface := dep.(*aidlInterface)
 			deps.imports = append(deps.imports, iface.properties.Include_dirs...)
-		case importApiDep, apiDep:
+		case apiDepTag:
 			api := dep.(*aidlApi)
 			// add imported module's checkapiTimestamps as implicits to make sure that imported apiDump is up-to-date
 			deps.implicits = append(deps.implicits, api.checkApiTimestamps.Paths()...)
@@ -436,23 +436,7 @@ func (m *aidlApi) AndroidMk() android.AndroidMkData {
 	}
 }
 
-type depTag struct {
-	blueprint.BaseDependencyTag
-	name string
-}
-
-var (
-	apiDep       = depTag{name: "api"}
-	interfaceDep = depTag{name: "interface"}
-
-	importApiDep       = depTag{name: "imported-api"}
-	importInterfaceDep = depTag{name: "imported-interface"}
-)
-
 func (m *aidlApi) DepsMutator(ctx android.BottomUpMutatorContext) {
-	ctx.AddDependency(ctx.Module(), interfaceDep, m.properties.BaseName+aidlInterfaceSuffix)
-	ctx.AddDependency(ctx.Module(), importInterfaceDep, wrap("", m.properties.ImportsWithoutVersion, aidlInterfaceSuffix)...)
-	ctx.AddDependency(ctx.Module(), importApiDep, wrap("", m.properties.ImportsWithoutVersion, aidlApiSuffix)...)
 	ctx.AddReverseDependency(ctx.Module(), nil, aidlMetadataSingletonName)
 }
 
@@ -469,13 +453,13 @@ func addApiModule(mctx android.LoadHookContext, i *aidlInterface) string {
 	mctx.CreateModule(aidlApiFactory, &nameProperties{
 		Name: proptools.StringPtr(apiModule),
 	}, &aidlApiProperties{
-		BaseName:              i.ModuleBase.Name(),
-		Srcs:                  srcs,
-		AidlRoot:              aidlRoot,
-		Stability:             i.properties.Stability,
-		ImportsWithoutVersion: i.properties.ImportsWithoutVersion,
-		Versions:              i.properties.Versions,
-		Dumpapi:               i.properties.Dumpapi,
+		BaseName:  i.ModuleBase.Name(),
+		Srcs:      srcs,
+		AidlRoot:  aidlRoot,
+		Stability: i.properties.Stability,
+		Imports:   i.properties.Imports,
+		Versions:  i.properties.Versions,
+		Dumpapi:   i.properties.Dumpapi,
 	})
 	return apiModule
 }
