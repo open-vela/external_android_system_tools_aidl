@@ -166,17 +166,8 @@ func _testAidl(t *testing.T, bp string, customizers ...android.FixturePreparer) 
 			ctx.RegisterModuleType("rust_defaults", func() android.Module {
 				return rust.DefaultsFactory()
 			})
-
-			ctx.PreArchMutators(func(ctx android.RegisterMutatorsContext) {
-				ctx.BottomUp("checkImports", checkImports)
-				ctx.TopDown("createAidlInterface", createAidlInterfaceMutator)
-			})
-
-			ctx.PostDepsMutators(func(ctx android.RegisterMutatorsContext) {
-				ctx.BottomUp("checkUnstableModule", checkUnstableModuleMutator).Parallel()
-				ctx.BottomUp("recordVersions", recordVersions).Parallel()
-				ctx.BottomUp("checkDuplicatedVersions", checkDuplicatedVersions).Parallel()
-			})
+			ctx.PreArchMutators(registerPreArchMutators)
+			ctx.PostDepsMutators(registerPostDepsMutators)
 		}),
 	)
 
@@ -862,7 +853,7 @@ func TestImports(t *testing.T) {
 func TestDuplicatedVersions(t *testing.T) {
 	// foo depends on myiface-V2-ndk via direct dep and also on
 	// myiface-V1-ndk via indirect dep. This should be prohibited.
-	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-ndk, myiface-V2-ndk`, `
+	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-.*, myiface-V2-.*`, `
 		aidl_interface {
 			name: "myiface",
 			srcs: ["IFoo.aidl"],
@@ -885,7 +876,7 @@ func TestDuplicatedVersions(t *testing.T) {
 		"aidl_api/myiface/2/myiface.2.aidl": nil,
 		"aidl_api/myiface/2/.hash":          nil,
 	}))
-	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-ndk, myiface-V2-ndk`, `
+	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-.*, myiface-V2-.*`, `
 		aidl_interface {
 			name: "myiface",
 			srcs: ["IFoo.aidl"],
@@ -907,7 +898,7 @@ func TestDuplicatedVersions(t *testing.T) {
 		"aidl_api/myiface/1/myiface.1.aidl": nil,
 		"aidl_api/myiface/1/.hash":          nil,
 	}))
-	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-ndk-source, myiface-V2-ndk`, `
+	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-.*, myiface-V2-.*`, `
 		aidl_interface {
 			name: "myiface",
 			srcs: ["IFoo.aidl"],
@@ -931,6 +922,21 @@ func TestDuplicatedVersions(t *testing.T) {
 			shared_libs: ["myiface2-V1-ndk"],
 		}
 
+	`, withFiles(map[string][]byte{
+		"aidl_api/myiface/1/myiface.1.aidl": nil,
+		"aidl_api/myiface/1/.hash":          nil,
+	}))
+	// Okay to reference two different
+	testAidl(t, `
+		aidl_interface {
+			name: "myiface",
+			srcs: ["IFoo.aidl"],
+			versions: ["1"],
+		}
+		cc_library {
+			name: "foobar",
+			shared_libs: ["myiface-V1-cpp", "myiface-V1-ndk"],
+		}
 	`, withFiles(map[string][]byte{
 		"aidl_api/myiface/1/myiface.1.aidl": nil,
 		"aidl_api/myiface/1/.hash":          nil,
