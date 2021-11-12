@@ -69,6 +69,7 @@ func _testAidl(t *testing.T, bp string, customizers ...android.FixturePreparer) 
 		cc.PrepareForTestWithCcDefaultModules,
 		java.PrepareForTestWithJavaDefaultModules,
 		genrule.PrepareForTestWithGenRuleBuildComponents,
+		android.PrepareForTestWithNamespace,
 	)
 
 	bp = bp + `
@@ -1555,4 +1556,61 @@ func TestUseVersionedPreprocessedWhenImporotedWithVersions(t *testing.T) {
 		android.AssertStringDoesContain(t, "foo-no-versions-V1(latest) imports bar-V2(latest) for 'bar'", rule.Args["optionalFlags"],
 			"-pout/soong/.intermediates/bar_interface/2/preprocessed.aidl")
 	}
+}
+
+func FindModule(ctx *android.TestContext, name, variant, dir string) android.Module {
+	var module android.Module
+	ctx.VisitAllModules(func(m blueprint.Module) {
+		if ctx.ModuleName(m) == name && ctx.ModuleSubDir(m) == variant && ctx.ModuleDir(m) == dir {
+			module = m.(android.Module)
+		}
+	})
+	if module == nil {
+		m := ctx.ModuleForTests(name, variant).Module()
+		panic(fmt.Errorf("failed to find module %q variant %q dir %q, but found one in %q",
+			name, variant, dir, ctx.ModuleDir(m)))
+	}
+	return module
+}
+
+func TestDuplicateInterfacesWithTheSameNameInDifferentSoongNamespaces(t *testing.T) {
+	ctx, _ := testAidl(t, ``, withFiles(map[string][]byte{
+		"common/Android.bp": []byte(`
+		  aidl_interface {
+				name: "common",
+				srcs: ["ICommon.aidl"],
+				versions: ["1", "2"],
+			}
+		`),
+		"common/aidl_api/common/1/ICommon.aidl": nil,
+		"common/aidl_api/common/1/.hash":        nil,
+		"common/aidl_api/common/2/ICommon.aidl": nil,
+		"common/aidl_api/common/2/.hash":        nil,
+		"vendor/a/Android.bp": []byte(`
+			soong_namespace {}
+		`),
+		"vendor/a/foo/Android.bp": []byte(`
+			aidl_interface {
+				name: "foo",
+				srcs: ["IFoo.aidl"],
+				imports: ["common-V1"],
+			}
+		`),
+		"vendor/b/Android.bp": []byte(`
+			soong_namespace {}
+		`),
+		"vendor/b/foo/Android.bp": []byte(`
+			aidl_interface {
+				name: "foo",
+				srcs: ["IFoo.aidl"],
+				imports: ["common-V2"],
+			}
+		`),
+	}))
+
+	aFooV1Java := FindModule(ctx, "foo-V1-java", "android_common", "vendor/a/foo").(*java.Library)
+	android.AssertStringListContains(t, "a/foo deps", aFooV1Java.CompilerDeps(), "common-V1-java")
+
+	bFooV1Java := FindModule(ctx, "foo-V1-java", "android_common", "vendor/b/foo").(*java.Library)
+	android.AssertStringListContains(t, "a/foo deps", bFooV1Java.CompilerDeps(), "common-V2-java")
 }
