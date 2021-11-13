@@ -69,6 +69,7 @@ func _testAidl(t *testing.T, bp string, customizers ...android.FixturePreparer) 
 		cc.PrepareForTestWithCcDefaultModules,
 		java.PrepareForTestWithJavaDefaultModules,
 		genrule.PrepareForTestWithGenRuleBuildComponents,
+		android.PrepareForTestWithNamespace,
 	)
 
 	bp = bp + `
@@ -165,17 +166,8 @@ func _testAidl(t *testing.T, bp string, customizers ...android.FixturePreparer) 
 			ctx.RegisterModuleType("rust_defaults", func() android.Module {
 				return rust.DefaultsFactory()
 			})
-
-			ctx.PreArchMutators(func(ctx android.RegisterMutatorsContext) {
-				ctx.BottomUp("checkImports", checkImports)
-				ctx.TopDown("createAidlInterface", createAidlInterfaceMutator)
-			})
-
-			ctx.PostDepsMutators(func(ctx android.RegisterMutatorsContext) {
-				ctx.BottomUp("checkUnstableModule", checkUnstableModuleMutator).Parallel()
-				ctx.BottomUp("recordVersions", recordVersions).Parallel()
-				ctx.BottomUp("checkDuplicatedVersions", checkDuplicatedVersions).Parallel()
-			})
+			ctx.PreArchMutators(registerPreArchMutators)
+			ctx.PostDepsMutators(registerPostDepsMutators)
 		}),
 	)
 
@@ -861,7 +853,7 @@ func TestImports(t *testing.T) {
 func TestDuplicatedVersions(t *testing.T) {
 	// foo depends on myiface-V2-ndk via direct dep and also on
 	// myiface-V1-ndk via indirect dep. This should be prohibited.
-	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-ndk, myiface-V2-ndk`, `
+	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-.*, myiface-V2-.*`, `
 		aidl_interface {
 			name: "myiface",
 			srcs: ["IFoo.aidl"],
@@ -884,7 +876,7 @@ func TestDuplicatedVersions(t *testing.T) {
 		"aidl_api/myiface/2/myiface.2.aidl": nil,
 		"aidl_api/myiface/2/.hash":          nil,
 	}))
-	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-ndk, myiface-V2-ndk`, `
+	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-.*, myiface-V2-.*`, `
 		aidl_interface {
 			name: "myiface",
 			srcs: ["IFoo.aidl"],
@@ -906,7 +898,7 @@ func TestDuplicatedVersions(t *testing.T) {
 		"aidl_api/myiface/1/myiface.1.aidl": nil,
 		"aidl_api/myiface/1/.hash":          nil,
 	}))
-	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-ndk-source, myiface-V2-ndk`, `
+	testAidlError(t, `depends on multiple versions of the same aidl_interface: myiface-V1-.*, myiface-V2-.*`, `
 		aidl_interface {
 			name: "myiface",
 			srcs: ["IFoo.aidl"],
@@ -930,6 +922,21 @@ func TestDuplicatedVersions(t *testing.T) {
 			shared_libs: ["myiface2-V1-ndk"],
 		}
 
+	`, withFiles(map[string][]byte{
+		"aidl_api/myiface/1/myiface.1.aidl": nil,
+		"aidl_api/myiface/1/.hash":          nil,
+	}))
+	// Okay to reference two different
+	testAidl(t, `
+		aidl_interface {
+			name: "myiface",
+			srcs: ["IFoo.aidl"],
+			versions: ["1"],
+		}
+		cc_library {
+			name: "foobar",
+			shared_libs: ["myiface-V1-cpp", "myiface-V1-ndk"],
+		}
 	`, withFiles(map[string][]byte{
 		"aidl_api/myiface/1/myiface.1.aidl": nil,
 		"aidl_api/myiface/1/.hash":          nil,
@@ -1555,4 +1562,61 @@ func TestUseVersionedPreprocessedWhenImporotedWithVersions(t *testing.T) {
 		android.AssertStringDoesContain(t, "foo-no-versions-V1(latest) imports bar-V2(latest) for 'bar'", rule.Args["optionalFlags"],
 			"-pout/soong/.intermediates/bar_interface/2/preprocessed.aidl")
 	}
+}
+
+func FindModule(ctx *android.TestContext, name, variant, dir string) android.Module {
+	var module android.Module
+	ctx.VisitAllModules(func(m blueprint.Module) {
+		if ctx.ModuleName(m) == name && ctx.ModuleSubDir(m) == variant && ctx.ModuleDir(m) == dir {
+			module = m.(android.Module)
+		}
+	})
+	if module == nil {
+		m := ctx.ModuleForTests(name, variant).Module()
+		panic(fmt.Errorf("failed to find module %q variant %q dir %q, but found one in %q",
+			name, variant, dir, ctx.ModuleDir(m)))
+	}
+	return module
+}
+
+func TestDuplicateInterfacesWithTheSameNameInDifferentSoongNamespaces(t *testing.T) {
+	ctx, _ := testAidl(t, ``, withFiles(map[string][]byte{
+		"common/Android.bp": []byte(`
+		  aidl_interface {
+				name: "common",
+				srcs: ["ICommon.aidl"],
+				versions: ["1", "2"],
+			}
+		`),
+		"common/aidl_api/common/1/ICommon.aidl": nil,
+		"common/aidl_api/common/1/.hash":        nil,
+		"common/aidl_api/common/2/ICommon.aidl": nil,
+		"common/aidl_api/common/2/.hash":        nil,
+		"vendor/a/Android.bp": []byte(`
+			soong_namespace {}
+		`),
+		"vendor/a/foo/Android.bp": []byte(`
+			aidl_interface {
+				name: "foo",
+				srcs: ["IFoo.aidl"],
+				imports: ["common-V1"],
+			}
+		`),
+		"vendor/b/Android.bp": []byte(`
+			soong_namespace {}
+		`),
+		"vendor/b/foo/Android.bp": []byte(`
+			aidl_interface {
+				name: "foo",
+				srcs: ["IFoo.aidl"],
+				imports: ["common-V2"],
+			}
+		`),
+	}))
+
+	aFooV1Java := FindModule(ctx, "foo-V1-java", "android_common", "vendor/a/foo").(*java.Library)
+	android.AssertStringListContains(t, "a/foo deps", aFooV1Java.CompilerDeps(), "common-V1-java")
+
+	bFooV1Java := FindModule(ctx, "foo-V1-java", "android_common", "vendor/b/foo").(*java.Library)
+	android.AssertStringListContains(t, "a/foo deps", bFooV1Java.CompilerDeps(), "common-V2-java")
 }
