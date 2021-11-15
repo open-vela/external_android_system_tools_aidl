@@ -296,6 +296,36 @@ func TestUnstableVersionUsageInRelease(t *testing.T) {
 	testAidl(t, stableVersionUsageInJavaBp, files)
 }
 
+func TestUsingUnstableVersionIndirectlyInRelease(t *testing.T) {
+	unstableVersionUsageInJavaBp := `
+	aidl_interface {
+		name: "xxx",
+		srcs: ["IFoo.aidl"],
+		versions: ["1"],
+	}
+	aidl_interface {
+		name: "foo",
+		imports: ["xxx-V2"],    // not OK
+		versions: ["1"],
+		srcs: ["IFoo.aidl"],
+	}
+	java_library {
+		name: "bar",
+		libs: ["foo-V1-java"],  // OK
+	}`
+	files := withFiles(map[string][]byte{
+		"aidl_api/foo/1/foo.1.aidl": nil,
+		"aidl_api/foo/1/.hash":      nil,
+		"aidl_api/xxx/1/foo.1.aidl": nil,
+		"aidl_api/xxx/1/.hash":      nil,
+	})
+
+	expectedError := `xxx-V2-java is disallowed in release version because it is unstable.`
+	testAidlError(t, expectedError, unstableVersionUsageInJavaBp, setReleaseEnv(), files)
+	testAidlError(t, expectedError, unstableVersionUsageInJavaBp, setTestFreezeEnv(), files)
+	testAidl(t, unstableVersionUsageInJavaBp, files)
+}
+
 // The module which has never been frozen and is not "unstable" is not allowed in release version.
 func TestNonVersionedModuleUsageInRelease(t *testing.T) {
 	nonVersionedModuleUsageInJavaBp := `
@@ -453,7 +483,7 @@ func TestUnstableVersionedModuleOwnedByTestUsageInRelease(t *testing.T) {
 
 	expectedError := `Android.bp:11:2: module \"bar\" variant \"android_common\": foo-V2-java is disallowed in release version because it is unstable, and its \"owner\" property is missing.`
 	testAidl(t, nonVersionedModuleUsageInJavaBp, setReleaseEnv(), files)
-	testAidlError(t, expectedError, nonVersionedModuleUsageInJavaBp, setTestFreezeEnv())
+	testAidlError(t, expectedError, nonVersionedModuleUsageInJavaBp, setTestFreezeEnv(), files)
 	testAidl(t, nonVersionedModuleUsageInJavaBp, files)
 }
 
@@ -1619,4 +1649,47 @@ func TestDuplicateInterfacesWithTheSameNameInDifferentSoongNamespaces(t *testing
 
 	bFooV1Java := FindModule(ctx, "foo-V1-java", "android_common", "vendor/b/foo").(*java.Library)
 	android.AssertStringListContains(t, "a/foo deps", bFooV1Java.CompilerDeps(), "common-V2-java")
+}
+
+func TestUnstableChecksForAidlInterfacesInDifferentNamespaces(t *testing.T) {
+	files := withFiles(map[string][]byte{
+		"vendor/a/Android.bp": []byte(`
+			soong_namespace {}
+		`),
+		"vendor/a/foo/Android.bp": []byte(`
+			aidl_interface {
+				name: "foo",
+				srcs: ["IFoo.aidl"],
+				versions: ["1", "2"],
+			}
+			java_library {
+				name: "bar",
+				libs: ["foo-V2-java"],  // OK
+			}
+		`),
+		"vendor/a/foo/aidl_api/foo/1/IFoo.aidl": nil,
+		"vendor/a/foo/aidl_api/foo/1/.hash":     nil,
+		"vendor/a/foo/aidl_api/foo/2/IFoo.aidl": nil,
+		"vendor/a/foo/aidl_api/foo/2/.hash":     nil,
+		"vendor/b/Android.bp": []byte(`
+			soong_namespace {}
+		`),
+		"vendor/b/foo/Android.bp": []byte(`
+			aidl_interface {
+				name: "foo",
+				srcs: ["IFoo.aidl"],
+				versions: ["1"],
+			}
+			java_library {
+				name: "bar",
+				libs: ["foo-V1-java"],  // OK
+			}
+		`),
+		"vendor/b/foo/aidl_api/foo/1/IFoo.aidl": nil,
+		"vendor/b/foo/aidl_api/foo/1/.hash":     nil,
+	})
+
+	testAidl(t, ``, files, setReleaseEnv())
+	testAidl(t, ``, files, setTestFreezeEnv())
+	testAidl(t, ``, files)
 }
