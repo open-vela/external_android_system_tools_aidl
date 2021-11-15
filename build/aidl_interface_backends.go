@@ -26,16 +26,16 @@ import (
 	"github.com/google/blueprint/proptools"
 )
 
-func addLibrary(mctx android.LoadHookContext, i *aidlInterface, version string, lang string) string {
+func addLibrary(mctx android.LoadHookContext, i *aidlInterface, version string, lang string, notFrozen bool) string {
 	if lang == langJava {
-		return addJavaLibrary(mctx, i, version)
+		return addJavaLibrary(mctx, i, version, notFrozen)
 	} else if lang == langRust {
-		return addRustLibrary(mctx, i, version)
+		return addRustLibrary(mctx, i, version, notFrozen)
 	}
-	return addCppLibrary(mctx, i, version, lang)
+	return addCppLibrary(mctx, i, version, lang, notFrozen)
 }
 
-func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version string, lang string) string {
+func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version string, lang string, notFrozen bool) string {
 	cppSourceGen := i.versionedName(version) + "-" + lang + "-source"
 	cppModuleGen := i.versionedName(version) + "-" + lang
 
@@ -84,6 +84,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		Version:         i.versionForAidlGenRule(version),
 		GenTrace:        genTrace,
 		Unstable:        i.properties.Unstable,
+		NotFrozen:       notFrozen,
 		Visibility:      srcsVisibility(mctx, lang),
 		Flags:           i.flagsForAidlGenRule(version),
 	})
@@ -203,7 +204,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 	return cppModuleGen
 }
 
-func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version string) string {
+func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version string, notFrozen bool) string {
 	javaSourceGen := i.versionedName(version) + "-java-source"
 	javaModuleGen := i.versionedName(version) + "-java"
 	srcs, aidlRoot := i.srcsForVersion(mctx, version)
@@ -239,6 +240,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		GenRpc:          proptools.Bool(i.properties.Backend.Java.Gen_rpc),
 		GenTrace:        proptools.Bool(i.properties.Gen_trace),
 		Unstable:        i.properties.Unstable,
+		NotFrozen:       notFrozen,
 		Visibility:      srcsVisibility(mctx, langJava),
 		Flags:           i.flagsForAidlGenRule(version),
 	})
@@ -265,7 +267,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 	return javaModuleGen
 }
 
-func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, version string) string {
+func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, version string, notFrozen bool) string {
 	rustSourceGen := i.versionedName(version) + "-rust-source"
 	rustModuleGen := i.versionedName(version) + "-rust"
 	srcs, aidlRoot := i.srcsForVersion(mctx, version)
@@ -288,6 +290,7 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		BaseName:        i.ModuleBase.Name(),
 		Version:         i.versionForAidlGenRule(version),
 		Unstable:        i.properties.Unstable,
+		NotFrozen:       notFrozen,
 		Visibility:      srcsVisibility(mctx, langRust),
 		Flags:           i.flagsForAidlGenRule(version),
 	})
@@ -295,7 +298,7 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 	versionedRustName := fixRustName(i.versionedName(version))
 	rustCrateName := fixRustName(i.ModuleBase.Name())
 
-	mctx.CreateModule(aidlRustLibraryFactory, &rustProperties{
+	mctx.CreateModule(wrapLibraryFactory(aidlRustLibraryFactory), &rustProperties{
 		Name:            proptools.StringPtr(rustModuleGen),
 		Crate_name:      rustCrateName,
 		Stem:            proptools.StringPtr("lib" + versionedRustName),
@@ -447,12 +450,12 @@ func (g *aidlImplementationGenerator) GenerateImplementation(ctx android.TopDown
 		if p, ok := g.properties.ModuleProperties[0].(*javaProperties); ok {
 			p.Static_libs = imports
 		}
-		ctx.CreateModule(java.LibraryFactory, g.properties.ModuleProperties...)
+		ctx.CreateModule(wrapLibraryFactory(java.LibraryFactory), g.properties.ModuleProperties...)
 	} else {
 		if p, ok := g.properties.ModuleProperties[0].(*ccProperties); ok {
 			p.Shared_libs = append(p.Shared_libs, imports...)
 			p.Export_shared_lib_headers = append(p.Export_shared_lib_headers, imports...)
 		}
-		ctx.CreateModule(cc.LibraryFactory, g.properties.ModuleProperties...)
+		ctx.CreateModule(wrapLibraryFactory(cc.LibraryFactory), g.properties.ModuleProperties...)
 	}
 }
