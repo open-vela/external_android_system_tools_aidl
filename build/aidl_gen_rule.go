@@ -76,6 +76,7 @@ type aidlGenProperties struct {
 	GenRpc          bool
 	GenTrace        bool
 	Unstable        *bool
+	NotFrozen       bool
 	Visibility      []string
 	Flags           []string
 }
