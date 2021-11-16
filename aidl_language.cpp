@@ -182,7 +182,7 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
       {AidlAnnotation::Type::PERMISSION_ENFORCE,
        "Enforce",
        CONTEXT_TYPE_INTERFACE | CONTEXT_METHOD,
-       {{"condition", kStringType, /* required= */ true}}},
+       {{"value", kStringType, /* required= */ true}}},
       {AidlAnnotation::Type::PERMISSION_MANUAL,
        "PermissionManuallyEnforced",
        CONTEXT_TYPE_INTERFACE | CONTEXT_METHOD,
@@ -312,11 +312,11 @@ bool AidlAnnotation::CheckValid() const {
 }
 
 Result<unique_ptr<perm::Expression>> AidlAnnotation::EnforceExpression() const {
-  auto perm_expr = ParamValue<std::string>("condition");
+  auto perm_expr = ParamValue<std::string>("value");
   if (perm_expr.has_value()) {
     return perm::Parser::Parse(perm_expr.value());
   }
-  return Error() << "No condition parameter for @Enforce";
+  return Error() << "No value parameter for @Enforce";
 }
 
 // Checks if the annotation is applicable to the current context.

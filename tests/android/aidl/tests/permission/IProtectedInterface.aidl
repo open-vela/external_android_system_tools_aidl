@@ -1,8 +1,8 @@
 package android.aidl.tests.permission;
 
-@Enforce(condition="permission = ACCESS_FINE_LOCATION")
+@Enforce("permission=ACCESS_FINE_LOCATION")
 interface IProtectedInterface {
     void Method1();
 
-    @Enforce(condition="permission = INTERNET") void Method2();
+    @Enforce("permission=INTERNET") void Method2();
 }
