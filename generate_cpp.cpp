@@ -1229,9 +1229,10 @@ void GenerateHeaderIncludes(CodeWriter& out, const AidlDefinedType& defined_type
       includes.insert("tuple");  // std::tie in comparison operators
     }
 
-    void Visit(const AidlUnionDecl&) override {
+    void Visit(const AidlUnionDecl& union_decl) override {
       AddParcelableCommonHeaders();
-      includes.insert(std::begin(UnionWriter::headers), std::end(UnionWriter::headers));
+      auto union_headers = cpp::UnionWriter::GetHeaders(union_decl);
+      includes.insert(std::begin(union_headers), std::end(union_headers));
     }
 
     void Visit(const AidlEnumDeclaration&) override {
