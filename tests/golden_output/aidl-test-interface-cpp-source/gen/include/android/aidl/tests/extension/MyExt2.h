@@ -15,6 +15,9 @@ namespace tests {
 namespace extension {
 class MyExt2 : public ::android::Parcelable {
 public:
+  int32_t a = 0;
+  ::android::aidl::tests::extension::MyExt b;
+  ::std::string c;
   inline bool operator!=(const MyExt2& rhs) const {
     return std::tie(a, b, c) != std::tie(rhs.a, rhs.b, rhs.c);
   }
@@ -34,9 +37,6 @@ public:
     return std::tie(a, b, c) >= std::tie(rhs.a, rhs.b, rhs.c);
   }
 
-  int32_t a = 0;
-  ::android::aidl::tests::extension::MyExt b;
-  ::std::string c;
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
   static const ::android::String16& getParcelableDescriptor() {

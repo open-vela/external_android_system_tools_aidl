@@ -14,6 +14,8 @@ namespace aidl {
 namespace tests {
 class RecursiveList : public ::android::Parcelable {
 public:
+  int32_t value = 0;
+  ::std::unique_ptr<::android::aidl::tests::RecursiveList> next;
   inline bool operator!=(const RecursiveList& rhs) const {
     return std::tie(value, next) != std::tie(rhs.value, rhs.next);
   }
@@ -33,8 +35,6 @@ public:
     return std::tie(value, next) >= std::tie(rhs.value, rhs.next);
   }
 
-  int32_t value = 0;
-  ::std::unique_ptr<::android::aidl::tests::RecursiveList> next;
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
   static const ::android::String16& getParcelableDescriptor() {

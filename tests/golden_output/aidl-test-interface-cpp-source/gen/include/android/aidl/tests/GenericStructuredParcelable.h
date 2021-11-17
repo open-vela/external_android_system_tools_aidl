@@ -13,6 +13,8 @@ namespace tests {
 template <typename T, typename U, typename B>
 class GenericStructuredParcelable : public ::android::Parcelable {
 public:
+  int32_t a = 0;
+  int32_t b = 0;
   inline bool operator!=(const GenericStructuredParcelable& rhs) const {
     return std::tie(a, b) != std::tie(rhs.a, rhs.b);
   }
@@ -32,8 +34,6 @@ public:
     return std::tie(a, b) >= std::tie(rhs.a, rhs.b);
   }
 
-  int32_t a = 0;
-  int32_t b = 0;
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
   static const ::android::String16& getParcelableDescriptor() {

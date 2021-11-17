@@ -20,25 +20,6 @@ namespace aidl {
 namespace loggable {
 class Union : public ::android::Parcelable {
 public:
-  inline bool operator!=(const Union& rhs) const {
-    return _value != rhs._value;
-  }
-  inline bool operator<(const Union& rhs) const {
-    return _value < rhs._value;
-  }
-  inline bool operator<=(const Union& rhs) const {
-    return _value <= rhs._value;
-  }
-  inline bool operator==(const Union& rhs) const {
-    return _value == rhs._value;
-  }
-  inline bool operator>(const Union& rhs) const {
-    return _value > rhs._value;
-  }
-  inline bool operator>=(const Union& rhs) const {
-    return _value >= rhs._value;
-  }
-
   enum Tag : int32_t {
     num = 0,  // int num;
     str,  // String str;
@@ -87,6 +68,25 @@ public:
   template <Tag _tag, typename... _Tp>
   void set(_Tp&&... _args) {
     _value.emplace<_tag>(std::forward<_Tp>(_args)...);
+  }
+
+  inline bool operator!=(const Union& rhs) const {
+    return _value != rhs._value;
+  }
+  inline bool operator<(const Union& rhs) const {
+    return _value < rhs._value;
+  }
+  inline bool operator<=(const Union& rhs) const {
+    return _value <= rhs._value;
+  }
+  inline bool operator==(const Union& rhs) const {
+    return _value == rhs._value;
+  }
+  inline bool operator>(const Union& rhs) const {
+    return _value > rhs._value;
+  }
+  inline bool operator>=(const Union& rhs) const {
+    return _value >= rhs._value;
   }
 
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;

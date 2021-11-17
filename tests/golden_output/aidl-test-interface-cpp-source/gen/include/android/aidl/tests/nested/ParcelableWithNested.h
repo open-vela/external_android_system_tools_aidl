@@ -17,6 +17,11 @@ namespace tests {
 namespace nested {
 class ParcelableWithNested : public ::android::Parcelable {
 public:
+  enum class Status : int8_t {
+    OK = 0,
+    NOT_OK = 1,
+  };
+  ::android::aidl::tests::nested::ParcelableWithNested::Status status = ::android::aidl::tests::nested::ParcelableWithNested::Status::OK;
   inline bool operator!=(const ParcelableWithNested& rhs) const {
     return std::tie(status) != std::tie(rhs.status);
   }
@@ -36,11 +41,6 @@ public:
     return std::tie(status) >= std::tie(rhs.status);
   }
 
-  enum class Status : int8_t {
-    OK = 0,
-    NOT_OK = 1,
-  };
-  ::android::aidl::tests::nested::ParcelableWithNested::Status status = ::android::aidl::tests::nested::ParcelableWithNested::Status::OK;
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
   static const ::android::String16& getParcelableDescriptor() {

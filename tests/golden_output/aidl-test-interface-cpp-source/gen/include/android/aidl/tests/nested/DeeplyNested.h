@@ -17,69 +17,15 @@ namespace tests {
 namespace nested {
 class DeeplyNested : public ::android::Parcelable {
 public:
-  inline bool operator!=(const DeeplyNested&) const {
-    return std::tie() != std::tie();
-  }
-  inline bool operator<(const DeeplyNested&) const {
-    return std::tie() < std::tie();
-  }
-  inline bool operator<=(const DeeplyNested&) const {
-    return std::tie() <= std::tie();
-  }
-  inline bool operator==(const DeeplyNested&) const {
-    return std::tie() == std::tie();
-  }
-  inline bool operator>(const DeeplyNested&) const {
-    return std::tie() > std::tie();
-  }
-  inline bool operator>=(const DeeplyNested&) const {
-    return std::tie() >= std::tie();
-  }
-
   class B : public ::android::Parcelable {
   public:
-    inline bool operator!=(const B&) const {
-      return std::tie() != std::tie();
-    }
-    inline bool operator<(const B&) const {
-      return std::tie() < std::tie();
-    }
-    inline bool operator<=(const B&) const {
-      return std::tie() <= std::tie();
-    }
-    inline bool operator==(const B&) const {
-      return std::tie() == std::tie();
-    }
-    inline bool operator>(const B&) const {
-      return std::tie() > std::tie();
-    }
-    inline bool operator>=(const B&) const {
-      return std::tie() >= std::tie();
-    }
-
     class C : public ::android::Parcelable {
     public:
-      inline bool operator!=(const C&) const {
-        return std::tie() != std::tie();
-      }
-      inline bool operator<(const C&) const {
-        return std::tie() < std::tie();
-      }
-      inline bool operator<=(const C&) const {
-        return std::tie() <= std::tie();
-      }
-      inline bool operator==(const C&) const {
-        return std::tie() == std::tie();
-      }
-      inline bool operator>(const C&) const {
-        return std::tie() > std::tie();
-      }
-      inline bool operator>=(const C&) const {
-        return std::tie() >= std::tie();
-      }
-
       class D : public ::android::Parcelable {
       public:
+        enum class E : int8_t {
+          OK = 0,
+        };
         inline bool operator!=(const D&) const {
           return std::tie() != std::tie();
         }
@@ -99,9 +45,6 @@ public:
           return std::tie() >= std::tie();
         }
 
-        enum class E : int8_t {
-          OK = 0,
-        };
         ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
         ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
         static const ::android::String16& getParcelableDescriptor() {
@@ -115,6 +58,25 @@ public:
           return os.str();
         }
       };  // class D
+      inline bool operator!=(const C&) const {
+        return std::tie() != std::tie();
+      }
+      inline bool operator<(const C&) const {
+        return std::tie() < std::tie();
+      }
+      inline bool operator<=(const C&) const {
+        return std::tie() <= std::tie();
+      }
+      inline bool operator==(const C&) const {
+        return std::tie() == std::tie();
+      }
+      inline bool operator>(const C&) const {
+        return std::tie() > std::tie();
+      }
+      inline bool operator>=(const C&) const {
+        return std::tie() >= std::tie();
+      }
+
       ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
       ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
       static const ::android::String16& getParcelableDescriptor() {
@@ -128,6 +90,25 @@ public:
         return os.str();
       }
     };  // class C
+    inline bool operator!=(const B&) const {
+      return std::tie() != std::tie();
+    }
+    inline bool operator<(const B&) const {
+      return std::tie() < std::tie();
+    }
+    inline bool operator<=(const B&) const {
+      return std::tie() <= std::tie();
+    }
+    inline bool operator==(const B&) const {
+      return std::tie() == std::tie();
+    }
+    inline bool operator>(const B&) const {
+      return std::tie() > std::tie();
+    }
+    inline bool operator>=(const B&) const {
+      return std::tie() >= std::tie();
+    }
+
     ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
     ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
     static const ::android::String16& getParcelableDescriptor() {
@@ -143,6 +124,7 @@ public:
   };  // class B
   class A : public ::android::Parcelable {
   public:
+    ::android::aidl::tests::nested::DeeplyNested::B::C::D::E e = ::android::aidl::tests::nested::DeeplyNested::B::C::D::E::OK;
     inline bool operator!=(const A& rhs) const {
       return std::tie(e) != std::tie(rhs.e);
     }
@@ -162,7 +144,6 @@ public:
       return std::tie(e) >= std::tie(rhs.e);
     }
 
-    ::android::aidl::tests::nested::DeeplyNested::B::C::D::E e = ::android::aidl::tests::nested::DeeplyNested::B::C::D::E::OK;
     ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
     ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
     static const ::android::String16& getParcelableDescriptor() {
@@ -177,6 +158,25 @@ public:
       return os.str();
     }
   };  // class A
+  inline bool operator!=(const DeeplyNested&) const {
+    return std::tie() != std::tie();
+  }
+  inline bool operator<(const DeeplyNested&) const {
+    return std::tie() < std::tie();
+  }
+  inline bool operator<=(const DeeplyNested&) const {
+    return std::tie() <= std::tie();
+  }
+  inline bool operator==(const DeeplyNested&) const {
+    return std::tie() == std::tie();
+  }
+  inline bool operator>(const DeeplyNested&) const {
+    return std::tie() > std::tie();
+  }
+  inline bool operator>=(const DeeplyNested&) const {
+    return std::tie() >= std::tie();
+  }
+
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
   static const ::android::String16& getParcelableDescriptor() {
