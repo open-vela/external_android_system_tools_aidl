@@ -254,12 +254,6 @@ struct ReturnStatement : public Statement {
   void Write(CodeWriter* to) const override;
 };
 
-struct BreakStatement : public Statement {
-  BreakStatement() = default;
-  virtual ~BreakStatement() = default;
-  void Write(CodeWriter* to) const override;
-};
-
 struct TryStatement : public Statement {
   std::shared_ptr<StatementBlock> statements = std::make_shared<StatementBlock>();
 
@@ -336,6 +330,20 @@ struct Class : public ClassElement {
   virtual ~Class() = default;
 
   void Write(CodeWriter* to) const override;
+};
+
+class Document : public AstNode {
+ public:
+  Document(const std::string& comment,
+           const std::string& package,
+           std::unique_ptr<Class> clazz);
+  virtual ~Document() = default;
+  void Write(CodeWriter* to) const override;
+
+ private:
+  std::string comment_;
+  std::string package_;
+  std::unique_ptr<Class> clazz_;
 };
 
 extern std::shared_ptr<Expression> NULL_VALUE;

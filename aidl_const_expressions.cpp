@@ -371,15 +371,8 @@ bool AidlConstantValue::ParseIntegral(const string& value, int64_t* parsed_value
     return false;
   }
 
-  std::string_view value_view = value;
-  const bool is_byte = ConsumeSuffix(&value_view, "u8");
-  const bool is_long = ConsumeSuffix(&value_view, "l") || ConsumeSuffix(&value_view, "L");
-  const std::string value_substr = std::string(value_view);
-
-  *parsed_value = 0;
-  *parsed_type = Type::ERROR;
-
-  if (is_byte && is_long) return false;
+  const bool isLong = EndsWith(value, 'l') || EndsWith(value, 'L');
+  const std::string value_substr = isLong ? value.substr(0, value.size() - 1) : value;
 
   if (IsHex(value)) {
     // AIDL considers 'const int foo = 0xffffffff' as -1, but if we want to
@@ -393,38 +386,28 @@ bool AidlConstantValue::ParseIntegral(const string& value, int64_t* parsed_value
     // Note, for historical consistency, we need to consider small hex values
     // as an integral type. Recognizing them as INT8 could break some files,
     // even though it would simplify this code.
-    if (is_byte) {
-      uint8_t raw_value8;
-      if (!android::base::ParseUint<uint8_t>(value_substr, &raw_value8)) {
-        return false;
-      }
-      *parsed_value = static_cast<int8_t>(raw_value8);
-      *parsed_type = Type::INT8;
-    } else if (uint32_t raw_value32;
-               !is_long && android::base::ParseUint<uint32_t>(value_substr, &raw_value32)) {
-      *parsed_value = static_cast<int32_t>(raw_value32);
+    if (uint32_t rawValue32;
+        !isLong && android::base::ParseUint<uint32_t>(value_substr, &rawValue32)) {
+      *parsed_value = static_cast<int32_t>(rawValue32);
       *parsed_type = Type::INT32;
-    } else if (uint64_t raw_value64;
-               android::base::ParseUint<uint64_t>(value_substr, &raw_value64)) {
-      *parsed_value = static_cast<int64_t>(raw_value64);
+    } else if (uint64_t rawValue64; android::base::ParseUint<uint64_t>(value_substr, &rawValue64)) {
+      *parsed_value = static_cast<int64_t>(rawValue64);
       *parsed_type = Type::INT64;
     } else {
+      *parsed_value = 0;
+      *parsed_type = Type::ERROR;
       return false;
     }
     return true;
   }
 
   if (!android::base::ParseInt<int64_t>(value_substr, parsed_value)) {
+    *parsed_value = 0;
+    *parsed_type = Type::ERROR;
     return false;
   }
 
-  if (is_byte) {
-    if (*parsed_value > UINT8_MAX || *parsed_value < 0) {
-      return false;
-    }
-    *parsed_value = static_cast<int8_t>(*parsed_value);
-    *parsed_type = Type::INT8;
-  } else if (is_long) {
+  if (isLong) {
     *parsed_type = Type::INT64;
   } else {
     // guess literal type.
@@ -487,7 +470,7 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
   }
 
   const AidlDefinedType* defined_type = type.GetDefinedType();
-  if (defined_type && final_type_ != Type::ARRAY) {
+  if (defined_type && !type.IsArray()) {
     const AidlEnumDeclaration* enum_type = defined_type->AsEnumDeclaration();
     if (!enum_type) {
       AIDL_ERROR(this) << "Invalid type (" << defined_type->GetCanonicalName()
@@ -551,11 +534,8 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
       bool success = true;
 
       for (const auto& value : values_) {
-        // Pass array type(T[]) as it is instead of converting it to base type(T)
-        // so that decorator can decorate the value in the context of array.
-        // In C++/NDK, 'byte[]' and 'byte' are mapped to different types. If we pass 'byte'
-        // decorator can't know the value should be treated as 'uint8_t'.
-        string value_string = value->ValueString(type, decorator);
+        const AidlTypeSpecifier& array_base = type.ArrayBase();
+        const string value_string = value->ValueString(array_base, decorator);
         if (value_string.empty()) {
           success = false;
           break;
@@ -597,8 +577,7 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
   }
 
   AIDL_FATAL_IF(err == 0, this);
-  AIDL_ERROR(this) << "Invalid type specifier for " << ToString(final_type_) << ": " << type_string
-                   << " (" << value_ << ")";
+  AIDL_ERROR(this) << "Invalid type specifier for " << ToString(final_type_) << ": " << type_string;
   return "";
 }
 
