@@ -25,25 +25,6 @@ namespace aidl {
 namespace tests {
 class ListOfInterfaces : public ::android::Parcelable {
 public:
-  inline bool operator!=(const ListOfInterfaces&) const {
-    return std::tie() != std::tie();
-  }
-  inline bool operator<(const ListOfInterfaces&) const {
-    return std::tie() < std::tie();
-  }
-  inline bool operator<=(const ListOfInterfaces&) const {
-    return std::tie() <= std::tie();
-  }
-  inline bool operator==(const ListOfInterfaces&) const {
-    return std::tie() == std::tie();
-  }
-  inline bool operator>(const ListOfInterfaces&) const {
-    return std::tie() > std::tie();
-  }
-  inline bool operator>=(const ListOfInterfaces&) const {
-    return std::tie() >= std::tie();
-  }
-
   class IEmptyInterface : public ::android::IInterface {
   public:
     DECLARE_META_INTERFACE(EmptyInterface)
@@ -113,6 +94,10 @@ public:
   };  // class IMyInterfaceDelegator
   class MyParcelable : public ::android::Parcelable {
   public:
+    ::android::sp<::android::aidl::tests::ListOfInterfaces::IEmptyInterface> iface;
+    ::android::sp<::android::aidl::tests::ListOfInterfaces::IEmptyInterface> nullable_iface;
+    ::std::vector<::android::sp<::android::aidl::tests::ListOfInterfaces::IEmptyInterface>> iface_list;
+    ::std::optional<::std::vector<::android::sp<::android::aidl::tests::ListOfInterfaces::IEmptyInterface>>> nullable_iface_list;
     inline bool operator!=(const MyParcelable& rhs) const {
       return std::tie(iface, nullable_iface, iface_list, nullable_iface_list) != std::tie(rhs.iface, rhs.nullable_iface, rhs.iface_list, rhs.nullable_iface_list);
     }
@@ -132,10 +117,6 @@ public:
       return std::tie(iface, nullable_iface, iface_list, nullable_iface_list) >= std::tie(rhs.iface, rhs.nullable_iface, rhs.iface_list, rhs.nullable_iface_list);
     }
 
-    ::android::sp<::android::aidl::tests::ListOfInterfaces::IEmptyInterface> iface;
-    ::android::sp<::android::aidl::tests::ListOfInterfaces::IEmptyInterface> nullable_iface;
-    ::std::vector<::android::sp<::android::aidl::tests::ListOfInterfaces::IEmptyInterface>> iface_list;
-    ::std::optional<::std::vector<::android::sp<::android::aidl::tests::ListOfInterfaces::IEmptyInterface>>> nullable_iface_list;
     ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
     ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
     static const ::android::String16& getParcelableDescriptor() {
@@ -155,25 +136,6 @@ public:
   };  // class MyParcelable
   class MyUnion : public ::android::Parcelable {
   public:
-    inline bool operator!=(const MyUnion& rhs) const {
-      return _value != rhs._value;
-    }
-    inline bool operator<(const MyUnion& rhs) const {
-      return _value < rhs._value;
-    }
-    inline bool operator<=(const MyUnion& rhs) const {
-      return _value <= rhs._value;
-    }
-    inline bool operator==(const MyUnion& rhs) const {
-      return _value == rhs._value;
-    }
-    inline bool operator>(const MyUnion& rhs) const {
-      return _value > rhs._value;
-    }
-    inline bool operator>=(const MyUnion& rhs) const {
-      return _value >= rhs._value;
-    }
-
     enum Tag : int32_t {
       iface = 0,  // android.aidl.tests.ListOfInterfaces.IEmptyInterface iface;
       nullable_iface,  // android.aidl.tests.ListOfInterfaces.IEmptyInterface nullable_iface;
@@ -226,6 +188,25 @@ public:
       _value.emplace<_tag>(std::forward<_Tp>(_args)...);
     }
 
+    inline bool operator!=(const MyUnion& rhs) const {
+      return _value != rhs._value;
+    }
+    inline bool operator<(const MyUnion& rhs) const {
+      return _value < rhs._value;
+    }
+    inline bool operator<=(const MyUnion& rhs) const {
+      return _value <= rhs._value;
+    }
+    inline bool operator==(const MyUnion& rhs) const {
+      return _value == rhs._value;
+    }
+    inline bool operator>(const MyUnion& rhs) const {
+      return _value > rhs._value;
+    }
+    inline bool operator>=(const MyUnion& rhs) const {
+      return _value >= rhs._value;
+    }
+
     ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
     ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
     static const ::android::String16& getParcelableDescriptor() {
@@ -247,6 +228,25 @@ public:
   private:
     std::variant<::android::sp<::android::aidl::tests::ListOfInterfaces::IEmptyInterface>, ::android::sp<::android::aidl::tests::ListOfInterfaces::IEmptyInterface>, ::std::vector<::android::sp<::android::aidl::tests::ListOfInterfaces::IEmptyInterface>>, ::std::optional<::std::vector<::android::sp<::android::aidl::tests::ListOfInterfaces::IEmptyInterface>>>> _value;
   };  // class MyUnion
+  inline bool operator!=(const ListOfInterfaces&) const {
+    return std::tie() != std::tie();
+  }
+  inline bool operator<(const ListOfInterfaces&) const {
+    return std::tie() < std::tie();
+  }
+  inline bool operator<=(const ListOfInterfaces&) const {
+    return std::tie() <= std::tie();
+  }
+  inline bool operator==(const ListOfInterfaces&) const {
+    return std::tie() == std::tie();
+  }
+  inline bool operator>(const ListOfInterfaces&) const {
+    return std::tie() > std::tie();
+  }
+  inline bool operator>=(const ListOfInterfaces&) const {
+    return std::tie() >= std::tie();
+  }
+
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
   static const ::android::String16& getParcelableDescriptor() {
