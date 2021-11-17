@@ -67,6 +67,24 @@ public:
   };  // class Empty
   class CompilerChecks : public ::android::Parcelable {
   public:
+    ::android::sp<::android::IBinder> binder;
+    ::android::sp<::android::IBinder> nullable_binder;
+    ::std::vector<::android::sp<::android::IBinder>> binder_array;
+    ::std::optional<::std::vector<::android::sp<::android::IBinder>>> nullable_binder_array;
+    ::std::vector<::android::sp<::android::IBinder>> binder_list;
+    ::std::optional<::std::vector<::android::sp<::android::IBinder>>> nullable_binder_list;
+    ::android::os::ParcelFileDescriptor pfd;
+    ::std::optional<::android::os::ParcelFileDescriptor> nullable_pfd;
+    ::std::vector<::android::os::ParcelFileDescriptor> pfd_array;
+    ::std::optional<::std::vector<::std::optional<::android::os::ParcelFileDescriptor>>> nullable_pfd_array;
+    ::std::vector<::android::os::ParcelFileDescriptor> pfd_list;
+    ::std::optional<::std::vector<::std::optional<::android::os::ParcelFileDescriptor>>> nullable_pfd_list;
+    ::android::aidl::tests::ITestService::Empty parcel;
+    ::std::optional<::android::aidl::tests::ITestService::Empty> nullable_parcel;
+    ::std::vector<::android::aidl::tests::ITestService::Empty> parcel_array;
+    ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>> nullable_parcel_array;
+    ::std::vector<::android::aidl::tests::ITestService::Empty> parcel_list;
+    ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>> nullable_parcel_list;
     inline bool operator!=(const CompilerChecks& rhs) const {
       return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list, pfd, nullable_pfd, pfd_array, nullable_pfd_array, pfd_list, nullable_pfd_list, parcel, nullable_parcel, parcel_array, nullable_parcel_array, parcel_list, nullable_parcel_list) != std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list, rhs.pfd, rhs.nullable_pfd, rhs.pfd_array, rhs.nullable_pfd_array, rhs.pfd_list, rhs.nullable_pfd_list, rhs.parcel, rhs.nullable_parcel, rhs.parcel_array, rhs.nullable_parcel_array, rhs.parcel_list, rhs.nullable_parcel_list);
     }
@@ -86,24 +104,6 @@ public:
       return std::tie(binder, nullable_binder, binder_array, nullable_binder_array, binder_list, nullable_binder_list, pfd, nullable_pfd, pfd_array, nullable_pfd_array, pfd_list, nullable_pfd_list, parcel, nullable_parcel, parcel_array, nullable_parcel_array, parcel_list, nullable_parcel_list) >= std::tie(rhs.binder, rhs.nullable_binder, rhs.binder_array, rhs.nullable_binder_array, rhs.binder_list, rhs.nullable_binder_list, rhs.pfd, rhs.nullable_pfd, rhs.pfd_array, rhs.nullable_pfd_array, rhs.pfd_list, rhs.nullable_pfd_list, rhs.parcel, rhs.nullable_parcel, rhs.parcel_array, rhs.nullable_parcel_array, rhs.parcel_list, rhs.nullable_parcel_list);
     }
 
-    ::android::sp<::android::IBinder> binder;
-    ::android::sp<::android::IBinder> nullable_binder;
-    ::std::vector<::android::sp<::android::IBinder>> binder_array;
-    ::std::optional<::std::vector<::android::sp<::android::IBinder>>> nullable_binder_array;
-    ::std::vector<::android::sp<::android::IBinder>> binder_list;
-    ::std::optional<::std::vector<::android::sp<::android::IBinder>>> nullable_binder_list;
-    ::android::os::ParcelFileDescriptor pfd;
-    ::std::optional<::android::os::ParcelFileDescriptor> nullable_pfd;
-    ::std::vector<::android::os::ParcelFileDescriptor> pfd_array;
-    ::std::optional<::std::vector<::std::optional<::android::os::ParcelFileDescriptor>>> nullable_pfd_array;
-    ::std::vector<::android::os::ParcelFileDescriptor> pfd_list;
-    ::std::optional<::std::vector<::std::optional<::android::os::ParcelFileDescriptor>>> nullable_pfd_list;
-    ::android::aidl::tests::ITestService::Empty parcel;
-    ::std::optional<::android::aidl::tests::ITestService::Empty> nullable_parcel;
-    ::std::vector<::android::aidl::tests::ITestService::Empty> parcel_array;
-    ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>> nullable_parcel_array;
-    ::std::vector<::android::aidl::tests::ITestService::Empty> parcel_list;
-    ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>> nullable_parcel_list;
     ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
     ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
     static const ::android::String16& getParcelableDescriptor() {
