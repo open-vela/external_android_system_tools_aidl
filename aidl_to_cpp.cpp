@@ -147,6 +147,9 @@ std::string WrapIfNullable(const std::string type_str, const AidlTypeSpecifier& 
 
   if (raw_type.IsNullable() && !AidlTypenames::IsPrimitiveTypename(type.GetName()) &&
       type.GetName() != "IBinder" && typenames.GetEnumDeclaration(type) == nullptr) {
+    if (raw_type.IsHeapNullable()) {
+      return "::std::unique_ptr<" + type_str + ">";
+    }
     return "::std::optional<" + type_str + ">";
   }
   return type_str;
@@ -186,50 +189,36 @@ std::string GetCppName(const AidlTypeSpecifier& raw_type, const AidlTypenames& t
   if (definedType != nullptr && definedType->AsInterface() != nullptr) {
     return "::android::sp<" + GetRawCppName(type) + ">";
   }
-
-  return WrapIfNullable(GetRawCppName(type), raw_type, typenames);
+  auto cpp_name = GetRawCppName(type);
+  if (type.IsGeneric()) {
+    std::vector<std::string> type_params;
+    for (const auto& parameter : type.GetTypeParameters()) {
+      type_params.push_back(CppNameOf(*parameter, typenames));
+    }
+    cpp_name += "<" + base::Join(type_params, ", ") + ">";
+  }
+  return WrapIfNullable(cpp_name, raw_type, typenames);
 }
 }  // namespace
-std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value) {
-  if (type.IsArray()) {
-    return raw_value;
-  }
-
-  if (type.GetName() == "long") {
-    return raw_value + "L";
-  }
-
-  if (type.GetName() == "String" && !type.IsUtf8InCpp()) {
-    return "::android::String16(" + raw_value + ")";
-  }
-
-  if (auto defined_type = type.GetDefinedType(); defined_type) {
-    auto enum_type = defined_type->AsEnumDeclaration();
-    AIDL_FATAL_IF(!enum_type, type) << "Invalid type for \"" << raw_value << "\"";
-    return GetRawCppName(type) + "::" + raw_value.substr(raw_value.find_last_of('.') + 1);
-  }
-
-  return raw_value;
+std::string ConstantValueDecorator(
+    const AidlTypeSpecifier& type,
+    const std::variant<std::string, std::vector<std::string>>& raw_value) {
+  return CppConstantValueDecorator(type, raw_value, /*is_ndk=*/false);
 };
 
-std::string GetTransactionIdFor(const AidlInterface& iface, const AidlMethod& method) {
-  return ClassName(iface, ClassNames::SERVER) + "::TRANSACTION_" + method.GetName();
+std::string GetTransactionIdFor(const std::string& clazz, const AidlMethod& method) {
+  return clazz + "::TRANSACTION_" + method.GetName();
 }
 
 std::string CppNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
   if (type.IsArray() || typenames.IsList(type)) {
     std::string cpp_name = GetCppName(type, typenames);
-    if (type.IsNullable()) {
+    if (type.IsHeapNullable()) {
+      return "::std::unique_ptr<::std::vector<" + cpp_name + ">>";
+    } else if (type.IsNullable()) {
       return "::std::optional<::std::vector<" + cpp_name + ">>";
     }
     return "::std::vector<" + cpp_name + ">";
-  } else if (type.IsGeneric()) {
-    std::vector<std::string> type_params;
-    for (const auto& parameter : type.GetTypeParameters()) {
-      type_params.push_back(CppNameOf(*parameter, typenames));
-    }
-    return StringPrintf("%s<%s>", GetCppName(type, typenames).c_str(),
-                        base::Join(type_params, ", ").c_str());
   }
   return GetCppName(type, typenames);
 }
@@ -274,14 +263,10 @@ std::string ParcelWriteCastOf(const AidlTypeSpecifier& type, const AidlTypenames
                         CppNameOf(enum_decl->GetBackingType(), typenames).c_str(),
                         variable_name.c_str());
   }
-
-  if (typenames.GetInterface(type) != nullptr) {
-    return GetRawCppName(type) + "::asBinder(" + variable_name + ")";
-  }
-
   return variable_name;
 }
 
+// Add includes for a type ref. Note that this is non-recursive.
 void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
                 std::set<std::string>* headers) {
   AIDL_FATAL_IF(typenames.IsList(type) && type.GetTypeParameters().size() != 1, type);
@@ -291,11 +276,6 @@ void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
 
   if (isVector) {
     headers->insert("vector");
-  }
-  if (type.IsGeneric()) {
-    for (const auto& parameter : type.GetTypeParameters()) {
-      AddHeaders(*parameter, typenames, headers);
-    }
   }
   if (isNullable) {
     if (type.GetName() != "IBinder") {
@@ -337,26 +317,21 @@ void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
     return;
   }
 
-  auto definedType = typenames.TryGetDefinedType(type.GetName());
-  AIDL_FATAL_IF(definedType == nullptr, type) << "Unexpected type: " << type.GetName();
+  auto defined_type = typenames.TryGetDefinedType(type.GetName());
+  AIDL_FATAL_IF(defined_type == nullptr, type) << "Unexpected type: " << type.GetName();
 
-  if (definedType->AsInterface() != nullptr || definedType->AsStructuredParcelable() != nullptr ||
-      definedType->AsEnumDeclaration() != nullptr || definedType->AsUnionDeclaration() != nullptr) {
-    AddHeaders(*definedType, headers);
-  } else if (definedType->AsParcelable() != nullptr) {
-    const std::string cpp_header = definedType->AsParcelable()->GetCppHeader();
-    AIDL_FATAL_IF(cpp_header.empty(), definedType->AsParcelable())
-        << "Parcelable " << definedType->AsParcelable()->GetCanonicalName()
-        << " has no C++ header defined.";
-    headers->insert(cpp_header);
-  }
+  headers->insert(CppHeaderForType(*defined_type));
 }
 
-void AddHeaders(const AidlDefinedType& definedType, std::set<std::string>* headers) {
-  vector<string> name = definedType.GetSplitPackage();
-  name.push_back(definedType.GetName());
-  const std::string cpp_header = Join(name, '/') + ".h";
-  headers->insert(cpp_header);
+std::string CppHeaderForType(const AidlDefinedType& defined_type) {
+  // Unstructured parcelable should set its cpp_header. use it.
+  if (auto unstructured = AidlCast<AidlParcelable>(defined_type); unstructured) {
+    const std::string cpp_header = unstructured->GetCppHeader();
+    AIDL_FATAL_IF(cpp_header.empty(), unstructured)
+        << "Parcelable " << unstructured->GetCanonicalName() << " has no C++ header defined.";
+    return cpp_header;
+  }
+  return HeaderFile(defined_type, ClassNames::RAW, /*use_os_sep=*/false);
 }
 
 }  // namespace cpp
