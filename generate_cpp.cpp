@@ -1073,9 +1073,9 @@ void GenerateParcelClassDecl(CodeWriter& out, const ParcelableType& parcel,
   out << "public:\n";
   out.Indent();
 
-  GenerateParcelableComparisonOperators(out, parcel);
   GenerateNestedTypeDecls(out, parcel, typenames, options);
   GenerateParcelFields(out, parcel, typenames);
+  GenerateParcelableComparisonOperators(out, parcel);
   GenerateConstantDeclarations(out, parcel, typenames);
 
   if (parcel.IsVintfStability()) {
