@@ -34,7 +34,7 @@ struct CodeGeneratorContext {
   const bool isPointer;           // whether the variable 'name' is a pointer or not
 };
 
-std::string GetTransactionIdFor(const std::string& clazz, const AidlMethod& method);
+std::string GetTransactionIdFor(const AidlInterface& iface, const AidlMethod& method);
 
 std::string CppNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames);
 
@@ -61,7 +61,7 @@ std::string ParcelWriteCastOf(const AidlTypeSpecifier& type, const AidlTypenames
 void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
                 std::set<std::string>* headers);
 
-std::string CppHeaderForType(const AidlDefinedType& defined_type);
+void AddHeaders(const AidlDefinedType& parcelable, std::set<std::string>* headers);
 }  // namespace cpp
 }  // namespace aidl
 }  // namespace android
