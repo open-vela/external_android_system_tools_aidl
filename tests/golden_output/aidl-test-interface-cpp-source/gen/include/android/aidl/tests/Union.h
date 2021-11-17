@@ -23,25 +23,6 @@ namespace aidl {
 namespace tests {
 class Union : public ::android::Parcelable {
 public:
-  inline bool operator!=(const Union& rhs) const {
-    return _value != rhs._value;
-  }
-  inline bool operator<(const Union& rhs) const {
-    return _value < rhs._value;
-  }
-  inline bool operator<=(const Union& rhs) const {
-    return _value <= rhs._value;
-  }
-  inline bool operator==(const Union& rhs) const {
-    return _value == rhs._value;
-  }
-  inline bool operator>(const Union& rhs) const {
-    return _value > rhs._value;
-  }
-  inline bool operator>=(const Union& rhs) const {
-    return _value >= rhs._value;
-  }
-
   enum Tag : int32_t {
     ns = 0,  // int[] ns;
     n,  // int n;
@@ -95,6 +76,25 @@ public:
   template <Tag _tag, typename... _Tp>
   void set(_Tp&&... _args) {
     _value.emplace<_tag>(std::forward<_Tp>(_args)...);
+  }
+
+  inline bool operator!=(const Union& rhs) const {
+    return _value != rhs._value;
+  }
+  inline bool operator<(const Union& rhs) const {
+    return _value < rhs._value;
+  }
+  inline bool operator<=(const Union& rhs) const {
+    return _value <= rhs._value;
+  }
+  inline bool operator==(const Union& rhs) const {
+    return _value == rhs._value;
+  }
+  inline bool operator>(const Union& rhs) const {
+    return _value > rhs._value;
+  }
+  inline bool operator>=(const Union& rhs) const {
+    return _value >= rhs._value;
   }
 
   static const ::std::string& S1();
