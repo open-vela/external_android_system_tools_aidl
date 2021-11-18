@@ -19,6 +19,7 @@
 #include <android-base/stringprintf.h>
 #include <android-base/strings.h>
 
+#include <limits>
 #include <set>
 #include <unordered_map>
 
@@ -298,6 +299,39 @@ std::string TemplateDecl(const AidlParcelable& defined_type) {
 
 void GenerateParcelableComparisonOperators(CodeWriter& out, const AidlParcelable& parcelable) {
   std::set<string> operators{"<", ">", "==", ">=", "<=", "!="};
+
+  if (parcelable.AsUnionDeclaration() && parcelable.IsFixedSize()) {
+    auto name = parcelable.GetName();
+    auto max_tag = parcelable.GetFields().back()->GetName();
+    auto min_tag = parcelable.GetFields().front()->GetName();
+    auto tmpl = R"--(static int _cmp(const {name}& _lhs, const {name}& _rhs) {{
+  return _cmp_value(_lhs.getTag(), _rhs.getTag()) || _cmp_value_at<{max_tag}>(_lhs, _rhs);
+}}
+template <Tag _Tag>
+static int _cmp_value_at(const {name}& _lhs, const {name}& _rhs) {{
+  if constexpr (_Tag == {min_tag}) {{
+    return _cmp_value(_lhs.get<_Tag>(), _rhs.get<_Tag>());
+  }} else {{
+    return (_lhs.getTag() == _Tag)
+      ? _cmp_value(_lhs.get<_Tag>(), _rhs.get<_Tag>())
+      : _cmp_value_at<(Tag)(_Tag-1)>(_lhs, _rhs);
+  }}
+}}
+template <typename _Type>
+static int _cmp_value(const _Type& _lhs, const _Type& _rhs) {{
+  return (_lhs == _rhs) ? 0 : (_lhs < _rhs) ? -1 : 1;
+}}
+)--";
+    out << fmt::format(tmpl, fmt::arg("name", name), fmt::arg("min_tag", min_tag),
+                       fmt::arg("max_tag", max_tag));
+    for (const auto& op : operators) {
+      out << "inline bool operator" << op << "(const " << name << "&_rhs) const {\n";
+      out << "  return _cmp(*this, _rhs) " << op << " 0;\n";
+      out << "}\n";
+    }
+    return;
+  }
+
   bool is_empty = false;
 
   auto comparable = [&](const string& prefix) {
@@ -396,25 +430,94 @@ std::string GetDeprecatedAttribute(const AidlCommentable& type) {
   return "";
 }
 
-const vector<string> UnionWriter::headers{
-    "cassert",      // __assert for logging
-    "type_traits",  // std::is_same_v
-    "utility",      // std::mode/forward for value
-    "variant",      // std::variant for value
-};
+size_t AlignmentOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
+  static map<string, size_t> alignment = {
+      {"boolean", 1}, {"byte", 1}, {"char", 2}, {"double", 8},
+      {"float", 4},   {"int", 4},  {"long", 8},
+  };
+
+  string name = type.GetName();
+  if (auto enum_decl = typenames.GetEnumDeclaration(type); enum_decl) {
+    name = enum_decl->GetBackingType().GetName();
+  }
+  // default to 0 for parcelable types
+  return alignment[name];
+}
+
+std::set<std::string> UnionWriter::GetHeaders(const AidlUnionDecl& decl) {
+  std::set<std::string> union_headers = {
+      "cassert",      // __assert for logging
+      "type_traits",  // std::is_same_v
+      "utility",      // std::mode/forward for value
+      "variant",      // union's impl
+  };
+  if (decl.IsFixedSize()) {
+    union_headers.insert("tuple");  // fixed-sized union's typelist
+  }
+  return union_headers;
+}
+
+// fixed-sized union class looks like:
+// class Union {
+// public:
+//   enum Tag : uint8_t {
+//     field1 = 0,
+//     field2,
+//   };
+//  ... methods ...
+// private:
+//   Tag _tag;
+//   union {
+//     type1 field1;
+//     type2 field2;
+//   } _value;
+// };
 
 void UnionWriter::PrivateFields(CodeWriter& out) const {
-  vector<string> field_types;
-  for (const auto& f : decl.GetFields()) {
-    field_types.push_back(name_of(f->GetType(), typenames));
+  if (decl.IsFixedSize()) {
+    AIDL_FATAL_IF(decl.GetFields().empty(), decl) << "Union '" << decl.GetName() << "' is empty.";
+    const auto& first_field = decl.GetFields()[0];
+    const auto& default_name = first_field->GetName();
+    const auto& default_value = name_of(first_field->GetType(), typenames) + "(" +
+                                first_field->ValueString(decorator) + ")";
+
+    out << "Tag _tag __attribute__((aligned (1))) = " << default_name << ";\n";
+    out << "union {\n";
+    out.Indent();
+    for (const auto& f : decl.GetFields()) {
+      const auto& fn = f->GetName();
+      out << name_of(f->GetType(), typenames) << " " << fn;
+      if (decl.IsFixedSize()) {
+        int alignment = AlignmentOf(f->GetType(), typenames);
+        if (alignment > 0) {
+          out << " __attribute__((aligned (" << std::to_string(alignment) << ")))";
+        }
+      }
+      if (fn == default_name) {
+        out << " = " << default_value;
+      }
+      out << ";\n";
+    }
+    out.Dedent();
+    out << "} _value;\n";
+  } else {
+    vector<string> field_types;
+    for (const auto& f : decl.GetFields()) {
+      field_types.push_back(name_of(f->GetType(), typenames));
+    }
+    out << "std::variant<" + Join(field_types, ", ") + "> _value;\n";
   }
-  out << "std::variant<" + Join(field_types, ", ") + "> _value;\n";
 }
 
 void UnionWriter::PublicFields(CodeWriter& out) const {
-  auto tag_type = typenames.MakeResolvedType(AIDL_LOCATION_HERE, "int", /* is_array= */ false);
-
-  out << "enum Tag : " << name_of(*tag_type, typenames) << " {\n";
+  std::string tag_type = "int32_t";
+  if (decl.IsFixedSize()) {
+    // For @FixedSize union, we use a smaller type for a tag to minimize the size overhead.
+    AIDL_FATAL_IF(decl.GetFields().size() > std::numeric_limits<uint8_t>::max(), decl)
+        << "Too many fields for @FixedSize";
+    tag_type = "uint8_t";
+  }
+  out << "enum Tag : " << tag_type << " {\n";
   bool is_first = true;
   for (const auto& f : decl.GetFields()) {
     out << "  " << f->GetName();
@@ -427,13 +530,49 @@ void UnionWriter::PublicFields(CodeWriter& out) const {
 
   const auto& name = decl.GetName();
 
-  AIDL_FATAL_IF(decl.GetFields().empty(), decl) << "Union '" << name << "' is empty.";
-  const auto& first_field = decl.GetFields()[0];
-  const auto& default_name = first_field->GetName();
-  const auto& default_value =
-      name_of(first_field->GetType(), typenames) + "(" + first_field->ValueString(decorator) + ")";
+  if (decl.IsFixedSize()) {
+    vector<string> field_types;
+    for (const auto& f : decl.GetFields()) {
+      field_types.push_back(name_of(f->GetType(), typenames));
+    }
+    auto typelist = Join(field_types, ", ");
+    auto tmpl = R"--(
+template <Tag _Tag>
+using _at = typename std::tuple_element<_Tag, std::tuple<{typelist}>>::type;
+template <Tag _Tag, typename _Type>
+static {name} make(_Type&& _arg) {{
+  {name} _inst;
+  _inst.set<_Tag>(std::forward<_Type>(_arg));
+  return _inst;
+}}
+constexpr Tag getTag() const {{
+  return _tag;
+}}
+template <Tag _Tag>
+const _at<_Tag>& get() const {{
+  if (_Tag != _tag) {{ __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "bad access: a wrong tag"); }}
+  return *(_at<_Tag>*)(&_value);
+}}
+template <Tag _Tag>
+_at<_Tag>& get() {{
+  if (_Tag != _tag) {{ __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "bad access: a wrong tag"); }}
+  return *(_at<_Tag>*)(&_value);
+}}
+template <Tag _Tag, typename _Type>
+void set(_Type&& _arg) {{
+  _tag = _Tag;
+  get<_Tag>() = std::forward<_Type>(_arg);
+}}
+)--";
+    out << fmt::format(tmpl, fmt::arg("name", name), fmt::arg("typelist", typelist));
+  } else {
+    AIDL_FATAL_IF(decl.GetFields().empty(), decl) << "Union '" << name << "' is empty.";
+    const auto& first_field = decl.GetFields()[0];
+    const auto& default_name = first_field->GetName();
+    const auto& default_value = name_of(first_field->GetType(), typenames) + "(" +
+                                first_field->ValueString(decorator) + ")";
 
-  auto tmpl = R"--(
+    auto tmpl = R"--(
 template<typename _Tp>
 static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, {name}>;
 
@@ -480,11 +619,14 @@ void set(_Tp&&... _args) {{
 }}
 
 )--";
-  out << fmt::format(tmpl, fmt::arg("name", name), fmt::arg("default_name", default_name),
-                     fmt::arg("default_value", default_value));
+    out << fmt::format(tmpl, fmt::arg("name", name), fmt::arg("default_name", default_name),
+                       fmt::arg("default_value", default_value));
+  }
 }
 
 void UnionWriter::ReadFromParcel(CodeWriter& out, const ParcelWriterContext& ctx) const {
+  // Even though @FixedSize union may use a smaller type than int32_t, we need to read/write it
+  // as if it is int32_t for compatibility with other bckends.
   auto tag_type = typenames.MakeResolvedType(AIDL_LOCATION_HERE, "int", /* is_array= */ false);
 
   const string tag = "_aidl_tag";
@@ -527,6 +669,8 @@ void UnionWriter::ReadFromParcel(CodeWriter& out, const ParcelWriterContext& ctx
 }
 
 void UnionWriter::WriteToParcel(CodeWriter& out, const ParcelWriterContext& ctx) const {
+  // Even though @FixedSize union may use a smaller type than int32_t, we need to read/write it
+  // as if it is int32_t for compatibility with other bckends.
   auto tag_type = typenames.MakeResolvedType(AIDL_LOCATION_HERE, "int", /* is_array= */ false);
 
   const string tag = "_aidl_tag";

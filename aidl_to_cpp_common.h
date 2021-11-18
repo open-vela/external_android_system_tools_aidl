@@ -114,7 +114,8 @@ struct UnionWriter {
   const AidlTypenames& typenames;
   const std::function<std::string(const AidlTypeSpecifier&, const AidlTypenames&)> name_of;
   const ::ConstantValueDecorator& decorator;
-  static const std::vector<std::string> headers;
+
+  static std::set<std::string> GetHeaders(const AidlUnionDecl&);
 
   void PrivateFields(CodeWriter& out) const;
   void PublicFields(CodeWriter& out) const;
