@@ -1087,11 +1087,11 @@ bool AidlDefinedType::CheckValid(const AidlTypenames& typenames) const {
 }
 
 std::string AidlDefinedType::GetCanonicalName() const {
-  if (package_.empty()) {
-    return GetName();
-  }
   if (auto parent = GetParentType(); parent) {
     return parent->GetCanonicalName() + "." + GetName();
+  }
+  if (package_.empty()) {
+    return GetName();
   }
   return GetPackage() + "." + GetName();
 }
