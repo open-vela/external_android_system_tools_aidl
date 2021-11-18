@@ -1050,13 +1050,6 @@ void GenerateParcelFields(CodeWriter& out, const AidlStructuredParcelable& decl,
       } else {
         out << " { ::android::Parcelable::Stability::STABILITY_LOCAL }";
       }
-    } else if (auto type = variable->GetType().GetDefinedType(); type) {
-      if (auto enum_type = type->AsEnumDeclaration(); enum_type) {
-        if (!variable->GetType().IsArray()) {
-          // if an enum doesn't have explicit default value, do zero-initialization
-          out << " = " << cppType << "(0)";
-        }
-      }
     }
     out << ";\n";
   }
@@ -1236,9 +1229,10 @@ void GenerateHeaderIncludes(CodeWriter& out, const AidlDefinedType& defined_type
       includes.insert("tuple");  // std::tie in comparison operators
     }
 
-    void Visit(const AidlUnionDecl&) override {
+    void Visit(const AidlUnionDecl& union_decl) override {
       AddParcelableCommonHeaders();
-      includes.insert(std::begin(UnionWriter::headers), std::end(UnionWriter::headers));
+      auto union_headers = cpp::UnionWriter::GetHeaders(union_decl);
+      includes.insert(std::begin(union_headers), std::end(union_headers));
     }
 
     void Visit(const AidlEnumDeclaration&) override {
