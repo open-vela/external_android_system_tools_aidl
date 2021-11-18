@@ -1682,6 +1682,25 @@ TEST_F(AidlTest, UnderstandsNestedTypesViaQualifiedInTheSameScope) {
   EXPECT_EQ(TypeFinder::Get(*foo, "t3"), "p.IFoo.Baz");
 }
 
+TEST_F(AidlTest, NestedTypeResolutionWithNoPackage) {
+  const string input_path = "Foo.aidl";
+  const string input =
+      "parcelable Foo {\n"
+      "  parcelable Bar {\n"
+      "    enum Baz { BAZ }\n"
+      "    Baz baz = Baz.BAZ;\n"
+      "  }\n"
+      "  Bar bar;\n"
+      "}";
+  CaptureStderr();
+  auto foo = Parse(input_path, input, typenames_, Options::Language::CPP);
+  EXPECT_EQ(GetCapturedStderr(), "");
+  ASSERT_NE(nullptr, foo);
+
+  EXPECT_EQ(TypeFinder::Get(*foo, "bar"), "Foo.Bar");
+  EXPECT_EQ(TypeFinder::Get(*foo, "baz"), "Foo.Bar.Baz");
+}
+
 TEST_F(AidlTest, RejectsNestedTypesWithParentsName) {
   const string input_path = "p/Foo.aidl";
   const string input =
