@@ -1307,7 +1307,18 @@ bool AidlParcelable::CheckValid(const AidlTypenames& typenames) const {
     return false;
   }
 
-  return true;
+  bool success = true;
+  if (IsFixedSize()) {
+    for (const auto& v : GetFields()) {
+      if (!typenames.CanBeFixedSize(v->GetType())) {
+        AIDL_ERROR(v) << "The @FixedSize parcelable '" << this->GetName() << "' has a "
+                      << "non-fixed size field named " << v->GetName() << ".";
+        success = false;
+      }
+    }
+  }
+
+  return success;
 }
 
 AidlStructuredParcelable::AidlStructuredParcelable(
@@ -1322,16 +1333,6 @@ bool AidlStructuredParcelable::CheckValid(const AidlTypenames& typenames) const 
   }
 
   bool success = true;
-
-  if (IsFixedSize()) {
-    for (const auto& v : GetFields()) {
-      if (!typenames.CanBeFixedSize(v->GetType())) {
-        AIDL_ERROR(v) << "The @FixedSize parcelable '" << this->GetName() << "' has a "
-                      << "non-fixed size field named " << v->GetName() << ".";
-        success = false;
-      }
-    }
-  }
 
   if (IsJavaOnlyImmutable()) {
     // Immutable parcelables provide getters
