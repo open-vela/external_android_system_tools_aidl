@@ -60,7 +60,7 @@ struct CodeGeneratorContext {
   const AidlTypeSpecifier& type;
   const string parcel;
   const string var;
-
+  const uint32_t min_sdk_version;
   // Set to true when the marshalled data will be returned to the client
   // This is given as a hint to the Parcelable that is being marshalled
   // so that the Parcelable can release its resource after the marshalling
@@ -89,7 +89,7 @@ struct CodeGeneratorContext {
 };
 
 // Writes code fragment that writes a variable to the parcel.
-bool WriteToParcelFor(const CodeGeneratorContext& c);
+void WriteToParcelFor(const CodeGeneratorContext& c);
 
 // Writes code fragment that reads data from the parcel into a variable. When
 // the variable type is array or List, the array or List is created.
@@ -102,6 +102,10 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c);
 // Writes an expression that returns the string representation of a field
 // in a parcelable
 void ToStringFor(const CodeGeneratorContext& c);
+
+// Generates create/read/write helper functions which are missing in Parcel.
+void GenerateParcelHelpers(CodeWriter& out, const AidlDefinedType& defined_type,
+                           const Options& options);
 
 }  // namespace java
 }  // namespace aidl
