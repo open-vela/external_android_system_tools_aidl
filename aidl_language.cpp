@@ -155,12 +155,16 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
        "JavaDerive",
        CONTEXT_TYPE_STRUCTURED_PARCELABLE | CONTEXT_TYPE_UNION,
        {{"toString", kBooleanType}, {"equals", kBooleanType}}},
+      {AidlAnnotation::Type::JAVA_DEFAULT, "JavaDefault", CONTEXT_TYPE_INTERFACE, {}},
       {AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE,
        "JavaOnlyImmutable",
        CONTEXT_TYPE_STRUCTURED_PARCELABLE | CONTEXT_TYPE_UNION |
            CONTEXT_TYPE_UNSTRUCTURED_PARCELABLE,
        {}},
-      {AidlAnnotation::Type::FIXED_SIZE, "FixedSize", CONTEXT_TYPE_STRUCTURED_PARCELABLE, {}},
+      {AidlAnnotation::Type::FIXED_SIZE,
+       "FixedSize",
+       CONTEXT_TYPE_STRUCTURED_PARCELABLE | CONTEXT_TYPE_UNION,
+       {}},
       {AidlAnnotation::Type::DESCRIPTOR,
        "Descriptor",
        CONTEXT_TYPE_INTERFACE,
@@ -486,6 +490,10 @@ bool AidlAnnotatable::JavaDerive(const std::string& method) const {
     return annotation->ParamValue<bool>(method).value_or(false);
   }
   return false;
+}
+
+bool AidlAnnotatable::IsJavaDefault() const {
+  return GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_DEFAULT);
 }
 
 std::string AidlAnnotatable::GetDescriptor() const {
@@ -1084,11 +1092,11 @@ bool AidlDefinedType::CheckValid(const AidlTypenames& typenames) const {
 }
 
 std::string AidlDefinedType::GetCanonicalName() const {
-  if (package_.empty()) {
-    return GetName();
-  }
   if (auto parent = GetParentType(); parent) {
     return parent->GetCanonicalName() + "." + GetName();
+  }
+  if (package_.empty()) {
+    return GetName();
   }
   return GetPackage() + "." + GetName();
 }
