@@ -20,14 +20,14 @@ binder_status_t RecursiveList::readFromParcel(const AParcel* _aidl_parcel) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = AParcel_readInt32(_aidl_parcel, &value);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &value);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readNullableParcelable(_aidl_parcel, &next);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_parcel, &next);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
@@ -39,10 +39,10 @@ binder_status_t RecursiveList::writeToParcel(AParcel* _aidl_parcel) const {
   _aidl_ret_status = AParcel_writeInt32(_aidl_parcel, 0);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = AParcel_writeInt32(_aidl_parcel, value);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, value);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeNullableParcelable(_aidl_parcel, next);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_parcel, next);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   size_t _aidl_end_pos = AParcel_getDataPosition(_aidl_parcel);

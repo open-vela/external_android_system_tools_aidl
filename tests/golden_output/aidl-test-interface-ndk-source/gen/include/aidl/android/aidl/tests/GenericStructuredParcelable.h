@@ -85,14 +85,14 @@ binder_status_t GenericStructuredParcelable<T, U, B>::readFromParcel(const AParc
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = AParcel_readInt32(_aidl_parcel, &a);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &a);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = AParcel_readInt32(_aidl_parcel, &b);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &b);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
@@ -105,10 +105,10 @@ binder_status_t GenericStructuredParcelable<T, U, B>::writeToParcel(AParcel* _ai
   _aidl_ret_status = AParcel_writeInt32(_aidl_parcel, 0);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = AParcel_writeInt32(_aidl_parcel, a);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, a);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = AParcel_writeInt32(_aidl_parcel, b);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, b);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   size_t _aidl_end_pos = AParcel_getDataPosition(_aidl_parcel);

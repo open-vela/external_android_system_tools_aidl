@@ -19,7 +19,7 @@ static binder_status_t _aidl_android_aidl_tests_nested_INestedService_onTransact
       ::aidl::android::aidl::tests::nested::ParcelableWithNested in_p;
       ::aidl::android::aidl::tests::nested::INestedService::Result _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readParcelable(_aidl_in, &in_p);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_p);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->flipStatus(in_p, &_aidl_return);
@@ -28,7 +28,7 @@ static binder_status_t _aidl_android_aidl_tests_nested_INestedService_onTransact
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeParcelable(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -37,10 +37,10 @@ static binder_status_t _aidl_android_aidl_tests_nested_INestedService_onTransact
       ::aidl::android::aidl::tests::nested::ParcelableWithNested::Status in_status;
       std::shared_ptr<::aidl::android::aidl::tests::nested::INestedService::ICallback> in_cb;
 
-      _aidl_ret_status = AParcel_readByte(_aidl_in, reinterpret_cast<int8_t*>(&in_status));
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_status);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::aidl::android::aidl::tests::nested::INestedService::ICallback::readFromParcel(_aidl_in, &in_cb);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_cb);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->flipStatusWithCallback(in_status, in_cb);
@@ -69,7 +69,7 @@ BpNestedService::~BpNestedService() {}
   _aidl_ret_status = AIBinder_prepareTransaction(asBinder().get(), _aidl_in.getR());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeParcelable(_aidl_in.get(), in_p);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_p);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -92,7 +92,7 @@ BpNestedService::~BpNestedService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readParcelable(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -109,10 +109,10 @@ BpNestedService::~BpNestedService() {}
   _aidl_ret_status = AIBinder_prepareTransaction(asBinder().get(), _aidl_in.getR());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeByte(_aidl_in.get(), static_cast<int8_t>(in_status));
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_status);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::aidl::android::aidl::tests::nested::INestedService::ICallback::writeToParcel(_aidl_in.get(), in_cb);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_cb);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -230,7 +230,7 @@ binder_status_t INestedService::Result::readFromParcel(const AParcel* _aidl_parc
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = AParcel_readByte(_aidl_parcel, reinterpret_cast<int8_t*>(&status));
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &status);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
@@ -242,7 +242,7 @@ binder_status_t INestedService::Result::writeToParcel(AParcel* _aidl_parcel) con
   _aidl_ret_status = AParcel_writeInt32(_aidl_parcel, 0);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = AParcel_writeByte(_aidl_parcel, static_cast<int8_t>(status));
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, status);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   size_t _aidl_end_pos = AParcel_getDataPosition(_aidl_parcel);
@@ -271,7 +271,7 @@ static binder_status_t _aidl_android_aidl_tests_nested_INestedService_ICallback_
     case (FIRST_CALL_TRANSACTION + 0 /*done*/): {
       ::aidl::android::aidl::tests::nested::ParcelableWithNested::Status in_status;
 
-      _aidl_ret_status = AParcel_readByte(_aidl_in, reinterpret_cast<int8_t*>(&in_status));
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_status);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->done(in_status);
@@ -300,7 +300,7 @@ INestedService::BpCallback::~BpCallback() {}
   _aidl_ret_status = AIBinder_prepareTransaction(asBinder().get(), _aidl_in.getR());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeByte(_aidl_in.get(), static_cast<int8_t>(in_status));
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_status);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
