@@ -23,7 +23,7 @@ static binder_status_t _aidl_android_aidl_tests_INewName_onTransact(AIBinder* _a
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeString(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -66,7 +66,7 @@ BpNewName::~BpNewName() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readString(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:

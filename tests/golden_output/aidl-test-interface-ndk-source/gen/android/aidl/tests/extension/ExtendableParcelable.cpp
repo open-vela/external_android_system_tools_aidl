@@ -21,35 +21,35 @@ binder_status_t ExtendableParcelable::readFromParcel(const AParcel* _aidl_parcel
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = AParcel_readInt32(_aidl_parcel, &a);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &a);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readString(_aidl_parcel, &b);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &b);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readParcelable(_aidl_parcel, &ext);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &ext);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = AParcel_readInt64(_aidl_parcel, &c);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &c);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readParcelable(_aidl_parcel, &ext2);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &ext2);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
@@ -61,19 +61,19 @@ binder_status_t ExtendableParcelable::writeToParcel(AParcel* _aidl_parcel) const
   _aidl_ret_status = AParcel_writeInt32(_aidl_parcel, 0);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = AParcel_writeInt32(_aidl_parcel, a);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, a);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeString(_aidl_parcel, b);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, b);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeParcelable(_aidl_parcel, ext);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, ext);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = AParcel_writeInt64(_aidl_parcel, c);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, c);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeParcelable(_aidl_parcel, ext2);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, ext2);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   size_t _aidl_end_pos = AParcel_getDataPosition(_aidl_parcel);

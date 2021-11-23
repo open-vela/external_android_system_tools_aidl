@@ -29,7 +29,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       int32_t in_arg;
       int32_t _aidl_return;
 
-      _aidl_ret_status = AParcel_readInt32(_aidl_in, &in_arg);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_arg);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->UnimplementedMethod(in_arg, &_aidl_return);
@@ -38,7 +38,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeInt32(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -63,7 +63,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       bool in_token;
       bool _aidl_return;
 
-      _aidl_ret_status = AParcel_readBool(_aidl_in, &in_token);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_token);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatBoolean(in_token, &_aidl_return);
@@ -72,7 +72,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeBool(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -81,7 +81,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       int8_t in_token;
       int8_t _aidl_return;
 
-      _aidl_ret_status = AParcel_readByte(_aidl_in, &in_token);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_token);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatByte(in_token, &_aidl_return);
@@ -90,7 +90,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeByte(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -99,7 +99,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       char16_t in_token;
       char16_t _aidl_return;
 
-      _aidl_ret_status = AParcel_readChar(_aidl_in, &in_token);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_token);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatChar(in_token, &_aidl_return);
@@ -108,7 +108,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeChar(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -117,7 +117,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       int32_t in_token;
       int32_t _aidl_return;
 
-      _aidl_ret_status = AParcel_readInt32(_aidl_in, &in_token);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_token);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatInt(in_token, &_aidl_return);
@@ -126,7 +126,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeInt32(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -135,7 +135,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       int64_t in_token;
       int64_t _aidl_return;
 
-      _aidl_ret_status = AParcel_readInt64(_aidl_in, &in_token);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_token);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatLong(in_token, &_aidl_return);
@@ -144,7 +144,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeInt64(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -153,7 +153,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       float in_token;
       float _aidl_return;
 
-      _aidl_ret_status = AParcel_readFloat(_aidl_in, &in_token);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_token);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatFloat(in_token, &_aidl_return);
@@ -162,7 +162,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeFloat(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -171,7 +171,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       double in_token;
       double _aidl_return;
 
-      _aidl_ret_status = AParcel_readDouble(_aidl_in, &in_token);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_token);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatDouble(in_token, &_aidl_return);
@@ -180,7 +180,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeDouble(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -189,7 +189,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::string in_token;
       std::string _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readString(_aidl_in, &in_token);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_token);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatString(in_token, &_aidl_return);
@@ -198,7 +198,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeString(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -207,7 +207,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       ::aidl::android::aidl::tests::ByteEnum in_token;
       ::aidl::android::aidl::tests::ByteEnum _aidl_return;
 
-      _aidl_ret_status = AParcel_readByte(_aidl_in, reinterpret_cast<int8_t*>(&in_token));
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_token);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatByteEnum(in_token, &_aidl_return);
@@ -216,7 +216,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeByte(_aidl_out, static_cast<int8_t>(_aidl_return));
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -225,7 +225,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       ::aidl::android::aidl::tests::IntEnum in_token;
       ::aidl::android::aidl::tests::IntEnum _aidl_return;
 
-      _aidl_ret_status = AParcel_readInt32(_aidl_in, reinterpret_cast<int32_t*>(&in_token));
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_token);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatIntEnum(in_token, &_aidl_return);
@@ -234,7 +234,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeInt32(_aidl_out, static_cast<int32_t>(_aidl_return));
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -243,7 +243,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       ::aidl::android::aidl::tests::LongEnum in_token;
       ::aidl::android::aidl::tests::LongEnum _aidl_return;
 
-      _aidl_ret_status = AParcel_readInt64(_aidl_in, reinterpret_cast<int64_t*>(&in_token));
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_token);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatLongEnum(in_token, &_aidl_return);
@@ -252,7 +252,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeInt64(_aidl_out, static_cast<int64_t>(_aidl_return));
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -262,7 +262,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<bool> out_repeated;
       std::vector<bool> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -274,10 +274,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, out_repeated);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -287,7 +287,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<uint8_t> out_repeated;
       std::vector<uint8_t> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -299,10 +299,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, out_repeated);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -312,7 +312,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<char16_t> out_repeated;
       std::vector<char16_t> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -324,10 +324,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, out_repeated);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -337,7 +337,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<int32_t> out_repeated;
       std::vector<int32_t> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -349,10 +349,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, out_repeated);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -362,7 +362,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<int64_t> out_repeated;
       std::vector<int64_t> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -374,10 +374,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, out_repeated);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -387,7 +387,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<float> out_repeated;
       std::vector<float> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -399,10 +399,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, out_repeated);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -412,7 +412,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<double> out_repeated;
       std::vector<double> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -424,10 +424,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, out_repeated);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -437,7 +437,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<std::string> out_repeated;
       std::vector<std::string> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -449,10 +449,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, out_repeated);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -462,7 +462,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<::aidl::android::aidl::tests::ByteEnum> out_repeated;
       std::vector<::aidl::android::aidl::tests::ByteEnum> _aidl_return;
 
-      _aidl_ret_status = AParcel_readByteArray(_aidl_in, static_cast<void*>(&in_input), ndk::AParcel_stdVectorAllocator<int8_t>);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -474,10 +474,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeByteArray(_aidl_out, reinterpret_cast<const int8_t*>(_aidl_return.data()), _aidl_return.size());
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = AParcel_writeByteArray(_aidl_out, reinterpret_cast<const int8_t*>(out_repeated.data()), out_repeated.size());
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -487,7 +487,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<::aidl::android::aidl::tests::IntEnum> out_repeated;
       std::vector<::aidl::android::aidl::tests::IntEnum> _aidl_return;
 
-      _aidl_ret_status = AParcel_readInt32Array(_aidl_in, static_cast<void*>(&in_input), ndk::AParcel_stdVectorAllocator<int32_t>);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -499,10 +499,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeInt32Array(_aidl_out, reinterpret_cast<const int32_t*>(_aidl_return.data()), _aidl_return.size());
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = AParcel_writeInt32Array(_aidl_out, reinterpret_cast<const int32_t*>(out_repeated.data()), out_repeated.size());
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -512,7 +512,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<::aidl::android::aidl::tests::LongEnum> out_repeated;
       std::vector<::aidl::android::aidl::tests::LongEnum> _aidl_return;
 
-      _aidl_ret_status = AParcel_readInt64Array(_aidl_in, static_cast<void*>(&in_input), ndk::AParcel_stdVectorAllocator<int64_t>);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -524,10 +524,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeInt64Array(_aidl_out, reinterpret_cast<const int64_t*>(_aidl_return.data()), _aidl_return.size());
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = AParcel_writeInt64Array(_aidl_out, reinterpret_cast<const int64_t*>(out_repeated.data()), out_repeated.size());
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -536,7 +536,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::string in_name;
       std::shared_ptr<::aidl::android::aidl::tests::INamedCallback> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readString(_aidl_in, &in_name);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_name);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->GetOtherTestService(in_name, &_aidl_return);
@@ -545,7 +545,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::aidl::android::aidl::tests::INamedCallback::writeToParcel(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -555,10 +555,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::string in_name;
       bool _aidl_return;
 
-      _aidl_ret_status = ::aidl::android::aidl::tests::INamedCallback::readFromParcel(_aidl_in, &in_service);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_service);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readString(_aidl_in, &in_name);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_name);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->VerifyName(in_service, in_name, &_aidl_return);
@@ -567,7 +567,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeBool(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -576,7 +576,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<std::string> in_names;
       std::vector<std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_names);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_names);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->GetInterfaceArray(in_names, &_aidl_return);
@@ -585,7 +585,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -595,10 +595,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<std::string> in_names;
       bool _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_services);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_services);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_names);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_names);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->VerifyNamesWithInterfaceArray(in_services, in_names, &_aidl_return);
@@ -607,7 +607,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeBool(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -616,7 +616,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::vector<std::optional<std::string>>> in_names;
       std::optional<std::vector<std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>>> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_names);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_names);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->GetNullableInterfaceArray(in_names, &_aidl_return);
@@ -625,7 +625,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -635,10 +635,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::vector<std::optional<std::string>>> in_names;
       bool _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_services);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_services);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_names);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_names);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->VerifyNamesWithNullableInterfaceArray(in_services, in_names, &_aidl_return);
@@ -647,7 +647,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeBool(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -656,7 +656,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::vector<std::optional<std::string>>> in_names;
       std::optional<std::vector<std::shared_ptr<::aidl::android::aidl::tests::INamedCallback>>> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_names);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_names);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->GetInterfaceList(in_names, &_aidl_return);
@@ -665,7 +665,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -675,10 +675,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::vector<std::optional<std::string>>> in_names;
       bool _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_services);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_services);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_names);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_names);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->VerifyNamesWithInterfaceList(in_services, in_names, &_aidl_return);
@@ -687,7 +687,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeBool(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -697,7 +697,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<std::string> out_repeated;
       std::vector<std::string> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->ReverseStringList(in_input, &out_repeated, &_aidl_return);
@@ -706,10 +706,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, out_repeated);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -718,7 +718,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       ::ndk::ScopedFileDescriptor in_read;
       ::ndk::ScopedFileDescriptor _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readRequiredParcelFileDescriptor(_aidl_in, &in_read);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_read);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatParcelFileDescriptor(in_read, &_aidl_return);
@@ -727,7 +727,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeRequiredParcelFileDescriptor(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -737,7 +737,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<::ndk::ScopedFileDescriptor> out_repeated;
       std::vector<::ndk::ScopedFileDescriptor> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -749,10 +749,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, out_repeated);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -760,7 +760,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
     case (FIRST_CALL_TRANSACTION + 36 /*ThrowServiceException*/): {
       int32_t in_code;
 
-      _aidl_ret_status = AParcel_readInt32(_aidl_in, &in_code);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_code);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->ThrowServiceException(in_code);
@@ -775,7 +775,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::vector<int32_t>> in_input;
       std::optional<std::vector<int32_t>> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatNullableIntArray(in_input, &_aidl_return);
@@ -784,7 +784,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -793,7 +793,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::vector<::aidl::android::aidl::tests::ByteEnum>> in_input;
       std::optional<std::vector<::aidl::android::aidl::tests::ByteEnum>> _aidl_return;
 
-      _aidl_ret_status = AParcel_readByteArray(_aidl_in, static_cast<void*>(&in_input), ndk::AParcel_nullableStdVectorAllocator<int8_t>);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatNullableByteEnumArray(in_input, &_aidl_return);
@@ -802,7 +802,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeByteArray(_aidl_out, (_aidl_return ? reinterpret_cast<const int8_t*>(_aidl_return->data()) : nullptr), (_aidl_return ? _aidl_return->size() : -1));
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -811,7 +811,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::vector<::aidl::android::aidl::tests::IntEnum>> in_input;
       std::optional<std::vector<::aidl::android::aidl::tests::IntEnum>> _aidl_return;
 
-      _aidl_ret_status = AParcel_readInt32Array(_aidl_in, static_cast<void*>(&in_input), ndk::AParcel_nullableStdVectorAllocator<int32_t>);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatNullableIntEnumArray(in_input, &_aidl_return);
@@ -820,7 +820,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeInt32Array(_aidl_out, (_aidl_return ? reinterpret_cast<const int32_t*>(_aidl_return->data()) : nullptr), (_aidl_return ? _aidl_return->size() : -1));
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -829,7 +829,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::vector<::aidl::android::aidl::tests::LongEnum>> in_input;
       std::optional<std::vector<::aidl::android::aidl::tests::LongEnum>> _aidl_return;
 
-      _aidl_ret_status = AParcel_readInt64Array(_aidl_in, static_cast<void*>(&in_input), ndk::AParcel_nullableStdVectorAllocator<int64_t>);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatNullableLongEnumArray(in_input, &_aidl_return);
@@ -838,7 +838,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeInt64Array(_aidl_out, (_aidl_return ? reinterpret_cast<const int64_t*>(_aidl_return->data()) : nullptr), (_aidl_return ? _aidl_return->size() : -1));
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -847,7 +847,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::string> in_input;
       std::optional<std::string> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readString(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatNullableString(in_input, &_aidl_return);
@@ -856,7 +856,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeString(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -865,7 +865,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::vector<std::optional<std::string>>> in_input;
       std::optional<std::vector<std::optional<std::string>>> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatNullableStringList(in_input, &_aidl_return);
@@ -874,7 +874,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -883,7 +883,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<::aidl::android::aidl::tests::ITestService::Empty> in_input;
       std::optional<::aidl::android::aidl::tests::ITestService::Empty> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readNullableParcelable(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatNullableParcelable(in_input, &_aidl_return);
@@ -892,7 +892,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeNullableParcelable(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -901,7 +901,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::vector<std::optional<::aidl::android::aidl::tests::ITestService::Empty>>> in_input;
       std::optional<std::vector<std::optional<::aidl::android::aidl::tests::ITestService::Empty>>> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatNullableParcelableArray(in_input, &_aidl_return);
@@ -910,7 +910,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -919,7 +919,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::vector<std::optional<::aidl::android::aidl::tests::ITestService::Empty>>> in_input;
       std::optional<std::vector<std::optional<::aidl::android::aidl::tests::ITestService::Empty>>> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatNullableParcelableList(in_input, &_aidl_return);
@@ -928,7 +928,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -936,7 +936,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
     case (FIRST_CALL_TRANSACTION + 46 /*TakesAnIBinder*/): {
       ::ndk::SpAIBinder in_input;
 
-      _aidl_ret_status = ::ndk::AParcel_readRequiredStrongBinder(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->TakesAnIBinder(in_input);
@@ -950,7 +950,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
     case (FIRST_CALL_TRANSACTION + 47 /*TakesANullableIBinder*/): {
       ::ndk::SpAIBinder in_input;
 
-      _aidl_ret_status = ::ndk::AParcel_readNullableStrongBinder(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->TakesANullableIBinder(in_input);
@@ -964,7 +964,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
     case (FIRST_CALL_TRANSACTION + 48 /*TakesAnIBinderList*/): {
       std::vector<::ndk::SpAIBinder> in_input;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->TakesAnIBinderList(in_input);
@@ -978,7 +978,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
     case (FIRST_CALL_TRANSACTION + 49 /*TakesANullableIBinderList*/): {
       std::optional<std::vector<::ndk::SpAIBinder>> in_input;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->TakesANullableIBinderList(in_input);
@@ -993,7 +993,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::string in_token;
       std::string _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readString(_aidl_in, &in_token);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_token);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatUtf8CppString(in_token, &_aidl_return);
@@ -1002,7 +1002,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeString(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -1011,7 +1011,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::string> in_token;
       std::optional<std::string> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readString(_aidl_in, &in_token);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_token);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatNullableUtf8CppString(in_token, &_aidl_return);
@@ -1020,7 +1020,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeString(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -1030,7 +1030,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<std::string> out_repeated;
       std::vector<std::string> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -1042,10 +1042,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, out_repeated);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -1055,7 +1055,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::vector<std::optional<std::string>>> out_repeated;
       std::optional<std::vector<std::optional<std::string>>> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -1067,10 +1067,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, out_repeated);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -1080,7 +1080,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::vector<std::optional<std::string>>> out_repeated;
       std::optional<std::vector<std::optional<std::string>>> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->ReverseUtf8CppStringList(in_input, &out_repeated, &_aidl_return);
@@ -1089,10 +1089,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, out_repeated);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -1101,7 +1101,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       bool in_return_null;
       std::shared_ptr<::aidl::android::aidl::tests::INamedCallback> _aidl_return;
 
-      _aidl_ret_status = AParcel_readBool(_aidl_in, &in_return_null);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_return_null);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->GetCallback(in_return_null, &_aidl_return);
@@ -1110,7 +1110,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::aidl::android::aidl::tests::INamedCallback::writeToParcel(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -1118,7 +1118,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
     case (FIRST_CALL_TRANSACTION + 56 /*FillOutStructuredParcelable*/): {
       ::aidl::android::aidl::tests::StructuredParcelable in_parcel;
 
-      _aidl_ret_status = ::ndk::AParcel_readParcelable(_aidl_in, &in_parcel);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_parcel);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->FillOutStructuredParcelable(&in_parcel);
@@ -1127,7 +1127,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeParcelable(_aidl_out, in_parcel);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, in_parcel);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -1136,7 +1136,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       ::aidl::android::aidl::tests::extension::ExtendableParcelable in_ep;
       ::aidl::android::aidl::tests::extension::ExtendableParcelable out_ep2;
 
-      _aidl_ret_status = ::ndk::AParcel_readParcelable(_aidl_in, &in_ep);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_ep);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->RepeatExtendableParcelable(in_ep, &out_ep2);
@@ -1145,7 +1145,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeParcelable(_aidl_out, out_ep2);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_ep2);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -1154,7 +1154,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       ::aidl::android::aidl::tests::RecursiveList in_list;
       ::aidl::android::aidl::tests::RecursiveList _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readParcelable(_aidl_in, &in_list);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_list);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ::ndk::ScopedAStatus _aidl_status = _aidl_impl->ReverseList(in_list, &_aidl_return);
@@ -1163,7 +1163,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeParcelable(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -1173,7 +1173,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::vector<::ndk::SpAIBinder> out_repeated;
       std::vector<::ndk::SpAIBinder> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -1185,10 +1185,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, out_repeated);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -1198,7 +1198,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
       std::optional<std::vector<::ndk::SpAIBinder>> out_repeated;
       std::optional<std::vector<::ndk::SpAIBinder>> _aidl_return;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_input);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_input);
       if (_aidl_ret_status != STATUS_OK) break;
 
       _aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &out_repeated);
@@ -1210,10 +1210,10 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, out_repeated);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, out_repeated);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -1227,7 +1227,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::aidl::android::aidl::tests::IOldName::writeToParcel(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -1241,7 +1241,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::aidl::android::aidl::tests::INewName::writeToParcel(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -1255,7 +1255,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeNullableStrongBinder(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -1269,7 +1269,7 @@ static binder_status_t _aidl_android_aidl_tests_ITestService_onTransact(AIBinder
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = AParcel_writeByte(_aidl_out, static_cast<int8_t>(_aidl_return));
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -1294,7 +1294,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeInt32(_aidl_in.get(), in_arg);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_arg);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -1317,7 +1317,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readInt32(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -1401,7 +1401,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeBool(_aidl_in.get(), in_token);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_token);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -1424,7 +1424,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readBool(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -1442,7 +1442,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeByte(_aidl_in.get(), in_token);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_token);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -1465,7 +1465,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readByte(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -1483,7 +1483,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeChar(_aidl_in.get(), in_token);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_token);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -1506,7 +1506,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readChar(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -1524,7 +1524,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeInt32(_aidl_in.get(), in_token);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_token);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -1547,7 +1547,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readInt32(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -1565,7 +1565,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeInt64(_aidl_in.get(), in_token);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_token);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -1588,7 +1588,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readInt64(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -1606,7 +1606,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeFloat(_aidl_in.get(), in_token);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_token);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -1629,7 +1629,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readFloat(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -1647,7 +1647,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeDouble(_aidl_in.get(), in_token);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_token);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -1670,7 +1670,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readDouble(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -1688,7 +1688,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeString(_aidl_in.get(), in_token);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_token);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -1711,7 +1711,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readString(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -1729,7 +1729,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeByte(_aidl_in.get(), static_cast<int8_t>(in_token));
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_token);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -1752,7 +1752,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readByte(_aidl_out.get(), reinterpret_cast<int8_t*>(_aidl_return));
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -1770,7 +1770,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeInt32(_aidl_in.get(), static_cast<int32_t>(in_token));
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_token);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -1793,7 +1793,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readInt32(_aidl_out.get(), reinterpret_cast<int32_t*>(_aidl_return));
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -1811,7 +1811,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeInt64(_aidl_in.get(), static_cast<int64_t>(in_token));
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_token);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -1834,7 +1834,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readInt64(_aidl_out.get(), reinterpret_cast<int64_t*>(_aidl_return));
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -1852,7 +1852,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -1878,10 +1878,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), out_repeated);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -1899,7 +1899,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -1925,10 +1925,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), out_repeated);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -1946,7 +1946,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -1972,10 +1972,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), out_repeated);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -1993,7 +1993,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -2019,10 +2019,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), out_repeated);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2040,7 +2040,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -2066,10 +2066,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), out_repeated);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2087,7 +2087,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -2113,10 +2113,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), out_repeated);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2134,7 +2134,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -2160,10 +2160,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), out_repeated);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2181,7 +2181,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -2207,10 +2207,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), out_repeated);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2228,7 +2228,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeByteArray(_aidl_in.get(), reinterpret_cast<const int8_t*>(in_input.data()), in_input.size());
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -2254,10 +2254,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readByteArray(_aidl_out.get(), static_cast<void*>(_aidl_return), ndk::AParcel_stdVectorAllocator<int8_t>);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_readByteArray(_aidl_out.get(), static_cast<void*>(out_repeated), ndk::AParcel_stdVectorAllocator<int8_t>);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2275,7 +2275,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeInt32Array(_aidl_in.get(), reinterpret_cast<const int32_t*>(in_input.data()), in_input.size());
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -2301,10 +2301,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readInt32Array(_aidl_out.get(), static_cast<void*>(_aidl_return), ndk::AParcel_stdVectorAllocator<int32_t>);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_readInt32Array(_aidl_out.get(), static_cast<void*>(out_repeated), ndk::AParcel_stdVectorAllocator<int32_t>);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2322,7 +2322,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeInt64Array(_aidl_in.get(), reinterpret_cast<const int64_t*>(in_input.data()), in_input.size());
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -2348,10 +2348,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readInt64Array(_aidl_out.get(), static_cast<void*>(_aidl_return), ndk::AParcel_stdVectorAllocator<int64_t>);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_readInt64Array(_aidl_out.get(), static_cast<void*>(out_repeated), ndk::AParcel_stdVectorAllocator<int64_t>);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2369,7 +2369,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeString(_aidl_in.get(), in_name);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_name);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -2392,7 +2392,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::aidl::android::aidl::tests::INamedCallback::readFromParcel(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2410,10 +2410,10 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::aidl::android::aidl::tests::INamedCallback::writeToParcel(_aidl_in.get(), in_service);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_service);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeString(_aidl_in.get(), in_name);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_name);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -2436,7 +2436,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readBool(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2454,7 +2454,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_names);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_names);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -2477,7 +2477,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2495,10 +2495,10 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_services);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_services);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_names);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_names);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -2521,7 +2521,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readBool(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2539,7 +2539,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_names);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_names);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -2562,7 +2562,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2580,10 +2580,10 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_services);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_services);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_names);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_names);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -2606,7 +2606,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readBool(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2624,7 +2624,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_names);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_names);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -2647,7 +2647,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2665,10 +2665,10 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_services);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_services);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_names);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_names);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -2691,7 +2691,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readBool(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2709,7 +2709,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -2732,10 +2732,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), out_repeated);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2753,7 +2753,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeRequiredParcelFileDescriptor(_aidl_in.get(), in_read);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_read);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -2776,7 +2776,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readRequiredParcelFileDescriptor(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2794,7 +2794,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -2820,10 +2820,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), out_repeated);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2841,7 +2841,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeInt32(_aidl_in.get(), in_code);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_code);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -2879,7 +2879,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -2902,7 +2902,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2920,7 +2920,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeByteArray(_aidl_in.get(), (in_input ? reinterpret_cast<const int8_t*>(in_input->data()) : nullptr), (in_input ? in_input->size() : -1));
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -2943,7 +2943,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readByteArray(_aidl_out.get(), static_cast<void*>(_aidl_return), ndk::AParcel_nullableStdVectorAllocator<int8_t>);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -2961,7 +2961,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeInt32Array(_aidl_in.get(), (in_input ? reinterpret_cast<const int32_t*>(in_input->data()) : nullptr), (in_input ? in_input->size() : -1));
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -2984,7 +2984,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readInt32Array(_aidl_out.get(), static_cast<void*>(_aidl_return), ndk::AParcel_nullableStdVectorAllocator<int32_t>);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3002,7 +3002,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeInt64Array(_aidl_in.get(), (in_input ? reinterpret_cast<const int64_t*>(in_input->data()) : nullptr), (in_input ? in_input->size() : -1));
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3025,7 +3025,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readInt64Array(_aidl_out.get(), static_cast<void*>(_aidl_return), ndk::AParcel_nullableStdVectorAllocator<int64_t>);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3043,7 +3043,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeString(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3066,7 +3066,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readString(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3084,7 +3084,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3107,7 +3107,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3125,7 +3125,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeNullableParcelable(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3148,7 +3148,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readNullableParcelable(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3166,7 +3166,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3189,7 +3189,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3207,7 +3207,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3230,7 +3230,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3248,7 +3248,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeRequiredStrongBinder(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3286,7 +3286,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeNullableStrongBinder(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3324,7 +3324,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3362,7 +3362,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3400,7 +3400,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeString(_aidl_in.get(), in_token);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_token);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3423,7 +3423,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readString(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3441,7 +3441,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeString(_aidl_in.get(), in_token);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_token);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3464,7 +3464,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readString(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3482,7 +3482,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -3508,10 +3508,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), out_repeated);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3529,7 +3529,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -3555,10 +3555,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), out_repeated);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3576,7 +3576,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3599,10 +3599,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), out_repeated);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3620,7 +3620,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeBool(_aidl_in.get(), in_return_null);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_return_null);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3643,7 +3643,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::aidl::android::aidl::tests::INamedCallback::readFromParcel(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3661,7 +3661,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeParcelable(_aidl_in.get(), *in_parcel);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), *in_parcel);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3684,7 +3684,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readParcelable(_aidl_out.get(), in_parcel);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), in_parcel);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3702,7 +3702,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeParcelable(_aidl_in.get(), in_ep);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_ep);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3725,7 +3725,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readParcelable(_aidl_out.get(), out_ep2);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_ep2);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3743,7 +3743,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeParcelable(_aidl_in.get(), in_list);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_list);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -3766,7 +3766,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readParcelable(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3784,7 +3784,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -3810,10 +3810,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), out_repeated);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3831,7 +3831,7 @@ BpTestService::~BpTestService() {}
   AParcel_markSensitive(_aidl_in.get());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), in_input);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_input);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *out_repeated);
@@ -3857,10 +3857,10 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), out_repeated);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), out_repeated);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3898,7 +3898,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::aidl::android::aidl::tests::IOldName::readFromParcel(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3936,7 +3936,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::aidl::android::aidl::tests::INewName::readFromParcel(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -3974,7 +3974,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readNullableStrongBinder(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -4012,7 +4012,7 @@ BpTestService::~BpTestService() {}
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = AParcel_readByte(_aidl_out.get(), reinterpret_cast<int8_t*>(_aidl_return));
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -4460,126 +4460,126 @@ binder_status_t ITestService::CompilerChecks::readFromParcel(const AParcel* _aid
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readRequiredStrongBinder(_aidl_parcel, &binder);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &binder);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readNullableStrongBinder(_aidl_parcel, &nullable_binder);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_parcel, &nullable_binder);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_parcel, &binder_array);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &binder_array);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_parcel, &nullable_binder_array);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_parcel, &nullable_binder_array);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_parcel, &binder_list);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &binder_list);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_parcel, &nullable_binder_list);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_parcel, &nullable_binder_list);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readRequiredParcelFileDescriptor(_aidl_parcel, &pfd);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &pfd);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readNullableParcelFileDescriptor(_aidl_parcel, &nullable_pfd);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_parcel, &nullable_pfd);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_parcel, &pfd_array);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &pfd_array);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_parcel, &nullable_pfd_array);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_parcel, &nullable_pfd_array);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_parcel, &pfd_list);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &pfd_list);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_parcel, &nullable_pfd_list);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_parcel, &nullable_pfd_list);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readParcelable(_aidl_parcel, &parcel);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &parcel);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readNullableParcelable(_aidl_parcel, &nullable_parcel);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_parcel, &nullable_parcel);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_parcel, &parcel_array);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &parcel_array);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_parcel, &nullable_parcel_array);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_parcel, &nullable_parcel_array);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_parcel, &parcel_list);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &parcel_list);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_parcel, &nullable_parcel_list);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_parcel, &nullable_parcel_list);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
@@ -4591,58 +4591,58 @@ binder_status_t ITestService::CompilerChecks::writeToParcel(AParcel* _aidl_parce
   _aidl_ret_status = AParcel_writeInt32(_aidl_parcel, 0);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeRequiredStrongBinder(_aidl_parcel, binder);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, binder);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeNullableStrongBinder(_aidl_parcel, nullable_binder);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_parcel, nullable_binder);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_parcel, binder_array);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, binder_array);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_parcel, nullable_binder_array);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_parcel, nullable_binder_array);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_parcel, binder_list);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, binder_list);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_parcel, nullable_binder_list);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_parcel, nullable_binder_list);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeRequiredParcelFileDescriptor(_aidl_parcel, pfd);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, pfd);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeNullableParcelFileDescriptor(_aidl_parcel, nullable_pfd);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_parcel, nullable_pfd);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_parcel, pfd_array);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, pfd_array);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_parcel, nullable_pfd_array);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_parcel, nullable_pfd_array);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_parcel, pfd_list);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, pfd_list);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_parcel, nullable_pfd_list);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_parcel, nullable_pfd_list);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeParcelable(_aidl_parcel, parcel);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, parcel);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeNullableParcelable(_aidl_parcel, nullable_parcel);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_parcel, nullable_parcel);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_parcel, parcel_array);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, parcel_array);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_parcel, nullable_parcel_array);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_parcel, nullable_parcel_array);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_parcel, parcel_list);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, parcel_list);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_parcel, nullable_parcel_list);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_parcel, nullable_parcel_list);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   size_t _aidl_end_pos = AParcel_getDataPosition(_aidl_parcel);
