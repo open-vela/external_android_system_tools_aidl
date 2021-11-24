@@ -135,7 +135,7 @@ public:
   public:
     bool booleanValue = false;
     int8_t byteValue = 0;
-    char16_t charValue;
+    char16_t charValue = '\0';
     int32_t intValue = 0;
     int64_t longValue = 0L;
     float floatValue = 0.000000f;
