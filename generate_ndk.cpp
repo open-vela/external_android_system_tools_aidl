@@ -1144,7 +1144,7 @@ void GenerateParcelClassDecl(CodeWriter& out, const AidlTypenames& types,
           << "}";
     }
     if (defined_type.IsFixedSize()) {
-      int alignment = cpp::AlignmentOf(variable->GetType(), types);
+      int alignment = NdkAlignmentOf(types, variable->GetType());
       if (alignment > 0) {
         out << " __attribute__((aligned (" << std::to_string(alignment) << ")))";
       }
