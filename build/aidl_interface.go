@@ -769,17 +769,11 @@ func aidlInterfaceHook(mctx android.LoadHookContext, i *aidlInterface) {
 	versions := i.properties.Versions
 	nextVersion := i.nextVersion()
 	shouldGenerateLangBackendMap := map[string]bool{
-		langCpp:  i.shouldGenerateCppBackend(),
-		langNdk:  i.shouldGenerateNdkBackend(),
-		langJava: i.shouldGenerateJavaBackend(),
-		langRust: i.shouldGenerateRustBackend()}
-
-	// The ndk_platform backend is generated only when explicitly requested. This will
-	// eventually be completely removed the devices in the long tail are gone.
-	if mctx.DeviceConfig().GenerateAidlNdkPlatformBackend() {
-		shouldGenerateLangBackendMap[langNdkPlatform] = i.shouldGenerateNdkBackend()
-	}
-
+		langCpp:         i.shouldGenerateCppBackend(),
+		langNdk:         i.shouldGenerateNdkBackend(),
+		langNdkPlatform: i.shouldGenerateNdkBackend(),
+		langJava:        i.shouldGenerateJavaBackend(),
+		langRust:        i.shouldGenerateRustBackend()}
 	for lang, shouldGenerate := range shouldGenerateLangBackendMap {
 		if !shouldGenerate {
 			continue
