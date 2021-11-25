@@ -482,8 +482,10 @@ void UnionWriter::PrivateFields(CodeWriter& out) const {
                                 first_field->ValueString(decorator) + ")";
 
     out << "Tag _tag __attribute__((aligned (1))) = " << default_name << ";\n";
-    out << "union {\n";
+    out << "union _value_t {\n";
     out.Indent();
+    out << "_value_t() {}\n";
+    out << "~_value_t() {}\n";
     for (const auto& f : decl.GetFields()) {
       const auto& fn = f->GetName();
       out << name_of(f->GetType(), typenames) << " " << fn;
