@@ -78,6 +78,7 @@ static vector<string> get_strict_annotations(const AidlAnnotatable& node) {
       AidlAnnotation::Type::NULLABLE,
       // @JavaDerive doesn't affect read/write
       AidlAnnotation::Type::JAVA_DERIVE,
+      AidlAnnotation::Type::JAVA_DEFAULT,
       AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE,
       // @Backing for a enum type is checked by the enum checker
       AidlAnnotation::Type::BACKING,
