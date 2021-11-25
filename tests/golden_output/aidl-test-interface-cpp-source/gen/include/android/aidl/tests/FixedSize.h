@@ -120,7 +120,9 @@ public:
     }
   private:
     Tag _tag __attribute__((aligned (1))) = booleanValue;
-    union {
+    union _value_t {
+      _value_t() {}
+      ~_value_t() {}
       bool booleanValue __attribute__((aligned (1))) = bool(false);
       int8_t byteValue __attribute__((aligned (1)));
       char16_t charValue __attribute__((aligned (2)));
