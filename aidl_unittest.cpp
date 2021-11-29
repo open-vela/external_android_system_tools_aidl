@@ -1967,7 +1967,7 @@ TEST_P(AidlTest, UnderstandsNativeParcelables) {
   AidlTypeSpecifier native_type(AIDL_LOCATION_HERE, "p.Bar", false, nullptr, {});
   native_type.Resolve(typenames_, parse_result);
 
-  EXPECT_EQ("p.Bar", java::InstantiableJavaSignatureOf(native_type, typenames_));
+  EXPECT_EQ("p.Bar", java::InstantiableJavaSignatureOf(native_type));
   // C++ understands C++ specific stuff
   EXPECT_EQ("::p::Bar", cpp::CppNameOf(native_type, typenames_));
   set<string> headers;
