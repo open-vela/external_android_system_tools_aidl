@@ -749,7 +749,7 @@ bool dump_mappings(const Options& options, const IoDelegate& io_delegate) {
       return false;
     }
     for (const auto& defined_type : typenames.MainDocument().DefinedTypes()) {
-      auto mappings = mappings::generate_mappings(defined_type.get(), typenames);
+      auto mappings = mappings::generate_mappings(defined_type.get());
       all_mappings.insert(mappings.begin(), mappings.end());
     }
   }
