@@ -677,7 +677,7 @@ arg
 
 non_array_type
  : annotation_list qualified_name {
-    $$ = new AidlTypeSpecifier(loc(@2), $2->GetText(), false, nullptr, $2->GetComments());
+    $$ = new AidlTypeSpecifier(loc(@2), $2->GetText(), /*array=*/std::nullopt, nullptr, $2->GetComments());
     if (!$1->empty()) {
       $$->SetComments($1->begin()->get()->GetComments());
       $$->Annotate(std::move(*$1));
@@ -710,8 +710,20 @@ type
       AIDL_ERROR(loc(@2)) << "Annotations for arrays are not supported.";
       ps->AddError();
     }
-    if (!$1->SetArray()) {
-      AIDL_ERROR(loc(@1)) << "Can only have one dimensional arrays.";
+    if (!$1->MakeArray(DynamicArray{})) {
+      AIDL_ERROR(loc(@1)) << "Multi-dimensional arrays must be fixed size.";
+      ps->AddError();
+    }
+    $$ = $1;
+    delete $2;
+  }
+ | type annotation_list '[' const_expr ']' {
+    if (!$2->empty()) {
+      AIDL_ERROR(loc(@2)) << "Annotations for arrays are not supported.";
+      ps->AddError();
+    }
+    if (!$1->MakeArray(FixedSizeArray{std::unique_ptr<AidlConstantValue>($4)})) {
+      AIDL_ERROR(loc(@1)) << "Multi-dimensional arrays must be fixed size.";
       ps->AddError();
     }
     $$ = $1;
