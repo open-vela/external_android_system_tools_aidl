@@ -401,7 +401,8 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
                     vector<unique_ptr<AidlTypeSpecifier>>* type_params, const Comments& comments);
   virtual ~AidlTypeSpecifier() = default;
 
-  // View of this type which is not an array.
+  // View of this type which has one-less dimension(s).
+  // e.g.) T[] => T, T[N][M] => T[M]
   void ViewAsArrayBase(std::function<void(const AidlTypeSpecifier&)> func) const;
 
   // Returns the full-qualified name of the base type.
