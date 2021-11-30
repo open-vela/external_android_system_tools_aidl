@@ -58,9 +58,13 @@ inline bool IsReference(ReferenceMode ref_mode) {
   }
 }
 
-std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value);
+std::string ConstantValueDecorator(
+    const AidlTypeSpecifier& type,
+    const std::variant<std::string, std::vector<std::string>>& raw_value);
 
-std::string ConstantValueDecoratorRef(const AidlTypeSpecifier& type, const std::string& raw_value);
+std::string ConstantValueDecoratorRef(
+    const AidlTypeSpecifier& type,
+    const std::variant<std::string, std::vector<std::string>>& raw_value);
 
 // Returns "'lifetime_name " including the initial apostrophe and the trailing space.
 // Returns empty string for NONE.

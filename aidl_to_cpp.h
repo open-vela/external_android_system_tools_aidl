@@ -23,7 +23,9 @@ namespace cpp {
 
 // This header provides functions that translate AIDL things to cpp things.
 
-std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value);
+std::string ConstantValueDecorator(
+    const AidlTypeSpecifier& type,
+    const std::variant<std::string, std::vector<std::string>>& raw_value);
 
 struct CodeGeneratorContext {
   CodeWriter& writer;

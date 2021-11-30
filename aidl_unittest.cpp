@@ -4904,7 +4904,7 @@ TEST_F(AidlTest, SuppressWarningsIsNotForArgs) {
   io_delegate_.SetFileContents(
       "IFoo.aidl",
       "interface IFoo {\n"
-      "  void foo(in @SuppressWarnings(value=\"inout-parameter\") int x);\n"
+      "  void foo(in @SuppressWarnings(value={\"inout-parameter\"}) int x);\n"
       "}");
   auto options = Options::From("aidl --lang=java IFoo.aidl");
   CaptureStderr();

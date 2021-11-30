@@ -13,7 +13,7 @@ pub enum Union {
 pub const S1: &str = "a string constant in union";
 impl Default for Union {
   fn default() -> Self {
-    Self::Ns(vec!{})
+    Self::Ns(vec![])
   }
 }
 impl binder::parcel::Parcelable for Union {
