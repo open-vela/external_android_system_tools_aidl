@@ -200,7 +200,9 @@ std::string GetCppName(const AidlTypeSpecifier& raw_type, const AidlTypenames& t
   return WrapIfNullable(cpp_name, raw_type, typenames);
 }
 }  // namespace
-std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value) {
+std::string ConstantValueDecorator(
+    const AidlTypeSpecifier& type,
+    const std::variant<std::string, std::vector<std::string>>& raw_value) {
   return CppConstantValueDecorator(type, raw_value, /*is_ndk=*/false);
 };
 
