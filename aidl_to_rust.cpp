@@ -39,40 +39,44 @@ namespace rust {
 namespace {
 std::string GetRawRustName(const AidlTypeSpecifier& type);
 
-std::string ConstantValueDecoratorInternal(const AidlTypeSpecifier& type,
-                                           const std::string& raw_value, bool by_ref) {
-  if (type.IsArray() && !raw_value.empty() && raw_value[0] == '{') {
-    // Convert `{ ... }` to `vec!{ ... }`
-    return "vec!" + raw_value;
+std::string ConstantValueDecoratorInternal(
+    const AidlTypeSpecifier& type,
+    const std::variant<std::string, std::vector<std::string>>& raw_value, bool by_ref) {
+  if (type.IsArray()) {
+    // Convert `{ ... }` to `vec![ ... ]`
+    const auto& values = std::get<std::vector<std::string>>(raw_value);
+    return "vec![" + Join(values, ", ") + "]";
   }
+
+  const std::string& value = std::get<std::string>(raw_value);
 
   const auto& aidl_name = type.GetName();
   if (aidl_name == "char") {
-    return raw_value + " as u16";
+    return value + " as u16";
   }
 
   if (aidl_name == "float") {
-    // raw_value already ends in `f`, so just add `32`
-    return raw_value + "32";
+    // value already ends in `f`, so just add `32`
+    return value + "32";
   }
 
   if (aidl_name == "double") {
-    return raw_value + "f64";
+    return value + "f64";
   }
 
   if (aidl_name == "String" && !by_ref) {
     // The actual type might be String or &str,
     // and .into() transparently converts into either one
-    return raw_value + ".into()";
+    return value + ".into()";
   }
 
   if (auto defined_type = type.GetDefinedType(); defined_type) {
     auto enum_type = defined_type->AsEnumDeclaration();
-    AIDL_FATAL_IF(!enum_type, type) << "Invalid type for \"" << raw_value << "\"";
-    return GetRawRustName(type) + "::" + raw_value.substr(raw_value.find_last_of('.') + 1);
+    AIDL_FATAL_IF(!enum_type, type) << "Invalid type for \"" << value << "\"";
+    return GetRawRustName(type) + "::" + value.substr(value.find_last_of('.') + 1);
   }
 
-  return raw_value;
+  return value;
 }
 
 std::string GetRawRustName(const AidlTypeSpecifier& type) {
@@ -140,7 +144,9 @@ std::string GetRustName(const AidlTypeSpecifier& type, const AidlTypenames& type
 }
 }  // namespace
 
-std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value) {
+std::string ConstantValueDecorator(
+    const AidlTypeSpecifier& type,
+    const std::variant<std::string, std::vector<std::string>>& raw_value) {
   auto rust_value = ConstantValueDecoratorInternal(type, raw_value, false);
   if (type.IsNullable()) {
     return "Some(" + rust_value + ")";
@@ -148,7 +154,9 @@ std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::str
   return rust_value;
 }
 
-std::string ConstantValueDecoratorRef(const AidlTypeSpecifier& type, const std::string& raw_value) {
+std::string ConstantValueDecoratorRef(
+    const AidlTypeSpecifier& type,
+    const std::variant<std::string, std::vector<std::string>>& raw_value) {
   auto rust_value = ConstantValueDecoratorInternal(type, raw_value, true);
   if (type.IsNullable()) {
     return "Some(" + rust_value + ")";
