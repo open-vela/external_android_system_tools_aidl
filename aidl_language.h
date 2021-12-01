@@ -437,7 +437,9 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   bool IsResolved() const { return fully_qualified_name_ != ""; }
 
   bool IsArray() const { return array_.has_value(); }
-
+  bool IsDynamicArray() const {
+    return array_.has_value() && std::get_if<DynamicArray>(&*array_) != nullptr;
+  }
   bool IsFixedSizeArray() const {
     return array_.has_value() && std::get_if<FixedSizeArray>(&*array_) != nullptr;
   }
