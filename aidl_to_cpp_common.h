@@ -129,8 +129,9 @@ struct UnionWriter {
   void WriteToParcel(CodeWriter& out, const ParcelWriterContext&) const;
 };
 
-std::string CppConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value,
-                                      bool is_ndk);
+std::string CppConstantValueDecorator(
+    const AidlTypeSpecifier& type,
+    const std::variant<std::string, std::vector<std::string>>& raw_value, bool is_ndk);
 }  // namespace cpp
 }  // namespace aidl
 }  // namespace android
