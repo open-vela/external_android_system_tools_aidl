@@ -381,28 +381,16 @@ class AidlAnnotatable : public AidlCommentable {
   vector<std::unique_ptr<AidlAnnotation>> annotations_;
 };
 
-// Represents `[]`
-struct DynamicArray {};
-// Represents `[N][M]..`
-struct FixedSizeArray {
-  FixedSizeArray(std::unique_ptr<AidlConstantValue> dim) { dimensions.push_back(std::move(dim)); }
-  std::vector<std::unique_ptr<AidlConstantValue>> dimensions;
-};
-// Represents `[]` or `[N]` part of type specifier
-using ArrayType = std::variant<DynamicArray, FixedSizeArray>;
-
 // AidlTypeSpecifier represents a reference to either a built-in type,
 // a defined type, or a variant (e.g., array of generic) of a type.
 class AidlTypeSpecifier final : public AidlAnnotatable,
                                 public AidlParameterizable<unique_ptr<AidlTypeSpecifier>> {
  public:
-  AidlTypeSpecifier(const AidlLocation& location, const string& unresolved_name,
-                    std::optional<ArrayType> array,
+  AidlTypeSpecifier(const AidlLocation& location, const string& unresolved_name, bool is_array,
                     vector<unique_ptr<AidlTypeSpecifier>>* type_params, const Comments& comments);
   virtual ~AidlTypeSpecifier() = default;
 
-  // View of this type which has one-less dimension(s).
-  // e.g.) T[] => T, T[N][M] => T[M]
+  // View of this type which is not an array.
   void ViewAsArrayBase(std::function<void(const AidlTypeSpecifier&)> func) const;
 
   // Returns the full-qualified name of the base type.
@@ -436,22 +424,13 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
 
   bool IsResolved() const { return fully_qualified_name_ != ""; }
 
-  bool IsArray() const { return array_.has_value(); }
+  bool IsArray() const { return is_array_; }
 
-  bool IsFixedSizeArray() const {
-    return array_.has_value() && std::get_if<FixedSizeArray>(&*array_) != nullptr;
+  __attribute__((warn_unused_result)) bool SetArray() {
+    if (is_array_) return false;
+    is_array_ = true;
+    return true;
   }
-
-  const ArrayType& GetArray() const {
-    AIDL_FATAL_IF(!array_.has_value(), this) << "GetArray() for non-array type";
-    return array_.value();
-  }
-
-  // Accept transitions from
-  //    T    to T[]
-  // or T    to T[N]
-  // or T[N] to T[N][M]
-  __attribute__((warn_unused_result)) bool MakeArray(ArrayType array_type);
 
   // Resolve the base type name to a fully-qualified name. Return false if the
   // resolution fails.
@@ -462,13 +441,20 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   const AidlNode& AsAidlNode() const override { return *this; }
 
   const AidlDefinedType* GetDefinedType() const;
-  void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override;
+  void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override {
+    AidlAnnotatable::TraverseChildren(traverse);
+    if (IsGeneric()) {
+      for (const auto& tp : GetTypeParameters()) {
+        traverse(*tp);
+      }
+    }
+  }
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 
  private:
   const string unresolved_name_;
   string fully_qualified_name_;
-  mutable std::optional<ArrayType> array_;
+  mutable bool is_array_;
   vector<string> split_name_;
   const AidlDefinedType* defined_type_ = nullptr;  // set when Resolve() for defined types
 };
@@ -632,7 +618,7 @@ class AidlConstantValue : public AidlNode {
     } else if constexpr (is_one_of<T, int8_t, int32_t, int64_t>::value) {
       AIDL_FATAL_IF(final_type_ < Type::INT8 && final_type_ > Type::INT64, this);
       return static_cast<T>(final_value_);
-    } else if constexpr (std::is_same<T, char16_t>::value) {
+    } else if constexpr (std::is_same<T, char>::value) {
       AIDL_FATAL_IF(final_type_ != Type::CHARACTER, this);
       return final_string_value_.at(1);  // unquote '
     } else if constexpr (std::is_same<T, bool>::value) {
@@ -657,9 +643,9 @@ class AidlConstantValue : public AidlNode {
   static AidlConstantValue* Default(const AidlTypeSpecifier& specifier);
 
   static AidlConstantValue* Boolean(const AidlLocation& location, bool value);
-  static AidlConstantValue* Character(const AidlLocation& location, const std::string& value);
+  static AidlConstantValue* Character(const AidlLocation& location, char value);
   // example: 123, -5498, maybe any size
-  static AidlConstantValue* Integral(const AidlLocation& location, const std::string& value);
+  static AidlConstantValue* Integral(const AidlLocation& location, const string& value);
   static AidlConstantValue* Floating(const AidlLocation& location, const std::string& value);
   static AidlConstantValue* Array(const AidlLocation& location,
                                   std::unique_ptr<vector<unique_ptr<AidlConstantValue>>> values);
