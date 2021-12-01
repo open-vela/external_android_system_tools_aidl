@@ -252,7 +252,7 @@ string GetOutputFilePath(const Options& options, const AidlDefinedType& defined_
   return result;
 }
 
-bool check_and_assign_method_ids(const std::vector<std::unique_ptr<AidlMethod>>& items) {
+bool CheckAndAssignMethodIDs(const std::vector<std::unique_ptr<AidlMethod>>& items) {
   // Check whether there are any methods with manually assigned id's and any
   // that are not. Either all method id's must be manually assigned or all of
   // them must not. Also, check for uplicates of user set ID's and that the
@@ -556,6 +556,23 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
       if (!success) return AidlError::NOT_STRUCTURED;
     }
 
+    // Verify the var/const declarations.
+    // const expressions should be non-empty when evaluated with the var/const type.
+    for (const auto& constant : defined_type->GetConstantDeclarations()) {
+      if (constant->ValueString(AidlConstantValueDecorator).empty()) {
+        return AidlError::BAD_TYPE;
+      }
+    }
+    for (const auto& var : defined_type->GetFields()) {
+      if (var->GetDefaultValue() && var->ValueString(AidlConstantValueDecorator).empty()) {
+        return AidlError::BAD_TYPE;
+      }
+    }
+  }
+
+  // Add meta methods and assign method IDs to each interface
+  typenames->IterateTypes([&](const AidlDefinedType& type) {
+    auto interface = const_cast<AidlInterface*>(type.AsInterface());
     if (interface != nullptr) {
       // add the meta-method 'int getInterfaceVersion()' if version is specified.
       if (options.Version() > 0) {
@@ -575,22 +592,13 @@ AidlError load_and_validate_aidl(const std::string& input_file_name, const Optio
             kGetInterfaceHashId, false /* is_user_defined */);
         interface->AddMethod(std::move(method));
       }
-      if (!check_and_assign_method_ids(interface->GetMethods())) {
-        return AidlError::BAD_METHOD_ID;
+      if (!CheckAndAssignMethodIDs(interface->GetMethods())) {
+        err = AidlError::BAD_METHOD_ID;
       }
     }
-    // Verify the var/const declarations.
-    // const expressions should be non-empty when evaluated with the var/const type.
-    for (const auto& constant : defined_type->GetConstantDeclarations()) {
-      if (constant->ValueString(AidlConstantValueDecorator).empty()) {
-        return AidlError::BAD_TYPE;
-      }
-    }
-    for (const auto& var : defined_type->GetFields()) {
-      if (var->GetDefaultValue() && var->ValueString(AidlConstantValueDecorator).empty()) {
-        return AidlError::BAD_TYPE;
-      }
-    }
+  });
+  if (err != AidlError::OK) {
+    return err;
   }
 
   for (const auto& doc : typenames->AllDocuments()) {
