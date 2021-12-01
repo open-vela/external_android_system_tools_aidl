@@ -745,7 +745,8 @@ AidlConstantReference::AidlConstantReference(const AidlLocation& location, const
   if (pos == string::npos) {
     field_name_ = value;
   } else {
-    ref_type_ = std::make_unique<AidlTypeSpecifier>(location, value.substr(0, pos), false, nullptr,
+    ref_type_ = std::make_unique<AidlTypeSpecifier>(location, value.substr(0, pos),
+                                                    /*array=*/std::nullopt, /*type_params=*/nullptr,
                                                     Comments{});
     field_name_ = value.substr(pos + 1);
   }
