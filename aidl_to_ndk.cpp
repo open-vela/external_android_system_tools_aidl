@@ -70,7 +70,9 @@ struct TypeInfo {
   std::shared_ptr<Aspect> nullable_array;
 };
 
-std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value) {
+std::string ConstantValueDecorator(
+    const AidlTypeSpecifier& type,
+    const std::variant<std::string, std::vector<std::string>>& raw_value) {
   return cpp::CppConstantValueDecorator(type, raw_value, /*is_ndk=*/true);
 };
 

@@ -455,11 +455,13 @@ AidlConstantValue* AidlConstantValue::Integral(const AidlLocation& location, con
 AidlConstantValue* AidlConstantValue::Array(
     const AidlLocation& location, std::unique_ptr<vector<unique_ptr<AidlConstantValue>>> values) {
   AIDL_FATAL_IF(values == nullptr, location);
+  // Reconstruct literal value
   std::vector<std::string> str_values;
   for (const auto& v : *values) {
     str_values.push_back(v->value_);
   }
-  return new AidlConstantValue(location, Type::ARRAY, std::move(values), Join(str_values, ", "));
+  return new AidlConstantValue(location, Type::ARRAY, std::move(values),
+                               "{" + Join(str_values, ", ") + "}");
 }
 
 AidlConstantValue* AidlConstantValue::String(const AidlLocation& location, const string& value) {
@@ -502,7 +504,7 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
     return decorator(type, value_);
   }
 
-  const string& type_string = type.GetName();
+  const string& type_string = type.Signature();
   int err = 0;
 
   switch (final_type_) {
@@ -551,11 +553,10 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
       bool success = true;
 
       for (const auto& value : values_) {
-        // Pass array type(T[]) as it is instead of converting it to base type(T)
-        // so that decorator can decorate the value in the context of array.
-        // In C++/NDK, 'byte[]' and 'byte' are mapped to different types. If we pass 'byte'
-        // decorator can't know the value should be treated as 'uint8_t'.
-        string value_string = value->ValueString(type, decorator);
+        string value_string;
+        type.ViewAsArrayBase([&](const auto& base_type) {
+          value_string = value->ValueString(base_type, decorator);
+        });
         if (value_string.empty()) {
           success = false;
           break;
@@ -566,8 +567,7 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
         err = -1;
         break;
       }
-
-      return decorator(type, "{" + Join(value_strings, ", ") + "}");
+      return decorator(type, value_strings);
     }
     case Type::FLOATING: {
       if (type_string == "double") {

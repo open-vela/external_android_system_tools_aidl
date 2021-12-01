@@ -20,6 +20,7 @@
 #include <regex>
 #include <string>
 #include <unordered_set>
+#include <variant>
 #include <vector>
 
 #include <android-base/result.h>
@@ -215,8 +216,9 @@ class AidlCommentable : public AidlNode {
 
 // Transforms a value string into a language specific form. Raw value as produced by
 // AidlConstantValue.
-using ConstantValueDecorator =
-    std::function<std::string(const AidlTypeSpecifier& type, const std::string& raw_value)>;
+using ConstantValueDecorator = std::function<std::string(
+    const AidlTypeSpecifier& type,
+    const std::variant<std::string, std::vector<std::string>>& raw_value)>;
 
 class AidlAnnotation : public AidlNode {
  public:
@@ -458,7 +460,9 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
 };
 
 // Returns the universal value unaltered.
-std::string AidlConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value);
+std::string AidlConstantValueDecorator(
+    const AidlTypeSpecifier& type,
+    const std::variant<std::string, std::vector<std::string>>& raw_value);
 
 class AidlMember : public AidlAnnotatable {
  public:
