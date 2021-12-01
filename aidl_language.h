@@ -381,12 +381,23 @@ class AidlAnnotatable : public AidlCommentable {
   vector<std::unique_ptr<AidlAnnotation>> annotations_;
 };
 
+// Represents `[]`
+struct DynamicArray {};
+// Represents `[N][M]..`
+struct FixedSizeArray {
+  FixedSizeArray(std::unique_ptr<AidlConstantValue> dim) { dimensions.push_back(std::move(dim)); }
+  std::vector<std::unique_ptr<AidlConstantValue>> dimensions;
+};
+// Represents `[]` or `[N]` part of type specifier
+using ArrayType = std::variant<DynamicArray, FixedSizeArray>;
+
 // AidlTypeSpecifier represents a reference to either a built-in type,
 // a defined type, or a variant (e.g., array of generic) of a type.
 class AidlTypeSpecifier final : public AidlAnnotatable,
                                 public AidlParameterizable<unique_ptr<AidlTypeSpecifier>> {
  public:
-  AidlTypeSpecifier(const AidlLocation& location, const string& unresolved_name, bool is_array,
+  AidlTypeSpecifier(const AidlLocation& location, const string& unresolved_name,
+                    std::optional<ArrayType> array,
                     vector<unique_ptr<AidlTypeSpecifier>>* type_params, const Comments& comments);
   virtual ~AidlTypeSpecifier() = default;
 
@@ -424,13 +435,22 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
 
   bool IsResolved() const { return fully_qualified_name_ != ""; }
 
-  bool IsArray() const { return is_array_; }
+  bool IsArray() const { return array_.has_value(); }
 
-  __attribute__((warn_unused_result)) bool SetArray() {
-    if (is_array_) return false;
-    is_array_ = true;
-    return true;
+  bool IsFixedSizeArray() const {
+    return array_.has_value() && std::get_if<FixedSizeArray>(&*array_) != nullptr;
   }
+
+  const ArrayType& GetArray() const {
+    AIDL_FATAL_IF(!array_.has_value(), this) << "GetArray() for non-array type";
+    return array_.value();
+  }
+
+  // Accept transitions from
+  //    T    to T[]
+  // or T    to T[N]
+  // or T[N] to T[N][M]
+  __attribute__((warn_unused_result)) bool MakeArray(ArrayType array_type);
 
   // Resolve the base type name to a fully-qualified name. Return false if the
   // resolution fails.
@@ -441,20 +461,13 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   const AidlNode& AsAidlNode() const override { return *this; }
 
   const AidlDefinedType* GetDefinedType() const;
-  void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override {
-    AidlAnnotatable::TraverseChildren(traverse);
-    if (IsGeneric()) {
-      for (const auto& tp : GetTypeParameters()) {
-        traverse(*tp);
-      }
-    }
-  }
+  void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override;
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 
  private:
   const string unresolved_name_;
   string fully_qualified_name_;
-  mutable bool is_array_;
+  mutable std::optional<ArrayType> array_;
   vector<string> split_name_;
   const AidlDefinedType* defined_type_ = nullptr;  // set when Resolve() for defined types
 };
