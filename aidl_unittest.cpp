@@ -1130,7 +1130,8 @@ TEST_P(AidlTest, SupportDeprecated) {
                       {Options::Language::JAVA, {"out/Foo.java", "@Deprecated"}},
                       {Options::Language::CPP, {"out/Foo.h", "__attribute__((deprecated"}},
                       {Options::Language::NDK, {"out/aidl/Foo.h", "__attribute__((deprecated"}},
-                      {Options::Language::RUST, {"out/Foo.rs", "#[deprecated"}},
+                      // TODO(b/177860423) support "deprecated" in Rust enum
+                      // {Options::Language::RUST, {"out/Foo.rs", "#[deprecated"}},
                   });
 }
 
@@ -3800,29 +3801,6 @@ TEST_F(AidlTest, FailOnPartiallyAssignedIds) {
   CaptureStderr();
   EXPECT_FALSE(compile_aidl(options, io_delegate_));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
-}
-
-TEST_F(AidlTest, AssignedIds) {
-  CaptureStderr();
-  EXPECT_NE(nullptr, Parse("IFoo.aidl",
-                           "interface IFoo {\n"
-                           "  void foo();\n"
-                           "  void bar();\n"
-                           "  interface INested {\n"
-                           "    void foo();\n"
-                           "    void bar();\n"
-                           "  }\n"
-                           "}",
-                           typenames_, Options::Language::JAVA));
-  EXPECT_EQ("", GetCapturedStderr());
-  auto foo = typenames_.ResolveTypename("IFoo").defined_type;
-  ASSERT_EQ(2u, foo->GetMethods().size());
-  EXPECT_EQ(0, foo->GetMethods()[0]->GetId());
-  EXPECT_EQ(1, foo->GetMethods()[1]->GetId());
-  auto nested = typenames_.ResolveTypename("IFoo.INested").defined_type;
-  ASSERT_EQ(2u, nested->GetMethods().size());
-  EXPECT_EQ(0, nested->GetMethods()[0]->GetId());
-  EXPECT_EQ(1, nested->GetMethods()[1]->GetId());
 }
 
 TEST_F(AidlTest, AllowDuplicatedImportPaths) {
