@@ -252,12 +252,8 @@ AidlTypenames::ResolvedTypename AidlTypenames::ResolveTypename(const string& typ
 std::unique_ptr<AidlTypeSpecifier> AidlTypenames::MakeResolvedType(const AidlLocation& location,
                                                                    const string& name,
                                                                    bool is_array) const {
-  std::optional<ArrayType> array;
-  if (is_array) {
-    array = DynamicArray{};
-  }
   std::unique_ptr<AidlTypeSpecifier> type(
-      new AidlTypeSpecifier(location, name, std::move(array), nullptr, {}));
+      new AidlTypeSpecifier(location, name, is_array, nullptr, {}));
   AIDL_FATAL_IF(!type->Resolve(*this, nullptr), type) << "Can't make unknown type: " << name;
   type->MarkVisited();
   return type;
@@ -291,16 +287,10 @@ bool AidlTypenames::CanBeJavaOnlyImmutable(const AidlTypeSpecifier& type) const 
   return t->IsJavaOnlyImmutable();
 }
 
-// Followings can be FixedSize:
-// - @FixedSize parcelables
-// - primitive types and enum types
-// - fixed-size arrays of FixedSize types
+// Only FixedSize Parcelable, primitive types, and enum types can be FixedSize.
 bool AidlTypenames::CanBeFixedSize(const AidlTypeSpecifier& type) const {
   const string& name = type.GetName();
-  if (type.IsGeneric() || type.IsNullable()) {
-    return false;
-  }
-  if (type.IsArray() && !type.IsFixedSizeArray()) {
+  if (type.IsGeneric() || type.IsArray() || type.IsNullable()) {
     return false;
   }
   if (IsPrimitiveTypename(name)) {

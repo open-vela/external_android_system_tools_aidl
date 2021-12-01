@@ -94,7 +94,6 @@ AidlLocation loc(const yy::parser::location_type& l) {
     std::vector<std::unique_ptr<AidlDefinedType>>* declarations;
 }
 
-%destructor { } <character>
 %destructor { } <direction>
 %destructor { delete ($$); } <*>
 
@@ -110,7 +109,7 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %token<token> UNION "union"
 %token<token> CONST "const"
 
-%token<character> CHARVALUE "char literal"
+%token<token> CHARVALUE "char literal"
 %token<token> FLOATVALUE "float literal"
 %token<token> HEXVALUE "hex literal"
 %token<token> INTVALUE "int literal"
@@ -409,7 +408,10 @@ interface_members
 const_expr
  : TRUE_LITERAL { $$ = AidlConstantValue::Boolean(loc(@1), true); }
  | FALSE_LITERAL { $$ = AidlConstantValue::Boolean(loc(@1), false); }
- | CHARVALUE { $$ = AidlConstantValue::Character(loc(@1), $1); }
+ | CHARVALUE {
+    $$ = AidlConstantValue::Character(loc(@1), $1->GetText());
+    delete $1;
+  }
  | INTVALUE {
     $$ = AidlConstantValue::Integral(loc(@1), $1->GetText());
     if ($$ == nullptr) {
@@ -675,7 +677,7 @@ arg
 
 non_array_type
  : annotation_list qualified_name {
-    $$ = new AidlTypeSpecifier(loc(@2), $2->GetText(), /*array=*/std::nullopt, nullptr, $2->GetComments());
+    $$ = new AidlTypeSpecifier(loc(@2), $2->GetText(), false, nullptr, $2->GetComments());
     if (!$1->empty()) {
       $$->SetComments($1->begin()->get()->GetComments());
       $$->Annotate(std::move(*$1));
@@ -708,20 +710,8 @@ type
       AIDL_ERROR(loc(@2)) << "Annotations for arrays are not supported.";
       ps->AddError();
     }
-    if (!$1->MakeArray(DynamicArray{})) {
-      AIDL_ERROR(loc(@1)) << "Multi-dimensional arrays must be fixed size.";
-      ps->AddError();
-    }
-    $$ = $1;
-    delete $2;
-  }
- | type annotation_list '[' const_expr ']' {
-    if (!$2->empty()) {
-      AIDL_ERROR(loc(@2)) << "Annotations for arrays are not supported.";
-      ps->AddError();
-    }
-    if (!$1->MakeArray(FixedSizeArray{std::unique_ptr<AidlConstantValue>($4)})) {
-      AIDL_ERROR(loc(@1)) << "Multi-dimensional arrays must be fixed size.";
+    if (!$1->SetArray()) {
+      AIDL_ERROR(loc(@1)) << "Can only have one dimensional arrays.";
       ps->AddError();
     }
     $$ = $1;
