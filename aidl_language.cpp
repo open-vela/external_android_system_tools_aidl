@@ -551,10 +551,18 @@ void AidlTypeSpecifier::ViewAsArrayBase(std::function<void(const AidlTypeSpecifi
   // Declaring array of generic type cannot happen, it is grammar error.
   AIDL_FATAL_IF(IsGeneric(), this);
 
-  ArrayType array_type = std::move(array_.value());
-  array_ = std::nullopt;
-  func(*this);
-  array_ = std::move(array_type);
+  if (IsFixedSizeArray() && std::get<FixedSizeArray>(*array_).dimensions.size() > 1) {
+    auto& dimensions = std::get<FixedSizeArray>(*array_).dimensions;
+    auto dim = std::move(dimensions.front());
+    dimensions.erase(dimensions.begin());
+    func(*this);
+    dimensions.insert(dimensions.begin(), std::move(dim));
+  } else {
+    ArrayType array_type = std::move(array_.value());
+    array_ = std::nullopt;
+    func(*this);
+    array_ = std::move(array_type);
+  }
 }
 
 bool AidlTypeSpecifier::MakeArray(ArrayType array_type) {
