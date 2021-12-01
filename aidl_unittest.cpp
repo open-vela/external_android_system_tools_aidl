@@ -792,7 +792,7 @@ TEST_P(AidlTest, PreferImportToPreprocessed) {
   EXPECT_TRUE(typenames_.ResolveTypename("one.IBar").is_resolved);
   EXPECT_TRUE(typenames_.ResolveTypename("another.IBar").is_resolved);
   // But if we request just "IBar" we should get our imported one.
-  AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", /*array=*/std::nullopt, nullptr, {});
+  AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", false, nullptr, {});
   ambiguous_type.Resolve(typenames_, parse_result);
   EXPECT_EQ("one.IBar", ambiguous_type.GetName());
 }
@@ -814,7 +814,7 @@ TEST_P(AidlTest, B147918827) {
   EXPECT_TRUE(typenames_.ResolveTypename("one.IBar").is_resolved);
   EXPECT_TRUE(typenames_.ResolveTypename("another.IBar").is_resolved);
   // But if we request just "IBar" we should get our imported one.
-  AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", /*array=*/std::nullopt, nullptr, {});
+  AidlTypeSpecifier ambiguous_type(AIDL_LOCATION_HERE, "IBar", false, nullptr, {});
   ambiguous_type.Resolve(typenames_, parse_result);
   EXPECT_EQ("one.IBar", ambiguous_type.GetName());
 }
@@ -1263,11 +1263,6 @@ TEST_P(AidlTest, RejectUnstructuredParcelablesInNDKandRust) {
   EXPECT_THAT(GetCapturedStderr(), HasSubstr(expected_err));
 }
 
-TEST_F(AidlTest, CosntantValueType) {
-  unique_ptr<AidlConstantValue> num{AidlConstantValue::Integral(AIDL_LOCATION_HERE, "1")};
-  EXPECT_EQ(num->GetType(), AidlConstantValue::Type::INT8);
-}
-
 TEST_P(AidlTest, FailOnTooBigConstant) {
   AidlError error;
   const string expected_stderr =
@@ -1299,7 +1294,7 @@ TEST_F(AidlTest, AidlConstantValue_EvaluatedValue) {
   using Ptr = unique_ptr<AidlConstantValue>;
   const AidlLocation& loc = AIDL_LOCATION_HERE;
 
-  EXPECT_EQ('c', Ptr(AidlConstantValue::Character(loc, "'c'"))->EvaluatedValue<char16_t>());
+  EXPECT_EQ('c', Ptr(AidlConstantValue::Character(loc, 'c'))->EvaluatedValue<char>());
   EXPECT_EQ("abc", Ptr(AidlConstantValue::String(loc, "\"abc\""))->EvaluatedValue<string>());
   EXPECT_FLOAT_EQ(1.0f, Ptr(AidlConstantValue::Floating(loc, "1.0f"))->EvaluatedValue<float>());
   EXPECT_EQ(true, Ptr(AidlConstantValue::Boolean(loc, true))->EvaluatedValue<bool>());
@@ -1315,14 +1310,6 @@ TEST_F(AidlTest, AidlConstantValue_EvaluatedValue) {
   EXPECT_EQ(
       expected,
       Ptr(AidlConstantValue::Array(loc, std::move(values)))->EvaluatedValue<vector<string>>());
-}
-
-TEST_F(AidlTest, AidlConstantCharacterDefault) {
-  auto char_type = typenames_.MakeResolvedType(AIDL_LOCATION_HERE, "char", false);
-  auto default_value = unique_ptr<AidlConstantValue>(AidlConstantValue::Default(*char_type));
-  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, cpp::ConstantValueDecorator));
-  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, ndk::ConstantValueDecorator));
-  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, java::ConstantValueDecorator));
 }
 
 TEST_P(AidlTest, FailOnManyDefinedTypes) {
@@ -1495,8 +1482,7 @@ TEST_P(AidlTest, UnderstandsNestedUnstructuredParcelables) {
 
   EXPECT_TRUE(typenames_.ResolveTypename("p.Outer.Inner").is_resolved);
   // C++ uses "::" instead of "." to refer to a inner class.
-  AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.Outer.Inner", /*array=*/std::nullopt,
-                                nullptr, {});
+  AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.Outer.Inner", false, nullptr, {});
   EXPECT_EQ("::p::Outer::Inner", cpp::CppNameOf(nested_type, typenames_));
 }
 
@@ -1512,8 +1498,7 @@ TEST_P(AidlTest, UnderstandsNestedUnstructuredParcelablesWithoutImports) {
 
   EXPECT_TRUE(typenames_.ResolveTypename("p.Outer.Inner").is_resolved);
   // C++ uses "::" instead of "." to refer to a inner class.
-  AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.Outer.Inner", /*array=*/std::nullopt,
-                                nullptr, {});
+  AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.Outer.Inner", false, nullptr, {});
   EXPECT_EQ("::p::Outer::Inner", cpp::CppNameOf(nested_type, typenames_));
 }
 
@@ -1537,8 +1522,7 @@ TEST_F(AidlTest, UnderstandsNestedTypes) {
 
   EXPECT_TRUE(typenames_.ResolveTypename("p.IOuter.Inner").is_resolved);
   // C++ uses "::" instead of "." to refer to a inner class.
-  AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.IOuter.Inner", /*array=*/std::nullopt,
-                                nullptr, {});
+  AidlTypeSpecifier nested_type(AIDL_LOCATION_HERE, "p.IOuter.Inner", false, nullptr, {});
   EXPECT_EQ("::p::IOuter::Inner", cpp::CppNameOf(nested_type, typenames_));
 }
 
@@ -1930,8 +1914,7 @@ TEST_F(AidlTest, CppNameOf_GenericType) {
   auto type = [](std::string name, auto&&... type_params) -> std::unique_ptr<AidlTypeSpecifier> {
     auto params = new std::vector<std::unique_ptr<AidlTypeSpecifier>>;
     (..., params->emplace_back(std::move(type_params)));
-    return std::make_unique<AidlTypeSpecifier>(AIDL_LOCATION_HERE, name, std::nullopt, params,
-                                               Comments{});
+    return std::make_unique<AidlTypeSpecifier>(AIDL_LOCATION_HERE, name, false, params, Comments{});
   };
 
   auto set_nullable = [](std::unique_ptr<AidlTypeSpecifier>&& type) {
@@ -1943,7 +1926,7 @@ TEST_F(AidlTest, CppNameOf_GenericType) {
   };
 
   auto set_array = [](std::unique_ptr<AidlTypeSpecifier>&& type) {
-    (void)type->MakeArray(DynamicArray{});
+    (void)type->SetArray();
     return std::move(type);
   };
 
@@ -1981,7 +1964,7 @@ TEST_P(AidlTest, UnderstandsNativeParcelables) {
   auto parse_result = Parse(input_path, input, typenames_, GetLanguage());
   EXPECT_NE(nullptr, parse_result);
   EXPECT_TRUE(typenames_.ResolveTypename("p.Bar").is_resolved);
-  AidlTypeSpecifier native_type(AIDL_LOCATION_HERE, "p.Bar", /*array=*/std::nullopt, nullptr, {});
+  AidlTypeSpecifier native_type(AIDL_LOCATION_HERE, "p.Bar", false, nullptr, {});
   native_type.Resolve(typenames_, parse_result);
 
   EXPECT_EQ("p.Bar", java::InstantiableJavaSignatureOf(native_type));
@@ -2205,7 +2188,6 @@ TEST_F(AidlTest, ApiDump) {
       "    int foo(out int[] a, String b, boolean c, inout List<String> d);\n"
       "    int foo2(@utf8InCpp String x, inout List<String> y);\n"
       "    IFoo foo3(IFoo foo);\n"
-      "    void foo4(in int[2][3] fixedArray);\n"
       "    Data getData();\n"
       "    // @hide not applied\n"
       "    /** blahblah\n"
@@ -2247,7 +2229,6 @@ interface IFoo {
   int foo(out int[] a, String b, boolean c, inout List<String> d);
   int foo2(@utf8InCpp String x, inout List<String> y);
   foo.bar.IFoo foo3(foo.bar.IFoo foo);
-  void foo4(in int[2][3] fixedArray);
   foo.bar.Data getData();
   /**
    * @deprecated reason why...
@@ -3586,7 +3567,6 @@ TEST_P(AidlTest, RejectNonFixedSizeFromFixedSize) {
                                "  int isFixedSize;\n"
                                "  @nullable OtherFixed nullable1;\n"
                                "  @nullable(heap=true) OtherFixed nullable2;\n"
-                               "  float[16] floats;\n"
                                "}");
   io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar { int a; }");
   io_delegate_.SetFileContents("OtherFixed.aidl", "@FixedSize parcelable OtherFixed { int a; }");
@@ -3626,7 +3606,6 @@ TEST_P(AidlTest, RejectNonFixedSizeFromFixedSize_Union) {
                                "  int isFixedSize;\n"
                                "  @nullable OtherFixed nullable1;\n"
                                "  @nullable(heap=true) OtherFixed nullable2;\n"
-                               "  float[16] floats;\n"
                                "}");
   io_delegate_.SetFileContents("Bar.aidl", "parcelable Bar { int a; }");
   io_delegate_.SetFileContents("OtherFixed.aidl", "@FixedSize parcelable OtherFixed { int a; }");
@@ -4387,58 +4366,15 @@ TEST_F(AidlTest, NestedTypeArgs) {
                   "a.Baz<a.Bar<a.Bar<java.lang.String[]>>[],a.Bar<java.lang.String>> barss;"));
 }
 
-TEST_F(AidlTest, AcceptMultiDimensionalFixedSizeArray) {
-  io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar { String[2][3] a; }");
-
-  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
-  CaptureStderr();
-  EXPECT_TRUE(compile_aidl(options, io_delegate_));
-  EXPECT_EQ("", GetCapturedStderr());
-}
-
-TEST_F(AidlTest, RejectArrayOfFixedSizeArray) {
-  io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar { String[2][] a; }");
-
-  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
-  CaptureStderr();
-  EXPECT_FALSE(compile_aidl(options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Multi-dimensional arrays must be fixed size."));
-}
-
-TEST_F(AidlTest, RejectFixedSizeArrayOfDynamicArray) {
-  io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar { String[][3] a; }");
-
-  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
-  CaptureStderr();
-  EXPECT_FALSE(compile_aidl(options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Multi-dimensional arrays must be fixed size."));
-}
-
-TEST_F(AidlTest, RejectArrayOfArray) {
+TEST_F(AidlTest, DoubleArrayError) {
   io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar { String[][] a; }");
 
   Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
+  const string expected_stderr =
+      "ERROR: a/Bar.aidl:1.28-37: Can only have one dimensional arrays.\n";
   CaptureStderr();
   EXPECT_FALSE(compile_aidl(options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Multi-dimensional arrays must be fixed size."));
-}
-
-TEST_F(AidlTest, RejectInvalidArraySize_Negative) {
-  io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar { String[-1] a; }");
-
-  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
-  CaptureStderr();
-  EXPECT_FALSE(compile_aidl(options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Array size must be a positive number"));
-}
-
-TEST_F(AidlTest, RejectInvalidArraySize_WrongType) {
-  io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar { String[\"3\"] a; }");
-
-  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
-  CaptureStderr();
-  EXPECT_FALSE(compile_aidl(options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Array size must be a positive number"));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
 TEST_F(AidlTest, DoubleGenericError) {
@@ -4481,46 +4417,6 @@ TEST_F(AidlTest, ListOfNullablesAreNotSupported) {
   EXPECT_FALSE(compile_aidl(options, io_delegate_));
   EXPECT_THAT(GetCapturedStderr(),
               testing::HasSubstr("Annotations for type arguments are not supported."));
-}
-
-TEST_F(AidlTest, DefaultShouldMatchWithFixedSizeArray) {
-  io_delegate_.SetFileContents("a/Bar.aidl",
-                               "package a;\n"
-                               "parcelable Bar {\n"
-                               "  int[2][3] a = {{1,2,3}, {4,5,6}};\n"
-                               "}");
-
-  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
-  CaptureStderr();
-  EXPECT_TRUE(compile_aidl(options, io_delegate_));
-  EXPECT_EQ("", GetCapturedStderr());
-}
-
-TEST_F(AidlTest, FixedSizeArrayWithWrongTypeDefaultValue) {
-  io_delegate_.SetFileContents("a/Bar.aidl",
-                               "package a;\n"
-                               "parcelable Bar {\n"
-                               "  int[2][3] a = {{\"1\",\"2\",\"3\"}, {4,5,6}};\n"
-                               "}");
-
-  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
-  CaptureStderr();
-  EXPECT_FALSE(compile_aidl(options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Invalid type specifier for a literal string: int"));
-}
-
-TEST_F(AidlTest, FixedSizeArrayWithWrongSizeDefaultValue) {
-  io_delegate_.SetFileContents("a/Bar.aidl",
-                               "package a;\n"
-                               "parcelable Bar {\n"
-                               "  int[2][3] a = {{1,2,3,4}, {4,5,6}};\n"
-                               "}");
-
-  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
-  CaptureStderr();
-  EXPECT_FALSE(compile_aidl(options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(),
-              HasSubstr("Expected an array of 3 elements, but found one with 4 elements"));
 }
 
 struct GenericAidlTest : ::testing::Test {
@@ -5042,17 +4938,11 @@ struct TypeParam {
 };
 
 const TypeParam kTypeParams[] = {
-    {"primitive", "int"},
-    {"primitiveArray", "int[]"},
-    {"primitiveFixedArray", "int[3]"},
-    {"String", "String"},
-    {"StringArray", "String[]"},
-    {"IBinder", "IBinder"},
-    {"ParcelFileDescriptor", "ParcelFileDescriptor"},
-    {"parcelable", "a.Foo"},
-    {"enum", "a.Enum"},
-    {"union", "a.Union"},
-    {"interface", "a.IBar"},
+    {"primitive", "int"},    {"primitiveArray", "int[]"},
+    {"String", "String"},    {"StringArray", "String[]"},
+    {"IBinder", "IBinder"},  {"ParcelFileDescriptor", "ParcelFileDescriptor"},
+    {"parcelable", "a.Foo"}, {"enum", "a.Enum"},
+    {"union", "a.Union"},    {"interface", "a.IBar"},
 };
 
 struct ExpectedResult {
@@ -5069,14 +4959,6 @@ const std::map<std::string, ExpectedResult> kListSupportExpectations = {
     {"java_primitiveArray", {"List of arrays is not supported", "List of arrays is not supported"}},
     {"ndk_primitiveArray", {"List of arrays is not supported", "List of arrays is not supported"}},
     {"rust_primitiveArray", {"List of arrays is not supported", "List of arrays is not supported"}},
-    {"cpp_primitiveFixedArray",
-     {"List of arrays is not supported", "List of arrays is not supported"}},
-    {"java_primitiveFixedArray",
-     {"List of arrays is not supported", "List of arrays is not supported"}},
-    {"ndk_primitiveFixedArray",
-     {"List of arrays is not supported", "List of arrays is not supported"}},
-    {"rust_primitiveFixedArray",
-     {"List of arrays is not supported", "List of arrays is not supported"}},
     {"cpp_String", {"", ""}},
     {"java_String", {"", ""}},
     {"ndk_String", {"", ""}},
@@ -5116,46 +4998,18 @@ const std::map<std::string, ExpectedResult> kArraySupportExpectations = {
     {"java_primitive", {"", ""}},
     {"ndk_primitive", {"", ""}},
     {"rust_primitive", {"", ""}},
-    {"cpp_primitiveArray",
-     {"Multi-dimensional arrays must be fixed size.",
-      "Multi-dimensional arrays must be fixed size."}},
-    {"java_primitiveArray",
-     {"Multi-dimensional arrays must be fixed size.",
-      "Multi-dimensional arrays must be fixed size."}},
-    {"ndk_primitiveArray",
-     {"Multi-dimensional arrays must be fixed size.",
-      "Multi-dimensional arrays must be fixed size."}},
-    {"rust_primitiveArray",
-     {"Multi-dimensional arrays must be fixed size.",
-      "Multi-dimensional arrays must be fixed size."}},
-    {"cpp_primitiveFixedArray",
-     {"Multi-dimensional arrays must be fixed size.",
-      "Multi-dimensional arrays must be fixed size."}},
-    {"java_primitiveFixedArray",
-     {"Multi-dimensional arrays must be fixed size.",
-      "Multi-dimensional arrays must be fixed size."}},
-    {"ndk_primitiveFixedArray",
-     {"Multi-dimensional arrays must be fixed size.",
-      "Multi-dimensional arrays must be fixed size."}},
-    {"rust_primitiveFixedArray",
-     {"Multi-dimensional arrays must be fixed size.",
-      "Multi-dimensional arrays must be fixed size."}},
+    {"cpp_primitiveArray", {"Can only have one dimensional", "Can only have one dimensional"}},
+    {"java_primitiveArray", {"Can only have one dimensional", "Can only have one dimensional"}},
+    {"ndk_primitiveArray", {"Can only have one dimensional", "Can only have one dimensional"}},
+    {"rust_primitiveArray", {"Can only have one dimensional", "Can only have one dimensional"}},
     {"cpp_String", {"", ""}},
     {"java_String", {"", ""}},
     {"ndk_String", {"", ""}},
     {"rust_String", {"", ""}},
-    {"cpp_StringArray",
-     {"Multi-dimensional arrays must be fixed size.",
-      "Multi-dimensional arrays must be fixed size."}},
-    {"java_StringArray",
-     {"Multi-dimensional arrays must be fixed size.",
-      "Multi-dimensional arrays must be fixed size."}},
-    {"ndk_StringArray",
-     {"Multi-dimensional arrays must be fixed size.",
-      "Multi-dimensional arrays must be fixed size."}},
-    {"rust_StringArray",
-     {"Multi-dimensional arrays must be fixed size.",
-      "Multi-dimensional arrays must be fixed size."}},
+    {"cpp_StringArray", {"Can only have one dimensional", "Can only have one dimensional"}},
+    {"java_StringArray", {"Can only have one dimensional", "Can only have one dimensional"}},
+    {"ndk_StringArray", {"Can only have one dimensional", "Can only have one dimensional"}},
+    {"rust_StringArray", {"Can only have one dimensional", "Can only have one dimensional"}},
     {"cpp_IBinder", {"", ""}},
     {"java_IBinder", {"", ""}},
     {"ndk_IBinder", {"", ""}},
@@ -5191,10 +5045,6 @@ const std::map<std::string, ExpectedResult> kFieldSupportExpectations = {
     {"java_primitiveArray", {"", ""}},
     {"ndk_primitiveArray", {"", ""}},
     {"rust_primitiveArray", {"", ""}},
-    {"cpp_primitiveFixedArray", {"", ""}},
-    {"java_primitiveFixedArray", {"", ""}},
-    {"ndk_primitiveFixedArray", {"", ""}},
-    {"rust_primitiveFixedArray", {"", ""}},
     {"cpp_String", {"", ""}},
     {"java_String", {"", ""}},
     {"ndk_String", {"", ""}},
