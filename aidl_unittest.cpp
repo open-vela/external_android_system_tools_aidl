@@ -4475,6 +4475,46 @@ TEST_F(AidlTest, ListOfNullablesAreNotSupported) {
               testing::HasSubstr("Annotations for type arguments are not supported."));
 }
 
+TEST_F(AidlTest, DefaultShouldMatchWithFixedSizeArray) {
+  io_delegate_.SetFileContents("a/Bar.aidl",
+                               "package a;\n"
+                               "parcelable Bar {\n"
+                               "  int[2][3] a = {{1,2,3}, {4,5,6}};\n"
+                               "}");
+
+  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
+  CaptureStderr();
+  EXPECT_TRUE(compile_aidl(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+}
+
+TEST_F(AidlTest, FixedSizeArrayWithWrongTypeDefaultValue) {
+  io_delegate_.SetFileContents("a/Bar.aidl",
+                               "package a;\n"
+                               "parcelable Bar {\n"
+                               "  int[2][3] a = {{\"1\",\"2\",\"3\"}, {4,5,6}};\n"
+                               "}");
+
+  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Invalid type specifier for a literal string: int"));
+}
+
+TEST_F(AidlTest, FixedSizeArrayWithWrongSizeDefaultValue) {
+  io_delegate_.SetFileContents("a/Bar.aidl",
+                               "package a;\n"
+                               "parcelable Bar {\n"
+                               "  int[2][3] a = {{1,2,3,4}, {4,5,6}};\n"
+                               "}");
+
+  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(),
+              HasSubstr("Expected an array of 3 elements, but found one with 4 elements"));
+}
+
 struct GenericAidlTest : ::testing::Test {
   FakeIoDelegate io_delegate_;
   void Compile(string cmd) {
