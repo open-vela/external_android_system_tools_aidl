@@ -144,9 +144,11 @@ pub mod B {
       pub mod E {
         #![allow(non_upper_case_globals)]
         use binder::declare_binder_enum;
-        declare_binder_enum! { E : [i8; 1] {
-          OK = 0,
-        } }
+        declare_binder_enum! {
+          E : [i8; 1] {
+            OK = 0,
+          }
+        }
       }
     }
   }
