@@ -1130,8 +1130,7 @@ TEST_P(AidlTest, SupportDeprecated) {
                       {Options::Language::JAVA, {"out/Foo.java", "@Deprecated"}},
                       {Options::Language::CPP, {"out/Foo.h", "__attribute__((deprecated"}},
                       {Options::Language::NDK, {"out/aidl/Foo.h", "__attribute__((deprecated"}},
-                      // TODO(b/177860423) support "deprecated" in Rust enum
-                      // {Options::Language::RUST, {"out/Foo.rs", "#[deprecated"}},
+                      {Options::Language::RUST, {"out/Foo.rs", "#[deprecated"}},
                   });
 }
 
