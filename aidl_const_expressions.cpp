@@ -273,6 +273,11 @@ bool AidlUnaryConstExpression::IsCompatibleType(Type type, const string& op) {
 
 bool AidlBinaryConstExpression::AreCompatibleTypes(Type t1, Type t2) {
   switch (t1) {
+    case Type::ARRAY:
+      if (t2 == Type::ARRAY) {
+        return true;
+      }
+      break;
     case Type::STRING:
       if (t2 == Type::STRING) {
         return true;
@@ -323,6 +328,12 @@ AidlConstantValue::Type AidlBinaryConstExpression::IntegralPromotion(Type in) {
 AidlConstantValue* AidlConstantValue::Default(const AidlTypeSpecifier& specifier) {
   AidlLocation location = specifier.GetLocation();
 
+  // Initialize non-nullable fixed-size arrays with {}("empty list").
+  // Each backend will handle it differently. For example, in Rust, it can be mapped to
+  // "Default::default()".
+  if (specifier.IsFixedSizeArray() && !specifier.IsNullable()) {
+    return Array(location, std::make_unique<std::vector<std::unique_ptr<AidlConstantValue>>>());
+  }
   // allocation of int[0] is a bit wasteful in Java
   if (specifier.IsArray()) {
     return nullptr;
@@ -455,11 +466,13 @@ AidlConstantValue* AidlConstantValue::Integral(const AidlLocation& location, con
 AidlConstantValue* AidlConstantValue::Array(
     const AidlLocation& location, std::unique_ptr<vector<unique_ptr<AidlConstantValue>>> values) {
   AIDL_FATAL_IF(values == nullptr, location);
+  // Reconstruct literal value
   std::vector<std::string> str_values;
   for (const auto& v : *values) {
     str_values.push_back(v->value_);
   }
-  return new AidlConstantValue(location, Type::ARRAY, std::move(values), Join(str_values, ", "));
+  return new AidlConstantValue(location, Type::ARRAY, std::move(values),
+                               "{" + Join(str_values, ", ") + "}");
 }
 
 AidlConstantValue* AidlConstantValue::String(const AidlLocation& location, const string& value) {
@@ -502,7 +515,7 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
     return decorator(type, value_);
   }
 
-  const string& type_string = type.GetName();
+  const string& type_string = type.Signature();
   int err = 0;
 
   switch (final_type_) {
@@ -551,11 +564,10 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
       bool success = true;
 
       for (const auto& value : values_) {
-        // Pass array type(T[]) as it is instead of converting it to base type(T)
-        // so that decorator can decorate the value in the context of array.
-        // In C++/NDK, 'byte[]' and 'byte' are mapped to different types. If we pass 'byte'
-        // decorator can't know the value should be treated as 'uint8_t'.
-        string value_string = value->ValueString(type, decorator);
+        string value_string;
+        type.ViewAsArrayBase([&](const auto& base_type) {
+          value_string = value->ValueString(base_type, decorator);
+        });
         if (value_string.empty()) {
           success = false;
           break;
@@ -566,8 +578,17 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
         err = -1;
         break;
       }
-
-      return decorator(type, "{" + Join(value_strings, ", ") + "}");
+      if (type.IsFixedSizeArray()) {
+        auto size =
+            std::get<FixedSizeArray>(type.GetArray()).dimensions.front()->EvaluatedValue<int32_t>();
+        if (values_.size() > static_cast<size_t>(size)) {
+          AIDL_ERROR(this) << "Expected an array of " << size << " elements, but found one with "
+                           << values_.size() << " elements";
+          err = -1;
+          break;
+        }
+      }
+      return decorator(type, value_strings);
     }
     case Type::FLOATING: {
       if (type_string == "double") {
@@ -745,7 +766,8 @@ AidlConstantReference::AidlConstantReference(const AidlLocation& location, const
   if (pos == string::npos) {
     field_name_ = value;
   } else {
-    ref_type_ = std::make_unique<AidlTypeSpecifier>(location, value.substr(0, pos), false, nullptr,
+    ref_type_ = std::make_unique<AidlTypeSpecifier>(location, value.substr(0, pos),
+                                                    /*array=*/std::nullopt, /*type_params=*/nullptr,
                                                     Comments{});
     field_name_ = value.substr(pos + 1);
   }

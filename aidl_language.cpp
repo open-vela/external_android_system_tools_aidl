@@ -111,14 +111,16 @@ std::string AidlNode::PrintLocation() const {
 
 std::vector<AidlLocation> AidlNode::unvisited_locations_;
 
-static const AidlTypeSpecifier kStringType{AIDL_LOCATION_HERE, "String", false, nullptr,
-                                           Comments{}};
-static const AidlTypeSpecifier kStringArrayType{AIDL_LOCATION_HERE, "String", true, nullptr,
-                                                Comments{}};
-static const AidlTypeSpecifier kIntType{AIDL_LOCATION_HERE, "int", false, nullptr, Comments{}};
-static const AidlTypeSpecifier kLongType{AIDL_LOCATION_HERE, "long", false, nullptr, Comments{}};
-static const AidlTypeSpecifier kBooleanType{AIDL_LOCATION_HERE, "boolean", false, nullptr,
-                                            Comments{}};
+static const AidlTypeSpecifier kStringType{AIDL_LOCATION_HERE, "String", /*array=*/std::nullopt,
+                                           nullptr, Comments{}};
+static const AidlTypeSpecifier kStringArrayType{AIDL_LOCATION_HERE, "String", DynamicArray{},
+                                                nullptr, Comments{}};
+static const AidlTypeSpecifier kIntType{AIDL_LOCATION_HERE, "int", /*array=*/std::nullopt, nullptr,
+                                        Comments{}};
+static const AidlTypeSpecifier kLongType{AIDL_LOCATION_HERE, "long", /*array=*/std::nullopt,
+                                         nullptr, Comments{}};
+static const AidlTypeSpecifier kBooleanType{AIDL_LOCATION_HERE, "boolean", /*array=*/std::nullopt,
+                                            nullptr, Comments{}};
 
 const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
   static const std::vector<Schema> kSchemas{
@@ -535,23 +537,50 @@ string AidlAnnotatable::ToString() const {
 }
 
 AidlTypeSpecifier::AidlTypeSpecifier(const AidlLocation& location, const string& unresolved_name,
-                                     bool is_array,
+                                     std::optional<ArrayType> array,
                                      vector<unique_ptr<AidlTypeSpecifier>>* type_params,
                                      const Comments& comments)
     : AidlAnnotatable(location, comments),
       AidlParameterizable<unique_ptr<AidlTypeSpecifier>>(type_params),
       unresolved_name_(unresolved_name),
-      is_array_(is_array),
+      array_(std::move(array)),
       split_name_(Split(unresolved_name, ".")) {}
 
 void AidlTypeSpecifier::ViewAsArrayBase(std::function<void(const AidlTypeSpecifier&)> func) const {
-  AIDL_FATAL_IF(!is_array_, this);
+  AIDL_FATAL_IF(!array_.has_value(), this);
   // Declaring array of generic type cannot happen, it is grammar error.
   AIDL_FATAL_IF(IsGeneric(), this);
 
-  is_array_ = false;
-  func(*this);
-  is_array_ = true;
+  if (IsFixedSizeArray() && std::get<FixedSizeArray>(*array_).dimensions.size() > 1) {
+    auto& dimensions = std::get<FixedSizeArray>(*array_).dimensions;
+    auto dim = std::move(dimensions.front());
+    dimensions.erase(dimensions.begin());
+    func(*this);
+    dimensions.insert(dimensions.begin(), std::move(dim));
+  } else {
+    ArrayType array_type = std::move(array_.value());
+    array_ = std::nullopt;
+    func(*this);
+    array_ = std::move(array_type);
+  }
+}
+
+bool AidlTypeSpecifier::MakeArray(ArrayType array_type) {
+  // T becomes T[] or T[N]
+  if (!IsArray()) {
+    array_ = std::move(array_type);
+    return true;
+  }
+  // T[N] becomes T[N][M]
+  if (auto fixed_size_array = std::get_if<FixedSizeArray>(&array_type);
+      fixed_size_array != nullptr && IsFixedSizeArray()) {
+    // concat dimensions
+    for (auto& dim : fixed_size_array->dimensions) {
+      std::get<FixedSizeArray>(*array_).dimensions.push_back(std::move(dim));
+    }
+    return true;
+  }
+  return false;
 }
 
 string AidlTypeSpecifier::Signature() const {
@@ -564,7 +593,13 @@ string AidlTypeSpecifier::Signature() const {
     ret += "<" + Join(arg_names, ",") + ">";
   }
   if (IsArray()) {
-    ret += "[]";
+    if (IsFixedSizeArray()) {
+      for (const auto& dim : std::get<FixedSizeArray>(GetArray()).dimensions) {
+        ret += "[" + dim->ValueString(kIntType, AidlConstantValueDecorator) + "]";
+      }
+    } else {
+      ret += "[]";
+    }
   }
   return ret;
 }
@@ -722,21 +757,54 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
       }
     }
   }
+
+  if (IsFixedSizeArray()) {
+    for (const auto& dim : std::get<FixedSizeArray>(GetArray()).dimensions) {
+      if (!dim->CheckValid()) {
+        return false;
+      }
+      if (dim->GetType() > AidlConstantValue::Type::INT32) {
+        AIDL_ERROR(this) << "Array size must be a positive number: " << dim->Literal();
+        return false;
+      }
+      auto value = dim->EvaluatedValue<int32_t>();
+      if (value < 0) {
+        AIDL_ERROR(this) << "Array size must be a positive number: " << value;
+        return false;
+      }
+    }
+  }
   return true;
 }
 
-std::string AidlConstantValueDecorator(const AidlTypeSpecifier& type,
-                                       const std::string& raw_value) {
-  if (type.IsArray()) {
-    return raw_value;
+void AidlTypeSpecifier::TraverseChildren(std::function<void(const AidlNode&)> traverse) const {
+  AidlAnnotatable::TraverseChildren(traverse);
+  if (IsGeneric()) {
+    for (const auto& tp : GetTypeParameters()) {
+      traverse(*tp);
+    }
   }
+  if (IsFixedSizeArray()) {
+    for (const auto& dim : std::get<FixedSizeArray>(GetArray()).dimensions) {
+      traverse(*dim);
+    }
+  }
+}
 
+std::string AidlConstantValueDecorator(
+    const AidlTypeSpecifier& type,
+    const std::variant<std::string, std::vector<std::string>>& raw_value) {
+  if (type.IsArray()) {
+    const auto& values = std::get<std::vector<std::string>>(raw_value);
+    return "{" + Join(values, ", ") + "}";
+  }
+  const std::string& value = std::get<std::string>(raw_value);
   if (auto defined_type = type.GetDefinedType(); defined_type) {
     auto enum_type = defined_type->AsEnumDeclaration();
-    AIDL_FATAL_IF(!enum_type, type) << "Invalid type for \"" << raw_value << "\"";
-    return type.GetName() + "." + raw_value.substr(raw_value.find_last_of('.') + 1);
+    AIDL_FATAL_IF(!enum_type, type) << "Invalid type for \"" << value << "\"";
+    return type.GetName() + "." + value.substr(value.find_last_of('.') + 1);
   }
-  return raw_value;
+  return value;
 }
 
 AidlVariableDeclaration::AidlVariableDeclaration(const AidlLocation& location,
