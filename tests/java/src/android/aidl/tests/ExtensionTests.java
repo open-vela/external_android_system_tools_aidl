@@ -58,13 +58,19 @@ public class ExtensionTests {
     private UnstableParcelable up;
 
     private ITestService mService;
+    private ICppJavaTests mCppJavaTests;
 
     @Before
-    public void setUp() {
+    public void setUp() throws RemoteException {
       IBinder binder = ServiceManager.waitForService(ITestService.class.getName());
       assertNotNull(binder);
       mService = ITestService.Stub.asInterface(binder);
       assertNotNull(mService);
+
+      IBinder binder2 = mService.GetCppJavaTests();
+      if (binder2 != null) {
+        mCppJavaTests = ICppJavaTests.Stub.asInterface(binder2);
+      }
 
       vep = new VintfExtendableParcelable();
       vp = new VintfParcelable();
@@ -78,6 +84,8 @@ public class ExtensionTests {
 
     @Test
     public void testRepeatExtendableParcelable() throws RemoteException {
+      assumeTrue(mCppJavaTests != null);
+
       MyExt ext = new MyExt();
       ext.a = 42;
       ext.b = "EXT";
@@ -90,7 +98,7 @@ public class ExtensionTests {
       ep.ext.setParcelable(ext);
 
       ExtendableParcelable ep2 = new ExtendableParcelable();
-      mService.RepeatExtendableParcelable(ep, ep2);
+      mCppJavaTests.RepeatExtendableParcelable(ep, ep2);
       assertThat(ep2.a, is(ep.a));
       assertThat(ep2.b, is(ep.b));
 
