@@ -11,8 +11,4 @@ interface ILoggableInterface {
             in Data dataValue, @nullable IBinder binderValue,
             inout @nullable ParcelFileDescriptor pfdValue,
             inout ParcelFileDescriptor[] pfdArray);
-
-    interface ISub {
-        void Log(int value);
-    }
 }
