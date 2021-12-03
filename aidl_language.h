@@ -209,7 +209,6 @@ class AidlAnnotation : public AidlNode {
     SENSITIVE_DATA,
     JAVA_PASSTHROUGH,
     JAVA_DERIVE,
-    JAVA_DEFAULT,
     JAVA_ONLY_IMMUTABLE,
     FIXED_SIZE,
     DESCRIPTOR,
@@ -326,7 +325,6 @@ class AidlAnnotatable : public AidlCommentable {
   bool IsStableApiParcelable(Options::Language lang) const;
   bool IsHide() const;
   bool JavaDerive(const std::string& method) const;
-  bool IsJavaDefault() const;
   std::string GetDescriptor() const;
 
   const AidlAnnotation* UnsupportedAppUsage() const;
