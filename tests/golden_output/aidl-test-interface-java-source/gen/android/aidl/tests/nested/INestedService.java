@@ -66,6 +66,7 @@ public interface INestedService extends android.os.IInterface
         {
           android.aidl.tests.nested.ParcelableWithNested _arg0;
           _arg0 = data.readTypedObject(android.aidl.tests.nested.ParcelableWithNested.CREATOR);
+          data.enforceNoDataAvail();
           android.aidl.tests.nested.INestedService.Result _result = this.flipStatus(_arg0);
           reply.writeNoException();
           reply.writeTypedObject(_result, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
@@ -77,6 +78,7 @@ public interface INestedService extends android.os.IInterface
           _arg0 = data.readByte();
           android.aidl.tests.nested.INestedService.ICallback _arg1;
           _arg1 = android.aidl.tests.nested.INestedService.ICallback.Stub.asInterface(data.readStrongBinder());
+          data.enforceNoDataAvail();
           this.flipStatusWithCallback(_arg0, _arg1);
           reply.writeNoException();
           break;
@@ -250,6 +252,7 @@ public interface INestedService extends android.os.IInterface
           {
             byte _arg0;
             _arg0 = data.readByte();
+            data.enforceNoDataAvail();
             this.done(_arg0);
             reply.writeNoException();
             break;
