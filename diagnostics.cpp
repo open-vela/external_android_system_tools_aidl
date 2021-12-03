@@ -195,6 +195,7 @@ struct DiagnoseMixedOneway : DiagnosticsVisitor {
     bool has_twoway = false;
     for (const auto& m : i.GetMethods()) {
       if (!m->IsUserDefined()) continue;
+      if (Suppressed(*m)) continue;
       if (m->IsOneway()) {
         has_oneway = true;
       } else {
@@ -207,6 +208,14 @@ struct DiagnoseMixedOneway : DiagnosticsVisitor {
           << "' has both one-way and two-way methods. This makes it hard to reason about threading "
              "of client code.";
     }
+  }
+  bool Suppressed(const AidlMethod& m) const {
+    for (const auto& w : m.GetType().SuppressWarnings()) {
+      if (w == to_string(DiagnosticID::mixed_oneway)) {
+        return true;
+      }
+    }
+    return false;
   }
 };
 
@@ -248,6 +257,45 @@ struct DiagnoseOutNullable : DiagnosticsVisitor {
   }
 };
 
+struct DiagnoseImports : DiagnosticsVisitor {
+  DiagnoseImports(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
+  void Visit(const AidlDocument& doc) override {
+    auto collide_with_decls = [&](const auto& import) {
+      for (const auto& type : doc.DefinedTypes()) {
+        if (type->GetCanonicalName() != import && type->GetName() == SimpleName(import)) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    std::set<std::string> imported_names;
+    for (const auto& import : doc.Imports()) {
+      if (collide_with_decls(import)) {
+        diag.Report(doc.GetLocation(), DiagnosticID::unique_import)
+            << SimpleName(import) << " is already defined in this file.";
+      }
+      auto [_, inserted] = imported_names.insert(SimpleName(import));
+      if (!inserted) {
+        diag.Report(doc.GetLocation(), DiagnosticID::unique_import)
+            << SimpleName(import) << " is already imported.";
+      }
+    }
+  }
+};
+
+struct DiagnoseUntypedCollection : DiagnosticsVisitor {
+  DiagnoseUntypedCollection(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
+  void Visit(const AidlTypeSpecifier& t) override {
+    if (t.GetName() == "List" || t.GetName() == "Map") {
+      if (!t.IsGeneric()) {
+        diag.Report(t.GetLocation(), DiagnosticID::untyped_collection)
+            << "Use List<V> or Map<K,V> instead.";
+      }
+    }
+  }
+};
+
 bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnosticsContext diag(mapping);
 
@@ -259,6 +307,8 @@ bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnoseOutArray{diag}.Check(doc);
   DiagnoseFileDescriptor{diag}.Check(doc);
   DiagnoseOutNullable{diag}.Check(doc);
+  DiagnoseImports{diag}.Check(doc);
+  DiagnoseUntypedCollection{diag}.Check(doc);
 
   return diag.ErrorCount() == 0;
 }
