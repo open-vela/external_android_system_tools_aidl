@@ -34,6 +34,7 @@
 #include "aidl_to_cpp.h"
 #include "aidl_to_cpp_common.h"
 #include "aidl_to_java.h"
+#include "aidl_to_ndk.h"
 #include "comments.h"
 #include "logging.h"
 #include "options.h"
