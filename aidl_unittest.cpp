@@ -34,7 +34,6 @@
 #include "aidl_to_cpp.h"
 #include "aidl_to_cpp_common.h"
 #include "aidl_to_java.h"
-#include "aidl_to_ndk.h"
 #include "comments.h"
 #include "logging.h"
 #include "options.h"
@@ -1298,7 +1297,7 @@ TEST_F(AidlTest, AidlConstantValue_EvaluatedValue) {
   using Ptr = unique_ptr<AidlConstantValue>;
   const AidlLocation& loc = AIDL_LOCATION_HERE;
 
-  EXPECT_EQ('c', Ptr(AidlConstantValue::Character(loc, "'c'"))->EvaluatedValue<char16_t>());
+  EXPECT_EQ('c', Ptr(AidlConstantValue::Character(loc, 'c'))->EvaluatedValue<char>());
   EXPECT_EQ("abc", Ptr(AidlConstantValue::String(loc, "\"abc\""))->EvaluatedValue<string>());
   EXPECT_FLOAT_EQ(1.0f, Ptr(AidlConstantValue::Floating(loc, "1.0f"))->EvaluatedValue<float>());
   EXPECT_EQ(true, Ptr(AidlConstantValue::Boolean(loc, true))->EvaluatedValue<bool>());
@@ -1314,14 +1313,6 @@ TEST_F(AidlTest, AidlConstantValue_EvaluatedValue) {
   EXPECT_EQ(
       expected,
       Ptr(AidlConstantValue::Array(loc, std::move(values)))->EvaluatedValue<vector<string>>());
-}
-
-TEST_F(AidlTest, AidlConstantCharacterDefault) {
-  AidlTypeSpecifier char_type(AIDL_LOCATION_HERE, "char", false, nullptr, {});
-  auto default_value = unique_ptr<AidlConstantValue>(AidlConstantValue::Default(char_type));
-  EXPECT_EQ("'\\0'", default_value->ValueString(char_type, cpp::ConstantValueDecorator));
-  EXPECT_EQ("'\\0'", default_value->ValueString(char_type, ndk::ConstantValueDecorator));
-  EXPECT_EQ("'\\0'", default_value->ValueString(char_type, java::ConstantValueDecorator));
 }
 
 TEST_P(AidlTest, FailOnManyDefinedTypes) {
