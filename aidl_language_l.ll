@@ -36,8 +36,8 @@
 
 identifier  [_a-zA-Z][_a-zA-Z0-9]*
 whitespace  ([ \t\r]+)
-intvalue    [0-9]+[lL]?
-hexvalue    0[x|X][0-9a-fA-F]+[lL]?
+intvalue    [0-9]+[lL]?(u8)?
+hexvalue    0[x|X][0-9a-fA-F]+[lL]?(u8)?
 floatvalue  [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?f?
 
 %%
@@ -142,9 +142,8 @@ union                 { yylval->token = new AidlToken("union", comments);
 {identifier}          { yylval->token = new AidlToken(yytext, comments);
                         return yy::parser::token::IDENTIFIER;
                       }
-'.'                   { yylval->character = yytext[1];
-                        return yy::parser::token::CHARVALUE;
-                      }
+'.'                   { yylval->token = new AidlToken(yytext, comments);
+                        return yy::parser::token::CHARVALUE; }
 {intvalue}            { yylval->token = new AidlToken(yytext, comments);
                         return yy::parser::token::INTVALUE; }
 {floatvalue}          { yylval->token = new AidlToken(yytext, comments);
