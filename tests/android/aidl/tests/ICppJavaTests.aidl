@@ -21,7 +21,6 @@ import android.aidl.tests.IntEnum;
 import android.aidl.tests.SimpleParcelable;
 import android.aidl.tests.StructuredParcelable;
 import android.aidl.tests.Union;
-import android.aidl.tests.extension.ExtendableParcelable;
 import android.os.PersistableBundle;
 
 // Tests that are only supported by the C++/Java backends, not NDK/Rust
@@ -43,9 +42,4 @@ interface ICppJavaTests {
     FileDescriptor RepeatFileDescriptor(in FileDescriptor read);
     FileDescriptor[] ReverseFileDescriptorArray(
             in FileDescriptor[] input, out FileDescriptor[] repeated);
-
-    void TakesAnIBinderList(in List<IBinder> input);
-    void TakesANullableIBinderList(in @nullable List<IBinder> input);
-
-    void RepeatExtendableParcelable(in ExtendableParcelable ep, out ExtendableParcelable ep2);
 }

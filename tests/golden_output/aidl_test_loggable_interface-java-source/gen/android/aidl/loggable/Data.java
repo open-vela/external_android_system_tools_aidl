@@ -26,13 +26,7 @@ public class Data implements android.os.Parcelable
     _aidl_parcel.writeInt(0);
     _aidl_parcel.writeInt(num);
     _aidl_parcel.writeString(str);
-    if ((nestedUnion!=null)) {
-      _aidl_parcel.writeInt(1);
-      nestedUnion.writeToParcel(_aidl_parcel, 0);
-    }
-    else {
-      _aidl_parcel.writeInt(0);
-    }
+    _aidl_parcel.writeTypedObject(nestedUnion, 0);
     _aidl_parcel.writeByte(nestedEnum);
     int _aidl_end_pos = _aidl_parcel.dataPosition();
     _aidl_parcel.setDataPosition(_aidl_start_pos);
@@ -50,12 +44,7 @@ public class Data implements android.os.Parcelable
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       str = _aidl_parcel.readString();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      if ((0!=_aidl_parcel.readInt())) {
-        nestedUnion = android.aidl.loggable.Union.CREATOR.createFromParcel(_aidl_parcel);
-      }
-      else {
-        nestedUnion = null;
-      }
+      nestedUnion = _aidl_parcel.readTypedObject(android.aidl.loggable.Union.CREATOR);
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       nestedEnum = _aidl_parcel.readByte();
     } finally {
