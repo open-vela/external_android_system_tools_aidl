@@ -53,19 +53,37 @@ public class ParcelableForToString implements android.os.Parcelable
     _aidl_parcel.writeFloatArray(floatArray);
     _aidl_parcel.writeByte(byteValue);
     _aidl_parcel.writeByteArray(byteArray);
-    _aidl_parcel.writeBoolean(booleanValue);
+    _aidl_parcel.writeInt(((booleanValue)?(1):(0)));
     _aidl_parcel.writeBooleanArray(booleanArray);
     _aidl_parcel.writeString(stringValue);
     _aidl_parcel.writeStringArray(stringArray);
     _aidl_parcel.writeStringList(stringList);
-    _aidl_parcel.writeTypedObject(parcelableValue, 0);
+    if ((parcelableValue!=null)) {
+      _aidl_parcel.writeInt(1);
+      parcelableValue.writeToParcel(_aidl_parcel, 0);
+    }
+    else {
+      _aidl_parcel.writeInt(0);
+    }
     _aidl_parcel.writeTypedArray(parcelableArray, 0);
     _aidl_parcel.writeInt(enumValue);
     _aidl_parcel.writeIntArray(enumArray);
     _aidl_parcel.writeStringArray(nullArray);
     _aidl_parcel.writeStringList(nullList);
-    _aidl_parcel.writeTypedObject(parcelableGeneric, 0);
-    _aidl_parcel.writeTypedObject(unionValue, 0);
+    if ((parcelableGeneric!=null)) {
+      _aidl_parcel.writeInt(1);
+      parcelableGeneric.writeToParcel(_aidl_parcel, 0);
+    }
+    else {
+      _aidl_parcel.writeInt(0);
+    }
+    if ((unionValue!=null)) {
+      _aidl_parcel.writeInt(1);
+      unionValue.writeToParcel(_aidl_parcel, 0);
+    }
+    else {
+      _aidl_parcel.writeInt(0);
+    }
     int _aidl_end_pos = _aidl_parcel.dataPosition();
     _aidl_parcel.setDataPosition(_aidl_start_pos);
     _aidl_parcel.writeInt(_aidl_end_pos - _aidl_start_pos);
@@ -98,7 +116,7 @@ public class ParcelableForToString implements android.os.Parcelable
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       byteArray = _aidl_parcel.createByteArray();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      booleanValue = _aidl_parcel.readBoolean();
+      booleanValue = (0!=_aidl_parcel.readInt());
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       booleanArray = _aidl_parcel.createBooleanArray();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
@@ -108,7 +126,12 @@ public class ParcelableForToString implements android.os.Parcelable
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       stringList = _aidl_parcel.createStringArrayList();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      parcelableValue = _aidl_parcel.readTypedObject(android.aidl.tests.OtherParcelableForToString.CREATOR);
+      if ((0!=_aidl_parcel.readInt())) {
+        parcelableValue = android.aidl.tests.OtherParcelableForToString.CREATOR.createFromParcel(_aidl_parcel);
+      }
+      else {
+        parcelableValue = null;
+      }
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       parcelableArray = _aidl_parcel.createTypedArray(android.aidl.tests.OtherParcelableForToString.CREATOR);
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
@@ -120,9 +143,19 @@ public class ParcelableForToString implements android.os.Parcelable
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       nullList = _aidl_parcel.createStringArrayList();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      parcelableGeneric = _aidl_parcel.readTypedObject(android.aidl.tests.GenericStructuredParcelable.CREATOR);
+      if ((0!=_aidl_parcel.readInt())) {
+        parcelableGeneric = android.aidl.tests.GenericStructuredParcelable.CREATOR.createFromParcel(_aidl_parcel);
+      }
+      else {
+        parcelableGeneric = null;
+      }
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      unionValue = _aidl_parcel.readTypedObject(android.aidl.tests.Union.CREATOR);
+      if ((0!=_aidl_parcel.readInt())) {
+        unionValue = android.aidl.tests.Union.CREATOR.createFromParcel(_aidl_parcel);
+      }
+      else {
+        unionValue = null;
+      }
     } finally {
       if (_aidl_start_pos > (Integer.MAX_VALUE - _aidl_parcelable_size)) {
         throw new android.os.BadParcelableException("Overflow in the size of parcelable");
