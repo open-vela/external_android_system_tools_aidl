@@ -54,8 +54,6 @@
 #include "android/aidl/tests/extension/MyExt.h"
 #include "android/aidl/tests/extension/MyExt2.h"
 
-#include "android/aidl/tests/nested/BnNestedService.h"
-
 #include "android/aidl/loggable/BnLoggableInterface.h"
 #include "android/aidl/loggable/Data.h"
 
@@ -99,7 +97,6 @@ using android::aidl::tests::INewName;
 using android::aidl::tests::IntEnum;
 using android::aidl::tests::IOldName;
 using android::aidl::tests::LongEnum;
-using android::aidl::tests::RecursiveList;
 using android::aidl::tests::SimpleParcelable;
 using android::aidl::tests::StructuredParcelable;
 using android::aidl::tests::Union;
@@ -252,12 +249,32 @@ class CppJavaTests : public BnCppJavaTests {
   Status ReverseFileDescriptorArray(const vector<unique_fd>& input, vector<unique_fd>* repeated,
                                     vector<unique_fd>* _aidl_return) override {
     ALOGI("Reversing descriptor array of length %zu", input.size());
-    repeated->clear();
     for (const auto& item : input) {
       repeated->push_back(unique_fd(dup(item.get())));
       _aidl_return->push_back(unique_fd(dup(item.get())));
     }
     std::reverse(_aidl_return->begin(), _aidl_return->end());
+    return Status::ok();
+  }
+
+  Status TakesAnIBinderList(const vector<sp<IBinder>>& input) override {
+    (void)input;
+    return Status::ok();
+  }
+  Status TakesANullableIBinderList(const optional<vector<sp<IBinder>>>& input) {
+    (void)input;
+    return Status::ok();
+  }
+
+  ::android::binder::Status RepeatExtendableParcelable(
+      const ::android::aidl::tests::extension::ExtendableParcelable& ep,
+      ::android::aidl::tests::extension::ExtendableParcelable* ep2) {
+    ep2->a = ep.a;
+    ep2->b = ep.b;
+    std::shared_ptr<android::aidl::tests::extension::MyExt> myExt;
+    ep.ext.getParcelable(&myExt);
+    ep2->ext.setParcelable(myExt);
+
     return Status::ok();
   }
 };
@@ -415,92 +432,6 @@ class NativeService : public BnTestService {
     return status;
   }
 
-  Status GetInterfaceArray(const vector<String16>& names,
-                           vector<sp<INamedCallback>>* _aidl_return) override {
-    vector<sp<INamedCallback>> services(names.size());
-    for (size_t i = 0; i < names.size(); i++) {
-      if (auto st = GetOtherTestService(names[i], &services[i]); !st.isOk()) {
-        return st;
-      }
-    }
-    *_aidl_return = std::move(services);
-    return Status::ok();
-  }
-
-  Status VerifyNamesWithInterfaceArray(const vector<sp<INamedCallback>>& services,
-                                       const vector<String16>& names, bool* _aidl_ret) override {
-    if (services.size() == names.size()) {
-      for (size_t i = 0; i < services.size(); i++) {
-        if (auto st = VerifyName(services[i], names[i], _aidl_ret); !st.isOk() || !*_aidl_ret) {
-          return st;
-        }
-      }
-      *_aidl_ret = true;
-    } else {
-      *_aidl_ret = false;
-    }
-    return Status::ok();
-  }
-
-  Status GetNullableInterfaceArray(const optional<vector<optional<String16>>>& names,
-                                   optional<vector<sp<INamedCallback>>>* _aidl_ret) override {
-    vector<sp<INamedCallback>> services;
-    if (names.has_value()) {
-      for (const auto& name : *names) {
-        if (name.has_value()) {
-          sp<INamedCallback> ret;
-          if (auto st = GetOtherTestService(*name, &ret); !st.isOk()) {
-            return st;
-          }
-          services.push_back(std::move(ret));
-        } else {
-          services.emplace_back();
-        }
-      }
-    }
-    *_aidl_ret = std::move(services);
-    return Status::ok();
-  }
-
-  Status VerifyNamesWithNullableInterfaceArray(const optional<vector<sp<INamedCallback>>>& services,
-                                               const optional<vector<optional<String16>>>& names,
-                                               bool* _aidl_ret) override {
-    if (services.has_value() && names.has_value()) {
-      if (services->size() == names->size()) {
-        for (size_t i = 0; i < services->size(); i++) {
-          if (services->at(i).get() && names->at(i).has_value()) {
-            if (auto st = VerifyName(services->at(i), names->at(i).value(), _aidl_ret);
-                !st.isOk() || !*_aidl_ret) {
-              return st;
-            }
-          } else if (services->at(i).get() || names->at(i).has_value()) {
-            *_aidl_ret = false;
-            return Status::ok();
-          } else {
-            // ok if service=null && name=null
-          }
-        }
-        *_aidl_ret = true;
-      } else {
-        *_aidl_ret = false;
-      }
-    } else {
-      *_aidl_ret = services.has_value() == names.has_value();
-    }
-    return Status::ok();
-  }
-
-  Status GetInterfaceList(const optional<vector<optional<String16>>>& names,
-                          optional<vector<sp<INamedCallback>>>* _aidl_ret) override {
-    return GetNullableInterfaceArray(names, _aidl_ret);
-  }
-
-  Status VerifyNamesWithInterfaceList(const optional<vector<sp<INamedCallback>>>& services,
-                                      const optional<vector<optional<String16>>>& names,
-                                      bool* _aidl_ret) override {
-    return VerifyNamesWithNullableInterfaceArray(services, names, _aidl_ret);
-  }
-
   Status ReverseStringList(const vector<String16>& input,
                            vector<String16>* repeated,
                            vector<String16>* _aidl_return) override {
@@ -562,20 +493,8 @@ class NativeService : public BnTestService {
     return RepeatNullable(input, _aidl_return);
   }
 
-  Status RepeatNullableParcelable(const optional<ITestService::Empty>& input,
-                                  optional<ITestService::Empty>* _aidl_return) {
-    return RepeatNullable(input, _aidl_return);
-  }
-
-  Status RepeatNullableParcelableList(
-      const optional<vector<optional<ITestService::Empty>>>& input,
-      optional<vector<optional<ITestService::Empty>>>* _aidl_return) {
-    return RepeatNullable(input, _aidl_return);
-  }
-
-  Status RepeatNullableParcelableArray(
-      const optional<vector<optional<ITestService::Empty>>>& input,
-      optional<vector<optional<ITestService::Empty>>>* _aidl_return) {
+  Status RepeatNullableParcelable(const optional<StructuredParcelable>& input,
+                                  optional<StructuredParcelable>* _aidl_return) {
     return RepeatNullable(input, _aidl_return);
   }
 
@@ -584,14 +503,6 @@ class NativeService : public BnTestService {
     return Status::ok();
   }
   Status TakesANullableIBinder(const sp<IBinder>& input) {
-    (void)input;
-    return Status::ok();
-  }
-  Status TakesAnIBinderList(const vector<sp<IBinder>>& input) override {
-    (void)input;
-    return Status::ok();
-  }
-  Status TakesANullableIBinderList(const optional<vector<sp<IBinder>>>& input) {
     (void)input;
     return Status::ok();
   }
@@ -672,51 +583,6 @@ class NativeService : public BnTestService {
 
     parcelable->u = Union::make<Union::ns>({1, 2, 3});
     parcelable->shouldBeConstS1 = Union::S1();
-    return Status::ok();
-  }
-
-  ::android::binder::Status RepeatExtendableParcelable(
-      const ::android::aidl::tests::extension::ExtendableParcelable& ep,
-      ::android::aidl::tests::extension::ExtendableParcelable* ep2) {
-    ep2->a = ep.a;
-    ep2->b = ep.b;
-    std::shared_ptr<android::aidl::tests::extension::MyExt> myExt;
-    ep.ext.getParcelable(&myExt);
-    ep2->ext.setParcelable(myExt);
-
-    return Status::ok();
-  }
-
-  ::android::binder::Status ReverseList(const RecursiveList& list, RecursiveList* ret) override {
-    std::unique_ptr<RecursiveList> reversed;
-    const RecursiveList* cur = &list;
-    while (cur) {
-      auto node = std::make_unique<RecursiveList>();
-      node->value = cur->value;
-      node->next = std::move(reversed);
-      reversed = std::move(node);
-      cur = cur->next.get();
-    }
-    *ret = std::move(*reversed);
-    return Status::ok();
-  }
-
-  Status ReverseIBinderArray(const vector<sp<IBinder>>& input, vector<sp<IBinder>>* repeated,
-                             vector<sp<IBinder>>* _aidl_return) override {
-    *repeated = input;
-    *_aidl_return = input;
-    std::reverse(_aidl_return->begin(), _aidl_return->end());
-    return Status::ok();
-  }
-
-  Status ReverseNullableIBinderArray(const std::optional<vector<sp<IBinder>>>& input,
-                                     std::optional<vector<sp<IBinder>>>* repeated,
-                                     std::optional<vector<sp<IBinder>>>* _aidl_return) override {
-    *repeated = input;
-    *_aidl_return = input;
-    if (*_aidl_return) {
-      std::reverse((*_aidl_return)->begin(), (*_aidl_return)->end());
-    }
     return Status::ok();
   }
 
@@ -807,30 +673,6 @@ class LoggableInterfaceService : public android::aidl::loggable::BnLoggableInter
   }
 };
 
-using namespace android::aidl::tests::nested;
-class NestedService : public BnNestedService {
- public:
-  NestedService() {}
-  virtual ~NestedService() = default;
-
-  virtual Status flipStatus(const ParcelableWithNested& p, INestedService::Result* _aidl_return) {
-    if (p.status == ParcelableWithNested::Status::OK) {
-      _aidl_return->status = ParcelableWithNested::Status::NOT_OK;
-    } else {
-      _aidl_return->status = ParcelableWithNested::Status::OK;
-    }
-    return Status::ok();
-  }
-  virtual Status flipStatusWithCallback(ParcelableWithNested::Status status,
-                                        const sp<INestedService::ICallback>& cb) {
-    if (status == ParcelableWithNested::Status::OK) {
-      return cb->done(ParcelableWithNested::Status::NOT_OK);
-    } else {
-      return cb->done(ParcelableWithNested::Status::OK);
-    }
-  }
-};
-
 int Run() {
   android::sp<NativeService> service = new NativeService;
   sp<Looper> looper(Looper::prepare(0 /* opts */));
@@ -869,14 +711,6 @@ int Run() {
   if (status != OK) {
     ALOGE("Failed to add service %s",
           String8(loggableInterfaceService->getInterfaceDescriptor()).c_str());
-    return -1;
-  }
-
-  android::sp<NestedService> nestedService = new NestedService;
-  status =
-      defaultServiceManager()->addService(nestedService->getInterfaceDescriptor(), nestedService);
-  if (status != OK) {
-    ALOGE("Failed to add service %s", String8(nestedService->getInterfaceDescriptor()).c_str());
     return -1;
   }
 
