@@ -3794,6 +3794,29 @@ TEST_F(AidlTest, FailOnPartiallyAssignedIds) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
+TEST_F(AidlTest, AssignedIds) {
+  CaptureStderr();
+  EXPECT_NE(nullptr, Parse("IFoo.aidl",
+                           "interface IFoo {\n"
+                           "  void foo();\n"
+                           "  void bar();\n"
+                           "  interface INested {\n"
+                           "    void foo();\n"
+                           "    void bar();\n"
+                           "  }\n"
+                           "}",
+                           typenames_, Options::Language::JAVA));
+  EXPECT_EQ("", GetCapturedStderr());
+  auto foo = typenames_.ResolveTypename("IFoo").defined_type;
+  ASSERT_EQ(2u, foo->GetMethods().size());
+  EXPECT_EQ(0, foo->GetMethods()[0]->GetId());
+  EXPECT_EQ(1, foo->GetMethods()[1]->GetId());
+  auto nested = typenames_.ResolveTypename("IFoo.INested").defined_type;
+  ASSERT_EQ(2u, nested->GetMethods().size());
+  EXPECT_EQ(0, nested->GetMethods()[0]->GetId());
+  EXPECT_EQ(1, nested->GetMethods()[1]->GetId());
+}
+
 TEST_F(AidlTest, AllowDuplicatedImportPaths) {
   Options options = Options::From("aidl --lang=java -I dir -I dir IFoo.aidl");
   io_delegate_.SetFileContents("dir/IBar.aidl", "interface IBar{}");
