@@ -1,23 +1,33 @@
 #include <android/aidl/tests/ITestService.h>
 #include <android/aidl/tests/BpTestService.h>
+
 namespace android {
+
 namespace aidl {
+
 namespace tests {
+
 DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(TestService, "android.aidl.tests.ITestService")
+
 const ::android::String16& ITestService::STRING_TEST_CONSTANT() {
   static const ::android::String16 value(::android::String16("foo"));
   return value;
 }
+
 const ::android::String16& ITestService::STRING_TEST_CONSTANT2() {
   static const ::android::String16 value(::android::String16("bar"));
   return value;
 }
+
 const ::std::string& ITestService::STRING_TEST_CONSTANT_UTF8() {
   static const ::std::string value("baz");
   return value;
 }
+
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android
 #include <android/aidl/tests/BpTestService.h>
 #include <android/aidl/tests/BnTestService.h>
@@ -25,7 +35,9 @@ const ::std::string& ITestService::STRING_TEST_CONSTANT_UTF8() {
 #include <android-base/macros.h>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
 
 BpTestService::BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl)
@@ -1096,7 +1108,7 @@ BpTestService::BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeStrongBinder(service);
+  _aidl_ret_status = _aidl_data.writeStrongBinder(::android::aidl::tests::INamedCallback::asBinder(service));
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
@@ -1107,246 +1119,6 @@ BpTestService::BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl
   _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_VerifyName, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
      return ITestService::getDefaultImpl()->VerifyName(service, name, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readBool(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpTestService::GetInterfaceArray(const ::std::vector<::android::String16>& names, ::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markSensitive();
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeString16Vector(names);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_GetInterfaceArray, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
-     return ITestService::getDefaultImpl()->GetInterfaceArray(names, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readStrongBinderVector(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpTestService::VerifyNamesWithInterfaceArray(const ::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>& services, const ::std::vector<::android::String16>& names, bool* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markSensitive();
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeStrongBinderVector(services);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeString16Vector(names);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_VerifyNamesWithInterfaceArray, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
-     return ITestService::getDefaultImpl()->VerifyNamesWithInterfaceArray(services, names, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readBool(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpTestService::GetNullableInterfaceArray(const ::std::optional<::std::vector<::std::optional<::android::String16>>>& names, ::std::optional<::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>>* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markSensitive();
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeString16Vector(names);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_GetNullableInterfaceArray, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
-     return ITestService::getDefaultImpl()->GetNullableInterfaceArray(names, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readStrongBinderVector(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpTestService::VerifyNamesWithNullableInterfaceArray(const ::std::optional<::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>>& services, const ::std::optional<::std::vector<::std::optional<::android::String16>>>& names, bool* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markSensitive();
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeStrongBinderVector(services);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeString16Vector(names);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_VerifyNamesWithNullableInterfaceArray, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
-     return ITestService::getDefaultImpl()->VerifyNamesWithNullableInterfaceArray(services, names, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readBool(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpTestService::GetInterfaceList(const ::std::optional<::std::vector<::std::optional<::android::String16>>>& names, ::std::optional<::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>>* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markSensitive();
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeString16Vector(names);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_GetInterfaceList, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
-     return ITestService::getDefaultImpl()->GetInterfaceList(names, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readStrongBinderVector(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpTestService::VerifyNamesWithInterfaceList(const ::std::optional<::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>>& services, const ::std::optional<::std::vector<::std::optional<::android::String16>>>& names, bool* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markSensitive();
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeStrongBinderVector(services);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeString16Vector(names);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_VerifyNamesWithInterfaceList, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
-     return ITestService::getDefaultImpl()->VerifyNamesWithInterfaceList(services, names, _aidl_return);
   }
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -1755,7 +1527,7 @@ BpTestService::BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl
   return _aidl_status;
 }
 
-::android::binder::Status BpTestService::RepeatNullableParcelable(const ::std::optional<::android::aidl::tests::ITestService::Empty>& input, ::std::optional<::android::aidl::tests::ITestService::Empty>* _aidl_return) {
+::android::binder::Status BpTestService::RepeatNullableParcelable(const ::std::optional<::android::aidl::tests::StructuredParcelable>& input, ::std::optional<::android::aidl::tests::StructuredParcelable>* _aidl_return) {
   ::android::Parcel _aidl_data;
   _aidl_data.markSensitive();
   _aidl_data.markForBinder(remoteStrong());
@@ -1785,82 +1557,6 @@ BpTestService::BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl
     return _aidl_status;
   }
   _aidl_ret_status = _aidl_reply.readParcelable(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpTestService::RepeatNullableParcelableArray(const ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>& input, ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markSensitive();
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeParcelableVector(input);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_RepeatNullableParcelableArray, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
-     return ITestService::getDefaultImpl()->RepeatNullableParcelableArray(input, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readParcelableVector(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpTestService::RepeatNullableParcelableList(const ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>& input, ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>>* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markSensitive();
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeParcelableVector(input);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_RepeatNullableParcelableList, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
-     return ITestService::getDefaultImpl()->RepeatNullableParcelableList(input, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readParcelableVector(_aidl_return);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
@@ -1921,74 +1617,6 @@ BpTestService::BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl
   _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_TakesANullableIBinder, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
      return ITestService::getDefaultImpl()->TakesANullableIBinder(input);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpTestService::TakesAnIBinderList(const ::std::vector<::android::sp<::android::IBinder>>& input) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markSensitive();
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeStrongBinderVector(input);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_TakesAnIBinderList, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
-     return ITestService::getDefaultImpl()->TakesAnIBinderList(input);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpTestService::TakesANullableIBinderList(const ::std::optional<::std::vector<::android::sp<::android::IBinder>>>& input) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markSensitive();
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeStrongBinderVector(input);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_TakesANullableIBinderList, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
-     return ITestService::getDefaultImpl()->TakesANullableIBinderList(input);
   }
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -2291,174 +1919,6 @@ BpTestService::BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl
   return _aidl_status;
 }
 
-::android::binder::Status BpTestService::RepeatExtendableParcelable(const ::android::aidl::tests::extension::ExtendableParcelable& ep, ::android::aidl::tests::extension::ExtendableParcelable* ep2) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markSensitive();
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeParcelable(ep);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_RepeatExtendableParcelable, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
-     return ITestService::getDefaultImpl()->RepeatExtendableParcelable(ep, ep2);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readParcelable(ep2);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpTestService::ReverseList(const ::android::aidl::tests::RecursiveList& list, ::android::aidl::tests::RecursiveList* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markSensitive();
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeParcelable(list);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_ReverseList, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
-     return ITestService::getDefaultImpl()->ReverseList(list, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readParcelable(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpTestService::ReverseIBinderArray(const ::std::vector<::android::sp<::android::IBinder>>& input, ::std::vector<::android::sp<::android::IBinder>>* repeated, ::std::vector<::android::sp<::android::IBinder>>* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markSensitive();
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeStrongBinderVector(input);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeVectorSize(*repeated);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_ReverseIBinderArray, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
-     return ITestService::getDefaultImpl()->ReverseIBinderArray(input, repeated, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readStrongBinderVector(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_reply.readStrongBinderVector(repeated);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpTestService::ReverseNullableIBinderArray(const ::std::optional<::std::vector<::android::sp<::android::IBinder>>>& input, ::std::optional<::std::vector<::android::sp<::android::IBinder>>>* repeated, ::std::optional<::std::vector<::android::sp<::android::IBinder>>>* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markSensitive();
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeStrongBinderVector(input);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeVectorSize(*repeated);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnTestService::TRANSACTION_ReverseNullableIBinderArray, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_CLEAR_BUF);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && ITestService::getDefaultImpl())) {
-     return ITestService::getDefaultImpl()->ReverseNullableIBinderArray(input, repeated, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readStrongBinderVector(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_reply.readStrongBinderVector(repeated);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
 ::android::binder::Status BpTestService::GetOldNameInterface(::android::sp<::android::aidl::tests::IOldName>* _aidl_return) {
   ::android::Parcel _aidl_data;
   _aidl_data.markSensitive();
@@ -2596,14 +2056,18 @@ BpTestService::BpTestService(const ::android::sp<::android::IBinder>& _aidl_impl
 }
 
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android
 #include <android/aidl/tests/BnTestService.h>
 #include <binder/Parcel.h>
 #include <binder/Stability.h>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
 
 BnTestService::BnTestService()
@@ -3359,7 +2823,7 @@ BnTestService::BnTestService()
     if (!_aidl_status.isOk()) {
       break;
     }
-    _aidl_ret_status = _aidl_reply->writeStrongBinder(_aidl_return);
+    _aidl_ret_status = _aidl_reply->writeStrongBinder(::android::aidl::tests::INamedCallback::asBinder(_aidl_return));
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
@@ -3383,177 +2847,6 @@ BnTestService::BnTestService()
       break;
     }
     ::android::binder::Status _aidl_status(VerifyName(in_service, in_name, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeBool(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnTestService::TRANSACTION_GetInterfaceArray:
-  {
-    ::std::vector<::android::String16> in_names;
-    ::std::vector<::android::sp<::android::aidl::tests::INamedCallback>> _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readString16Vector(&in_names);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    ::android::binder::Status _aidl_status(GetInterfaceArray(in_names, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeStrongBinderVector(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnTestService::TRANSACTION_VerifyNamesWithInterfaceArray:
-  {
-    ::std::vector<::android::sp<::android::aidl::tests::INamedCallback>> in_services;
-    ::std::vector<::android::String16> in_names;
-    bool _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readStrongBinderVector(&in_services);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readString16Vector(&in_names);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    ::android::binder::Status _aidl_status(VerifyNamesWithInterfaceArray(in_services, in_names, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeBool(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnTestService::TRANSACTION_GetNullableInterfaceArray:
-  {
-    ::std::optional<::std::vector<::std::optional<::android::String16>>> in_names;
-    ::std::optional<::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>> _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readString16Vector(&in_names);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    ::android::binder::Status _aidl_status(GetNullableInterfaceArray(in_names, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeStrongBinderVector(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnTestService::TRANSACTION_VerifyNamesWithNullableInterfaceArray:
-  {
-    ::std::optional<::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>> in_services;
-    ::std::optional<::std::vector<::std::optional<::android::String16>>> in_names;
-    bool _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readStrongBinderVector(&in_services);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readString16Vector(&in_names);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    ::android::binder::Status _aidl_status(VerifyNamesWithNullableInterfaceArray(in_services, in_names, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeBool(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnTestService::TRANSACTION_GetInterfaceList:
-  {
-    ::std::optional<::std::vector<::std::optional<::android::String16>>> in_names;
-    ::std::optional<::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>> _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readString16Vector(&in_names);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    ::android::binder::Status _aidl_status(GetInterfaceList(in_names, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeStrongBinderVector(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnTestService::TRANSACTION_VerifyNamesWithInterfaceList:
-  {
-    ::std::optional<::std::vector<::android::sp<::android::aidl::tests::INamedCallback>>> in_services;
-    ::std::optional<::std::vector<::std::optional<::android::String16>>> in_names;
-    bool _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readStrongBinderVector(&in_services);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readString16Vector(&in_names);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    ::android::binder::Status _aidl_status(VerifyNamesWithInterfaceList(in_services, in_names, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
@@ -3838,8 +3131,8 @@ BnTestService::BnTestService()
   break;
   case BnTestService::TRANSACTION_RepeatNullableParcelable:
   {
-    ::std::optional<::android::aidl::tests::ITestService::Empty> in_input;
-    ::std::optional<::android::aidl::tests::ITestService::Empty> _aidl_return;
+    ::std::optional<::android::aidl::tests::StructuredParcelable> in_input;
+    ::std::optional<::android::aidl::tests::StructuredParcelable> _aidl_return;
     if (!(_aidl_data.checkInterface(this))) {
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
@@ -3857,58 +3150,6 @@ BnTestService::BnTestService()
       break;
     }
     _aidl_ret_status = _aidl_reply->writeNullableParcelable(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnTestService::TRANSACTION_RepeatNullableParcelableArray:
-  {
-    ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>> in_input;
-    ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>> _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readParcelableVector(&in_input);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    ::android::binder::Status _aidl_status(RepeatNullableParcelableArray(in_input, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeParcelableVector(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnTestService::TRANSACTION_RepeatNullableParcelableList:
-  {
-    ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>> in_input;
-    ::std::optional<::std::vector<::std::optional<::android::aidl::tests::ITestService::Empty>>> _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readParcelableVector(&in_input);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    ::android::binder::Status _aidl_status(RepeatNullableParcelableList(in_input, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeParcelableVector(_aidl_return);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
@@ -3947,48 +3188,6 @@ BnTestService::BnTestService()
       break;
     }
     ::android::binder::Status _aidl_status(TakesANullableIBinder(in_input));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-  }
-  break;
-  case BnTestService::TRANSACTION_TakesAnIBinderList:
-  {
-    ::std::vector<::android::sp<::android::IBinder>> in_input;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readStrongBinderVector(&in_input);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    ::android::binder::Status _aidl_status(TakesAnIBinderList(in_input));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-  }
-  break;
-  case BnTestService::TRANSACTION_TakesANullableIBinderList:
-  {
-    ::std::optional<::std::vector<::android::sp<::android::IBinder>>> in_input;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readStrongBinderVector(&in_input);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    ::android::binder::Status _aidl_status(TakesANullableIBinderList(in_input));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
@@ -4171,7 +3370,7 @@ BnTestService::BnTestService()
     if (!_aidl_status.isOk()) {
       break;
     }
-    _aidl_ret_status = _aidl_reply->writeStrongBinder(_aidl_return);
+    _aidl_ret_status = _aidl_reply->writeStrongBinder(::android::aidl::tests::INamedCallback::asBinder(_aidl_return));
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
@@ -4202,128 +3401,6 @@ BnTestService::BnTestService()
     }
   }
   break;
-  case BnTestService::TRANSACTION_RepeatExtendableParcelable:
-  {
-    ::android::aidl::tests::extension::ExtendableParcelable in_ep;
-    ::android::aidl::tests::extension::ExtendableParcelable out_ep2;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readParcelable(&in_ep);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    ::android::binder::Status _aidl_status(RepeatExtendableParcelable(in_ep, &out_ep2));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeParcelable(out_ep2);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnTestService::TRANSACTION_ReverseList:
-  {
-    ::android::aidl::tests::RecursiveList in_list;
-    ::android::aidl::tests::RecursiveList _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readParcelable(&in_list);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    ::android::binder::Status _aidl_status(ReverseList(in_list, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeParcelable(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnTestService::TRANSACTION_ReverseIBinderArray:
-  {
-    ::std::vector<::android::sp<::android::IBinder>> in_input;
-    ::std::vector<::android::sp<::android::IBinder>> out_repeated;
-    ::std::vector<::android::sp<::android::IBinder>> _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readStrongBinderVector(&in_input);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    _aidl_ret_status = _aidl_data.resizeOutVector(&out_repeated);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    ::android::binder::Status _aidl_status(ReverseIBinderArray(in_input, &out_repeated, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeStrongBinderVector(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeStrongBinderVector(out_repeated);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnTestService::TRANSACTION_ReverseNullableIBinderArray:
-  {
-    ::std::optional<::std::vector<::android::sp<::android::IBinder>>> in_input;
-    ::std::optional<::std::vector<::android::sp<::android::IBinder>>> out_repeated;
-    ::std::optional<::std::vector<::android::sp<::android::IBinder>>> _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readStrongBinderVector(&in_input);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    _aidl_ret_status = _aidl_data.resizeOutVector(&out_repeated);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    ::android::binder::Status _aidl_status(ReverseNullableIBinderArray(in_input, &out_repeated, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeStrongBinderVector(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeStrongBinderVector(out_repeated);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
   case BnTestService::TRANSACTION_GetOldNameInterface:
   {
     ::android::sp<::android::aidl::tests::IOldName> _aidl_return;
@@ -4339,7 +3416,7 @@ BnTestService::BnTestService()
     if (!_aidl_status.isOk()) {
       break;
     }
-    _aidl_ret_status = _aidl_reply->writeStrongBinder(_aidl_return);
+    _aidl_ret_status = _aidl_reply->writeStrongBinder(::android::aidl::tests::IOldName::asBinder(_aidl_return));
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
@@ -4360,7 +3437,7 @@ BnTestService::BnTestService()
     if (!_aidl_status.isOk()) {
       break;
     }
-    _aidl_ret_status = _aidl_reply->writeStrongBinder(_aidl_return);
+    _aidl_ret_status = _aidl_reply->writeStrongBinder(::android::aidl::tests::INewName::asBinder(_aidl_return));
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
@@ -4423,277 +3500,7 @@ BnTestService::BnTestService()
 #pragma clang diagnostic pop
 
 }  // namespace tests
-}  // namespace aidl
-}  // namespace android
-#include <android/aidl/tests/ITestService.h>
 
-namespace android {
-namespace aidl {
-namespace tests {
-::android::status_t ITestService::Empty::readFromParcel(const ::android::Parcel* _aidl_parcel) {
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  [[maybe_unused]] size_t _aidl_start_pos = _aidl_parcel->dataPosition();
-  int32_t _aidl_parcelable_raw_size = _aidl_parcel->readInt32();
-  if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;
-  [[maybe_unused]] size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
-  if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;
-  _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-  return _aidl_ret_status;
-}
-::android::status_t ITestService::Empty::writeToParcel(::android::Parcel* _aidl_parcel) const {
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  auto _aidl_start_pos = _aidl_parcel->dataPosition();
-  _aidl_parcel->writeInt32(0);
-  auto _aidl_end_pos = _aidl_parcel->dataPosition();
-  _aidl_parcel->setDataPosition(_aidl_start_pos);
-  _aidl_parcel->writeInt32(_aidl_end_pos - _aidl_start_pos);
-  _aidl_parcel->setDataPosition(_aidl_end_pos);
-  return _aidl_ret_status;
-}
-}  // namespace tests
 }  // namespace aidl
-}  // namespace android
-#include <android/aidl/tests/ITestService.h>
 
-namespace android {
-namespace aidl {
-namespace tests {
-::android::status_t ITestService::CompilerChecks::readFromParcel(const ::android::Parcel* _aidl_parcel) {
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  [[maybe_unused]] size_t _aidl_start_pos = _aidl_parcel->dataPosition();
-  int32_t _aidl_parcelable_raw_size = _aidl_parcel->readInt32();
-  if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;
-  [[maybe_unused]] size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
-  if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readStrongBinder(&binder);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readNullableStrongBinder(&nullable_binder);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readStrongBinderVector(&binder_array);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readStrongBinderVector(&nullable_binder_array);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readStrongBinderVector(&binder_list);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readStrongBinderVector(&nullable_binder_list);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readParcelable(&pfd);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readParcelable(&nullable_pfd);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readParcelableVector(&pfd_array);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readParcelableVector(&nullable_pfd_array);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readParcelableVector(&pfd_list);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readParcelableVector(&nullable_pfd_list);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readParcelable(&parcel);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readParcelable(&nullable_parcel);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readParcelableVector(&parcel_array);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readParcelableVector(&nullable_parcel_array);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readParcelableVector(&parcel_list);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readParcelableVector(&nullable_parcel_list);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-  return _aidl_ret_status;
-}
-::android::status_t ITestService::CompilerChecks::writeToParcel(::android::Parcel* _aidl_parcel) const {
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  auto _aidl_start_pos = _aidl_parcel->dataPosition();
-  _aidl_parcel->writeInt32(0);
-  _aidl_ret_status = _aidl_parcel->writeStrongBinder(binder);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeStrongBinder(nullable_binder);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeStrongBinderVector(binder_array);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeStrongBinderVector(nullable_binder_array);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeStrongBinderVector(binder_list);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeStrongBinderVector(nullable_binder_list);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeParcelable(pfd);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeNullableParcelable(nullable_pfd);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeParcelableVector(pfd_array);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeParcelableVector(nullable_pfd_array);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeParcelableVector(pfd_list);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeParcelableVector(nullable_pfd_list);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeParcelable(parcel);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeNullableParcelable(nullable_parcel);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeParcelableVector(parcel_array);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeParcelableVector(nullable_parcel_array);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeParcelableVector(parcel_list);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeParcelableVector(nullable_parcel_list);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  auto _aidl_end_pos = _aidl_parcel->dataPosition();
-  _aidl_parcel->setDataPosition(_aidl_start_pos);
-  _aidl_parcel->writeInt32(_aidl_end_pos - _aidl_start_pos);
-  _aidl_parcel->setDataPosition(_aidl_end_pos);
-  return _aidl_ret_status;
-}
-}  // namespace tests
-}  // namespace aidl
 }  // namespace android
