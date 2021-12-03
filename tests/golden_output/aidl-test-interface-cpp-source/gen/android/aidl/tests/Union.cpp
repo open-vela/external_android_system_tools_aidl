@@ -1,12 +1,16 @@
 #include <android/aidl/tests/Union.h>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
+
 const ::std::string& Union::S1() {
   static const ::std::string value("a string constant in union");
   return value;
 }
+
 ::android::status_t Union::readFromParcel(const ::android::Parcel* _aidl_parcel) {
   ::android::status_t _aidl_ret_status;
   int32_t _aidl_tag;
@@ -85,6 +89,7 @@ const ::std::string& Union::S1() {
   }
   return ::android::BAD_VALUE;
 }
+
 ::android::status_t Union::writeToParcel(::android::Parcel* _aidl_parcel) const {
   ::android::status_t _aidl_ret_status = _aidl_parcel->writeInt32(getTag());
   if (_aidl_ret_status != ::android::OK) return _aidl_ret_status;
@@ -99,6 +104,9 @@ const ::std::string& Union::S1() {
   }
   __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "can't reach here");
 }
+
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android
