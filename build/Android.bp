@@ -27,6 +27,7 @@ bootstrap_go_package {
     deps: [
         "blueprint",
         "soong",
+        "soong-apex",
         "soong-android",
         "soong-cc",
         "soong-genrule",
@@ -114,7 +115,7 @@ aidl_interface {
         "tests_1/some_package/IBar.aidl",
     ],
     imports: [
-        "test-piece-1-V3",
+        "test-piece-1",
     ],
     backend: {
         java: {
@@ -133,7 +134,7 @@ aidl_interface {
         "tests_1/other_package/IBaz.aidl",
     ],
     imports: [
-        "test-piece-2-V1",
+        "test-piece-2",
     ],
     backend: {
         java: {
@@ -152,7 +153,7 @@ aidl_interface {
         "tests_2/another_package/IFaz.aidl",
     ],
     imports: [
-        "test-piece-1-V3",
+        "test-piece-1",
     ],
     backend: {
         java: {
@@ -173,7 +174,7 @@ aidl_interface {
         "test_package/IBaz.aidl",
     ],
     imports: [
-        "test-piece-2-V1",
+        "test-piece-2",
     ],
     backend: {
         java: {
@@ -196,17 +197,6 @@ aidl_interface {
     srcs: [
         "tests_3/EmptyParcelable.aidl",
         "tests_3/IEmptyInterface.aidl",
-    ],
-}
-
-aidl_interface {
-    name: "test-piece-6",
-    unstable: true,
-    local_include_dir: "tests_6",
-    flags: ["-Werror"],
-    srcs: [
-        "tests_6/test6/Bar.aidl",
-        "tests_6/test6/Foo.aidl",
     ],
 }
 
@@ -252,10 +242,4 @@ aidl_interface {
             enabled: true,
         },
     },
-}
-
-sh_binary {
-    name: "aidl_hash_gen",
-    src: "hash_gen.sh",
-    host_supported: true,
 }
