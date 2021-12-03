@@ -1317,11 +1317,11 @@ TEST_F(AidlTest, AidlConstantValue_EvaluatedValue) {
 }
 
 TEST_F(AidlTest, AidlConstantCharacterDefault) {
-  AidlTypeSpecifier char_type(AIDL_LOCATION_HERE, "char", false, nullptr, {});
-  auto default_value = unique_ptr<AidlConstantValue>(AidlConstantValue::Default(char_type));
-  EXPECT_EQ("'\\0'", default_value->ValueString(char_type, cpp::ConstantValueDecorator));
-  EXPECT_EQ("'\\0'", default_value->ValueString(char_type, ndk::ConstantValueDecorator));
-  EXPECT_EQ("'\\0'", default_value->ValueString(char_type, java::ConstantValueDecorator));
+  auto char_type = typenames_.MakeResolvedType(AIDL_LOCATION_HERE, "char", false);
+  auto default_value = unique_ptr<AidlConstantValue>(AidlConstantValue::Default(*char_type));
+  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, cpp::ConstantValueDecorator));
+  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, ndk::ConstantValueDecorator));
+  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, java::ConstantValueDecorator));
 }
 
 TEST_P(AidlTest, FailOnManyDefinedTypes) {
