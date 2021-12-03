@@ -1,5 +1,3 @@
-#![forbid(unsafe_code)]
-#![rustfmt::skip]
 #![allow(non_upper_case_globals)]
 #![allow(non_snake_case)]
 #[allow(unused_imports)] use binder::IBinderInternal;
@@ -9,7 +7,6 @@ declare_binder_interface! {
     native: BnTestService(on_transact),
     proxy: BpTestService {
     },
-    async: ITestServiceAsync,
   }
 }
 pub trait ITestService: binder::Interface + Send {
@@ -42,12 +39,6 @@ pub trait ITestService: binder::Interface + Send {
   fn ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>;
   fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>;
   fn VerifyName(&self, _arg_service: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>, _arg_name: &str) -> binder::public_api::Result<bool>;
-  fn GetInterfaceArray(&self, _arg_names: &[String]) -> binder::public_api::Result<Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>;
-  fn VerifyNamesWithInterfaceArray(&self, _arg_services: &[binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>], _arg_names: &[String]) -> binder::public_api::Result<bool>;
-  fn GetNullableInterfaceArray(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>>;
-  fn VerifyNamesWithNullableInterfaceArray(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<bool>;
-  fn GetInterfaceList(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>>;
-  fn VerifyNamesWithInterfaceList(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<bool>;
   fn ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>>;
   fn RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor) -> binder::public_api::Result<binder::parcel::ParcelFileDescriptor>;
   fn ReverseParcelFileDescriptorArray(&self, _arg_input: &[binder::parcel::ParcelFileDescriptor], _arg_repeated: &mut Vec<Option<binder::parcel::ParcelFileDescriptor>>) -> binder::public_api::Result<Vec<binder::parcel::ParcelFileDescriptor>>;
@@ -58,13 +49,9 @@ pub trait ITestService: binder::Interface + Send {
   fn RepeatNullableLongEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>>;
   fn RepeatNullableString(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>>;
   fn RepeatNullableStringList(&self, _arg_input: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<String>>>>;
-  fn RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>;
-  fn RepeatNullableParcelableArray(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>>;
-  fn RepeatNullableParcelableList(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>>;
+  fn RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>>;
   fn TakesAnIBinder(&self, _arg_input: &binder::SpIBinder) -> binder::public_api::Result<()>;
   fn TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>) -> binder::public_api::Result<()>;
-  fn TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder]) -> binder::public_api::Result<()>;
-  fn TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>) -> binder::public_api::Result<()>;
   fn RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<String>;
   fn RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>) -> binder::public_api::Result<Option<String>>;
   fn ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>>;
@@ -72,10 +59,6 @@ pub trait ITestService: binder::Interface + Send {
   fn ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>>;
   fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>;
   fn FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<()>;
-  fn RepeatExtendableParcelable(&self, _arg_ep: &crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable) -> binder::public_api::Result<()>;
-  fn ReverseList(&self, _arg_list: &crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList>;
-  fn ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>) -> binder::public_api::Result<Vec<binder::SpIBinder>>;
-  fn ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::public_api::Result<Option<Vec<Option<binder::SpIBinder>>>>;
   fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>>;
   fn GetNewNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>>;
   fn GetCppJavaTests(&self) -> binder::public_api::Result<Option<binder::SpIBinder>>;
@@ -86,75 +69,6 @@ pub trait ITestService: binder::Interface + Send {
   fn setDefaultImpl(d: ITestServiceDefaultRef) -> ITestServiceDefaultRef where Self: Sized {
     std::mem::replace(&mut *DEFAULT_IMPL.lock().unwrap(), d)
   }
-}
-pub trait ITestServiceAsync<P>: binder::Interface + Send {
-  fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.ITestService" }
-  fn UnimplementedMethod<'a>(&'a self, _arg_arg: i32) -> binder::BoxFuture<'a, binder::public_api::Result<i32>>;
-  #[deprecated = "to make sure we have something in system/tools/aidl which does a compile check of deprecated and make sure this is reflected in goldens"]
-  fn Deprecated<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
-  fn TestOneway(&self) -> std::future::Ready<binder::public_api::Result<()>>;
-  fn RepeatBoolean<'a>(&'a self, _arg_token: bool) -> binder::BoxFuture<'a, binder::public_api::Result<bool>>;
-  fn RepeatByte<'a>(&'a self, _arg_token: i8) -> binder::BoxFuture<'a, binder::public_api::Result<i8>>;
-  fn RepeatChar<'a>(&'a self, _arg_token: u16) -> binder::BoxFuture<'a, binder::public_api::Result<u16>>;
-  fn RepeatInt<'a>(&'a self, _arg_token: i32) -> binder::BoxFuture<'a, binder::public_api::Result<i32>>;
-  fn RepeatLong<'a>(&'a self, _arg_token: i64) -> binder::BoxFuture<'a, binder::public_api::Result<i64>>;
-  fn RepeatFloat<'a>(&'a self, _arg_token: f32) -> binder::BoxFuture<'a, binder::public_api::Result<f32>>;
-  fn RepeatDouble<'a>(&'a self, _arg_token: f64) -> binder::BoxFuture<'a, binder::public_api::Result<f64>>;
-  fn RepeatString<'a>(&'a self, _arg_token: &'a str) -> binder::BoxFuture<'a, binder::public_api::Result<String>>;
-  fn RepeatByteEnum<'a>(&'a self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum) -> binder::BoxFuture<'a, binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>;
-  fn RepeatIntEnum<'a>(&'a self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum) -> binder::BoxFuture<'a, binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>;
-  fn RepeatLongEnum<'a>(&'a self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum) -> binder::BoxFuture<'a, binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>;
-  fn ReverseBoolean<'a>(&'a self, _arg_input: &'a [bool], _arg_repeated: &'a mut Vec<bool>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<bool>>>;
-  fn ReverseByte<'a>(&'a self, _arg_input: &'a [u8], _arg_repeated: &'a mut Vec<u8>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<u8>>>;
-  fn ReverseChar<'a>(&'a self, _arg_input: &'a [u16], _arg_repeated: &'a mut Vec<u16>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<u16>>>;
-  fn ReverseInt<'a>(&'a self, _arg_input: &'a [i32], _arg_repeated: &'a mut Vec<i32>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<i32>>>;
-  fn ReverseLong<'a>(&'a self, _arg_input: &'a [i64], _arg_repeated: &'a mut Vec<i64>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<i64>>>;
-  fn ReverseFloat<'a>(&'a self, _arg_input: &'a [f32], _arg_repeated: &'a mut Vec<f32>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<f32>>>;
-  fn ReverseDouble<'a>(&'a self, _arg_input: &'a [f64], _arg_repeated: &'a mut Vec<f64>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<f64>>>;
-  fn ReverseString<'a>(&'a self, _arg_input: &'a [String], _arg_repeated: &'a mut Vec<String>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<String>>>;
-  fn ReverseByteEnum<'a>(&'a self, _arg_input: &'a [crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &'a mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>>;
-  fn ReverseIntEnum<'a>(&'a self, _arg_input: &'a [crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &'a mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>>;
-  fn ReverseLongEnum<'a>(&'a self, _arg_input: &'a [crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &'a mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>>;
-  fn GetOtherTestService<'a>(&'a self, _arg_name: &'a str) -> binder::BoxFuture<'a, binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>;
-  fn VerifyName<'a>(&'a self, _arg_service: &'a binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>, _arg_name: &'a str) -> binder::BoxFuture<'a, binder::public_api::Result<bool>>;
-  fn GetInterfaceArray<'a>(&'a self, _arg_names: &'a [String]) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>;
-  fn VerifyNamesWithInterfaceArray<'a>(&'a self, _arg_services: &'a [binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>], _arg_names: &'a [String]) -> binder::BoxFuture<'a, binder::public_api::Result<bool>>;
-  fn GetNullableInterfaceArray<'a>(&'a self, _arg_names: Option<&'a [Option<String>]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>>>;
-  fn VerifyNamesWithNullableInterfaceArray<'a>(&'a self, _arg_services: Option<&'a [Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&'a [Option<String>]>) -> binder::BoxFuture<'a, binder::public_api::Result<bool>>;
-  fn GetInterfaceList<'a>(&'a self, _arg_names: Option<&'a [Option<String>]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>>>;
-  fn VerifyNamesWithInterfaceList<'a>(&'a self, _arg_services: Option<&'a [Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&'a [Option<String>]>) -> binder::BoxFuture<'a, binder::public_api::Result<bool>>;
-  fn ReverseStringList<'a>(&'a self, _arg_input: &'a [String], _arg_repeated: &'a mut Vec<String>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<String>>>;
-  fn RepeatParcelFileDescriptor<'a>(&'a self, _arg_read: &'a binder::parcel::ParcelFileDescriptor) -> binder::BoxFuture<'a, binder::public_api::Result<binder::parcel::ParcelFileDescriptor>>;
-  fn ReverseParcelFileDescriptorArray<'a>(&'a self, _arg_input: &'a [binder::parcel::ParcelFileDescriptor], _arg_repeated: &'a mut Vec<Option<binder::parcel::ParcelFileDescriptor>>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<binder::parcel::ParcelFileDescriptor>>>;
-  fn ThrowServiceException<'a>(&'a self, _arg_code: i32) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
-  fn RepeatNullableIntArray<'a>(&'a self, _arg_input: Option<&'a [i32]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<i32>>>>;
-  fn RepeatNullableByteEnumArray<'a>(&'a self, _arg_input: Option<&'a [crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>>>;
-  fn RepeatNullableIntEnumArray<'a>(&'a self, _arg_input: Option<&'a [crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>>>;
-  fn RepeatNullableLongEnumArray<'a>(&'a self, _arg_input: Option<&'a [crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>>>;
-  fn RepeatNullableString<'a>(&'a self, _arg_input: Option<&'a str>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<String>>>;
-  fn RepeatNullableStringList<'a>(&'a self, _arg_input: Option<&'a [Option<String>]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<String>>>>>;
-  fn RepeatNullableParcelable<'a>(&'a self, _arg_input: Option<&'a crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>;
-  fn RepeatNullableParcelableArray<'a>(&'a self, _arg_input: Option<&'a [Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>>>;
-  fn RepeatNullableParcelableList<'a>(&'a self, _arg_input: Option<&'a [Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>>>;
-  fn TakesAnIBinder<'a>(&'a self, _arg_input: &'a binder::SpIBinder) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
-  fn TakesANullableIBinder<'a>(&'a self, _arg_input: Option<&'a binder::SpIBinder>) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
-  fn TakesAnIBinderList<'a>(&'a self, _arg_input: &'a [binder::SpIBinder]) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
-  fn TakesANullableIBinderList<'a>(&'a self, _arg_input: Option<&'a [Option<binder::SpIBinder>]>) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
-  fn RepeatUtf8CppString<'a>(&'a self, _arg_token: &'a str) -> binder::BoxFuture<'a, binder::public_api::Result<String>>;
-  fn RepeatNullableUtf8CppString<'a>(&'a self, _arg_token: Option<&'a str>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<String>>>;
-  fn ReverseUtf8CppString<'a>(&'a self, _arg_input: &'a [String], _arg_repeated: &'a mut Vec<String>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<String>>>;
-  fn ReverseNullableUtf8CppString<'a>(&'a self, _arg_input: Option<&'a [Option<String>]>, _arg_repeated: &'a mut Option<Vec<Option<String>>>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<String>>>>>;
-  fn ReverseUtf8CppStringList<'a>(&'a self, _arg_input: Option<&'a [Option<String>]>, _arg_repeated: &'a mut Option<Vec<Option<String>>>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<String>>>>>;
-  fn GetCallback<'a>(&'a self, _arg_return_null: bool) -> binder::BoxFuture<'a, binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>;
-  fn FillOutStructuredParcelable<'a>(&'a self, _arg_parcel: &'a mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
-  fn RepeatExtendableParcelable<'a>(&'a self, _arg_ep: &'a crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &'a mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
-  fn ReverseList<'a>(&'a self, _arg_list: &'a crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList) -> binder::BoxFuture<'a, binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList>>;
-  fn ReverseIBinderArray<'a>(&'a self, _arg_input: &'a [binder::SpIBinder], _arg_repeated: &'a mut Vec<Option<binder::SpIBinder>>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<binder::SpIBinder>>>;
-  fn ReverseNullableIBinderArray<'a>(&'a self, _arg_input: Option<&'a [Option<binder::SpIBinder>]>, _arg_repeated: &'a mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<binder::SpIBinder>>>>>;
-  fn GetOldNameInterface<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>>>;
-  fn GetNewNameInterface<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>>>;
-  fn GetCppJavaTests<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<Option<binder::SpIBinder>>>;
-  fn getBackendType<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType>>;
 }
 pub trait ITestServiceDefault: Send + Sync {
   fn UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<i32> {
@@ -238,24 +152,6 @@ pub trait ITestServiceDefault: Send + Sync {
   fn VerifyName(&self, _arg_service: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>, _arg_name: &str) -> binder::public_api::Result<bool> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
-  fn GetInterfaceArray(&self, _arg_names: &[String]) -> binder::public_api::Result<Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn VerifyNamesWithInterfaceArray(&self, _arg_services: &[binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>], _arg_names: &[String]) -> binder::public_api::Result<bool> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn GetNullableInterfaceArray(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn VerifyNamesWithNullableInterfaceArray(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<bool> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn GetInterfaceList(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn VerifyNamesWithInterfaceList(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<bool> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
   fn ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
@@ -286,25 +182,13 @@ pub trait ITestServiceDefault: Send + Sync {
   fn RepeatNullableStringList(&self, _arg_input: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
-  fn RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn RepeatNullableParcelableArray(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn RepeatNullableParcelableList(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>> {
+  fn RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
   fn TakesAnIBinder(&self, _arg_input: &binder::SpIBinder) -> binder::public_api::Result<()> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
   fn TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>) -> binder::public_api::Result<()> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder]) -> binder::public_api::Result<()> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>) -> binder::public_api::Result<()> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
   fn RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<String> {
@@ -326,18 +210,6 @@ pub trait ITestServiceDefault: Send + Sync {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
   fn FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<()> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn RepeatExtendableParcelable(&self, _arg_ep: &crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable) -> binder::public_api::Result<()> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn ReverseList(&self, _arg_list: &crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>) -> binder::public_api::Result<Vec<binder::SpIBinder>> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
-  fn ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::public_api::Result<Option<Vec<Option<binder::SpIBinder>>>> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
   fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> {
@@ -381,44 +253,30 @@ pub mod transactions {
   pub const ReverseLongEnum: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 24;
   pub const GetOtherTestService: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 25;
   pub const VerifyName: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 26;
-  pub const GetInterfaceArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 27;
-  pub const VerifyNamesWithInterfaceArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 28;
-  pub const GetNullableInterfaceArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 29;
-  pub const VerifyNamesWithNullableInterfaceArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 30;
-  pub const GetInterfaceList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 31;
-  pub const VerifyNamesWithInterfaceList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 32;
-  pub const ReverseStringList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 33;
-  pub const RepeatParcelFileDescriptor: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 34;
-  pub const ReverseParcelFileDescriptorArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 35;
-  pub const ThrowServiceException: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 36;
-  pub const RepeatNullableIntArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 37;
-  pub const RepeatNullableByteEnumArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 38;
-  pub const RepeatNullableIntEnumArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 39;
-  pub const RepeatNullableLongEnumArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 40;
-  pub const RepeatNullableString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 41;
-  pub const RepeatNullableStringList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 42;
-  pub const RepeatNullableParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 43;
-  pub const RepeatNullableParcelableArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 44;
-  pub const RepeatNullableParcelableList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 45;
-  pub const TakesAnIBinder: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 46;
-  pub const TakesANullableIBinder: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 47;
-  pub const TakesAnIBinderList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 48;
-  pub const TakesANullableIBinderList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 49;
-  pub const RepeatUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 50;
-  pub const RepeatNullableUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 51;
-  pub const ReverseUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 52;
-  pub const ReverseNullableUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 53;
-  pub const ReverseUtf8CppStringList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 54;
-  pub const GetCallback: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 55;
-  pub const FillOutStructuredParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 56;
-  pub const RepeatExtendableParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 57;
-  pub const ReverseList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 58;
-  pub const ReverseIBinderArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 59;
-  pub const ReverseNullableIBinderArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 60;
-  pub const GetOldNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 61;
-  pub const GetNewNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 62;
-  pub const GetCppJavaTests: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 63;
-  pub const getBackendType: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 64;
+  pub const ReverseStringList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 27;
+  pub const RepeatParcelFileDescriptor: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 28;
+  pub const ReverseParcelFileDescriptorArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 29;
+  pub const ThrowServiceException: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 30;
+  pub const RepeatNullableIntArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 31;
+  pub const RepeatNullableByteEnumArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 32;
+  pub const RepeatNullableIntEnumArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 33;
+  pub const RepeatNullableLongEnumArray: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 34;
+  pub const RepeatNullableString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 35;
+  pub const RepeatNullableStringList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 36;
+  pub const RepeatNullableParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 37;
+  pub const TakesAnIBinder: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 38;
+  pub const TakesANullableIBinder: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 39;
+  pub const RepeatUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 40;
+  pub const RepeatNullableUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 41;
+  pub const ReverseUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 42;
+  pub const ReverseNullableUtf8CppString: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 43;
+  pub const ReverseUtf8CppStringList: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 44;
+  pub const GetCallback: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 45;
+  pub const FillOutStructuredParcelable: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 46;
+  pub const GetOldNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 47;
+  pub const GetNewNameInterface: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 48;
+  pub const GetCppJavaTests: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 49;
+  pub const getBackendType: binder::TransactionCode = binder::FIRST_CALL_TRANSACTION + 50;
 }
 pub type ITestServiceDefaultRef = Option<std::sync::Arc<dyn ITestServiceDefault>>;
 use lazy_static::lazy_static;
@@ -499,14 +357,14 @@ pub const A54: i32 = 1;
 pub const A55: i32 = 1;
 pub const A56: i32 = 1;
 pub const A57: i32 = 1;
-impl BpTestService {
-  fn build_parcel_UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_arg)?;
-    Ok(aidl_data)
-  }
-  fn read_response_UnimplementedMethod(&self, _arg_arg: i32, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<i32> {
+pub(crate) mod mangled { pub use super::ITestService as _7_android_4_aidl_5_tests_12_ITestService; }
+impl ITestService for BpTestService {
+  fn UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<i32> {
+    let _aidl_reply = self.binder.transact(transactions::UnimplementedMethod, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_arg)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.UnimplementedMethod(_arg_arg);
@@ -518,12 +376,11 @@ impl BpTestService {
     let _aidl_return: i32 = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_Deprecated(&self) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    Ok(aidl_data)
-  }
-  fn read_response_Deprecated(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
+  fn Deprecated(&self) -> binder::public_api::Result<()> {
+    let _aidl_reply = self.binder.transact(transactions::Deprecated, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.Deprecated();
@@ -534,12 +391,11 @@ impl BpTestService {
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
   }
-  fn build_parcel_TestOneway(&self) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    Ok(aidl_data)
-  }
-  fn read_response_TestOneway(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
+  fn TestOneway(&self) -> binder::public_api::Result<()> {
+    let _aidl_reply = self.binder.transact(transactions::TestOneway, binder::FLAG_ONEWAY | binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.TestOneway();
@@ -548,13 +404,12 @@ impl BpTestService {
     let _aidl_reply = _aidl_reply?;
     Ok(())
   }
-  fn build_parcel_RepeatBoolean(&self, _arg_token: bool) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_token)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatBoolean(&self, _arg_token: bool, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<bool> {
+  fn RepeatBoolean(&self, _arg_token: bool) -> binder::public_api::Result<bool> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatBoolean, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_token)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatBoolean(_arg_token);
@@ -566,13 +421,12 @@ impl BpTestService {
     let _aidl_return: bool = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatByte(&self, _arg_token: i8) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_token)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatByte(&self, _arg_token: i8, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<i8> {
+  fn RepeatByte(&self, _arg_token: i8) -> binder::public_api::Result<i8> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatByte, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_token)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatByte(_arg_token);
@@ -584,13 +438,12 @@ impl BpTestService {
     let _aidl_return: i8 = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatChar(&self, _arg_token: u16) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_token)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatChar(&self, _arg_token: u16, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<u16> {
+  fn RepeatChar(&self, _arg_token: u16) -> binder::public_api::Result<u16> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatChar, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_token)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatChar(_arg_token);
@@ -602,13 +455,12 @@ impl BpTestService {
     let _aidl_return: u16 = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatInt(&self, _arg_token: i32) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_token)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatInt(&self, _arg_token: i32, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<i32> {
+  fn RepeatInt(&self, _arg_token: i32) -> binder::public_api::Result<i32> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatInt, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_token)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatInt(_arg_token);
@@ -620,13 +472,12 @@ impl BpTestService {
     let _aidl_return: i32 = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatLong(&self, _arg_token: i64) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_token)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatLong(&self, _arg_token: i64, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<i64> {
+  fn RepeatLong(&self, _arg_token: i64) -> binder::public_api::Result<i64> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatLong, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_token)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatLong(_arg_token);
@@ -638,13 +489,12 @@ impl BpTestService {
     let _aidl_return: i64 = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatFloat(&self, _arg_token: f32) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_token)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatFloat(&self, _arg_token: f32, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<f32> {
+  fn RepeatFloat(&self, _arg_token: f32) -> binder::public_api::Result<f32> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatFloat, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_token)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatFloat(_arg_token);
@@ -656,13 +506,12 @@ impl BpTestService {
     let _aidl_return: f32 = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatDouble(&self, _arg_token: f64) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_token)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatDouble(&self, _arg_token: f64, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<f64> {
+  fn RepeatDouble(&self, _arg_token: f64) -> binder::public_api::Result<f64> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatDouble, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_token)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatDouble(_arg_token);
@@ -674,13 +523,12 @@ impl BpTestService {
     let _aidl_return: f64 = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatString(&self, _arg_token: &str) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_token)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatString(&self, _arg_token: &str, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<String> {
+  fn RepeatString(&self, _arg_token: &str) -> binder::public_api::Result<String> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatString, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_token)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatString(_arg_token);
@@ -692,13 +540,12 @@ impl BpTestService {
     let _aidl_return: String = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatByteEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_token)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatByteEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum> {
+  fn RepeatByteEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatByteEnum, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_token)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatByteEnum(_arg_token);
@@ -710,13 +557,12 @@ impl BpTestService {
     let _aidl_return: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatIntEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_token)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatIntEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum> {
+  fn RepeatIntEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatIntEnum, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_token)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatIntEnum(_arg_token);
@@ -728,13 +574,12 @@ impl BpTestService {
     let _aidl_return: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatLongEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_token)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatLongEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum> {
+  fn RepeatLongEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatLongEnum, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_token)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatLongEnum(_arg_token);
@@ -746,14 +591,13 @@ impl BpTestService {
     let _aidl_return: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseBoolean(&self, _arg_input: &[bool], _arg_repeated: &mut Vec<bool>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseBoolean(&self, _arg_input: &[bool], _arg_repeated: &mut Vec<bool>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<bool>> {
+  fn ReverseBoolean(&self, _arg_input: &[bool], _arg_repeated: &mut Vec<bool>) -> binder::public_api::Result<Vec<bool>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseBoolean, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      _aidl_data.write_slice_size(Some(_arg_repeated))?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseBoolean(_arg_input, _arg_repeated);
@@ -763,17 +607,16 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<bool> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseByte(&self, _arg_input: &[u8], _arg_repeated: &mut Vec<u8>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseByte(&self, _arg_input: &[u8], _arg_repeated: &mut Vec<u8>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<u8>> {
+  fn ReverseByte(&self, _arg_input: &[u8], _arg_repeated: &mut Vec<u8>) -> binder::public_api::Result<Vec<u8>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseByte, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      _aidl_data.write_slice_size(Some(_arg_repeated))?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseByte(_arg_input, _arg_repeated);
@@ -783,17 +626,16 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<u8> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseChar(&self, _arg_input: &[u16], _arg_repeated: &mut Vec<u16>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseChar(&self, _arg_input: &[u16], _arg_repeated: &mut Vec<u16>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<u16>> {
+  fn ReverseChar(&self, _arg_input: &[u16], _arg_repeated: &mut Vec<u16>) -> binder::public_api::Result<Vec<u16>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseChar, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      _aidl_data.write_slice_size(Some(_arg_repeated))?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseChar(_arg_input, _arg_repeated);
@@ -803,17 +645,16 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<u16> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseInt(&self, _arg_input: &[i32], _arg_repeated: &mut Vec<i32>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseInt(&self, _arg_input: &[i32], _arg_repeated: &mut Vec<i32>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<i32>> {
+  fn ReverseInt(&self, _arg_input: &[i32], _arg_repeated: &mut Vec<i32>) -> binder::public_api::Result<Vec<i32>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseInt, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      _aidl_data.write_slice_size(Some(_arg_repeated))?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseInt(_arg_input, _arg_repeated);
@@ -823,17 +664,16 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<i32> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseLong(&self, _arg_input: &[i64], _arg_repeated: &mut Vec<i64>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseLong(&self, _arg_input: &[i64], _arg_repeated: &mut Vec<i64>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<i64>> {
+  fn ReverseLong(&self, _arg_input: &[i64], _arg_repeated: &mut Vec<i64>) -> binder::public_api::Result<Vec<i64>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseLong, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      _aidl_data.write_slice_size(Some(_arg_repeated))?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseLong(_arg_input, _arg_repeated);
@@ -843,17 +683,16 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<i64> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseFloat(&self, _arg_input: &[f32], _arg_repeated: &mut Vec<f32>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseFloat(&self, _arg_input: &[f32], _arg_repeated: &mut Vec<f32>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<f32>> {
+  fn ReverseFloat(&self, _arg_input: &[f32], _arg_repeated: &mut Vec<f32>) -> binder::public_api::Result<Vec<f32>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseFloat, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      _aidl_data.write_slice_size(Some(_arg_repeated))?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseFloat(_arg_input, _arg_repeated);
@@ -863,17 +702,16 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<f32> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseDouble(&self, _arg_input: &[f64], _arg_repeated: &mut Vec<f64>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseDouble(&self, _arg_input: &[f64], _arg_repeated: &mut Vec<f64>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<f64>> {
+  fn ReverseDouble(&self, _arg_input: &[f64], _arg_repeated: &mut Vec<f64>) -> binder::public_api::Result<Vec<f64>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseDouble, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      _aidl_data.write_slice_size(Some(_arg_repeated))?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseDouble(_arg_input, _arg_repeated);
@@ -883,17 +721,16 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<f64> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<String>> {
+  fn ReverseString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseString, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      _aidl_data.write_slice_size(Some(_arg_repeated))?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseString(_arg_input, _arg_repeated);
@@ -903,17 +740,16 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<String> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseByteEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseByteEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>> {
+  fn ReverseByteEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseByteEnum, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      _aidl_data.write_slice_size(Some(_arg_repeated))?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseByteEnum(_arg_input, _arg_repeated);
@@ -923,17 +759,16 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseIntEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseIntEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>> {
+  fn ReverseIntEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseIntEnum, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      _aidl_data.write_slice_size(Some(_arg_repeated))?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseIntEnum(_arg_input, _arg_repeated);
@@ -943,17 +778,16 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>> {
+  fn ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseLongEnum, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      _aidl_data.write_slice_size(Some(_arg_repeated))?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseLongEnum(_arg_input, _arg_repeated);
@@ -963,16 +797,15 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_name)?;
-    Ok(aidl_data)
-  }
-  fn read_response_GetOtherTestService(&self, _arg_name: &str, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> {
+  fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> {
+    let _aidl_reply = self.binder.transact(transactions::GetOtherTestService, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_name)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.GetOtherTestService(_arg_name);
@@ -984,14 +817,13 @@ impl BpTestService {
     let _aidl_return: binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_VerifyName(&self, _arg_service: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>, _arg_name: &str) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_service)?;
-    aidl_data.write(_arg_name)?;
-    Ok(aidl_data)
-  }
-  fn read_response_VerifyName(&self, _arg_service: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>, _arg_name: &str, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<bool> {
+  fn VerifyName(&self, _arg_service: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>, _arg_name: &str) -> binder::public_api::Result<bool> {
+    let _aidl_reply = self.binder.transact(transactions::VerifyName, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_service)?;
+      _aidl_data.write(_arg_name)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.VerifyName(_arg_service, _arg_name);
@@ -1003,124 +835,12 @@ impl BpTestService {
     let _aidl_return: bool = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_GetInterfaceArray(&self, _arg_names: &[String]) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_names)?;
-    Ok(aidl_data)
-  }
-  fn read_response_GetInterfaceArray(&self, _arg_names: &[String], _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
-        return _aidl_default_impl.GetInterfaceArray(_arg_names);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn build_parcel_VerifyNamesWithInterfaceArray(&self, _arg_services: &[binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>], _arg_names: &[String]) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_services)?;
-    aidl_data.write(_arg_names)?;
-    Ok(aidl_data)
-  }
-  fn read_response_VerifyNamesWithInterfaceArray(&self, _arg_services: &[binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>], _arg_names: &[String], _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<bool> {
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
-        return _aidl_default_impl.VerifyNamesWithInterfaceArray(_arg_services, _arg_names);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: bool = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn build_parcel_GetNullableInterfaceArray(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_names)?;
-    Ok(aidl_data)
-  }
-  fn read_response_GetNullableInterfaceArray(&self, _arg_names: Option<&[Option<String>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>> {
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
-        return _aidl_default_impl.GetNullableInterfaceArray(_arg_names);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>> = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn build_parcel_VerifyNamesWithNullableInterfaceArray(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_services)?;
-    aidl_data.write(&_arg_names)?;
-    Ok(aidl_data)
-  }
-  fn read_response_VerifyNamesWithNullableInterfaceArray(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<bool> {
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
-        return _aidl_default_impl.VerifyNamesWithNullableInterfaceArray(_arg_services, _arg_names);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: bool = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn build_parcel_GetInterfaceList(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_names)?;
-    Ok(aidl_data)
-  }
-  fn read_response_GetInterfaceList(&self, _arg_names: Option<&[Option<String>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>> {
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
-        return _aidl_default_impl.GetInterfaceList(_arg_names);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>> = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn build_parcel_VerifyNamesWithInterfaceList(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_services)?;
-    aidl_data.write(&_arg_names)?;
-    Ok(aidl_data)
-  }
-  fn read_response_VerifyNamesWithInterfaceList(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<bool> {
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
-        return _aidl_default_impl.VerifyNamesWithInterfaceList(_arg_services, _arg_names);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: bool = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn build_parcel_ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<String>> {
+  fn ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseStringList, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseStringList(_arg_input, _arg_repeated);
@@ -1130,16 +850,15 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<String> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_read)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<binder::parcel::ParcelFileDescriptor> {
+  fn RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor) -> binder::public_api::Result<binder::parcel::ParcelFileDescriptor> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatParcelFileDescriptor, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_read)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatParcelFileDescriptor(_arg_read);
@@ -1151,14 +870,13 @@ impl BpTestService {
     let _aidl_return: binder::parcel::ParcelFileDescriptor = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseParcelFileDescriptorArray(&self, _arg_input: &[binder::parcel::ParcelFileDescriptor], _arg_repeated: &mut Vec<Option<binder::parcel::ParcelFileDescriptor>>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseParcelFileDescriptorArray(&self, _arg_input: &[binder::parcel::ParcelFileDescriptor], _arg_repeated: &mut Vec<Option<binder::parcel::ParcelFileDescriptor>>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<binder::parcel::ParcelFileDescriptor>> {
+  fn ReverseParcelFileDescriptorArray(&self, _arg_input: &[binder::parcel::ParcelFileDescriptor], _arg_repeated: &mut Vec<Option<binder::parcel::ParcelFileDescriptor>>) -> binder::public_api::Result<Vec<binder::parcel::ParcelFileDescriptor>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseParcelFileDescriptorArray, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      _aidl_data.write_slice_size(Some(_arg_repeated))?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseParcelFileDescriptorArray(_arg_input, _arg_repeated);
@@ -1168,16 +886,15 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<binder::parcel::ParcelFileDescriptor> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ThrowServiceException(&self, _arg_code: i32) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_code)?;
-    Ok(aidl_data)
-  }
-  fn read_response_ThrowServiceException(&self, _arg_code: i32, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
+  fn ThrowServiceException(&self, _arg_code: i32) -> binder::public_api::Result<()> {
+    let _aidl_reply = self.binder.transact(transactions::ThrowServiceException, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_code)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ThrowServiceException(_arg_code);
@@ -1188,13 +905,12 @@ impl BpTestService {
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
   }
-  fn build_parcel_RepeatNullableIntArray(&self, _arg_input: Option<&[i32]>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatNullableIntArray(&self, _arg_input: Option<&[i32]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<i32>>> {
+  fn RepeatNullableIntArray(&self, _arg_input: Option<&[i32]>) -> binder::public_api::Result<Option<Vec<i32>>> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableIntArray, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_input)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableIntArray(_arg_input);
@@ -1206,13 +922,12 @@ impl BpTestService {
     let _aidl_return: Option<Vec<i32>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableByteEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum]>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatNullableByteEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>> {
+  fn RepeatNullableByteEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableByteEnumArray, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_input)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableByteEnumArray(_arg_input);
@@ -1224,13 +939,12 @@ impl BpTestService {
     let _aidl_return: Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableIntEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum]>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatNullableIntEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>> {
+  fn RepeatNullableIntEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableIntEnumArray, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_input)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableIntEnumArray(_arg_input);
@@ -1242,13 +956,12 @@ impl BpTestService {
     let _aidl_return: Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableLongEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatNullableLongEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>> {
+  fn RepeatNullableLongEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableLongEnumArray, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_input)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableLongEnumArray(_arg_input);
@@ -1260,13 +973,12 @@ impl BpTestService {
     let _aidl_return: Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableString(&self, _arg_input: Option<&str>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatNullableString(&self, _arg_input: Option<&str>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<String>> {
+  fn RepeatNullableString(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableString, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_input)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableString(_arg_input);
@@ -1278,13 +990,12 @@ impl BpTestService {
     let _aidl_return: Option<String> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableStringList(&self, _arg_input: Option<&[Option<String>]>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatNullableStringList(&self, _arg_input: Option<&[Option<String>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
+  fn RepeatNullableStringList(&self, _arg_input: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableStringList, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_input)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableStringList(_arg_input);
@@ -1296,13 +1007,12 @@ impl BpTestService {
     let _aidl_return: Option<Vec<Option<String>>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>> {
+  fn RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableParcelable, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_input)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableParcelable(_arg_input);
@@ -1311,52 +1021,15 @@ impl BpTestService {
     let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty> = _aidl_reply.read()?;
+    let _aidl_return: Option<crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableParcelableArray(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatNullableParcelableArray(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>> {
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
-        return _aidl_default_impl.RepeatNullableParcelableArray(_arg_input);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>> = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn build_parcel_RepeatNullableParcelableList(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatNullableParcelableList(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>> {
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
-        return _aidl_default_impl.RepeatNullableParcelableList(_arg_input);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>> = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn build_parcel_TakesAnIBinder(&self, _arg_input: &binder::SpIBinder) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_TakesAnIBinder(&self, _arg_input: &binder::SpIBinder, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
+  fn TakesAnIBinder(&self, _arg_input: &binder::SpIBinder) -> binder::public_api::Result<()> {
+    let _aidl_reply = self.binder.transact(transactions::TakesAnIBinder, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.TakesAnIBinder(_arg_input);
@@ -1367,13 +1040,12 @@ impl BpTestService {
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
   }
-  fn build_parcel_TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
+  fn TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>) -> binder::public_api::Result<()> {
+    let _aidl_reply = self.binder.transact(transactions::TakesANullableIBinder, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_input)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.TakesANullableIBinder(_arg_input);
@@ -1384,47 +1056,12 @@ impl BpTestService {
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     Ok(())
   }
-  fn build_parcel_TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder]) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder], _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
-        return _aidl_default_impl.TakesAnIBinderList(_arg_input);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    Ok(())
-  }
-  fn build_parcel_TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
-        return _aidl_default_impl.TakesANullableIBinderList(_arg_input);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    Ok(())
-  }
-  fn build_parcel_RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_token)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatUtf8CppString(&self, _arg_token: &str, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<String> {
+  fn RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<String> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatUtf8CppString, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_token)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatUtf8CppString(_arg_token);
@@ -1436,13 +1073,12 @@ impl BpTestService {
     let _aidl_return: String = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_token)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<String>> {
+  fn RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>) -> binder::public_api::Result<Option<String>> {
+    let _aidl_reply = self.binder.transact(transactions::RepeatNullableUtf8CppString, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_token)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.RepeatNullableUtf8CppString(_arg_token);
@@ -1454,14 +1090,13 @@ impl BpTestService {
     let _aidl_return: Option<String> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<String>> {
+  fn ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseUtf8CppString, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_input)?;
+      _aidl_data.write_slice_size(Some(_arg_repeated))?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseUtf8CppString(_arg_input, _arg_repeated);
@@ -1471,17 +1106,16 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Vec<String> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseNullableUtf8CppString(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_input)?;
-    aidl_data.write_slice_size(_arg_repeated.as_deref())?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseNullableUtf8CppString(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
+  fn ReverseNullableUtf8CppString(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseNullableUtf8CppString, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_input)?;
+      _aidl_data.write_slice_size(_arg_repeated.as_deref())?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseNullableUtf8CppString(_arg_input, _arg_repeated);
@@ -1491,16 +1125,15 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<Option<String>>> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
+  fn ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
+    let _aidl_reply = self.binder.transact(transactions::ReverseUtf8CppStringList, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_input)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.ReverseUtf8CppStringList(_arg_input, _arg_repeated);
@@ -1510,16 +1143,15 @@ impl BpTestService {
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: Option<Vec<Option<String>>> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
+    *_arg_repeated = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_return_null)?;
-    Ok(aidl_data)
-  }
-  fn read_response_GetCallback(&self, _arg_return_null: bool, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
+  fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
+    let _aidl_reply = self.binder.transact(transactions::GetCallback, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(&_arg_return_null)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.GetCallback(_arg_return_null);
@@ -1531,13 +1163,12 @@ impl BpTestService {
     let _aidl_return: Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_parcel)?;
-    Ok(aidl_data)
-  }
-  fn read_response_FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
+  fn FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<()> {
+    let _aidl_reply = self.binder.transact(transactions::FillOutStructuredParcelable, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      _aidl_data.write(_arg_parcel)?;
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.FillOutStructuredParcelable(_arg_parcel);
@@ -1546,91 +1177,14 @@ impl BpTestService {
     let _aidl_reply = _aidl_reply?;
     let _aidl_status: binder::Status = _aidl_reply.read()?;
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    _aidl_reply.read_onto(_arg_parcel)?;
+    *_arg_parcel = _aidl_reply.read()?;
     Ok(())
   }
-  fn build_parcel_RepeatExtendableParcelable(&self, _arg_ep: &crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_ep)?;
-    Ok(aidl_data)
-  }
-  fn read_response_RepeatExtendableParcelable(&self, _arg_ep: &crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<()> {
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
-        return _aidl_default_impl.RepeatExtendableParcelable(_arg_ep, _arg_ep2);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    _aidl_reply.read_onto(_arg_ep2)?;
-    Ok(())
-  }
-  fn build_parcel_ReverseList(&self, _arg_list: &crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_list)?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseList(&self, _arg_list: &crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList> {
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
-        return _aidl_default_impl.ReverseList(_arg_list);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
-  fn build_parcel_ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    aidl_data.write_slice_size(Some(_arg_repeated))?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Vec<binder::SpIBinder>> {
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
-        return _aidl_default_impl.ReverseIBinderArray(_arg_input, _arg_repeated);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Vec<binder::SpIBinder> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
-    Ok(_aidl_return)
-  }
-  fn build_parcel_ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(&_arg_input)?;
-    aidl_data.write_slice_size(_arg_repeated.as_deref())?;
-    Ok(aidl_data)
-  }
-  fn read_response_ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<Vec<Option<binder::SpIBinder>>>> {
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
-        return _aidl_default_impl.ReverseNullableIBinderArray(_arg_input, _arg_repeated);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Option<Vec<Option<binder::SpIBinder>>> = _aidl_reply.read()?;
-    _aidl_reply.read_onto(_arg_repeated)?;
-    Ok(_aidl_return)
-  }
-  fn build_parcel_GetOldNameInterface(&self) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    Ok(aidl_data)
-  }
-  fn read_response_GetOldNameInterface(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> {
+  fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> {
+    let _aidl_reply = self.binder.transact(transactions::GetOldNameInterface, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.GetOldNameInterface();
@@ -1642,12 +1196,11 @@ impl BpTestService {
     let _aidl_return: binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_GetNewNameInterface(&self) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    Ok(aidl_data)
-  }
-  fn read_response_GetNewNameInterface(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> {
+  fn GetNewNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> {
+    let _aidl_reply = self.binder.transact(transactions::GetNewNameInterface, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.GetNewNameInterface();
@@ -1659,12 +1212,11 @@ impl BpTestService {
     let _aidl_return: binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_GetCppJavaTests(&self) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    Ok(aidl_data)
-  }
-  fn read_response_GetCppJavaTests(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<Option<binder::SpIBinder>> {
+  fn GetCppJavaTests(&self) -> binder::public_api::Result<Option<binder::SpIBinder>> {
+    let _aidl_reply = self.binder.transact(transactions::GetCppJavaTests, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.GetCppJavaTests();
@@ -1676,12 +1228,11 @@ impl BpTestService {
     let _aidl_return: Option<binder::SpIBinder> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_getBackendType(&self) -> binder::public_api::Result<binder::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    Ok(aidl_data)
-  }
-  fn read_response_getBackendType(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType> {
+  fn getBackendType(&self) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType> {
+    let _aidl_reply = self.binder.transact(transactions::getBackendType, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
+      _aidl_data.mark_sensitive();
+      Ok(())
+    });
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
         return _aidl_default_impl.getBackendType();
@@ -1692,1175 +1243,6 @@ impl BpTestService {
     if !_aidl_status.is_ok() { return Err(_aidl_status); }
     let _aidl_return: crate::mangled::_7_android_4_aidl_5_tests_11_BackendType = _aidl_reply.read()?;
     Ok(_aidl_return)
-  }
-}
-impl ITestService for BpTestService {
-  fn UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<i32> {
-    let _aidl_data = self.build_parcel_UnimplementedMethod(_arg_arg)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::UnimplementedMethod, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_UnimplementedMethod(_arg_arg, _aidl_reply)
-  }
-  fn Deprecated(&self) -> binder::public_api::Result<()> {
-    let _aidl_data = self.build_parcel_Deprecated()?;
-    let _aidl_reply = self.binder.submit_transact(transactions::Deprecated, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_Deprecated(_aidl_reply)
-  }
-  fn TestOneway(&self) -> binder::public_api::Result<()> {
-    let _aidl_data = self.build_parcel_TestOneway()?;
-    let _aidl_reply = self.binder.submit_transact(transactions::TestOneway, _aidl_data, binder::FLAG_ONEWAY | binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_TestOneway(_aidl_reply)
-  }
-  fn RepeatBoolean(&self, _arg_token: bool) -> binder::public_api::Result<bool> {
-    let _aidl_data = self.build_parcel_RepeatBoolean(_arg_token)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatBoolean, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatBoolean(_arg_token, _aidl_reply)
-  }
-  fn RepeatByte(&self, _arg_token: i8) -> binder::public_api::Result<i8> {
-    let _aidl_data = self.build_parcel_RepeatByte(_arg_token)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatByte, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatByte(_arg_token, _aidl_reply)
-  }
-  fn RepeatChar(&self, _arg_token: u16) -> binder::public_api::Result<u16> {
-    let _aidl_data = self.build_parcel_RepeatChar(_arg_token)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatChar, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatChar(_arg_token, _aidl_reply)
-  }
-  fn RepeatInt(&self, _arg_token: i32) -> binder::public_api::Result<i32> {
-    let _aidl_data = self.build_parcel_RepeatInt(_arg_token)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatInt, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatInt(_arg_token, _aidl_reply)
-  }
-  fn RepeatLong(&self, _arg_token: i64) -> binder::public_api::Result<i64> {
-    let _aidl_data = self.build_parcel_RepeatLong(_arg_token)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatLong, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatLong(_arg_token, _aidl_reply)
-  }
-  fn RepeatFloat(&self, _arg_token: f32) -> binder::public_api::Result<f32> {
-    let _aidl_data = self.build_parcel_RepeatFloat(_arg_token)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatFloat, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatFloat(_arg_token, _aidl_reply)
-  }
-  fn RepeatDouble(&self, _arg_token: f64) -> binder::public_api::Result<f64> {
-    let _aidl_data = self.build_parcel_RepeatDouble(_arg_token)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatDouble, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatDouble(_arg_token, _aidl_reply)
-  }
-  fn RepeatString(&self, _arg_token: &str) -> binder::public_api::Result<String> {
-    let _aidl_data = self.build_parcel_RepeatString(_arg_token)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatString, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatString(_arg_token, _aidl_reply)
-  }
-  fn RepeatByteEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum> {
-    let _aidl_data = self.build_parcel_RepeatByteEnum(_arg_token)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatByteEnum, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatByteEnum(_arg_token, _aidl_reply)
-  }
-  fn RepeatIntEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum> {
-    let _aidl_data = self.build_parcel_RepeatIntEnum(_arg_token)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatIntEnum, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatIntEnum(_arg_token, _aidl_reply)
-  }
-  fn RepeatLongEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum> {
-    let _aidl_data = self.build_parcel_RepeatLongEnum(_arg_token)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatLongEnum, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatLongEnum(_arg_token, _aidl_reply)
-  }
-  fn ReverseBoolean(&self, _arg_input: &[bool], _arg_repeated: &mut Vec<bool>) -> binder::public_api::Result<Vec<bool>> {
-    let _aidl_data = self.build_parcel_ReverseBoolean(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseBoolean, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseBoolean(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn ReverseByte(&self, _arg_input: &[u8], _arg_repeated: &mut Vec<u8>) -> binder::public_api::Result<Vec<u8>> {
-    let _aidl_data = self.build_parcel_ReverseByte(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseByte, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseByte(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn ReverseChar(&self, _arg_input: &[u16], _arg_repeated: &mut Vec<u16>) -> binder::public_api::Result<Vec<u16>> {
-    let _aidl_data = self.build_parcel_ReverseChar(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseChar, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseChar(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn ReverseInt(&self, _arg_input: &[i32], _arg_repeated: &mut Vec<i32>) -> binder::public_api::Result<Vec<i32>> {
-    let _aidl_data = self.build_parcel_ReverseInt(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseInt, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseInt(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn ReverseLong(&self, _arg_input: &[i64], _arg_repeated: &mut Vec<i64>) -> binder::public_api::Result<Vec<i64>> {
-    let _aidl_data = self.build_parcel_ReverseLong(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseLong, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseLong(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn ReverseFloat(&self, _arg_input: &[f32], _arg_repeated: &mut Vec<f32>) -> binder::public_api::Result<Vec<f32>> {
-    let _aidl_data = self.build_parcel_ReverseFloat(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseFloat, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseFloat(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn ReverseDouble(&self, _arg_input: &[f64], _arg_repeated: &mut Vec<f64>) -> binder::public_api::Result<Vec<f64>> {
-    let _aidl_data = self.build_parcel_ReverseDouble(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseDouble, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseDouble(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn ReverseString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> {
-    let _aidl_data = self.build_parcel_ReverseString(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseString, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseString(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn ReverseByteEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>> {
-    let _aidl_data = self.build_parcel_ReverseByteEnum(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseByteEnum, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseByteEnum(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn ReverseIntEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>> {
-    let _aidl_data = self.build_parcel_ReverseIntEnum(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseIntEnum, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseIntEnum(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>> {
-    let _aidl_data = self.build_parcel_ReverseLongEnum(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseLongEnum, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseLongEnum(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> {
-    let _aidl_data = self.build_parcel_GetOtherTestService(_arg_name)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::GetOtherTestService, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_GetOtherTestService(_arg_name, _aidl_reply)
-  }
-  fn VerifyName(&self, _arg_service: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>, _arg_name: &str) -> binder::public_api::Result<bool> {
-    let _aidl_data = self.build_parcel_VerifyName(_arg_service, _arg_name)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::VerifyName, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_VerifyName(_arg_service, _arg_name, _aidl_reply)
-  }
-  fn GetInterfaceArray(&self, _arg_names: &[String]) -> binder::public_api::Result<Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
-    let _aidl_data = self.build_parcel_GetInterfaceArray(_arg_names)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::GetInterfaceArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_GetInterfaceArray(_arg_names, _aidl_reply)
-  }
-  fn VerifyNamesWithInterfaceArray(&self, _arg_services: &[binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>], _arg_names: &[String]) -> binder::public_api::Result<bool> {
-    let _aidl_data = self.build_parcel_VerifyNamesWithInterfaceArray(_arg_services, _arg_names)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::VerifyNamesWithInterfaceArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_VerifyNamesWithInterfaceArray(_arg_services, _arg_names, _aidl_reply)
-  }
-  fn GetNullableInterfaceArray(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>> {
-    let _aidl_data = self.build_parcel_GetNullableInterfaceArray(_arg_names)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::GetNullableInterfaceArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_GetNullableInterfaceArray(_arg_names, _aidl_reply)
-  }
-  fn VerifyNamesWithNullableInterfaceArray(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<bool> {
-    let _aidl_data = self.build_parcel_VerifyNamesWithNullableInterfaceArray(_arg_services, _arg_names)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::VerifyNamesWithNullableInterfaceArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_VerifyNamesWithNullableInterfaceArray(_arg_services, _arg_names, _aidl_reply)
-  }
-  fn GetInterfaceList(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>> {
-    let _aidl_data = self.build_parcel_GetInterfaceList(_arg_names)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::GetInterfaceList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_GetInterfaceList(_arg_names, _aidl_reply)
-  }
-  fn VerifyNamesWithInterfaceList(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<bool> {
-    let _aidl_data = self.build_parcel_VerifyNamesWithInterfaceList(_arg_services, _arg_names)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::VerifyNamesWithInterfaceList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_VerifyNamesWithInterfaceList(_arg_services, _arg_names, _aidl_reply)
-  }
-  fn ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> {
-    let _aidl_data = self.build_parcel_ReverseStringList(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseStringList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseStringList(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor) -> binder::public_api::Result<binder::parcel::ParcelFileDescriptor> {
-    let _aidl_data = self.build_parcel_RepeatParcelFileDescriptor(_arg_read)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatParcelFileDescriptor, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatParcelFileDescriptor(_arg_read, _aidl_reply)
-  }
-  fn ReverseParcelFileDescriptorArray(&self, _arg_input: &[binder::parcel::ParcelFileDescriptor], _arg_repeated: &mut Vec<Option<binder::parcel::ParcelFileDescriptor>>) -> binder::public_api::Result<Vec<binder::parcel::ParcelFileDescriptor>> {
-    let _aidl_data = self.build_parcel_ReverseParcelFileDescriptorArray(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseParcelFileDescriptorArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseParcelFileDescriptorArray(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn ThrowServiceException(&self, _arg_code: i32) -> binder::public_api::Result<()> {
-    let _aidl_data = self.build_parcel_ThrowServiceException(_arg_code)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ThrowServiceException, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ThrowServiceException(_arg_code, _aidl_reply)
-  }
-  fn RepeatNullableIntArray(&self, _arg_input: Option<&[i32]>) -> binder::public_api::Result<Option<Vec<i32>>> {
-    let _aidl_data = self.build_parcel_RepeatNullableIntArray(_arg_input)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatNullableIntArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatNullableIntArray(_arg_input, _aidl_reply)
-  }
-  fn RepeatNullableByteEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>> {
-    let _aidl_data = self.build_parcel_RepeatNullableByteEnumArray(_arg_input)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatNullableByteEnumArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatNullableByteEnumArray(_arg_input, _aidl_reply)
-  }
-  fn RepeatNullableIntEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>> {
-    let _aidl_data = self.build_parcel_RepeatNullableIntEnumArray(_arg_input)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatNullableIntEnumArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatNullableIntEnumArray(_arg_input, _aidl_reply)
-  }
-  fn RepeatNullableLongEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>> {
-    let _aidl_data = self.build_parcel_RepeatNullableLongEnumArray(_arg_input)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatNullableLongEnumArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatNullableLongEnumArray(_arg_input, _aidl_reply)
-  }
-  fn RepeatNullableString(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> {
-    let _aidl_data = self.build_parcel_RepeatNullableString(_arg_input)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatNullableString, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatNullableString(_arg_input, _aidl_reply)
-  }
-  fn RepeatNullableStringList(&self, _arg_input: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
-    let _aidl_data = self.build_parcel_RepeatNullableStringList(_arg_input)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatNullableStringList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatNullableStringList(_arg_input, _aidl_reply)
-  }
-  fn RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>> {
-    let _aidl_data = self.build_parcel_RepeatNullableParcelable(_arg_input)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatNullableParcelable, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatNullableParcelable(_arg_input, _aidl_reply)
-  }
-  fn RepeatNullableParcelableArray(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>> {
-    let _aidl_data = self.build_parcel_RepeatNullableParcelableArray(_arg_input)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatNullableParcelableArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatNullableParcelableArray(_arg_input, _aidl_reply)
-  }
-  fn RepeatNullableParcelableList(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>> {
-    let _aidl_data = self.build_parcel_RepeatNullableParcelableList(_arg_input)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatNullableParcelableList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatNullableParcelableList(_arg_input, _aidl_reply)
-  }
-  fn TakesAnIBinder(&self, _arg_input: &binder::SpIBinder) -> binder::public_api::Result<()> {
-    let _aidl_data = self.build_parcel_TakesAnIBinder(_arg_input)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::TakesAnIBinder, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_TakesAnIBinder(_arg_input, _aidl_reply)
-  }
-  fn TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>) -> binder::public_api::Result<()> {
-    let _aidl_data = self.build_parcel_TakesANullableIBinder(_arg_input)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::TakesANullableIBinder, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_TakesANullableIBinder(_arg_input, _aidl_reply)
-  }
-  fn TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder]) -> binder::public_api::Result<()> {
-    let _aidl_data = self.build_parcel_TakesAnIBinderList(_arg_input)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::TakesAnIBinderList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_TakesAnIBinderList(_arg_input, _aidl_reply)
-  }
-  fn TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>) -> binder::public_api::Result<()> {
-    let _aidl_data = self.build_parcel_TakesANullableIBinderList(_arg_input)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::TakesANullableIBinderList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_TakesANullableIBinderList(_arg_input, _aidl_reply)
-  }
-  fn RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<String> {
-    let _aidl_data = self.build_parcel_RepeatUtf8CppString(_arg_token)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatUtf8CppString, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatUtf8CppString(_arg_token, _aidl_reply)
-  }
-  fn RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>) -> binder::public_api::Result<Option<String>> {
-    let _aidl_data = self.build_parcel_RepeatNullableUtf8CppString(_arg_token)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatNullableUtf8CppString, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatNullableUtf8CppString(_arg_token, _aidl_reply)
-  }
-  fn ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> {
-    let _aidl_data = self.build_parcel_ReverseUtf8CppString(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseUtf8CppString, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseUtf8CppString(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn ReverseNullableUtf8CppString(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
-    let _aidl_data = self.build_parcel_ReverseNullableUtf8CppString(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseNullableUtf8CppString, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseNullableUtf8CppString(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
-    let _aidl_data = self.build_parcel_ReverseUtf8CppStringList(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseUtf8CppStringList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseUtf8CppStringList(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
-    let _aidl_data = self.build_parcel_GetCallback(_arg_return_null)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::GetCallback, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_GetCallback(_arg_return_null, _aidl_reply)
-  }
-  fn FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<()> {
-    let _aidl_data = self.build_parcel_FillOutStructuredParcelable(_arg_parcel)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::FillOutStructuredParcelable, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_FillOutStructuredParcelable(_arg_parcel, _aidl_reply)
-  }
-  fn RepeatExtendableParcelable(&self, _arg_ep: &crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable) -> binder::public_api::Result<()> {
-    let _aidl_data = self.build_parcel_RepeatExtendableParcelable(_arg_ep, _arg_ep2)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::RepeatExtendableParcelable, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_RepeatExtendableParcelable(_arg_ep, _arg_ep2, _aidl_reply)
-  }
-  fn ReverseList(&self, _arg_list: &crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList> {
-    let _aidl_data = self.build_parcel_ReverseList(_arg_list)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseList(_arg_list, _aidl_reply)
-  }
-  fn ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>) -> binder::public_api::Result<Vec<binder::SpIBinder>> {
-    let _aidl_data = self.build_parcel_ReverseIBinderArray(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseIBinderArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseIBinderArray(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::public_api::Result<Option<Vec<Option<binder::SpIBinder>>>> {
-    let _aidl_data = self.build_parcel_ReverseNullableIBinderArray(_arg_input, _arg_repeated)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::ReverseNullableIBinderArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_ReverseNullableIBinderArray(_arg_input, _arg_repeated, _aidl_reply)
-  }
-  fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> {
-    let _aidl_data = self.build_parcel_GetOldNameInterface()?;
-    let _aidl_reply = self.binder.submit_transact(transactions::GetOldNameInterface, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_GetOldNameInterface(_aidl_reply)
-  }
-  fn GetNewNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> {
-    let _aidl_data = self.build_parcel_GetNewNameInterface()?;
-    let _aidl_reply = self.binder.submit_transact(transactions::GetNewNameInterface, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_GetNewNameInterface(_aidl_reply)
-  }
-  fn GetCppJavaTests(&self) -> binder::public_api::Result<Option<binder::SpIBinder>> {
-    let _aidl_data = self.build_parcel_GetCppJavaTests()?;
-    let _aidl_reply = self.binder.submit_transact(transactions::GetCppJavaTests, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_GetCppJavaTests(_aidl_reply)
-  }
-  fn getBackendType(&self) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType> {
-    let _aidl_data = self.build_parcel_getBackendType()?;
-    let _aidl_reply = self.binder.submit_transact(transactions::getBackendType, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    self.read_response_getBackendType(_aidl_reply)
-  }
-}
-impl<P: binder::BinderAsyncPool> ITestServiceAsync<P> for BpTestService {
-  fn UnimplementedMethod<'a>(&'a self, _arg_arg: i32) -> binder::BoxFuture<'a, binder::public_api::Result<i32>> {
-    let _aidl_data = match self.build_parcel_UnimplementedMethod(_arg_arg) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::UnimplementedMethod, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_UnimplementedMethod(_arg_arg, _aidl_reply)
-      }
-    )
-  }
-  fn Deprecated<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<()>> {
-    let _aidl_data = match self.build_parcel_Deprecated() {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::Deprecated, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_Deprecated(_aidl_reply)
-      }
-    )
-  }
-  fn TestOneway(&self) -> std::future::Ready<binder::public_api::Result<()>> {
-    let _aidl_data = match self.build_parcel_TestOneway() {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return std::future::ready(Err(err)),
-    };
-    let _aidl_reply = self.binder.submit_transact(transactions::TestOneway, _aidl_data, binder::FLAG_ONEWAY | binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL);
-    std::future::ready(self.read_response_TestOneway(_aidl_reply))
-  }
-  fn RepeatBoolean<'a>(&'a self, _arg_token: bool) -> binder::BoxFuture<'a, binder::public_api::Result<bool>> {
-    let _aidl_data = match self.build_parcel_RepeatBoolean(_arg_token) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatBoolean, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatBoolean(_arg_token, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatByte<'a>(&'a self, _arg_token: i8) -> binder::BoxFuture<'a, binder::public_api::Result<i8>> {
-    let _aidl_data = match self.build_parcel_RepeatByte(_arg_token) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatByte, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatByte(_arg_token, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatChar<'a>(&'a self, _arg_token: u16) -> binder::BoxFuture<'a, binder::public_api::Result<u16>> {
-    let _aidl_data = match self.build_parcel_RepeatChar(_arg_token) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatChar, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatChar(_arg_token, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatInt<'a>(&'a self, _arg_token: i32) -> binder::BoxFuture<'a, binder::public_api::Result<i32>> {
-    let _aidl_data = match self.build_parcel_RepeatInt(_arg_token) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatInt, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatInt(_arg_token, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatLong<'a>(&'a self, _arg_token: i64) -> binder::BoxFuture<'a, binder::public_api::Result<i64>> {
-    let _aidl_data = match self.build_parcel_RepeatLong(_arg_token) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatLong, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatLong(_arg_token, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatFloat<'a>(&'a self, _arg_token: f32) -> binder::BoxFuture<'a, binder::public_api::Result<f32>> {
-    let _aidl_data = match self.build_parcel_RepeatFloat(_arg_token) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatFloat, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatFloat(_arg_token, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatDouble<'a>(&'a self, _arg_token: f64) -> binder::BoxFuture<'a, binder::public_api::Result<f64>> {
-    let _aidl_data = match self.build_parcel_RepeatDouble(_arg_token) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatDouble, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatDouble(_arg_token, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatString<'a>(&'a self, _arg_token: &'a str) -> binder::BoxFuture<'a, binder::public_api::Result<String>> {
-    let _aidl_data = match self.build_parcel_RepeatString(_arg_token) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatString, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatString(_arg_token, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatByteEnum<'a>(&'a self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum) -> binder::BoxFuture<'a, binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>> {
-    let _aidl_data = match self.build_parcel_RepeatByteEnum(_arg_token) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatByteEnum, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatByteEnum(_arg_token, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatIntEnum<'a>(&'a self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum) -> binder::BoxFuture<'a, binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>> {
-    let _aidl_data = match self.build_parcel_RepeatIntEnum(_arg_token) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatIntEnum, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatIntEnum(_arg_token, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatLongEnum<'a>(&'a self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum) -> binder::BoxFuture<'a, binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>> {
-    let _aidl_data = match self.build_parcel_RepeatLongEnum(_arg_token) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatLongEnum, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatLongEnum(_arg_token, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseBoolean<'a>(&'a self, _arg_input: &'a [bool], _arg_repeated: &'a mut Vec<bool>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<bool>>> {
-    let _aidl_data = match self.build_parcel_ReverseBoolean(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseBoolean, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseBoolean(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseByte<'a>(&'a self, _arg_input: &'a [u8], _arg_repeated: &'a mut Vec<u8>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<u8>>> {
-    let _aidl_data = match self.build_parcel_ReverseByte(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseByte, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseByte(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseChar<'a>(&'a self, _arg_input: &'a [u16], _arg_repeated: &'a mut Vec<u16>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<u16>>> {
-    let _aidl_data = match self.build_parcel_ReverseChar(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseChar, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseChar(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseInt<'a>(&'a self, _arg_input: &'a [i32], _arg_repeated: &'a mut Vec<i32>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<i32>>> {
-    let _aidl_data = match self.build_parcel_ReverseInt(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseInt, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseInt(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseLong<'a>(&'a self, _arg_input: &'a [i64], _arg_repeated: &'a mut Vec<i64>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<i64>>> {
-    let _aidl_data = match self.build_parcel_ReverseLong(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseLong, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseLong(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseFloat<'a>(&'a self, _arg_input: &'a [f32], _arg_repeated: &'a mut Vec<f32>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<f32>>> {
-    let _aidl_data = match self.build_parcel_ReverseFloat(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseFloat, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseFloat(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseDouble<'a>(&'a self, _arg_input: &'a [f64], _arg_repeated: &'a mut Vec<f64>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<f64>>> {
-    let _aidl_data = match self.build_parcel_ReverseDouble(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseDouble, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseDouble(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseString<'a>(&'a self, _arg_input: &'a [String], _arg_repeated: &'a mut Vec<String>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<String>>> {
-    let _aidl_data = match self.build_parcel_ReverseString(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseString, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseString(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseByteEnum<'a>(&'a self, _arg_input: &'a [crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &'a mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>> {
-    let _aidl_data = match self.build_parcel_ReverseByteEnum(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseByteEnum, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseByteEnum(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseIntEnum<'a>(&'a self, _arg_input: &'a [crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &'a mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>> {
-    let _aidl_data = match self.build_parcel_ReverseIntEnum(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseIntEnum, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseIntEnum(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseLongEnum<'a>(&'a self, _arg_input: &'a [crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &'a mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>> {
-    let _aidl_data = match self.build_parcel_ReverseLongEnum(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseLongEnum, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseLongEnum(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn GetOtherTestService<'a>(&'a self, _arg_name: &'a str) -> binder::BoxFuture<'a, binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
-    let _aidl_data = match self.build_parcel_GetOtherTestService(_arg_name) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::GetOtherTestService, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_GetOtherTestService(_arg_name, _aidl_reply)
-      }
-    )
-  }
-  fn VerifyName<'a>(&'a self, _arg_service: &'a binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>, _arg_name: &'a str) -> binder::BoxFuture<'a, binder::public_api::Result<bool>> {
-    let _aidl_data = match self.build_parcel_VerifyName(_arg_service, _arg_name) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::VerifyName, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_VerifyName(_arg_service, _arg_name, _aidl_reply)
-      }
-    )
-  }
-  fn GetInterfaceArray<'a>(&'a self, _arg_names: &'a [String]) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>> {
-    let _aidl_data = match self.build_parcel_GetInterfaceArray(_arg_names) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::GetInterfaceArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_GetInterfaceArray(_arg_names, _aidl_reply)
-      }
-    )
-  }
-  fn VerifyNamesWithInterfaceArray<'a>(&'a self, _arg_services: &'a [binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>], _arg_names: &'a [String]) -> binder::BoxFuture<'a, binder::public_api::Result<bool>> {
-    let _aidl_data = match self.build_parcel_VerifyNamesWithInterfaceArray(_arg_services, _arg_names) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::VerifyNamesWithInterfaceArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_VerifyNamesWithInterfaceArray(_arg_services, _arg_names, _aidl_reply)
-      }
-    )
-  }
-  fn GetNullableInterfaceArray<'a>(&'a self, _arg_names: Option<&'a [Option<String>]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>>> {
-    let _aidl_data = match self.build_parcel_GetNullableInterfaceArray(_arg_names) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::GetNullableInterfaceArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_GetNullableInterfaceArray(_arg_names, _aidl_reply)
-      }
-    )
-  }
-  fn VerifyNamesWithNullableInterfaceArray<'a>(&'a self, _arg_services: Option<&'a [Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&'a [Option<String>]>) -> binder::BoxFuture<'a, binder::public_api::Result<bool>> {
-    let _aidl_data = match self.build_parcel_VerifyNamesWithNullableInterfaceArray(_arg_services, _arg_names) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::VerifyNamesWithNullableInterfaceArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_VerifyNamesWithNullableInterfaceArray(_arg_services, _arg_names, _aidl_reply)
-      }
-    )
-  }
-  fn GetInterfaceList<'a>(&'a self, _arg_names: Option<&'a [Option<String>]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>>> {
-    let _aidl_data = match self.build_parcel_GetInterfaceList(_arg_names) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::GetInterfaceList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_GetInterfaceList(_arg_names, _aidl_reply)
-      }
-    )
-  }
-  fn VerifyNamesWithInterfaceList<'a>(&'a self, _arg_services: Option<&'a [Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&'a [Option<String>]>) -> binder::BoxFuture<'a, binder::public_api::Result<bool>> {
-    let _aidl_data = match self.build_parcel_VerifyNamesWithInterfaceList(_arg_services, _arg_names) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::VerifyNamesWithInterfaceList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_VerifyNamesWithInterfaceList(_arg_services, _arg_names, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseStringList<'a>(&'a self, _arg_input: &'a [String], _arg_repeated: &'a mut Vec<String>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<String>>> {
-    let _aidl_data = match self.build_parcel_ReverseStringList(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseStringList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseStringList(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatParcelFileDescriptor<'a>(&'a self, _arg_read: &'a binder::parcel::ParcelFileDescriptor) -> binder::BoxFuture<'a, binder::public_api::Result<binder::parcel::ParcelFileDescriptor>> {
-    let _aidl_data = match self.build_parcel_RepeatParcelFileDescriptor(_arg_read) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatParcelFileDescriptor, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatParcelFileDescriptor(_arg_read, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseParcelFileDescriptorArray<'a>(&'a self, _arg_input: &'a [binder::parcel::ParcelFileDescriptor], _arg_repeated: &'a mut Vec<Option<binder::parcel::ParcelFileDescriptor>>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<binder::parcel::ParcelFileDescriptor>>> {
-    let _aidl_data = match self.build_parcel_ReverseParcelFileDescriptorArray(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseParcelFileDescriptorArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseParcelFileDescriptorArray(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn ThrowServiceException<'a>(&'a self, _arg_code: i32) -> binder::BoxFuture<'a, binder::public_api::Result<()>> {
-    let _aidl_data = match self.build_parcel_ThrowServiceException(_arg_code) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ThrowServiceException, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ThrowServiceException(_arg_code, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatNullableIntArray<'a>(&'a self, _arg_input: Option<&'a [i32]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<i32>>>> {
-    let _aidl_data = match self.build_parcel_RepeatNullableIntArray(_arg_input) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatNullableIntArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatNullableIntArray(_arg_input, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatNullableByteEnumArray<'a>(&'a self, _arg_input: Option<&'a [crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>>> {
-    let _aidl_data = match self.build_parcel_RepeatNullableByteEnumArray(_arg_input) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatNullableByteEnumArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatNullableByteEnumArray(_arg_input, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatNullableIntEnumArray<'a>(&'a self, _arg_input: Option<&'a [crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>>> {
-    let _aidl_data = match self.build_parcel_RepeatNullableIntEnumArray(_arg_input) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatNullableIntEnumArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatNullableIntEnumArray(_arg_input, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatNullableLongEnumArray<'a>(&'a self, _arg_input: Option<&'a [crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>>> {
-    let _aidl_data = match self.build_parcel_RepeatNullableLongEnumArray(_arg_input) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatNullableLongEnumArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatNullableLongEnumArray(_arg_input, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatNullableString<'a>(&'a self, _arg_input: Option<&'a str>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<String>>> {
-    let _aidl_data = match self.build_parcel_RepeatNullableString(_arg_input) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatNullableString, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatNullableString(_arg_input, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatNullableStringList<'a>(&'a self, _arg_input: Option<&'a [Option<String>]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<String>>>>> {
-    let _aidl_data = match self.build_parcel_RepeatNullableStringList(_arg_input) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatNullableStringList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatNullableStringList(_arg_input, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatNullableParcelable<'a>(&'a self, _arg_input: Option<&'a crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>> {
-    let _aidl_data = match self.build_parcel_RepeatNullableParcelable(_arg_input) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatNullableParcelable, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatNullableParcelable(_arg_input, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatNullableParcelableArray<'a>(&'a self, _arg_input: Option<&'a [Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>>> {
-    let _aidl_data = match self.build_parcel_RepeatNullableParcelableArray(_arg_input) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatNullableParcelableArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatNullableParcelableArray(_arg_input, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatNullableParcelableList<'a>(&'a self, _arg_input: Option<&'a [Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>>> {
-    let _aidl_data = match self.build_parcel_RepeatNullableParcelableList(_arg_input) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatNullableParcelableList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatNullableParcelableList(_arg_input, _aidl_reply)
-      }
-    )
-  }
-  fn TakesAnIBinder<'a>(&'a self, _arg_input: &'a binder::SpIBinder) -> binder::BoxFuture<'a, binder::public_api::Result<()>> {
-    let _aidl_data = match self.build_parcel_TakesAnIBinder(_arg_input) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::TakesAnIBinder, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_TakesAnIBinder(_arg_input, _aidl_reply)
-      }
-    )
-  }
-  fn TakesANullableIBinder<'a>(&'a self, _arg_input: Option<&'a binder::SpIBinder>) -> binder::BoxFuture<'a, binder::public_api::Result<()>> {
-    let _aidl_data = match self.build_parcel_TakesANullableIBinder(_arg_input) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::TakesANullableIBinder, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_TakesANullableIBinder(_arg_input, _aidl_reply)
-      }
-    )
-  }
-  fn TakesAnIBinderList<'a>(&'a self, _arg_input: &'a [binder::SpIBinder]) -> binder::BoxFuture<'a, binder::public_api::Result<()>> {
-    let _aidl_data = match self.build_parcel_TakesAnIBinderList(_arg_input) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::TakesAnIBinderList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_TakesAnIBinderList(_arg_input, _aidl_reply)
-      }
-    )
-  }
-  fn TakesANullableIBinderList<'a>(&'a self, _arg_input: Option<&'a [Option<binder::SpIBinder>]>) -> binder::BoxFuture<'a, binder::public_api::Result<()>> {
-    let _aidl_data = match self.build_parcel_TakesANullableIBinderList(_arg_input) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::TakesANullableIBinderList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_TakesANullableIBinderList(_arg_input, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatUtf8CppString<'a>(&'a self, _arg_token: &'a str) -> binder::BoxFuture<'a, binder::public_api::Result<String>> {
-    let _aidl_data = match self.build_parcel_RepeatUtf8CppString(_arg_token) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatUtf8CppString, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatUtf8CppString(_arg_token, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatNullableUtf8CppString<'a>(&'a self, _arg_token: Option<&'a str>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<String>>> {
-    let _aidl_data = match self.build_parcel_RepeatNullableUtf8CppString(_arg_token) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatNullableUtf8CppString, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatNullableUtf8CppString(_arg_token, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseUtf8CppString<'a>(&'a self, _arg_input: &'a [String], _arg_repeated: &'a mut Vec<String>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<String>>> {
-    let _aidl_data = match self.build_parcel_ReverseUtf8CppString(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseUtf8CppString, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseUtf8CppString(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseNullableUtf8CppString<'a>(&'a self, _arg_input: Option<&'a [Option<String>]>, _arg_repeated: &'a mut Option<Vec<Option<String>>>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<String>>>>> {
-    let _aidl_data = match self.build_parcel_ReverseNullableUtf8CppString(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseNullableUtf8CppString, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseNullableUtf8CppString(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseUtf8CppStringList<'a>(&'a self, _arg_input: Option<&'a [Option<String>]>, _arg_repeated: &'a mut Option<Vec<Option<String>>>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<String>>>>> {
-    let _aidl_data = match self.build_parcel_ReverseUtf8CppStringList(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseUtf8CppStringList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseUtf8CppStringList(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn GetCallback<'a>(&'a self, _arg_return_null: bool) -> binder::BoxFuture<'a, binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>> {
-    let _aidl_data = match self.build_parcel_GetCallback(_arg_return_null) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::GetCallback, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_GetCallback(_arg_return_null, _aidl_reply)
-      }
-    )
-  }
-  fn FillOutStructuredParcelable<'a>(&'a self, _arg_parcel: &'a mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::BoxFuture<'a, binder::public_api::Result<()>> {
-    let _aidl_data = match self.build_parcel_FillOutStructuredParcelable(_arg_parcel) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::FillOutStructuredParcelable, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_FillOutStructuredParcelable(_arg_parcel, _aidl_reply)
-      }
-    )
-  }
-  fn RepeatExtendableParcelable<'a>(&'a self, _arg_ep: &'a crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &'a mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable) -> binder::BoxFuture<'a, binder::public_api::Result<()>> {
-    let _aidl_data = match self.build_parcel_RepeatExtendableParcelable(_arg_ep, _arg_ep2) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::RepeatExtendableParcelable, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_RepeatExtendableParcelable(_arg_ep, _arg_ep2, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseList<'a>(&'a self, _arg_list: &'a crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList) -> binder::BoxFuture<'a, binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList>> {
-    let _aidl_data = match self.build_parcel_ReverseList(_arg_list) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseList, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseList(_arg_list, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseIBinderArray<'a>(&'a self, _arg_input: &'a [binder::SpIBinder], _arg_repeated: &'a mut Vec<Option<binder::SpIBinder>>) -> binder::BoxFuture<'a, binder::public_api::Result<Vec<binder::SpIBinder>>> {
-    let _aidl_data = match self.build_parcel_ReverseIBinderArray(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseIBinderArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseIBinderArray(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn ReverseNullableIBinderArray<'a>(&'a self, _arg_input: Option<&'a [Option<binder::SpIBinder>]>, _arg_repeated: &'a mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<binder::SpIBinder>>>>> {
-    let _aidl_data = match self.build_parcel_ReverseNullableIBinderArray(_arg_input, _arg_repeated) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::ReverseNullableIBinderArray, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_ReverseNullableIBinderArray(_arg_input, _arg_repeated, _aidl_reply)
-      }
-    )
-  }
-  fn GetOldNameInterface<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>>> {
-    let _aidl_data = match self.build_parcel_GetOldNameInterface() {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::GetOldNameInterface, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_GetOldNameInterface(_aidl_reply)
-      }
-    )
-  }
-  fn GetNewNameInterface<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>>> {
-    let _aidl_data = match self.build_parcel_GetNewNameInterface() {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::GetNewNameInterface, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_GetNewNameInterface(_aidl_reply)
-      }
-    )
-  }
-  fn GetCppJavaTests<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<Option<binder::SpIBinder>>> {
-    let _aidl_data = match self.build_parcel_GetCppJavaTests() {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::GetCppJavaTests, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_GetCppJavaTests(_aidl_reply)
-      }
-    )
-  }
-  fn getBackendType<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType>> {
-    let _aidl_data = match self.build_parcel_getBackendType() {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::getBackendType, _aidl_data, binder::FLAG_CLEAR_BUF | binder::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_getBackendType(_aidl_reply)
-      }
-    )
   }
 }
 impl ITestService for binder::Binder<BnTestService> {
@@ -2891,12 +1273,6 @@ impl ITestService for binder::Binder<BnTestService> {
   fn ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>> { self.0.ReverseLongEnum(_arg_input, _arg_repeated) }
   fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> { self.0.GetOtherTestService(_arg_name) }
   fn VerifyName(&self, _arg_service: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>, _arg_name: &str) -> binder::public_api::Result<bool> { self.0.VerifyName(_arg_service, _arg_name) }
-  fn GetInterfaceArray(&self, _arg_names: &[String]) -> binder::public_api::Result<Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> { self.0.GetInterfaceArray(_arg_names) }
-  fn VerifyNamesWithInterfaceArray(&self, _arg_services: &[binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>], _arg_names: &[String]) -> binder::public_api::Result<bool> { self.0.VerifyNamesWithInterfaceArray(_arg_services, _arg_names) }
-  fn GetNullableInterfaceArray(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>> { self.0.GetNullableInterfaceArray(_arg_names) }
-  fn VerifyNamesWithNullableInterfaceArray(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<bool> { self.0.VerifyNamesWithNullableInterfaceArray(_arg_services, _arg_names) }
-  fn GetInterfaceList(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>> { self.0.GetInterfaceList(_arg_names) }
-  fn VerifyNamesWithInterfaceList(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<bool> { self.0.VerifyNamesWithInterfaceList(_arg_services, _arg_names) }
   fn ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> { self.0.ReverseStringList(_arg_input, _arg_repeated) }
   fn RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor) -> binder::public_api::Result<binder::parcel::ParcelFileDescriptor> { self.0.RepeatParcelFileDescriptor(_arg_read) }
   fn ReverseParcelFileDescriptorArray(&self, _arg_input: &[binder::parcel::ParcelFileDescriptor], _arg_repeated: &mut Vec<Option<binder::parcel::ParcelFileDescriptor>>) -> binder::public_api::Result<Vec<binder::parcel::ParcelFileDescriptor>> { self.0.ReverseParcelFileDescriptorArray(_arg_input, _arg_repeated) }
@@ -2907,13 +1283,9 @@ impl ITestService for binder::Binder<BnTestService> {
   fn RepeatNullableLongEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>> { self.0.RepeatNullableLongEnumArray(_arg_input) }
   fn RepeatNullableString(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> { self.0.RepeatNullableString(_arg_input) }
   fn RepeatNullableStringList(&self, _arg_input: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<String>>>> { self.0.RepeatNullableStringList(_arg_input) }
-  fn RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>> { self.0.RepeatNullableParcelable(_arg_input) }
-  fn RepeatNullableParcelableArray(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>> { self.0.RepeatNullableParcelableArray(_arg_input) }
-  fn RepeatNullableParcelableList(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>> { self.0.RepeatNullableParcelableList(_arg_input) }
+  fn RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable>> { self.0.RepeatNullableParcelable(_arg_input) }
   fn TakesAnIBinder(&self, _arg_input: &binder::SpIBinder) -> binder::public_api::Result<()> { self.0.TakesAnIBinder(_arg_input) }
   fn TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>) -> binder::public_api::Result<()> { self.0.TakesANullableIBinder(_arg_input) }
-  fn TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder]) -> binder::public_api::Result<()> { self.0.TakesAnIBinderList(_arg_input) }
-  fn TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>) -> binder::public_api::Result<()> { self.0.TakesANullableIBinderList(_arg_input) }
   fn RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<String> { self.0.RepeatUtf8CppString(_arg_token) }
   fn RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>) -> binder::public_api::Result<Option<String>> { self.0.RepeatNullableUtf8CppString(_arg_token) }
   fn ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> { self.0.ReverseUtf8CppString(_arg_input, _arg_repeated) }
@@ -2921,16 +1293,12 @@ impl ITestService for binder::Binder<BnTestService> {
   fn ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>> { self.0.ReverseUtf8CppStringList(_arg_input, _arg_repeated) }
   fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> { self.0.GetCallback(_arg_return_null) }
   fn FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<()> { self.0.FillOutStructuredParcelable(_arg_parcel) }
-  fn RepeatExtendableParcelable(&self, _arg_ep: &crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable) -> binder::public_api::Result<()> { self.0.RepeatExtendableParcelable(_arg_ep, _arg_ep2) }
-  fn ReverseList(&self, _arg_list: &crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList> { self.0.ReverseList(_arg_list) }
-  fn ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>) -> binder::public_api::Result<Vec<binder::SpIBinder>> { self.0.ReverseIBinderArray(_arg_input, _arg_repeated) }
-  fn ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::public_api::Result<Option<Vec<Option<binder::SpIBinder>>>> { self.0.ReverseNullableIBinderArray(_arg_input, _arg_repeated) }
   fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> { self.0.GetOldNameInterface() }
   fn GetNewNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> { self.0.GetNewNameInterface() }
   fn GetCppJavaTests(&self) -> binder::public_api::Result<Option<binder::SpIBinder>> { self.0.GetCppJavaTests() }
   fn getBackendType(&self) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType> { self.0.getBackendType() }
 }
-fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::BorrowedParcel<'_>, _aidl_reply: &mut binder::parcel::BorrowedParcel<'_>) -> binder::Result<()> {
+fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::Parcel, _aidl_reply: &mut binder::parcel::Parcel) -> binder::Result<()> {
   match _aidl_code {
     transactions::UnimplementedMethod => {
       let _arg_arg: i32 = _aidl_data.read()?;
@@ -3280,81 +1648,6 @@ fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::Transaction
       }
       Ok(())
     }
-    transactions::GetInterfaceArray => {
-      let _arg_names: Vec<String> = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.GetInterfaceArray(&_arg_names);
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::VerifyNamesWithInterfaceArray => {
-      let _arg_services: Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> = _aidl_data.read()?;
-      let _arg_names: Vec<String> = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.VerifyNamesWithInterfaceArray(&_arg_services, &_arg_names);
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::GetNullableInterfaceArray => {
-      let _arg_names: Option<Vec<Option<String>>> = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.GetNullableInterfaceArray(_arg_names.as_deref());
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::VerifyNamesWithNullableInterfaceArray => {
-      let _arg_services: Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>> = _aidl_data.read()?;
-      let _arg_names: Option<Vec<Option<String>>> = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.VerifyNamesWithNullableInterfaceArray(_arg_services.as_deref(), _arg_names.as_deref());
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::GetInterfaceList => {
-      let _arg_names: Option<Vec<Option<String>>> = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.GetInterfaceList(_arg_names.as_deref());
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::VerifyNamesWithInterfaceList => {
-      let _arg_services: Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>> = _aidl_data.read()?;
-      let _arg_names: Option<Vec<Option<String>>> = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.VerifyNamesWithInterfaceList(_arg_services.as_deref(), _arg_names.as_deref());
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
     transactions::ReverseStringList => {
       let _arg_input: Vec<String> = _aidl_data.read()?;
       let mut _arg_repeated: Vec<String> = Default::default();
@@ -3481,32 +1774,8 @@ fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::Transaction
       Ok(())
     }
     transactions::RepeatNullableParcelable => {
-      let _arg_input: Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty> = _aidl_data.read()?;
+      let _arg_input: Option<crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable> = _aidl_data.read()?;
       let _aidl_return = _aidl_service.RepeatNullableParcelable(_arg_input.as_ref());
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::RepeatNullableParcelableArray => {
-      let _arg_input: Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>> = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.RepeatNullableParcelableArray(_arg_input.as_deref());
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::RepeatNullableParcelableList => {
-      let _arg_input: Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>> = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.RepeatNullableParcelableList(_arg_input.as_deref());
       match &_aidl_return {
         Ok(_aidl_return) => {
           _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
@@ -3530,28 +1799,6 @@ fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::Transaction
     transactions::TakesANullableIBinder => {
       let _arg_input: Option<binder::SpIBinder> = _aidl_data.read()?;
       let _aidl_return = _aidl_service.TakesANullableIBinder(_arg_input.as_ref());
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::TakesAnIBinderList => {
-      let _arg_input: Vec<binder::SpIBinder> = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.TakesAnIBinderList(&_arg_input);
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::TakesANullableIBinderList => {
-      let _arg_input: Option<Vec<Option<binder::SpIBinder>>> = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.TakesANullableIBinderList(_arg_input.as_deref());
       match &_aidl_return {
         Ok(_aidl_return) => {
           _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
@@ -3652,61 +1899,6 @@ fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::Transaction
       }
       Ok(())
     }
-    transactions::RepeatExtendableParcelable => {
-      let _arg_ep: crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable = _aidl_data.read()?;
-      let mut _arg_ep2: crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable = Default::default();
-      let _aidl_return = _aidl_service.RepeatExtendableParcelable(&_arg_ep, &mut _arg_ep2);
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(&_arg_ep2)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::ReverseList => {
-      let _arg_list: crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.ReverseList(&_arg_list);
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::ReverseIBinderArray => {
-      let _arg_input: Vec<binder::SpIBinder> = _aidl_data.read()?;
-      let mut _arg_repeated: Vec<Option<binder::SpIBinder>> = Default::default();
-      _aidl_data.resize_out_vec(&mut _arg_repeated)?;
-      let _aidl_return = _aidl_service.ReverseIBinderArray(&_arg_input, &mut _arg_repeated);
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-          _aidl_reply.write(&_arg_repeated)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::ReverseNullableIBinderArray => {
-      let _arg_input: Option<Vec<Option<binder::SpIBinder>>> = _aidl_data.read()?;
-      let mut _arg_repeated: Option<Vec<Option<binder::SpIBinder>>> = Default::default();
-      _aidl_data.resize_nullable_out_vec(&mut _arg_repeated)?;
-      let _aidl_return = _aidl_service.ReverseNullableIBinderArray(_arg_input.as_deref(), &mut _arg_repeated);
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-          _aidl_reply.write(&_arg_repeated)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
     transactions::GetOldNameInterface => {
       let _aidl_return = _aidl_service.GetOldNameInterface();
       match &_aidl_return {
@@ -3753,175 +1945,4 @@ fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::Transaction
     }
     _ => Err(binder::StatusCode::UNKNOWN_TRANSACTION)
   }
-}
-pub mod Empty {
-  #[derive(Debug, Clone, PartialEq)]
-  pub struct Empty {
-  }
-  impl Default for Empty {
-    fn default() -> Self {
-      Self {
-      }
-    }
-  }
-  impl binder::parcel::Parcelable for Empty {
-    fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
-      parcel.sized_write(|subparcel| {
-        Ok(())
-      })
-    }
-    fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
-      parcel.sized_read(|subparcel| {
-        Ok(())
-      })
-    }
-  }
-  binder::impl_serialize_for_parcelable!(Empty);
-  binder::impl_deserialize_for_parcelable!(Empty);
-  impl binder::parcel::ParcelableMetadata for Empty {
-    fn get_descriptor() -> &'static str { "android.aidl.tests.ITestService.Empty" }
-  }
-}
-pub mod CompilerChecks {
-  #[derive(Debug)]
-  pub struct CompilerChecks {
-    pub binder: Option<binder::SpIBinder>,
-    pub nullable_binder: Option<binder::SpIBinder>,
-    pub binder_array: Vec<binder::SpIBinder>,
-    pub nullable_binder_array: Option<Vec<Option<binder::SpIBinder>>>,
-    pub binder_list: Vec<binder::SpIBinder>,
-    pub nullable_binder_list: Option<Vec<Option<binder::SpIBinder>>>,
-    pub pfd: Option<binder::parcel::ParcelFileDescriptor>,
-    pub nullable_pfd: Option<binder::parcel::ParcelFileDescriptor>,
-    pub pfd_array: Vec<binder::parcel::ParcelFileDescriptor>,
-    pub nullable_pfd_array: Option<Vec<Option<binder::parcel::ParcelFileDescriptor>>>,
-    pub pfd_list: Vec<binder::parcel::ParcelFileDescriptor>,
-    pub nullable_pfd_list: Option<Vec<Option<binder::parcel::ParcelFileDescriptor>>>,
-    pub parcel: crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty,
-    pub nullable_parcel: Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>,
-    pub parcel_array: Vec<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>,
-    pub nullable_parcel_array: Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>,
-    pub parcel_list: Vec<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>,
-    pub nullable_parcel_list: Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>,
-  }
-  impl Default for CompilerChecks {
-    fn default() -> Self {
-      Self {
-        binder: Default::default(),
-        nullable_binder: Default::default(),
-        binder_array: Default::default(),
-        nullable_binder_array: Default::default(),
-        binder_list: Default::default(),
-        nullable_binder_list: Default::default(),
-        pfd: Default::default(),
-        nullable_pfd: Default::default(),
-        pfd_array: Default::default(),
-        nullable_pfd_array: Default::default(),
-        pfd_list: Default::default(),
-        nullable_pfd_list: Default::default(),
-        parcel: Default::default(),
-        nullable_parcel: Default::default(),
-        parcel_array: Default::default(),
-        nullable_parcel_array: Default::default(),
-        parcel_list: Default::default(),
-        nullable_parcel_list: Default::default(),
-      }
-    }
-  }
-  impl binder::parcel::Parcelable for CompilerChecks {
-    fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
-      parcel.sized_write(|subparcel| {
-        let __field_ref = self.binder.as_ref().ok_or(binder::StatusCode::UNEXPECTED_NULL)?;
-        subparcel.write(__field_ref)?;
-        subparcel.write(&self.nullable_binder)?;
-        subparcel.write(&self.binder_array)?;
-        subparcel.write(&self.nullable_binder_array)?;
-        subparcel.write(&self.binder_list)?;
-        subparcel.write(&self.nullable_binder_list)?;
-        let __field_ref = self.pfd.as_ref().ok_or(binder::StatusCode::UNEXPECTED_NULL)?;
-        subparcel.write(__field_ref)?;
-        subparcel.write(&self.nullable_pfd)?;
-        subparcel.write(&self.pfd_array)?;
-        subparcel.write(&self.nullable_pfd_array)?;
-        subparcel.write(&self.pfd_list)?;
-        subparcel.write(&self.nullable_pfd_list)?;
-        subparcel.write(&self.parcel)?;
-        subparcel.write(&self.nullable_parcel)?;
-        subparcel.write(&self.parcel_array)?;
-        subparcel.write(&self.nullable_parcel_array)?;
-        subparcel.write(&self.parcel_list)?;
-        subparcel.write(&self.nullable_parcel_list)?;
-        Ok(())
-      })
-    }
-    fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
-      parcel.sized_read(|subparcel| {
-        if subparcel.has_more_data() {
-          self.binder = Some(subparcel.read()?);
-        }
-        if subparcel.has_more_data() {
-          self.nullable_binder = subparcel.read()?;
-        }
-        if subparcel.has_more_data() {
-          self.binder_array = subparcel.read()?;
-        }
-        if subparcel.has_more_data() {
-          self.nullable_binder_array = subparcel.read()?;
-        }
-        if subparcel.has_more_data() {
-          self.binder_list = subparcel.read()?;
-        }
-        if subparcel.has_more_data() {
-          self.nullable_binder_list = subparcel.read()?;
-        }
-        if subparcel.has_more_data() {
-          self.pfd = Some(subparcel.read()?);
-        }
-        if subparcel.has_more_data() {
-          self.nullable_pfd = subparcel.read()?;
-        }
-        if subparcel.has_more_data() {
-          self.pfd_array = subparcel.read()?;
-        }
-        if subparcel.has_more_data() {
-          self.nullable_pfd_array = subparcel.read()?;
-        }
-        if subparcel.has_more_data() {
-          self.pfd_list = subparcel.read()?;
-        }
-        if subparcel.has_more_data() {
-          self.nullable_pfd_list = subparcel.read()?;
-        }
-        if subparcel.has_more_data() {
-          self.parcel = subparcel.read()?;
-        }
-        if subparcel.has_more_data() {
-          self.nullable_parcel = subparcel.read()?;
-        }
-        if subparcel.has_more_data() {
-          self.parcel_array = subparcel.read()?;
-        }
-        if subparcel.has_more_data() {
-          self.nullable_parcel_array = subparcel.read()?;
-        }
-        if subparcel.has_more_data() {
-          self.parcel_list = subparcel.read()?;
-        }
-        if subparcel.has_more_data() {
-          self.nullable_parcel_list = subparcel.read()?;
-        }
-        Ok(())
-      })
-    }
-  }
-  binder::impl_serialize_for_parcelable!(CompilerChecks);
-  binder::impl_deserialize_for_parcelable!(CompilerChecks);
-  impl binder::parcel::ParcelableMetadata for CompilerChecks {
-    fn get_descriptor() -> &'static str { "android.aidl.tests.ITestService.CompilerChecks" }
-  }
-}
-pub(crate) mod mangled {
- pub use super::ITestService as _7_android_4_aidl_5_tests_12_ITestService;
- pub use super::Empty::Empty as _7_android_4_aidl_5_tests_12_ITestService_5_Empty;
- pub use super::CompilerChecks::CompilerChecks as _7_android_4_aidl_5_tests_12_ITestService_14_CompilerChecks;
 }
