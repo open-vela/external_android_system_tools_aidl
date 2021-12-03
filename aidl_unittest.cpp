@@ -1298,7 +1298,7 @@ TEST_F(AidlTest, AidlConstantValue_EvaluatedValue) {
   using Ptr = unique_ptr<AidlConstantValue>;
   const AidlLocation& loc = AIDL_LOCATION_HERE;
 
-  EXPECT_EQ('c', Ptr(AidlConstantValue::Character(loc, "'c'"))->EvaluatedValue<char16_t>());
+  EXPECT_EQ('c', Ptr(AidlConstantValue::Character(loc, 'c'))->EvaluatedValue<char>());
   EXPECT_EQ("abc", Ptr(AidlConstantValue::String(loc, "\"abc\""))->EvaluatedValue<string>());
   EXPECT_FLOAT_EQ(1.0f, Ptr(AidlConstantValue::Floating(loc, "1.0f"))->EvaluatedValue<float>());
   EXPECT_EQ(true, Ptr(AidlConstantValue::Boolean(loc, true))->EvaluatedValue<bool>());
@@ -1314,14 +1314,6 @@ TEST_F(AidlTest, AidlConstantValue_EvaluatedValue) {
   EXPECT_EQ(
       expected,
       Ptr(AidlConstantValue::Array(loc, std::move(values)))->EvaluatedValue<vector<string>>());
-}
-
-TEST_F(AidlTest, AidlConstantCharacterDefault) {
-  auto char_type = typenames_.MakeResolvedType(AIDL_LOCATION_HERE, "char", false);
-  auto default_value = unique_ptr<AidlConstantValue>(AidlConstantValue::Default(*char_type));
-  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, cpp::ConstantValueDecorator));
-  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, ndk::ConstantValueDecorator));
-  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, java::ConstantValueDecorator));
 }
 
 TEST_P(AidlTest, FailOnManyDefinedTypes) {
@@ -3800,6 +3792,29 @@ TEST_F(AidlTest, FailOnPartiallyAssignedIds) {
   CaptureStderr();
   EXPECT_FALSE(compile_aidl(options, io_delegate_));
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
+}
+
+TEST_F(AidlTest, AssignedIds) {
+  CaptureStderr();
+  EXPECT_NE(nullptr, Parse("IFoo.aidl",
+                           "interface IFoo {\n"
+                           "  void foo();\n"
+                           "  void bar();\n"
+                           "  interface INested {\n"
+                           "    void foo();\n"
+                           "    void bar();\n"
+                           "  }\n"
+                           "}",
+                           typenames_, Options::Language::JAVA));
+  EXPECT_EQ("", GetCapturedStderr());
+  auto foo = typenames_.ResolveTypename("IFoo").defined_type;
+  ASSERT_EQ(2u, foo->GetMethods().size());
+  EXPECT_EQ(0, foo->GetMethods()[0]->GetId());
+  EXPECT_EQ(1, foo->GetMethods()[1]->GetId());
+  auto nested = typenames_.ResolveTypename("IFoo.INested").defined_type;
+  ASSERT_EQ(2u, nested->GetMethods().size());
+  EXPECT_EQ(0, nested->GetMethods()[0]->GetId());
+  EXPECT_EQ(1, nested->GetMethods()[1]->GetId());
 }
 
 TEST_F(AidlTest, AllowDuplicatedImportPaths) {
