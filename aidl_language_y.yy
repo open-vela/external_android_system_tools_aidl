@@ -96,6 +96,7 @@ AidlLocation loc(const yy::parser::location_type& l) {
     std::vector<std::unique_ptr<AidlDefinedType>>* declarations;
 }
 
+%destructor { } <character>
 %destructor { } <direction>
 %destructor { delete ($$); } <*>
 
@@ -111,7 +112,7 @@ AidlLocation loc(const yy::parser::location_type& l) {
 %token<token> UNION "union"
 %token<token> CONST "const"
 
-%token<token> CHARVALUE "char literal"
+%token<character> CHARVALUE "char literal"
 %token<token> FLOATVALUE "float literal"
 %token<token> HEXVALUE "hex literal"
 %token<token> INTVALUE "int literal"
@@ -394,10 +395,7 @@ interface_members
 const_expr
  : TRUE_LITERAL { $$ = AidlConstantValue::Boolean(loc(@1), true); }
  | FALSE_LITERAL { $$ = AidlConstantValue::Boolean(loc(@1), false); }
- | CHARVALUE {
-    $$ = AidlConstantValue::Character(loc(@1), $1->GetText());
-    delete $1;
-  }
+ | CHARVALUE { $$ = AidlConstantValue::Character(loc(@1), $1); }
  | INTVALUE {
     $$ = AidlConstantValue::Integral(loc(@1), $1->GetText());
     if ($$ == nullptr) {
