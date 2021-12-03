@@ -1,11 +1,8 @@
 #include <android/aidl/loggable/Data.h>
 
 namespace android {
-
 namespace aidl {
-
 namespace loggable {
-
 ::android::status_t Data::readFromParcel(const ::android::Parcel* _aidl_parcel) {
   ::android::status_t _aidl_ret_status = ::android::OK;
   [[maybe_unused]] size_t _aidl_start_pos = _aidl_parcel->dataPosition();
@@ -48,7 +45,6 @@ namespace loggable {
   _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
   return _aidl_ret_status;
 }
-
 ::android::status_t Data::writeToParcel(::android::Parcel* _aidl_parcel) const {
   ::android::status_t _aidl_ret_status = ::android::OK;
   auto _aidl_start_pos = _aidl_parcel->dataPosition();
@@ -75,9 +71,6 @@ namespace loggable {
   _aidl_parcel->setDataPosition(_aidl_end_pos);
   return _aidl_ret_status;
 }
-
 }  // namespace loggable
-
 }  // namespace aidl
-
 }  // namespace android
