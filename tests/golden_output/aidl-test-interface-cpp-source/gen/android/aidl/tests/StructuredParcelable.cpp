@@ -1,8 +1,11 @@
 #include <android/aidl/tests/StructuredParcelable.h>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
+
 ::android::status_t StructuredParcelable::readFromParcel(const ::android::Parcel* _aidl_parcel) {
   ::android::status_t _aidl_ret_status = ::android::OK;
   [[maybe_unused]] size_t _aidl_start_pos = _aidl_parcel->dataPosition();
@@ -278,14 +281,6 @@ namespace tests {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = _aidl_parcel->readByteVector(&int8_1);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
   _aidl_ret_status = _aidl_parcel->readInt32Vector(&int32_1);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -445,6 +440,7 @@ namespace tests {
   _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
   return _aidl_ret_status;
 }
+
 ::android::status_t StructuredParcelable::writeToParcel(::android::Parcel* _aidl_parcel) const {
   ::android::status_t _aidl_ret_status = ::android::OK;
   auto _aidl_start_pos = _aidl_parcel->dataPosition();
@@ -581,10 +577,6 @@ namespace tests {
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
-  _aidl_ret_status = _aidl_parcel->writeByteVector(int8_1);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
   _aidl_ret_status = _aidl_parcel->writeInt32Vector(int32_1);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -671,6 +663,9 @@ namespace tests {
   _aidl_parcel->setDataPosition(_aidl_end_pos);
   return _aidl_ret_status;
 }
+
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android
