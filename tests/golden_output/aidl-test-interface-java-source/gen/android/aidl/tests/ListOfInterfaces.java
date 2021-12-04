@@ -193,6 +193,7 @@ public class ListOfInterfaces implements android.os.Parcelable
             _arg6 = new java.util.ArrayList<android.aidl.tests.ListOfInterfaces.IEmptyInterface>();
             java.util.List<android.aidl.tests.ListOfInterfaces.IEmptyInterface> _arg7;
             _arg7 = data.createInterfaceArrayList(android.aidl.tests.ListOfInterfaces.IEmptyInterface.Stub::asInterface);
+            data.enforceNoDataAvail();
             java.util.List<android.aidl.tests.ListOfInterfaces.IEmptyInterface> _result = this.methodWithInterfaces(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7);
             reply.writeNoException();
             reply.writeInterfaceList(_result);

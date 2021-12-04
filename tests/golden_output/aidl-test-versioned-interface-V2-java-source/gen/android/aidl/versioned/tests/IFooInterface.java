@@ -111,6 +111,7 @@ public interface IFooInterface extends android.os.IInterface
         {
           android.aidl.versioned.tests.BazUnion _arg0;
           _arg0 = data.readTypedObject(android.aidl.versioned.tests.BazUnion.CREATOR);
+          data.enforceNoDataAvail();
           java.lang.String _result = this.acceptUnionAndReturnString(_arg0);
           reply.writeNoException();
           reply.writeString(_result);
@@ -126,6 +127,7 @@ public interface IFooInterface extends android.os.IInterface
           _arg2 = new android.aidl.versioned.tests.Foo();
           int _arg3;
           _arg3 = data.readInt();
+          data.enforceNoDataAvail();
           int _result = this.ignoreParcelablesAndRepeatInt(_arg0, _arg1, _arg2, _arg3);
           reply.writeNoException();
           reply.writeInt(_result);
@@ -137,6 +139,7 @@ public interface IFooInterface extends android.os.IInterface
         {
           android.aidl.versioned.tests.Foo[] _arg0;
           _arg0 = data.createTypedArray(android.aidl.versioned.tests.Foo.CREATOR);
+          data.enforceNoDataAvail();
           int _result = this.returnsLengthOfFooArray(_arg0);
           reply.writeNoException();
           reply.writeInt(_result);
