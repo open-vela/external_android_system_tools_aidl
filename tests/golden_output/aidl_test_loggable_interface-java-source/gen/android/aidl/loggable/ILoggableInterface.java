@@ -105,6 +105,7 @@ public interface ILoggableInterface extends android.os.IInterface
             _arg19 = data.readTypedObject(android.os.ParcelFileDescriptor.CREATOR);
             android.os.ParcelFileDescriptor[] _arg20;
             _arg20 = data.createTypedArray(android.os.ParcelFileDescriptor.CREATOR);
+            data.enforceNoDataAvail();
             java.lang.String[] _result = this.LogThis(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7, _arg8, _arg9, _arg10, _arg11, _arg12, _arg13, _arg14, _arg15, _arg16, _arg17, _arg18, _arg19, _arg20);
             reply.writeNoException();
             reply.writeStringArray(_result);
@@ -267,6 +268,7 @@ public interface ILoggableInterface extends android.os.IInterface
               android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::ISub::Log::server");
               int _arg0;
               _arg0 = data.readInt();
+              data.enforceNoDataAvail();
               this.Log(_arg0);
               reply.writeNoException();
             }
