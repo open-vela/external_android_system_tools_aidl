@@ -337,6 +337,7 @@ public interface ITestService extends android.os.IInterface
         {
           int _arg0;
           _arg0 = data.readInt();
+          data.enforceNoDataAvail();
           int _result = this.UnimplementedMethod(_arg0);
           reply.writeNoException();
           reply.writeInt(_result);
@@ -357,6 +358,7 @@ public interface ITestService extends android.os.IInterface
         {
           boolean _arg0;
           _arg0 = data.readBoolean();
+          data.enforceNoDataAvail();
           boolean _result = this.RepeatBoolean(_arg0);
           reply.writeNoException();
           reply.writeBoolean(_result);
@@ -366,6 +368,7 @@ public interface ITestService extends android.os.IInterface
         {
           byte _arg0;
           _arg0 = data.readByte();
+          data.enforceNoDataAvail();
           byte _result = this.RepeatByte(_arg0);
           reply.writeNoException();
           reply.writeByte(_result);
@@ -375,6 +378,7 @@ public interface ITestService extends android.os.IInterface
         {
           char _arg0;
           _arg0 = (char)data.readInt();
+          data.enforceNoDataAvail();
           char _result = this.RepeatChar(_arg0);
           reply.writeNoException();
           reply.writeInt(((int)_result));
@@ -384,6 +388,7 @@ public interface ITestService extends android.os.IInterface
         {
           int _arg0;
           _arg0 = data.readInt();
+          data.enforceNoDataAvail();
           int _result = this.RepeatInt(_arg0);
           reply.writeNoException();
           reply.writeInt(_result);
@@ -393,6 +398,7 @@ public interface ITestService extends android.os.IInterface
         {
           long _arg0;
           _arg0 = data.readLong();
+          data.enforceNoDataAvail();
           long _result = this.RepeatLong(_arg0);
           reply.writeNoException();
           reply.writeLong(_result);
@@ -402,6 +408,7 @@ public interface ITestService extends android.os.IInterface
         {
           float _arg0;
           _arg0 = data.readFloat();
+          data.enforceNoDataAvail();
           float _result = this.RepeatFloat(_arg0);
           reply.writeNoException();
           reply.writeFloat(_result);
@@ -411,6 +418,7 @@ public interface ITestService extends android.os.IInterface
         {
           double _arg0;
           _arg0 = data.readDouble();
+          data.enforceNoDataAvail();
           double _result = this.RepeatDouble(_arg0);
           reply.writeNoException();
           reply.writeDouble(_result);
@@ -420,6 +428,7 @@ public interface ITestService extends android.os.IInterface
         {
           java.lang.String _arg0;
           _arg0 = data.readString();
+          data.enforceNoDataAvail();
           java.lang.String _result = this.RepeatString(_arg0);
           reply.writeNoException();
           reply.writeString(_result);
@@ -429,6 +438,7 @@ public interface ITestService extends android.os.IInterface
         {
           byte _arg0;
           _arg0 = data.readByte();
+          data.enforceNoDataAvail();
           byte _result = this.RepeatByteEnum(_arg0);
           reply.writeNoException();
           reply.writeByte(_result);
@@ -438,6 +448,7 @@ public interface ITestService extends android.os.IInterface
         {
           int _arg0;
           _arg0 = data.readInt();
+          data.enforceNoDataAvail();
           int _result = this.RepeatIntEnum(_arg0);
           reply.writeNoException();
           reply.writeInt(_result);
@@ -447,6 +458,7 @@ public interface ITestService extends android.os.IInterface
         {
           long _arg0;
           _arg0 = data.readLong();
+          data.enforceNoDataAvail();
           long _result = this.RepeatLongEnum(_arg0);
           reply.writeNoException();
           reply.writeLong(_result);
@@ -464,6 +476,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new boolean[_arg1_length];
           }
+          data.enforceNoDataAvail();
           boolean[] _result = this.ReverseBoolean(_arg0, _arg1);
           reply.writeNoException();
           reply.writeBooleanArray(_result);
@@ -482,6 +495,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new byte[_arg1_length];
           }
+          data.enforceNoDataAvail();
           byte[] _result = this.ReverseByte(_arg0, _arg1);
           reply.writeNoException();
           reply.writeByteArray(_result);
@@ -500,6 +514,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new char[_arg1_length];
           }
+          data.enforceNoDataAvail();
           char[] _result = this.ReverseChar(_arg0, _arg1);
           reply.writeNoException();
           reply.writeCharArray(_result);
@@ -518,6 +533,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new int[_arg1_length];
           }
+          data.enforceNoDataAvail();
           int[] _result = this.ReverseInt(_arg0, _arg1);
           reply.writeNoException();
           reply.writeIntArray(_result);
@@ -536,6 +552,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new long[_arg1_length];
           }
+          data.enforceNoDataAvail();
           long[] _result = this.ReverseLong(_arg0, _arg1);
           reply.writeNoException();
           reply.writeLongArray(_result);
@@ -554,6 +571,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new float[_arg1_length];
           }
+          data.enforceNoDataAvail();
           float[] _result = this.ReverseFloat(_arg0, _arg1);
           reply.writeNoException();
           reply.writeFloatArray(_result);
@@ -572,6 +590,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new double[_arg1_length];
           }
+          data.enforceNoDataAvail();
           double[] _result = this.ReverseDouble(_arg0, _arg1);
           reply.writeNoException();
           reply.writeDoubleArray(_result);
@@ -590,6 +609,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new java.lang.String[_arg1_length];
           }
+          data.enforceNoDataAvail();
           java.lang.String[] _result = this.ReverseString(_arg0, _arg1);
           reply.writeNoException();
           reply.writeStringArray(_result);
@@ -608,6 +628,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new byte[_arg1_length];
           }
+          data.enforceNoDataAvail();
           byte[] _result = this.ReverseByteEnum(_arg0, _arg1);
           reply.writeNoException();
           reply.writeByteArray(_result);
@@ -626,6 +647,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new int[_arg1_length];
           }
+          data.enforceNoDataAvail();
           int[] _result = this.ReverseIntEnum(_arg0, _arg1);
           reply.writeNoException();
           reply.writeIntArray(_result);
@@ -644,6 +666,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new long[_arg1_length];
           }
+          data.enforceNoDataAvail();
           long[] _result = this.ReverseLongEnum(_arg0, _arg1);
           reply.writeNoException();
           reply.writeLongArray(_result);
@@ -654,6 +677,7 @@ public interface ITestService extends android.os.IInterface
         {
           java.lang.String _arg0;
           _arg0 = data.readString();
+          data.enforceNoDataAvail();
           android.aidl.tests.INamedCallback _result = this.GetOtherTestService(_arg0);
           reply.writeNoException();
           reply.writeStrongInterface(_result);
@@ -665,6 +689,7 @@ public interface ITestService extends android.os.IInterface
           _arg0 = android.aidl.tests.INamedCallback.Stub.asInterface(data.readStrongBinder());
           java.lang.String _arg1;
           _arg1 = data.readString();
+          data.enforceNoDataAvail();
           boolean _result = this.VerifyName(_arg0, _arg1);
           reply.writeNoException();
           reply.writeBoolean(_result);
@@ -674,6 +699,7 @@ public interface ITestService extends android.os.IInterface
         {
           java.lang.String[] _arg0;
           _arg0 = data.createStringArray();
+          data.enforceNoDataAvail();
           android.aidl.tests.INamedCallback[] _result = this.GetInterfaceArray(_arg0);
           reply.writeNoException();
           reply.writeInterfaceArray(_result);
@@ -685,6 +711,7 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createInterfaceArray(android.aidl.tests.INamedCallback[]::new, android.aidl.tests.INamedCallback.Stub::asInterface);
           java.lang.String[] _arg1;
           _arg1 = data.createStringArray();
+          data.enforceNoDataAvail();
           boolean _result = this.VerifyNamesWithInterfaceArray(_arg0, _arg1);
           reply.writeNoException();
           reply.writeBoolean(_result);
@@ -694,6 +721,7 @@ public interface ITestService extends android.os.IInterface
         {
           java.lang.String[] _arg0;
           _arg0 = data.createStringArray();
+          data.enforceNoDataAvail();
           android.aidl.tests.INamedCallback[] _result = this.GetNullableInterfaceArray(_arg0);
           reply.writeNoException();
           reply.writeInterfaceArray(_result);
@@ -705,6 +733,7 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createInterfaceArray(android.aidl.tests.INamedCallback[]::new, android.aidl.tests.INamedCallback.Stub::asInterface);
           java.lang.String[] _arg1;
           _arg1 = data.createStringArray();
+          data.enforceNoDataAvail();
           boolean _result = this.VerifyNamesWithNullableInterfaceArray(_arg0, _arg1);
           reply.writeNoException();
           reply.writeBoolean(_result);
@@ -714,6 +743,7 @@ public interface ITestService extends android.os.IInterface
         {
           java.lang.String[] _arg0;
           _arg0 = data.createStringArray();
+          data.enforceNoDataAvail();
           java.util.List<android.aidl.tests.INamedCallback> _result = this.GetInterfaceList(_arg0);
           reply.writeNoException();
           reply.writeInterfaceList(_result);
@@ -725,6 +755,7 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createInterfaceArrayList(android.aidl.tests.INamedCallback.Stub::asInterface);
           java.lang.String[] _arg1;
           _arg1 = data.createStringArray();
+          data.enforceNoDataAvail();
           boolean _result = this.VerifyNamesWithInterfaceList(_arg0, _arg1);
           reply.writeNoException();
           reply.writeBoolean(_result);
@@ -736,6 +767,7 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createStringArrayList();
           java.util.List<java.lang.String> _arg1;
           _arg1 = new java.util.ArrayList<java.lang.String>();
+          data.enforceNoDataAvail();
           java.util.List<java.lang.String> _result = this.ReverseStringList(_arg0, _arg1);
           reply.writeNoException();
           reply.writeStringList(_result);
@@ -746,6 +778,7 @@ public interface ITestService extends android.os.IInterface
         {
           android.os.ParcelFileDescriptor _arg0;
           _arg0 = data.readTypedObject(android.os.ParcelFileDescriptor.CREATOR);
+          data.enforceNoDataAvail();
           android.os.ParcelFileDescriptor _result = this.RepeatParcelFileDescriptor(_arg0);
           reply.writeNoException();
           reply.writeTypedObject(_result, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
@@ -763,6 +796,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new android.os.ParcelFileDescriptor[_arg1_length];
           }
+          data.enforceNoDataAvail();
           android.os.ParcelFileDescriptor[] _result = this.ReverseParcelFileDescriptorArray(_arg0, _arg1);
           reply.writeNoException();
           reply.writeTypedArray(_result, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
@@ -773,6 +807,7 @@ public interface ITestService extends android.os.IInterface
         {
           int _arg0;
           _arg0 = data.readInt();
+          data.enforceNoDataAvail();
           this.ThrowServiceException(_arg0);
           reply.writeNoException();
           break;
@@ -781,6 +816,7 @@ public interface ITestService extends android.os.IInterface
         {
           int[] _arg0;
           _arg0 = data.createIntArray();
+          data.enforceNoDataAvail();
           int[] _result = this.RepeatNullableIntArray(_arg0);
           reply.writeNoException();
           reply.writeIntArray(_result);
@@ -790,6 +826,7 @@ public interface ITestService extends android.os.IInterface
         {
           byte[] _arg0;
           _arg0 = data.createByteArray();
+          data.enforceNoDataAvail();
           byte[] _result = this.RepeatNullableByteEnumArray(_arg0);
           reply.writeNoException();
           reply.writeByteArray(_result);
@@ -799,6 +836,7 @@ public interface ITestService extends android.os.IInterface
         {
           int[] _arg0;
           _arg0 = data.createIntArray();
+          data.enforceNoDataAvail();
           int[] _result = this.RepeatNullableIntEnumArray(_arg0);
           reply.writeNoException();
           reply.writeIntArray(_result);
@@ -808,6 +846,7 @@ public interface ITestService extends android.os.IInterface
         {
           long[] _arg0;
           _arg0 = data.createLongArray();
+          data.enforceNoDataAvail();
           long[] _result = this.RepeatNullableLongEnumArray(_arg0);
           reply.writeNoException();
           reply.writeLongArray(_result);
@@ -817,6 +856,7 @@ public interface ITestService extends android.os.IInterface
         {
           java.lang.String _arg0;
           _arg0 = data.readString();
+          data.enforceNoDataAvail();
           java.lang.String _result = this.RepeatNullableString(_arg0);
           reply.writeNoException();
           reply.writeString(_result);
@@ -826,6 +866,7 @@ public interface ITestService extends android.os.IInterface
         {
           java.util.List<java.lang.String> _arg0;
           _arg0 = data.createStringArrayList();
+          data.enforceNoDataAvail();
           java.util.List<java.lang.String> _result = this.RepeatNullableStringList(_arg0);
           reply.writeNoException();
           reply.writeStringList(_result);
@@ -835,6 +876,7 @@ public interface ITestService extends android.os.IInterface
         {
           android.aidl.tests.ITestService.Empty _arg0;
           _arg0 = data.readTypedObject(android.aidl.tests.ITestService.Empty.CREATOR);
+          data.enforceNoDataAvail();
           android.aidl.tests.ITestService.Empty _result = this.RepeatNullableParcelable(_arg0);
           reply.writeNoException();
           reply.writeTypedObject(_result, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
@@ -844,6 +886,7 @@ public interface ITestService extends android.os.IInterface
         {
           android.aidl.tests.ITestService.Empty[] _arg0;
           _arg0 = data.createTypedArray(android.aidl.tests.ITestService.Empty.CREATOR);
+          data.enforceNoDataAvail();
           android.aidl.tests.ITestService.Empty[] _result = this.RepeatNullableParcelableArray(_arg0);
           reply.writeNoException();
           reply.writeTypedArray(_result, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
@@ -853,6 +896,7 @@ public interface ITestService extends android.os.IInterface
         {
           java.util.List<android.aidl.tests.ITestService.Empty> _arg0;
           _arg0 = data.createTypedArrayList(android.aidl.tests.ITestService.Empty.CREATOR);
+          data.enforceNoDataAvail();
           java.util.List<android.aidl.tests.ITestService.Empty> _result = this.RepeatNullableParcelableList(_arg0);
           reply.writeNoException();
           reply.writeTypedList(_result);
@@ -862,6 +906,7 @@ public interface ITestService extends android.os.IInterface
         {
           android.os.IBinder _arg0;
           _arg0 = data.readStrongBinder();
+          data.enforceNoDataAvail();
           this.TakesAnIBinder(_arg0);
           reply.writeNoException();
           break;
@@ -870,6 +915,7 @@ public interface ITestService extends android.os.IInterface
         {
           android.os.IBinder _arg0;
           _arg0 = data.readStrongBinder();
+          data.enforceNoDataAvail();
           this.TakesANullableIBinder(_arg0);
           reply.writeNoException();
           break;
@@ -878,6 +924,7 @@ public interface ITestService extends android.os.IInterface
         {
           java.util.List<android.os.IBinder> _arg0;
           _arg0 = data.createBinderArrayList();
+          data.enforceNoDataAvail();
           this.TakesAnIBinderList(_arg0);
           reply.writeNoException();
           break;
@@ -886,6 +933,7 @@ public interface ITestService extends android.os.IInterface
         {
           java.util.List<android.os.IBinder> _arg0;
           _arg0 = data.createBinderArrayList();
+          data.enforceNoDataAvail();
           this.TakesANullableIBinderList(_arg0);
           reply.writeNoException();
           break;
@@ -894,6 +942,7 @@ public interface ITestService extends android.os.IInterface
         {
           java.lang.String _arg0;
           _arg0 = data.readString();
+          data.enforceNoDataAvail();
           java.lang.String _result = this.RepeatUtf8CppString(_arg0);
           reply.writeNoException();
           reply.writeString(_result);
@@ -903,6 +952,7 @@ public interface ITestService extends android.os.IInterface
         {
           java.lang.String _arg0;
           _arg0 = data.readString();
+          data.enforceNoDataAvail();
           java.lang.String _result = this.RepeatNullableUtf8CppString(_arg0);
           reply.writeNoException();
           reply.writeString(_result);
@@ -920,6 +970,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new java.lang.String[_arg1_length];
           }
+          data.enforceNoDataAvail();
           java.lang.String[] _result = this.ReverseUtf8CppString(_arg0, _arg1);
           reply.writeNoException();
           reply.writeStringArray(_result);
@@ -938,6 +989,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new java.lang.String[_arg1_length];
           }
+          data.enforceNoDataAvail();
           java.lang.String[] _result = this.ReverseNullableUtf8CppString(_arg0, _arg1);
           reply.writeNoException();
           reply.writeStringArray(_result);
@@ -950,6 +1002,7 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createStringArrayList();
           java.util.List<java.lang.String> _arg1;
           _arg1 = new java.util.ArrayList<java.lang.String>();
+          data.enforceNoDataAvail();
           java.util.List<java.lang.String> _result = this.ReverseUtf8CppStringList(_arg0, _arg1);
           reply.writeNoException();
           reply.writeStringList(_result);
@@ -960,6 +1013,7 @@ public interface ITestService extends android.os.IInterface
         {
           boolean _arg0;
           _arg0 = data.readBoolean();
+          data.enforceNoDataAvail();
           android.aidl.tests.INamedCallback _result = this.GetCallback(_arg0);
           reply.writeNoException();
           reply.writeStrongInterface(_result);
@@ -969,6 +1023,7 @@ public interface ITestService extends android.os.IInterface
         {
           android.aidl.tests.StructuredParcelable _arg0;
           _arg0 = data.readTypedObject(android.aidl.tests.StructuredParcelable.CREATOR);
+          data.enforceNoDataAvail();
           this.FillOutStructuredParcelable(_arg0);
           reply.writeNoException();
           reply.writeTypedObject(_arg0, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
@@ -980,6 +1035,7 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.readTypedObject(android.aidl.tests.extension.ExtendableParcelable.CREATOR);
           android.aidl.tests.extension.ExtendableParcelable _arg1;
           _arg1 = new android.aidl.tests.extension.ExtendableParcelable();
+          data.enforceNoDataAvail();
           this.RepeatExtendableParcelable(_arg0, _arg1);
           reply.writeNoException();
           reply.writeTypedObject(_arg1, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
@@ -989,6 +1045,7 @@ public interface ITestService extends android.os.IInterface
         {
           android.aidl.tests.RecursiveList _arg0;
           _arg0 = data.readTypedObject(android.aidl.tests.RecursiveList.CREATOR);
+          data.enforceNoDataAvail();
           android.aidl.tests.RecursiveList _result = this.ReverseList(_arg0);
           reply.writeNoException();
           reply.writeTypedObject(_result, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
@@ -1006,6 +1063,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new android.os.IBinder[_arg1_length];
           }
+          data.enforceNoDataAvail();
           android.os.IBinder[] _result = this.ReverseIBinderArray(_arg0, _arg1);
           reply.writeNoException();
           reply.writeBinderArray(_result);
@@ -1024,6 +1082,7 @@ public interface ITestService extends android.os.IInterface
           else {
             _arg1 = new android.os.IBinder[_arg1_length];
           }
+          data.enforceNoDataAvail();
           android.os.IBinder[] _result = this.ReverseNullableIBinderArray(_arg0, _arg1);
           reply.writeNoException();
           reply.writeBinderArray(_result);
