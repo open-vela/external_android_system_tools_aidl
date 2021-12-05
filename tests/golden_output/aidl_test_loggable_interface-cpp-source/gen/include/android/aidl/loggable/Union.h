@@ -16,32 +16,10 @@
 #endif
 
 namespace android {
-
 namespace aidl {
-
 namespace loggable {
-
 class Union : public ::android::Parcelable {
 public:
-  inline bool operator!=(const Union& rhs) const {
-    return _value != rhs._value;
-  }
-  inline bool operator<(const Union& rhs) const {
-    return _value < rhs._value;
-  }
-  inline bool operator<=(const Union& rhs) const {
-    return _value <= rhs._value;
-  }
-  inline bool operator==(const Union& rhs) const {
-    return _value == rhs._value;
-  }
-  inline bool operator>(const Union& rhs) const {
-    return _value > rhs._value;
-  }
-  inline bool operator>=(const Union& rhs) const {
-    return _value >= rhs._value;
-  }
-
   enum Tag : int32_t {
     num = 0,  // int num;
     str,  // String str;
@@ -51,10 +29,6 @@ public:
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, Union>;
 
   Union() : _value(std::in_place_index<num>, int32_t(43)) { }
-  Union(const Union&) = default;
-  Union(Union&&) = default;
-  Union& operator=(const Union&) = default;
-  Union& operator=(Union&&) = default;
 
   template <typename _Tp, typename = std::enable_if_t<_not_self<_Tp>>>
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -96,6 +70,25 @@ public:
     _value.emplace<_tag>(std::forward<_Tp>(_args)...);
   }
 
+  inline bool operator!=(const Union& rhs) const {
+    return _value != rhs._value;
+  }
+  inline bool operator<(const Union& rhs) const {
+    return _value < rhs._value;
+  }
+  inline bool operator<=(const Union& rhs) const {
+    return _value <= rhs._value;
+  }
+  inline bool operator==(const Union& rhs) const {
+    return _value == rhs._value;
+  }
+  inline bool operator>(const Union& rhs) const {
+    return _value > rhs._value;
+  }
+  inline bool operator>=(const Union& rhs) const {
+    return _value >= rhs._value;
+  }
+
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
   static const ::android::String16& getParcelableDescriptor() {
@@ -115,9 +108,6 @@ public:
 private:
   std::variant<int32_t, ::std::string> _value;
 };  // class Union
-
 }  // namespace loggable
-
 }  // namespace aidl
-
 }  // namespace android

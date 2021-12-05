@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+#![rustfmt::skip]
 #![allow(non_upper_case_globals)]
 #![allow(non_snake_case)]
 #[allow(unused_imports)] use binder::IBinderInternal;
@@ -7,6 +9,7 @@ declare_binder_interface! {
     native: BnNewName(on_transact),
     proxy: BpNewName {
     },
+    async: INewNameAsync,
   }
 }
 pub trait INewName: binder::Interface + Send {
@@ -18,6 +21,10 @@ pub trait INewName: binder::Interface + Send {
   fn setDefaultImpl(d: INewNameDefaultRef) -> INewNameDefaultRef where Self: Sized {
     std::mem::replace(&mut *DEFAULT_IMPL.lock().unwrap(), d)
   }
+}
+pub trait INewNameAsync<P>: binder::Interface + Send {
+  fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.IOldName" }
+  fn RealName<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<String>>;
 }
 pub trait INewNameDefault: Send + Sync {
   fn RealName(&self) -> binder::public_api::Result<String> {
@@ -32,12 +39,12 @@ use lazy_static::lazy_static;
 lazy_static! {
   static ref DEFAULT_IMPL: std::sync::Mutex<INewNameDefaultRef> = std::sync::Mutex::new(None);
 }
-pub(crate) mod mangled { pub use super::INewName as _7_android_4_aidl_5_tests_8_INewName; }
-impl INewName for BpNewName {
-  fn RealName(&self) -> binder::public_api::Result<String> {
-    let _aidl_reply = self.binder.transact(transactions::RealName, binder::FLAG_PRIVATE_LOCAL, |_aidl_data| {
-      Ok(())
-    });
+impl BpNewName {
+  fn build_parcel_RealName(&self) -> binder::public_api::Result<binder::Parcel> {
+    let mut aidl_data = self.binder.prepare_transact()?;
+    Ok(aidl_data)
+  }
+  fn read_response_RealName(&self, _aidl_reply: binder::Result<binder::Parcel>) -> binder::public_api::Result<String> {
     if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
       if let Some(_aidl_default_impl) = <Self as INewName>::getDefaultImpl() {
         return _aidl_default_impl.RealName();
@@ -50,10 +57,32 @@ impl INewName for BpNewName {
     Ok(_aidl_return)
   }
 }
+impl INewName for BpNewName {
+  fn RealName(&self) -> binder::public_api::Result<String> {
+    let _aidl_data = self.build_parcel_RealName()?;
+    let _aidl_reply = self.binder.submit_transact(transactions::RealName, _aidl_data, binder::FLAG_PRIVATE_LOCAL);
+    self.read_response_RealName(_aidl_reply)
+  }
+}
+impl<P: binder::BinderAsyncPool> INewNameAsync<P> for BpNewName {
+  fn RealName<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<String>> {
+    let _aidl_data = match self.build_parcel_RealName() {
+      Ok(_aidl_data) => _aidl_data,
+      Err(err) => return Box::pin(std::future::ready(Err(err))),
+    };
+    let binder = self.binder.clone();
+    P::spawn(
+      move || binder.submit_transact(transactions::RealName, _aidl_data, binder::FLAG_PRIVATE_LOCAL),
+      move |_aidl_reply| async move {
+        self.read_response_RealName(_aidl_reply)
+      }
+    )
+  }
+}
 impl INewName for binder::Binder<BnNewName> {
   fn RealName(&self) -> binder::public_api::Result<String> { self.0.RealName() }
 }
-fn on_transact(_aidl_service: &dyn INewName, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::Parcel, _aidl_reply: &mut binder::parcel::Parcel) -> binder::Result<()> {
+fn on_transact(_aidl_service: &dyn INewName, _aidl_code: binder::TransactionCode, _aidl_data: &binder::parcel::BorrowedParcel<'_>, _aidl_reply: &mut binder::parcel::BorrowedParcel<'_>) -> binder::Result<()> {
   match _aidl_code {
     transactions::RealName => {
       let _aidl_return = _aidl_service.RealName();
@@ -68,4 +97,7 @@ fn on_transact(_aidl_service: &dyn INewName, _aidl_code: binder::TransactionCode
     }
     _ => Err(binder::StatusCode::UNKNOWN_TRANSACTION)
   }
+}
+pub(crate) mod mangled {
+ pub use super::INewName as _7_android_4_aidl_5_tests_8_INewName;
 }
