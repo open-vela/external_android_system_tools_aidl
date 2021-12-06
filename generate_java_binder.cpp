@@ -16,12 +16,10 @@
 
 #include "aidl.h"
 #include "aidl_to_java.h"
-#include "aidl_typenames.h"
 #include "ast_java.h"
 #include "generate_java.h"
 #include "logging.h"
 #include "options.h"
-#include "parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,8 +49,8 @@ class VariableFactory {
   using Variable = ::android::aidl::java::Variable;
 
   explicit VariableFactory(const std::string& base) : base_(base), index_(0) {}
-  std::shared_ptr<Variable> Get(const AidlTypeSpecifier& type) {
-    auto v = std::make_shared<Variable>(JavaSignatureOf(type),
+  std::shared_ptr<Variable> Get(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
+    auto v = std::make_shared<Variable>(JavaSignatureOf(type, typenames),
                                         StringPrintf("%s%d", base_.c_str(), index_));
     vars_.push_back(v);
     index_++;
@@ -96,12 +94,12 @@ class StubClass : public Class {
   size_t all_method_count;
 
   // Finish generation. This will add a default case to the switch.
-  void Finish();
+  void finish();
 
-  std::shared_ptr<Expression> GetTransactDescriptor(const AidlMethod* method);
+  std::shared_ptr<Expression> get_transact_descriptor(const AidlMethod* method);
 
  private:
-  void MakeAsInterface(const AidlInterface* interfaceType);
+  void make_as_interface(const AidlInterface* interfaceType);
 
   std::shared_ptr<Variable> transact_descriptor;
   const Options& options_;
@@ -140,7 +138,7 @@ StubClass::StubClass(const AidlInterface* interfaceType, const Options& options)
   this->elements.push_back(ctor);
 
   // asInterface
-  MakeAsInterface(interfaceType);
+  make_as_interface(interfaceType);
 
   // asBinder
   auto asBinder = std::make_shared<Method>();
@@ -201,7 +199,7 @@ StubClass::StubClass(const AidlInterface* interfaceType, const Options& options)
   this->transact_switch_user = std::make_shared<SwitchStatement>(this->transact_code);
 }
 
-void StubClass::Finish() {
+void StubClass::finish() {
   auto default_case = std::make_shared<Case>();
 
   auto superCall = std::make_shared<MethodCall>(
@@ -209,22 +207,7 @@ void StubClass::Finish() {
       std::vector<std::shared_ptr<Expression>>{this->transact_code, this->transact_data,
                                                this->transact_reply, this->transact_flags});
   default_case->statements->Add(std::make_shared<ReturnStatement>(superCall));
-
-  auto case_count = transact_switch_user->cases.size();
   transact_switch_user->cases.push_back(default_case);
-
-  // Interface token validation is done for user-defined transactions.
-  if (case_count > 0) {
-    auto ifStatement = std::make_shared<IfStatement>();
-    ifStatement->expression = std::make_shared<LiteralExpression>(
-        "code >= android.os.IBinder.FIRST_CALL_TRANSACTION && "
-        "code <= android.os.IBinder.LAST_CALL_TRANSACTION");
-    ifStatement->statements = std::make_shared<StatementBlock>();
-    ifStatement->statements->Add(std::make_shared<MethodCall>(
-        this->transact_data, "enforceInterface",
-        std::vector<std::shared_ptr<Expression>>{this->GetTransactDescriptor(nullptr)}));
-    transact_statements->Add(ifStatement);
-  }
 
   // Meta transactions are looked up prior to user-defined transactions.
   transact_statements->Add(this->transact_switch_meta);
@@ -239,18 +222,12 @@ void StubClass::Finish() {
     code_switch_default_case->statements->Add(std::make_shared<ReturnStatement>(NULL_VALUE));
     this->code_to_method_name_switch->cases.push_back(code_switch_default_case);
   }
-
-  // There will be at least one statement for the default, but if we emit a
-  // return true after that default, it will be unreachable.
-  if (case_count > 0) {
-    transact_statements->Add(std::make_shared<ReturnStatement>(TRUE_VALUE));
-  }
 }
 
 // The the expression for the interface's descriptor to be used when
 // generating code for the given method. Null is acceptable for method
 // and stands for synthetic cases.
-std::shared_ptr<Expression> StubClass::GetTransactDescriptor(const AidlMethod* method) {
+std::shared_ptr<Expression> StubClass::get_transact_descriptor(const AidlMethod* method) {
   if (transact_outline) {
     if (method != nullptr) {
       // When outlining, each outlined method needs its own literal.
@@ -276,7 +253,7 @@ std::shared_ptr<Expression> StubClass::GetTransactDescriptor(const AidlMethod* m
   return transact_descriptor;
 }
 
-void StubClass::MakeAsInterface(const AidlInterface* interfaceType) {
+void StubClass::make_as_interface(const AidlInterface* interfaceType) {
   auto obj = std::make_shared<Variable>("android.os.IBinder", "obj");
 
   auto m = std::make_shared<Method>();
@@ -378,8 +355,9 @@ ProxyClass::ProxyClass(const AidlInterface* interfaceType, const Options& option
 ProxyClass::~ProxyClass() {}
 
 // =================================================
-static void GenerateNewArray(const AidlTypeSpecifier& type, std::shared_ptr<StatementBlock> addTo,
-                             std::shared_ptr<Variable> v, std::shared_ptr<Variable> parcel) {
+static void generate_new_array(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
+                               std::shared_ptr<StatementBlock> addTo, std::shared_ptr<Variable> v,
+                               std::shared_ptr<Variable> parcel) {
   auto len = std::make_shared<Variable>("int", v->name + "_length");
   addTo->Add(
       std::make_shared<VariableDeclaration>(len, std::make_shared<MethodCall>(parcel, "readInt")));
@@ -389,23 +367,22 @@ static void GenerateNewArray(const AidlTypeSpecifier& type, std::shared_ptr<Stat
   lencheck->statements->Add(std::make_shared<Assignment>(v, NULL_VALUE));
   lencheck->elseif = std::make_shared<IfStatement>();
   lencheck->elseif->statements->Add(std::make_shared<Assignment>(
-      v, std::make_shared<NewArrayExpression>(InstantiableJavaSignatureOf(type), len)));
+      v, std::make_shared<NewArrayExpression>(InstantiableJavaSignatureOf(type, typenames), len)));
   addTo->Add(lencheck);
 }
 
-static void GenerateWriteToParcel(std::shared_ptr<StatementBlock> addTo,
-                                  const AidlTypenames& typenames, const AidlTypeSpecifier& type,
-                                  const std::string& parcel, const std::string& var,
-                                  uint32_t min_sdk_version, bool is_return_value) {
+static void generate_write_to_parcel(const AidlTypeSpecifier& type,
+                                     std::shared_ptr<StatementBlock> addTo,
+                                     std::shared_ptr<Variable> v, std::shared_ptr<Variable> parcel,
+                                     bool is_return_value, const AidlTypenames& typenames) {
   string code;
   CodeWriterPtr writer = CodeWriter::ForString(&code);
   CodeGeneratorContext context{
       .writer = *(writer.get()),
       .typenames = typenames,
       .type = type,
-      .parcel = parcel,
-      .var = var,
-      .min_sdk_version = min_sdk_version,
+      .parcel = parcel->name,
+      .var = v->name,
       .is_return_value = is_return_value,
   };
   WriteToParcelFor(context);
@@ -413,7 +390,7 @@ static void GenerateWriteToParcel(std::shared_ptr<StatementBlock> addTo,
   addTo->Add(std::make_shared<LiteralStatement>(code));
 }
 
-void GenerateConstantDeclarations(CodeWriter& out, const AidlDefinedType& type) {
+void generate_constant_declarations(CodeWriter& out, const AidlDefinedType& type) {
   for (const auto& constant : type.GetConstantDeclarations()) {
     const AidlTypeSpecifier& type = constant->GetType();
     out << GenerateComments(*constant);
@@ -423,16 +400,17 @@ void GenerateConstantDeclarations(CodeWriter& out, const AidlDefinedType& type) 
   }
 }
 
-static std::shared_ptr<Method> GenerateInterfaceMethod(const AidlMethod& method) {
+static std::shared_ptr<Method> generate_interface_method(const AidlMethod& method,
+                                                         const AidlTypenames& typenames) {
   auto decl = std::make_shared<Method>();
   decl->comment = GenerateComments(method);
   decl->modifiers = PUBLIC;
-  decl->returnType = JavaSignatureOf(method.GetType());
+  decl->returnType = JavaSignatureOf(method.GetType(), typenames);
   decl->name = method.GetName();
   decl->annotations = JavaAnnotationsFor(method);
 
   for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
-    auto var = std::make_shared<Variable>(JavaSignatureOf(arg->GetType()), arg->GetName());
+    auto var = std::make_shared<Variable>(JavaSignatureOf(arg->GetType(), typenames), arg->GetName());
     var->annotations = JavaAnnotationsFor(arg->GetType());
     decl->parameters.push_back(var);
   }
@@ -442,147 +420,12 @@ static std::shared_ptr<Method> GenerateInterfaceMethod(const AidlMethod& method)
   return decl;
 }
 
-// Visitor for the permission declared in the @Enforce annotation.
-// The visitor pattern evaluates one node at a time, recursive evaluations should be dispatched
-// by creating a new instance of the visitor. Visit methods should use SetResult to return their
-// current value. For example:
-//
-//   Visit(const perm::Expression& permissionExpression) {
-//     std::shared_ptr<Expression> expr = Evaluate(permissionExpression.FirstChild());
-//     ...
-//     SetResult(TRUE_VALUE);
-//   }
-class PermissionVisitor : public perm::Visitor {
- public:
-  // Converts a permission expression (e.g., "permission = CALL_PHONE") into an equivalent Java
-  // expression (e.g., "(checkPermission("CALL_PHONE", ...) == GRANTED").
-  static std::shared_ptr<Expression> Evaluate(const AidlMethod& method,
-                                              const perm::Expression& expr) {
-    PermissionVisitor visitor(method);
-    expr.DispatchVisit(visitor);
-    return visitor.GetResult();
-  }
-
- private:
-  void Visit(const perm::AndQuantifier& quantifier) {
-    std::shared_ptr<Expression> result;
-    for (const auto& operand : quantifier.GetOperands()) {
-      auto expr = Evaluate(method_, *operand);
-      if (result) {
-        result = std::make_shared<Comparison>(result, "&&", expr);
-      } else {
-        result = expr;
-      }
-    }
-    SetResult(result);
-  }
-
-  void Visit(const perm::OrQuantifier& quantifier) {
-    std::shared_ptr<Expression> result;
-    for (const auto& operand : quantifier.GetOperands()) {
-      auto expr = Evaluate(method_, *operand);
-      if (result) {
-        result = std::make_shared<Comparison>(result, "||", expr);
-      } else {
-        result = expr;
-      }
-    }
-    SetResult(result);
-  }
-
-  void Visit(const perm::Predicate& p) {
-    switch (p.GetType()) {
-      case perm::Predicate::Type::kPermission: {
-        auto attributionSource =
-            std::string("new android.content.AttributionSource(getCallingUid(), null, null)");
-        for (size_t i = 0; i < method_.GetArguments().size(); i++) {
-          const auto& arg = method_.GetArguments()[i];
-          if (arg->GetType().GetName() == "android.content.AttributionSource") {
-            attributionSource = android::base::StringPrintf("_arg%zu", i);
-            break;
-          }
-        }
-        auto checkPermission = std::make_shared<MethodCall>(
-            THIS_VALUE, "permissionCheckerWrapper",
-            std::vector<std::shared_ptr<Expression>>{
-                std::make_shared<LiteralExpression>("android.Manifest.permission." + p.GetValue()),
-                std::make_shared<MethodCall>(THIS_VALUE, "getCallingPid"),
-                std::make_shared<LiteralExpression>(attributionSource)});
-        SetResult(checkPermission);
-        break;
-      }
-      case perm::Predicate::Type::kUid: {
-        auto uid = std::make_shared<LiteralExpression>("android.os.Process." + p.GetValue());
-        auto getCallingUid = std::make_shared<MethodCall>(THIS_VALUE, "getCallingUid");
-        SetResult(std::make_shared<Comparison>(getCallingUid, "==", uid));
-        break;
-      }
-      default: {
-        AIDL_FATAL(AIDL_LOCATION_HERE) << "Unsupported predicate: " << p.ToString();
-        break;
-      }
-    }
-  }
-
-  PermissionVisitor(const AidlMethod& method) : method_(method){};
-
-  std::shared_ptr<Expression> GetResult() { return result_; }
-  void SetResult(std::shared_ptr<Expression> expr) { result_ = expr; }
-  std::shared_ptr<Expression> result_;
-  const AidlMethod& method_;
-};
-
-static void GeneratePermissionWrapper(Class* stubClass) {
-  // TODO(b/208707422) avoid generating platform-specific API calls.
-  std::string permissionCheckerWrapperCode =
-      "private boolean permissionCheckerWrapper(\n"
-      "    String permission, int pid, android.content.AttributionSource attributionSource) {\n"
-      "  android.content.Context ctx =\n"
-      "      android.app.ActivityThread.currentActivityThread().getSystemContext();\n"
-      "  return (android.content.PermissionChecker.checkPermissionForDataDelivery(\n"
-      "          ctx, permission, pid, attributionSource, \"\" /*message*/) ==\n"
-      "      android.content.PermissionChecker.PERMISSION_GRANTED);\n"
-      "}\n";
-  auto permissionCheckerWrapper =
-      std::make_shared<LiteralClassElement>(permissionCheckerWrapperCode);
-  stubClass->elements.push_back(permissionCheckerWrapper);
-}
-
-static void GeneratePermissionChecks(const AidlInterface& iface, const AidlMethod& method,
-                                     std::shared_ptr<StatementBlock> addTo) {
-  std::unique_ptr<perm::Expression> combinedPermExpr;
-  auto ifacePermExpr = iface.EnforceExpression();
-  auto methodPermExpr = method.GetType().EnforceExpression();
-  if (ifacePermExpr) {
-    if (methodPermExpr) {
-      auto andPermExpr = std::make_unique<perm::AndQuantifier>();
-      andPermExpr->Append(std::move(ifacePermExpr));
-      andPermExpr->Append(std::move(methodPermExpr));
-      combinedPermExpr = std::move(andPermExpr);
-    } else {
-      combinedPermExpr = std::move(ifacePermExpr);
-    }
-  } else if (methodPermExpr) {
-    combinedPermExpr = std::move(methodPermExpr);
-  } else {
-    return;
-  }
-  auto ifstatement = std::make_shared<IfStatement>();
-  auto combinedExpr = PermissionVisitor::Evaluate(method, *combinedPermExpr.get());
-  ifstatement->expression = std::make_shared<Comparison>(combinedExpr, "!=", TRUE_VALUE);
-  ifstatement->statements = std::make_shared<StatementBlock>();
-  ifstatement->statements->Add(std::make_shared<LiteralStatement>(
-      android::base::StringPrintf("throw new SecurityException(\"Access denied, requires: %s\");\n",
-                                  combinedPermExpr->ToString().c_str())));
-  addTo->Add(ifstatement);
-}
-
-static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& method, bool oneway,
-                             std::shared_ptr<Variable> transact_data,
-                             std::shared_ptr<Variable> transact_reply,
-                             const AidlTypenames& typenames,
-                             std::shared_ptr<StatementBlock> statement_block,
-                             const Options& options) {
+static void generate_stub_code(const AidlInterface& iface, const AidlMethod& method, bool oneway,
+                               std::shared_ptr<Variable> transact_data,
+                               std::shared_ptr<Variable> transact_reply,
+                               const AidlTypenames& typenames,
+                               std::shared_ptr<StatementBlock> statement_block,
+                               std::shared_ptr<StubClass> stubClass, const Options& options) {
   // try and finally
   auto tryStatement = std::make_shared<TryStatement>();
   auto finallyStatement = std::make_shared<FinallyStatement>();
@@ -606,6 +449,11 @@ static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& metho
 
   auto realCall = std::make_shared<MethodCall>(THIS_VALUE, method.GetName());
 
+  // interface token validation is the very first thing we do
+  statements->Add(std::make_shared<MethodCall>(
+      transact_data, "enforceInterface",
+      std::vector<std::shared_ptr<Expression>>{stubClass->get_transact_descriptor(&method)}));
+
   // args
   VariableFactory stubArgs("_arg");
   {
@@ -613,7 +461,7 @@ static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& metho
     // at most once.
     bool is_classloader_created = false;
     for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
-      std::shared_ptr<Variable> v = stubArgs.Get(arg->GetType());
+      std::shared_ptr<Variable> v = stubArgs.Get(arg->GetType(), typenames);
 
       statements->Add(std::make_shared<VariableDeclaration>(v));
 
@@ -625,7 +473,6 @@ static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& metho
                                      .type = arg->GetType(),
                                      .parcel = transact_data->name,
                                      .var = v->name,
-                                     .min_sdk_version = options.GetMinSdkVersion(),
                                      .is_classloader_created = &is_classloader_created};
         CreateFromParcelFor(context);
         writer->Close();
@@ -633,22 +480,16 @@ static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& metho
       } else {
         if (!arg->GetType().IsArray()) {
           statements->Add(std::make_shared<Assignment>(
-              v, std::make_shared<NewExpression>(InstantiableJavaSignatureOf(arg->GetType()))));
+              v, std::make_shared<NewExpression>(
+                     InstantiableJavaSignatureOf(arg->GetType(), typenames))));
         } else {
-          GenerateNewArray(arg->GetType(), statements, v, transact_data);
+          generate_new_array(arg->GetType(), typenames, statements, v, transact_data);
         }
       }
 
       realCall->arguments.push_back(v);
     }
   }
-
-  // EOF check
-  if (!method.GetArguments().empty() && options.GetMinSdkVersion() >= 32u) {
-    statements->Add(std::make_shared<MethodCall>(transact_data, "enforceNoDataAvail"));
-  }
-
-  GeneratePermissionChecks(iface, method, statements);
 
   // the real call
   if (method.GetType().GetName() == "void") {
@@ -660,8 +501,9 @@ static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& metho
       statements->Add(ex);
     }
   } else {
-    auto _result = std::make_shared<Variable>(JavaSignatureOf(method.GetType()), "_result");
-    statements->Add(std::make_shared<VariableDeclaration>(_result, realCall));
+    auto _result =
+        std::make_shared<Variable>(JavaSignatureOf(method.GetType(), typenames), "_result");
+      statements->Add(std::make_shared<VariableDeclaration>(_result, realCall));
 
     if (!oneway) {
       // report that there were no exceptions
@@ -670,38 +512,40 @@ static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& metho
     }
 
     // marshall the return value
-    GenerateWriteToParcel(statements, typenames, method.GetType(), transact_reply->name,
-                          _result->name, options.GetMinSdkVersion(), /*is_return_value=*/true);
+    generate_write_to_parcel(method.GetType(), statements, _result, transact_reply, true,
+                             typenames);
   }
 
   // out parameters
   int i = 0;
   for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
     std::shared_ptr<Variable> v = stubArgs.Get(i++);
+
     if (arg->GetDirection() & AidlArgument::OUT_DIR) {
-      GenerateWriteToParcel(statements, typenames, arg->GetType(), transact_reply->name, v->name,
-                            options.GetMinSdkVersion(), /*is_return_value=*/true);
+      generate_write_to_parcel(arg->GetType(), statements, v, transact_reply, true, typenames);
     }
   }
+
+  // return true
+  statements->Add(std::make_shared<ReturnStatement>(TRUE_VALUE));
 }
 
-static void GenerateStubCase(const AidlInterface& iface, const AidlMethod& method,
-                             const std::string& transactCodeName, bool oneway,
-                             std::shared_ptr<StubClass> stubClass, const AidlTypenames& typenames,
-                             const Options& options) {
+static void generate_stub_case(const AidlInterface& iface, const AidlMethod& method,
+                               const std::string& transactCodeName, bool oneway,
+                               std::shared_ptr<StubClass> stubClass, const AidlTypenames& typenames,
+                               const Options& options) {
   auto c = std::make_shared<Case>(transactCodeName);
 
-  GenerateStubCode(iface, method, oneway, stubClass->transact_data, stubClass->transact_reply,
-                   typenames, c->statements, options);
-  c->statements->Add(std::make_shared<BreakStatement>());
+  generate_stub_code(iface, method, oneway, stubClass->transact_data, stubClass->transact_reply,
+                     typenames, c->statements, stubClass, options);
 
   stubClass->transact_switch_user->cases.push_back(c);
 }
 
-static void GenerateStubCaseOutline(const AidlInterface& iface, const AidlMethod& method,
-                                    const std::string& transactCodeName, bool oneway,
-                                    std::shared_ptr<StubClass> stubClass,
-                                    const AidlTypenames& typenames, const Options& options) {
+static void generate_stub_case_outline(const AidlInterface& iface, const AidlMethod& method,
+                                       const std::string& transactCodeName, bool oneway,
+                                       std::shared_ptr<StubClass> stubClass,
+                                       const AidlTypenames& typenames, const Options& options) {
   std::string outline_name = "onTransact$" + method.GetName() + "$";
   // Generate an "outlined" method with the actual code.
   {
@@ -717,9 +561,8 @@ static void GenerateStubCaseOutline(const AidlInterface& iface, const AidlMethod
     onTransact_case->exceptions.push_back("android.os.RemoteException");
     stubClass->elements.push_back(onTransact_case);
 
-    GenerateStubCode(iface, method, oneway, transact_data, transact_reply, typenames,
-                     onTransact_case->statements, options);
-    onTransact_case->statements->Add(std::make_shared<ReturnStatement>(TRUE_VALUE));
+    generate_stub_code(iface, method, oneway, transact_data, transact_reply, typenames,
+                       onTransact_case->statements, stubClass, options);
   }
 
   // Generate the case dispatch.
@@ -736,36 +579,29 @@ static void GenerateStubCaseOutline(const AidlInterface& iface, const AidlMethod
   }
 }
 
-static std::shared_ptr<Method> GenerateProxyMethod(const AidlInterface& iface,
-                                                   const AidlMethod& method,
-                                                   const std::string& transactCodeName, bool oneway,
-                                                   std::shared_ptr<ProxyClass> proxyClass,
-                                                   const AidlTypenames& typenames,
-                                                   const Options& options) {
+static std::shared_ptr<Method> generate_proxy_method(
+    const AidlInterface& iface, const AidlMethod& method, const std::string& transactCodeName,
+    bool oneway, std::shared_ptr<ProxyClass> proxyClass, const AidlTypenames& typenames,
+    const Options& options) {
   auto proxy = std::make_shared<Method>();
   proxy->comment = GenerateComments(method);
   proxy->modifiers = PUBLIC | OVERRIDE;
-  proxy->returnType = JavaSignatureOf(method.GetType());
+  proxy->returnType = JavaSignatureOf(method.GetType(), typenames);
   proxy->name = method.GetName();
   proxy->statements = std::make_shared<StatementBlock>();
   for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
     proxy->parameters.push_back(
-        std::make_shared<Variable>(JavaSignatureOf(arg->GetType()), arg->GetName()));
+        std::make_shared<Variable>(JavaSignatureOf(arg->GetType(), typenames), arg->GetName()));
   }
   proxy->exceptions.push_back("android.os.RemoteException");
 
   // the parcels
   auto _data = std::make_shared<Variable>("android.os.Parcel", "_data");
-  if (options.GenRpc()) {
-    proxy->statements->Add(std::make_shared<LiteralStatement>(
-        "android.os.Parcel _data = android.os.Parcel.obtain(asBinder());\n"));
-  } else {
-    proxy->statements->Add(std::make_shared<LiteralStatement>(
-        "android.os.Parcel _data = android.os.Parcel.obtain();\n"));
-  }
+  proxy->statements->Add(std::make_shared<VariableDeclaration>(
+      _data, std::make_shared<MethodCall>("android.os.Parcel", "obtain")));
 
   if (iface.IsSensitiveData()) {
-    proxy->statements->Add(std::make_shared<LiteralStatement>("_data.markSensitive();\n"));
+    proxy->statements->Add(std::make_shared<LiteralStatement>("_data.markSensitive();"));
   }
 
   std::shared_ptr<Variable> _reply = nullptr;
@@ -805,7 +641,7 @@ static std::shared_ptr<Method> GenerateProxyMethod(const AidlInterface& iface,
 
   // the parameters
   for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
-    auto v = std::make_shared<Variable>(JavaSignatureOf(arg->GetType()), arg->GetName());
+    auto v = std::make_shared<Variable>(JavaSignatureOf(arg->GetType(), typenames), arg->GetName());
     AidlArgument::Direction dir = arg->GetDirection();
     if (dir == AidlArgument::OUT_DIR && arg->GetType().IsArray()) {
       auto checklen = std::make_shared<IfStatement>();
@@ -819,8 +655,8 @@ static std::shared_ptr<Method> GenerateProxyMethod(const AidlInterface& iface,
           std::vector<std::shared_ptr<Expression>>{std::make_shared<FieldVariable>(v, "length")}));
       tryStatement->statements->Add(checklen);
     } else if (dir & AidlArgument::IN_DIR) {
-      GenerateWriteToParcel(tryStatement->statements, typenames, arg->GetType(), _data->name,
-                            v->name, options.GetMinSdkVersion(), /*is_return_value=*/false);
+      generate_write_to_parcel(arg->GetType(), tryStatement->statements, v, _data, false,
+                               typenames);
     }
   }
 
@@ -860,24 +696,19 @@ static std::shared_ptr<Method> GenerateProxyMethod(const AidlInterface& iface,
                                     Join(arg_names, ", ").c_str())));
     checkDefaultImpl->statements->Add(std::make_shared<LiteralStatement>("return;\n"));
   }
-
-  auto checkTransactionError = std::make_shared<IfStatement>();
-  checkTransactionError->expression = std::make_shared<LiteralExpression>("!_status");
-
-  if (iface.IsJavaDefault()) {
-    checkTransactionError->statements->Add(checkDefaultImpl);
-  }
-
   if (options.Version() > 0) {
-    checkTransactionError->statements->Add(
+    checkDefaultImpl->elseif = std::make_shared<IfStatement>();
+    checkDefaultImpl->elseif->statements->Add(
         std::make_shared<LiteralStatement>(android::base::StringPrintf(
             "throw new android.os.RemoteException(\"Method %s is unimplemented.\");\n",
             method.GetName().c_str())));
   }
 
-  if (iface.IsJavaDefault() || options.Version() > 0) {
-    tryStatement->statements->Add(checkTransactionError);
-  }
+  auto checkTransactionError = std::make_shared<IfStatement>();
+  checkTransactionError->expression = std::make_shared<LiteralExpression>("!_status");
+  checkTransactionError->statements->Add(checkDefaultImpl);
+
+  tryStatement->statements->Add(checkTransactionError);
 
   // throw back exceptions.
   if (_reply) {
@@ -898,7 +729,6 @@ static std::shared_ptr<Method> GenerateProxyMethod(const AidlInterface& iface,
                                    .type = method.GetType(),
                                    .parcel = _reply->name,
                                    .var = _result->name,
-                                   .min_sdk_version = options.GetMinSdkVersion(),
                                    .is_classloader_created = &is_classloader_created};
       CreateFromParcelFor(context);
       writer->Close();
@@ -915,7 +745,6 @@ static std::shared_ptr<Method> GenerateProxyMethod(const AidlInterface& iface,
                                      .type = arg->GetType(),
                                      .parcel = _reply->name,
                                      .var = arg->GetName(),
-                                     .min_sdk_version = options.GetMinSdkVersion(),
                                      .is_classloader_created = &is_classloader_created};
         ReadFromParcelFor(context);
         writer->Close();
@@ -941,10 +770,10 @@ static std::shared_ptr<Method> GenerateProxyMethod(const AidlInterface& iface,
   return proxy;
 }
 
-static void GenerateMethods(const AidlInterface& iface, const AidlMethod& method, Class* interface,
-                            std::shared_ptr<StubClass> stubClass,
-                            std::shared_ptr<ProxyClass> proxyClass, int index,
-                            const AidlTypenames& typenames, const Options& options) {
+static void generate_methods(const AidlInterface& iface, const AidlMethod& method, Class* interface,
+                             std::shared_ptr<StubClass> stubClass,
+                             std::shared_ptr<ProxyClass> proxyClass, int index,
+                             const AidlTypenames& typenames, const Options& options) {
   const bool oneway = method.IsOneway();
 
   // == the TRANSACT_ constant =============================================
@@ -968,7 +797,7 @@ static void GenerateMethods(const AidlInterface& iface, const AidlMethod& method
   // == the declaration in the interface ===================================
   std::shared_ptr<ClassElement> decl;
   if (method.IsUserDefined()) {
-    decl = GenerateInterfaceMethod(method);
+    decl = generate_interface_method(method, typenames);
   } else {
     if (method.GetName() == kGetInterfaceVersion && options.Version() > 0) {
       std::ostringstream code;
@@ -990,16 +819,17 @@ static void GenerateMethods(const AidlInterface& iface, const AidlMethod& method
     bool outline_stub =
         stubClass->transact_outline && stubClass->outline_methods.count(&method) != 0;
     if (outline_stub) {
-      GenerateStubCaseOutline(iface, method, transactCodeName, oneway, stubClass, typenames,
-                              options);
+      generate_stub_case_outline(iface, method, transactCodeName, oneway, stubClass, typenames,
+                                 options);
     } else {
-      GenerateStubCase(iface, method, transactCodeName, oneway, stubClass, typenames, options);
+      generate_stub_case(iface, method, transactCodeName, oneway, stubClass, typenames, options);
     }
   } else {
     if (method.GetName() == kGetInterfaceVersion && options.Version() > 0) {
       auto c = std::make_shared<Case>(transactCodeName);
       std::ostringstream code;
-      code << "reply.writeNoException();\n"
+      code << "data.enforceInterface(descriptor);\n"
+           << "reply.writeNoException();\n"
            << "reply.writeInt(" << kGetInterfaceVersion << "());\n"
            << "return true;\n";
       c->statements->Add(std::make_shared<LiteralStatement>(code.str()));
@@ -1008,7 +838,8 @@ static void GenerateMethods(const AidlInterface& iface, const AidlMethod& method
     if (method.GetName() == kGetInterfaceHash && !options.Hash().empty()) {
       auto c = std::make_shared<Case>(transactCodeName);
       std::ostringstream code;
-      code << "reply.writeNoException();\n"
+      code << "data.enforceInterface(descriptor);\n"
+           << "reply.writeNoException();\n"
            << "reply.writeString(" << kGetInterfaceHash << "());\n"
            << "return true;\n";
       c->statements->Add(std::make_shared<LiteralStatement>(code.str()));
@@ -1019,8 +850,8 @@ static void GenerateMethods(const AidlInterface& iface, const AidlMethod& method
   // == the proxy method ===================================================
   std::shared_ptr<ClassElement> proxy = nullptr;
   if (method.IsUserDefined()) {
-    proxy = GenerateProxyMethod(iface, method, transactCodeName, oneway, proxyClass, typenames,
-                                options);
+    proxy = generate_proxy_method(iface, method, transactCodeName, oneway, proxyClass, typenames,
+                                  options);
 
   } else {
     if (method.GetName() == kGetInterfaceVersion && options.Version() > 0) {
@@ -1031,22 +862,17 @@ static void GenerateMethods(const AidlInterface& iface, const AidlMethod& method
            << "android.os.RemoteException {\n"
            << "  if (mCachedVersion == -1) {\n"
            << "    android.os.Parcel data = android.os.Parcel.obtain();\n"
-           << "    android.os.Parcel reply = android.os.Parcel.obtain();\n";
-      if (options.GenRpc()) {
-        code << "    data.markForBinder(asBinder());\n";
-      }
-      code << "    try {\n"
+           << "    android.os.Parcel reply = android.os.Parcel.obtain();\n"
+           << "    try {\n"
            << "      data.writeInterfaceToken(DESCRIPTOR);\n"
            << "      boolean _status = mRemote.transact(Stub." << transactCodeName << ", "
-           << "data, reply, 0);\n";
-      if (iface.IsJavaDefault()) {
-        code << "      if (!_status) {\n"
-             << "        if (getDefaultImpl() != null) {\n"
-             << "          return getDefaultImpl().getInterfaceVersion();\n"
-             << "        }\n"
-             << "      }\n";
-      }
-      code << "      reply.readException();\n"
+           << "data, reply, 0);\n"
+           << "      if (!_status) {\n"
+           << "        if (getDefaultImpl() != null) {\n"
+           << "          return getDefaultImpl().getInterfaceVersion();\n"
+           << "        }\n"
+           << "      }\n"
+           << "      reply.readException();\n"
            << "      mCachedVersion = reply.readInt();\n"
            << "    } finally {\n"
            << "      reply.recycle();\n"
@@ -1065,22 +891,17 @@ static void GenerateMethods(const AidlInterface& iface, const AidlMethod& method
            << "android.os.RemoteException {\n"
            << "  if (\"-1\".equals(mCachedHash)) {\n"
            << "    android.os.Parcel data = android.os.Parcel.obtain();\n"
-           << "    android.os.Parcel reply = android.os.Parcel.obtain();\n";
-      if (options.GenRpc()) {
-        code << "    data.markForBinder(asBinder());\n";
-      }
-      code << "    try {\n"
+           << "    android.os.Parcel reply = android.os.Parcel.obtain();\n"
+           << "    try {\n"
            << "      data.writeInterfaceToken(DESCRIPTOR);\n"
            << "      boolean _status = mRemote.transact(Stub." << transactCodeName << ", "
-           << "data, reply, 0);\n";
-      if (iface.IsJavaDefault()) {
-        code << "      if (!_status) {\n"
-             << "        if (getDefaultImpl() != null) {\n"
-             << "          return getDefaultImpl().getInterfaceHash();\n"
-             << "        }\n"
-             << "      }\n";
-      }
-      code << "      reply.readException();\n"
+           << "data, reply, 0);\n"
+           << "      if (!_status) {\n"
+           << "        if (getDefaultImpl() != null) {\n"
+           << "          return getDefaultImpl().getInterfaceHash();\n"
+           << "        }\n"
+           << "      }\n"
+           << "      reply.readException();\n"
            << "      mCachedHash = reply.readString();\n"
            << "    } finally {\n"
            << "      reply.recycle();\n"
@@ -1097,14 +918,14 @@ static void GenerateMethods(const AidlInterface& iface, const AidlMethod& method
   }
 }
 
-static void GenerateInterfaceDescriptors(const Options& options, const AidlInterface* iface,
-                                         Class* interface, std::shared_ptr<StubClass> stub,
-                                         std::shared_ptr<ProxyClass> proxy) {
+static void generate_interface_descriptors(const Options& options, const AidlInterface* iface,
+                                           Class* interface, std::shared_ptr<StubClass> stub,
+                                           std::shared_ptr<ProxyClass> proxy) {
   // the interface descriptor transaction handler
   auto c = std::make_shared<Case>("INTERFACE_TRANSACTION");
   c->statements->Add(std::make_shared<MethodCall>(
       stub->transact_reply, "writeString",
-      std::vector<std::shared_ptr<Expression>>{stub->GetTransactDescriptor(nullptr)}));
+      std::vector<std::shared_ptr<Expression>>{stub->get_transact_descriptor(nullptr)}));
   c->statements->Add(std::make_shared<ReturnStatement>(TRUE_VALUE));
   stub->transact_switch_meta->cases.push_back(c);
 
@@ -1152,8 +973,9 @@ static void GenerateInterfaceDescriptors(const Options& options, const AidlInter
 // number of methods not outlined (are kept in the onTransact() method).
 //
 // Requirements: non_outline_count <= outline_threshold.
-static void ComputeOutlineMethods(const AidlInterface* iface, const std::shared_ptr<StubClass> stub,
-                                  size_t outline_threshold, size_t non_outline_count) {
+static void compute_outline_methods(const AidlInterface* iface,
+                                    const std::shared_ptr<StubClass> stub, size_t outline_threshold,
+                                    size_t non_outline_count) {
   AIDL_FATAL_IF(non_outline_count > outline_threshold, iface);
   // We'll outline (create sub methods) if there are more than min_methods
   // cases.
@@ -1178,29 +1000,31 @@ static void ComputeOutlineMethods(const AidlInterface* iface, const std::shared_
   }
 }
 
-static shared_ptr<ClassElement> GenerateDefaultImplMethod(const AidlMethod& method) {
+static shared_ptr<ClassElement> generate_default_impl_method(const AidlMethod& method,
+                                                             const AidlTypenames& typenames) {
   auto default_method = std::make_shared<Method>();
   default_method->comment = GenerateComments(method);
   default_method->modifiers = PUBLIC | OVERRIDE;
-  default_method->returnType = JavaSignatureOf(method.GetType());
+  default_method->returnType = JavaSignatureOf(method.GetType(), typenames);
   default_method->name = method.GetName();
   default_method->statements = std::make_shared<StatementBlock>();
   for (const auto& arg : method.GetArguments()) {
     default_method->parameters.push_back(
-        std::make_shared<Variable>(JavaSignatureOf(arg->GetType()), arg->GetName()));
+        std::make_shared<Variable>(JavaSignatureOf(arg->GetType(), typenames), arg->GetName()));
   }
   default_method->exceptions.push_back("android.os.RemoteException");
 
   if (method.GetType().GetName() != "void") {
-    const string& defaultValue = DefaultJavaValueOf(method.GetType());
+    const string& defaultValue = DefaultJavaValueOf(method.GetType(), typenames);
     default_method->statements->Add(
         std::make_shared<LiteralStatement>(StringPrintf("return %s;\n", defaultValue.c_str())));
   }
   return default_method;
 }
 
-static shared_ptr<Class> GenerateDefaultImplClass(const AidlInterface& iface,
-                                                  const Options& options) {
+static shared_ptr<Class> generate_default_impl_class(const AidlInterface& iface,
+                                                     const AidlTypenames& typenames,
+                                                     const Options& options) {
   auto default_class = std::make_shared<Class>();
   default_class->comment = "/** Default implementation for " + iface.GetName() + ". */";
   default_class->modifiers = PUBLIC | STATIC;
@@ -1210,7 +1034,7 @@ static shared_ptr<Class> GenerateDefaultImplClass(const AidlInterface& iface,
 
   for (const auto& m : iface.GetMethods()) {
     if (m->IsUserDefined()) {
-      default_class->elements.emplace_back(GenerateDefaultImplMethod(*m));
+      default_class->elements.emplace_back(generate_default_impl_method(*m, typenames));
     } else {
       // These are called only when the remote side does not implement these
       // methods, which is normally impossible, because these methods are
@@ -1246,21 +1070,9 @@ static shared_ptr<Class> GenerateDefaultImplClass(const AidlInterface& iface,
   return default_class;
 }
 
-static shared_ptr<ClassElement> GenerateMaxTransactionId(int max_transaction_id) {
-  auto getMaxTransactionId = std::make_shared<Method>();
-  getMaxTransactionId->comment = "/** @hide */";
-  getMaxTransactionId->modifiers = PUBLIC;
-  getMaxTransactionId->returnType = "int";
-  getMaxTransactionId->name = "getMaxTransactionId";
-  getMaxTransactionId->statements = std::make_shared<StatementBlock>();
-  getMaxTransactionId->statements->Add(std::make_shared<ReturnStatement>(
-      std::make_shared<LiteralExpression>(std::to_string(max_transaction_id))));
-  return getMaxTransactionId;
-}
-
-std::unique_ptr<Class> GenerateInterfaceClass(const AidlInterface* iface,
-                                              const AidlTypenames& typenames,
-                                              const Options& options) {
+std::unique_ptr<Class> generate_binder_interface_class(const AidlInterface* iface,
+                                                       const AidlTypenames& typenames,
+                                                       const Options& options) {
   // the interface class
   auto interface = std::make_unique<Class>();
   interface->comment = GenerateComments(*iface);
@@ -1288,92 +1100,71 @@ std::unique_ptr<Class> GenerateInterfaceClass(const AidlInterface* iface,
   }
 
   // the default impl class
-  auto default_impl = GenerateDefaultImplClass(*iface, options);
+  auto default_impl = generate_default_impl_class(*iface, typenames, options);
   interface->elements.emplace_back(default_impl);
 
   // the stub inner class
   auto stub = std::make_shared<StubClass>(iface, options);
   interface->elements.push_back(stub);
 
-  ComputeOutlineMethods(iface, stub, options.onTransact_outline_threshold_,
-                        options.onTransact_non_outline_count_);
+  compute_outline_methods(iface,
+                          stub,
+                          options.onTransact_outline_threshold_,
+                          options.onTransact_non_outline_count_);
 
   // the proxy inner class
   auto proxy = std::make_shared<ProxyClass>(iface, options);
   stub->elements.push_back(proxy);
 
   // stub and proxy support for getInterfaceDescriptor()
-  GenerateInterfaceDescriptors(options, iface, interface.get(), stub, proxy);
+  generate_interface_descriptors(options, iface, interface.get(), stub, proxy);
 
   // all the declared constants of the interface
   string constants;
-  GenerateConstantDeclarations(*CodeWriter::ForString(&constants), *iface);
+  generate_constant_declarations(*CodeWriter::ForString(&constants), *iface);
   interface->elements.push_back(std::make_shared<LiteralClassElement>(constants));
 
   // all the declared methods of the interface
-  bool permissionWrapperGenerated = false;
-  int max_transaction_id = 0;
+
   for (const auto& item : iface->GetMethods()) {
-    if ((iface->EnforceExpression() || item->GetType().EnforceExpression()) &&
-        !permissionWrapperGenerated) {
-      GeneratePermissionWrapper(stub.get());
-      permissionWrapperGenerated = true;
-    }
-    GenerateMethods(*iface, *item, interface.get(), stub, proxy, item->GetId(), typenames, options);
-    max_transaction_id = std::max(max_transaction_id, item->GetId());
+    generate_methods(*iface, *item, interface.get(), stub, proxy, item->GetId(), typenames,
+                     options);
   }
 
-  // getMaxTransactionId
-  if (options.GenTransactionNames()) {
-    stub->elements.push_back(GenerateMaxTransactionId(max_transaction_id));
-  }
+  // additional static methods for the default impl set/get to the
+  // stub class. Can't add them to the interface as the generated java files
+  // may be compiled with Java < 1.7 where static interface method isn't
+  // supported.
+  // TODO(b/111417145) make this conditional depending on the Java language
+  // version requested
+  const string i_name = iface->GetCanonicalName();
+  stub->elements.emplace_back(std::make_shared<LiteralClassElement>(
+      StringPrintf("public static boolean setDefaultImpl(%s impl) {\n"
+                   "  // Only one user of this interface can use this function\n"
+                   "  // at a time. This is a heuristic to detect if two different\n"
+                   "  // users in the same process use this function.\n"
+                   "  if (Stub.Proxy.sDefaultImpl != null) {\n"
+                   "    throw new IllegalStateException(\"setDefaultImpl() called twice\");\n"
+                   "  }\n"
+                   "  if (impl != null) {\n"
+                   "    Stub.Proxy.sDefaultImpl = impl;\n"
+                   "    return true;\n"
+                   "  }\n"
+                   "  return false;\n"
+                   "}\n",
+                   i_name.c_str())));
+  stub->elements.emplace_back(
+      std::make_shared<LiteralClassElement>(StringPrintf("public static %s getDefaultImpl() {\n"
+                                                         "  return Stub.Proxy.sDefaultImpl;\n"
+                                                         "}\n",
+                                                         i_name.c_str())));
 
-  // all the nested types
-  string code;
-  auto writer = CodeWriter::ForString(&code);
-  for (const auto& nested : iface->GetNestedTypes()) {
-    GenerateClass(*writer, *nested, typenames, options);
-  }
-  GenerateParcelHelpers(*writer, *iface, options);
-  writer->Close();
-  interface->elements.push_back(std::make_shared<LiteralClassElement>(code));
+  // the static field is defined in the proxy class, not in the interface class
+  // because all fields in an interface class are by default final.
+  proxy->elements.emplace_back(std::make_shared<LiteralClassElement>(
+      StringPrintf("public static %s sDefaultImpl;\n", i_name.c_str())));
 
-  if (iface->IsJavaDefault()) {
-    // additional static methods for the default impl set/get to the
-    // stub class. Can't add them to the interface as the generated java files
-    // may be compiled with Java < 1.7 where static interface method isn't
-    // supported.
-    // TODO(b/111417145) make this conditional depending on the Java language
-    // version requested
-    const string i_name = iface->GetCanonicalName();
-    stub->elements.emplace_back(std::make_shared<LiteralClassElement>(
-        StringPrintf("public static boolean setDefaultImpl(%s impl) {\n"
-                     "  // Only one user of this interface can use this function\n"
-                     "  // at a time. This is a heuristic to detect if two different\n"
-                     "  // users in the same process use this function.\n"
-                     "  if (Stub.Proxy.sDefaultImpl != null) {\n"
-                     "    throw new IllegalStateException(\"setDefaultImpl() called twice\");\n"
-                     "  }\n"
-                     "  if (impl != null) {\n"
-                     "    Stub.Proxy.sDefaultImpl = impl;\n"
-                     "    return true;\n"
-                     "  }\n"
-                     "  return false;\n"
-                     "}\n",
-                     i_name.c_str())));
-    stub->elements.emplace_back(
-        std::make_shared<LiteralClassElement>(StringPrintf("public static %s getDefaultImpl() {\n"
-                                                           "  return Stub.Proxy.sDefaultImpl;\n"
-                                                           "}\n",
-                                                           i_name.c_str())));
-
-    // the static field is defined in the proxy class, not in the interface class
-    // because all fields in an interface class are by default final.
-    proxy->elements.emplace_back(std::make_shared<LiteralClassElement>(
-        StringPrintf("public static %s sDefaultImpl;\n", i_name.c_str())));
-  }
-
-  stub->Finish();
+  stub->finish();
 
   return interface;
 }
