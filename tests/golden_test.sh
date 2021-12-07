@@ -45,6 +45,7 @@ function _golden_test() {
     "aidl_test_loggable_interface-cpp-source"
     "aidl_test_loggable_interface-java-source"
     "aidl_test_loggable_interface-ndk-source"
+    "aidl-test-interface-platform-java-source"
   )
 
   local root="."
