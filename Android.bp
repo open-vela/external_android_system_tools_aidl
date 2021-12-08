@@ -306,7 +306,8 @@ filegroup {
         "tests/android/aidl/tests/UnionWithFd.aidl",
         "tests/android/aidl/tests/extension/*.aidl",
         "tests/android/aidl/tests/nested/*.aidl",
-        "tests/android/aidl/tests/permission/*.aidl",
+        "tests/android/aidl/tests/permission/IProtected.aidl",
+        "tests/android/aidl/tests/permission/IProtectedInterface.aidl",
         "tests/android/aidl/tests/unions/*.aidl",
     ],
     path: "tests",
@@ -317,6 +318,14 @@ filegroup {
     srcs: [
         "tests/android/aidl/tests/ICppJavaTests.aidl",
         "tests/android/aidl/tests/SimpleParcelable.aidl",
+    ],
+    path: "tests",
+}
+
+filegroup {
+    name: "libaidl-integration-platform-test-files",
+    srcs: [
+        "tests/android/aidl/tests/permission/platform/*.aidl",
     ],
     path: "tests",
 }
@@ -346,7 +355,9 @@ cc_library_static {
         generate_traces: true,
         export_aidl_headers: true,
         local_include_dirs: ["tests"],
-        include_dirs: ["frameworks/native/aidl/binder"],
+        include_dirs: [
+            "frameworks/native/aidl/binder",
+        ],
     },
     srcs: [
         ":libaidl-integration-test-files",
@@ -378,7 +389,7 @@ cc_test {
         "libgmock",
         //  client uses the latest version
         "aidl-test-versioned-interface-V2-cpp",
-        "aidl_test_loggable_interface-cpp"
+        "aidl_test_loggable_interface-cpp",
     ],
     srcs: [
         "tests/aidl_test_client.cpp",
@@ -533,7 +544,6 @@ java_defaults {
     test_suites: ["general-tests"],
 }
 
-
 java_test {
     name: "aidl_test_java_client_sdk29",
     defaults: ["aidl_test_java_sdkversion_defaults"],
@@ -583,7 +593,7 @@ genrule {
     name: "aidl-golden-test-build-hook-gen",
     tools: ["aidl-golden-test"],
     cmd: "$(location aidl-golden-test) check && " +
-         "echo 'int main(){return 0;}' > $(genDir)/TODO_b_37575883.cpp",
+        "echo 'int main(){return 0;}' > $(genDir)/TODO_b_37575883.cpp",
     srcs: [
         // warning: keep this list up to date with tests/golden_test.sh
         ":aidl-test-interface-cpp-source",
@@ -594,6 +604,7 @@ genrule {
         ":aidl_test_loggable_interface-cpp-source",
         ":aidl_test_loggable_interface-java-source",
         ":aidl_test_loggable_interface-ndk-source",
+        ":aidl-test-interface-platform-java-source",
         "tests/golden_output/**/*",
     ],
     out: ["TODO_b_37575883.cpp"],
@@ -637,10 +648,6 @@ aidl_interface {
     },
 }
 
-//
-// Rust tests
-//
-
 aidl_interface {
     name: "aidl-test-interface",
     unstable: true,
@@ -667,6 +674,36 @@ aidl_interface {
         },
     },
 }
+
+aidl_interface {
+    name: "aidl-test-interface-platform",
+    unstable: true,
+    flags: ["-Werror"],
+    srcs: [":libaidl-integration-platform-test-files"],
+    include_dirs: [
+        "frameworks/base/core/java",
+    ],
+    local_include_dir: "tests",
+    backend: {
+        cpp: {
+            enabled: false,
+        },
+        java: {
+            platform_apis: true,
+            srcs_available: true,
+        },
+        rust: {
+            enabled: false,
+        },
+        ndk: {
+            enabled: false,
+        },
+    },
+}
+
+//
+// Rust tests
+//
 
 rust_test {
     name: "aidl_test_rust_client",
