@@ -66,7 +66,7 @@ public interface IProtected extends android.os.IInterface
       {
         case TRANSACTION_PermissionProtected:
         {
-          if (((android.permission.PermissionManager.checkPermission(android.Manifest.permission.READ_PHONE_STATE, this.getCallingPid(), this.getCallingUid())==android.content.pm.PackageManager.PERMISSION_GRANTED)!=true)) {
+          if ((this.permissionCheckerWrapper(android.Manifest.permission.READ_PHONE_STATE, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null))!=true)) {
             throw new SecurityException("Access denied, requires: permission = READ_PHONE_STATE");
           }
           this.PermissionProtected();
@@ -75,7 +75,7 @@ public interface IProtected extends android.os.IInterface
         }
         case TRANSACTION_MultiplePermissions:
         {
-          if ((((android.permission.PermissionManager.checkPermission(android.Manifest.permission.ACCESS_FINE_LOCATION, this.getCallingPid(), this.getCallingUid())==android.content.pm.PackageManager.PERMISSION_GRANTED)||(this.getCallingUid()==android.os.Process.SYSTEM_UID))!=true)) {
+          if (((this.permissionCheckerWrapper(android.Manifest.permission.ACCESS_FINE_LOCATION, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null))||(this.getCallingUid()==android.os.Process.SYSTEM_UID))!=true)) {
             throw new SecurityException("Access denied, requires: permission = ACCESS_FINE_LOCATION || uid = SYSTEM_UID");
           }
           this.MultiplePermissions();
@@ -84,7 +84,7 @@ public interface IProtected extends android.os.IInterface
         }
         case TRANSACTION_MultiplePermissions2:
         {
-          if (((((android.permission.PermissionManager.checkPermission(android.Manifest.permission.INTERNET, this.getCallingPid(), this.getCallingUid())==android.content.pm.PackageManager.PERMISSION_GRANTED)&&(android.permission.PermissionManager.checkPermission(android.Manifest.permission.VIBRATE, this.getCallingPid(), this.getCallingUid())==android.content.pm.PackageManager.PERMISSION_GRANTED))||(this.getCallingUid()==android.os.Process.SYSTEM_UID))!=true)) {
+          if ((((this.permissionCheckerWrapper(android.Manifest.permission.INTERNET, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null))&&this.permissionCheckerWrapper(android.Manifest.permission.VIBRATE, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null)))||(this.getCallingUid()==android.os.Process.SYSTEM_UID))!=true)) {
             throw new SecurityException("Access denied, requires: permission = INTERNET && permission = VIBRATE || uid = SYSTEM_UID");
           }
           this.MultiplePermissions2();
@@ -155,6 +155,14 @@ public interface IProtected extends android.os.IInterface
           _data.recycle();
         }
       }
+    }
+    private boolean permissionCheckerWrapper(
+        String permission, int pid, android.content.AttributionSource attributionSource) {
+      android.content.Context ctx =
+          android.app.ActivityThread.currentActivityThread().getSystemContext();
+      return (android.content.PermissionChecker.checkPermissionForDataDelivery(
+              ctx, permission, pid, attributionSource, "" /*message*/) ==
+          android.content.PermissionChecker.PERMISSION_GRANTED);
     }
     static final int TRANSACTION_PermissionProtected = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
     static final int TRANSACTION_MultiplePermissions = (android.os.IBinder.FIRST_CALL_TRANSACTION + 1);
