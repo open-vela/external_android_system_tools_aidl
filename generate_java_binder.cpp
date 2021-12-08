@@ -456,8 +456,9 @@ class PermissionVisitor : public perm::Visitor {
  public:
   // Converts a permission expression (e.g., "permission = CALL_PHONE") into an equivalent Java
   // expression (e.g., "(checkPermission("CALL_PHONE", ...) == GRANTED").
-  static std::shared_ptr<Expression> Evaluate(const perm::Expression& expr) {
-    PermissionVisitor visitor;
+  static std::shared_ptr<Expression> Evaluate(const AidlMethod& method,
+                                              const perm::Expression& expr) {
+    PermissionVisitor visitor(method);
     expr.DispatchVisit(visitor);
     return visitor.GetResult();
   }
@@ -466,7 +467,7 @@ class PermissionVisitor : public perm::Visitor {
   void Visit(const perm::AndQuantifier& quantifier) {
     std::shared_ptr<Expression> result;
     for (const auto& operand : quantifier.GetOperands()) {
-      auto expr = Evaluate(*operand);
+      auto expr = Evaluate(method_, *operand);
       if (result) {
         result = std::make_shared<Comparison>(result, "&&", expr);
       } else {
@@ -479,7 +480,7 @@ class PermissionVisitor : public perm::Visitor {
   void Visit(const perm::OrQuantifier& quantifier) {
     std::shared_ptr<Expression> result;
     for (const auto& operand : quantifier.GetOperands()) {
-      auto expr = Evaluate(*operand);
+      auto expr = Evaluate(method_, *operand);
       if (result) {
         result = std::make_shared<Comparison>(result, "||", expr);
       } else {
@@ -492,16 +493,22 @@ class PermissionVisitor : public perm::Visitor {
   void Visit(const perm::Predicate& p) {
     switch (p.GetType()) {
       case perm::Predicate::Type::kPermission: {
-        auto permissionGranted = std::make_shared<LiteralExpression>(
-            "android.content.pm.PackageManager.PERMISSION_GRANTED");
+        auto attributionSource =
+            std::string("new android.content.AttributionSource(getCallingUid(), null, null)");
+        for (size_t i = 0; i < method_.GetArguments().size(); i++) {
+          const auto& arg = method_.GetArguments()[i];
+          if (arg->GetType().GetName() == "android.content.AttributionSource") {
+            attributionSource = android::base::StringPrintf("_arg%zu", i);
+            break;
+          }
+        }
         auto checkPermission = std::make_shared<MethodCall>(
-            std::make_shared<LiteralExpression>("android.permission.PermissionManager"),
-            "checkPermission",
+            THIS_VALUE, "permissionCheckerWrapper",
             std::vector<std::shared_ptr<Expression>>{
                 std::make_shared<LiteralExpression>("android.Manifest.permission." + p.GetValue()),
                 std::make_shared<MethodCall>(THIS_VALUE, "getCallingPid"),
-                std::make_shared<MethodCall>(THIS_VALUE, "getCallingUid")});
-        SetResult(std::make_shared<Comparison>(checkPermission, "==", permissionGranted));
+                std::make_shared<LiteralExpression>(attributionSource)});
+        SetResult(checkPermission);
         break;
       }
       case perm::Predicate::Type::kUid: {
@@ -517,10 +524,29 @@ class PermissionVisitor : public perm::Visitor {
     }
   }
 
+  PermissionVisitor(const AidlMethod& method) : method_(method){};
+
   std::shared_ptr<Expression> GetResult() { return result_; }
   void SetResult(std::shared_ptr<Expression> expr) { result_ = expr; }
   std::shared_ptr<Expression> result_;
+  const AidlMethod& method_;
 };
+
+static void GeneratePermissionWrapper(Class* stubClass) {
+  // TODO(b/208707422) avoid generating platform-specific API calls.
+  std::string permissionCheckerWrapperCode =
+      "private boolean permissionCheckerWrapper(\n"
+      "    String permission, int pid, android.content.AttributionSource attributionSource) {\n"
+      "  android.content.Context ctx =\n"
+      "      android.app.ActivityThread.currentActivityThread().getSystemContext();\n"
+      "  return (android.content.PermissionChecker.checkPermissionForDataDelivery(\n"
+      "          ctx, permission, pid, attributionSource, \"\" /*message*/) ==\n"
+      "      android.content.PermissionChecker.PERMISSION_GRANTED);\n"
+      "}\n";
+  auto permissionCheckerWrapper =
+      std::make_shared<LiteralClassElement>(permissionCheckerWrapperCode);
+  stubClass->elements.push_back(permissionCheckerWrapper);
+}
 
 static void GeneratePermissionChecks(const AidlInterface& iface, const AidlMethod& method,
                                      std::shared_ptr<StatementBlock> addTo) {
@@ -542,7 +568,7 @@ static void GeneratePermissionChecks(const AidlInterface& iface, const AidlMetho
     return;
   }
   auto ifstatement = std::make_shared<IfStatement>();
-  auto combinedExpr = PermissionVisitor::Evaluate(*combinedPermExpr.get());
+  auto combinedExpr = PermissionVisitor::Evaluate(method, *combinedPermExpr.get());
   ifstatement->expression = std::make_shared<Comparison>(combinedExpr, "!=", TRUE_VALUE);
   ifstatement->statements = std::make_shared<StatementBlock>();
   ifstatement->statements->Add(std::make_shared<LiteralStatement>(
@@ -577,8 +603,6 @@ static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& metho
         std::vector<std::shared_ptr<Expression>>{
             std::make_shared<LiteralExpression>("android.os.Trace.TRACE_TAG_AIDL")}));
   }
-
-  GeneratePermissionChecks(iface, method, statements);
 
   auto realCall = std::make_shared<MethodCall>(THIS_VALUE, method.GetName());
 
@@ -623,6 +647,8 @@ static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& metho
   if (!method.GetArguments().empty() && options.GetMinSdkVersion() >= 32u) {
     statements->Add(std::make_shared<MethodCall>(transact_data, "enforceNoDataAvail"));
   }
+
+  GeneratePermissionChecks(iface, method, statements);
 
   // the real call
   if (method.GetType().GetName() == "void") {
@@ -1273,8 +1299,13 @@ std::unique_ptr<Class> GenerateInterfaceClass(const AidlInterface* iface,
   interface->elements.push_back(std::make_shared<LiteralClassElement>(constants));
 
   // all the declared methods of the interface
-
+  bool permissionWrapperGenerated = false;
   for (const auto& item : iface->GetMethods()) {
+    if ((iface->EnforceExpression() || item->GetType().EnforceExpression()) &&
+        !permissionWrapperGenerated) {
+      GeneratePermissionWrapper(stub.get());
+      permissionWrapperGenerated = true;
+    }
     GenerateMethods(*iface, *item, interface.get(), stub, proxy, item->GetId(), typenames, options);
   }
 

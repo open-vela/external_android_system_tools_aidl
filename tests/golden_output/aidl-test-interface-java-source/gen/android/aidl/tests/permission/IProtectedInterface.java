@@ -63,7 +63,7 @@ public interface IProtectedInterface extends android.os.IInterface
       {
         case TRANSACTION_Method1:
         {
-          if (((android.permission.PermissionManager.checkPermission(android.Manifest.permission.ACCESS_FINE_LOCATION, this.getCallingPid(), this.getCallingUid())==android.content.pm.PackageManager.PERMISSION_GRANTED)!=true)) {
+          if ((this.permissionCheckerWrapper(android.Manifest.permission.ACCESS_FINE_LOCATION, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null))!=true)) {
             throw new SecurityException("Access denied, requires: permission = ACCESS_FINE_LOCATION");
           }
           this.Method1();
@@ -72,7 +72,7 @@ public interface IProtectedInterface extends android.os.IInterface
         }
         case TRANSACTION_Method2:
         {
-          if ((((android.permission.PermissionManager.checkPermission(android.Manifest.permission.ACCESS_FINE_LOCATION, this.getCallingPid(), this.getCallingUid())==android.content.pm.PackageManager.PERMISSION_GRANTED)&&(android.permission.PermissionManager.checkPermission(android.Manifest.permission.INTERNET, this.getCallingPid(), this.getCallingUid())==android.content.pm.PackageManager.PERMISSION_GRANTED))!=true)) {
+          if (((this.permissionCheckerWrapper(android.Manifest.permission.ACCESS_FINE_LOCATION, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null))&&this.permissionCheckerWrapper(android.Manifest.permission.INTERNET, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null)))!=true)) {
             throw new SecurityException("Access denied, requires: permission = ACCESS_FINE_LOCATION && permission = INTERNET");
           }
           this.Method2();
@@ -129,6 +129,14 @@ public interface IProtectedInterface extends android.os.IInterface
           _data.recycle();
         }
       }
+    }
+    private boolean permissionCheckerWrapper(
+        String permission, int pid, android.content.AttributionSource attributionSource) {
+      android.content.Context ctx =
+          android.app.ActivityThread.currentActivityThread().getSystemContext();
+      return (android.content.PermissionChecker.checkPermissionForDataDelivery(
+              ctx, permission, pid, attributionSource, "" /*message*/) ==
+          android.content.PermissionChecker.PERMISSION_GRANTED);
     }
     static final int TRANSACTION_Method1 = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
     static final int TRANSACTION_Method2 = (android.os.IBinder.FIRST_CALL_TRANSACTION + 1);
