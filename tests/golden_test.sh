@@ -70,7 +70,7 @@ function _golden_test() {
       mkdir -p "$golden"
       cp -r "$built/gen" "$golden"
     else
-      diff -r "$built" "$golden" || e=1
+      diff -r "$built/gen" "$golden/gen" || e=1
     fi
   done
 
