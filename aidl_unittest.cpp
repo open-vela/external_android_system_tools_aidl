@@ -4412,7 +4412,7 @@ TEST_F(AidlTest, NestedTypeArgs) {
 TEST_F(AidlTest, AcceptMultiDimensionalFixedSizeArray) {
   io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar { String[2][3] a; }");
 
-  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
+  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=ndk");
   CaptureStderr();
   EXPECT_TRUE(compile_aidl(options, io_delegate_));
   EXPECT_EQ("", GetCapturedStderr());
@@ -4512,7 +4512,7 @@ TEST_F(AidlTest, DefaultShouldMatchWithFixedSizeArray) {
                                "  int[2][3] a = {{1,2,3}, {4,5,6}};\n"
                                "}");
 
-  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
+  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=ndk");
   CaptureStderr();
   EXPECT_TRUE(compile_aidl(options, io_delegate_));
   EXPECT_EQ("", GetCapturedStderr());
@@ -5213,10 +5213,10 @@ const std::map<std::string, ExpectedResult> kFieldSupportExpectations = {
     {"java_primitiveArray", {"", ""}},
     {"ndk_primitiveArray", {"", ""}},
     {"rust_primitiveArray", {"", ""}},
-    {"cpp_primitiveFixedArray", {"", ""}},
-    {"java_primitiveFixedArray", {"", ""}},
+    {"cpp_primitiveFixedArray", {"not supported yet", "not supported yet"}},
+    {"java_primitiveFixedArray", {"not supported yet", "not supported yet"}},
     {"ndk_primitiveFixedArray", {"", ""}},
-    {"rust_primitiveFixedArray", {"", ""}},
+    {"rust_primitiveFixedArray", {"not supported yet", "not supported yet"}},
     {"cpp_String", {"", ""}},
     {"java_String", {"", ""}},
     {"ndk_String", {"", ""}},
