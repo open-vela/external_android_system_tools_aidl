@@ -1246,6 +1246,18 @@ static shared_ptr<Class> GenerateDefaultImplClass(const AidlInterface& iface,
   return default_class;
 }
 
+static shared_ptr<ClassElement> GenerateMaxTransactionId(int max_transaction_id) {
+  auto getMaxTransactionId = std::make_shared<Method>();
+  getMaxTransactionId->comment = "/** @hide */";
+  getMaxTransactionId->modifiers = PUBLIC;
+  getMaxTransactionId->returnType = "int";
+  getMaxTransactionId->name = "getMaxTransactionId";
+  getMaxTransactionId->statements = std::make_shared<StatementBlock>();
+  getMaxTransactionId->statements->Add(std::make_shared<ReturnStatement>(
+      std::make_shared<LiteralExpression>(std::to_string(max_transaction_id))));
+  return getMaxTransactionId;
+}
+
 std::unique_ptr<Class> GenerateInterfaceClass(const AidlInterface* iface,
                                               const AidlTypenames& typenames,
                                               const Options& options) {
@@ -1300,6 +1312,7 @@ std::unique_ptr<Class> GenerateInterfaceClass(const AidlInterface* iface,
 
   // all the declared methods of the interface
   bool permissionWrapperGenerated = false;
+  int max_transaction_id = 0;
   for (const auto& item : iface->GetMethods()) {
     if ((iface->EnforceExpression() || item->GetType().EnforceExpression()) &&
         !permissionWrapperGenerated) {
@@ -1307,6 +1320,12 @@ std::unique_ptr<Class> GenerateInterfaceClass(const AidlInterface* iface,
       permissionWrapperGenerated = true;
     }
     GenerateMethods(*iface, *item, interface.get(), stub, proxy, item->GetId(), typenames, options);
+    max_transaction_id = std::max(max_transaction_id, item->GetId());
+  }
+
+  // getMaxTransactionId
+  if (options.GenTransactionNames()) {
+    stub->elements.push_back(GenerateMaxTransactionId(max_transaction_id));
   }
 
   // all the nested types
