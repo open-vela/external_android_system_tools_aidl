@@ -437,9 +437,7 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   bool IsResolved() const { return fully_qualified_name_ != ""; }
 
   bool IsArray() const { return array_.has_value(); }
-  bool IsDynamicArray() const {
-    return array_.has_value() && std::get_if<DynamicArray>(&*array_) != nullptr;
-  }
+
   bool IsFixedSizeArray() const {
     return array_.has_value() && std::get_if<FixedSizeArray>(&*array_) != nullptr;
   }
@@ -634,7 +632,7 @@ class AidlConstantValue : public AidlNode {
     } else if constexpr (is_one_of<T, int8_t, int32_t, int64_t>::value) {
       AIDL_FATAL_IF(final_type_ < Type::INT8 && final_type_ > Type::INT64, this);
       return static_cast<T>(final_value_);
-    } else if constexpr (std::is_same<T, char16_t>::value) {
+    } else if constexpr (std::is_same<T, char>::value) {
       AIDL_FATAL_IF(final_type_ != Type::CHARACTER, this);
       return final_string_value_.at(1);  // unquote '
     } else if constexpr (std::is_same<T, bool>::value) {
@@ -659,9 +657,9 @@ class AidlConstantValue : public AidlNode {
   static AidlConstantValue* Default(const AidlTypeSpecifier& specifier);
 
   static AidlConstantValue* Boolean(const AidlLocation& location, bool value);
-  static AidlConstantValue* Character(const AidlLocation& location, const std::string& value);
+  static AidlConstantValue* Character(const AidlLocation& location, char value);
   // example: 123, -5498, maybe any size
-  static AidlConstantValue* Integral(const AidlLocation& location, const std::string& value);
+  static AidlConstantValue* Integral(const AidlLocation& location, const string& value);
   static AidlConstantValue* Floating(const AidlLocation& location, const std::string& value);
   static AidlConstantValue* Array(const AidlLocation& location,
                                   std::unique_ptr<vector<unique_ptr<AidlConstantValue>>> values);
