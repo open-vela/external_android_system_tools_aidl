@@ -1298,7 +1298,7 @@ TEST_F(AidlTest, AidlConstantValue_EvaluatedValue) {
   using Ptr = unique_ptr<AidlConstantValue>;
   const AidlLocation& loc = AIDL_LOCATION_HERE;
 
-  EXPECT_EQ('c', Ptr(AidlConstantValue::Character(loc, 'c'))->EvaluatedValue<char>());
+  EXPECT_EQ('c', Ptr(AidlConstantValue::Character(loc, "'c'"))->EvaluatedValue<char16_t>());
   EXPECT_EQ("abc", Ptr(AidlConstantValue::String(loc, "\"abc\""))->EvaluatedValue<string>());
   EXPECT_FLOAT_EQ(1.0f, Ptr(AidlConstantValue::Floating(loc, "1.0f"))->EvaluatedValue<float>());
   EXPECT_EQ(true, Ptr(AidlConstantValue::Boolean(loc, true))->EvaluatedValue<bool>());
@@ -1314,6 +1314,14 @@ TEST_F(AidlTest, AidlConstantValue_EvaluatedValue) {
   EXPECT_EQ(
       expected,
       Ptr(AidlConstantValue::Array(loc, std::move(values)))->EvaluatedValue<vector<string>>());
+}
+
+TEST_F(AidlTest, AidlConstantCharacterDefault) {
+  auto char_type = typenames_.MakeResolvedType(AIDL_LOCATION_HERE, "char", false);
+  auto default_value = unique_ptr<AidlConstantValue>(AidlConstantValue::Default(*char_type));
+  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, cpp::ConstantValueDecorator));
+  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, ndk::ConstantValueDecorator));
+  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, java::ConstantValueDecorator));
 }
 
 TEST_P(AidlTest, FailOnManyDefinedTypes) {
@@ -4404,7 +4412,7 @@ TEST_F(AidlTest, NestedTypeArgs) {
 TEST_F(AidlTest, AcceptMultiDimensionalFixedSizeArray) {
   io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar { String[2][3] a; }");
 
-  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=ndk");
+  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
   CaptureStderr();
   EXPECT_TRUE(compile_aidl(options, io_delegate_));
   EXPECT_EQ("", GetCapturedStderr());
@@ -4504,7 +4512,7 @@ TEST_F(AidlTest, DefaultShouldMatchWithFixedSizeArray) {
                                "  int[2][3] a = {{1,2,3}, {4,5,6}};\n"
                                "}");
 
-  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=ndk");
+  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
   CaptureStderr();
   EXPECT_TRUE(compile_aidl(options, io_delegate_));
   EXPECT_EQ("", GetCapturedStderr());
@@ -5205,10 +5213,10 @@ const std::map<std::string, ExpectedResult> kFieldSupportExpectations = {
     {"java_primitiveArray", {"", ""}},
     {"ndk_primitiveArray", {"", ""}},
     {"rust_primitiveArray", {"", ""}},
-    {"cpp_primitiveFixedArray", {"not supported yet", "not supported yet"}},
-    {"java_primitiveFixedArray", {"not supported yet", "not supported yet"}},
+    {"cpp_primitiveFixedArray", {"", ""}},
+    {"java_primitiveFixedArray", {"", ""}},
     {"ndk_primitiveFixedArray", {"", ""}},
-    {"rust_primitiveFixedArray", {"not supported yet", "not supported yet"}},
+    {"rust_primitiveFixedArray", {"", ""}},
     {"cpp_String", {"", ""}},
     {"java_String", {"", ""}},
     {"ndk_String", {"", ""}},
