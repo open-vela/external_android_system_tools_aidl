@@ -521,7 +521,7 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
       WriteToParcelFor({out, types, arg->GetType(), "_aidl_in.get()", prefix + var_name});
       out << ";\n";
       StatusCheckGoto(out);
-    } else if (arg->IsOut() && arg->GetType().IsArray()) {
+    } else if (arg->IsOut() && arg->GetType().IsDynamicArray()) {
       out << "_aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *" << var_name
           << ");\n";
       StatusCheckGoto(out);
@@ -626,7 +626,7 @@ static void GenerateServerCaseDefinition(CodeWriter& out, const AidlTypenames& t
       ReadFromParcelFor({out, types, arg->GetType(), "_aidl_in", "&" + var_name});
       out << ";\n";
       StatusCheckBreak(out);
-    } else if (arg->IsOut() && arg->GetType().IsArray()) {
+    } else if (arg->IsOut() && arg->GetType().IsDynamicArray()) {
       out << "_aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &" << var_name << ");\n";
       StatusCheckBreak(out);
     }
