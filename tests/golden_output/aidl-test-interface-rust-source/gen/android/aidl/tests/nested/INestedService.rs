@@ -28,6 +28,43 @@ pub trait INestedServiceAsync<P>: binder::Interface + Send {
   fn flipStatus<'a>(&'a self, _arg_p: &'a crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested) -> binder::BoxFuture<'a, binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_6_Result>>;
   fn flipStatusWithCallback<'a>(&'a self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status, _arg_cb: &'a binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_9_ICallback>) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
 }
+#[::async_trait::async_trait]
+pub trait INestedServiceAsyncServer: binder::Interface + Send {
+  fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.nested.INestedService" }
+  async fn flipStatus(&self, _arg_p: &crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_6_Result>;
+  async fn flipStatusWithCallback(&self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status, _arg_cb: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_9_ICallback>) -> binder::public_api::Result<()>;
+}
+impl BnNestedService {
+  /// Create a new async binder service.
+  pub fn new_async_binder<T, R>(inner: T, rt: R, features: binder::BinderFeatures) -> binder::Strong<dyn INestedService>
+  where
+    T: INestedServiceAsyncServer + binder::Interface + Send + Sync + 'static,
+    R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+  {
+    struct Wrapper<T, R> {
+      _inner: T,
+      _rt: R,
+    }
+    impl<T, R> binder::Interface for Wrapper<T, R> where T: binder::Interface, R: Send + Sync {
+      fn as_binder(&self) -> binder::SpIBinder { self._inner.as_binder() }
+      fn dump(&self, _file: &std::fs::File, _args: &[&std::ffi::CStr]) -> binder::Result<()> { self._inner.dump(_file, _args) }
+    }
+    impl<T, R> INestedService for Wrapper<T, R>
+    where
+      T: INestedServiceAsyncServer + Send + Sync + 'static,
+      R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+    {
+      fn flipStatus(&self, _arg_p: &crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_6_Result> {
+        self._rt.block_on(self._inner.flipStatus(_arg_p))
+      }
+      fn flipStatusWithCallback(&self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status, _arg_cb: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_9_ICallback>) -> binder::public_api::Result<()> {
+        self._rt.block_on(self._inner.flipStatusWithCallback(_arg_status, _arg_cb))
+      }
+    }
+    let wrapped = Wrapper { _inner: inner, _rt: rt };
+    Self::new_binder(wrapped, features)
+  }
+}
 pub trait INestedServiceDefault: Send + Sync {
   fn flipStatus(&self, _arg_p: &crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_6_nested_14_INestedService_6_Result> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
@@ -214,6 +251,39 @@ pub mod ICallback {
   pub trait ICallbackAsync<P>: binder::Interface + Send {
     fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.nested.INestedService.ICallback" }
     fn done<'a>(&'a self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
+  }
+  #[::async_trait::async_trait]
+  pub trait ICallbackAsyncServer: binder::Interface + Send {
+    fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.nested.INestedService.ICallback" }
+    async fn done(&self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status) -> binder::public_api::Result<()>;
+  }
+  impl BnCallback {
+    /// Create a new async binder service.
+    pub fn new_async_binder<T, R>(inner: T, rt: R, features: binder::BinderFeatures) -> binder::Strong<dyn ICallback>
+    where
+      T: ICallbackAsyncServer + binder::Interface + Send + Sync + 'static,
+      R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+    {
+      struct Wrapper<T, R> {
+        _inner: T,
+        _rt: R,
+      }
+      impl<T, R> binder::Interface for Wrapper<T, R> where T: binder::Interface, R: Send + Sync {
+        fn as_binder(&self) -> binder::SpIBinder { self._inner.as_binder() }
+        fn dump(&self, _file: &std::fs::File, _args: &[&std::ffi::CStr]) -> binder::Result<()> { self._inner.dump(_file, _args) }
+      }
+      impl<T, R> ICallback for Wrapper<T, R>
+      where
+        T: ICallbackAsyncServer + Send + Sync + 'static,
+        R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+      {
+        fn done(&self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status) -> binder::public_api::Result<()> {
+          self._rt.block_on(self._inner.done(_arg_status))
+        }
+      }
+      let wrapped = Wrapper { _inner: inner, _rt: rt };
+      Self::new_binder(wrapped, features)
+    }
   }
   pub trait ICallbackDefault: Send + Sync {
     fn done(&self, _arg_status: crate::mangled::_7_android_4_aidl_5_tests_6_nested_20_ParcelableWithNested_6_Status) -> binder::public_api::Result<()> {

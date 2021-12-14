@@ -94,7 +94,11 @@ string BuildArg(const AidlArgument& arg, const AidlTypenames& typenames, Lifetim
 enum class MethodKind {
   // This is a normal non-async method.
   NORMAL,
-  // This is an async function, using a Box to return it via the trait.
+  // This is an async method. Identical to NORMAL except that async is added
+  // in front of `fn`.
+  ASYNC,
+  // This is an async function, but using a boxed future instead of the async
+  // keyword.
   BOXED_FUTURE,
   // This could have been a non-async method, but it returns a Future so that
   // it would not be breaking to make the function do async stuff in the future.
@@ -108,22 +112,25 @@ string BuildMethod(const AidlMethod& method, const AidlTypenames& typenames,
   Lifetime lifetime;
   switch (kind) {
     case MethodKind::NORMAL:
+    case MethodKind::ASYNC:
+    case MethodKind::READY_FUTURE:
       lifetime = Lifetime::NONE;
       break;
     case MethodKind::BOXED_FUTURE:
       lifetime = Lifetime::A;
       break;
-    case MethodKind::READY_FUTURE:
-      lifetime = Lifetime::NONE;
-      break;
   }
 
   auto method_type = RustNameOf(method.GetType(), typenames, StorageMode::VALUE, lifetime);
   auto return_type = string{"binder::public_api::Result<"} + method_type + ">";
+  auto fn_prefix = string{""};
 
   switch (kind) {
     case MethodKind::NORMAL:
       // Don't wrap the return type in anything.
+      break;
+    case MethodKind::ASYNC:
+      fn_prefix = "async ";
       break;
     case MethodKind::BOXED_FUTURE:
       return_type = "binder::BoxFuture<'a, " + return_type + ">";
@@ -141,7 +148,8 @@ string BuildMethod(const AidlMethod& method, const AidlTypenames& typenames,
     parameters += BuildArg(*arg, typenames, lifetime);
   }
 
-  return "fn " + method.GetName() + lifetime_str + "(" + parameters + ") -> " + return_type;
+  return fn_prefix + "fn " + method.GetName() + lifetime_str + "(" + parameters + ") -> " +
+         return_type;
 }
 
 void GenerateClientMethodHelpers(CodeWriter& out, const AidlInterface& iface,
@@ -267,6 +275,7 @@ void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const Aid
              "self.cached_version.load(std::sync::atomic::Ordering::Relaxed);\n";
       switch (kind) {
         case MethodKind::NORMAL:
+        case MethodKind::ASYNC:
           out << "if _aidl_version != -1 { return Ok(_aidl_version); }\n";
           break;
         case MethodKind::BOXED_FUTURE:
@@ -285,6 +294,7 @@ void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const Aid
       out << "  if let Some(ref _aidl_hash) = *_aidl_hash_lock {\n";
       switch (kind) {
         case MethodKind::NORMAL:
+        case MethodKind::ASYNC:
           out << "    return Ok(_aidl_hash.clone());\n";
           break;
         case MethodKind::BOXED_FUTURE:
@@ -320,6 +330,7 @@ void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const Aid
 
   switch (kind) {
     case MethodKind::NORMAL:
+    case MethodKind::ASYNC:
       // Prepare transaction.
       out << "let _aidl_data = self.build_parcel_" + method.GetName() + "(" + build_parcel_args +
                  ")?;\n";
@@ -535,6 +546,7 @@ void GenerateRustInterface(CodeWriter* code_writer, const AidlInterface* iface,
 
   auto trait_name = ClassName(*iface, cpp::ClassNames::INTERFACE);
   auto trait_name_async = trait_name + "Async";
+  auto trait_name_async_server = trait_name + "AsyncServer";
   auto client_name = ClassName(*iface, cpp::ClassNames::CLIENT);
   auto server_name = ClassName(*iface, cpp::ClassNames::SERVER);
   *code_writer << "use binder::declare_binder_interface;\n";
@@ -636,6 +648,93 @@ void GenerateRustInterface(CodeWriter* code_writer, const AidlInterface* iface,
       *code_writer << "}\n";
     }
   }
+  code_writer->Dedent();
+  *code_writer << "}\n";
+
+  // Emit the async server trait.
+  GenerateDeprecated(*code_writer, *iface);
+  *code_writer << "#[::async_trait::async_trait]\n";
+  *code_writer << "pub trait " << trait_name_async_server << ": binder::Interface + Send {\n";
+  code_writer->Indent();
+  *code_writer << "fn get_descriptor() -> &'static str where Self: Sized { \""
+               << iface->GetDescriptor() << "\" }\n";
+
+  for (const auto& method : iface->GetMethods()) {
+    // Generate the method
+    if (method->IsUserDefined()) {
+      GenerateDeprecated(*code_writer, *method);
+      *code_writer << BuildMethod(*method, typenames, MethodKind::ASYNC) << ";\n";
+    }
+  }
+  code_writer->Dedent();
+  *code_writer << "}\n";
+
+  // Emit a new_async_binder method for binding an async server.
+  *code_writer << "impl " << server_name << " {\n";
+  code_writer->Indent();
+  *code_writer << "/// Create a new async binder service.\n";
+  *code_writer << "pub fn new_async_binder<T, R>(inner: T, rt: R, features: "
+                  "binder::BinderFeatures) -> binder::Strong<dyn "
+               << trait_name << ">\n";
+  *code_writer << "where\n";
+  code_writer->Indent();
+  *code_writer << "T: " << trait_name_async_server
+               << " + binder::Interface + Send + Sync + 'static,\n";
+  *code_writer << "R: binder::BinderAsyncRuntime + Send + Sync + 'static,\n";
+  code_writer->Dedent();
+  *code_writer << "{\n";
+  code_writer->Indent();
+  // Define a wrapper struct that implements the non-async trait by calling block_on.
+  *code_writer << "struct Wrapper<T, R> {\n";
+  code_writer->Indent();
+  *code_writer << "_inner: T,\n";
+  *code_writer << "_rt: R,\n";
+  code_writer->Dedent();
+  *code_writer << "}\n";
+  *code_writer << "impl<T, R> binder::Interface for Wrapper<T, R> where T: binder::Interface, R: "
+                  "Send + Sync {\n";
+  code_writer->Indent();
+  *code_writer << "fn as_binder(&self) -> binder::SpIBinder { self._inner.as_binder() }\n";
+  *code_writer << "fn dump(&self, _file: &std::fs::File, _args: &[&std::ffi::CStr]) -> "
+                  "binder::Result<()> { self._inner.dump(_file, _args) }\n";
+  code_writer->Dedent();
+  *code_writer << "}\n";
+  *code_writer << "impl<T, R> " << trait_name << " for Wrapper<T, R>\n";
+  *code_writer << "where\n";
+  code_writer->Indent();
+  *code_writer << "T: " << trait_name_async_server << " + Send + Sync + 'static,\n";
+  *code_writer << "R: binder::BinderAsyncRuntime + Send + Sync + 'static,\n";
+  code_writer->Dedent();
+  *code_writer << "{\n";
+  code_writer->Indent();
+  for (const auto& method : iface->GetMethods()) {
+    // Generate the method
+    if (method->IsUserDefined()) {
+      string args = "";
+      for (const std::unique_ptr<AidlArgument>& arg : method->GetArguments()) {
+        if (!args.empty()) {
+          args += ", ";
+        }
+        args += kArgumentPrefix;
+        args += arg->GetName();
+      }
+
+      *code_writer << BuildMethod(*method, typenames) << " {\n";
+      code_writer->Indent();
+      *code_writer << "self._rt.block_on(self._inner." << method->GetName() << "(" << args
+                   << "))\n";
+      code_writer->Dedent();
+      *code_writer << "}\n";
+    }
+  }
+  code_writer->Dedent();
+  *code_writer << "}\n";
+
+  *code_writer << "let wrapped = Wrapper { _inner: inner, _rt: rt };\n";
+  *code_writer << "Self::new_binder(wrapped, features)\n";
+
+  code_writer->Dedent();
+  *code_writer << "}\n";
   code_writer->Dedent();
   *code_writer << "}\n";
 

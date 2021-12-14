@@ -51,6 +51,35 @@ pub mod IEmptyInterface {
   pub trait IEmptyInterfaceAsync<P>: binder::Interface + Send {
     fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.ArrayOfInterfaces.IEmptyInterface" }
   }
+  #[::async_trait::async_trait]
+  pub trait IEmptyInterfaceAsyncServer: binder::Interface + Send {
+    fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.ArrayOfInterfaces.IEmptyInterface" }
+  }
+  impl BnEmptyInterface {
+    /// Create a new async binder service.
+    pub fn new_async_binder<T, R>(inner: T, rt: R, features: binder::BinderFeatures) -> binder::Strong<dyn IEmptyInterface>
+    where
+      T: IEmptyInterfaceAsyncServer + binder::Interface + Send + Sync + 'static,
+      R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+    {
+      struct Wrapper<T, R> {
+        _inner: T,
+        _rt: R,
+      }
+      impl<T, R> binder::Interface for Wrapper<T, R> where T: binder::Interface, R: Send + Sync {
+        fn as_binder(&self) -> binder::SpIBinder { self._inner.as_binder() }
+        fn dump(&self, _file: &std::fs::File, _args: &[&std::ffi::CStr]) -> binder::Result<()> { self._inner.dump(_file, _args) }
+      }
+      impl<T, R> IEmptyInterface for Wrapper<T, R>
+      where
+        T: IEmptyInterfaceAsyncServer + Send + Sync + 'static,
+        R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+      {
+      }
+      let wrapped = Wrapper { _inner: inner, _rt: rt };
+      Self::new_binder(wrapped, features)
+    }
+  }
   pub trait IEmptyInterfaceDefault: Send + Sync {
   }
   pub mod transactions {
@@ -100,6 +129,39 @@ pub mod IMyInterface {
   pub trait IMyInterfaceAsync<P>: binder::Interface + Send {
     fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.ArrayOfInterfaces.IMyInterface" }
     fn methodWithInterfaces<'a>(&'a self, _arg_iface: &'a binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>, _arg_nullable_iface: Option<&'a binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>, _arg_iface_array_in: &'a [binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>], _arg_iface_array_out: &'a mut Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>, _arg_iface_array_inout: &'a mut Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>, _arg_nullable_iface_array_in: Option<&'a [Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>]>, _arg_nullable_iface_array_out: &'a mut Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>>, _arg_nullable_iface_array_inout: &'a mut Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>>) -> binder::BoxFuture<'a, binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>>>>;
+  }
+  #[::async_trait::async_trait]
+  pub trait IMyInterfaceAsyncServer: binder::Interface + Send {
+    fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.ArrayOfInterfaces.IMyInterface" }
+    async fn methodWithInterfaces(&self, _arg_iface: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>, _arg_nullable_iface: Option<&binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>, _arg_iface_array_in: &[binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>], _arg_iface_array_out: &mut Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>, _arg_iface_array_inout: &mut Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>, _arg_nullable_iface_array_in: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>]>, _arg_nullable_iface_array_out: &mut Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>>, _arg_nullable_iface_array_inout: &mut Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>>>;
+  }
+  impl BnMyInterface {
+    /// Create a new async binder service.
+    pub fn new_async_binder<T, R>(inner: T, rt: R, features: binder::BinderFeatures) -> binder::Strong<dyn IMyInterface>
+    where
+      T: IMyInterfaceAsyncServer + binder::Interface + Send + Sync + 'static,
+      R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+    {
+      struct Wrapper<T, R> {
+        _inner: T,
+        _rt: R,
+      }
+      impl<T, R> binder::Interface for Wrapper<T, R> where T: binder::Interface, R: Send + Sync {
+        fn as_binder(&self) -> binder::SpIBinder { self._inner.as_binder() }
+        fn dump(&self, _file: &std::fs::File, _args: &[&std::ffi::CStr]) -> binder::Result<()> { self._inner.dump(_file, _args) }
+      }
+      impl<T, R> IMyInterface for Wrapper<T, R>
+      where
+        T: IMyInterfaceAsyncServer + Send + Sync + 'static,
+        R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+      {
+        fn methodWithInterfaces(&self, _arg_iface: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>, _arg_nullable_iface: Option<&binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>, _arg_iface_array_in: &[binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>], _arg_iface_array_out: &mut Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>, _arg_iface_array_inout: &mut Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>, _arg_nullable_iface_array_in: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>]>, _arg_nullable_iface_array_out: &mut Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>>, _arg_nullable_iface_array_inout: &mut Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>>> {
+          self._rt.block_on(self._inner.methodWithInterfaces(_arg_iface, _arg_nullable_iface, _arg_iface_array_in, _arg_iface_array_out, _arg_iface_array_inout, _arg_nullable_iface_array_in, _arg_nullable_iface_array_out, _arg_nullable_iface_array_inout))
+        }
+      }
+      let wrapped = Wrapper { _inner: inner, _rt: rt };
+      Self::new_binder(wrapped, features)
+    }
   }
   pub trait IMyInterfaceDefault: Send + Sync {
     fn methodWithInterfaces(&self, _arg_iface: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>, _arg_nullable_iface: Option<&binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>, _arg_iface_array_in: &[binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>], _arg_iface_array_out: &mut Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>, _arg_iface_array_inout: &mut Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>, _arg_nullable_iface_array_in: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>]>, _arg_nullable_iface_array_out: &mut Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>>, _arg_nullable_iface_array_inout: &mut Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_17_ArrayOfInterfaces_15_IEmptyInterface>>>>> {

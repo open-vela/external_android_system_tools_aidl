@@ -156,6 +156,296 @@ pub trait ITestServiceAsync<P>: binder::Interface + Send {
   fn GetCppJavaTests<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<Option<binder::SpIBinder>>>;
   fn getBackendType<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType>>;
 }
+#[::async_trait::async_trait]
+pub trait ITestServiceAsyncServer: binder::Interface + Send {
+  fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.ITestService" }
+  async fn UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<i32>;
+  #[deprecated = "to make sure we have something in system/tools/aidl which does a compile check of deprecated and make sure this is reflected in goldens"]
+  async fn Deprecated(&self) -> binder::public_api::Result<()>;
+  async fn TestOneway(&self) -> binder::public_api::Result<()>;
+  async fn RepeatBoolean(&self, _arg_token: bool) -> binder::public_api::Result<bool>;
+  async fn RepeatByte(&self, _arg_token: i8) -> binder::public_api::Result<i8>;
+  async fn RepeatChar(&self, _arg_token: u16) -> binder::public_api::Result<u16>;
+  async fn RepeatInt(&self, _arg_token: i32) -> binder::public_api::Result<i32>;
+  async fn RepeatLong(&self, _arg_token: i64) -> binder::public_api::Result<i64>;
+  async fn RepeatFloat(&self, _arg_token: f32) -> binder::public_api::Result<f32>;
+  async fn RepeatDouble(&self, _arg_token: f64) -> binder::public_api::Result<f64>;
+  async fn RepeatString(&self, _arg_token: &str) -> binder::public_api::Result<String>;
+  async fn RepeatByteEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>;
+  async fn RepeatIntEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>;
+  async fn RepeatLongEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>;
+  async fn ReverseBoolean(&self, _arg_input: &[bool], _arg_repeated: &mut Vec<bool>) -> binder::public_api::Result<Vec<bool>>;
+  async fn ReverseByte(&self, _arg_input: &[u8], _arg_repeated: &mut Vec<u8>) -> binder::public_api::Result<Vec<u8>>;
+  async fn ReverseChar(&self, _arg_input: &[u16], _arg_repeated: &mut Vec<u16>) -> binder::public_api::Result<Vec<u16>>;
+  async fn ReverseInt(&self, _arg_input: &[i32], _arg_repeated: &mut Vec<i32>) -> binder::public_api::Result<Vec<i32>>;
+  async fn ReverseLong(&self, _arg_input: &[i64], _arg_repeated: &mut Vec<i64>) -> binder::public_api::Result<Vec<i64>>;
+  async fn ReverseFloat(&self, _arg_input: &[f32], _arg_repeated: &mut Vec<f32>) -> binder::public_api::Result<Vec<f32>>;
+  async fn ReverseDouble(&self, _arg_input: &[f64], _arg_repeated: &mut Vec<f64>) -> binder::public_api::Result<Vec<f64>>;
+  async fn ReverseString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>>;
+  async fn ReverseByteEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>;
+  async fn ReverseIntEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>;
+  async fn ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>;
+  async fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>;
+  async fn VerifyName(&self, _arg_service: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>, _arg_name: &str) -> binder::public_api::Result<bool>;
+  async fn GetInterfaceArray(&self, _arg_names: &[String]) -> binder::public_api::Result<Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>;
+  async fn VerifyNamesWithInterfaceArray(&self, _arg_services: &[binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>], _arg_names: &[String]) -> binder::public_api::Result<bool>;
+  async fn GetNullableInterfaceArray(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>>;
+  async fn VerifyNamesWithNullableInterfaceArray(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<bool>;
+  async fn GetInterfaceList(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>>;
+  async fn VerifyNamesWithInterfaceList(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<bool>;
+  async fn ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>>;
+  async fn RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor) -> binder::public_api::Result<binder::parcel::ParcelFileDescriptor>;
+  async fn ReverseParcelFileDescriptorArray(&self, _arg_input: &[binder::parcel::ParcelFileDescriptor], _arg_repeated: &mut Vec<Option<binder::parcel::ParcelFileDescriptor>>) -> binder::public_api::Result<Vec<binder::parcel::ParcelFileDescriptor>>;
+  async fn ThrowServiceException(&self, _arg_code: i32) -> binder::public_api::Result<()>;
+  async fn RepeatNullableIntArray(&self, _arg_input: Option<&[i32]>) -> binder::public_api::Result<Option<Vec<i32>>>;
+  async fn RepeatNullableByteEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>>;
+  async fn RepeatNullableIntEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>>;
+  async fn RepeatNullableLongEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>>;
+  async fn RepeatNullableString(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>>;
+  async fn RepeatNullableStringList(&self, _arg_input: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<String>>>>;
+  async fn RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>;
+  async fn RepeatNullableParcelableArray(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>>;
+  async fn RepeatNullableParcelableList(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>>;
+  async fn TakesAnIBinder(&self, _arg_input: &binder::SpIBinder) -> binder::public_api::Result<()>;
+  async fn TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>) -> binder::public_api::Result<()>;
+  async fn TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder]) -> binder::public_api::Result<()>;
+  async fn TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>) -> binder::public_api::Result<()>;
+  async fn RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<String>;
+  async fn RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>) -> binder::public_api::Result<Option<String>>;
+  async fn ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>>;
+  async fn ReverseNullableUtf8CppString(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>>;
+  async fn ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>>;
+  async fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>;
+  async fn FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<()>;
+  async fn RepeatExtendableParcelable(&self, _arg_ep: &crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable) -> binder::public_api::Result<()>;
+  async fn ReverseList(&self, _arg_list: &crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList>;
+  async fn ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>) -> binder::public_api::Result<Vec<binder::SpIBinder>>;
+  async fn ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::public_api::Result<Option<Vec<Option<binder::SpIBinder>>>>;
+  async fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>>;
+  async fn GetNewNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>>;
+  async fn GetCppJavaTests(&self) -> binder::public_api::Result<Option<binder::SpIBinder>>;
+  async fn getBackendType(&self) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType>;
+}
+impl BnTestService {
+  /// Create a new async binder service.
+  pub fn new_async_binder<T, R>(inner: T, rt: R, features: binder::BinderFeatures) -> binder::Strong<dyn ITestService>
+  where
+    T: ITestServiceAsyncServer + binder::Interface + Send + Sync + 'static,
+    R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+  {
+    struct Wrapper<T, R> {
+      _inner: T,
+      _rt: R,
+    }
+    impl<T, R> binder::Interface for Wrapper<T, R> where T: binder::Interface, R: Send + Sync {
+      fn as_binder(&self) -> binder::SpIBinder { self._inner.as_binder() }
+      fn dump(&self, _file: &std::fs::File, _args: &[&std::ffi::CStr]) -> binder::Result<()> { self._inner.dump(_file, _args) }
+    }
+    impl<T, R> ITestService for Wrapper<T, R>
+    where
+      T: ITestServiceAsyncServer + Send + Sync + 'static,
+      R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+    {
+      fn UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<i32> {
+        self._rt.block_on(self._inner.UnimplementedMethod(_arg_arg))
+      }
+      fn Deprecated(&self) -> binder::public_api::Result<()> {
+        self._rt.block_on(self._inner.Deprecated())
+      }
+      fn TestOneway(&self) -> binder::public_api::Result<()> {
+        self._rt.block_on(self._inner.TestOneway())
+      }
+      fn RepeatBoolean(&self, _arg_token: bool) -> binder::public_api::Result<bool> {
+        self._rt.block_on(self._inner.RepeatBoolean(_arg_token))
+      }
+      fn RepeatByte(&self, _arg_token: i8) -> binder::public_api::Result<i8> {
+        self._rt.block_on(self._inner.RepeatByte(_arg_token))
+      }
+      fn RepeatChar(&self, _arg_token: u16) -> binder::public_api::Result<u16> {
+        self._rt.block_on(self._inner.RepeatChar(_arg_token))
+      }
+      fn RepeatInt(&self, _arg_token: i32) -> binder::public_api::Result<i32> {
+        self._rt.block_on(self._inner.RepeatInt(_arg_token))
+      }
+      fn RepeatLong(&self, _arg_token: i64) -> binder::public_api::Result<i64> {
+        self._rt.block_on(self._inner.RepeatLong(_arg_token))
+      }
+      fn RepeatFloat(&self, _arg_token: f32) -> binder::public_api::Result<f32> {
+        self._rt.block_on(self._inner.RepeatFloat(_arg_token))
+      }
+      fn RepeatDouble(&self, _arg_token: f64) -> binder::public_api::Result<f64> {
+        self._rt.block_on(self._inner.RepeatDouble(_arg_token))
+      }
+      fn RepeatString(&self, _arg_token: &str) -> binder::public_api::Result<String> {
+        self._rt.block_on(self._inner.RepeatString(_arg_token))
+      }
+      fn RepeatByteEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum> {
+        self._rt.block_on(self._inner.RepeatByteEnum(_arg_token))
+      }
+      fn RepeatIntEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum> {
+        self._rt.block_on(self._inner.RepeatIntEnum(_arg_token))
+      }
+      fn RepeatLongEnum(&self, _arg_token: crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum> {
+        self._rt.block_on(self._inner.RepeatLongEnum(_arg_token))
+      }
+      fn ReverseBoolean(&self, _arg_input: &[bool], _arg_repeated: &mut Vec<bool>) -> binder::public_api::Result<Vec<bool>> {
+        self._rt.block_on(self._inner.ReverseBoolean(_arg_input, _arg_repeated))
+      }
+      fn ReverseByte(&self, _arg_input: &[u8], _arg_repeated: &mut Vec<u8>) -> binder::public_api::Result<Vec<u8>> {
+        self._rt.block_on(self._inner.ReverseByte(_arg_input, _arg_repeated))
+      }
+      fn ReverseChar(&self, _arg_input: &[u16], _arg_repeated: &mut Vec<u16>) -> binder::public_api::Result<Vec<u16>> {
+        self._rt.block_on(self._inner.ReverseChar(_arg_input, _arg_repeated))
+      }
+      fn ReverseInt(&self, _arg_input: &[i32], _arg_repeated: &mut Vec<i32>) -> binder::public_api::Result<Vec<i32>> {
+        self._rt.block_on(self._inner.ReverseInt(_arg_input, _arg_repeated))
+      }
+      fn ReverseLong(&self, _arg_input: &[i64], _arg_repeated: &mut Vec<i64>) -> binder::public_api::Result<Vec<i64>> {
+        self._rt.block_on(self._inner.ReverseLong(_arg_input, _arg_repeated))
+      }
+      fn ReverseFloat(&self, _arg_input: &[f32], _arg_repeated: &mut Vec<f32>) -> binder::public_api::Result<Vec<f32>> {
+        self._rt.block_on(self._inner.ReverseFloat(_arg_input, _arg_repeated))
+      }
+      fn ReverseDouble(&self, _arg_input: &[f64], _arg_repeated: &mut Vec<f64>) -> binder::public_api::Result<Vec<f64>> {
+        self._rt.block_on(self._inner.ReverseDouble(_arg_input, _arg_repeated))
+      }
+      fn ReverseString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> {
+        self._rt.block_on(self._inner.ReverseString(_arg_input, _arg_repeated))
+      }
+      fn ReverseByteEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>> {
+        self._rt.block_on(self._inner.ReverseByteEnum(_arg_input, _arg_repeated))
+      }
+      fn ReverseIntEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>> {
+        self._rt.block_on(self._inner.ReverseIntEnum(_arg_input, _arg_repeated))
+      }
+      fn ReverseLongEnum(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum], _arg_repeated: &mut Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>) -> binder::public_api::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>> {
+        self._rt.block_on(self._inner.ReverseLongEnum(_arg_input, _arg_repeated))
+      }
+      fn GetOtherTestService(&self, _arg_name: &str) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>> {
+        self._rt.block_on(self._inner.GetOtherTestService(_arg_name))
+      }
+      fn VerifyName(&self, _arg_service: &binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>, _arg_name: &str) -> binder::public_api::Result<bool> {
+        self._rt.block_on(self._inner.VerifyName(_arg_service, _arg_name))
+      }
+      fn GetInterfaceArray(&self, _arg_names: &[String]) -> binder::public_api::Result<Vec<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
+        self._rt.block_on(self._inner.GetInterfaceArray(_arg_names))
+      }
+      fn VerifyNamesWithInterfaceArray(&self, _arg_services: &[binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>], _arg_names: &[String]) -> binder::public_api::Result<bool> {
+        self._rt.block_on(self._inner.VerifyNamesWithInterfaceArray(_arg_services, _arg_names))
+      }
+      fn GetNullableInterfaceArray(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>> {
+        self._rt.block_on(self._inner.GetNullableInterfaceArray(_arg_names))
+      }
+      fn VerifyNamesWithNullableInterfaceArray(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<bool> {
+        self._rt.block_on(self._inner.VerifyNamesWithNullableInterfaceArray(_arg_services, _arg_names))
+      }
+      fn GetInterfaceList(&self, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>>>> {
+        self._rt.block_on(self._inner.GetInterfaceList(_arg_names))
+      }
+      fn VerifyNamesWithInterfaceList(&self, _arg_services: Option<&[Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>]>, _arg_names: Option<&[Option<String>]>) -> binder::public_api::Result<bool> {
+        self._rt.block_on(self._inner.VerifyNamesWithInterfaceList(_arg_services, _arg_names))
+      }
+      fn ReverseStringList(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> {
+        self._rt.block_on(self._inner.ReverseStringList(_arg_input, _arg_repeated))
+      }
+      fn RepeatParcelFileDescriptor(&self, _arg_read: &binder::parcel::ParcelFileDescriptor) -> binder::public_api::Result<binder::parcel::ParcelFileDescriptor> {
+        self._rt.block_on(self._inner.RepeatParcelFileDescriptor(_arg_read))
+      }
+      fn ReverseParcelFileDescriptorArray(&self, _arg_input: &[binder::parcel::ParcelFileDescriptor], _arg_repeated: &mut Vec<Option<binder::parcel::ParcelFileDescriptor>>) -> binder::public_api::Result<Vec<binder::parcel::ParcelFileDescriptor>> {
+        self._rt.block_on(self._inner.ReverseParcelFileDescriptorArray(_arg_input, _arg_repeated))
+      }
+      fn ThrowServiceException(&self, _arg_code: i32) -> binder::public_api::Result<()> {
+        self._rt.block_on(self._inner.ThrowServiceException(_arg_code))
+      }
+      fn RepeatNullableIntArray(&self, _arg_input: Option<&[i32]>) -> binder::public_api::Result<Option<Vec<i32>>> {
+        self._rt.block_on(self._inner.RepeatNullableIntArray(_arg_input))
+      }
+      fn RepeatNullableByteEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_ByteEnum>>> {
+        self._rt.block_on(self._inner.RepeatNullableByteEnumArray(_arg_input))
+      }
+      fn RepeatNullableIntEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_7_IntEnum>>> {
+        self._rt.block_on(self._inner.RepeatNullableIntEnumArray(_arg_input))
+      }
+      fn RepeatNullableLongEnumArray(&self, _arg_input: Option<&[crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum]>) -> binder::public_api::Result<Option<Vec<crate::mangled::_7_android_4_aidl_5_tests_8_LongEnum>>> {
+        self._rt.block_on(self._inner.RepeatNullableLongEnumArray(_arg_input))
+      }
+      fn RepeatNullableString(&self, _arg_input: Option<&str>) -> binder::public_api::Result<Option<String>> {
+        self._rt.block_on(self._inner.RepeatNullableString(_arg_input))
+      }
+      fn RepeatNullableStringList(&self, _arg_input: Option<&[Option<String>]>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
+        self._rt.block_on(self._inner.RepeatNullableStringList(_arg_input))
+      }
+      fn RepeatNullableParcelable(&self, _arg_input: Option<&crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>) -> binder::public_api::Result<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>> {
+        self._rt.block_on(self._inner.RepeatNullableParcelable(_arg_input))
+      }
+      fn RepeatNullableParcelableArray(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>> {
+        self._rt.block_on(self._inner.RepeatNullableParcelableArray(_arg_input))
+      }
+      fn RepeatNullableParcelableList(&self, _arg_input: Option<&[Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>]>) -> binder::public_api::Result<Option<Vec<Option<crate::mangled::_7_android_4_aidl_5_tests_12_ITestService_5_Empty>>>> {
+        self._rt.block_on(self._inner.RepeatNullableParcelableList(_arg_input))
+      }
+      fn TakesAnIBinder(&self, _arg_input: &binder::SpIBinder) -> binder::public_api::Result<()> {
+        self._rt.block_on(self._inner.TakesAnIBinder(_arg_input))
+      }
+      fn TakesANullableIBinder(&self, _arg_input: Option<&binder::SpIBinder>) -> binder::public_api::Result<()> {
+        self._rt.block_on(self._inner.TakesANullableIBinder(_arg_input))
+      }
+      fn TakesAnIBinderList(&self, _arg_input: &[binder::SpIBinder]) -> binder::public_api::Result<()> {
+        self._rt.block_on(self._inner.TakesAnIBinderList(_arg_input))
+      }
+      fn TakesANullableIBinderList(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>) -> binder::public_api::Result<()> {
+        self._rt.block_on(self._inner.TakesANullableIBinderList(_arg_input))
+      }
+      fn RepeatUtf8CppString(&self, _arg_token: &str) -> binder::public_api::Result<String> {
+        self._rt.block_on(self._inner.RepeatUtf8CppString(_arg_token))
+      }
+      fn RepeatNullableUtf8CppString(&self, _arg_token: Option<&str>) -> binder::public_api::Result<Option<String>> {
+        self._rt.block_on(self._inner.RepeatNullableUtf8CppString(_arg_token))
+      }
+      fn ReverseUtf8CppString(&self, _arg_input: &[String], _arg_repeated: &mut Vec<String>) -> binder::public_api::Result<Vec<String>> {
+        self._rt.block_on(self._inner.ReverseUtf8CppString(_arg_input, _arg_repeated))
+      }
+      fn ReverseNullableUtf8CppString(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
+        self._rt.block_on(self._inner.ReverseNullableUtf8CppString(_arg_input, _arg_repeated))
+      }
+      fn ReverseUtf8CppStringList(&self, _arg_input: Option<&[Option<String>]>, _arg_repeated: &mut Option<Vec<Option<String>>>) -> binder::public_api::Result<Option<Vec<Option<String>>>> {
+        self._rt.block_on(self._inner.ReverseUtf8CppStringList(_arg_input, _arg_repeated))
+      }
+      fn GetCallback(&self, _arg_return_null: bool) -> binder::public_api::Result<Option<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_14_INamedCallback>>> {
+        self._rt.block_on(self._inner.GetCallback(_arg_return_null))
+      }
+      fn FillOutStructuredParcelable(&self, _arg_parcel: &mut crate::mangled::_7_android_4_aidl_5_tests_20_StructuredParcelable) -> binder::public_api::Result<()> {
+        self._rt.block_on(self._inner.FillOutStructuredParcelable(_arg_parcel))
+      }
+      fn RepeatExtendableParcelable(&self, _arg_ep: &crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable, _arg_ep2: &mut crate::mangled::_7_android_4_aidl_5_tests_9_extension_20_ExtendableParcelable) -> binder::public_api::Result<()> {
+        self._rt.block_on(self._inner.RepeatExtendableParcelable(_arg_ep, _arg_ep2))
+      }
+      fn ReverseList(&self, _arg_list: &crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_13_RecursiveList> {
+        self._rt.block_on(self._inner.ReverseList(_arg_list))
+      }
+      fn ReverseIBinderArray(&self, _arg_input: &[binder::SpIBinder], _arg_repeated: &mut Vec<Option<binder::SpIBinder>>) -> binder::public_api::Result<Vec<binder::SpIBinder>> {
+        self._rt.block_on(self._inner.ReverseIBinderArray(_arg_input, _arg_repeated))
+      }
+      fn ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::public_api::Result<Option<Vec<Option<binder::SpIBinder>>>> {
+        self._rt.block_on(self._inner.ReverseNullableIBinderArray(_arg_input, _arg_repeated))
+      }
+      fn GetOldNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> {
+        self._rt.block_on(self._inner.GetOldNameInterface())
+      }
+      fn GetNewNameInterface(&self) -> binder::public_api::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> {
+        self._rt.block_on(self._inner.GetNewNameInterface())
+      }
+      fn GetCppJavaTests(&self) -> binder::public_api::Result<Option<binder::SpIBinder>> {
+        self._rt.block_on(self._inner.GetCppJavaTests())
+      }
+      fn getBackendType(&self) -> binder::public_api::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType> {
+        self._rt.block_on(self._inner.getBackendType())
+      }
+    }
+    let wrapped = Wrapper { _inner: inner, _rt: rt };
+    Self::new_binder(wrapped, features)
+  }
+}
 pub trait ITestServiceDefault: Send + Sync {
   fn UnimplementedMethod(&self, _arg_arg: i32) -> binder::public_api::Result<i32> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())

@@ -397,6 +397,67 @@ pub mod IRepeatFixedSizeArray {
     fn Repeat2dBinders<'a>(&'a self, _arg_input: &'a [[binder::SpIBinder; 3]; 2], _arg_repeated: &'a mut [[Option<binder::SpIBinder>; 3]; 2]) -> binder::BoxFuture<'a, binder::public_api::Result<[[binder::SpIBinder; 3]; 2]>>;
     fn Repeat2dParcelables<'a>(&'a self, _arg_input: &'a [[crate::mangled::_7_android_4_aidl_14_fixedsizearray_21_FixedSizeArrayExample_13_IntParcelable; 3]; 2], _arg_repeated: &'a mut [[crate::mangled::_7_android_4_aidl_14_fixedsizearray_21_FixedSizeArrayExample_13_IntParcelable; 3]; 2]) -> binder::BoxFuture<'a, binder::public_api::Result<[[crate::mangled::_7_android_4_aidl_14_fixedsizearray_21_FixedSizeArrayExample_13_IntParcelable; 3]; 2]>>;
   }
+  #[::async_trait::async_trait]
+  pub trait IRepeatFixedSizeArrayAsyncServer: binder::Interface + Send {
+    fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.fixedsizearray.FixedSizeArrayExample.IRepeatFixedSizeArray" }
+    async fn RepeatBytes(&self, _arg_input: &[u8; 3], _arg_repeated: &mut [u8; 3]) -> binder::public_api::Result<[u8; 3]>;
+    async fn RepeatInts(&self, _arg_input: &[i32; 3], _arg_repeated: &mut [i32; 3]) -> binder::public_api::Result<[i32; 3]>;
+    async fn RepeatBinders(&self, _arg_input: &[binder::SpIBinder; 3], _arg_repeated: &mut [Option<binder::SpIBinder>; 3]) -> binder::public_api::Result<[binder::SpIBinder; 3]>;
+    async fn RepeatParcelables(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_14_fixedsizearray_21_FixedSizeArrayExample_13_IntParcelable; 3], _arg_repeated: &mut [crate::mangled::_7_android_4_aidl_14_fixedsizearray_21_FixedSizeArrayExample_13_IntParcelable; 3]) -> binder::public_api::Result<[crate::mangled::_7_android_4_aidl_14_fixedsizearray_21_FixedSizeArrayExample_13_IntParcelable; 3]>;
+    async fn Repeat2dBytes(&self, _arg_input: &[[u8; 3]; 2], _arg_repeated: &mut [[u8; 3]; 2]) -> binder::public_api::Result<[[u8; 3]; 2]>;
+    async fn Repeat2dInts(&self, _arg_input: &[[i32; 3]; 2], _arg_repeated: &mut [[i32; 3]; 2]) -> binder::public_api::Result<[[i32; 3]; 2]>;
+    async fn Repeat2dBinders(&self, _arg_input: &[[binder::SpIBinder; 3]; 2], _arg_repeated: &mut [[Option<binder::SpIBinder>; 3]; 2]) -> binder::public_api::Result<[[binder::SpIBinder; 3]; 2]>;
+    async fn Repeat2dParcelables(&self, _arg_input: &[[crate::mangled::_7_android_4_aidl_14_fixedsizearray_21_FixedSizeArrayExample_13_IntParcelable; 3]; 2], _arg_repeated: &mut [[crate::mangled::_7_android_4_aidl_14_fixedsizearray_21_FixedSizeArrayExample_13_IntParcelable; 3]; 2]) -> binder::public_api::Result<[[crate::mangled::_7_android_4_aidl_14_fixedsizearray_21_FixedSizeArrayExample_13_IntParcelable; 3]; 2]>;
+  }
+  impl BnRepeatFixedSizeArray {
+    /// Create a new async binder service.
+    pub fn new_async_binder<T, R>(inner: T, rt: R, features: binder::BinderFeatures) -> binder::Strong<dyn IRepeatFixedSizeArray>
+    where
+      T: IRepeatFixedSizeArrayAsyncServer + binder::Interface + Send + Sync + 'static,
+      R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+    {
+      struct Wrapper<T, R> {
+        _inner: T,
+        _rt: R,
+      }
+      impl<T, R> binder::Interface for Wrapper<T, R> where T: binder::Interface, R: Send + Sync {
+        fn as_binder(&self) -> binder::SpIBinder { self._inner.as_binder() }
+        fn dump(&self, _file: &std::fs::File, _args: &[&std::ffi::CStr]) -> binder::Result<()> { self._inner.dump(_file, _args) }
+      }
+      impl<T, R> IRepeatFixedSizeArray for Wrapper<T, R>
+      where
+        T: IRepeatFixedSizeArrayAsyncServer + Send + Sync + 'static,
+        R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+      {
+        fn RepeatBytes(&self, _arg_input: &[u8; 3], _arg_repeated: &mut [u8; 3]) -> binder::public_api::Result<[u8; 3]> {
+          self._rt.block_on(self._inner.RepeatBytes(_arg_input, _arg_repeated))
+        }
+        fn RepeatInts(&self, _arg_input: &[i32; 3], _arg_repeated: &mut [i32; 3]) -> binder::public_api::Result<[i32; 3]> {
+          self._rt.block_on(self._inner.RepeatInts(_arg_input, _arg_repeated))
+        }
+        fn RepeatBinders(&self, _arg_input: &[binder::SpIBinder; 3], _arg_repeated: &mut [Option<binder::SpIBinder>; 3]) -> binder::public_api::Result<[binder::SpIBinder; 3]> {
+          self._rt.block_on(self._inner.RepeatBinders(_arg_input, _arg_repeated))
+        }
+        fn RepeatParcelables(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_14_fixedsizearray_21_FixedSizeArrayExample_13_IntParcelable; 3], _arg_repeated: &mut [crate::mangled::_7_android_4_aidl_14_fixedsizearray_21_FixedSizeArrayExample_13_IntParcelable; 3]) -> binder::public_api::Result<[crate::mangled::_7_android_4_aidl_14_fixedsizearray_21_FixedSizeArrayExample_13_IntParcelable; 3]> {
+          self._rt.block_on(self._inner.RepeatParcelables(_arg_input, _arg_repeated))
+        }
+        fn Repeat2dBytes(&self, _arg_input: &[[u8; 3]; 2], _arg_repeated: &mut [[u8; 3]; 2]) -> binder::public_api::Result<[[u8; 3]; 2]> {
+          self._rt.block_on(self._inner.Repeat2dBytes(_arg_input, _arg_repeated))
+        }
+        fn Repeat2dInts(&self, _arg_input: &[[i32; 3]; 2], _arg_repeated: &mut [[i32; 3]; 2]) -> binder::public_api::Result<[[i32; 3]; 2]> {
+          self._rt.block_on(self._inner.Repeat2dInts(_arg_input, _arg_repeated))
+        }
+        fn Repeat2dBinders(&self, _arg_input: &[[binder::SpIBinder; 3]; 2], _arg_repeated: &mut [[Option<binder::SpIBinder>; 3]; 2]) -> binder::public_api::Result<[[binder::SpIBinder; 3]; 2]> {
+          self._rt.block_on(self._inner.Repeat2dBinders(_arg_input, _arg_repeated))
+        }
+        fn Repeat2dParcelables(&self, _arg_input: &[[crate::mangled::_7_android_4_aidl_14_fixedsizearray_21_FixedSizeArrayExample_13_IntParcelable; 3]; 2], _arg_repeated: &mut [[crate::mangled::_7_android_4_aidl_14_fixedsizearray_21_FixedSizeArrayExample_13_IntParcelable; 3]; 2]) -> binder::public_api::Result<[[crate::mangled::_7_android_4_aidl_14_fixedsizearray_21_FixedSizeArrayExample_13_IntParcelable; 3]; 2]> {
+          self._rt.block_on(self._inner.Repeat2dParcelables(_arg_input, _arg_repeated))
+        }
+      }
+      let wrapped = Wrapper { _inner: inner, _rt: rt };
+      Self::new_binder(wrapped, features)
+    }
+  }
   pub trait IRepeatFixedSizeArrayDefault: Send + Sync {
     fn RepeatBytes(&self, _arg_input: &[u8; 3], _arg_repeated: &mut [u8; 3]) -> binder::public_api::Result<[u8; 3]> {
       Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
@@ -945,6 +1006,35 @@ pub mod IEmptyInterface {
   }
   pub trait IEmptyInterfaceAsync<P>: binder::Interface + Send {
     fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.fixedsizearray.FixedSizeArrayExample.IEmptyInterface" }
+  }
+  #[::async_trait::async_trait]
+  pub trait IEmptyInterfaceAsyncServer: binder::Interface + Send {
+    fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.fixedsizearray.FixedSizeArrayExample.IEmptyInterface" }
+  }
+  impl BnEmptyInterface {
+    /// Create a new async binder service.
+    pub fn new_async_binder<T, R>(inner: T, rt: R, features: binder::BinderFeatures) -> binder::Strong<dyn IEmptyInterface>
+    where
+      T: IEmptyInterfaceAsyncServer + binder::Interface + Send + Sync + 'static,
+      R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+    {
+      struct Wrapper<T, R> {
+        _inner: T,
+        _rt: R,
+      }
+      impl<T, R> binder::Interface for Wrapper<T, R> where T: binder::Interface, R: Send + Sync {
+        fn as_binder(&self) -> binder::SpIBinder { self._inner.as_binder() }
+        fn dump(&self, _file: &std::fs::File, _args: &[&std::ffi::CStr]) -> binder::Result<()> { self._inner.dump(_file, _args) }
+      }
+      impl<T, R> IEmptyInterface for Wrapper<T, R>
+      where
+        T: IEmptyInterfaceAsyncServer + Send + Sync + 'static,
+        R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+      {
+      }
+      let wrapped = Wrapper { _inner: inner, _rt: rt };
+      Self::new_binder(wrapped, features)
+    }
   }
   pub trait IEmptyInterfaceDefault: Send + Sync {
   }

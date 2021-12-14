@@ -26,6 +26,39 @@ pub trait IOldNameAsync<P>: binder::Interface + Send {
   fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.IOldName" }
   fn RealName<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<String>>;
 }
+#[::async_trait::async_trait]
+pub trait IOldNameAsyncServer: binder::Interface + Send {
+  fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.IOldName" }
+  async fn RealName(&self) -> binder::public_api::Result<String>;
+}
+impl BnOldName {
+  /// Create a new async binder service.
+  pub fn new_async_binder<T, R>(inner: T, rt: R, features: binder::BinderFeatures) -> binder::Strong<dyn IOldName>
+  where
+    T: IOldNameAsyncServer + binder::Interface + Send + Sync + 'static,
+    R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+  {
+    struct Wrapper<T, R> {
+      _inner: T,
+      _rt: R,
+    }
+    impl<T, R> binder::Interface for Wrapper<T, R> where T: binder::Interface, R: Send + Sync {
+      fn as_binder(&self) -> binder::SpIBinder { self._inner.as_binder() }
+      fn dump(&self, _file: &std::fs::File, _args: &[&std::ffi::CStr]) -> binder::Result<()> { self._inner.dump(_file, _args) }
+    }
+    impl<T, R> IOldName for Wrapper<T, R>
+    where
+      T: IOldNameAsyncServer + Send + Sync + 'static,
+      R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+    {
+      fn RealName(&self) -> binder::public_api::Result<String> {
+        self._rt.block_on(self._inner.RealName())
+      }
+    }
+    let wrapped = Wrapper { _inner: inner, _rt: rt };
+    Self::new_binder(wrapped, features)
+  }
+}
 pub trait IOldNameDefault: Send + Sync {
   fn RealName(&self) -> binder::public_api::Result<String> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
