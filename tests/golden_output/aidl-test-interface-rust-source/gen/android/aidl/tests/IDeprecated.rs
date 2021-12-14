@@ -26,6 +26,36 @@ pub trait IDeprecated: binder::Interface + Send {
 pub trait IDeprecatedAsync<P>: binder::Interface + Send {
   fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.IDeprecated" }
 }
+#[deprecated = "test"]
+#[::async_trait::async_trait]
+pub trait IDeprecatedAsyncServer: binder::Interface + Send {
+  fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.IDeprecated" }
+}
+impl BnDeprecated {
+  /// Create a new async binder service.
+  pub fn new_async_binder<T, R>(inner: T, rt: R, features: binder::BinderFeatures) -> binder::Strong<dyn IDeprecated>
+  where
+    T: IDeprecatedAsyncServer + binder::Interface + Send + Sync + 'static,
+    R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+  {
+    struct Wrapper<T, R> {
+      _inner: T,
+      _rt: R,
+    }
+    impl<T, R> binder::Interface for Wrapper<T, R> where T: binder::Interface, R: Send + Sync {
+      fn as_binder(&self) -> binder::SpIBinder { self._inner.as_binder() }
+      fn dump(&self, _file: &std::fs::File, _args: &[&std::ffi::CStr]) -> binder::Result<()> { self._inner.dump(_file, _args) }
+    }
+    impl<T, R> IDeprecated for Wrapper<T, R>
+    where
+      T: IDeprecatedAsyncServer + Send + Sync + 'static,
+      R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+    {
+    }
+    let wrapped = Wrapper { _inner: inner, _rt: rt };
+    Self::new_binder(wrapped, features)
+  }
+}
 pub trait IDeprecatedDefault: Send + Sync {
 }
 pub mod transactions {

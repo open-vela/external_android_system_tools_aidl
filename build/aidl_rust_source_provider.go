@@ -97,6 +97,7 @@ func (sp *aidlRustSourceProvider) SourceProviderDeps(ctx rust.DepsContext, deps 
 	deps = sp.BaseSourceProvider.SourceProviderDeps(ctx, deps)
 	deps.Rustlibs = append(deps.Rustlibs, "libbinder_rs", "liblazy_static")
 	deps.Rustlibs = append(deps.Rustlibs, wrap("", getImportsWithVersion(ctx, sp.properties.AidlInterfaceName, sp.properties.Version), "-"+langRust)...)
+	deps.ProcMacros = append(deps.ProcMacros, "libasync_trait")
 	// Add a depencency to the source module (*-rust-source) directly via `ctx` because
 	// the source module is specific to aidlRustSourceProvider and we don't want the rust module
 	// to know about it.
