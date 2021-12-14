@@ -15,8 +15,8 @@ public:
   virtual ~BpProtected();
 
   ::ndk::ScopedAStatus PermissionProtected() override;
-  ::ndk::ScopedAStatus MultiplePermissions() override;
-  ::ndk::ScopedAStatus MultiplePermissions2() override;
+  ::ndk::ScopedAStatus MultiplePermissionsAll() override;
+  ::ndk::ScopedAStatus MultiplePermissionsAny() override;
 };
 }  // namespace permission
 }  // namespace tests
