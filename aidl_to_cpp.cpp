@@ -35,9 +35,6 @@ namespace aidl {
 namespace cpp {
 
 namespace {
-static const AidlTypeSpecifier kIntType{AIDL_LOCATION_HERE, "int", /*array=*/std::nullopt, nullptr,
-                                        Comments{}};
-
 std::string RawParcelMethod(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
                             bool readMethod) {
   static map<string, string> kBuiltin = {
@@ -72,10 +69,6 @@ std::string RawParcelMethod(const AidlTypeSpecifier& type, const AidlTypenames& 
   const bool nullable = type.IsNullable();
   const bool isVector = type.IsArray() || typenames.IsList(type);
   const bool utf8 = type.IsUtf8InCpp();
-
-  if (type.IsFixedSizeArray()) {
-    return "FixedArray";
-  }
 
   if (auto enum_decl = typenames.GetEnumDeclaration(type); enum_decl != nullptr) {
     if (isVector) {
@@ -218,28 +211,16 @@ std::string GetTransactionIdFor(const std::string& clazz, const AidlMethod& meth
 }
 
 std::string CppNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
-  // get base type's cpp_name with nullable processed.
-  std::string cpp_name = GetCppName(type, typenames);
-
   if (type.IsArray() || typenames.IsList(type)) {
-    if (type.IsFixedSizeArray()) {
-      for (const auto& dim : std::get<FixedSizeArray>(type.GetArray()).dimensions) {
-        cpp_name = "std::array<" + cpp_name + ", " +
-                   dim->ValueString(kIntType, ConstantValueDecorator) + ">";
-      }
-    } else {
-      cpp_name = "::std::vector<" + cpp_name + ">";
-    }
-
-    // wrap nullable again because @nullable applies to BOTH array type(outermost type) AND base
-    // type(innermost type)
+    std::string cpp_name = GetCppName(type, typenames);
     if (type.IsHeapNullable()) {
-      cpp_name = "::std::unique_ptr<" + cpp_name + ">";
+      return "::std::unique_ptr<::std::vector<" + cpp_name + ">>";
     } else if (type.IsNullable()) {
-      cpp_name = "::std::optional<" + cpp_name + ">";
+      return "::std::optional<::std::vector<" + cpp_name + ">>";
     }
+    return "::std::vector<" + cpp_name + ">";
   }
-  return cpp_name;
+  return GetCppName(type, typenames);
 }
 
 bool IsNonCopyableType(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
@@ -288,28 +269,25 @@ std::string ParcelWriteCastOf(const AidlTypeSpecifier& type, const AidlTypenames
 // Add includes for a type ref. Note that this is non-recursive.
 void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
                 std::set<std::string>* headers) {
-  if (type.IsArray()) {
-    if (type.IsFixedSizeArray()) {
-      headers->insert("array");
-    } else {
-      headers->insert("vector");
-    }
+  AIDL_FATAL_IF(typenames.IsList(type) && type.GetTypeParameters().size() != 1, type);
+  bool isVector = type.IsArray() || typenames.IsList(type);
+  bool isNullable = type.IsNullable();
+  bool utf8 = type.IsUtf8InCpp();
+
+  if (isVector) {
+    headers->insert("vector");
   }
-  if (type.IsNullable()) {
+  if (isNullable) {
     if (type.GetName() != "IBinder") {
       headers->insert("optional");
     }
   }
   if (typenames.IsList(type)) {
-    headers->insert("vector");
+    // Nothing else to do for List.
     return;
   }
   if (type.GetName() == "String") {
-    if (type.IsUtf8InCpp()) {
-      headers->insert("string");
-    } else {
-      headers->insert("utils/String16.h");
-    }
+    headers->insert(utf8 ? "string" : "utils/String16.h");
     return;
   }
   if (type.GetName() == "IBinder") {

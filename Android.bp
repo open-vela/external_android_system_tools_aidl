@@ -376,7 +376,6 @@ cc_test {
         // service uses the old version
         "aidl-test-versioned-interface-V1-cpp",
         "aidl_test_loggable_interface-cpp",
-        "aidl-test-fixedsizearray-cpp",
     ],
     srcs: ["tests/aidl_test_service.cpp"],
 }
@@ -391,7 +390,6 @@ cc_test {
         //  client uses the latest version
         "aidl-test-versioned-interface-V2-cpp",
         "aidl_test_loggable_interface-cpp",
-        "aidl-test-fixedsizearray-cpp",
     ],
     srcs: [
         "tests/aidl_test_client.cpp",
@@ -444,8 +442,7 @@ aidl_interface {
     unstable: true,
     backend: {
         cpp: {
-            enabled: true,
-            srcs_available: true,
+            enabled: false,
         },
         java: {
             enabled: false,
@@ -631,7 +628,6 @@ genrule {
         ":aidl_test_loggable_interface-java-source",
         ":aidl_test_loggable_interface-ndk-source",
         ":aidl-test-interface-platform-java-source",
-        ":aidl-test-fixedsizearray-cpp-source",
         ":aidl-test-fixedsizearray-ndk-source",
         "tests/golden_output/**/*",
     ],
