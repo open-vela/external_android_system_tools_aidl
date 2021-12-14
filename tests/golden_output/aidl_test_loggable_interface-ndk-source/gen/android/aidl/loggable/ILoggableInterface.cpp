@@ -47,67 +47,67 @@ static binder_status_t _aidl_android_aidl_loggable_ILoggableInterface_onTransact
       std::vector<std::string> _aidl_return;
 
       ScopedTrace _aidl_trace("AIDL::ndk::ILoggableInterface::LogThis::server");
-      _aidl_ret_status = AParcel_readBool(_aidl_in, &in_boolValue);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_boolValue);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_boolArray);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_boolArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = AParcel_readByte(_aidl_in, &in_byteValue);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_byteValue);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_byteArray);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_byteArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = AParcel_readChar(_aidl_in, &in_charValue);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_charValue);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_charArray);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_charArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = AParcel_readInt32(_aidl_in, &in_intValue);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_intValue);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_intArray);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_intArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = AParcel_readInt64(_aidl_in, &in_longValue);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_longValue);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_longArray);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_longArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = AParcel_readFloat(_aidl_in, &in_floatValue);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_floatValue);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_floatArray);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_floatArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = AParcel_readDouble(_aidl_in, &in_doubleValue);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_doubleValue);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_doubleArray);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_doubleArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readString(_aidl_in, &in_stringValue);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_stringValue);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_stringArray);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_stringArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_listValue);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_listValue);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readParcelable(_aidl_in, &in_dataValue);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_dataValue);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readNullableStrongBinder(_aidl_in, &in_binderValue);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_binderValue);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readNullableParcelFileDescriptor(_aidl_in, &in_pfdValue);
+      _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_in, &in_pfdValue);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_in, &in_pfdArray);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_pfdArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
       BnLoggableInterface::TransactionLog _transaction_log;
@@ -166,40 +166,40 @@ static binder_status_t _aidl_android_aidl_loggable_ILoggableInterface_onTransact
 
       if (!AStatus_isOk(_aidl_status.get())) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, _aidl_return);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, _aidl_return);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, in_boolArray);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, in_boolArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, in_byteArray);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, in_byteArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, in_charArray);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, in_charArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, in_intArray);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, in_intArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, in_longArray);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, in_longArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, in_floatArray);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, in_floatArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, in_doubleArray);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, in_doubleArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, in_stringArray);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, in_stringArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, in_listValue);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, in_listValue);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeNullableParcelFileDescriptor(_aidl_out, in_pfdValue);
+      _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_out, in_pfdValue);
       if (_aidl_ret_status != STATUS_OK) break;
 
-      _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_out, in_pfdArray);
+      _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_out, in_pfdArray);
       if (_aidl_ret_status != STATUS_OK) break;
 
       break;
@@ -249,67 +249,67 @@ std::function<void(const BpLoggableInterface::TransactionLog&)> BpLoggableInterf
   _aidl_ret_status = AIBinder_prepareTransaction(asBinder().get(), _aidl_in.getR());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeBool(_aidl_in.get(), in_boolValue);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_boolValue);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), *in_boolArray);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), *in_boolArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeByte(_aidl_in.get(), in_byteValue);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_byteValue);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), *in_byteArray);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), *in_byteArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeChar(_aidl_in.get(), in_charValue);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_charValue);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), *in_charArray);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), *in_charArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeInt32(_aidl_in.get(), in_intValue);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_intValue);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), *in_intArray);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), *in_intArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeInt64(_aidl_in.get(), in_longValue);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_longValue);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), *in_longArray);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), *in_longArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeFloat(_aidl_in.get(), in_floatValue);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_floatValue);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), *in_floatArray);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), *in_floatArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeDouble(_aidl_in.get(), in_doubleValue);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_doubleValue);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), *in_doubleArray);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), *in_doubleArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeString(_aidl_in.get(), in_stringValue);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_stringValue);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), *in_stringArray);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), *in_stringArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), *in_listValue);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), *in_listValue);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeParcelable(_aidl_in.get(), in_dataValue);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_dataValue);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeNullableStrongBinder(_aidl_in.get(), in_binderValue);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), in_binderValue);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeNullableParcelFileDescriptor(_aidl_in.get(), *in_pfdValue);
+  _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_in.get(), *in_pfdValue);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_writeVector(_aidl_in.get(), *in_pfdArray);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), *in_pfdArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
@@ -332,40 +332,40 @@ std::function<void(const BpLoggableInterface::TransactionLog&)> BpLoggableInterf
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   if (!AStatus_isOk(_aidl_status.get())) goto _aidl_status_return;
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), _aidl_return);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), _aidl_return);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), in_boolArray);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), in_boolArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), in_byteArray);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), in_byteArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), in_charArray);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), in_charArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), in_intArray);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), in_intArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), in_longArray);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), in_longArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), in_floatArray);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), in_floatArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), in_doubleArray);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), in_doubleArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), in_stringArray);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), in_stringArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), in_listValue);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), in_listValue);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readNullableParcelFileDescriptor(_aidl_out.get(), in_pfdValue);
+  _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_out.get(), in_pfdValue);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = ::ndk::AParcel_readVector(_aidl_out.get(), in_pfdArray);
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_out.get(), in_pfdArray);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_error:
@@ -478,7 +478,7 @@ static binder_status_t _aidl_android_aidl_loggable_ILoggableInterface_ISub_onTra
       int32_t in_value;
 
       ScopedTrace _aidl_trace("AIDL::ndk::ISub::Log::server");
-      _aidl_ret_status = AParcel_readInt32(_aidl_in, &in_value);
+      _aidl_ret_status = ::ndk::AParcel_readData(_aidl_in, &in_value);
       if (_aidl_ret_status != STATUS_OK) break;
 
       ILoggableInterface::BnSub::TransactionLog _transaction_log;
@@ -532,7 +532,7 @@ std::function<void(const ILoggableInterface::BpSub::TransactionLog&)> ILoggableI
   _aidl_ret_status = AIBinder_prepareTransaction(asBinder().get(), _aidl_in.getR());
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
-  _aidl_ret_status = AParcel_writeInt32(_aidl_in.get(), in_value);
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_in.get(), in_value);
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
 
   _aidl_ret_status = AIBinder_transact(
