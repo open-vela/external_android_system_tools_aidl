@@ -57,7 +57,7 @@ binder_status_t DeeplyNested::A::readFromParcel(const AParcel* _aidl_parcel) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = AParcel_readByte(_aidl_parcel, reinterpret_cast<int8_t*>(&e));
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &e);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
@@ -69,7 +69,7 @@ binder_status_t DeeplyNested::A::writeToParcel(AParcel* _aidl_parcel) const {
   _aidl_ret_status = AParcel_writeInt32(_aidl_parcel, 0);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  _aidl_ret_status = AParcel_writeByte(_aidl_parcel, static_cast<int8_t>(e));
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, e);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   size_t _aidl_end_pos = AParcel_getDataPosition(_aidl_parcel);
