@@ -38,7 +38,7 @@
 #include "aidl_language_y.h"
 #include "comments.h"
 #include "logging.h"
-#include "permission/parser.h"
+#include "permission.h"
 
 #ifdef _WIN32
 int isatty(int  fd)
@@ -186,15 +186,15 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
        CONTEXT_TYPE | CONTEXT_MEMBER,
        {{"value", kStringArrayType, /* required= */ true}}},
       {AidlAnnotation::Type::PERMISSION_ENFORCE,
-       "Enforce",
+       "EnforcePermission",
        CONTEXT_TYPE_INTERFACE | CONTEXT_METHOD,
-       {{"value", kStringType, /* required= */ true}}},
+       {{"value", kStringType}, {"anyOf", kStringArrayType}, {"allOf", kStringArrayType}}},
       {AidlAnnotation::Type::PERMISSION_MANUAL,
        "PermissionManuallyEnforced",
        CONTEXT_TYPE_INTERFACE | CONTEXT_METHOD,
        {}},
       {AidlAnnotation::Type::PERMISSION_NONE,
-       "NoPermissionRequired",
+       "RequiresNoPermission",
        CONTEXT_TYPE_INTERFACE | CONTEXT_METHOD,
        {}},
   };
@@ -310,19 +310,27 @@ bool AidlAnnotation::CheckValid() const {
   if (schema_.type == AidlAnnotation::Type::PERMISSION_ENFORCE) {
     auto expr = EnforceExpression();
     if (!expr.ok()) {
-      AIDL_ERROR(this) << "Unable to parse @Enforce annotation: " << expr.error();
+      AIDL_ERROR(this) << "Unable to parse @EnforcePermission annotation: " << expr.error();
       return false;
     }
   }
   return true;
 }
 
-Result<unique_ptr<perm::Expression>> AidlAnnotation::EnforceExpression() const {
-  auto perm_expr = ParamValue<std::string>("value");
-  if (perm_expr.has_value()) {
-    return perm::Parser::Parse(perm_expr.value());
+Result<unique_ptr<android::aidl::perm::Expression>> AidlAnnotation::EnforceExpression() const {
+  auto single = ParamValue<std::string>("value");
+  auto anyOf = ParamValue<std::vector<std::string>>("anyOf");
+  auto allOf = ParamValue<std::vector<std::string>>("allOf");
+  if (single.has_value()) {
+    return std::make_unique<android::aidl::perm::Expression>(single.value());
+  } else if (anyOf.has_value()) {
+    auto v = android::aidl::perm::AnyOf{anyOf.value()};
+    return std::make_unique<android::aidl::perm::Expression>(v);
+  } else if (allOf.has_value()) {
+    auto v = android::aidl::perm::AllOf{allOf.value()};
+    return std::make_unique<android::aidl::perm::Expression>(v);
   }
-  return Error() << "No value parameter for @Enforce";
+  return Error() << "No parameter for @EnforcePermission";
 }
 
 // Checks if the annotation is applicable to the current context.
@@ -456,13 +464,13 @@ std::vector<std::string> AidlAnnotatable::SuppressWarnings() const {
 }
 
 // Parses the @Enforce annotation expression.
-std::unique_ptr<perm::Expression> AidlAnnotatable::EnforceExpression() const {
+std::unique_ptr<android::aidl::perm::Expression> AidlAnnotatable::EnforceExpression() const {
   auto annot = GetAnnotation(annotations_, AidlAnnotation::Type::PERMISSION_ENFORCE);
   if (annot) {
     auto perm_expr = annot->EnforceExpression();
     if (!perm_expr.ok()) {
       // This should have been caught during validation.
-      AIDL_FATAL(this) << "Unable to parse @Enforce annotation: " << perm_expr.error();
+      AIDL_FATAL(this) << "Unable to parse @EnforcePermission annotation: " << perm_expr.error();
     }
     return std::move(perm_expr.value());
   }

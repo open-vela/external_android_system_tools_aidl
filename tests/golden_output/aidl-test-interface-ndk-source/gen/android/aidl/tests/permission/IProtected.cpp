@@ -25,9 +25,9 @@ static binder_status_t _aidl_android_aidl_tests_permission_IProtected_onTransact
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 1 /*MultiplePermissions*/): {
+    case (FIRST_CALL_TRANSACTION + 1 /*MultiplePermissionsAll*/): {
 
-      ::ndk::ScopedAStatus _aidl_status = _aidl_impl->MultiplePermissions();
+      ::ndk::ScopedAStatus _aidl_status = _aidl_impl->MultiplePermissionsAll();
       _aidl_ret_status = AParcel_writeStatusHeader(_aidl_out, _aidl_status.get());
       if (_aidl_ret_status != STATUS_OK) break;
 
@@ -35,9 +35,9 @@ static binder_status_t _aidl_android_aidl_tests_permission_IProtected_onTransact
 
       break;
     }
-    case (FIRST_CALL_TRANSACTION + 2 /*MultiplePermissions2*/): {
+    case (FIRST_CALL_TRANSACTION + 2 /*MultiplePermissionsAny*/): {
 
-      ::ndk::ScopedAStatus _aidl_status = _aidl_impl->MultiplePermissions2();
+      ::ndk::ScopedAStatus _aidl_status = _aidl_impl->MultiplePermissionsAny();
       _aidl_ret_status = AParcel_writeStatusHeader(_aidl_out, _aidl_status.get());
       if (_aidl_ret_status != STATUS_OK) break;
 
@@ -88,7 +88,7 @@ BpProtected::~BpProtected() {}
   _aidl_status_return:
   return _aidl_status;
 }
-::ndk::ScopedAStatus BpProtected::MultiplePermissions() {
+::ndk::ScopedAStatus BpProtected::MultiplePermissionsAll() {
   binder_status_t _aidl_ret_status = STATUS_OK;
   ::ndk::ScopedAStatus _aidl_status;
   ::ndk::ScopedAParcel _aidl_in;
@@ -99,7 +99,7 @@ BpProtected::~BpProtected() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 1 /*MultiplePermissions*/),
+    (FIRST_CALL_TRANSACTION + 1 /*MultiplePermissionsAll*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     0
@@ -108,7 +108,7 @@ BpProtected::~BpProtected() {}
     #endif  // BINDER_STABILITY_SUPPORT
     );
   if (_aidl_ret_status == STATUS_UNKNOWN_TRANSACTION && IProtected::getDefaultImpl()) {
-    _aidl_status = IProtected::getDefaultImpl()->MultiplePermissions();
+    _aidl_status = IProtected::getDefaultImpl()->MultiplePermissionsAll();
     goto _aidl_status_return;
   }
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
@@ -122,7 +122,7 @@ BpProtected::~BpProtected() {}
   _aidl_status_return:
   return _aidl_status;
 }
-::ndk::ScopedAStatus BpProtected::MultiplePermissions2() {
+::ndk::ScopedAStatus BpProtected::MultiplePermissionsAny() {
   binder_status_t _aidl_ret_status = STATUS_OK;
   ::ndk::ScopedAStatus _aidl_status;
   ::ndk::ScopedAParcel _aidl_in;
@@ -133,7 +133,7 @@ BpProtected::~BpProtected() {}
 
   _aidl_ret_status = AIBinder_transact(
     asBinder().get(),
-    (FIRST_CALL_TRANSACTION + 2 /*MultiplePermissions2*/),
+    (FIRST_CALL_TRANSACTION + 2 /*MultiplePermissionsAny*/),
     _aidl_in.getR(),
     _aidl_out.getR(),
     0
@@ -142,7 +142,7 @@ BpProtected::~BpProtected() {}
     #endif  // BINDER_STABILITY_SUPPORT
     );
   if (_aidl_ret_status == STATUS_UNKNOWN_TRANSACTION && IProtected::getDefaultImpl()) {
-    _aidl_status = IProtected::getDefaultImpl()->MultiplePermissions2();
+    _aidl_status = IProtected::getDefaultImpl()->MultiplePermissionsAny();
     goto _aidl_status_return;
   }
   if (_aidl_ret_status != STATUS_OK) goto _aidl_error;
@@ -211,12 +211,12 @@ std::shared_ptr<IProtected> IProtected::default_impl = nullptr;
   _aidl_status.set(AStatus_fromStatus(STATUS_UNKNOWN_TRANSACTION));
   return _aidl_status;
 }
-::ndk::ScopedAStatus IProtectedDefault::MultiplePermissions() {
+::ndk::ScopedAStatus IProtectedDefault::MultiplePermissionsAll() {
   ::ndk::ScopedAStatus _aidl_status;
   _aidl_status.set(AStatus_fromStatus(STATUS_UNKNOWN_TRANSACTION));
   return _aidl_status;
 }
-::ndk::ScopedAStatus IProtectedDefault::MultiplePermissions2() {
+::ndk::ScopedAStatus IProtectedDefault::MultiplePermissionsAny() {
   ::ndk::ScopedAStatus _aidl_status;
   _aidl_status.set(AStatus_fromStatus(STATUS_UNKNOWN_TRANSACTION));
   return _aidl_status;

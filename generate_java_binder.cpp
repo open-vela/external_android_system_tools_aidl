@@ -442,93 +442,53 @@ static std::shared_ptr<Method> GenerateInterfaceMethod(const AidlMethod& method)
   return decl;
 }
 
-// Visitor for the permission declared in the @Enforce annotation.
-// The visitor pattern evaluates one node at a time, recursive evaluations should be dispatched
-// by creating a new instance of the visitor. Visit methods should use SetResult to return their
-// current value. For example:
-//
-//   Visit(const perm::Expression& permissionExpression) {
-//     std::shared_ptr<Expression> expr = Evaluate(permissionExpression.FirstChild());
-//     ...
-//     SetResult(TRUE_VALUE);
-//   }
-class PermissionVisitor : public perm::Visitor {
- public:
-  // Converts a permission expression (e.g., "permission = CALL_PHONE") into an equivalent Java
-  // expression (e.g., "(checkPermission("CALL_PHONE", ...) == GRANTED").
-  static std::shared_ptr<Expression> Evaluate(const AidlMethod& method,
-                                              const perm::Expression& expr) {
-    PermissionVisitor visitor(method);
-    expr.DispatchVisit(visitor);
-    return visitor.GetResult();
-  }
-
- private:
-  void Visit(const perm::AndQuantifier& quantifier) {
+// Visitor for the permission declared in the @EnforcePermission annotation.
+struct PermissionVisitor {
+  shared_ptr<Expression> operator()(const perm::AllOf& quantifier) {
     std::shared_ptr<Expression> result;
-    for (const auto& operand : quantifier.GetOperands()) {
-      auto expr = Evaluate(method_, *operand);
+    for (const auto& operand : quantifier.operands) {
+      auto expr = (*this)(operand);
       if (result) {
         result = std::make_shared<Comparison>(result, "&&", expr);
       } else {
         result = expr;
       }
     }
-    SetResult(result);
+    return result;
   }
 
-  void Visit(const perm::OrQuantifier& quantifier) {
+  shared_ptr<Expression> operator()(const perm::AnyOf& quantifier) {
     std::shared_ptr<Expression> result;
-    for (const auto& operand : quantifier.GetOperands()) {
-      auto expr = Evaluate(method_, *operand);
+    for (const auto& operand : quantifier.operands) {
+      auto expr = (*this)(operand);
       if (result) {
         result = std::make_shared<Comparison>(result, "||", expr);
       } else {
         result = expr;
       }
     }
-    SetResult(result);
+    return result;
   }
 
-  void Visit(const perm::Predicate& p) {
-    switch (p.GetType()) {
-      case perm::Predicate::Type::kPermission: {
-        auto attributionSource =
-            std::string("new android.content.AttributionSource(getCallingUid(), null, null)");
-        for (size_t i = 0; i < method_.GetArguments().size(); i++) {
-          const auto& arg = method_.GetArguments()[i];
-          if (arg->GetType().GetName() == "android.content.AttributionSource") {
-            attributionSource = android::base::StringPrintf("_arg%zu", i);
-            break;
-          }
-        }
-        auto checkPermission = std::make_shared<MethodCall>(
-            THIS_VALUE, "permissionCheckerWrapper",
-            std::vector<std::shared_ptr<Expression>>{
-                std::make_shared<LiteralExpression>("android.Manifest.permission." + p.GetValue()),
-                std::make_shared<MethodCall>(THIS_VALUE, "getCallingPid"),
-                std::make_shared<LiteralExpression>(attributionSource)});
-        SetResult(checkPermission);
-        break;
-      }
-      case perm::Predicate::Type::kUid: {
-        auto uid = std::make_shared<LiteralExpression>("android.os.Process." + p.GetValue());
-        auto getCallingUid = std::make_shared<MethodCall>(THIS_VALUE, "getCallingUid");
-        SetResult(std::make_shared<Comparison>(getCallingUid, "==", uid));
-        break;
-      }
-      default: {
-        AIDL_FATAL(AIDL_LOCATION_HERE) << "Unsupported predicate: " << p.ToString();
+  shared_ptr<Expression> operator()(const std::string& permission) {
+    auto attributionSource =
+        std::string("new android.content.AttributionSource(getCallingUid(), null, null)");
+    for (size_t i = 0; i < method_.GetArguments().size(); i++) {
+      const auto& arg = method_.GetArguments()[i];
+      if (arg->GetType().GetName() == "android.content.AttributionSource") {
+        attributionSource = android::base::StringPrintf("_arg%zu", i);
         break;
       }
     }
+    auto checkPermission = std::make_shared<MethodCall>(
+        THIS_VALUE, "permissionCheckerWrapper",
+        std::vector<std::shared_ptr<Expression>>{
+            std::make_shared<LiteralExpression>("android.Manifest.permission." + permission),
+            std::make_shared<MethodCall>(THIS_VALUE, "getCallingPid"),
+            std::make_shared<LiteralExpression>(attributionSource)});
+    return checkPermission;
   }
 
-  PermissionVisitor(const AidlMethod& method) : method_(method){};
-
-  std::shared_ptr<Expression> GetResult() { return result_; }
-  void SetResult(std::shared_ptr<Expression> expr) { result_ = expr; }
-  std::shared_ptr<Expression> result_;
   const AidlMethod& method_;
 };
 
@@ -548,33 +508,28 @@ static void GeneratePermissionWrapper(Class* stubClass) {
   stubClass->elements.push_back(permissionCheckerWrapper);
 }
 
-static void GeneratePermissionChecks(const AidlInterface& iface, const AidlMethod& method,
-                                     std::shared_ptr<StatementBlock> addTo) {
-  std::unique_ptr<perm::Expression> combinedPermExpr;
-  auto ifacePermExpr = iface.EnforceExpression();
-  auto methodPermExpr = method.GetType().EnforceExpression();
-  if (ifacePermExpr) {
-    if (methodPermExpr) {
-      auto andPermExpr = std::make_unique<perm::AndQuantifier>();
-      andPermExpr->Append(std::move(ifacePermExpr));
-      andPermExpr->Append(std::move(methodPermExpr));
-      combinedPermExpr = std::move(andPermExpr);
-    } else {
-      combinedPermExpr = std::move(ifacePermExpr);
-    }
-  } else if (methodPermExpr) {
-    combinedPermExpr = std::move(methodPermExpr);
-  } else {
-    return;
-  }
+static void GeneratePermissionCheck(const AidlMethod& method, const perm::Expression& expr,
+                                    std::shared_ptr<StatementBlock> addTo) {
   auto ifstatement = std::make_shared<IfStatement>();
-  auto combinedExpr = PermissionVisitor::Evaluate(method, *combinedPermExpr.get());
+  auto combinedExpr = std::visit(PermissionVisitor{method}, expr);
   ifstatement->expression = std::make_shared<Comparison>(combinedExpr, "!=", TRUE_VALUE);
   ifstatement->statements = std::make_shared<StatementBlock>();
   ifstatement->statements->Add(std::make_shared<LiteralStatement>(
       android::base::StringPrintf("throw new SecurityException(\"Access denied, requires: %s\");\n",
-                                  combinedPermExpr->ToString().c_str())));
+                                  perm::ExprAsString(expr).c_str())));
   addTo->Add(ifstatement);
+}
+
+static void GeneratePermissionChecks(const AidlInterface& iface, const AidlMethod& method,
+                                     std::shared_ptr<StatementBlock> addTo) {
+  auto ifacePermExpr = iface.EnforceExpression();
+  if (ifacePermExpr) {
+    GeneratePermissionCheck(method, *ifacePermExpr.get(), addTo);
+  }
+  auto methodPermExpr = method.GetType().EnforceExpression();
+  if (methodPermExpr) {
+    GeneratePermissionCheck(method, *methodPermExpr.get(), addTo);
+  }
 }
 
 static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& method, bool oneway,

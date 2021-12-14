@@ -41,7 +41,6 @@ cc_defaults {
     header_libs: ["libgtest_prod_headers"],
     static_libs: [
         "libbase",
-        "libaidl-perm",
         "libcutils",
         "libgtest",
     ],
@@ -105,6 +104,7 @@ cc_library_static {
         "logging.cpp",
         "options.cpp",
         "parser.cpp",
+        "permission.cpp",
         "preprocess.cpp",
     ],
     yacc: {
@@ -120,7 +120,6 @@ cc_binary_host {
     srcs: ["main.cpp"],
     static_libs: [
         "libaidl-common",
-        "libaidl-perm",
         "libbase",
         "liblog",
     ],
@@ -134,7 +133,6 @@ cc_binary_host {
     cflags: ["-DAIDL_CPP_BUILD"],
     static_libs: [
         "libaidl-common",
-        "libaidl-perm",
         "libbase",
         "liblog",
     ],
@@ -169,7 +167,6 @@ cc_test {
 
     static_libs: [
         "libaidl-common",
-        "libaidl-perm",
         "libbase",
         "libcutils",
         "libgmock",
@@ -204,7 +201,6 @@ cc_fuzz {
     ],
     static_libs: [
         "libaidl-common",
-        "libaidl-perm",
         "libbase",
         "libcutils",
         "libgtest",

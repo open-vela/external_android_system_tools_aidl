@@ -63,8 +63,8 @@ public interface IProtected extends android.os.IInterface
           android.content.AttributionSource _arg0;
           _arg0 = data.readTypedObject(android.content.AttributionSource.CREATOR);
           data.enforceNoDataAvail();
-          if ((((this.permissionCheckerWrapper(android.Manifest.permission.INTERNET, this.getCallingPid(), _arg0)&&this.permissionCheckerWrapper(android.Manifest.permission.VIBRATE, this.getCallingPid(), _arg0))||(this.getCallingUid()==android.os.Process.SYSTEM_UID))!=true)) {
-            throw new SecurityException("Access denied, requires: permission = INTERNET && permission = VIBRATE || uid = SYSTEM_UID");
+          if (((this.permissionCheckerWrapper(android.Manifest.permission.INTERNET, this.getCallingPid(), _arg0)&&this.permissionCheckerWrapper(android.Manifest.permission.VIBRATE, this.getCallingPid(), _arg0))!=true)) {
+            throw new SecurityException("Access denied, requires: allOf = {INTERNET,VIBRATE}");
           }
           this.ProtectedWithSourceAttribution(_arg0);
           reply.writeNoException();
