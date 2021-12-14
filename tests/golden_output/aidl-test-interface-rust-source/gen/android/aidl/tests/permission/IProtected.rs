@@ -30,6 +30,47 @@ pub trait IProtectedAsync<P>: binder::Interface + Send {
   fn MultiplePermissionsAll<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
   fn MultiplePermissionsAny<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
 }
+#[::async_trait::async_trait]
+pub trait IProtectedAsyncServer: binder::Interface + Send {
+  fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.permission.IProtected" }
+  async fn PermissionProtected(&self) -> binder::public_api::Result<()>;
+  async fn MultiplePermissionsAll(&self) -> binder::public_api::Result<()>;
+  async fn MultiplePermissionsAny(&self) -> binder::public_api::Result<()>;
+}
+impl BnProtected {
+  /// Create a new async binder service.
+  pub fn new_async_binder<T, R>(inner: T, rt: R, features: binder::BinderFeatures) -> binder::Strong<dyn IProtected>
+  where
+    T: IProtectedAsyncServer + binder::Interface + Send + Sync + 'static,
+    R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+  {
+    struct Wrapper<T, R> {
+      _inner: T,
+      _rt: R,
+    }
+    impl<T, R> binder::Interface for Wrapper<T, R> where T: binder::Interface, R: Send + Sync {
+      fn as_binder(&self) -> binder::SpIBinder { self._inner.as_binder() }
+      fn dump(&self, _file: &std::fs::File, _args: &[&std::ffi::CStr]) -> binder::Result<()> { self._inner.dump(_file, _args) }
+    }
+    impl<T, R> IProtected for Wrapper<T, R>
+    where
+      T: IProtectedAsyncServer + Send + Sync + 'static,
+      R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+    {
+      fn PermissionProtected(&self) -> binder::public_api::Result<()> {
+        self._rt.block_on(self._inner.PermissionProtected())
+      }
+      fn MultiplePermissionsAll(&self) -> binder::public_api::Result<()> {
+        self._rt.block_on(self._inner.MultiplePermissionsAll())
+      }
+      fn MultiplePermissionsAny(&self) -> binder::public_api::Result<()> {
+        self._rt.block_on(self._inner.MultiplePermissionsAny())
+      }
+    }
+    let wrapped = Wrapper { _inner: inner, _rt: rt };
+    Self::new_binder(wrapped, features)
+  }
+}
 pub trait IProtectedDefault: Send + Sync {
   fn PermissionProtected(&self) -> binder::public_api::Result<()> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
