@@ -14,8 +14,8 @@ public:
   explicit BpProtected(const ::android::sp<::android::IBinder>& _aidl_impl);
   virtual ~BpProtected() = default;
   ::android::binder::Status PermissionProtected() override;
-  ::android::binder::Status MultiplePermissions() override;
-  ::android::binder::Status MultiplePermissions2() override;
+  ::android::binder::Status MultiplePermissionsAll() override;
+  ::android::binder::Status MultiplePermissionsAny() override;
 };  // class BpProtected
 }  // namespace permission
 }  // namespace tests

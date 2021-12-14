@@ -52,7 +52,7 @@ BpProtected::BpProtected(const ::android::sp<::android::IBinder>& _aidl_impl)
   return _aidl_status;
 }
 
-::android::binder::Status BpProtected::MultiplePermissions() {
+::android::binder::Status BpProtected::MultiplePermissionsAll() {
   ::android::Parcel _aidl_data;
   _aidl_data.markForBinder(remoteStrong());
   ::android::Parcel _aidl_reply;
@@ -62,9 +62,9 @@ BpProtected::BpProtected(const ::android::sp<::android::IBinder>& _aidl_impl)
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(BnProtected::TRANSACTION_MultiplePermissions, _aidl_data, &_aidl_reply, 0);
+  _aidl_ret_status = remote()->transact(BnProtected::TRANSACTION_MultiplePermissionsAll, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IProtected::getDefaultImpl())) {
-     return IProtected::getDefaultImpl()->MultiplePermissions();
+     return IProtected::getDefaultImpl()->MultiplePermissionsAll();
   }
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -81,7 +81,7 @@ BpProtected::BpProtected(const ::android::sp<::android::IBinder>& _aidl_impl)
   return _aidl_status;
 }
 
-::android::binder::Status BpProtected::MultiplePermissions2() {
+::android::binder::Status BpProtected::MultiplePermissionsAny() {
   ::android::Parcel _aidl_data;
   _aidl_data.markForBinder(remoteStrong());
   ::android::Parcel _aidl_reply;
@@ -91,9 +91,9 @@ BpProtected::BpProtected(const ::android::sp<::android::IBinder>& _aidl_impl)
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(BnProtected::TRANSACTION_MultiplePermissions2, _aidl_data, &_aidl_reply, 0);
+  _aidl_ret_status = remote()->transact(BnProtected::TRANSACTION_MultiplePermissionsAny, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IProtected::getDefaultImpl())) {
-     return IProtected::getDefaultImpl()->MultiplePermissions2();
+     return IProtected::getDefaultImpl()->MultiplePermissionsAny();
   }
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -147,13 +147,13 @@ BnProtected::BnProtected()
     }
   }
   break;
-  case BnProtected::TRANSACTION_MultiplePermissions:
+  case BnProtected::TRANSACTION_MultiplePermissionsAll:
   {
     if (!(_aidl_data.checkInterface(this))) {
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
     }
-    ::android::binder::Status _aidl_status(MultiplePermissions());
+    ::android::binder::Status _aidl_status(MultiplePermissionsAll());
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
@@ -163,13 +163,13 @@ BnProtected::BnProtected()
     }
   }
   break;
-  case BnProtected::TRANSACTION_MultiplePermissions2:
+  case BnProtected::TRANSACTION_MultiplePermissionsAny:
   {
     if (!(_aidl_data.checkInterface(this))) {
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
     }
-    ::android::binder::Status _aidl_status(MultiplePermissions2());
+    ::android::binder::Status _aidl_status(MultiplePermissionsAny());
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;

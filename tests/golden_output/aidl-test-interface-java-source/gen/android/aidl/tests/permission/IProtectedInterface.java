@@ -64,7 +64,7 @@ public interface IProtectedInterface extends android.os.IInterface
         case TRANSACTION_Method1:
         {
           if ((this.permissionCheckerWrapper(android.Manifest.permission.ACCESS_FINE_LOCATION, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null))!=true)) {
-            throw new SecurityException("Access denied, requires: permission = ACCESS_FINE_LOCATION");
+            throw new SecurityException("Access denied, requires: ACCESS_FINE_LOCATION");
           }
           this.Method1();
           reply.writeNoException();
@@ -72,8 +72,11 @@ public interface IProtectedInterface extends android.os.IInterface
         }
         case TRANSACTION_Method2:
         {
-          if (((this.permissionCheckerWrapper(android.Manifest.permission.ACCESS_FINE_LOCATION, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null))&&this.permissionCheckerWrapper(android.Manifest.permission.INTERNET, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null)))!=true)) {
-            throw new SecurityException("Access denied, requires: permission = ACCESS_FINE_LOCATION && permission = INTERNET");
+          if ((this.permissionCheckerWrapper(android.Manifest.permission.ACCESS_FINE_LOCATION, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null))!=true)) {
+            throw new SecurityException("Access denied, requires: ACCESS_FINE_LOCATION");
+          }
+          if ((this.permissionCheckerWrapper(android.Manifest.permission.INTERNET, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null))!=true)) {
+            throw new SecurityException("Access denied, requires: INTERNET");
           }
           this.Method2();
           reply.writeNoException();

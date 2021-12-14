@@ -22,8 +22,8 @@ public:
   virtual ~IProtected();
 
   static constexpr uint32_t TRANSACTION_PermissionProtected = FIRST_CALL_TRANSACTION + 0;
-  static constexpr uint32_t TRANSACTION_MultiplePermissions = FIRST_CALL_TRANSACTION + 1;
-  static constexpr uint32_t TRANSACTION_MultiplePermissions2 = FIRST_CALL_TRANSACTION + 2;
+  static constexpr uint32_t TRANSACTION_MultiplePermissionsAll = FIRST_CALL_TRANSACTION + 1;
+  static constexpr uint32_t TRANSACTION_MultiplePermissionsAny = FIRST_CALL_TRANSACTION + 2;
 
   static std::shared_ptr<IProtected> fromBinder(const ::ndk::SpAIBinder& binder);
   static binder_status_t writeToParcel(AParcel* parcel, const std::shared_ptr<IProtected>& instance);
@@ -31,16 +31,16 @@ public:
   static bool setDefaultImpl(const std::shared_ptr<IProtected>& impl);
   static const std::shared_ptr<IProtected>& getDefaultImpl();
   virtual ::ndk::ScopedAStatus PermissionProtected() = 0;
-  virtual ::ndk::ScopedAStatus MultiplePermissions() = 0;
-  virtual ::ndk::ScopedAStatus MultiplePermissions2() = 0;
+  virtual ::ndk::ScopedAStatus MultiplePermissionsAll() = 0;
+  virtual ::ndk::ScopedAStatus MultiplePermissionsAny() = 0;
 private:
   static std::shared_ptr<IProtected> default_impl;
 };
 class IProtectedDefault : public IProtected {
 public:
   ::ndk::ScopedAStatus PermissionProtected() override;
-  ::ndk::ScopedAStatus MultiplePermissions() override;
-  ::ndk::ScopedAStatus MultiplePermissions2() override;
+  ::ndk::ScopedAStatus MultiplePermissionsAll() override;
+  ::ndk::ScopedAStatus MultiplePermissionsAny() override;
   ::ndk::SpAIBinder asBinder() override;
   bool isRemote() override;
 };

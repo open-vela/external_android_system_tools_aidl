@@ -34,7 +34,7 @@
 #include "location.h"
 #include "logging.h"
 #include "options.h"
-#include "permission/parser.h"
+#include "permission.h"
 
 using android::aidl::AidlTypenames;
 using android::aidl::CodeWriter;
@@ -289,7 +289,7 @@ class AidlAnnotation : public AidlNode {
   void TraverseChildren(std::function<void(const AidlNode&)> traverse) const override;
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 
-  Result<unique_ptr<perm::Expression>> EnforceExpression() const;
+  Result<unique_ptr<android::aidl::perm::Expression>> EnforceExpression() const;
 
  private:
   struct ParamType {
@@ -360,7 +360,7 @@ class AidlAnnotatable : public AidlCommentable {
   const AidlAnnotation* RustDerive() const;
   const AidlAnnotation* BackingType() const;
   std::vector<std::string> SuppressWarnings() const;
-  std::unique_ptr<perm::Expression> EnforceExpression() const;
+  std::unique_ptr<android::aidl::perm::Expression> EnforceExpression() const;
   bool IsPermissionManual() const;
   bool IsPermissionNone() const;
 
