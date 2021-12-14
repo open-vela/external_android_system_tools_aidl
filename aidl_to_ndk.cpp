@@ -30,6 +30,9 @@ namespace android {
 namespace aidl {
 namespace ndk {
 
+static const AidlTypeSpecifier kIntType{AIDL_LOCATION_HERE, "int", /*array=*/std::nullopt, nullptr,
+                                        Comments{}};
+
 std::string NdkHeaderFile(const AidlDefinedType& defined_type, cpp::ClassNames name,
                           bool use_os_sep) {
   char seperator = (use_os_sep) ? OS_PATH_SEPARATOR : '/';
@@ -111,11 +114,19 @@ static TypeInfo WrapNullableType(TypeInfo info, bool is_heap) {
   return info;
 }
 
-static TypeInfo WrapArrayType(TypeInfo info) {
+static TypeInfo WrapArrayType(TypeInfo info, const ArrayType* array) {
+  AIDL_FATAL_IF(!array, AIDL_LOCATION_HERE) << "not an array";
+  // When "byte"(AIDL) is used in an array, use "uint8_t" because it's more C++ idiomatic.
   if (info.cpp_name == "int8_t") {
-    info.cpp_name = "std::vector<uint8_t>";
-  } else {
+    info.cpp_name = "uint8_t";
+  }
+  if (std::get_if<DynamicArray>(array)) {
     info.cpp_name = "std::vector<" + info.cpp_name + ">";
+  } else {
+    for (const auto& dim : std::get<FixedSizeArray>(*array).dimensions) {
+      info.cpp_name = "std::array<" + info.cpp_name + ", " +
+                      dim->ValueString(kIntType, ConstantValueDecorator) + ">";
+    }
   }
   info.value_is_cheap = false;
   return info;
@@ -139,11 +150,13 @@ static TypeInfo GetTypeInfo(const AidlTypenames& types, const AidlTypeSpecifier&
   // Keep original @nullable to handle the case of List<T>. "@nullable" is attached to "List" not
   // "T"
   bool is_nullable = aidl.IsNullable();
-  bool is_array = aidl.IsArray();
+  const ArrayType* array = nullptr;
   const AidlTypeSpecifier* element_type = &aidl;
 
   // List<T> is converted to T[].
   if (aidl.GetName() == "List") {
+    static const ArrayType kDynamicArray{DynamicArray{}};
+
     AIDL_FATAL_IF(!aidl.IsGeneric(), aidl) << "List must be generic type.";
     AIDL_FATAL_IF(aidl.GetTypeParameters().size() != 1, aidl)
         << "List can accept only one type parameter.";
@@ -151,8 +164,10 @@ static TypeInfo GetTypeInfo(const AidlTypenames& types, const AidlTypeSpecifier&
     // TODO(b/136048684) AIDL doesn't support nested type parameter yet.
     AIDL_FATAL_IF(type_param.IsGeneric(), aidl) << "AIDL doesn't support nested type parameter";
     // Treat "List<T>" as an array of T.
-    is_array = true;
+    array = &kDynamicArray;
     element_type = &type_param;
+  } else if (aidl.IsArray()) {
+    array = &aidl.GetArray();
   }
 
   TypeInfo info = GetBaseTypeInfo(types, *element_type);
@@ -160,9 +175,8 @@ static TypeInfo GetTypeInfo(const AidlTypenames& types, const AidlTypeSpecifier&
   if (is_nullable && ShouldWrapNullable(types, element_type->GetName())) {
     info = WrapNullableType(info, aidl.IsHeapNullable());
   }
-  if (is_array) {
-    info = WrapArrayType(info);
-    // @nullable is applied to both the element type and the vector type.
+  if (array) {
+    info = WrapArrayType(info, array);
     if (is_nullable) {
       AIDL_FATAL_IF(aidl.IsHeapNullable(), aidl) << "Array/List can't be @nullable(heap=true)";
       info = WrapNullableType(info, /*is_heap=*/false);
