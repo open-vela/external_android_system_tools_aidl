@@ -35,8 +35,6 @@ namespace aidl {
 namespace cpp {
 
 namespace {
-static const AidlTypeSpecifier kIntType{AIDL_LOCATION_HERE, "int", /*array=*/std::nullopt, nullptr,
-                                        Comments{}};
 
 std::string RawParcelMethod(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
                             bool readMethod) {
@@ -223,9 +221,9 @@ std::string CppNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typena
 
   if (type.IsArray() || typenames.IsList(type)) {
     if (type.IsFixedSizeArray()) {
-      for (const auto& dim : std::get<FixedSizeArray>(type.GetArray()).dimensions) {
-        cpp_name = "std::array<" + cpp_name + ", " +
-                   dim->ValueString(kIntType, ConstantValueDecorator) + ">";
+      auto dimensions = type.GetFixedSizeArrayDimensions();
+      for (auto it = rbegin(dimensions), end = rend(dimensions); it != end; it++) {
+        cpp_name = "std::array<" + cpp_name + ", " + std::to_string(*it) + ">";
       }
     } else {
       cpp_name = "::std::vector<" + cpp_name + ">";

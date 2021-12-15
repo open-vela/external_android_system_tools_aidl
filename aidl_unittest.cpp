@@ -1451,7 +1451,7 @@ TEST_F(AidlTest, ByteAndByteArrayDifferInCpp) {
   ASSERT_EQ(3ul, fields.size());
   EXPECT_EQ("-1", fields[0]->ValueString(cpp::ConstantValueDecorator));
   EXPECT_EQ("{uint8_t(-1), 1}", fields[1]->ValueString(cpp::ConstantValueDecorator));
-  EXPECT_EQ("{uint8_t(-1), 1}", fields[2]->ValueString(cpp::ConstantValueDecorator));
+  EXPECT_EQ("{{uint8_t(-1), 1}}", fields[2]->ValueString(cpp::ConstantValueDecorator));
 }
 
 TEST_F(AidlTest, ByteAndByteArrayDifferInNdk) {
@@ -1470,7 +1470,7 @@ TEST_F(AidlTest, ByteAndByteArrayDifferInNdk) {
   ASSERT_EQ(3ul, fields.size());
   EXPECT_EQ("-1", fields[0]->ValueString(ndk::ConstantValueDecorator));
   EXPECT_EQ("{uint8_t(-1), 1}", fields[1]->ValueString(ndk::ConstantValueDecorator));
-  EXPECT_EQ("{uint8_t(-1), 1}", fields[2]->ValueString(ndk::ConstantValueDecorator));
+  EXPECT_EQ("{{uint8_t(-1), 1}}", fields[2]->ValueString(ndk::ConstantValueDecorator));
 }
 
 TEST_P(AidlTest, UnderstandsNestedUnstructuredParcelables) {
