@@ -16,6 +16,7 @@
 
 package android.aidl.fixedsizearray;
 
+@RustDerive(PartialEq=true)
 parcelable FixedSizeArrayExample {
     // to see if NxM array works
     int[2][3] int2x3 = {{1, 2, 3}, {4, 5, 6}};
@@ -108,6 +109,7 @@ parcelable FixedSizeArrayExample {
 
     @Backing(type="long") enum LongEnum { A }
 
+    @RustDerive(Clone=true, Copy=true, PartialEq=true)
     parcelable IntParcelable {
         int value;
     }
