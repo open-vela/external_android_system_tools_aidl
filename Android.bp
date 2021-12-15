@@ -419,6 +419,7 @@ cc_test {
         "aidl-test-versioned-interface-V2-ndk",
         "aidl-test-interface-ndk",
         "aidl_test_loggable_interface-ndk",
+        "aidl-test-fixedsizearray-ndk",
     ],
     shared_libs: [
         "libbinder_ndk",
@@ -432,6 +433,28 @@ cc_test {
         "tests/aidl_test_client_ndk_strings_test.cpp",
         "tests/aidl_test_client_ndk_versioned_interface.cpp",
     ],
+}
+
+aidl_interface {
+    name: "aidl-test-fixedsizearray",
+    srcs: ["tests/android/aidl/fixedsizearray/FixedSizeArrayExample.aidl"],
+    local_include_dir: "tests",
+    unstable: true,
+    backend: {
+        cpp: {
+            enabled: false,
+        },
+        java: {
+            enabled: false,
+        },
+        ndk: {
+            enabled: true,
+            srcs_available: true,
+        },
+        rust: {
+            enabled: false,
+        },
+    }
 }
 
 java_defaults {
@@ -605,6 +628,7 @@ genrule {
         ":aidl_test_loggable_interface-java-source",
         ":aidl_test_loggable_interface-ndk-source",
         ":aidl-test-interface-platform-java-source",
+        ":aidl-test-fixedsizearray-ndk-source",
         "tests/golden_output/**/*",
     ],
     out: ["TODO_b_37575883.cpp"],
