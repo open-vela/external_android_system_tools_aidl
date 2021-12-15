@@ -123,10 +123,9 @@ static TypeInfo WrapArrayType(TypeInfo info, const ArrayType* array) {
   if (std::get_if<DynamicArray>(array)) {
     info.cpp_name = "std::vector<" + info.cpp_name + ">";
   } else {
-    const auto& dimensions = std::get<FixedSizeArray>(*array).dimensions;
-    for (auto it = rbegin(dimensions), end = rend(dimensions); it != end; it++) {
+    for (const auto& dim : std::get<FixedSizeArray>(*array).dimensions) {
       info.cpp_name = "std::array<" + info.cpp_name + ", " +
-                      (*it)->ValueString(kIntType, ConstantValueDecorator) + ">";
+                      dim->ValueString(kIntType, ConstantValueDecorator) + ">";
     }
   }
   info.value_is_cheap = false;

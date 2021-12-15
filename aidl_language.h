@@ -404,8 +404,6 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   // View of this type which has one-less dimension(s).
   // e.g.) T[] => T, T[N][M] => T[M]
   void ViewAsArrayBase(std::function<void(const AidlTypeSpecifier&)> func) const;
-  // ViewAsArrayBase passes "mutated" type to its callback.
-  bool IsMutated() const { return mutated_; }
 
   // Returns the full-qualified name of the base type.
   // int -> int
@@ -445,7 +443,6 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   bool IsFixedSizeArray() const {
     return array_.has_value() && std::get_if<FixedSizeArray>(&*array_) != nullptr;
   }
-  std::vector<int32_t> GetFixedSizeArrayDimensions() const;
 
   const ArrayType& GetArray() const {
     AIDL_FATAL_IF(!array_.has_value(), this) << "GetArray() for non-array type";
@@ -474,8 +471,6 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   const string unresolved_name_;
   string fully_qualified_name_;
   mutable std::optional<ArrayType> array_;
-  mutable bool mutated_ = false;  // ViewAsArrayBase() sets this as true to distinguish mutated one
-                                  // from the original type
   vector<string> split_name_;
   const AidlDefinedType* defined_type_ = nullptr;  // set when Resolve() for defined types
 };
@@ -639,7 +634,7 @@ class AidlConstantValue : public AidlNode {
     } else if constexpr (is_one_of<T, int8_t, int32_t, int64_t>::value) {
       AIDL_FATAL_IF(final_type_ < Type::INT8 && final_type_ > Type::INT64, this);
       return static_cast<T>(final_value_);
-    } else if constexpr (std::is_same<T, char>::value) {
+    } else if constexpr (std::is_same<T, char16_t>::value) {
       AIDL_FATAL_IF(final_type_ != Type::CHARACTER, this);
       return final_string_value_.at(1);  // unquote '
     } else if constexpr (std::is_same<T, bool>::value) {
@@ -664,9 +659,9 @@ class AidlConstantValue : public AidlNode {
   static AidlConstantValue* Default(const AidlTypeSpecifier& specifier);
 
   static AidlConstantValue* Boolean(const AidlLocation& location, bool value);
-  static AidlConstantValue* Character(const AidlLocation& location, char value);
+  static AidlConstantValue* Character(const AidlLocation& location, const std::string& value);
   // example: 123, -5498, maybe any size
-  static AidlConstantValue* Integral(const AidlLocation& location, const string& value);
+  static AidlConstantValue* Integral(const AidlLocation& location, const std::string& value);
   static AidlConstantValue* Floating(const AidlLocation& location, const std::string& value);
   static AidlConstantValue* Array(const AidlLocation& location,
                                   std::unique_ptr<vector<unique_ptr<AidlConstantValue>>> values);

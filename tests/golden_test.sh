@@ -48,7 +48,6 @@ function _golden_test() {
     "aidl-test-interface-platform-java-source"
     "aidl-test-fixedsizearray-cpp-source"
     "aidl-test-fixedsizearray-ndk-source"
-    "aidl-test-fixedsizearray-rust-source"
   )
 
   local root="."
