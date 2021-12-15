@@ -176,7 +176,7 @@ TEST_F(AidlTest, FixedSizeArrayOverBinder) {
   BackendType backend;
   auto status = test_service->getBackendType(&backend);
   EXPECT_TRUE(status.isOk());
-  if (backend != BackendType::CPP) GTEST_SKIP();
+  if (backend == BackendType::JAVA) GTEST_SKIP();
 
   auto service = getService<IRepeatFixedSizeArray>();
 
