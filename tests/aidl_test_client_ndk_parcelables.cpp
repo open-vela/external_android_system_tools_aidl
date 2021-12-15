@@ -159,8 +159,8 @@ void CheckRepeat(Service service, MemFn fn, Input input) {
 }
 
 template <typename T>
-std::array<std::array<T, 2>, 3> Make2dArray(std::initializer_list<T> values) {
-  std::array<std::array<T, 2>, 3> arr = {};
+std::array<std::array<T, 3>, 2> Make2dArray(std::initializer_list<T> values) {
+  std::array<std::array<T, 3>, 2> arr = {};
   auto it = std::begin(values);
   for (auto& row : arr) {
     for (auto& el : row) {

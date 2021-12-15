@@ -17,6 +17,9 @@
 package android.aidl.fixedsizearray;
 
 parcelable FixedSizeArrayExample {
+    // to see if NxM array works
+    int[2][3] int2x3 = {{1, 2, 3}, {4, 5, 6}};
+
     boolean[2] boolArray;
     byte[2] byteArray;
     char[2] charArray;
@@ -24,7 +27,7 @@ parcelable FixedSizeArrayExample {
     long[2] longArray;
     float[2] floatArray;
     double[2] doubleArray;
-    @utf8InCpp String[2] stringArray;
+    @utf8InCpp String[2] stringArray = {"hello", "world"};
     ByteEnum[2] byteEnumArray;
     IntEnum[2] intEnumArray;
     LongEnum[2] longEnumArray;
@@ -41,7 +44,7 @@ parcelable FixedSizeArrayExample {
     long[2][2] longMatrix;
     float[2][2] floatMatrix;
     double[2][2] doubleMatrix;
-    @utf8InCpp String[2][2] stringMatrix;
+    @utf8InCpp String[2][2] stringMatrix = {{"hello", "world"}, {"Ciao", "mondo"}};
     ByteEnum[2][2] byteEnumMatrix;
     IntEnum[2][2] intEnumMatrix;
     LongEnum[2][2] longEnumMatrix;
@@ -58,7 +61,7 @@ parcelable FixedSizeArrayExample {
     @nullable long[2] longNullableArray;
     @nullable float[2] floatNullableArray;
     @nullable double[2] doubleNullableArray;
-    @nullable @utf8InCpp String[2] stringNullableArray;
+    @nullable @utf8InCpp String[2] stringNullableArray = {"hello", "world"};
     @nullable ByteEnum[2] byteEnumNullableArray;
     @nullable IntEnum[2] intEnumNullableArray;
     @nullable LongEnum[2] longEnumNullableArray;
@@ -74,7 +77,8 @@ parcelable FixedSizeArrayExample {
     @nullable long[2][2] longNullableMatrix;
     @nullable float[2][2] floatNullableMatrix;
     @nullable double[2][2] doubleNullableMatrix;
-    @nullable @utf8InCpp String[2][2] stringNullableMatrix;
+    @nullable @utf8InCpp String[2][2] stringNullableMatrix = {
+            {"hello", "world"}, {"Ciao", "mondo"}};
     @nullable ByteEnum[2][2] byteEnumNullableMatrix;
     @nullable IntEnum[2][2] intEnumNullableMatrix;
     @nullable LongEnum[2][2] longEnumNullableMatrix;
