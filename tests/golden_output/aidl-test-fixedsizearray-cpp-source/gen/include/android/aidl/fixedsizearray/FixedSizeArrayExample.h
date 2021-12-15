@@ -1,40 +1,29 @@
 #pragma once
 
+#include <android/aidl/fixedsizearray/FixedSizeArrayExample.h>
+#include <android/binder_to_string.h>
 #include <array>
+#include <binder/Enums.h>
+#include <binder/IBinder.h>
+#include <binder/IInterface.h>
+#include <binder/Parcel.h>
+#include <binder/ParcelFileDescriptor.h>
+#include <binder/Status.h>
 #include <cstdint>
-#include <memory>
 #include <optional>
 #include <string>
-#include <vector>
-#include <android/binder_enums.h>
-#include <android/binder_ibinder.h>
-#include <android/binder_interface_utils.h>
-#include <android/binder_parcelable_utils.h>
-#include <android/binder_to_string.h>
-#include <aidl/android/aidl/fixedsizearray/FixedSizeArrayExample.h>
-#ifdef BINDER_STABILITY_SUPPORT
-#include <android/binder_stability.h>
-#endif  // BINDER_STABILITY_SUPPORT
+#include <tuple>
+#include <utils/String16.h>
+#include <utils/StrongPointer.h>
 
-namespace aidl {
 namespace android {
 namespace aidl {
 namespace fixedsizearray {
-class FixedSizeArrayExample {
+class FixedSizeArrayExample : public ::android::Parcelable {
 public:
-  typedef std::false_type fixed_size;
-  static const char* descriptor;
-
-  class IntParcelable {
+  class IntParcelable : public ::android::Parcelable {
   public:
-    typedef std::false_type fixed_size;
-    static const char* descriptor;
-
     int32_t value = 0;
-
-    binder_status_t readFromParcel(const AParcel* parcel);
-    binder_status_t writeToParcel(AParcel* parcel) const;
-
     inline bool operator!=(const IntParcelable& rhs) const {
       return std::tie(value) != std::tie(rhs.value);
     }
@@ -54,7 +43,12 @@ public:
       return std::tie(value) >= std::tie(rhs.value);
     }
 
-    static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::STABILITY_LOCAL;
+    ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
+    ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
+    static const ::android::String16& getParcelableDescriptor() {
+      static const ::android::StaticString16 DESCIPTOR (u"android.aidl.fixedsizearray.FixedSizeArrayExample.IntParcelable");
+      return DESCIPTOR;
+    }
     inline std::string toString() const {
       std::ostringstream os;
       os << "IntParcelable{";
@@ -62,119 +56,146 @@ public:
       os << "}";
       return os.str();
     }
-  };
-  class IRepeatFixedSizeArray : public ::ndk::ICInterface {
+  };  // class IntParcelable
+  class IRepeatFixedSizeArray : public ::android::IInterface {
   public:
-    static const char* descriptor;
-    IRepeatFixedSizeArray();
-    virtual ~IRepeatFixedSizeArray();
+    DECLARE_META_INTERFACE(RepeatFixedSizeArray)
+    virtual ::android::binder::Status RepeatBytes(const std::array<uint8_t, 3>& input, std::array<uint8_t, 3>* repeated, std::array<uint8_t, 3>* _aidl_return) = 0;
+    virtual ::android::binder::Status RepeatInts(const std::array<int32_t, 3>& input, std::array<int32_t, 3>* repeated, std::array<int32_t, 3>* _aidl_return) = 0;
+    virtual ::android::binder::Status RepeatBinders(const std::array<::android::sp<::android::IBinder>, 3>& input, std::array<::android::sp<::android::IBinder>, 3>* repeated, std::array<::android::sp<::android::IBinder>, 3>* _aidl_return) = 0;
+    virtual ::android::binder::Status RepeatParcelables(const std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>& input, std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>* repeated, std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>* _aidl_return) = 0;
+    virtual ::android::binder::Status Repeat2dBytes(const std::array<std::array<uint8_t, 3>, 2>& input, std::array<std::array<uint8_t, 3>, 2>* repeated, std::array<std::array<uint8_t, 3>, 2>* _aidl_return) = 0;
+    virtual ::android::binder::Status Repeat2dInts(const std::array<std::array<int32_t, 3>, 2>& input, std::array<std::array<int32_t, 3>, 2>* repeated, std::array<std::array<int32_t, 3>, 2>* _aidl_return) = 0;
+    virtual ::android::binder::Status Repeat2dBinders(const std::array<std::array<::android::sp<::android::IBinder>, 3>, 2>& input, std::array<std::array<::android::sp<::android::IBinder>, 3>, 2>* repeated, std::array<std::array<::android::sp<::android::IBinder>, 3>, 2>* _aidl_return) = 0;
+    virtual ::android::binder::Status Repeat2dParcelables(const std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>& input, std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>* repeated, std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>* _aidl_return) = 0;
+  };  // class IRepeatFixedSizeArray
 
-    static constexpr uint32_t TRANSACTION_RepeatBytes = FIRST_CALL_TRANSACTION + 0;
-    static constexpr uint32_t TRANSACTION_RepeatInts = FIRST_CALL_TRANSACTION + 1;
-    static constexpr uint32_t TRANSACTION_RepeatBinders = FIRST_CALL_TRANSACTION + 2;
-    static constexpr uint32_t TRANSACTION_RepeatParcelables = FIRST_CALL_TRANSACTION + 3;
-    static constexpr uint32_t TRANSACTION_Repeat2dBytes = FIRST_CALL_TRANSACTION + 4;
-    static constexpr uint32_t TRANSACTION_Repeat2dInts = FIRST_CALL_TRANSACTION + 5;
-    static constexpr uint32_t TRANSACTION_Repeat2dBinders = FIRST_CALL_TRANSACTION + 6;
-    static constexpr uint32_t TRANSACTION_Repeat2dParcelables = FIRST_CALL_TRANSACTION + 7;
-
-    static std::shared_ptr<IRepeatFixedSizeArray> fromBinder(const ::ndk::SpAIBinder& binder);
-    static binder_status_t writeToParcel(AParcel* parcel, const std::shared_ptr<IRepeatFixedSizeArray>& instance);
-    static binder_status_t readFromParcel(const AParcel* parcel, std::shared_ptr<IRepeatFixedSizeArray>* instance);
-    static bool setDefaultImpl(const std::shared_ptr<IRepeatFixedSizeArray>& impl);
-    static const std::shared_ptr<IRepeatFixedSizeArray>& getDefaultImpl();
-    virtual ::ndk::ScopedAStatus RepeatBytes(const std::array<uint8_t, 3>& in_input, std::array<uint8_t, 3>* out_repeated, std::array<uint8_t, 3>* _aidl_return) = 0;
-    virtual ::ndk::ScopedAStatus RepeatInts(const std::array<int32_t, 3>& in_input, std::array<int32_t, 3>* out_repeated, std::array<int32_t, 3>* _aidl_return) = 0;
-    virtual ::ndk::ScopedAStatus RepeatBinders(const std::array<::ndk::SpAIBinder, 3>& in_input, std::array<::ndk::SpAIBinder, 3>* out_repeated, std::array<::ndk::SpAIBinder, 3>* _aidl_return) = 0;
-    virtual ::ndk::ScopedAStatus RepeatParcelables(const std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>& in_input, std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>* out_repeated, std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>* _aidl_return) = 0;
-    virtual ::ndk::ScopedAStatus Repeat2dBytes(const std::array<std::array<uint8_t, 3>, 2>& in_input, std::array<std::array<uint8_t, 3>, 2>* out_repeated, std::array<std::array<uint8_t, 3>, 2>* _aidl_return) = 0;
-    virtual ::ndk::ScopedAStatus Repeat2dInts(const std::array<std::array<int32_t, 3>, 2>& in_input, std::array<std::array<int32_t, 3>, 2>* out_repeated, std::array<std::array<int32_t, 3>, 2>* _aidl_return) = 0;
-    virtual ::ndk::ScopedAStatus Repeat2dBinders(const std::array<std::array<::ndk::SpAIBinder, 3>, 2>& in_input, std::array<std::array<::ndk::SpAIBinder, 3>, 2>* out_repeated, std::array<std::array<::ndk::SpAIBinder, 3>, 2>* _aidl_return) = 0;
-    virtual ::ndk::ScopedAStatus Repeat2dParcelables(const std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>& in_input, std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>* out_repeated, std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>* _aidl_return) = 0;
-  private:
-    static std::shared_ptr<IRepeatFixedSizeArray> default_impl;
-  };
   class IRepeatFixedSizeArrayDefault : public IRepeatFixedSizeArray {
   public:
-    ::ndk::ScopedAStatus RepeatBytes(const std::array<uint8_t, 3>& in_input, std::array<uint8_t, 3>* out_repeated, std::array<uint8_t, 3>* _aidl_return) override;
-    ::ndk::ScopedAStatus RepeatInts(const std::array<int32_t, 3>& in_input, std::array<int32_t, 3>* out_repeated, std::array<int32_t, 3>* _aidl_return) override;
-    ::ndk::ScopedAStatus RepeatBinders(const std::array<::ndk::SpAIBinder, 3>& in_input, std::array<::ndk::SpAIBinder, 3>* out_repeated, std::array<::ndk::SpAIBinder, 3>* _aidl_return) override;
-    ::ndk::ScopedAStatus RepeatParcelables(const std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>& in_input, std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>* out_repeated, std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>* _aidl_return) override;
-    ::ndk::ScopedAStatus Repeat2dBytes(const std::array<std::array<uint8_t, 3>, 2>& in_input, std::array<std::array<uint8_t, 3>, 2>* out_repeated, std::array<std::array<uint8_t, 3>, 2>* _aidl_return) override;
-    ::ndk::ScopedAStatus Repeat2dInts(const std::array<std::array<int32_t, 3>, 2>& in_input, std::array<std::array<int32_t, 3>, 2>* out_repeated, std::array<std::array<int32_t, 3>, 2>* _aidl_return) override;
-    ::ndk::ScopedAStatus Repeat2dBinders(const std::array<std::array<::ndk::SpAIBinder, 3>, 2>& in_input, std::array<std::array<::ndk::SpAIBinder, 3>, 2>* out_repeated, std::array<std::array<::ndk::SpAIBinder, 3>, 2>* _aidl_return) override;
-    ::ndk::ScopedAStatus Repeat2dParcelables(const std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>& in_input, std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>* out_repeated, std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>* _aidl_return) override;
-    ::ndk::SpAIBinder asBinder() override;
-    bool isRemote() override;
-  };
-  class BpRepeatFixedSizeArray : public ::ndk::BpCInterface<IRepeatFixedSizeArray> {
+    ::android::IBinder* onAsBinder() override {
+      return nullptr;
+    }
+    ::android::binder::Status RepeatBytes(const std::array<uint8_t, 3>& /*input*/, std::array<uint8_t, 3>* /*repeated*/, std::array<uint8_t, 3>* /*_aidl_return*/) override {
+      return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+    }
+    ::android::binder::Status RepeatInts(const std::array<int32_t, 3>& /*input*/, std::array<int32_t, 3>* /*repeated*/, std::array<int32_t, 3>* /*_aidl_return*/) override {
+      return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+    }
+    ::android::binder::Status RepeatBinders(const std::array<::android::sp<::android::IBinder>, 3>& /*input*/, std::array<::android::sp<::android::IBinder>, 3>* /*repeated*/, std::array<::android::sp<::android::IBinder>, 3>* /*_aidl_return*/) override {
+      return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+    }
+    ::android::binder::Status RepeatParcelables(const std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>& /*input*/, std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>* /*repeated*/, std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>* /*_aidl_return*/) override {
+      return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+    }
+    ::android::binder::Status Repeat2dBytes(const std::array<std::array<uint8_t, 3>, 2>& /*input*/, std::array<std::array<uint8_t, 3>, 2>* /*repeated*/, std::array<std::array<uint8_t, 3>, 2>* /*_aidl_return*/) override {
+      return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+    }
+    ::android::binder::Status Repeat2dInts(const std::array<std::array<int32_t, 3>, 2>& /*input*/, std::array<std::array<int32_t, 3>, 2>* /*repeated*/, std::array<std::array<int32_t, 3>, 2>* /*_aidl_return*/) override {
+      return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+    }
+    ::android::binder::Status Repeat2dBinders(const std::array<std::array<::android::sp<::android::IBinder>, 3>, 2>& /*input*/, std::array<std::array<::android::sp<::android::IBinder>, 3>, 2>* /*repeated*/, std::array<std::array<::android::sp<::android::IBinder>, 3>, 2>* /*_aidl_return*/) override {
+      return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+    }
+    ::android::binder::Status Repeat2dParcelables(const std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>& /*input*/, std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>* /*repeated*/, std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>* /*_aidl_return*/) override {
+      return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+    }
+  };  // class IRepeatFixedSizeArrayDefault
+  class BpRepeatFixedSizeArray : public ::android::BpInterface<IRepeatFixedSizeArray> {
   public:
-    explicit BpRepeatFixedSizeArray(const ::ndk::SpAIBinder& binder);
-    virtual ~BpRepeatFixedSizeArray();
+    explicit BpRepeatFixedSizeArray(const ::android::sp<::android::IBinder>& _aidl_impl);
+    virtual ~BpRepeatFixedSizeArray() = default;
+    ::android::binder::Status RepeatBytes(const std::array<uint8_t, 3>& input, std::array<uint8_t, 3>* repeated, std::array<uint8_t, 3>* _aidl_return) override;
+    ::android::binder::Status RepeatInts(const std::array<int32_t, 3>& input, std::array<int32_t, 3>* repeated, std::array<int32_t, 3>* _aidl_return) override;
+    ::android::binder::Status RepeatBinders(const std::array<::android::sp<::android::IBinder>, 3>& input, std::array<::android::sp<::android::IBinder>, 3>* repeated, std::array<::android::sp<::android::IBinder>, 3>* _aidl_return) override;
+    ::android::binder::Status RepeatParcelables(const std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>& input, std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>* repeated, std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>* _aidl_return) override;
+    ::android::binder::Status Repeat2dBytes(const std::array<std::array<uint8_t, 3>, 2>& input, std::array<std::array<uint8_t, 3>, 2>* repeated, std::array<std::array<uint8_t, 3>, 2>* _aidl_return) override;
+    ::android::binder::Status Repeat2dInts(const std::array<std::array<int32_t, 3>, 2>& input, std::array<std::array<int32_t, 3>, 2>* repeated, std::array<std::array<int32_t, 3>, 2>* _aidl_return) override;
+    ::android::binder::Status Repeat2dBinders(const std::array<std::array<::android::sp<::android::IBinder>, 3>, 2>& input, std::array<std::array<::android::sp<::android::IBinder>, 3>, 2>* repeated, std::array<std::array<::android::sp<::android::IBinder>, 3>, 2>* _aidl_return) override;
+    ::android::binder::Status Repeat2dParcelables(const std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>& input, std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>* repeated, std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>* _aidl_return) override;
+  };  // class BpRepeatFixedSizeArray
+  class BnRepeatFixedSizeArray : public ::android::BnInterface<IRepeatFixedSizeArray> {
+  public:
+    static constexpr uint32_t TRANSACTION_RepeatBytes = ::android::IBinder::FIRST_CALL_TRANSACTION + 0;
+    static constexpr uint32_t TRANSACTION_RepeatInts = ::android::IBinder::FIRST_CALL_TRANSACTION + 1;
+    static constexpr uint32_t TRANSACTION_RepeatBinders = ::android::IBinder::FIRST_CALL_TRANSACTION + 2;
+    static constexpr uint32_t TRANSACTION_RepeatParcelables = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
+    static constexpr uint32_t TRANSACTION_Repeat2dBytes = ::android::IBinder::FIRST_CALL_TRANSACTION + 4;
+    static constexpr uint32_t TRANSACTION_Repeat2dInts = ::android::IBinder::FIRST_CALL_TRANSACTION + 5;
+    static constexpr uint32_t TRANSACTION_Repeat2dBinders = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
+    static constexpr uint32_t TRANSACTION_Repeat2dParcelables = ::android::IBinder::FIRST_CALL_TRANSACTION + 7;
+    explicit BnRepeatFixedSizeArray();
+    ::android::status_t onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) override;
+  };  // class BnRepeatFixedSizeArray
 
-    ::ndk::ScopedAStatus RepeatBytes(const std::array<uint8_t, 3>& in_input, std::array<uint8_t, 3>* out_repeated, std::array<uint8_t, 3>* _aidl_return) override;
-    ::ndk::ScopedAStatus RepeatInts(const std::array<int32_t, 3>& in_input, std::array<int32_t, 3>* out_repeated, std::array<int32_t, 3>* _aidl_return) override;
-    ::ndk::ScopedAStatus RepeatBinders(const std::array<::ndk::SpAIBinder, 3>& in_input, std::array<::ndk::SpAIBinder, 3>* out_repeated, std::array<::ndk::SpAIBinder, 3>* _aidl_return) override;
-    ::ndk::ScopedAStatus RepeatParcelables(const std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>& in_input, std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>* out_repeated, std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>* _aidl_return) override;
-    ::ndk::ScopedAStatus Repeat2dBytes(const std::array<std::array<uint8_t, 3>, 2>& in_input, std::array<std::array<uint8_t, 3>, 2>* out_repeated, std::array<std::array<uint8_t, 3>, 2>* _aidl_return) override;
-    ::ndk::ScopedAStatus Repeat2dInts(const std::array<std::array<int32_t, 3>, 2>& in_input, std::array<std::array<int32_t, 3>, 2>* out_repeated, std::array<std::array<int32_t, 3>, 2>* _aidl_return) override;
-    ::ndk::ScopedAStatus Repeat2dBinders(const std::array<std::array<::ndk::SpAIBinder, 3>, 2>& in_input, std::array<std::array<::ndk::SpAIBinder, 3>, 2>* out_repeated, std::array<std::array<::ndk::SpAIBinder, 3>, 2>* _aidl_return) override;
-    ::ndk::ScopedAStatus Repeat2dParcelables(const std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>& in_input, std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>* out_repeated, std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>* _aidl_return) override;
-  };
-  class BnRepeatFixedSizeArray : public ::ndk::BnCInterface<IRepeatFixedSizeArray> {
+  class IRepeatFixedSizeArrayDelegator : public BnRepeatFixedSizeArray {
   public:
-    BnRepeatFixedSizeArray();
-    virtual ~BnRepeatFixedSizeArray();
-  protected:
-    ::ndk::SpAIBinder createBinder() override;
+    explicit IRepeatFixedSizeArrayDelegator(::android::sp<IRepeatFixedSizeArray> &impl) : _aidl_delegate(impl) {}
+
+    ::android::binder::Status RepeatBytes(const std::array<uint8_t, 3>& input, std::array<uint8_t, 3>* repeated, std::array<uint8_t, 3>* _aidl_return) override {
+      return _aidl_delegate->RepeatBytes(input, repeated, _aidl_return);
+    }
+    ::android::binder::Status RepeatInts(const std::array<int32_t, 3>& input, std::array<int32_t, 3>* repeated, std::array<int32_t, 3>* _aidl_return) override {
+      return _aidl_delegate->RepeatInts(input, repeated, _aidl_return);
+    }
+    ::android::binder::Status RepeatBinders(const std::array<::android::sp<::android::IBinder>, 3>& input, std::array<::android::sp<::android::IBinder>, 3>* repeated, std::array<::android::sp<::android::IBinder>, 3>* _aidl_return) override {
+      return _aidl_delegate->RepeatBinders(input, repeated, _aidl_return);
+    }
+    ::android::binder::Status RepeatParcelables(const std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>& input, std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>* repeated, std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>* _aidl_return) override {
+      return _aidl_delegate->RepeatParcelables(input, repeated, _aidl_return);
+    }
+    ::android::binder::Status Repeat2dBytes(const std::array<std::array<uint8_t, 3>, 2>& input, std::array<std::array<uint8_t, 3>, 2>* repeated, std::array<std::array<uint8_t, 3>, 2>* _aidl_return) override {
+      return _aidl_delegate->Repeat2dBytes(input, repeated, _aidl_return);
+    }
+    ::android::binder::Status Repeat2dInts(const std::array<std::array<int32_t, 3>, 2>& input, std::array<std::array<int32_t, 3>, 2>* repeated, std::array<std::array<int32_t, 3>, 2>* _aidl_return) override {
+      return _aidl_delegate->Repeat2dInts(input, repeated, _aidl_return);
+    }
+    ::android::binder::Status Repeat2dBinders(const std::array<std::array<::android::sp<::android::IBinder>, 3>, 2>& input, std::array<std::array<::android::sp<::android::IBinder>, 3>, 2>* repeated, std::array<std::array<::android::sp<::android::IBinder>, 3>, 2>* _aidl_return) override {
+      return _aidl_delegate->Repeat2dBinders(input, repeated, _aidl_return);
+    }
+    ::android::binder::Status Repeat2dParcelables(const std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>& input, std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>* repeated, std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 3>, 2>* _aidl_return) override {
+      return _aidl_delegate->Repeat2dParcelables(input, repeated, _aidl_return);
+    }
   private:
-  };
+    ::android::sp<IRepeatFixedSizeArray> _aidl_delegate;
+  };  // class IRepeatFixedSizeArrayDelegator
   enum class ByteEnum : int8_t {
     A = 0,
   };
-
   enum class IntEnum : int32_t {
     A = 0,
   };
-
   enum class LongEnum : int64_t {
     A = 0L,
   };
-
-  class IEmptyInterface : public ::ndk::ICInterface {
+  class IEmptyInterface : public ::android::IInterface {
   public:
-    static const char* descriptor;
-    IEmptyInterface();
-    virtual ~IEmptyInterface();
+    DECLARE_META_INTERFACE(EmptyInterface)
+  };  // class IEmptyInterface
 
-
-    static std::shared_ptr<IEmptyInterface> fromBinder(const ::ndk::SpAIBinder& binder);
-    static binder_status_t writeToParcel(AParcel* parcel, const std::shared_ptr<IEmptyInterface>& instance);
-    static binder_status_t readFromParcel(const AParcel* parcel, std::shared_ptr<IEmptyInterface>* instance);
-    static bool setDefaultImpl(const std::shared_ptr<IEmptyInterface>& impl);
-    static const std::shared_ptr<IEmptyInterface>& getDefaultImpl();
-  private:
-    static std::shared_ptr<IEmptyInterface> default_impl;
-  };
   class IEmptyInterfaceDefault : public IEmptyInterface {
   public:
-    ::ndk::SpAIBinder asBinder() override;
-    bool isRemote() override;
-  };
-  class BpEmptyInterface : public ::ndk::BpCInterface<IEmptyInterface> {
+    ::android::IBinder* onAsBinder() override {
+      return nullptr;
+    }
+  };  // class IEmptyInterfaceDefault
+  class BpEmptyInterface : public ::android::BpInterface<IEmptyInterface> {
   public:
-    explicit BpEmptyInterface(const ::ndk::SpAIBinder& binder);
-    virtual ~BpEmptyInterface();
+    explicit BpEmptyInterface(const ::android::sp<::android::IBinder>& _aidl_impl);
+    virtual ~BpEmptyInterface() = default;
+  };  // class BpEmptyInterface
+  class BnEmptyInterface : public ::android::BnInterface<IEmptyInterface> {
+  public:
+    explicit BnEmptyInterface();
+    ::android::status_t onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) override;
+  };  // class BnEmptyInterface
 
-  };
-  class BnEmptyInterface : public ::ndk::BnCInterface<IEmptyInterface> {
+  class IEmptyInterfaceDelegator : public BnEmptyInterface {
   public:
-    BnEmptyInterface();
-    virtual ~BnEmptyInterface();
-  protected:
-    ::ndk::SpAIBinder createBinder() override;
+    explicit IEmptyInterfaceDelegator(::android::sp<IEmptyInterface> &impl) : _aidl_delegate(impl) {}
+
   private:
-  };
+    ::android::sp<IEmptyInterface> _aidl_delegate;
+  };  // class IEmptyInterfaceDelegator
   std::array<std::array<int32_t, 3>, 2> int2x3 = {{{{1, 2, 3}}, {{4, 5, 6}}}};
   std::array<bool, 2> boolArray = {{}};
   std::array<uint8_t, 2> byteArray = {{}};
@@ -183,11 +204,11 @@ public:
   std::array<int64_t, 2> longArray = {{}};
   std::array<float, 2> floatArray = {{}};
   std::array<double, 2> doubleArray = {{}};
-  std::array<std::string, 2> stringArray = {{"hello", "world"}};
-  std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::ByteEnum, 2> byteEnumArray = {{}};
-  std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntEnum, 2> intEnumArray = {{}};
-  std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::LongEnum, 2> longEnumArray = {{}};
-  std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 2> parcelableArray = {{}};
+  std::array<::std::string, 2> stringArray = {{"hello", "world"}};
+  std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::ByteEnum, 2> byteEnumArray = {{}};
+  std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntEnum, 2> intEnumArray = {{}};
+  std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::LongEnum, 2> longEnumArray = {{}};
+  std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 2> parcelableArray = {{}};
   std::array<std::array<bool, 2>, 2> boolMatrix = {{}};
   std::array<std::array<uint8_t, 2>, 2> byteMatrix = {{}};
   std::array<std::array<char16_t, 2>, 2> charMatrix = {{}};
@@ -195,45 +216,41 @@ public:
   std::array<std::array<int64_t, 2>, 2> longMatrix = {{}};
   std::array<std::array<float, 2>, 2> floatMatrix = {{}};
   std::array<std::array<double, 2>, 2> doubleMatrix = {{}};
-  std::array<std::array<std::string, 2>, 2> stringMatrix = {{{{"hello", "world"}}, {{"Ciao", "mondo"}}}};
-  std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::ByteEnum, 2>, 2> byteEnumMatrix = {{}};
-  std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntEnum, 2>, 2> intEnumMatrix = {{}};
-  std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::LongEnum, 2>, 2> longEnumMatrix = {{}};
-  std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 2>, 2> parcelableMatrix = {{}};
-  std::optional<std::array<bool, 2>> boolNullableArray;
-  std::optional<std::array<uint8_t, 2>> byteNullableArray;
-  std::optional<std::array<char16_t, 2>> charNullableArray;
-  std::optional<std::array<int32_t, 2>> intNullableArray;
-  std::optional<std::array<int64_t, 2>> longNullableArray;
-  std::optional<std::array<float, 2>> floatNullableArray;
-  std::optional<std::array<double, 2>> doubleNullableArray;
-  std::optional<std::array<std::optional<std::string>, 2>> stringNullableArray = {{{"hello", "world"}}};
-  std::optional<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::ByteEnum, 2>> byteEnumNullableArray;
-  std::optional<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntEnum, 2>> intEnumNullableArray;
-  std::optional<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::LongEnum, 2>> longEnumNullableArray;
-  std::optional<std::array<::ndk::SpAIBinder, 2>> binderNullableArray;
-  std::optional<std::array<::ndk::ScopedFileDescriptor, 2>> pfdNullableArray;
-  std::optional<std::array<std::optional<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable>, 2>> parcelableNullableArray;
-  std::optional<std::array<std::shared_ptr<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IEmptyInterface>, 2>> interfaceNullableArray;
-  std::optional<std::array<std::array<bool, 2>, 2>> boolNullableMatrix;
-  std::optional<std::array<std::array<uint8_t, 2>, 2>> byteNullableMatrix;
-  std::optional<std::array<std::array<char16_t, 2>, 2>> charNullableMatrix;
-  std::optional<std::array<std::array<int32_t, 2>, 2>> intNullableMatrix;
-  std::optional<std::array<std::array<int64_t, 2>, 2>> longNullableMatrix;
-  std::optional<std::array<std::array<float, 2>, 2>> floatNullableMatrix;
-  std::optional<std::array<std::array<double, 2>, 2>> doubleNullableMatrix;
-  std::optional<std::array<std::array<std::optional<std::string>, 2>, 2>> stringNullableMatrix = {{{{{"hello", "world"}}, {{"Ciao", "mondo"}}}}};
-  std::optional<std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::ByteEnum, 2>, 2>> byteEnumNullableMatrix;
-  std::optional<std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntEnum, 2>, 2>> intEnumNullableMatrix;
-  std::optional<std::array<std::array<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::LongEnum, 2>, 2>> longEnumNullableMatrix;
-  std::optional<std::array<std::array<::ndk::SpAIBinder, 2>, 2>> binderNullableMatrix;
-  std::optional<std::array<std::array<::ndk::ScopedFileDescriptor, 2>, 2>> pfdNullableMatrix;
-  std::optional<std::array<std::array<std::optional<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable>, 2>, 2>> parcelableNullableMatrix;
-  std::optional<std::array<std::array<std::shared_ptr<::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IEmptyInterface>, 2>, 2>> interfaceNullableMatrix;
-
-  binder_status_t readFromParcel(const AParcel* parcel);
-  binder_status_t writeToParcel(AParcel* parcel) const;
-
+  std::array<std::array<::std::string, 2>, 2> stringMatrix = {{{{"hello", "world"}}, {{"Ciao", "mondo"}}}};
+  std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::ByteEnum, 2>, 2> byteEnumMatrix = {{}};
+  std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntEnum, 2>, 2> intEnumMatrix = {{}};
+  std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::LongEnum, 2>, 2> longEnumMatrix = {{}};
+  std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable, 2>, 2> parcelableMatrix = {{}};
+  ::std::optional<std::array<bool, 2>> boolNullableArray;
+  ::std::optional<std::array<uint8_t, 2>> byteNullableArray;
+  ::std::optional<std::array<char16_t, 2>> charNullableArray;
+  ::std::optional<std::array<int32_t, 2>> intNullableArray;
+  ::std::optional<std::array<int64_t, 2>> longNullableArray;
+  ::std::optional<std::array<float, 2>> floatNullableArray;
+  ::std::optional<std::array<double, 2>> doubleNullableArray;
+  ::std::optional<std::array<::std::optional<::std::string>, 2>> stringNullableArray = {{{"hello", "world"}}};
+  ::std::optional<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::ByteEnum, 2>> byteEnumNullableArray;
+  ::std::optional<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntEnum, 2>> intEnumNullableArray;
+  ::std::optional<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::LongEnum, 2>> longEnumNullableArray;
+  ::std::optional<std::array<::android::sp<::android::IBinder>, 2>> binderNullableArray;
+  ::std::optional<std::array<::std::optional<::android::os::ParcelFileDescriptor>, 2>> pfdNullableArray;
+  ::std::optional<std::array<::std::optional<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable>, 2>> parcelableNullableArray;
+  ::std::optional<std::array<::android::sp<::android::aidl::fixedsizearray::FixedSizeArrayExample::IEmptyInterface>, 2>> interfaceNullableArray;
+  ::std::optional<std::array<std::array<bool, 2>, 2>> boolNullableMatrix;
+  ::std::optional<std::array<std::array<uint8_t, 2>, 2>> byteNullableMatrix;
+  ::std::optional<std::array<std::array<char16_t, 2>, 2>> charNullableMatrix;
+  ::std::optional<std::array<std::array<int32_t, 2>, 2>> intNullableMatrix;
+  ::std::optional<std::array<std::array<int64_t, 2>, 2>> longNullableMatrix;
+  ::std::optional<std::array<std::array<float, 2>, 2>> floatNullableMatrix;
+  ::std::optional<std::array<std::array<double, 2>, 2>> doubleNullableMatrix;
+  ::std::optional<std::array<std::array<::std::optional<::std::string>, 2>, 2>> stringNullableMatrix = {{{{{"hello", "world"}}, {{"Ciao", "mondo"}}}}};
+  ::std::optional<std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::ByteEnum, 2>, 2>> byteEnumNullableMatrix;
+  ::std::optional<std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntEnum, 2>, 2>> intEnumNullableMatrix;
+  ::std::optional<std::array<std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::LongEnum, 2>, 2>> longEnumNullableMatrix;
+  ::std::optional<std::array<std::array<::android::sp<::android::IBinder>, 2>, 2>> binderNullableMatrix;
+  ::std::optional<std::array<std::array<::std::optional<::android::os::ParcelFileDescriptor>, 2>, 2>> pfdNullableMatrix;
+  ::std::optional<std::array<std::array<::std::optional<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable>, 2>, 2>> parcelableNullableMatrix;
+  ::std::optional<std::array<std::array<::android::sp<::android::aidl::fixedsizearray::FixedSizeArrayExample::IEmptyInterface>, 2>, 2>> interfaceNullableMatrix;
   inline bool operator!=(const FixedSizeArrayExample& rhs) const {
     return std::tie(int2x3, boolArray, byteArray, charArray, intArray, longArray, floatArray, doubleArray, stringArray, byteEnumArray, intEnumArray, longEnumArray, parcelableArray, boolMatrix, byteMatrix, charMatrix, intMatrix, longMatrix, floatMatrix, doubleMatrix, stringMatrix, byteEnumMatrix, intEnumMatrix, longEnumMatrix, parcelableMatrix, boolNullableArray, byteNullableArray, charNullableArray, intNullableArray, longNullableArray, floatNullableArray, doubleNullableArray, stringNullableArray, byteEnumNullableArray, intEnumNullableArray, longEnumNullableArray, binderNullableArray, pfdNullableArray, parcelableNullableArray, interfaceNullableArray, boolNullableMatrix, byteNullableMatrix, charNullableMatrix, intNullableMatrix, longNullableMatrix, floatNullableMatrix, doubleNullableMatrix, stringNullableMatrix, byteEnumNullableMatrix, intEnumNullableMatrix, longEnumNullableMatrix, binderNullableMatrix, pfdNullableMatrix, parcelableNullableMatrix, interfaceNullableMatrix) != std::tie(rhs.int2x3, rhs.boolArray, rhs.byteArray, rhs.charArray, rhs.intArray, rhs.longArray, rhs.floatArray, rhs.doubleArray, rhs.stringArray, rhs.byteEnumArray, rhs.intEnumArray, rhs.longEnumArray, rhs.parcelableArray, rhs.boolMatrix, rhs.byteMatrix, rhs.charMatrix, rhs.intMatrix, rhs.longMatrix, rhs.floatMatrix, rhs.doubleMatrix, rhs.stringMatrix, rhs.byteEnumMatrix, rhs.intEnumMatrix, rhs.longEnumMatrix, rhs.parcelableMatrix, rhs.boolNullableArray, rhs.byteNullableArray, rhs.charNullableArray, rhs.intNullableArray, rhs.longNullableArray, rhs.floatNullableArray, rhs.doubleNullableArray, rhs.stringNullableArray, rhs.byteEnumNullableArray, rhs.intEnumNullableArray, rhs.longEnumNullableArray, rhs.binderNullableArray, rhs.pfdNullableArray, rhs.parcelableNullableArray, rhs.interfaceNullableArray, rhs.boolNullableMatrix, rhs.byteNullableMatrix, rhs.charNullableMatrix, rhs.intNullableMatrix, rhs.longNullableMatrix, rhs.floatNullableMatrix, rhs.doubleNullableMatrix, rhs.stringNullableMatrix, rhs.byteEnumNullableMatrix, rhs.intEnumNullableMatrix, rhs.longEnumNullableMatrix, rhs.binderNullableMatrix, rhs.pfdNullableMatrix, rhs.parcelableNullableMatrix, rhs.interfaceNullableMatrix);
   }
@@ -253,7 +270,12 @@ public:
     return std::tie(int2x3, boolArray, byteArray, charArray, intArray, longArray, floatArray, doubleArray, stringArray, byteEnumArray, intEnumArray, longEnumArray, parcelableArray, boolMatrix, byteMatrix, charMatrix, intMatrix, longMatrix, floatMatrix, doubleMatrix, stringMatrix, byteEnumMatrix, intEnumMatrix, longEnumMatrix, parcelableMatrix, boolNullableArray, byteNullableArray, charNullableArray, intNullableArray, longNullableArray, floatNullableArray, doubleNullableArray, stringNullableArray, byteEnumNullableArray, intEnumNullableArray, longEnumNullableArray, binderNullableArray, pfdNullableArray, parcelableNullableArray, interfaceNullableArray, boolNullableMatrix, byteNullableMatrix, charNullableMatrix, intNullableMatrix, longNullableMatrix, floatNullableMatrix, doubleNullableMatrix, stringNullableMatrix, byteEnumNullableMatrix, intEnumNullableMatrix, longEnumNullableMatrix, binderNullableMatrix, pfdNullableMatrix, parcelableNullableMatrix, interfaceNullableMatrix) >= std::tie(rhs.int2x3, rhs.boolArray, rhs.byteArray, rhs.charArray, rhs.intArray, rhs.longArray, rhs.floatArray, rhs.doubleArray, rhs.stringArray, rhs.byteEnumArray, rhs.intEnumArray, rhs.longEnumArray, rhs.parcelableArray, rhs.boolMatrix, rhs.byteMatrix, rhs.charMatrix, rhs.intMatrix, rhs.longMatrix, rhs.floatMatrix, rhs.doubleMatrix, rhs.stringMatrix, rhs.byteEnumMatrix, rhs.intEnumMatrix, rhs.longEnumMatrix, rhs.parcelableMatrix, rhs.boolNullableArray, rhs.byteNullableArray, rhs.charNullableArray, rhs.intNullableArray, rhs.longNullableArray, rhs.floatNullableArray, rhs.doubleNullableArray, rhs.stringNullableArray, rhs.byteEnumNullableArray, rhs.intEnumNullableArray, rhs.longEnumNullableArray, rhs.binderNullableArray, rhs.pfdNullableArray, rhs.parcelableNullableArray, rhs.interfaceNullableArray, rhs.boolNullableMatrix, rhs.byteNullableMatrix, rhs.charNullableMatrix, rhs.intNullableMatrix, rhs.longNullableMatrix, rhs.floatNullableMatrix, rhs.doubleNullableMatrix, rhs.stringNullableMatrix, rhs.byteEnumNullableMatrix, rhs.intEnumNullableMatrix, rhs.longEnumNullableMatrix, rhs.binderNullableMatrix, rhs.pfdNullableMatrix, rhs.parcelableNullableMatrix, rhs.interfaceNullableMatrix);
   }
 
-  static const ::ndk::parcelable_stability_t _aidl_stability = ::ndk::STABILITY_LOCAL;
+  ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
+  ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
+  static const ::android::String16& getParcelableDescriptor() {
+    static const ::android::StaticString16 DESCIPTOR (u"android.aidl.fixedsizearray.FixedSizeArrayExample");
+    return DESCIPTOR;
+  }
   inline std::string toString() const {
     std::ostringstream os;
     os << "FixedSizeArrayExample{";
@@ -315,12 +337,10 @@ public:
     os << "}";
     return os.str();
   }
-};
+};  // class FixedSizeArrayExample
 }  // namespace fixedsizearray
 }  // namespace aidl
 }  // namespace android
-}  // namespace aidl
-namespace aidl {
 namespace android {
 namespace aidl {
 namespace fixedsizearray {
@@ -335,19 +355,17 @@ namespace fixedsizearray {
 }  // namespace fixedsizearray
 }  // namespace aidl
 }  // namespace android
-}  // namespace aidl
-namespace ndk {
+namespace android {
 namespace internal {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc++17-extensions"
 template <>
-constexpr inline std::array<aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::ByteEnum, 1> enum_values<aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::ByteEnum> = {
-  aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::ByteEnum::A,
+constexpr inline std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::ByteEnum, 1> enum_values<::android::aidl::fixedsizearray::FixedSizeArrayExample::ByteEnum> = {
+  ::android::aidl::fixedsizearray::FixedSizeArrayExample::ByteEnum::A,
 };
 #pragma clang diagnostic pop
 }  // namespace internal
-}  // namespace ndk
-namespace aidl {
+}  // namespace android
 namespace android {
 namespace aidl {
 namespace fixedsizearray {
@@ -362,19 +380,17 @@ namespace fixedsizearray {
 }  // namespace fixedsizearray
 }  // namespace aidl
 }  // namespace android
-}  // namespace aidl
-namespace ndk {
+namespace android {
 namespace internal {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc++17-extensions"
 template <>
-constexpr inline std::array<aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntEnum, 1> enum_values<aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntEnum> = {
-  aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntEnum::A,
+constexpr inline std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntEnum, 1> enum_values<::android::aidl::fixedsizearray::FixedSizeArrayExample::IntEnum> = {
+  ::android::aidl::fixedsizearray::FixedSizeArrayExample::IntEnum::A,
 };
 #pragma clang diagnostic pop
 }  // namespace internal
-}  // namespace ndk
-namespace aidl {
+}  // namespace android
 namespace android {
 namespace aidl {
 namespace fixedsizearray {
@@ -389,15 +405,14 @@ namespace fixedsizearray {
 }  // namespace fixedsizearray
 }  // namespace aidl
 }  // namespace android
-}  // namespace aidl
-namespace ndk {
+namespace android {
 namespace internal {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc++17-extensions"
 template <>
-constexpr inline std::array<aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::LongEnum, 1> enum_values<aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::LongEnum> = {
-  aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::LongEnum::A,
+constexpr inline std::array<::android::aidl::fixedsizearray::FixedSizeArrayExample::LongEnum, 1> enum_values<::android::aidl::fixedsizearray::FixedSizeArrayExample::LongEnum> = {
+  ::android::aidl::fixedsizearray::FixedSizeArrayExample::LongEnum::A,
 };
 #pragma clang diagnostic pop
 }  // namespace internal
-}  // namespace ndk
+}  // namespace android

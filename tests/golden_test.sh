@@ -46,6 +46,7 @@ function _golden_test() {
     "aidl_test_loggable_interface-java-source"
     "aidl_test_loggable_interface-ndk-source"
     "aidl-test-interface-platform-java-source"
+    "aidl-test-fixedsizearray-cpp-source"
     "aidl-test-fixedsizearray-ndk-source"
   )
 

@@ -551,6 +551,10 @@ void AidlTypeSpecifier::ViewAsArrayBase(std::function<void(const AidlTypeSpecifi
   // Declaring array of generic type cannot happen, it is grammar error.
   AIDL_FATAL_IF(IsGeneric(), this);
 
+  bool is_mutated = mutated_;
+  mutated_ = true;
+  // mutate the array type to its base by removing a single dimension
+  // e.g.) T[] => T, T[N][M] => T[M] (note that, M is removed)
   if (IsFixedSizeArray() && std::get<FixedSizeArray>(*array_).dimensions.size() > 1) {
     auto& dimensions = std::get<FixedSizeArray>(*array_).dimensions;
     auto dim = std::move(dimensions.front());
@@ -563,6 +567,7 @@ void AidlTypeSpecifier::ViewAsArrayBase(std::function<void(const AidlTypeSpecifi
     func(*this);
     array_ = std::move(array_type);
   }
+  mutated_ = is_mutated;
 }
 
 bool AidlTypeSpecifier::MakeArray(ArrayType array_type) {
@@ -583,6 +588,15 @@ bool AidlTypeSpecifier::MakeArray(ArrayType array_type) {
   return false;
 }
 
+std::vector<int32_t> AidlTypeSpecifier::GetFixedSizeArrayDimensions() const {
+  AIDL_FATAL_IF(!IsFixedSizeArray(), "not a fixed-size array");
+  std::vector<int32_t> dimensions;
+  for (const auto& dim : std::get<FixedSizeArray>(GetArray()).dimensions) {
+    dimensions.push_back(dim->EvaluatedValue<int32_t>());
+  }
+  return dimensions;
+}
+
 string AidlTypeSpecifier::Signature() const {
   string ret = GetName();
   if (IsGeneric()) {
@@ -594,8 +608,8 @@ string AidlTypeSpecifier::Signature() const {
   }
   if (IsArray()) {
     if (IsFixedSizeArray()) {
-      for (const auto& dim : std::get<FixedSizeArray>(GetArray()).dimensions) {
-        ret += "[" + dim->ValueString(kIntType, AidlConstantValueDecorator) + "]";
+      for (const auto& dim : GetFixedSizeArrayDimensions()) {
+        ret += "[" + std::to_string(dim) + "]";
       }
     } else {
       ret += "[]";
