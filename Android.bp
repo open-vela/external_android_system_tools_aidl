@@ -455,8 +455,7 @@ aidl_interface {
             srcs_available: true,
         },
         rust: {
-            enabled: true,
-            srcs_available: true,
+            enabled: false,
         },
     }
 }
@@ -634,7 +633,6 @@ genrule {
         ":aidl-test-interface-platform-java-source",
         ":aidl-test-fixedsizearray-cpp-source",
         ":aidl-test-fixedsizearray-ndk-source",
-        ":aidl-test-fixedsizearray-rust-source",
         "tests/golden_output/**/*",
     ],
     out: ["TODO_b_37575883.cpp"],
@@ -746,7 +744,6 @@ rust_test {
         "aidl_test_nonvintf_parcelable-V1-rust",
         "aidl_test_unstable_parcelable-rust",
         "aidl_test_vintf_parcelable-V1-rust",
-        "aidl-test-fixedsizearray-rust",
         "liblibc",
         // We need to import binder_rs directly
         // for a few internal types like Parcel
@@ -775,7 +772,6 @@ rust_test {
     rustlibs: [
         "aidl-test-interface-rust",
         "aidl-test-versioned-interface-V1-rust",
-        "aidl-test-fixedsizearray-rust",
         "liblibc",
     ],
     prefer_rlib: true,
