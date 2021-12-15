@@ -83,7 +83,7 @@ bool CheckValid(const AidlDocument& doc, const Options& options) {
   if (options.GetTask() == Options::Task::COMPILE) {
     v.Check([&](const AidlTypeSpecifier& type) {
       if (type.IsFixedSizeArray()) {
-        if (lang != Options::Language::NDK && lang != Options::Language::CPP) {
+        if (lang == Options::Language::JAVA) {
           AIDL_ERROR(type) << "Fixed-size arrays are not supported yet in " << to_string(lang)
                            << " backend.";
           return false;
