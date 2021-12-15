@@ -34,6 +34,9 @@ using BpRepeatFixedSizeArray =
 using IntParcelable = aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IntParcelable;
 using IRepeatFixedSizeArray =
     aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::IRepeatFixedSizeArray;
+using BnEmptyInterface =
+    aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::BnEmptyInterface;
+using aidl::android::aidl::tests::BackendType;
 using aidl::android::aidl::tests::ITestService;
 using aidl::android::aidl::tests::RecursiveList;
 using android::OK;
@@ -147,70 +150,10 @@ TEST_F(AidlTest, FixedSizeArrayOfBytesShouldBePacked) {
   AParcel_delete(parcel);
 }
 
-struct MyService : FixedSizeArrayExample::BnRepeatFixedSizeArray {
-  ScopedAStatus RepeatBytes(const std::array<uint8_t, 3>& in_input,
-                            std::array<uint8_t, 3>* out_repeated,
-                            std::array<uint8_t, 3>* _aidl_return) {
-    *out_repeated = in_input;
-    *_aidl_return = in_input;
-    return ScopedAStatus::ok();
-  }
-  ScopedAStatus RepeatInts(const std::array<int32_t, 3>& in_input,
-                           std::array<int32_t, 3>* out_repeated,
-                           std::array<int32_t, 3>* _aidl_return) {
-    *out_repeated = in_input;
-    *_aidl_return = in_input;
-    return ScopedAStatus::ok();
-  }
-  ScopedAStatus RepeatBinders(const std::array<::ndk::SpAIBinder, 3>& in_input,
-                              std::array<::ndk::SpAIBinder, 3>* out_repeated,
-                              std::array<::ndk::SpAIBinder, 3>* _aidl_return) {
-    *out_repeated = in_input;
-    *_aidl_return = in_input;
-    return ScopedAStatus::ok();
-  }
-  ScopedAStatus RepeatParcelables(const std::array<IntParcelable, 3>& in_input,
-                                  std::array<IntParcelable, 3>* out_repeated,
-                                  std::array<IntParcelable, 3>* _aidl_return) {
-    *out_repeated = in_input;
-    *_aidl_return = in_input;
-    return ScopedAStatus::ok();
-  }
-  ScopedAStatus Repeat2dBytes(const std::array<std::array<uint8_t, 2>, 3>& in_input,
-                              std::array<std::array<uint8_t, 2>, 3>* out_repeated,
-                              std::array<std::array<uint8_t, 2>, 3>* _aidl_return) {
-    *out_repeated = in_input;
-    *_aidl_return = in_input;
-    return ScopedAStatus::ok();
-  }
-  ScopedAStatus Repeat2dInts(const std::array<std::array<int32_t, 2>, 3>& in_input,
-                             std::array<std::array<int32_t, 2>, 3>* out_repeated,
-                             std::array<std::array<int32_t, 2>, 3>* _aidl_return) {
-    *out_repeated = in_input;
-    *_aidl_return = in_input;
-    return ScopedAStatus::ok();
-  }
-  ScopedAStatus Repeat2dBinders(const std::array<std::array<::ndk::SpAIBinder, 2>, 3>& in_input,
-                                std::array<std::array<::ndk::SpAIBinder, 2>, 3>* out_repeated,
-                                std::array<std::array<::ndk::SpAIBinder, 2>, 3>* _aidl_return) {
-    *out_repeated = in_input;
-    *_aidl_return = in_input;
-    return ScopedAStatus::ok();
-  }
-  ScopedAStatus Repeat2dParcelables(const std::array<std::array<IntParcelable, 2>, 3>& in_input,
-                                    std::array<std::array<IntParcelable, 2>, 3>* out_repeated,
-                                    std::array<std::array<IntParcelable, 2>, 3>* _aidl_return) {
-    *out_repeated = in_input;
-    *_aidl_return = in_input;
-    return ScopedAStatus::ok();
-  }
-};
-
 template <typename Service, typename MemFn, typename Input>
 void CheckRepeat(Service service, MemFn fn, Input input) {
-  auto proxy = SharedRefBase::make<BpRepeatFixedSizeArray>(service->asBinder());
   Input out1, out2;
-  EXPECT_TRUE(std::invoke(fn, *proxy, input, &out1, &out2).isOk());
+  EXPECT_TRUE(std::invoke(fn, service, input, &out1, &out2).isOk());
   EXPECT_EQ(input, out1);
   EXPECT_EQ(input, out2);
 }
@@ -229,15 +172,21 @@ std::array<std::array<T, 2>, 3> Make2dArray(std::initializer_list<T> values) {
 }
 
 TEST_F(AidlTest, FixedSizeArrayOverBinder) {
-  auto service = SharedRefBase::make<MyService>();
+  auto test_service = getService<ITestService>();
+  BackendType backend;
+  auto status = test_service->getBackendType(&backend);
+  EXPECT_TRUE(status.isOk());
+  if (backend != BackendType::CPP) GTEST_SKIP();
+
+  auto service = getService<IRepeatFixedSizeArray>();
 
   CheckRepeat(service, &IRepeatFixedSizeArray::RepeatBytes, (std::array<uint8_t, 3>{1, 2, 3}));
 
   CheckRepeat(service, &IRepeatFixedSizeArray::RepeatInts, (std::array<int32_t, 3>{1, 2, 3}));
 
-  auto binder1 = SharedRefBase::make<MyService>()->asBinder();
-  auto binder2 = SharedRefBase::make<MyService>()->asBinder();
-  auto binder3 = service->asBinder();
+  auto binder1 = SharedRefBase::make<BnEmptyInterface>()->asBinder();
+  auto binder2 = SharedRefBase::make<BnEmptyInterface>()->asBinder();
+  auto binder3 = SharedRefBase::make<BnEmptyInterface>()->asBinder();
   CheckRepeat(service, &IRepeatFixedSizeArray::RepeatBinders,
               (std::array<SpAIBinder, 3>{binder1, binder2, binder3}));
 
