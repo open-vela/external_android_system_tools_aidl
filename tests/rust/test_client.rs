@@ -17,6 +17,11 @@
 //! Test Rust client for the AIDL compiler.
 
 use ::binder::{parcel::Parcelable, Parcel};
+use aidl_test_fixedsizearray::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::{
+    FixedSizeArrayExample,
+    IRepeatFixedSizeArray::{BpRepeatFixedSizeArray, IRepeatFixedSizeArray},
+    IntParcelable::IntParcelable,
+};
 use aidl_test_interface::aidl::android::aidl::tests::nested::{
     INestedService, ParcelableWithNested,
 };
@@ -1084,4 +1089,123 @@ fn test_nullable_binder_array() {
     assert_eq!(repeated.as_ref(), Some(&array));
     array.reverse();
     assert_eq!(result, Ok(Some(array)));
+}
+
+#[test]
+fn test_read_write_fixed_size_array() {
+    let mut parcel = Parcel::new();
+    let mut p: FixedSizeArrayExample = Default::default();
+    p.byteMatrix[0][0] = 0;
+    p.byteMatrix[0][1] = 1;
+    p.byteMatrix[1][0] = 2;
+    p.byteMatrix[1][1] = 3;
+
+    p.floatMatrix[0][0] = 0.0;
+    p.floatMatrix[0][1] = 1.0;
+    p.floatMatrix[1][0] = 2.0;
+    p.floatMatrix[1][1] = 3.0;
+
+    p.boolNullableArray = Some([true, false]);
+    p.byteNullableArray = Some([42, 0]);
+    p.stringNullableArray = Some([Some("hello".into()), Some("world".into())]);
+
+    p.boolNullableMatrix = Some([[true, false], Default::default()]);
+    p.byteNullableMatrix = Some([[42, 0], Default::default()]);
+    p.stringNullableMatrix =
+        Some([[Some("hello".into()), Some("world".into())], Default::default()]);
+
+    assert_eq!(parcel.write(&p), Ok(()));
+    unsafe {
+        parcel.set_data_position(0).unwrap();
+    }
+    assert_eq!(p, parcel.read::<FixedSizeArrayExample>().unwrap());
+}
+
+#[test]
+fn test_fixed_size_array_uses_array_optimization() {
+    let mut parcel = Parcel::new();
+    let byte_array = [[1u8, 2u8, 3u8], [4u8, 5u8, 6u8]];
+    assert_eq!(parcel.write(&byte_array), Ok(()));
+    unsafe {
+        parcel.set_data_position(0).unwrap();
+    }
+    assert_eq!(parcel.read::<i32>(), Ok(2i32));
+    assert_eq!(parcel.read::<Vec<u8>>(), Ok(vec![1u8, 2u8, 3u8]));
+    assert_eq!(parcel.read::<Vec<u8>>(), Ok(vec![4u8, 5u8, 6u8]));
+}
+
+macro_rules! test_repeat_fixed_size_array {
+    ($service:ident, $func:ident, $value:expr) => {
+        let array = $value;
+        let mut repeated = Default::default();
+        let result = $service.$func(&array, &mut repeated).unwrap();
+        assert_eq!(repeated, array);
+        assert_eq!(result, array);
+    };
+}
+
+macro_rules! test_repeat_fixed_size_array_1d_binder {
+    ($service:ident, $func:ident, $value:expr) => {
+        let array = $value;
+        let mut repeated = Default::default();
+        let result = $service.$func(&array, &mut repeated).unwrap();
+        assert_eq!(result, array.clone());
+        assert_eq!(repeated, array.map(Some));
+    };
+}
+
+macro_rules! test_repeat_fixed_size_array_2d_binder {
+    ($service:ident, $func:ident, $value:expr) => {
+        let array = $value;
+        let mut repeated = Default::default();
+        let result = $service.$func(&array, &mut repeated).unwrap();
+        assert_eq!(result, array.clone());
+        assert_eq!(repeated, array.map(|row| row.map(Some)));
+    };
+}
+
+#[test]
+fn test_fixed_size_array_over_binder() {
+    let test_service = get_test_service();
+    let backend = test_service.getBackendType().expect("error getting backend type");
+    if backend == BackendType::JAVA {
+        // Java doesn't support fixed-size arrays yet
+        return;
+    }
+
+    let service: binder::Strong<dyn IRepeatFixedSizeArray> =
+        binder::get_interface(<BpRepeatFixedSizeArray as IRepeatFixedSizeArray>::get_descriptor())
+            .expect("did not get binder service");
+
+    test_repeat_fixed_size_array!(service, RepeatBytes, [1u8, 2u8, 3u8]);
+    test_repeat_fixed_size_array!(service, RepeatInts, [1i32, 2i32, 3i32]);
+
+    let binder1 = test_service.as_binder();
+    let binder2 = test_service
+        .GetCallback(false)
+        .expect("error calling GetCallback")
+        .expect("expected Some from GetCallback")
+        .as_binder();
+    let binder3 = service.as_binder();
+    test_repeat_fixed_size_array_1d_binder!(
+        service,
+        RepeatBinders,
+        [binder1.clone(), binder2.clone(), binder3.clone()]
+    );
+
+    let p1 = IntParcelable { value: 1 };
+    let p2 = IntParcelable { value: 2 };
+    let p3 = IntParcelable { value: 3 };
+    test_repeat_fixed_size_array!(service, RepeatParcelables, [p1, p2, p3]);
+
+    test_repeat_fixed_size_array!(service, Repeat2dBytes, [[1u8, 2u8, 3u8], [1u8, 2u8, 3u8]]);
+    test_repeat_fixed_size_array!(service, Repeat2dInts, [[1i32, 2i32, 3i32], [1i32, 2i32, 3i32]]);
+
+    test_repeat_fixed_size_array_2d_binder!(
+        service,
+        Repeat2dBinders,
+        [[binder1.clone(), binder2.clone(), binder3.clone()], [binder1, binder2, binder3]]
+    );
+
+    test_repeat_fixed_size_array!(service, Repeat2dParcelables, [[p1, p2, p3], [p1, p2, p3]]);
 }
