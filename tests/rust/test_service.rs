@@ -16,6 +16,9 @@
 
 //! Test Rust service for the AIDL compiler.
 
+use aidl_test_fixedsizearray::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::{
+    IRepeatFixedSizeArray, IntParcelable::IntParcelable,
+};
 use aidl_test_interface::aidl::android::aidl::tests::nested::{
     INestedService, ParcelableWithNested,
 };
@@ -504,6 +507,69 @@ impl INestedService::INestedService for NestedService {
     }
 }
 
+struct FixedSizeArrayService;
+
+impl Interface for FixedSizeArrayService {}
+
+impl IRepeatFixedSizeArray::IRepeatFixedSizeArray for FixedSizeArrayService {
+    fn RepeatBytes(&self, input: &[u8; 3], repeated: &mut [u8; 3]) -> binder::Result<[u8; 3]> {
+        *repeated = *input;
+        Ok(*input)
+    }
+    fn RepeatInts(&self, input: &[i32; 3], repeated: &mut [i32; 3]) -> binder::Result<[i32; 3]> {
+        *repeated = *input;
+        Ok(*input)
+    }
+    fn RepeatBinders(
+        &self,
+        input: &[SpIBinder; 3],
+        repeated: &mut [Option<SpIBinder>; 3],
+    ) -> binder::Result<[SpIBinder; 3]> {
+        *repeated = input.clone().map(Some);
+        Ok(input.clone())
+    }
+    fn RepeatParcelables(
+        &self,
+        input: &[IntParcelable; 3],
+        repeated: &mut [IntParcelable; 3],
+    ) -> binder::Result<[IntParcelable; 3]> {
+        *repeated = *input;
+        Ok(*input)
+    }
+    fn Repeat2dBytes(
+        &self,
+        input: &[[u8; 3]; 2],
+        repeated: &mut [[u8; 3]; 2],
+    ) -> binder::Result<[[u8; 3]; 2]> {
+        *repeated = *input;
+        Ok(*input)
+    }
+    fn Repeat2dInts(
+        &self,
+        input: &[[i32; 3]; 2],
+        repeated: &mut [[i32; 3]; 2],
+    ) -> binder::Result<[[i32; 3]; 2]> {
+        *repeated = *input;
+        Ok(*input)
+    }
+    fn Repeat2dBinders(
+        &self,
+        input: &[[SpIBinder; 3]; 2],
+        repeated: &mut [[Option<SpIBinder>; 3]; 2],
+    ) -> binder::Result<[[SpIBinder; 3]; 2]> {
+        *repeated = input.clone().map(|nested| nested.map(Some));
+        Ok(input.clone())
+    }
+    fn Repeat2dParcelables(
+        &self,
+        input: &[[IntParcelable; 3]; 2],
+        repeated: &mut [[IntParcelable; 3]; 2],
+    ) -> binder::Result<[[IntParcelable; 3]; 2]> {
+        *repeated = *input;
+        Ok(*input)
+    }
+}
+
 fn main() {
     binder::ProcessState::set_thread_pool_max_thread_count(0);
     binder::ProcessState::start_thread_pool();
@@ -522,6 +588,15 @@ fn main() {
     let nested_service =
         INestedService::BnNestedService::new_binder(NestedService, BinderFeatures::default());
     binder::add_service(nested_service_name, nested_service.as_binder())
+        .expect("Could not register service");
+
+    let fixed_size_array_service_name =
+        <IRepeatFixedSizeArray::BpRepeatFixedSizeArray as IRepeatFixedSizeArray::IRepeatFixedSizeArray>::get_descriptor();
+    let fixed_size_array_service = IRepeatFixedSizeArray::BnRepeatFixedSizeArray::new_binder(
+        FixedSizeArrayService,
+        BinderFeatures::default(),
+    );
+    binder::add_service(fixed_size_array_service_name, fixed_size_array_service.as_binder())
         .expect("Could not register service");
 
     binder::ProcessState::join_thread_pool();
