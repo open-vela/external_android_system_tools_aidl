@@ -404,6 +404,8 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   // View of this type which has one-less dimension(s).
   // e.g.) T[] => T, T[N][M] => T[M]
   void ViewAsArrayBase(std::function<void(const AidlTypeSpecifier&)> func) const;
+  // ViewAsArrayBase passes "mutated" type to its callback.
+  bool IsMutated() const { return mutated_; }
 
   // Returns the full-qualified name of the base type.
   // int -> int
@@ -443,6 +445,7 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   bool IsFixedSizeArray() const {
     return array_.has_value() && std::get_if<FixedSizeArray>(&*array_) != nullptr;
   }
+  std::vector<int32_t> GetFixedSizeArrayDimensions() const;
 
   const ArrayType& GetArray() const {
     AIDL_FATAL_IF(!array_.has_value(), this) << "GetArray() for non-array type";
@@ -471,6 +474,8 @@ class AidlTypeSpecifier final : public AidlAnnotatable,
   const string unresolved_name_;
   string fully_qualified_name_;
   mutable std::optional<ArrayType> array_;
+  mutable bool mutated_ = false;  // ViewAsArrayBase() sets this as true to distinguish mutated one
+                                  // from the original type
   vector<string> split_name_;
   const AidlDefinedType* defined_type_ = nullptr;  // set when Resolve() for defined types
 };
