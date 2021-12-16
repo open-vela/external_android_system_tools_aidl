@@ -697,21 +697,33 @@ std::string CppConstantValueDecorator(
     const AidlTypeSpecifier& type,
     const std::variant<std::string, std::vector<std::string>>& raw_value, bool is_ndk) {
   if (type.IsArray()) {
-    const auto& values = std::get<std::vector<std::string>>(raw_value);
+    auto values = std::get<std::vector<std::string>>(raw_value);
     // Hexadecimal literals for byte arrays should be casted to uint8_t
     if (type.GetName() == "byte" &&
         std::any_of(values.begin(), values.end(),
                     [](const auto& value) { return !value.empty() && value[0] == '-'; })) {
-      std::vector<std::string> copy = values;
-      for (auto& value : copy) {
+      for (auto& value : values) {
         // cast only if necessary
         if (value[0] == '-') {
           value = "uint8_t(" + value + ")";
         }
       }
-      return "{" + Join(copy, ", ") + "}";
     }
-    return "{" + Join(values, ", ") + "}";
+    std::string value = "{" + Join(values, ", ") + "}";
+
+    if (type.IsFixedSizeArray()) {
+      // For arrays, use double braces because arrays can be nested.
+      //  e.g.) array<array<int, 2>, 3> ints = {{ {{1,2}}, {{3,4}}, {{5,6}} }};
+      // Vectors might need double braces, but since we don't have nested vectors (yet)
+      // single brace would work even for optional vectors.
+      value = "{" + value + "}";
+    }
+
+    if (!type.IsMutated() && type.IsNullable()) {
+      // For outermost std::optional<>, we need an additional brace pair to initialize its value.
+      value = "{" + value + "}";
+    }
+    return value;
   }
 
   const std::string& value = std::get<std::string>(raw_value);
