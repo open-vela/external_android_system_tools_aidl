@@ -43,12 +43,22 @@ std::string ConstantValueDecoratorInternal(
     const AidlTypeSpecifier& type,
     const std::variant<std::string, std::vector<std::string>>& raw_value, bool by_ref) {
   if (type.IsArray()) {
-    // Convert `{ ... }` to `vec![ ... ]`
     const auto& values = std::get<std::vector<std::string>>(raw_value);
-    return "vec![" + Join(values, ", ") + "]";
+    std::string value = "[" + Join(values, ", ") + "]";
+    if (type.IsDynamicArray()) {
+      value = "vec!" + value;
+    }
+    if (type.IsFixedSizeArray() && values.empty()) {
+      // empty list("[]") can't initialize [T;N] type.
+      value = "Default::default()";
+    }
+    if (!type.IsMutated() && type.IsNullable()) {
+      value = "Some(" + value + ")";
+    }
+    return value;
   }
 
-  const std::string& value = std::get<std::string>(raw_value);
+  std::string value = std::get<std::string>(raw_value);
 
   const auto& aidl_name = type.GetName();
   if (aidl_name == "char") {
@@ -64,16 +74,20 @@ std::string ConstantValueDecoratorInternal(
     return value + "f64";
   }
 
-  if (aidl_name == "String" && !by_ref) {
-    // The actual type might be String or &str,
-    // and .into() transparently converts into either one
-    return value + ".into()";
-  }
-
   if (auto defined_type = type.GetDefinedType(); defined_type) {
     auto enum_type = defined_type->AsEnumDeclaration();
     AIDL_FATAL_IF(!enum_type, type) << "Invalid type for \"" << value << "\"";
     return GetRawRustName(type) + "::" + value.substr(value.find_last_of('.') + 1);
+  }
+
+  if (aidl_name == "String" && !by_ref) {
+    // The actual type might be String or &str,
+    // and .into() transparently converts into either one
+    value = value + ".into()";
+  }
+
+  if (type.IsNullable()) {
+    value = "Some(" + value + ")";
   }
 
   return value;
@@ -147,21 +161,13 @@ std::string GetRustName(const AidlTypeSpecifier& type, const AidlTypenames& type
 std::string ConstantValueDecorator(
     const AidlTypeSpecifier& type,
     const std::variant<std::string, std::vector<std::string>>& raw_value) {
-  auto rust_value = ConstantValueDecoratorInternal(type, raw_value, false);
-  if (type.IsNullable()) {
-    return "Some(" + rust_value + ")";
-  }
-  return rust_value;
+  return ConstantValueDecoratorInternal(type, raw_value, false);
 }
 
 std::string ConstantValueDecoratorRef(
     const AidlTypeSpecifier& type,
     const std::variant<std::string, std::vector<std::string>>& raw_value) {
-  auto rust_value = ConstantValueDecoratorInternal(type, raw_value, true);
-  if (type.IsNullable()) {
-    return "Some(" + rust_value + ")";
-  }
-  return rust_value;
+  return ConstantValueDecoratorInternal(type, raw_value, true);
 }
 
 bool UsesOptionInNullableVector(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
@@ -220,6 +226,12 @@ std::string RustNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typen
     }
     if (mode == StorageMode::UNSIZED_ARGUMENT) {
       rust_name = "[" + rust_name + "]";
+    } else if (type.IsFixedSizeArray()) {
+      auto dimensions = type.GetFixedSizeArrayDimensions();
+      // T[N][M] => [[T; M]; N]
+      for (auto it = rbegin(dimensions), end = rend(dimensions); it != end; it++) {
+        rust_name = "[" + rust_name + "; " + std::to_string(*it) + "]";
+      }
     } else {
       rust_name = "Vec<" + rust_name + ">";
     }
@@ -263,9 +275,9 @@ StorageMode ArgumentStorageMode(const AidlArgument& arg, const AidlTypenames& ty
 
   const bool isEnum = definedType && definedType->AsEnumDeclaration() != nullptr;
   const bool isPrimitive = AidlTypenames::IsPrimitiveTypename(typeName);
-  if (typeName == "String" || arg.GetType().IsArray() || typenames.IsList(arg.GetType())) {
+  if (typeName == "String" || arg.GetType().IsDynamicArray() || typenames.IsList(arg.GetType())) {
     return StorageMode::UNSIZED_ARGUMENT;
-  } else if (!(isPrimitive || isEnum)) {
+  } else if (!(isPrimitive || isEnum) || arg.GetType().IsFixedSizeArray()) {
     return StorageMode::IN_ARGUMENT;
   } else {
     return StorageMode::VALUE;
