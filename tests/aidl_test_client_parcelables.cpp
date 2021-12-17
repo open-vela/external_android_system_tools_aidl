@@ -628,8 +628,8 @@ void CheckRepeat(Service service, MemFn fn, Input input) {
 }
 
 template <typename T>
-std::array<std::array<T, 2>, 3> Make2dArray(std::initializer_list<T> values) {
-  std::array<std::array<T, 2>, 3> arr = {};
+std::array<std::array<T, 3>, 2> Make2dArray(std::initializer_list<T> values) {
+  std::array<std::array<T, 3>, 2> arr = {};
   auto it = std::begin(values);
   for (auto& row : arr) {
     for (auto& el : row) {
@@ -644,7 +644,7 @@ TEST_F(AidlTest, FixedSizeArrayOverBinder) {
   BackendType backend;
   auto status = service->getBackendType(&backend);
   EXPECT_TRUE(status.isOk());
-  if (backend != BackendType::CPP) GTEST_SKIP();
+  if (backend == BackendType::JAVA) GTEST_SKIP();
 
   sp<IRepeatFixedSizeArray> service;
   ASSERT_EQ(OK, getService(IRepeatFixedSizeArray::descriptor, &service));
