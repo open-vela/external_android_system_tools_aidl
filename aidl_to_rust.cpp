@@ -170,6 +170,7 @@ std::string ConstantValueDecoratorRef(
   return ConstantValueDecoratorInternal(type, raw_value, true);
 }
 
+// Returns true if @nullable T[] should be mapped Option<Vec<Option<T>>
 bool UsesOptionInNullableVector(const AidlTypeSpecifier& type, const AidlTypenames& typenames) {
   AIDL_FATAL_IF(!type.IsArray() && !typenames.IsList(type), type) << "not a vector";
   AIDL_FATAL_IF(typenames.IsList(type) && type.GetTypeParameters().size() != 1, type)
@@ -208,7 +209,10 @@ std::string RustNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typen
   std::string rust_name;
   if (type.IsArray() || typenames.IsList(type)) {
     StorageMode element_mode;
-    if (mode == StorageMode::OUT_ARGUMENT || mode == StorageMode::DEFAULT_VALUE) {
+    if (type.IsFixedSizeArray() && mode == StorageMode::PARCELABLE_FIELD) {
+      // Elements of fixed-size array field need to have Default.
+      element_mode = StorageMode::DEFAULT_VALUE;
+    } else if (mode == StorageMode::OUT_ARGUMENT || mode == StorageMode::DEFAULT_VALUE) {
       // Elements need to have Default for resize_out_vec()
       element_mode = StorageMode::DEFAULT_VALUE;
     } else {
