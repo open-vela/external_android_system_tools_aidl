@@ -64,7 +64,7 @@ public interface IProtected extends android.os.IInterface
           _arg0 = data.readTypedObject(android.content.AttributionSource.CREATOR);
           data.enforceNoDataAvail();
           if (((this.permissionCheckerWrapper(android.Manifest.permission.INTERNET, this.getCallingPid(), _arg0)&&this.permissionCheckerWrapper(android.Manifest.permission.VIBRATE, this.getCallingPid(), _arg0))!=true)) {
-            throw new SecurityException("Access denied, requires: allOf = {INTERNET,VIBRATE}");
+            throw new SecurityException("Access denied, requires: allOf = {android.Manifest.permission.INTERNET, android.Manifest.permission.VIBRATE}");
           }
           this.ProtectedWithSourceAttribution(_arg0);
           reply.writeNoException();
@@ -119,5 +119,6 @@ public interface IProtected extends android.os.IInterface
     static final int TRANSACTION_ProtectedWithSourceAttribution = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
   }
   public static final java.lang.String DESCRIPTOR = "android$aidl$tests$permission$platform$IProtected".replace('$', '.');
+  @android.annotation.EnforcePermission(allOf = {android.Manifest.permission.INTERNET, android.Manifest.permission.VIBRATE})
   public void ProtectedWithSourceAttribution(android.content.AttributionSource source) throws android.os.RemoteException;
 }

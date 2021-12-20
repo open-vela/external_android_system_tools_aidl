@@ -67,7 +67,7 @@ public interface IProtected extends android.os.IInterface
         case TRANSACTION_PermissionProtected:
         {
           if ((this.permissionCheckerWrapper(android.Manifest.permission.READ_PHONE_STATE, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null))!=true)) {
-            throw new SecurityException("Access denied, requires: READ_PHONE_STATE");
+            throw new SecurityException("Access denied, requires: android.Manifest.permission.READ_PHONE_STATE");
           }
           this.PermissionProtected();
           reply.writeNoException();
@@ -76,7 +76,7 @@ public interface IProtected extends android.os.IInterface
         case TRANSACTION_MultiplePermissionsAll:
         {
           if (((this.permissionCheckerWrapper(android.Manifest.permission.INTERNET, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null))&&this.permissionCheckerWrapper(android.Manifest.permission.VIBRATE, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null)))!=true)) {
-            throw new SecurityException("Access denied, requires: allOf = {INTERNET,VIBRATE}");
+            throw new SecurityException("Access denied, requires: allOf = {android.Manifest.permission.INTERNET, android.Manifest.permission.VIBRATE}");
           }
           this.MultiplePermissionsAll();
           reply.writeNoException();
@@ -85,7 +85,7 @@ public interface IProtected extends android.os.IInterface
         case TRANSACTION_MultiplePermissionsAny:
         {
           if (((this.permissionCheckerWrapper(android.Manifest.permission.INTERNET, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null))||this.permissionCheckerWrapper(android.Manifest.permission.VIBRATE, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null)))!=true)) {
-            throw new SecurityException("Access denied, requires: anyOf = {INTERNET,VIBRATE}");
+            throw new SecurityException("Access denied, requires: anyOf = {android.Manifest.permission.INTERNET, android.Manifest.permission.VIBRATE}");
           }
           this.MultiplePermissionsAny();
           reply.writeNoException();
@@ -169,7 +169,10 @@ public interface IProtected extends android.os.IInterface
     static final int TRANSACTION_MultiplePermissionsAny = (android.os.IBinder.FIRST_CALL_TRANSACTION + 2);
   }
   public static final java.lang.String DESCRIPTOR = "android$aidl$tests$permission$IProtected".replace('$', '.');
+  @android.annotation.EnforcePermission(android.Manifest.permission.READ_PHONE_STATE)
   public void PermissionProtected() throws android.os.RemoteException;
+  @android.annotation.EnforcePermission(allOf = {android.Manifest.permission.INTERNET, android.Manifest.permission.VIBRATE})
   public void MultiplePermissionsAll() throws android.os.RemoteException;
+  @android.annotation.EnforcePermission(anyOf = {android.Manifest.permission.INTERNET, android.Manifest.permission.VIBRATE})
   public void MultiplePermissionsAny() throws android.os.RemoteException;
 }

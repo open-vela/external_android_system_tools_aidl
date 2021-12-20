@@ -2,6 +2,7 @@
  * This file is auto-generated.  DO NOT MODIFY.
  */
 package android.aidl.tests.permission;
+@android.annotation.EnforcePermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
 public interface IProtectedInterface extends android.os.IInterface
 {
   /** Default implementation for IProtectedInterface. */
@@ -64,7 +65,7 @@ public interface IProtectedInterface extends android.os.IInterface
         case TRANSACTION_Method1:
         {
           if ((this.permissionCheckerWrapper(android.Manifest.permission.ACCESS_FINE_LOCATION, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null))!=true)) {
-            throw new SecurityException("Access denied, requires: ACCESS_FINE_LOCATION");
+            throw new SecurityException("Access denied, requires: android.Manifest.permission.ACCESS_FINE_LOCATION");
           }
           this.Method1();
           reply.writeNoException();
@@ -73,10 +74,10 @@ public interface IProtectedInterface extends android.os.IInterface
         case TRANSACTION_Method2:
         {
           if ((this.permissionCheckerWrapper(android.Manifest.permission.ACCESS_FINE_LOCATION, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null))!=true)) {
-            throw new SecurityException("Access denied, requires: ACCESS_FINE_LOCATION");
+            throw new SecurityException("Access denied, requires: android.Manifest.permission.ACCESS_FINE_LOCATION");
           }
           if ((this.permissionCheckerWrapper(android.Manifest.permission.INTERNET, this.getCallingPid(), new android.content.AttributionSource(getCallingUid(), null, null))!=true)) {
-            throw new SecurityException("Access denied, requires: INTERNET");
+            throw new SecurityException("Access denied, requires: android.Manifest.permission.INTERNET");
           }
           this.Method2();
           reply.writeNoException();
@@ -146,5 +147,6 @@ public interface IProtectedInterface extends android.os.IInterface
   }
   public static final java.lang.String DESCRIPTOR = "android$aidl$tests$permission$IProtectedInterface".replace('$', '.');
   public void Method1() throws android.os.RemoteException;
+  @android.annotation.EnforcePermission(android.Manifest.permission.INTERNET)
   public void Method2() throws android.os.RemoteException;
 }
