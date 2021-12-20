@@ -3,6 +3,6 @@ package android.aidl.tests.permission.platform;
 import android.content.AttributionSource;
 
 interface IProtected {
-    @Enforce("permission=INTERNET && permission=VIBRATE || uid=SYSTEM_UID")
+    @EnforcePermission(allOf={"INTERNET", "VIBRATE"})
     void ProtectedWithSourceAttribution(in AttributionSource source);
 }
