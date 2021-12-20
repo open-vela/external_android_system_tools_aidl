@@ -516,7 +516,7 @@ static void GeneratePermissionCheck(const AidlMethod& method, const perm::Expres
   ifstatement->statements = std::make_shared<StatementBlock>();
   ifstatement->statements->Add(std::make_shared<LiteralStatement>(
       android::base::StringPrintf("throw new SecurityException(\"Access denied, requires: %s\");\n",
-                                  perm::ExprAsString(expr).c_str())));
+                                  perm::AsJavaAnnotation(expr).c_str())));
   addTo->Add(ifstatement);
 }
 

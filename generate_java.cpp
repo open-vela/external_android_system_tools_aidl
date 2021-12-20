@@ -920,6 +920,13 @@ std::vector<std::string> GenerateJavaAnnotations(const AidlAnnotatable& a) {
     }
   }
 
+  if (auto enforce_expr = a.EnforceExpression(); enforce_expr) {
+    result.emplace_back("@android.annotation.EnforcePermission(" +
+                        android::aidl::perm::AsJavaAnnotation(*enforce_expr.get()) + ")");
+  } else if (a.IsPermissionNone()) {
+    result.emplace_back("@android.annotation.RequiresNoPermission");
+  }  // TODO: Add annoation for @PermissionManuallyEnforced
+
   return result;
 }
 
