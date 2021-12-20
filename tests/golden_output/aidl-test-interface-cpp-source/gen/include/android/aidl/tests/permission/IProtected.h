@@ -13,8 +13,8 @@ class IProtected : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(Protected)
   virtual ::android::binder::Status PermissionProtected() = 0;
-  virtual ::android::binder::Status MultiplePermissions() = 0;
-  virtual ::android::binder::Status MultiplePermissions2() = 0;
+  virtual ::android::binder::Status MultiplePermissionsAll() = 0;
+  virtual ::android::binder::Status MultiplePermissionsAny() = 0;
 };  // class IProtected
 
 class IProtectedDefault : public IProtected {
@@ -25,10 +25,10 @@ public:
   ::android::binder::Status PermissionProtected() override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
-  ::android::binder::Status MultiplePermissions() override {
+  ::android::binder::Status MultiplePermissionsAll() override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
-  ::android::binder::Status MultiplePermissions2() override {
+  ::android::binder::Status MultiplePermissionsAny() override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
 };  // class IProtectedDefault
