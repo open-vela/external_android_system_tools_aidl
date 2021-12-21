@@ -49,8 +49,11 @@ std::string ConstantValueDecoratorInternal(
       value = "vec!" + value;
     }
     if (type.IsFixedSizeArray() && values.empty()) {
-      // empty list("[]") can't initialize [T;N] type.
+      auto dimensions = type.GetFixedSizeArrayDimensions();
       value = "Default::default()";
+      for (auto it = rbegin(dimensions), end = rend(dimensions); it != end; it++) {
+        value = "[" + Join(std::vector<std::string>(*it, value), ", ") + "]";
+      }
     }
     if (!type.IsMutated() && type.IsNullable()) {
       value = "Some(" + value + ")";
