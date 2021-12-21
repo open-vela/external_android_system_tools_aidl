@@ -35,6 +35,7 @@
 #include "aidl_to_cpp_common.h"
 #include "aidl_to_java.h"
 #include "aidl_to_ndk.h"
+#include "aidl_to_rust.h"
 #include "comments.h"
 #include "logging.h"
 #include "options.h"
@@ -3947,46 +3948,42 @@ TEST_F(AidlTest, ParseRustDerive) {
 TEST_F(AidlTest, EmptyEnforceAnnotation) {
   io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
     interface IFoo {
-        @Enforce()
+        @EnforcePermission()
         void Protected();
     })");
 
   Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
   CaptureStderr();
   EXPECT_FALSE(compile_aidl(options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Missing 'value' on @Enforce."));
-}
-
-TEST_F(AidlTest, EmptyEnforceCondition) {
-  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
-    interface IFoo {
-        @Enforce("")
-        void Protected();
-    })");
-
-  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
-  CaptureStderr();
-  EXPECT_FALSE(compile_aidl(options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Unable to parse @Enforce annotation"));
-}
-
-TEST_F(AidlTest, InvalidEnforceCondition) {
-  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
-    interface IFoo {
-        @Enforce("invalid")
-        void Protected();
-    })");
-
-  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
-  CaptureStderr();
-  EXPECT_FALSE(compile_aidl(options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Unable to parse @Enforce annotation"));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Unable to parse @EnforcePermission annotation"));
 }
 
 TEST_F(AidlTest, InterfaceEnforceCondition) {
   io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
-    @Enforce("permission = INTERNET")
+    @EnforcePermission("INTERNET")
     interface IFoo {
+        void Protected();
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  EXPECT_TRUE(compile_aidl(options, io_delegate_));
+}
+
+TEST_F(AidlTest, EnforceConditionAny) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    interface IFoo {
+        @EnforcePermission(anyOf={"INTERNET", "READ_PHONE_STATE"})
+        void Protected();
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  EXPECT_TRUE(compile_aidl(options, io_delegate_));
+}
+
+TEST_F(AidlTest, EnforceConditionAll) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    interface IFoo {
+        @EnforcePermission(allOf={"INTERNET", "READ_PHONE_STATE"})
         void Protected();
     })");
 
@@ -3996,9 +3993,9 @@ TEST_F(AidlTest, InterfaceEnforceCondition) {
 
 TEST_F(AidlTest, InterfaceAndMethodEnforceCondition) {
   io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
-    @Enforce("permission = INTERNET")
+    @EnforcePermission("INTERNET")
     interface IFoo {
-        @Enforce("uid = SYSTEM_UID")
+        @EnforcePermission("SYSTEM_UID")
         void Protected();
     })");
 
@@ -4008,9 +4005,9 @@ TEST_F(AidlTest, InterfaceAndMethodEnforceCondition) {
 
 TEST_F(AidlTest, NoPermissionInterfaceEnforceMethod) {
   io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
-    @NoPermissionRequired
+    @RequiresNoPermission
     interface IFoo {
-        @Enforce("permission = INTERNET")
+        @EnforcePermission("INTERNET")
         void Protected();
     })");
 
@@ -4025,7 +4022,7 @@ TEST_F(AidlTest, ManualPermissionInterfaceEnforceMethod) {
   io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
     @PermissionManuallyEnforced
     interface IFoo {
-        @Enforce("permission = INTERNET")
+        @EnforcePermission("INTERNET")
         void Protected();
     })");
 
@@ -4039,9 +4036,9 @@ TEST_F(AidlTest, ManualPermissionInterfaceEnforceMethod) {
 
 TEST_F(AidlTest, EnforceInterfaceNoPermissionsMethod) {
   io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
-    @Enforce("permission = INTERNET")
+    @EnforcePermission("INTERNET")
     interface IFoo {
-        @NoPermissionRequired
+        @RequiresNoPermission
         void Protected();
     })");
 
@@ -4054,7 +4051,7 @@ TEST_F(AidlTest, EnforceInterfaceNoPermissionsMethod) {
 
 TEST_F(AidlTest, EnforceInterfaceManualPermissionMethod) {
   io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
-    @Enforce("permission = INTERNET")
+    @EnforcePermission("INTERNET")
     interface IFoo {
         @PermissionManuallyEnforced
         void Protected();
@@ -5056,6 +5053,41 @@ TEST_F(AidlTest, InterfaceVectorIsAvailableAfterTiramisu) {
       compile_aidl(Options::From("aidl --lang=java --min_sdk_version Tiramisu -o out p/IFoo.aidl"),
                    io_delegate_));
   EXPECT_EQ(GetCapturedStderr(), "");
+}
+
+TEST_F(AidlTest, RustNameOf_PfdFixedArray) {
+  auto pfd = typenames_.MakeResolvedType(AIDL_LOCATION_HERE, "ParcelFileDescriptor", false);
+  ASSERT_TRUE(pfd->MakeArray(FixedSizeArray{
+      std::unique_ptr<AidlConstantValue>(AidlConstantValue::Integral(AIDL_LOCATION_HERE, "2"))}));
+  ASSERT_TRUE(pfd->MakeArray(FixedSizeArray{
+      std::unique_ptr<AidlConstantValue>(AidlConstantValue::Integral(AIDL_LOCATION_HERE, "3"))}));
+  EXPECT_EQ(
+      rust::RustNameOf(*pfd, typenames_, rust::StorageMode::PARCELABLE_FIELD, rust::Lifetime::NONE),
+      "[[Option<binder::parcel::ParcelFileDescriptor>; 3]; 2]");
+  EXPECT_EQ(
+      rust::RustNameOf(*pfd, typenames_, rust::StorageMode::DEFAULT_VALUE, rust::Lifetime::NONE),
+      "[[Option<binder::parcel::ParcelFileDescriptor>; 3]; 2]");
+  EXPECT_EQ(
+      rust::RustNameOf(*pfd, typenames_, rust::StorageMode::IN_ARGUMENT, rust::Lifetime::NONE),
+      "&[[binder::parcel::ParcelFileDescriptor; 3]; 2]");
+  EXPECT_EQ(rust::RustNameOf(*pfd, typenames_, rust::StorageMode::VALUE, rust::Lifetime::NONE),
+            "[[binder::parcel::ParcelFileDescriptor; 3]; 2]");
+}
+
+TEST_F(AidlTest, RustNameOf_PfdDynamicArray) {
+  auto pfd = typenames_.MakeResolvedType(AIDL_LOCATION_HERE, "ParcelFileDescriptor", true);
+  EXPECT_EQ(
+      rust::RustNameOf(*pfd, typenames_, rust::StorageMode::PARCELABLE_FIELD, rust::Lifetime::NONE),
+      "Vec<binder::parcel::ParcelFileDescriptor>");
+  EXPECT_EQ(
+      rust::RustNameOf(*pfd, typenames_, rust::StorageMode::DEFAULT_VALUE, rust::Lifetime::NONE),
+      "Vec<Option<binder::parcel::ParcelFileDescriptor>>");
+  // we use UNSIZED_ARGUMENT mode for input argument of dynamic array
+  EXPECT_EQ(
+      rust::RustNameOf(*pfd, typenames_, rust::StorageMode::UNSIZED_ARGUMENT, rust::Lifetime::NONE),
+      "&[binder::parcel::ParcelFileDescriptor]");
+  EXPECT_EQ(rust::RustNameOf(*pfd, typenames_, rust::StorageMode::VALUE, rust::Lifetime::NONE),
+            "Vec<binder::parcel::ParcelFileDescriptor>");
 }
 
 struct TypeParam {
