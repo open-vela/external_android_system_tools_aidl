@@ -176,7 +176,7 @@ void GenerateClientMethodHelpers(CodeWriter& out, const AidlInterface& iface,
       } else {
         out << "aidl_data.write(&" << arg_name << ")?;\n";
       }
-    } else if (arg->GetType().IsArray()) {
+    } else if (arg->GetType().IsDynamicArray()) {
       // For out-only arrays, send the array size
       if (arg->GetType().IsNullable()) {
         out << "aidl_data.write_slice_size(" << arg_name << ".as_deref())?;\n";
