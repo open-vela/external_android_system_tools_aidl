@@ -16,6 +16,7 @@
 
 package android.aidl.tests;
 
+import android.aidl.tests.BadParcelable;
 import android.aidl.tests.GenericStructuredParcelable;
 import android.aidl.tests.IntEnum;
 import android.aidl.tests.SimpleParcelable;
@@ -25,6 +26,8 @@ import android.os.PersistableBundle;
 
 // Tests that are only supported by the C++/Java backends, not NDK/Rust
 interface ICppJavaTests {
+    BadParcelable RepeatBadParcelable(in BadParcelable input);
+
     SimpleParcelable RepeatSimpleParcelable(in SimpleParcelable input, out SimpleParcelable repeat);
     GenericStructuredParcelable<int, StructuredParcelable, IntEnum> RepeatGenericParcelable(
             in GenericStructuredParcelable<int, StructuredParcelable, IntEnum> input,

@@ -494,6 +494,13 @@ void GenerateServerTransaction(CodeWriter& out, const AidlInterface& interface,
     out << GenLogBeforeExecute(bn_name, method, true /* isServer */, false /* isNdk */);
   }
 
+  if (!method.GetArguments().empty() && options.GetMinSdkVersion() >= SDK_VERSION_Tiramisu) {
+    out << "if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {\n";
+    out << "  _aidl_ret_status = st.writeToParcel(_aidl_reply);\n";
+    out << "  break;\n";
+    out << "}\n";
+  }
+
   // Call the actual method.  This is implemented by the subclass.
   out.Write("%s %s(%s(%s));\n", kBinderStatusLiteral, kStatusVarName, method.GetName().c_str(),
             GenerateArgList(typenames, method, /*for_declaration=*/false, /*type_name_only=*/false)
