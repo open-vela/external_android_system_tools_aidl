@@ -87,6 +87,7 @@ using android::binder::Status;
 
 // Generated code:
 using android::aidl::tests::BackendType;
+using android::aidl::tests::BadParcelable;
 using android::aidl::tests::BnCppJavaTests;
 using android::aidl::tests::BnNamedCallback;
 using android::aidl::tests::BnNewName;
@@ -182,6 +183,11 @@ class CppJavaTests : public BnCppJavaTests {
  public:
   CppJavaTests() = default;
   ~CppJavaTests() = default;
+
+  Status RepeatBadParcelable(const BadParcelable& input, BadParcelable* _aidl_return) override {
+    *_aidl_return = input;
+    return Status::ok();
+  }
 
   Status RepeatSimpleParcelable(const SimpleParcelable& input, SimpleParcelable* repeat,
                                 SimpleParcelable* _aidl_return) override {
