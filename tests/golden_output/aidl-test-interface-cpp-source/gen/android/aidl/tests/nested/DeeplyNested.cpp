@@ -6,14 +6,10 @@ namespace tests {
 namespace nested {
 ::android::status_t DeeplyNested::readFromParcel(const ::android::Parcel* _aidl_parcel) {
   ::android::status_t _aidl_ret_status = ::android::OK;
-  size_t _aidl_start_pos = _aidl_parcel->dataPosition();
-  int32_t _aidl_parcelable_raw_size = 0;
-  _aidl_ret_status = _aidl_parcel->readInt32(&_aidl_parcelable_raw_size);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
+  [[maybe_unused]] size_t _aidl_start_pos = _aidl_parcel->dataPosition();
+  int32_t _aidl_parcelable_raw_size = _aidl_parcel->readInt32();
   if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;
-  size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
+  [[maybe_unused]] size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
   if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;
   _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
   return _aidl_ret_status;
@@ -40,14 +36,10 @@ namespace tests {
 namespace nested {
 ::android::status_t DeeplyNested::A::readFromParcel(const ::android::Parcel* _aidl_parcel) {
   ::android::status_t _aidl_ret_status = ::android::OK;
-  size_t _aidl_start_pos = _aidl_parcel->dataPosition();
-  int32_t _aidl_parcelable_raw_size = 0;
-  _aidl_ret_status = _aidl_parcel->readInt32(&_aidl_parcelable_raw_size);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
+  [[maybe_unused]] size_t _aidl_start_pos = _aidl_parcel->dataPosition();
+  int32_t _aidl_parcelable_raw_size = _aidl_parcel->readInt32();
   if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;
-  size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
+  [[maybe_unused]] size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
   if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
@@ -86,14 +78,10 @@ namespace tests {
 namespace nested {
 ::android::status_t DeeplyNested::B::readFromParcel(const ::android::Parcel* _aidl_parcel) {
   ::android::status_t _aidl_ret_status = ::android::OK;
-  size_t _aidl_start_pos = _aidl_parcel->dataPosition();
-  int32_t _aidl_parcelable_raw_size = 0;
-  _aidl_ret_status = _aidl_parcel->readInt32(&_aidl_parcelable_raw_size);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
+  [[maybe_unused]] size_t _aidl_start_pos = _aidl_parcel->dataPosition();
+  int32_t _aidl_parcelable_raw_size = _aidl_parcel->readInt32();
   if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;
-  size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
+  [[maybe_unused]] size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
   if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;
   _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
   return _aidl_ret_status;
@@ -120,14 +108,10 @@ namespace tests {
 namespace nested {
 ::android::status_t DeeplyNested::B::C::readFromParcel(const ::android::Parcel* _aidl_parcel) {
   ::android::status_t _aidl_ret_status = ::android::OK;
-  size_t _aidl_start_pos = _aidl_parcel->dataPosition();
-  int32_t _aidl_parcelable_raw_size = 0;
-  _aidl_ret_status = _aidl_parcel->readInt32(&_aidl_parcelable_raw_size);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
+  [[maybe_unused]] size_t _aidl_start_pos = _aidl_parcel->dataPosition();
+  int32_t _aidl_parcelable_raw_size = _aidl_parcel->readInt32();
   if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;
-  size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
+  [[maybe_unused]] size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
   if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;
   _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
   return _aidl_ret_status;
@@ -154,14 +138,10 @@ namespace tests {
 namespace nested {
 ::android::status_t DeeplyNested::B::C::D::readFromParcel(const ::android::Parcel* _aidl_parcel) {
   ::android::status_t _aidl_ret_status = ::android::OK;
-  size_t _aidl_start_pos = _aidl_parcel->dataPosition();
-  int32_t _aidl_parcelable_raw_size = 0;
-  _aidl_ret_status = _aidl_parcel->readInt32(&_aidl_parcelable_raw_size);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
+  [[maybe_unused]] size_t _aidl_start_pos = _aidl_parcel->dataPosition();
+  int32_t _aidl_parcelable_raw_size = _aidl_parcel->readInt32();
   if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;
-  size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
+  [[maybe_unused]] size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
   if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;
   _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
   return _aidl_ret_status;
