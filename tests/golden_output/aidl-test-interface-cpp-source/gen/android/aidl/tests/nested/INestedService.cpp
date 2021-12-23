@@ -130,6 +130,10 @@ BnNestedService::BnNestedService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(flipStatus(in_p, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -158,6 +162,10 @@ BnNestedService::BnNestedService()
     }
     _aidl_ret_status = _aidl_data.readStrongBinder(&in_cb);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(flipStatusWithCallback(in_status, in_cb));
@@ -316,6 +324,10 @@ INestedService::BnCallback::BnCallback()
     }
     _aidl_ret_status = _aidl_data.readByte(reinterpret_cast<int8_t *>(&in_status));
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(done(in_status));

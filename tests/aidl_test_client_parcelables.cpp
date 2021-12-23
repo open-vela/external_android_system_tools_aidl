@@ -29,7 +29,9 @@
 using android::IInterface;
 using android::sp;
 using android::String16;
+using android::String8;
 using android::aidl::fixedsizearray::FixedSizeArrayExample;
+using android::aidl::tests::BadParcelable;
 using android::aidl::tests::ConstantExpressionEnum;
 using android::aidl::tests::GenericStructuredParcelable;
 using android::aidl::tests::INamedCallback;
@@ -56,6 +58,24 @@ using android::binder::Status;
 using android::os::PersistableBundle;
 using std::string;
 using std::vector;
+
+TEST_F(AidlTest, BadParcelable) {
+  if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
+
+  BadParcelable output;
+  {
+    BadParcelable bad(/*bad=*/true, "Booya", 42);
+    Status status = cpp_java_tests->RepeatBadParcelable(bad, &output);
+    ASSERT_FALSE(status.isOk());
+    EXPECT_EQ(status.exceptionCode(), Status::Exception::EX_BAD_PARCELABLE);
+  }
+  {
+    BadParcelable not_bad(/*bad=*/false, "Booya", 42);
+    Status status = cpp_java_tests->RepeatBadParcelable(not_bad, &output);
+    ASSERT_TRUE(status.isOk());
+    EXPECT_EQ(not_bad, output);
+  }
+}
 
 TEST_F(AidlTest, RepeatSimpleParcelable) {
   if (!cpp_java_tests) GTEST_SKIP() << "Service does not support the CPP/Java-only tests.";
