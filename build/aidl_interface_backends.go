@@ -98,16 +98,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 	var hostSupported *bool
 	var addCflags []string
 	targetProp := ccTargetProperties{
-		// Currently necessary for host builds
-		// TODO(b/31559095): bionic on host should define this
-		// TODO(b/146436251): default isn't applied because the module is created
-		// in PreArchMutators, when import behavior becomes explicit, the logic can
-		// be moved back to LoadHook
-		Host: hostProperties{Cflags: []string{
-			"-D__INTRODUCED_IN(n)=",
-			"-D__assert(a,b,c)=",
-			// We want all the APIs to be available on the host.
-			"-D__ANDROID_API__=10000"}},
 		Darwin: darwinProperties{Enabled: proptools.BoolPtr(false)},
 	}
 
