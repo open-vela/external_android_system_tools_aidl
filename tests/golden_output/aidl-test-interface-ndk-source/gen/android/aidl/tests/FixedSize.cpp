@@ -9,13 +9,14 @@ namespace tests {
 const char* FixedSize::descriptor = "android.aidl.tests.FixedSize";
 
 binder_status_t FixedSize::readFromParcel(const AParcel* _aidl_parcel) {
-  int32_t _aidl_parcelable_size;
+  binder_status_t _aidl_ret_status = STATUS_OK;
   int32_t _aidl_start_pos = AParcel_getDataPosition(_aidl_parcel);
-  binder_status_t _aidl_ret_status = AParcel_readInt32(_aidl_parcel, &_aidl_parcelable_size);
-  if (_aidl_start_pos > INT32_MAX - _aidl_parcelable_size) return STATUS_BAD_VALUE;
-  if (_aidl_parcelable_size < 0) return STATUS_BAD_VALUE;
+  int32_t _aidl_parcelable_size = 0;
+  _aidl_ret_status = AParcel_readInt32(_aidl_parcel, &_aidl_parcelable_size);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
+  if (_aidl_parcelable_size < 0) return STATUS_BAD_VALUE;
+  if (_aidl_start_pos > INT32_MAX - _aidl_parcelable_size) return STATUS_BAD_VALUE;
   AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
   return _aidl_ret_status;
 }
@@ -43,13 +44,14 @@ namespace tests {
 const char* FixedSize::FixedParcelable::descriptor = "android.aidl.tests.FixedSize.FixedParcelable";
 
 binder_status_t FixedSize::FixedParcelable::readFromParcel(const AParcel* _aidl_parcel) {
-  int32_t _aidl_parcelable_size;
+  binder_status_t _aidl_ret_status = STATUS_OK;
   int32_t _aidl_start_pos = AParcel_getDataPosition(_aidl_parcel);
-  binder_status_t _aidl_ret_status = AParcel_readInt32(_aidl_parcel, &_aidl_parcelable_size);
-  if (_aidl_start_pos > INT32_MAX - _aidl_parcelable_size) return STATUS_BAD_VALUE;
-  if (_aidl_parcelable_size < 0) return STATUS_BAD_VALUE;
+  int32_t _aidl_parcelable_size = 0;
+  _aidl_ret_status = AParcel_readInt32(_aidl_parcel, &_aidl_parcelable_size);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
+  if (_aidl_parcelable_size < 0) return STATUS_BAD_VALUE;
+  if (_aidl_start_pos > INT32_MAX - _aidl_parcelable_size) return STATUS_BAD_VALUE;
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
