@@ -1068,10 +1068,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
-      break;
-    }
     ::android::binder::Status _aidl_status(RepeatBytes(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -1101,10 +1097,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     }
     _aidl_ret_status = _aidl_data.readFixedArray(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatInts(in_input, &out_repeated, &_aidl_return));
@@ -1138,10 +1130,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
-      break;
-    }
     ::android::binder::Status _aidl_status(RepeatBinders(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -1171,10 +1159,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     }
     _aidl_ret_status = _aidl_data.readFixedArray(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatParcelables(in_input, &out_repeated, &_aidl_return));
@@ -1208,10 +1192,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
-      break;
-    }
     ::android::binder::Status _aidl_status(Repeat2dBytes(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -1241,10 +1221,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     }
     _aidl_ret_status = _aidl_data.readFixedArray(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(Repeat2dInts(in_input, &out_repeated, &_aidl_return));
@@ -1278,10 +1254,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
-      break;
-    }
     ::android::binder::Status _aidl_status(Repeat2dBinders(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -1311,10 +1283,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     }
     _aidl_ret_status = _aidl_data.readFixedArray(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(Repeat2dParcelables(in_input, &out_repeated, &_aidl_return));
