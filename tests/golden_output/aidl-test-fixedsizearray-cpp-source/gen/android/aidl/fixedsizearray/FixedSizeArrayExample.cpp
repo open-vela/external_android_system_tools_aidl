@@ -5,14 +5,10 @@ namespace aidl {
 namespace fixedsizearray {
 ::android::status_t FixedSizeArrayExample::readFromParcel(const ::android::Parcel* _aidl_parcel) {
   ::android::status_t _aidl_ret_status = ::android::OK;
-  size_t _aidl_start_pos = _aidl_parcel->dataPosition();
-  int32_t _aidl_parcelable_raw_size = 0;
-  _aidl_ret_status = _aidl_parcel->readInt32(&_aidl_parcelable_raw_size);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
+  [[maybe_unused]] size_t _aidl_start_pos = _aidl_parcel->dataPosition();
+  int32_t _aidl_parcelable_raw_size = _aidl_parcel->readInt32();
   if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;
-  size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
+  [[maybe_unused]] size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
   if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
@@ -1072,10 +1068,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
-      break;
-    }
     ::android::binder::Status _aidl_status(RepeatBytes(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -1105,10 +1097,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     }
     _aidl_ret_status = _aidl_data.readFixedArray(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatInts(in_input, &out_repeated, &_aidl_return));
@@ -1142,10 +1130,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
-      break;
-    }
     ::android::binder::Status _aidl_status(RepeatBinders(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -1175,10 +1159,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     }
     _aidl_ret_status = _aidl_data.readFixedArray(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatParcelables(in_input, &out_repeated, &_aidl_return));
@@ -1212,10 +1192,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
-      break;
-    }
     ::android::binder::Status _aidl_status(Repeat2dBytes(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -1245,10 +1221,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     }
     _aidl_ret_status = _aidl_data.readFixedArray(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(Repeat2dInts(in_input, &out_repeated, &_aidl_return));
@@ -1282,10 +1254,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
-      break;
-    }
     ::android::binder::Status _aidl_status(Repeat2dBinders(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -1315,10 +1283,6 @@ FixedSizeArrayExample::BnRepeatFixedSizeArray::BnRepeatFixedSizeArray()
     }
     _aidl_ret_status = _aidl_data.readFixedArray(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(Repeat2dParcelables(in_input, &out_repeated, &_aidl_return));
@@ -1361,14 +1325,10 @@ namespace aidl {
 namespace fixedsizearray {
 ::android::status_t FixedSizeArrayExample::IntParcelable::readFromParcel(const ::android::Parcel* _aidl_parcel) {
   ::android::status_t _aidl_ret_status = ::android::OK;
-  size_t _aidl_start_pos = _aidl_parcel->dataPosition();
-  int32_t _aidl_parcelable_raw_size = 0;
-  _aidl_ret_status = _aidl_parcel->readInt32(&_aidl_parcelable_raw_size);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
+  [[maybe_unused]] size_t _aidl_start_pos = _aidl_parcel->dataPosition();
+  int32_t _aidl_parcelable_raw_size = _aidl_parcel->readInt32();
   if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;
-  size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
+  [[maybe_unused]] size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
   if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
