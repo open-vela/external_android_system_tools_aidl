@@ -235,6 +235,10 @@ ListOfInterfaces::BnMyInterface::BnMyInterface()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(methodWithInterfaces(in_iface, in_nullable_iface, in_iface_list_in, &out_iface_list_out, &in_iface_list_inout, in_nullable_iface_list_in, &out_nullable_iface_list_out, &in_nullable_iface_list_inout, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
