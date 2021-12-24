@@ -38,6 +38,9 @@ constexpr uint32_t DEFAULT_SDK_VERSION_CPP = 23;
 constexpr uint32_t DEFAULT_SDK_VERSION_NDK = 29;
 constexpr uint32_t DEFAULT_SDK_VERSION_RUST = 31;
 
+constexpr uint32_t SDK_VERSION_current = 10000;
+constexpr uint32_t SDK_VERSION_Tiramisu = SDK_VERSION_current;
+
 // A simple wrapper around ostringstream. This is just to make Options class
 // copiable by the implicit copy constructor. If ostingstream is not wrapped,
 // the implcit copy constructor is not generated because ostringstream isn't
