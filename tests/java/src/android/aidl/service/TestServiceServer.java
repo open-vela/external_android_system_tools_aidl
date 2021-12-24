@@ -17,6 +17,7 @@
 package android.aidl.service;
 
 import android.aidl.tests.BackendType;
+import android.aidl.tests.BadParcelable;
 import android.aidl.tests.ByteEnum;
 import android.aidl.tests.ConstantExpressionEnum;
 import android.aidl.tests.GenericStructuredParcelable;
@@ -587,6 +588,10 @@ public class TestServiceServer extends ITestService.Stub {
   }
 
   class MyCppJavaTests extends ICppJavaTests.Stub {
+    @Override
+    public BadParcelable RepeatBadParcelable(BadParcelable input) throws RemoteException {
+      return input;
+    }
     @Override
     public SimpleParcelable RepeatSimpleParcelable(SimpleParcelable input, SimpleParcelable repeat)
         throws RemoteException {
