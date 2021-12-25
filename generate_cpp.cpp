@@ -494,6 +494,13 @@ void GenerateServerTransaction(CodeWriter& out, const AidlInterface& interface,
     out << GenLogBeforeExecute(bn_name, method, true /* isServer */, false /* isNdk */);
   }
 
+  if (!method.GetArguments().empty() && options.GetMinSdkVersion() >= SDK_VERSION_Tiramisu) {
+    out << "if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {\n";
+    out << "  _aidl_ret_status = st.writeToParcel(_aidl_reply);\n";
+    out << "  break;\n";
+    out << "}\n";
+  }
+
   // Call the actual method.  This is implemented by the subclass.
   out.Write("%s %s(%s(%s));\n", kBinderStatusLiteral, kStatusVarName, method.GetName().c_str(),
             GenerateArgList(typenames, method, /*for_declaration=*/false, /*type_name_only=*/false)
@@ -961,27 +968,28 @@ void GenerateInterfaceClassDecl(CodeWriter& out, const AidlInterface& interface,
 void GenerateReadFromParcel(CodeWriter& out, const AidlStructuredParcelable& parcel,
                             const AidlTypenames& typenames) {
   out << "::android::status_t _aidl_ret_status = ::android::OK;\n";
-  out << "[[maybe_unused]] size_t _aidl_start_pos = " << kParcelVarName << "->dataPosition();\n";
-  out << "int32_t _aidl_parcelable_raw_size = " << kParcelVarName << "->readInt32();\n";
+  out << "size_t _aidl_start_pos = _aidl_parcel->dataPosition();\n";
+  out << "int32_t _aidl_parcelable_raw_size = 0;\n";
+  out << "_aidl_ret_status = _aidl_parcel->readInt32(&_aidl_parcelable_raw_size);\n";
+  out << "if (((_aidl_ret_status) != (::android::OK))) {\n";
+  out << "  return _aidl_ret_status;\n";
+  out << "}\n";
   out << "if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;\n";
-  out << "[[maybe_unused]] size_t _aidl_parcelable_size = "
-      << "static_cast<size_t>(_aidl_parcelable_raw_size);\n";
+  out << "size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);\n";
   out << "if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;\n";
   for (const auto& variable : parcel.GetFields()) {
     string method = ParcelReadMethodOf(variable->GetType(), typenames);
     string arg = ParcelReadCastOf(variable->GetType(), typenames, "&" + variable->GetName());
-    out << "if (" << kParcelVarName
-        << "->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {\n";
-    out << "  " << kParcelVarName
-        << "->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);\n";
+    out << "if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {\n";
+    out << "  _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);\n";
     out << "  return _aidl_ret_status;\n";
     out << "}\n";
-    out << "_aidl_ret_status = " << kParcelVarName << "->" << method << "(" << arg << ");\n";
+    out << "_aidl_ret_status = _aidl_parcel->" << method << "(" << arg << ");\n";
     out << "if (((_aidl_ret_status) != (::android::OK))) {\n";
     out << "  return _aidl_ret_status;\n";
     out << "}\n";
   }
-  out << "" << kParcelVarName << "->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);\n";
+  out << "_aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);\n";
   out << "return _aidl_ret_status;\n";
 }
 

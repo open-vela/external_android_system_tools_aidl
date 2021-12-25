@@ -2629,6 +2629,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(UnimplementedMethod(in_arg, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -2680,6 +2684,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(RepeatBoolean(in_token, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -2704,6 +2712,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readByte(&in_token);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatByte(in_token, &_aidl_return));
@@ -2732,6 +2744,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(RepeatChar(in_token, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -2756,6 +2772,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readInt32(&in_token);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatInt(in_token, &_aidl_return));
@@ -2784,6 +2804,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(RepeatLong(in_token, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -2808,6 +2832,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readFloat(&in_token);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatFloat(in_token, &_aidl_return));
@@ -2836,6 +2864,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(RepeatDouble(in_token, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -2860,6 +2892,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readString16(&in_token);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatString(in_token, &_aidl_return));
@@ -2888,6 +2924,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(RepeatByteEnum(in_token, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -2914,6 +2954,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(RepeatIntEnum(in_token, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -2938,6 +2982,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readInt64(reinterpret_cast<int64_t *>(&in_token));
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatLongEnum(in_token, &_aidl_return));
@@ -2969,6 +3017,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.resizeOutVector(&out_repeated);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(ReverseBoolean(in_input, &out_repeated, &_aidl_return));
@@ -3006,6 +3058,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(ReverseByte(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3039,6 +3095,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.resizeOutVector(&out_repeated);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(ReverseChar(in_input, &out_repeated, &_aidl_return));
@@ -3076,6 +3136,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(ReverseInt(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3109,6 +3173,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.resizeOutVector(&out_repeated);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(ReverseLong(in_input, &out_repeated, &_aidl_return));
@@ -3146,6 +3214,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(ReverseFloat(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3179,6 +3251,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.resizeOutVector(&out_repeated);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(ReverseDouble(in_input, &out_repeated, &_aidl_return));
@@ -3216,6 +3292,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(ReverseString(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3249,6 +3329,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.resizeOutVector(&out_repeated);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(ReverseByteEnum(in_input, &out_repeated, &_aidl_return));
@@ -3286,6 +3370,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(ReverseIntEnum(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3321,6 +3409,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(ReverseLongEnum(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3349,6 +3441,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readString16(&in_name);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(GetOtherTestService(in_name, &_aidl_return));
@@ -3382,6 +3478,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(VerifyName(in_service, in_name, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3406,6 +3506,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readString16Vector(&in_names);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(GetInterfaceArray(in_names, &_aidl_return));
@@ -3439,6 +3543,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(VerifyNamesWithInterfaceArray(in_services, in_names, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3463,6 +3571,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readString16Vector(&in_names);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(GetNullableInterfaceArray(in_names, &_aidl_return));
@@ -3496,6 +3608,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(VerifyNamesWithNullableInterfaceArray(in_services, in_names, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3520,6 +3636,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readString16Vector(&in_names);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(GetInterfaceList(in_names, &_aidl_return));
@@ -3553,6 +3673,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(VerifyNamesWithInterfaceList(in_services, in_names, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3578,6 +3702,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readString16Vector(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(ReverseStringList(in_input, &out_repeated, &_aidl_return));
@@ -3608,6 +3736,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readParcelable(&in_read);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatParcelFileDescriptor(in_read, &_aidl_return));
@@ -3641,6 +3773,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(ReverseParcelFileDescriptorArray(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3670,6 +3806,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(ThrowServiceException(in_code));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3690,6 +3830,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readInt32Vector(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatNullableIntArray(in_input, &_aidl_return));
@@ -3718,6 +3862,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(RepeatNullableByteEnumArray(in_input, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3742,6 +3890,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readEnumVector(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatNullableIntEnumArray(in_input, &_aidl_return));
@@ -3770,6 +3922,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(RepeatNullableLongEnumArray(in_input, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3794,6 +3950,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readString16(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatNullableString(in_input, &_aidl_return));
@@ -3822,6 +3982,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(RepeatNullableStringList(in_input, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3846,6 +4010,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readParcelable(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatNullableParcelable(in_input, &_aidl_return));
@@ -3874,6 +4042,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(RepeatNullableParcelableArray(in_input, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3898,6 +4070,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readParcelableVector(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatNullableParcelableList(in_input, &_aidl_return));
@@ -3925,6 +4101,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(TakesAnIBinder(in_input));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3944,6 +4124,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readNullableStrongBinder(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(TakesANullableIBinder(in_input));
@@ -3967,6 +4151,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(TakesAnIBinderList(in_input));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -3986,6 +4174,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readStrongBinderVector(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(TakesANullableIBinderList(in_input));
@@ -4008,6 +4200,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readUtf8FromUtf16(&in_token);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatUtf8CppString(in_token, &_aidl_return));
@@ -4034,6 +4230,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readUtf8FromUtf16(&in_token);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(RepeatNullableUtf8CppString(in_token, &_aidl_return));
@@ -4065,6 +4265,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.resizeOutVector(&out_repeated);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(ReverseUtf8CppString(in_input, &out_repeated, &_aidl_return));
@@ -4102,6 +4306,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(ReverseNullableUtf8CppString(in_input, &out_repeated, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -4131,6 +4339,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readUtf8VectorFromUtf16Vector(&in_input);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(ReverseUtf8CppStringList(in_input, &out_repeated, &_aidl_return));
@@ -4163,6 +4375,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(GetCallback(in_return_null, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -4186,6 +4402,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readParcelable(&in_parcel);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(FillOutStructuredParcelable(&in_parcel));
@@ -4214,6 +4434,10 @@ BnTestService::BnTestService()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(RepeatExtendableParcelable(in_ep, &out_ep2));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
@@ -4238,6 +4462,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.readParcelable(&in_list);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(ReverseList(in_list, &_aidl_return));
@@ -4269,6 +4497,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.resizeOutVector(&out_repeated);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(ReverseIBinderArray(in_input, &out_repeated, &_aidl_return));
@@ -4304,6 +4536,10 @@ BnTestService::BnTestService()
     }
     _aidl_ret_status = _aidl_data.resizeOutVector(&out_repeated);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
     ::android::binder::Status _aidl_status(ReverseNullableIBinderArray(in_input, &out_repeated, &_aidl_return));
@@ -4432,10 +4668,14 @@ namespace aidl {
 namespace tests {
 ::android::status_t ITestService::Empty::readFromParcel(const ::android::Parcel* _aidl_parcel) {
   ::android::status_t _aidl_ret_status = ::android::OK;
-  [[maybe_unused]] size_t _aidl_start_pos = _aidl_parcel->dataPosition();
-  int32_t _aidl_parcelable_raw_size = _aidl_parcel->readInt32();
+  size_t _aidl_start_pos = _aidl_parcel->dataPosition();
+  int32_t _aidl_parcelable_raw_size = 0;
+  _aidl_ret_status = _aidl_parcel->readInt32(&_aidl_parcelable_raw_size);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
   if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;
-  [[maybe_unused]] size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
+  size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
   if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;
   _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
   return _aidl_ret_status;
@@ -4460,10 +4700,14 @@ namespace aidl {
 namespace tests {
 ::android::status_t ITestService::CompilerChecks::readFromParcel(const ::android::Parcel* _aidl_parcel) {
   ::android::status_t _aidl_ret_status = ::android::OK;
-  [[maybe_unused]] size_t _aidl_start_pos = _aidl_parcel->dataPosition();
-  int32_t _aidl_parcelable_raw_size = _aidl_parcel->readInt32();
+  size_t _aidl_start_pos = _aidl_parcel->dataPosition();
+  int32_t _aidl_parcelable_raw_size = 0;
+  _aidl_ret_status = _aidl_parcel->readInt32(&_aidl_parcelable_raw_size);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
   if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;
-  [[maybe_unused]] size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
+  size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
   if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;
   if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);

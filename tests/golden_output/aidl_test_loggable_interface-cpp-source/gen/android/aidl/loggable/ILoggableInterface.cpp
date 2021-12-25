@@ -395,6 +395,10 @@ BnLoggableInterface::BnLoggableInterface()
       _transaction_log.input_args.emplace_back("in_pfdArray", ::android::internal::ToString(in_pfdArray));
     }
     auto _log_start = std::chrono::steady_clock::now();
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(LogThis(in_boolValue, &in_boolArray, in_byteValue, &in_byteArray, in_charValue, &in_charArray, in_intValue, &in_intArray, in_longValue, &in_longArray, in_floatValue, &in_floatArray, in_doubleValue, &in_doubleArray, in_stringValue, &in_stringArray, &in_listValue, in_dataValue, in_binderValue, &in_pfdValue, &in_pfdArray, &_aidl_return));
     if (BnLoggableInterface::logFunc != nullptr) {
       auto _log_end = std::chrono::steady_clock::now();
@@ -610,6 +614,10 @@ ILoggableInterface::BnSub::BnSub()
       _transaction_log.input_args.emplace_back("in_value", ::android::internal::ToString(in_value));
     }
     auto _log_start = std::chrono::steady_clock::now();
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
     ::android::binder::Status _aidl_status(Log(in_value));
     if (ILoggableInterface::BnSub::logFunc != nullptr) {
       auto _log_end = std::chrono::steady_clock::now();
