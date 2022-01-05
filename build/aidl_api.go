@@ -155,7 +155,9 @@ func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, 
 	targetDir := filepath.Join(moduleDir, m.apiDir(), version)
 	rb := android.NewRuleBuilder(pctx, ctx)
 
+	var actionWord string
 	if creatingNewVersion {
+		actionWord = "Making"
 		// We are asked to create a new version. But before doing that, check if the given
 		// dump is the same as the latest version. If so, don't create a new version,
 		// otherwise we will be unnecessarily creating many versions.
@@ -177,6 +179,7 @@ func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, 
 			Text("; fi")
 
 	} else {
+		actionWord = "Updating"
 		// We are updating the current version. Don't copy .hash to the current dump
 		rb.Command().Text("mkdir -p " + targetDir)
 		rb.Command().Text("rm -rf " + targetDir + "/*")
@@ -186,8 +189,7 @@ func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, 
 	timestampFile := android.PathForModuleOut(ctx, "updateapi_"+version+".timestamp")
 	rb.Command().Text("touch").Output(timestampFile)
 
-	rb.Build("dump_aidl_api"+m.properties.BaseName+"_"+version,
-		"Making AIDL API of "+m.properties.BaseName+" as version "+version)
+	rb.Build("dump_aidl_api_"+m.properties.BaseName+"_"+version, actionWord+" AIDL API dump version "+version+" for "+m.properties.BaseName+" (see "+targetDir+")")
 	return timestampFile
 }
 
