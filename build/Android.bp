@@ -62,8 +62,11 @@ aidl_interfaces_metadata {
 // be moved back to LoadHook, and then default can be applied as well.
 cc_defaults {
     name: "aidl-cpp-module-defaults",
-    // TODO(b/31559095): remove when host bionic is available
-    defaults: ["libbinder_ndk_host_user"],
+    target: {
+        darwin: {
+            enabled: false,
+        },
+    },
 }
 
 java_defaults {
