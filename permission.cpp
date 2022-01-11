@@ -26,7 +26,7 @@ namespace android {
 namespace aidl {
 namespace perm {
 
-std::string AsJavaAnnotation(Expression expr) {
+std::string AsJavaAnnotation(const Expression& expr) {
   if (const auto& s = std::get_if<std::string>(&expr); s) {
     return JavaAnnotation(*s);
   }
@@ -39,7 +39,7 @@ std::string AsJavaAnnotation(Expression expr) {
   return "";
 }
 
-std::string JavaAnnotation(std::string permission) {
+std::string JavaAnnotation(const std::string& permission) {
   return "android.Manifest.permission." + permission;
 }
 
