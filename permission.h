@@ -31,13 +31,13 @@ struct AnyOf;
 struct AllOf;
 
 typedef std::variant<std::string, AnyOf, AllOf> Expression;
-std::string AsJavaAnnotation(Expression expr);
-std::string JavaAnnotation(std::string permission);
+std::string AsJavaAnnotation(const Expression& expr);
+std::string JavaAnnotation(const std::string& permission);
 
 struct AnyOf {
   std::vector<std::string> operands;
 
-  std::string JavaAnnotation() {
+  std::string JavaAnnotation() const {
     std::string ret("anyOf = {");
     for (size_t i = 0; i < operands.size(); i++) {
       ret += android::aidl::perm::JavaAnnotation(operands[i]);
@@ -52,7 +52,7 @@ struct AnyOf {
 struct AllOf {
   std::vector<std::string> operands;
 
-  std::string JavaAnnotation() {
+  std::string JavaAnnotation() const {
     std::string ret("allOf = {");
     for (size_t i = 0; i < operands.size(); i++) {
       ret += android::aidl::perm::JavaAnnotation(operands[i]);
