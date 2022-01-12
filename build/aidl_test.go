@@ -138,6 +138,12 @@ func _testAidl(t *testing.T, bp string, customizers ...android.FixturePreparer) 
 			crate_name: "binder",
 			srcs: [""],
 		}
+		rust_proc_macro {
+			name: "libasync_trait",
+			crate_name: "async_trait",
+			srcs: [""],
+			no_stdlibs: true,
+		}
 	`
 	preparers = append(preparers, android.FixtureWithRootAndroidBp(bp))
 	preparers = append(preparers, android.FixtureAddTextFile("system/tools/aidl/build/Android.bp", `

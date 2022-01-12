@@ -28,6 +28,43 @@ pub trait IProtectedInterfaceAsync<P>: binder::Interface + Send {
   fn Method1<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
   fn Method2<'a>(&'a self) -> binder::BoxFuture<'a, binder::public_api::Result<()>>;
 }
+#[::async_trait::async_trait]
+pub trait IProtectedInterfaceAsyncServer: binder::Interface + Send {
+  fn get_descriptor() -> &'static str where Self: Sized { "android.aidl.tests.permission.IProtectedInterface" }
+  async fn Method1(&self) -> binder::public_api::Result<()>;
+  async fn Method2(&self) -> binder::public_api::Result<()>;
+}
+impl BnProtectedInterface {
+  /// Create a new async binder service.
+  pub fn new_async_binder<T, R>(inner: T, rt: R, features: binder::BinderFeatures) -> binder::Strong<dyn IProtectedInterface>
+  where
+    T: IProtectedInterfaceAsyncServer + binder::Interface + Send + Sync + 'static,
+    R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+  {
+    struct Wrapper<T, R> {
+      _inner: T,
+      _rt: R,
+    }
+    impl<T, R> binder::Interface for Wrapper<T, R> where T: binder::Interface, R: Send + Sync {
+      fn as_binder(&self) -> binder::SpIBinder { self._inner.as_binder() }
+      fn dump(&self, _file: &std::fs::File, _args: &[&std::ffi::CStr]) -> binder::Result<()> { self._inner.dump(_file, _args) }
+    }
+    impl<T, R> IProtectedInterface for Wrapper<T, R>
+    where
+      T: IProtectedInterfaceAsyncServer + Send + Sync + 'static,
+      R: binder::BinderAsyncRuntime + Send + Sync + 'static,
+    {
+      fn Method1(&self) -> binder::public_api::Result<()> {
+        self._rt.block_on(self._inner.Method1())
+      }
+      fn Method2(&self) -> binder::public_api::Result<()> {
+        self._rt.block_on(self._inner.Method2())
+      }
+    }
+    let wrapped = Wrapper { _inner: inner, _rt: rt };
+    Self::new_binder(wrapped, features)
+  }
+}
 pub trait IProtectedInterfaceDefault: Send + Sync {
   fn Method1(&self) -> binder::public_api::Result<()> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
