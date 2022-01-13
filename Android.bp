@@ -227,6 +227,7 @@ python_test_host {
         "aidl_test_java_service",
         "aidl_test_rust_client",
         "aidl_test_rust_service",
+        "aidl_test_rust_service_async",
         "aidl_test_java_client_sdk1",
         "aidl_test_java_service_sdk1",
         "aidl_test_java_client_sdk29",
@@ -777,6 +778,33 @@ rust_test {
         "aidl-test-fixedsizearray-rust",
         "liblibc",
     ],
+    prefer_rlib: true,
+    compile_multilib: "both",
+    multilib: {
+        lib32: {
+            suffix: "32",
+        },
+        lib64: {
+            suffix: "64",
+        },
+    },
+    test_suites: ["general-tests"],
+}
+
+rust_test {
+    name: "aidl_test_rust_service_async",
+    test_harness: false,
+    srcs: [
+        "tests/rust/test_service_async.rs",
+    ],
+    rustlibs: [
+        "aidl-test-interface-rust",
+        "aidl-test-versioned-interface-V1-rust",
+        "liblibc",
+        "libbinder_tokio_rs",
+        "libtokio",
+    ],
+    proc_macros: ["libasync_trait"],
     prefer_rlib: true,
     compile_multilib: "both",
     multilib: {

@@ -218,6 +218,16 @@ class RustServer:
     def run(self):
         return self.host.run(self.binary, background=True)
 
+class RustAsyncServer:
+    def __init__(self, host, bitness):
+        self.name = "%s_bit_rust_server_async" % pretty_bitness(bitness)
+        self.host = host
+        self.binary = RUST_TEST_SERVICE_FOR_BITNESS % bitness
+    def cleanup(self):
+        self.host.run('killall %s' % self.binary, ignore_status=True)
+    def run(self):
+        return self.host.run(self.binary, background=True)
+
 def supported_bitnesses(host):
     bitnesses = []
     if getprop(host, "ro.product.cpu.abilist32") != "":
@@ -268,6 +278,7 @@ if __name__ == '__main__':
 
         clients += [RustClient(host, bitness)]
         servers += [RustServer(host, bitness)]
+        servers += [RustAsyncServer(host, bitness)]
 
     for client in clients:
         for server in servers:
