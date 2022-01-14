@@ -50,7 +50,7 @@ TEST_F(AidlTest, unimplementedMethodImpl) {
 }
 
 TEST_F(AidlTest, defaultImpl) {
-  std::unique_ptr<ITestService> defImpl = std::make_unique<Def>();
+  android::sp<ITestService> defImpl = android::sp<Def>::make();
   auto ret = ITestService::setDefaultImpl(std::move(defImpl));
   ASSERT_TRUE(ret);
 
