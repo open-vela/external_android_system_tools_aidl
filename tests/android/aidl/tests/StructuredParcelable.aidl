@@ -71,6 +71,13 @@ parcelable StructuredParcelable {
 
     @nullable IBinder ibinder;
 
+    // Make sure we can send an empty parcelable
+    @JavaDerive(toString=true, equals=true)
+    @RustDerive(Clone=true, PartialEq=true)
+    parcelable Empty {}
+
+    Empty empty;
+
     // Constant expressions that evaluate to 1
     byte[] int8_1 = {
             1,
