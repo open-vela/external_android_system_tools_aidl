@@ -163,6 +163,10 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
        CONTEXT_TYPE_STRUCTURED_PARCELABLE | CONTEXT_TYPE_UNION |
            CONTEXT_TYPE_UNSTRUCTURED_PARCELABLE,
        {}},
+      {AidlAnnotation::Type::JAVA_SUPPRESS_LINT,
+       "JavaSuppressLint",
+       CONTEXT_ALL,
+       {{"value", kStringArrayType, /* required= */ true}}},
       {AidlAnnotation::Type::FIXED_SIZE,
        "FixedSize",
        CONTEXT_TYPE_STRUCTURED_PARCELABLE | CONTEXT_TYPE_UNION,
