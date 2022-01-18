@@ -15,7 +15,7 @@ binder_status_t DeprecatedParcelable::readFromParcel(const AParcel* _aidl_parcel
   _aidl_ret_status = AParcel_readInt32(_aidl_parcel, &_aidl_parcelable_size);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  if (_aidl_parcelable_size < 0) return STATUS_BAD_VALUE;
+  if (_aidl_parcelable_size < 4) return STATUS_BAD_VALUE;
   if (_aidl_start_pos > INT32_MAX - _aidl_parcelable_size) return STATUS_BAD_VALUE;
   AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
   return _aidl_ret_status;
