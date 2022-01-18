@@ -4,23 +4,23 @@
 pub struct ExtendableParcelable {
   pub a: i32,
   pub b: String,
-  pub ext: binder::ParcelableHolder,
+  pub ext: binder::parcel::ParcelableHolder,
   pub c: i64,
-  pub ext2: binder::ParcelableHolder,
+  pub ext2: binder::parcel::ParcelableHolder,
 }
 impl Default for ExtendableParcelable {
   fn default() -> Self {
     Self {
       a: 0,
       b: Default::default(),
-      ext: binder::ParcelableHolder::new(binder::binder_impl::Stability::Local),
+      ext: binder::parcel::ParcelableHolder::new(binder::Stability::Local),
       c: 0,
-      ext2: binder::ParcelableHolder::new(binder::binder_impl::Stability::Local),
+      ext2: binder::parcel::ParcelableHolder::new(binder::Stability::Local),
     }
   }
 }
-impl binder::Parcelable for ExtendableParcelable {
-  fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+impl binder::parcel::Parcelable for ExtendableParcelable {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_write(|subparcel| {
       subparcel.write(&self.a)?;
       subparcel.write(&self.b)?;
@@ -30,7 +30,7 @@ impl binder::Parcelable for ExtendableParcelable {
       Ok(())
     })
   }
-  fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_read(|subparcel| {
       if subparcel.has_more_data() {
         self.a = subparcel.read()?;
@@ -53,7 +53,7 @@ impl binder::Parcelable for ExtendableParcelable {
 }
 binder::impl_serialize_for_parcelable!(ExtendableParcelable);
 binder::impl_deserialize_for_parcelable!(ExtendableParcelable);
-impl binder::binder_impl::ParcelableMetadata for ExtendableParcelable {
+impl binder::parcel::ParcelableMetadata for ExtendableParcelable {
   fn get_descriptor() -> &'static str { "android.aidl.tests.extension.ExtendableParcelable" }
 }
 pub(crate) mod mangled {
