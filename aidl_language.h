@@ -211,6 +211,7 @@ class AidlAnnotation : public AidlNode {
     JAVA_DERIVE,
     JAVA_DEFAULT,
     JAVA_ONLY_IMMUTABLE,
+    JAVA_SUPPRESS_LINT,
     FIXED_SIZE,
     DESCRIPTOR,
     RUST_DERIVE,
