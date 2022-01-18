@@ -1,8 +1,11 @@
 #include <android/aidl/tests/UnionWithFd.h>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
+
 ::android::status_t UnionWithFd::readFromParcel(const ::android::Parcel* _aidl_parcel) {
   ::android::status_t _aidl_ret_status;
   int32_t _aidl_tag;
@@ -31,6 +34,7 @@ namespace tests {
   }
   return ::android::BAD_VALUE;
 }
+
 ::android::status_t UnionWithFd::writeToParcel(::android::Parcel* _aidl_parcel) const {
   ::android::status_t _aidl_ret_status = _aidl_parcel->writeInt32(getTag());
   if (_aidl_ret_status != ::android::OK) return _aidl_ret_status;
@@ -40,6 +44,9 @@ namespace tests {
   }
   __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "can't reach here");
 }
+
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android
