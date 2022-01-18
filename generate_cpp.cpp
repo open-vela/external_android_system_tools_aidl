@@ -974,7 +974,7 @@ void GenerateReadFromParcel(CodeWriter& out, const AidlStructuredParcelable& par
   out << "if (((_aidl_ret_status) != (::android::OK))) {\n";
   out << "  return _aidl_ret_status;\n";
   out << "}\n";
-  out << "if (_aidl_parcelable_raw_size < 0) return ::android::BAD_VALUE;\n";
+  out << "if (_aidl_parcelable_raw_size < 4) return ::android::BAD_VALUE;\n";
   out << "size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);\n";
   out << "if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;\n";
   for (const auto& variable : parcel.GetFields()) {
