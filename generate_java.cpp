@@ -504,7 +504,8 @@ std::unique_ptr<android::aidl::java::Class> GenerateParcelableClass(
   out << "int _aidl_start_pos = _aidl_parcel.dataPosition();\n"
       << "int _aidl_parcelable_size = _aidl_parcel.readInt();\n"
       << "try {\n"
-      << "  if (_aidl_parcelable_size < 0) return";
+      << "  if (_aidl_parcelable_size < 0) throw new "
+         "android.os.BadParcelableException(\"Parcelable too small\");";
   if (parcel->IsJavaOnlyImmutable()) {
     out << " " << builder_variable << ".build()";
   }
