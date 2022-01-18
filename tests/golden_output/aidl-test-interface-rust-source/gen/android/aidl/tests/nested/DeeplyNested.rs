@@ -9,13 +9,13 @@ impl Default for DeeplyNested {
     }
   }
 }
-impl binder::Parcelable for DeeplyNested {
-  fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+impl binder::parcel::Parcelable for DeeplyNested {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_write(|subparcel| {
       Ok(())
     })
   }
-  fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_read(|subparcel| {
       Ok(())
     })
@@ -23,7 +23,7 @@ impl binder::Parcelable for DeeplyNested {
 }
 binder::impl_serialize_for_parcelable!(DeeplyNested);
 binder::impl_deserialize_for_parcelable!(DeeplyNested);
-impl binder::binder_impl::ParcelableMetadata for DeeplyNested {
+impl binder::parcel::ParcelableMetadata for DeeplyNested {
   fn get_descriptor() -> &'static str { "android.aidl.tests.nested.DeeplyNested" }
 }
 pub mod A {
@@ -38,14 +38,14 @@ pub mod A {
       }
     }
   }
-  impl binder::Parcelable for A {
-    fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+  impl binder::parcel::Parcelable for A {
+    fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
       parcel.sized_write(|subparcel| {
         subparcel.write(&self.e)?;
         Ok(())
       })
     }
-    fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+    fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
       parcel.sized_read(|subparcel| {
         if subparcel.has_more_data() {
           self.e = subparcel.read()?;
@@ -56,7 +56,7 @@ pub mod A {
   }
   binder::impl_serialize_for_parcelable!(A);
   binder::impl_deserialize_for_parcelable!(A);
-  impl binder::binder_impl::ParcelableMetadata for A {
+  impl binder::parcel::ParcelableMetadata for A {
     fn get_descriptor() -> &'static str { "android.aidl.tests.nested.DeeplyNested.A" }
   }
 }
@@ -70,13 +70,13 @@ pub mod B {
       }
     }
   }
-  impl binder::Parcelable for B {
-    fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+  impl binder::parcel::Parcelable for B {
+    fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
       parcel.sized_write(|subparcel| {
         Ok(())
       })
     }
-    fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+    fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
       parcel.sized_read(|subparcel| {
         Ok(())
       })
@@ -84,7 +84,7 @@ pub mod B {
   }
   binder::impl_serialize_for_parcelable!(B);
   binder::impl_deserialize_for_parcelable!(B);
-  impl binder::binder_impl::ParcelableMetadata for B {
+  impl binder::parcel::ParcelableMetadata for B {
     fn get_descriptor() -> &'static str { "android.aidl.tests.nested.DeeplyNested.B" }
   }
   pub mod C {
@@ -97,13 +97,13 @@ pub mod B {
         }
       }
     }
-    impl binder::Parcelable for C {
-      fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+    impl binder::parcel::Parcelable for C {
+      fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
         parcel.sized_write(|subparcel| {
           Ok(())
         })
       }
-      fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+      fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
         parcel.sized_read(|subparcel| {
           Ok(())
         })
@@ -111,7 +111,7 @@ pub mod B {
     }
     binder::impl_serialize_for_parcelable!(C);
     binder::impl_deserialize_for_parcelable!(C);
-    impl binder::binder_impl::ParcelableMetadata for C {
+    impl binder::parcel::ParcelableMetadata for C {
       fn get_descriptor() -> &'static str { "android.aidl.tests.nested.DeeplyNested.B.C" }
     }
     pub mod D {
@@ -124,13 +124,13 @@ pub mod B {
           }
         }
       }
-      impl binder::Parcelable for D {
-        fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+      impl binder::parcel::Parcelable for D {
+        fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
           parcel.sized_write(|subparcel| {
             Ok(())
           })
         }
-        fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+        fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
           parcel.sized_read(|subparcel| {
             Ok(())
           })
@@ -138,7 +138,7 @@ pub mod B {
       }
       binder::impl_serialize_for_parcelable!(D);
       binder::impl_deserialize_for_parcelable!(D);
-      impl binder::binder_impl::ParcelableMetadata for D {
+      impl binder::parcel::ParcelableMetadata for D {
         fn get_descriptor() -> &'static str { "android.aidl.tests.nested.DeeplyNested.B.C.D" }
       }
       pub mod E {
