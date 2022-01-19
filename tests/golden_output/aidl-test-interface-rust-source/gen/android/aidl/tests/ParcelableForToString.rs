@@ -55,8 +55,8 @@ impl Default for ParcelableForToString {
     }
   }
 }
-impl binder::Parcelable for ParcelableForToString {
-  fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+impl binder::parcel::Parcelable for ParcelableForToString {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_write(|subparcel| {
       subparcel.write(&self.intValue)?;
       subparcel.write(&self.intArray)?;
@@ -84,7 +84,7 @@ impl binder::Parcelable for ParcelableForToString {
       Ok(())
     })
   }
-  fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_read(|subparcel| {
       if subparcel.has_more_data() {
         self.intValue = subparcel.read()?;
@@ -161,7 +161,7 @@ impl binder::Parcelable for ParcelableForToString {
 }
 binder::impl_serialize_for_parcelable!(ParcelableForToString);
 binder::impl_deserialize_for_parcelable!(ParcelableForToString);
-impl binder::binder_impl::ParcelableMetadata for ParcelableForToString {
+impl binder::parcel::ParcelableMetadata for ParcelableForToString {
   fn get_descriptor() -> &'static str { "android.aidl.tests.ParcelableForToString" }
 }
 pub(crate) mod mangled {
