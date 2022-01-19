@@ -75,7 +75,7 @@ def main(output, root, inputs, imports):
     lib_rs_file.write("#![feature(custom_inner_attributes)]\n")
     lib_rs_file.write("#![allow(non_snake_case)]\n")
     lib_rs_file.write("#![allow(missing_docs)]\n")
-    lib_rs_file.write("pub use binder;\n")
+    lib_rs_file.write("pub use binder::public_api as binder;\n")
 
     lib_rs_file.write("pub mod aidl {\n")
     root_module.emit(lib_rs_file, indent="  ")

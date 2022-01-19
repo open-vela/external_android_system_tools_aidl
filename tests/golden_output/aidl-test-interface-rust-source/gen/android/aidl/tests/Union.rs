@@ -16,8 +16,8 @@ impl Default for Union {
     Self::Ns(vec![])
   }
 }
-impl binder::Parcelable for Union {
-  fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+impl binder::parcel::Parcelable for Union {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
     match self {
       Self::Ns(v) => {
         parcel.write(&0i32)?;
@@ -49,7 +49,7 @@ impl binder::Parcelable for Union {
       }
     }
   }
-  fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
     let tag: i32 = parcel.read()?;
     match tag {
       0 => {
@@ -95,7 +95,7 @@ impl binder::Parcelable for Union {
 }
 binder::impl_serialize_for_parcelable!(Union);
 binder::impl_deserialize_for_parcelable!(Union);
-impl binder::binder_impl::ParcelableMetadata for Union {
+impl binder::parcel::ParcelableMetadata for Union {
   fn get_descriptor() -> &'static str { "android.aidl.tests.Union" }
 }
 pub(crate) mod mangled {
