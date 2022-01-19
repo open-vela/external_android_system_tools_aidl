@@ -10,13 +10,13 @@ impl Default for DeprecatedParcelable {
     }
   }
 }
-impl binder::parcel::Parcelable for DeprecatedParcelable {
-  fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
+impl binder::Parcelable for DeprecatedParcelable {
+  fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
     parcel.sized_write(|subparcel| {
       Ok(())
     })
   }
-  fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
+  fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
     parcel.sized_read(|subparcel| {
       Ok(())
     })
@@ -24,7 +24,7 @@ impl binder::parcel::Parcelable for DeprecatedParcelable {
 }
 binder::impl_serialize_for_parcelable!(DeprecatedParcelable);
 binder::impl_deserialize_for_parcelable!(DeprecatedParcelable);
-impl binder::parcel::ParcelableMetadata for DeprecatedParcelable {
+impl binder::binder_impl::ParcelableMetadata for DeprecatedParcelable {
   fn get_descriptor() -> &'static str { "android.aidl.tests.DeprecatedParcelable" }
 }
 pub(crate) mod mangled {
