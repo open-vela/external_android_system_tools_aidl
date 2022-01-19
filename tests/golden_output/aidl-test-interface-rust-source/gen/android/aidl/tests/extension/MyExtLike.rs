@@ -13,15 +13,15 @@ impl Default for MyExtLike {
     }
   }
 }
-impl binder::Parcelable for MyExtLike {
-  fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+impl binder::parcel::Parcelable for MyExtLike {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_write(|subparcel| {
       subparcel.write(&self.a)?;
       subparcel.write(&self.b)?;
       Ok(())
     })
   }
-  fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_read(|subparcel| {
       if subparcel.has_more_data() {
         self.a = subparcel.read()?;
@@ -35,7 +35,7 @@ impl binder::Parcelable for MyExtLike {
 }
 binder::impl_serialize_for_parcelable!(MyExtLike);
 binder::impl_deserialize_for_parcelable!(MyExtLike);
-impl binder::binder_impl::ParcelableMetadata for MyExtLike {
+impl binder::parcel::ParcelableMetadata for MyExtLike {
   fn get_descriptor() -> &'static str { "android.aidl.tests.extension.MyExtLike" }
 }
 pub(crate) mod mangled {

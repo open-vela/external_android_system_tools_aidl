@@ -122,8 +122,8 @@ impl Default for StructuredParcelable {
     }
   }
 }
-impl binder::Parcelable for StructuredParcelable {
-  fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+impl binder::parcel::Parcelable for StructuredParcelable {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_write(|subparcel| {
       subparcel.write(&self.shouldContainThreeFs)?;
       subparcel.write(&self.f)?;
@@ -183,7 +183,7 @@ impl binder::Parcelable for StructuredParcelable {
       Ok(())
     })
   }
-  fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
     parcel.sized_read(|subparcel| {
       if subparcel.has_more_data() {
         self.shouldContainThreeFs = subparcel.read()?;
@@ -356,7 +356,7 @@ impl binder::Parcelable for StructuredParcelable {
 }
 binder::impl_serialize_for_parcelable!(StructuredParcelable);
 binder::impl_deserialize_for_parcelable!(StructuredParcelable);
-impl binder::binder_impl::ParcelableMetadata for StructuredParcelable {
+impl binder::parcel::ParcelableMetadata for StructuredParcelable {
   fn get_descriptor() -> &'static str { "android.aidl.tests.StructuredParcelable" }
 }
 pub mod Empty {
