@@ -9,13 +9,13 @@ impl Default for FixedSize {
     }
   }
 }
-impl binder::parcel::Parcelable for FixedSize {
-  fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
+impl binder::Parcelable for FixedSize {
+  fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
     parcel.sized_write(|subparcel| {
       Ok(())
     })
   }
-  fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
+  fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
     parcel.sized_read(|subparcel| {
       Ok(())
     })
@@ -23,7 +23,7 @@ impl binder::parcel::Parcelable for FixedSize {
 }
 binder::impl_serialize_for_parcelable!(FixedSize);
 binder::impl_deserialize_for_parcelable!(FixedSize);
-impl binder::parcel::ParcelableMetadata for FixedSize {
+impl binder::binder_impl::ParcelableMetadata for FixedSize {
   fn get_descriptor() -> &'static str { "android.aidl.tests.FixedSize" }
 }
 pub mod FixedParcelable {
@@ -54,8 +54,8 @@ pub mod FixedParcelable {
       }
     }
   }
-  impl binder::parcel::Parcelable for FixedParcelable {
-    fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
+  impl binder::Parcelable for FixedParcelable {
+    fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
       parcel.sized_write(|subparcel| {
         subparcel.write(&self.booleanValue)?;
         subparcel.write(&self.byteValue)?;
@@ -69,7 +69,7 @@ pub mod FixedParcelable {
         Ok(())
       })
     }
-    fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
+    fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
       parcel.sized_read(|subparcel| {
         if subparcel.has_more_data() {
           self.booleanValue = subparcel.read()?;
@@ -104,7 +104,7 @@ pub mod FixedParcelable {
   }
   binder::impl_serialize_for_parcelable!(FixedParcelable);
   binder::impl_deserialize_for_parcelable!(FixedParcelable);
-  impl binder::parcel::ParcelableMetadata for FixedParcelable {
+  impl binder::binder_impl::ParcelableMetadata for FixedParcelable {
     fn get_descriptor() -> &'static str { "android.aidl.tests.FixedSize.FixedParcelable" }
   }
 }
@@ -125,8 +125,8 @@ pub mod FixedUnion {
       Self::BooleanValue(false)
     }
   }
-  impl binder::parcel::Parcelable for FixedUnion {
-    fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
+  impl binder::Parcelable for FixedUnion {
+    fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
       match self {
         Self::BooleanValue(v) => {
           parcel.write(&0i32)?;
@@ -162,7 +162,7 @@ pub mod FixedUnion {
         }
       }
     }
-    fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
+    fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
       let tag: i32 = parcel.read()?;
       match tag {
         0 => {
@@ -213,7 +213,7 @@ pub mod FixedUnion {
   }
   binder::impl_serialize_for_parcelable!(FixedUnion);
   binder::impl_deserialize_for_parcelable!(FixedUnion);
-  impl binder::parcel::ParcelableMetadata for FixedUnion {
+  impl binder::binder_impl::ParcelableMetadata for FixedUnion {
     fn get_descriptor() -> &'static str { "android.aidl.tests.FixedSize.FixedUnion" }
   }
 }
