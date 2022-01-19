@@ -3,15 +3,15 @@
 #[derive(Debug)]
 pub enum UnionWithFd {
   Num(i32),
-  Pfd(Option<binder::ParcelFileDescriptor>),
+  Pfd(Option<binder::parcel::ParcelFileDescriptor>),
 }
 impl Default for UnionWithFd {
   fn default() -> Self {
     Self::Num(0)
   }
 }
-impl binder::Parcelable for UnionWithFd {
-  fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+impl binder::parcel::Parcelable for UnionWithFd {
+  fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
     match self {
       Self::Num(v) => {
         parcel.write(&0i32)?;
@@ -24,7 +24,7 @@ impl binder::Parcelable for UnionWithFd {
       }
     }
   }
-  fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
+  fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
     let tag: i32 = parcel.read()?;
     match tag {
       0 => {
@@ -33,7 +33,7 @@ impl binder::Parcelable for UnionWithFd {
         Ok(())
       }
       1 => {
-        let value: Option<binder::ParcelFileDescriptor> = Some(parcel.read()?);
+        let value: Option<binder::parcel::ParcelFileDescriptor> = Some(parcel.read()?);
         *self = Self::Pfd(value);
         Ok(())
       }
@@ -45,7 +45,7 @@ impl binder::Parcelable for UnionWithFd {
 }
 binder::impl_serialize_for_parcelable!(UnionWithFd);
 binder::impl_deserialize_for_parcelable!(UnionWithFd);
-impl binder::binder_impl::ParcelableMetadata for UnionWithFd {
+impl binder::parcel::ParcelableMetadata for UnionWithFd {
   fn get_descriptor() -> &'static str { "android.aidl.tests.UnionWithFd" }
 }
 pub(crate) mod mangled {
