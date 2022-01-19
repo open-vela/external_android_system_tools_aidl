@@ -3019,6 +3019,21 @@ TEST_F(AidlTestCompatibleChanges, NewNestedTypes) {
   EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
 }
 
+TEST_F(AidlTestCompatibleChanges, NewJavaSuppressLint) {
+  io_delegate_.SetFileContents("old/p/IFoo.aidl",
+                               "package p;"
+                               "interface IFoo {"
+                               "  void foo(int a);"
+                               "}");
+  io_delegate_.SetFileContents("new/p/IFoo.aidl",
+                               "package p;"
+                               "@JavaSuppressLint({\"NewApi\"})"
+                               "interface IFoo {"
+                               "  void foo(int a);"
+                               "}");
+  EXPECT_TRUE(::android::aidl::check_api(options_, io_delegate_));
+}
+
 class AidlTestIncompatibleChanges : public AidlTest {
  protected:
   Options options_ = Options::From("aidl --checkapi old new");
@@ -4054,6 +4069,21 @@ TEST_F(AidlTest, EnforceInterfaceManualPermissionMethod) {
   EXPECT_FALSE(compile_aidl(options, io_delegate_));
   EXPECT_THAT(GetCapturedStderr(),
               HasSubstr("The interface IFoo enforces permissions using annotations"));
+}
+
+TEST_F(AidlTest, JavaSuppressLint) {
+  io_delegate_.SetFileContents("a/IFoo.aidl", R"(package a;
+    @JavaSuppressLint({"NewApi"})
+    interface IFoo {
+    })");
+
+  Options options = Options::From("aidl --lang=java -o out a/IFoo.aidl");
+  CaptureStderr();
+  EXPECT_TRUE(compile_aidl(options, io_delegate_));
+  EXPECT_EQ(GetCapturedStderr(), "");
+  string code;
+  EXPECT_TRUE(io_delegate_.GetWrittenContents("out/a/IFoo.java", &code));
+  EXPECT_THAT(code, HasSubstr("@android.annotation.SuppressLint(value = {\"NewApi\"})"));
 }
 
 class AidlOutputPathTest : public AidlTest {
