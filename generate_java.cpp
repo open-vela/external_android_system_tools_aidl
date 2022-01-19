@@ -919,6 +919,13 @@ std::vector<std::string> GenerateJavaAnnotations(const AidlAnnotatable& a) {
     if (annotation->GetType() == AidlAnnotation::Type::JAVA_PASSTHROUGH) {
       result.emplace_back(annotation->ParamValue<std::string>("annotation").value());
     }
+    if (annotation->GetType() == AidlAnnotation::Type::JAVA_SUPPRESS_LINT) {
+      std::vector<std::string> values;
+      for (const auto& [name, value] : annotation->AnnotationParams(ConstantValueDecorator)) {
+        values.emplace_back(name + " = " + value);
+      }
+      result.emplace_back("@android.annotation.SuppressLint(" + Join(values, ", ") + ")");
+    }
   }
 
   if (auto enforce_expr = a.EnforceExpression(); enforce_expr) {
