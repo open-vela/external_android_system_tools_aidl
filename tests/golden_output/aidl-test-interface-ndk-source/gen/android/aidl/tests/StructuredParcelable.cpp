@@ -15,7 +15,7 @@ binder_status_t StructuredParcelable::readFromParcel(const AParcel* _aidl_parcel
   _aidl_ret_status = AParcel_readInt32(_aidl_parcel, &_aidl_parcelable_size);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
-  if (_aidl_parcelable_size < 0) return STATUS_BAD_VALUE;
+  if (_aidl_parcelable_size < 4) return STATUS_BAD_VALUE;
   if (_aidl_start_pos > INT32_MAX - _aidl_parcelable_size) return STATUS_BAD_VALUE;
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
     AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
@@ -246,6 +246,13 @@ binder_status_t StructuredParcelable::readFromParcel(const AParcel* _aidl_parcel
     return _aidl_ret_status;
   }
   _aidl_ret_status = ::ndk::AParcel_readNullableData(_aidl_parcel, &ibinder);
+  if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
+
+  if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
+    AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = ::ndk::AParcel_readData(_aidl_parcel, &empty);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   if (AParcel_getDataPosition(_aidl_parcel) - _aidl_start_pos >= _aidl_parcelable_size) {
@@ -503,6 +510,9 @@ binder_status_t StructuredParcelable::writeToParcel(AParcel* _aidl_parcel) const
   _aidl_ret_status = ::ndk::AParcel_writeNullableData(_aidl_parcel, ibinder);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
+  _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, empty);
+  if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
+
   _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, int8_1);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
@@ -564,6 +574,41 @@ binder_status_t StructuredParcelable::writeToParcel(AParcel* _aidl_parcel) const
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   _aidl_ret_status = ::ndk::AParcel_writeData(_aidl_parcel, defaultWithFoo);
+  if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
+
+  size_t _aidl_end_pos = AParcel_getDataPosition(_aidl_parcel);
+  AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos);
+  AParcel_writeInt32(_aidl_parcel, _aidl_end_pos - _aidl_start_pos);
+  AParcel_setDataPosition(_aidl_parcel, _aidl_end_pos);
+  return _aidl_ret_status;
+}
+
+}  // namespace tests
+}  // namespace aidl
+}  // namespace android
+}  // namespace aidl
+namespace aidl {
+namespace android {
+namespace aidl {
+namespace tests {
+const char* StructuredParcelable::Empty::descriptor = "android.aidl.tests.StructuredParcelable.Empty";
+
+binder_status_t StructuredParcelable::Empty::readFromParcel(const AParcel* _aidl_parcel) {
+  binder_status_t _aidl_ret_status = STATUS_OK;
+  int32_t _aidl_start_pos = AParcel_getDataPosition(_aidl_parcel);
+  int32_t _aidl_parcelable_size = 0;
+  _aidl_ret_status = AParcel_readInt32(_aidl_parcel, &_aidl_parcelable_size);
+  if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
+
+  if (_aidl_parcelable_size < 4) return STATUS_BAD_VALUE;
+  if (_aidl_start_pos > INT32_MAX - _aidl_parcelable_size) return STATUS_BAD_VALUE;
+  AParcel_setDataPosition(_aidl_parcel, _aidl_start_pos + _aidl_parcelable_size);
+  return _aidl_ret_status;
+}
+binder_status_t StructuredParcelable::Empty::writeToParcel(AParcel* _aidl_parcel) const {
+  binder_status_t _aidl_ret_status;
+  size_t _aidl_start_pos = AParcel_getDataPosition(_aidl_parcel);
+  _aidl_ret_status = AParcel_writeInt32(_aidl_parcel, 0);
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
 
   size_t _aidl_end_pos = AParcel_getDataPosition(_aidl_parcel);

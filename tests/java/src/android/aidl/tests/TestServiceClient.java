@@ -655,7 +655,7 @@ public class TestServiceClient {
     }
 
     @Test
-    public void testStructurecParcelableEquality() {
+    public void testStructuredParcelableEquality() {
         StructuredParcelable p = new StructuredParcelable();
         p.shouldContainThreeFs = new int[] {1, 2, 3};
         p.shouldBeJerry = "Jerry";
@@ -677,7 +677,7 @@ public class TestServiceClient {
     }
 
     @Test
-    public void testStrucuturedParcelable() throws RemoteException {
+    public void testStructuredParcelable() throws RemoteException {
         final int kDesiredFValue = 17;
 
         StructuredParcelable p = new StructuredParcelable();
@@ -687,6 +687,7 @@ public class TestServiceClient {
         p.shouldContainTwoByteFoos = new byte[2];
         p.shouldContainTwoIntFoos = new int[2];
         p.shouldContainTwoLongFoos = new long[2];
+        p.empty = new StructuredParcelable.Empty();
 
         // Check the default values
         assertThat(p.stringDefaultsToFoo, is("foo"));
@@ -779,6 +780,7 @@ public class TestServiceClient {
             + "int64_max: 9223372036854775807, "
             + "hexInt32_neg_1: -1, "
             + "ibinder: null, "
+            + "empty: android.aidl.tests.StructuredParcelable.Empty{}, "
             + "int8_1: [1, 1, 1, 1, 1], "
             + "int32_1: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, "
             + "1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, "
