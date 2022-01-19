@@ -121,8 +121,8 @@ std::string GetRustName(const AidlTypeSpecifier& type, const AidlTypenames& type
       {"double", "f64"},
       {"String", "String"},
       {"IBinder", "binder::SpIBinder"},
-      {"ParcelFileDescriptor", "binder::parcel::ParcelFileDescriptor"},
-      {"ParcelableHolder", "binder::parcel::ParcelableHolder"},
+      {"ParcelFileDescriptor", "binder::ParcelFileDescriptor"},
+      {"ParcelableHolder", "binder::ParcelableHolder"},
   };
   const bool is_vector = type.IsArray() || typenames.IsList(type);
   // If the type is an array/List<T>, get the inner element type
