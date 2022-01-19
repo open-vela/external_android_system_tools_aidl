@@ -44,7 +44,7 @@ pub mod FixedParcelable {
       Self {
         booleanValue: false,
         byteValue: 0,
-        charValue: Default::default(),
+        charValue: '\0' as u16,
         intValue: 0,
         longValue: 0,
         floatValue: 0.000000f32,
