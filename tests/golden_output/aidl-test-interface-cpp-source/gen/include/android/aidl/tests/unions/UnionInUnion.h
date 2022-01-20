@@ -16,34 +16,11 @@
 #endif
 
 namespace android {
-
 namespace aidl {
-
 namespace tests {
-
 namespace unions {
-
 class UnionInUnion : public ::android::Parcelable {
 public:
-  inline bool operator!=(const UnionInUnion& rhs) const {
-    return _value != rhs._value;
-  }
-  inline bool operator<(const UnionInUnion& rhs) const {
-    return _value < rhs._value;
-  }
-  inline bool operator<=(const UnionInUnion& rhs) const {
-    return _value <= rhs._value;
-  }
-  inline bool operator==(const UnionInUnion& rhs) const {
-    return _value == rhs._value;
-  }
-  inline bool operator>(const UnionInUnion& rhs) const {
-    return _value > rhs._value;
-  }
-  inline bool operator>=(const UnionInUnion& rhs) const {
-    return _value >= rhs._value;
-  }
-
   enum Tag : int32_t {
     first = 0,  // android.aidl.tests.unions.EnumUnion first;
     second,  // int second;
@@ -53,10 +30,6 @@ public:
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, UnionInUnion>;
 
   UnionInUnion() : _value(std::in_place_index<first>, ::android::aidl::tests::unions::EnumUnion()) { }
-  UnionInUnion(const UnionInUnion&) = default;
-  UnionInUnion(UnionInUnion&&) = default;
-  UnionInUnion& operator=(const UnionInUnion&) = default;
-  UnionInUnion& operator=(UnionInUnion&&) = default;
 
   template <typename _Tp, typename = std::enable_if_t<_not_self<_Tp>>>
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -98,6 +71,25 @@ public:
     _value.emplace<_tag>(std::forward<_Tp>(_args)...);
   }
 
+  inline bool operator!=(const UnionInUnion& rhs) const {
+    return _value != rhs._value;
+  }
+  inline bool operator<(const UnionInUnion& rhs) const {
+    return _value < rhs._value;
+  }
+  inline bool operator<=(const UnionInUnion& rhs) const {
+    return _value <= rhs._value;
+  }
+  inline bool operator==(const UnionInUnion& rhs) const {
+    return _value == rhs._value;
+  }
+  inline bool operator>(const UnionInUnion& rhs) const {
+    return _value > rhs._value;
+  }
+  inline bool operator>=(const UnionInUnion& rhs) const {
+    return _value >= rhs._value;
+  }
+
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
   static const ::android::String16& getParcelableDescriptor() {
@@ -117,11 +109,7 @@ public:
 private:
   std::variant<::android::aidl::tests::unions::EnumUnion, int32_t> _value;
 };  // class UnionInUnion
-
 }  // namespace unions
-
 }  // namespace tests
-
 }  // namespace aidl
-
 }  // namespace android
