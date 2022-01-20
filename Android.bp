@@ -699,7 +699,6 @@ aidl_interface {
         },
         ndk: {
             apps_enabled: false,
-            separate_platform_variant: false, // TODO(b/161456198): remove as test
             srcs_available: true,
         },
     },
