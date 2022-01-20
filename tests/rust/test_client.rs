@@ -16,7 +16,7 @@
 
 //! Test Rust client for the AIDL compiler.
 
-use ::binder::{parcel::Parcelable, Parcel};
+use ::binder::{binder_impl::Parcel, Parcelable};
 use aidl_test_fixedsizearray::aidl::android::aidl::fixedsizearray::FixedSizeArrayExample::{
     FixedSizeArrayExample,
     IRepeatFixedSizeArray::{BpRepeatFixedSizeArray, IRepeatFixedSizeArray},
