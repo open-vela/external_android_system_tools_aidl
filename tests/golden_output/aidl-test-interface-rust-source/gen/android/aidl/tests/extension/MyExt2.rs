@@ -15,8 +15,8 @@ impl Default for MyExt2 {
     }
   }
 }
-impl binder::parcel::Parcelable for MyExt2 {
-  fn write_to_parcel(&self, parcel: &mut binder::parcel::BorrowedParcel) -> binder::Result<()> {
+impl binder::Parcelable for MyExt2 {
+  fn write_to_parcel(&self, parcel: &mut binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
     parcel.sized_write(|subparcel| {
       subparcel.write(&self.a)?;
       subparcel.write(&self.b)?;
@@ -24,7 +24,7 @@ impl binder::parcel::Parcelable for MyExt2 {
       Ok(())
     })
   }
-  fn read_from_parcel(&mut self, parcel: &binder::parcel::BorrowedParcel) -> binder::Result<()> {
+  fn read_from_parcel(&mut self, parcel: &binder::binder_impl::BorrowedParcel) -> std::result::Result<(), binder::StatusCode> {
     parcel.sized_read(|subparcel| {
       if subparcel.has_more_data() {
         self.a = subparcel.read()?;
@@ -41,7 +41,7 @@ impl binder::parcel::Parcelable for MyExt2 {
 }
 binder::impl_serialize_for_parcelable!(MyExt2);
 binder::impl_deserialize_for_parcelable!(MyExt2);
-impl binder::parcel::ParcelableMetadata for MyExt2 {
+impl binder::binder_impl::ParcelableMetadata for MyExt2 {
   fn get_descriptor() -> &'static str { "android.aidl.tests.extension.MyExt2" }
 }
 pub(crate) mod mangled {
