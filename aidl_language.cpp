@@ -809,7 +809,7 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
 
   if (IsFixedSizeArray()) {
     for (const auto& dim : std::get<FixedSizeArray>(GetArray()).dimensions) {
-      if (!dim->CheckValid()) {
+      if (!dim->Evaluate()) {
         return false;
       }
       if (dim->GetType() > AidlConstantValue::Type::INT32) {
