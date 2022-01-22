@@ -5321,7 +5321,7 @@ const std::map<std::string, ExpectedResult> kFieldSupportExpectations = {
     {"ndk_primitiveArray", {"", ""}},
     {"rust_primitiveArray", {"", ""}},
     {"cpp_primitiveFixedArray", {"", ""}},
-    {"java_primitiveFixedArray", {"not supported yet", "not supported yet"}},
+    {"java_primitiveFixedArray", {"", ""}},
     {"ndk_primitiveFixedArray", {"", ""}},
     {"rust_primitiveFixedArray", {"", ""}},
     {"cpp_String", {"", ""}},

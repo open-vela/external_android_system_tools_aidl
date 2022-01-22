@@ -80,19 +80,6 @@ bool CheckValid(const AidlDocument& doc, const Options& options) {
     return true;
   });
 
-  if (options.GetTask() == Options::Task::COMPILE) {
-    v.Check([&](const AidlTypeSpecifier& type) {
-      if (type.IsFixedSizeArray()) {
-        if (lang == Options::Language::JAVA) {
-          AIDL_ERROR(type) << "Fixed-size arrays are not supported yet in " << to_string(lang)
-                           << " backend.";
-          return false;
-        }
-      }
-      return true;
-    });
-  }
-
   VisitTopDown(v, doc);
   return v.success;
 }
