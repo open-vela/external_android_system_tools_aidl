@@ -661,11 +661,6 @@ std::array<std::array<T, 3>, 2> Make2dArray(std::initializer_list<T> values) {
 }
 
 TEST_F(AidlTest, FixedSizeArrayOverBinder) {
-  BackendType backend;
-  auto status = service->getBackendType(&backend);
-  EXPECT_TRUE(status.isOk());
-  if (backend == BackendType::JAVA) GTEST_SKIP();
-
   sp<IRepeatFixedSizeArray> service;
   ASSERT_EQ(OK, getService(IRepeatFixedSizeArray::descriptor, &service));
 

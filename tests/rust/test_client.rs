@@ -1167,12 +1167,6 @@ macro_rules! test_repeat_fixed_size_array_2d_binder {
 #[test]
 fn test_fixed_size_array_over_binder() {
     let test_service = get_test_service();
-    let backend = test_service.getBackendType().expect("error getting backend type");
-    if backend == BackendType::JAVA {
-        // Java doesn't support fixed-size arrays yet
-        return;
-    }
-
     let service: binder::Strong<dyn IRepeatFixedSizeArray> =
         binder::get_interface(<BpRepeatFixedSizeArray as IRepeatFixedSizeArray>::get_descriptor())
             .expect("did not get binder service");
