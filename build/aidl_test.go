@@ -939,11 +939,6 @@ func TestDuplicatedVersions(t *testing.T) {
 			name: "myiface",
 			srcs: ["IFoo.aidl"],
 			versions: ["1"],
-			backend: {
-				ndk: {
-					srcs_available: true,
-				},
-			},
 		}
 
 		aidl_interface {
@@ -982,11 +977,6 @@ func TestDuplicatedVersions(t *testing.T) {
 			name: "myiface",
 			srcs: ["IFoo.aidl"],
 			versions: ["1"],
-			backend: {
-				ndk: {
-					srcs_available: true,
-				},
-			},
 		}
 
 		aidl_interface {
