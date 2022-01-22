@@ -233,15 +233,6 @@ void NewExpression::Write(CodeWriter* to) const {
   to->Write(")");
 }
 
-NewArrayExpression::NewArrayExpression(const std::string& t, std::shared_ptr<Expression> s)
-    : type(t), size(s) {}
-
-void NewArrayExpression::Write(CodeWriter* to) const {
-  to->Write("new %s[", this->type.c_str());
-  size->Write(to);
-  to->Write("]");
-}
-
 Cast::Cast(const std::string& t, std::shared_ptr<Expression> e) : type(t), expression(e) {}
 
 void Cast::Write(CodeWriter* to) const {

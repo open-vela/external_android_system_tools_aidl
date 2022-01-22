@@ -378,20 +378,6 @@ ProxyClass::ProxyClass(const AidlInterface* interfaceType, const Options& option
 ProxyClass::~ProxyClass() {}
 
 // =================================================
-static void GenerateNewArray(const AidlTypeSpecifier& type, std::shared_ptr<StatementBlock> addTo,
-                             std::shared_ptr<Variable> v, std::shared_ptr<Variable> parcel) {
-  auto len = std::make_shared<Variable>("int", v->name + "_length");
-  addTo->Add(
-      std::make_shared<VariableDeclaration>(len, std::make_shared<MethodCall>(parcel, "readInt")));
-  auto lencheck = std::make_shared<IfStatement>();
-  lencheck->expression =
-      std::make_shared<Comparison>(len, "<", std::make_shared<LiteralExpression>("0"));
-  lencheck->statements->Add(std::make_shared<Assignment>(v, NULL_VALUE));
-  lencheck->elseif = std::make_shared<IfStatement>();
-  lencheck->elseif->statements->Add(std::make_shared<Assignment>(
-      v, std::make_shared<NewArrayExpression>(InstantiableJavaSignatureOf(type), len)));
-  addTo->Add(lencheck);
-}
 
 static void GenerateWriteToParcel(std::shared_ptr<StatementBlock> addTo,
                                   const AidlTypenames& typenames, const AidlTypeSpecifier& type,
@@ -572,9 +558,10 @@ static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& metho
 
       statements->Add(std::make_shared<VariableDeclaration>(v));
 
+      string code;
+      CodeWriterPtr writer = CodeWriter::ForString(&code);
       if (arg->GetDirection() & AidlArgument::IN_DIR) {
-        string code;
-        CodeWriterPtr writer = CodeWriter::ForString(&code);
+        // "in/inout" parameter should be created from parcel.
         CodeGeneratorContext context{.writer = *(writer.get()),
                                      .typenames = typenames,
                                      .type = arg->GetType(),
@@ -583,16 +570,26 @@ static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& metho
                                      .min_sdk_version = options.GetMinSdkVersion(),
                                      .is_classloader_created = &is_classloader_created};
         CreateFromParcelFor(context);
-        writer->Close();
-        statements->Add(std::make_shared<LiteralStatement>(code));
       } else {
-        if (!arg->GetType().IsArray()) {
-          statements->Add(std::make_shared<Assignment>(
-              v, std::make_shared<NewExpression>(InstantiableJavaSignatureOf(arg->GetType()))));
+        // "out" parameter should be instantiated before calling the real impl.
+        string java_type = InstantiableJavaSignatureOf(arg->GetType());
+
+        if (arg->GetType().IsArray()) {
+          // array should be created with a passed length
+          string var_length = v->name + "_length";
+          (*writer) << "int " << var_length << " = data.readInt();\n";
+          (*writer) << "if (" << var_length << " < 0) {\n";
+          (*writer) << "  " << v->name << " = null;\n";
+          (*writer) << "} else {\n";
+          (*writer) << "  " << v->name << " = new " << java_type << "[" << var_length << "];\n";
+          (*writer) << "}\n";
         } else {
-          GenerateNewArray(arg->GetType(), statements, v, transact_data);
+          // otherwise, create a new instance with a default constructor
+          (*writer) << v->name << " = new " << java_type << "();\n";
         }
       }
+      writer->Close();
+      statements->Add(std::make_shared<LiteralStatement>(code));
 
       realCall->arguments.push_back(v);
     }

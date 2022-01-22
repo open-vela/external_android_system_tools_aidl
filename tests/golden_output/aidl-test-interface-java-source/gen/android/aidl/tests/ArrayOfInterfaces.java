@@ -185,10 +185,9 @@ public class ArrayOfInterfaces implements android.os.Parcelable
             _arg2 = data.createInterfaceArray(android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface);
             android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _arg3;
             int _arg3_length = data.readInt();
-            if ((_arg3_length<0)) {
+            if (_arg3_length < 0) {
               _arg3 = null;
-            }
-            else {
+            } else {
               _arg3 = new android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[_arg3_length];
             }
             android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _arg4;
@@ -197,10 +196,9 @@ public class ArrayOfInterfaces implements android.os.Parcelable
             _arg5 = data.createInterfaceArray(android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[]::new, android.aidl.tests.ArrayOfInterfaces.IEmptyInterface.Stub::asInterface);
             android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _arg6;
             int _arg6_length = data.readInt();
-            if ((_arg6_length<0)) {
+            if (_arg6_length < 0) {
               _arg6 = null;
-            }
-            else {
+            } else {
               _arg6 = new android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[_arg6_length];
             }
             android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] _arg7;
