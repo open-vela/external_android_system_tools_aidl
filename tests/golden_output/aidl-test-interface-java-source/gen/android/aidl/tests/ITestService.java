@@ -470,10 +470,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createBooleanArray();
           boolean[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new boolean[_arg1_length];
           }
           data.enforceNoDataAvail();
@@ -489,10 +488,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createByteArray();
           byte[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new byte[_arg1_length];
           }
           data.enforceNoDataAvail();
@@ -508,10 +506,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createCharArray();
           char[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new char[_arg1_length];
           }
           data.enforceNoDataAvail();
@@ -527,10 +524,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createIntArray();
           int[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new int[_arg1_length];
           }
           data.enforceNoDataAvail();
@@ -546,10 +542,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createLongArray();
           long[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new long[_arg1_length];
           }
           data.enforceNoDataAvail();
@@ -565,10 +560,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createFloatArray();
           float[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new float[_arg1_length];
           }
           data.enforceNoDataAvail();
@@ -584,10 +578,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createDoubleArray();
           double[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new double[_arg1_length];
           }
           data.enforceNoDataAvail();
@@ -603,10 +596,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createStringArray();
           java.lang.String[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new java.lang.String[_arg1_length];
           }
           data.enforceNoDataAvail();
@@ -622,10 +614,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createByteArray();
           byte[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new byte[_arg1_length];
           }
           data.enforceNoDataAvail();
@@ -641,10 +632,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createIntArray();
           int[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new int[_arg1_length];
           }
           data.enforceNoDataAvail();
@@ -660,10 +650,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createLongArray();
           long[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new long[_arg1_length];
           }
           data.enforceNoDataAvail();
@@ -790,10 +779,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createTypedArray(android.os.ParcelFileDescriptor.CREATOR);
           android.os.ParcelFileDescriptor[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new android.os.ParcelFileDescriptor[_arg1_length];
           }
           data.enforceNoDataAvail();
@@ -964,10 +952,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createStringArray();
           java.lang.String[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new java.lang.String[_arg1_length];
           }
           data.enforceNoDataAvail();
@@ -983,10 +970,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createStringArray();
           java.lang.String[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new java.lang.String[_arg1_length];
           }
           data.enforceNoDataAvail();
@@ -1057,10 +1043,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createBinderArray();
           android.os.IBinder[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new android.os.IBinder[_arg1_length];
           }
           data.enforceNoDataAvail();
@@ -1076,10 +1061,9 @@ public interface ITestService extends android.os.IInterface
           _arg0 = data.createBinderArray();
           android.os.IBinder[] _arg1;
           int _arg1_length = data.readInt();
-          if ((_arg1_length<0)) {
+          if (_arg1_length < 0) {
             _arg1 = null;
-          }
-          else {
+          } else {
             _arg1 = new android.os.IBinder[_arg1_length];
           }
           data.enforceNoDataAvail();

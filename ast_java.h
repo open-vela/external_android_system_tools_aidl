@@ -207,15 +207,6 @@ struct NewExpression : public Expression {
   void Write(CodeWriter* to) const override;
 };
 
-struct NewArrayExpression : public Expression {
-  const std::string type;
-  std::shared_ptr<Expression> size;
-
-  NewArrayExpression(const std::string& type, std::shared_ptr<Expression> size);
-  virtual ~NewArrayExpression() = default;
-  void Write(CodeWriter* to) const override;
-};
-
 struct Cast : public Expression {
   const std::string type;
   std::shared_ptr<Expression> expression = nullptr;
