@@ -834,7 +834,7 @@ func srcsVisibility(mctx android.LoadHookContext, lang string) []string {
 	if a, ok := mctx.Module().(*aidlInterface); !ok {
 		panic(fmt.Errorf("%q is not aidl_interface", mctx.Module().String()))
 	} else {
-		if proptools.Bool(a.commonBackendProperties(lang).Srcs_available) {
+		if proptools.BoolDefault(a.commonBackendProperties(lang).Srcs_available, true) {
 			// Returning nil so that the visibility of the source module defaults to the
 			// the package-level default visibility. This way, the source module gets
 			// the same visibility as the library modules.

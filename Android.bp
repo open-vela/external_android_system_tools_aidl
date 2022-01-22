@@ -444,18 +444,15 @@ aidl_interface {
     backend: {
         cpp: {
             enabled: true,
-            srcs_available: true,
         },
         java: {
             enabled: false,
         },
         ndk: {
             enabled: true,
-            srcs_available: true,
         },
         rust: {
             enabled: true,
-            srcs_available: true,
         },
     }
 }
@@ -664,15 +661,12 @@ aidl_interface {
     gen_trace: true,
     backend: {
         cpp: {
-            srcs_available: true,
             gen_log: true,
         },
         ndk: {
-            srcs_available: true,
             gen_log: true,
         },
         java: {
-            srcs_available: true,
             platform_apis: true,
         },
     },
@@ -686,20 +680,16 @@ aidl_interface {
     local_include_dir: "tests",
     backend: {
         cpp: {
-            srcs_available: true,
         },
         java: {
             platform_apis: true,
-            srcs_available: true,
             gen_rpc: true,
         },
         rust: {
             enabled: true,
-            srcs_available: true,
         },
         ndk: {
             apps_enabled: false,
-            srcs_available: true,
         },
     },
 }
@@ -719,7 +709,6 @@ aidl_interface {
         },
         java: {
             platform_apis: true,
-            srcs_available: true,
         },
         rust: {
             enabled: false,
