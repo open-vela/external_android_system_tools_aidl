@@ -1136,27 +1136,34 @@ void GenerateParcelClassDecl(CodeWriter& out, const AidlTypenames& types,
   out << "\n";
   GenerateNestedTypeDecls(out, types, defined_type, options);
   for (const auto& variable : defined_type.GetFields()) {
-    out << NdkNameOf(types, variable->GetType(), StorageMode::STACK);
+    const auto& type = variable->GetType();
+    std::string cpp_type = NdkNameOf(types, type, StorageMode::STACK);
+    out << cpp_type;
     cpp::GenerateDeprecated(out, *variable);
     out << " " << variable->GetName();
-    if (variable->GetType().GetName() == "ParcelableHolder") {
-      out << "{::ndk::" << (defined_type.IsVintfStability() ? "STABILITY_VINTF" : "STABILITY_LOCAL")
-          << "}";
-    }
     if (defined_type.IsFixedSize()) {
-      int alignment = cpp::AlignmentOf(variable->GetType(), types);
+      int alignment = cpp::AlignmentOf(type, types);
       if (alignment > 0) {
         out << " __attribute__((aligned (" << std::to_string(alignment) << ")))";
       }
     }
     if (variable->GetDefaultValue()) {
       out << " = " << variable->ValueString(ConstantValueDecorator);
-    } else if (auto type = variable->GetType().GetDefinedType(); type) {
-      if (auto enum_type = type->AsEnumDeclaration(); enum_type) {
-        if (!variable->GetType().IsArray()) {
-          // if an enum doesn't have explicit default value, do zero-initialization
-          out << " = " << NdkNameOf(types, variable->GetType(), StorageMode::STACK) << "(0)";
+    } else {
+      // Some types needs to be explicitly initialized even when no default value is set.
+      // - ParcelableHolder should be initialized with stability.
+      // - enum should be zero initialized, otherwise the value will be indeterminate
+      // - fixed-size arrays should be initialized, otherwise the value will be indeterminate
+      if (type.GetName() == "ParcelableHolder") {
+        if (defined_type.IsVintfStability()) {
+          out << "{::ndk::STABILITY_VINTF}";
+        } else {
+          out << "{::ndk::STABILITY_LOCAL}";
         }
+      } else if (types.GetEnumDeclaration(type) && !type.IsArray()) {
+        out << " = " << cpp_type << "(0)";
+      } else if (type.IsFixedSizeArray() && !type.IsNullable()) {
+        out << " = {{}}";
       }
     }
     out << ";\n";
