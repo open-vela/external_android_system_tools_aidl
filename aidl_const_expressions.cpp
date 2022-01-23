@@ -334,12 +334,6 @@ AidlConstantValue::Type AidlBinaryConstExpression::IntegralPromotion(Type in) {
 AidlConstantValue* AidlConstantValue::Default(const AidlTypeSpecifier& specifier) {
   AidlLocation location = specifier.GetLocation();
 
-  // Initialize non-nullable fixed-size arrays with {}("empty list").
-  // Each backend will handle it differently. For example, in Rust, it can be mapped to
-  // "Default::default()".
-  if (specifier.IsFixedSizeArray() && !specifier.IsNullable()) {
-    return Array(location, std::make_unique<std::vector<std::unique_ptr<AidlConstantValue>>>());
-  }
   // allocation of int[0] is a bit wasteful in Java
   if (specifier.IsArray()) {
     return nullptr;
@@ -596,7 +590,7 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
       if (type.IsFixedSizeArray()) {
         auto size =
             std::get<FixedSizeArray>(type.GetArray()).dimensions.front()->EvaluatedValue<int32_t>();
-        if (values_.size() > static_cast<size_t>(size)) {
+        if (values_.size() != static_cast<size_t>(size)) {
           AIDL_ERROR(this) << "Expected an array of " << size << " elements, but found one with "
                            << values_.size() << " elements";
           err = -1;
