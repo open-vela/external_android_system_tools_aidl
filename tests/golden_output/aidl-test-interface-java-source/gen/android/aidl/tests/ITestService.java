@@ -3251,7 +3251,8 @@ public interface ITestService extends android.os.IInterface
     }
     private int describeContents(Object _v) {
       if (_v == null) return 0;
-      if (_v instanceof Object[]) {
+      Class<?> _clazz = _v.getClass();
+      if (_clazz.isArray() && _clazz.getComponentType() == Object.class) {
         int _mask = 0;
         for (Object o : (Object[]) _v) {
           _mask |= describeContents(o);

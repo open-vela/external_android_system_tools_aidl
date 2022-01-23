@@ -242,12 +242,6 @@ bool handleLogical(const AidlConstantValue& context, bool lval, const string& op
   return false;
 }
 
-static bool isValidLiteralChar(char c) {
-  return !(c <= 0x1f ||  // control characters are < 0x20
-           c >= 0x7f ||  // DEL is 0x7f
-           c == '\\');   // Disallow backslashes for future proofing.
-}
-
 bool ParseFloating(std::string_view sv, double* parsed) {
   // float literal should be parsed successfully.
   android::base::ConsumeSuffix(&sv, "f");
@@ -334,6 +328,12 @@ AidlConstantValue::Type AidlBinaryConstExpression::IntegralPromotion(Type in) {
 AidlConstantValue* AidlConstantValue::Default(const AidlTypeSpecifier& specifier) {
   AidlLocation location = specifier.GetLocation();
 
+  // Initialize non-nullable fixed-size arrays with {}("empty list").
+  // Each backend will handle it differently. For example, in Rust, it can be mapped to
+  // "Default::default()".
+  if (specifier.IsFixedSizeArray() && !specifier.IsNullable()) {
+    return Array(location, std::make_unique<std::vector<std::unique_ptr<AidlConstantValue>>>());
+  }
   // allocation of int[0] is a bit wasteful in Java
   if (specifier.IsArray()) {
     return nullptr;
@@ -342,6 +342,9 @@ AidlConstantValue* AidlConstantValue::Default(const AidlTypeSpecifier& specifier
   const std::string name = specifier.GetName();
   if (name == "boolean") {
     return Boolean(location, false);
+  }
+  if (name == "char") {
+    return Character(location, "'\\0'");  // literal to be used in backends
   }
   if (name == "byte" || name == "int" || name == "long") {
     return Integral(location, "0");
@@ -359,13 +362,9 @@ AidlConstantValue* AidlConstantValue::Boolean(const AidlLocation& location, bool
   return new AidlConstantValue(location, Type::BOOLEAN, value ? "true" : "false");
 }
 
-AidlConstantValue* AidlConstantValue::Character(const AidlLocation& location, char value) {
-  const std::string explicit_value = string("'") + value + "'";
-  if (!isValidLiteralChar(value)) {
-    AIDL_ERROR(location) << "Invalid character literal " << value;
-    return new AidlConstantValue(location, Type::ERROR, explicit_value);
-  }
-  return new AidlConstantValue(location, Type::CHARACTER, explicit_value);
+AidlConstantValue* AidlConstantValue::Character(const AidlLocation& location,
+                                                const std::string& value) {
+  return new AidlConstantValue(location, Type::CHARACTER, value);
 }
 
 AidlConstantValue* AidlConstantValue::Floating(const AidlLocation& location,
@@ -477,14 +476,6 @@ AidlConstantValue* AidlConstantValue::Array(
 }
 
 AidlConstantValue* AidlConstantValue::String(const AidlLocation& location, const string& value) {
-  for (size_t i = 0; i < value.length(); ++i) {
-    if (!isValidLiteralChar(value[i])) {
-      AIDL_ERROR(location) << "Found invalid character at index " << i << " in string constant '"
-                           << value << "'";
-      return new AidlConstantValue(location, Type::ERROR, value);
-    }
-  }
-
   return new AidlConstantValue(location, Type::STRING, value);
 }
 
@@ -590,7 +581,7 @@ string AidlConstantValue::ValueString(const AidlTypeSpecifier& type,
       if (type.IsFixedSizeArray()) {
         auto size =
             std::get<FixedSizeArray>(type.GetArray()).dimensions.front()->EvaluatedValue<int32_t>();
-        if (values_.size() != static_cast<size_t>(size)) {
+        if (values_.size() > static_cast<size_t>(size)) {
           AIDL_ERROR(this) << "Expected an array of " << size << " elements, but found one with "
                            << values_.size() << " elements";
           err = -1;
@@ -1044,6 +1035,8 @@ bool AidlBinaryConstExpression::evaluate() const {
   return false;
 }
 
+// Constructor for integer(byte, int, long)
+// Keep parsed integer & literal
 AidlConstantValue::AidlConstantValue(const AidlLocation& location, Type parsed_type,
                                      int64_t parsed_value, const string& checked_value)
     : AidlNode(location),
@@ -1055,6 +1048,8 @@ AidlConstantValue::AidlConstantValue(const AidlLocation& location, Type parsed_t
   AIDL_FATAL_IF(type_ != Type::INT8 && type_ != Type::INT32 && type_ != Type::INT64, location);
 }
 
+// Constructor for non-integer(String, char, boolean, float, double)
+// Keep literal as it is. (e.g. String literal has double quotes at both ends)
 AidlConstantValue::AidlConstantValue(const AidlLocation& location, Type type,
                                      const string& checked_value)
     : AidlNode(location),
@@ -1074,6 +1069,7 @@ AidlConstantValue::AidlConstantValue(const AidlLocation& location, Type type,
   }
 }
 
+// Constructor for array
 AidlConstantValue::AidlConstantValue(const AidlLocation& location, Type type,
                                      std::unique_ptr<vector<unique_ptr<AidlConstantValue>>> values,
                                      const std::string& value)
