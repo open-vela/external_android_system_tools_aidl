@@ -4550,7 +4550,7 @@ TEST_F(AidlTest, FixedSizeArrayWithWrongTypeDefaultValue) {
   EXPECT_THAT(GetCapturedStderr(), HasSubstr("Invalid type specifier for a literal string: int"));
 }
 
-TEST_F(AidlTest, FixedSizeArrayWithWrongSizeDefaultValue) {
+TEST_F(AidlTest, FixedSizeArrayWithMoreElements) {
   io_delegate_.SetFileContents("a/Bar.aidl",
                                "package a;\n"
                                "parcelable Bar {\n"
@@ -4562,6 +4562,20 @@ TEST_F(AidlTest, FixedSizeArrayWithWrongSizeDefaultValue) {
   EXPECT_FALSE(compile_aidl(options, io_delegate_));
   EXPECT_THAT(GetCapturedStderr(),
               HasSubstr("Expected an array of 3 elements, but found one with 4 elements"));
+}
+
+TEST_F(AidlTest, FixedSizeArrayWithFewerElements) {
+  io_delegate_.SetFileContents("a/Bar.aidl",
+                               "package a;\n"
+                               "parcelable Bar {\n"
+                               "  int[2][3] a = {};\n"
+                               "}");
+
+  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=java");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(options, io_delegate_));
+  EXPECT_THAT(GetCapturedStderr(),
+              HasSubstr("Expected an array of 2 elements, but found one with 0 elements"));
 }
 
 struct GenericAidlTest : ::testing::Test {

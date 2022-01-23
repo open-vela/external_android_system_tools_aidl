@@ -66,6 +66,8 @@ std::string ConstantValueDecoratorRef(
     const AidlTypeSpecifier& type,
     const std::variant<std::string, std::vector<std::string>>& raw_value);
 
+std::string ArrayDefaultValue(const AidlTypeSpecifier& type);
+
 // Returns "'lifetime_name " including the initial apostrophe and the trailing space.
 // Returns empty string for NONE.
 std::string RustLifetimeName(Lifetime lifetime);
