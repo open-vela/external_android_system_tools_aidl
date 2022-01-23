@@ -859,16 +859,23 @@ void GenerateParcelDefault(CodeWriter& out, const AidlStructuredParcelable* parc
     out << variable->GetName() << ": ";
     if (variable->GetDefaultValue()) {
       out << variable->ValueString(ConstantValueDecorator);
-    } else if (variable->GetType().GetName() == "ParcelableHolder") {
-      out << "binder::ParcelableHolder::new(";
-      if (parcel->IsVintfStability()) {
-        out << "binder::binder_impl::Stability::Vintf";
-      } else {
-        out << "binder::binder_impl::Stability::Local";
-      }
-      out << ")";
     } else {
-      out << "Default::default()";
+      // Some types don't implement "Default".
+      // - ParcelableHolder
+      // - Arrays
+      if (variable->GetType().GetName() == "ParcelableHolder") {
+        out << "binder::ParcelableHolder::new(";
+        if (parcel->IsVintfStability()) {
+          out << "binder::binder_impl::Stability::Vintf";
+        } else {
+          out << "binder::binder_impl::Stability::Local";
+        }
+        out << ")";
+      } else if (variable->GetType().IsFixedSizeArray() && !variable->GetType().IsNullable()) {
+        out << ArrayDefaultValue(variable->GetType());
+      } else {
+        out << "Default::default()";
+      }
     }
     out << ",\n";
   }
