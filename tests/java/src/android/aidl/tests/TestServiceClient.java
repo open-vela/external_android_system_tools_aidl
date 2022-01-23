@@ -31,6 +31,7 @@ import android.aidl.tests.ByteEnum;
 import android.aidl.tests.GenericStructuredParcelable;
 import android.aidl.tests.INamedCallback;
 import android.aidl.tests.ITestService;
+import android.aidl.tests.ITestService.CompilerChecks;
 import android.aidl.tests.IntEnum;
 import android.aidl.tests.LongEnum;
 import android.aidl.tests.SimpleParcelable;
@@ -44,6 +45,7 @@ import android.os.BadParcelableException;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
+import android.os.Parcelable;
 import android.os.PersistableBundle;
 import android.os.RemoteException;
 import android.os.ServiceManager;
@@ -947,5 +949,17 @@ public class TestServiceClient {
         reversed = reversed.next;
       }
       assertNull(reversed);
+    }
+
+    @Test
+    public void testDescribeContents() throws Exception {
+      CompilerChecks cc = new CompilerChecks();
+      cc.pfd_array = new ParcelFileDescriptor[] {null, null, null};
+      assertThat(cc.describeContents(), is(0));
+
+      String file = "/data/local/tmp/aidl-test-file";
+      cc.pfd_array[1] = ParcelFileDescriptor.open(
+          new File(file), ParcelFileDescriptor.MODE_CREATE | ParcelFileDescriptor.MODE_WRITE_ONLY);
+      assertThat(cc.describeContents(), is(Parcelable.CONTENTS_FILE_DESCRIPTOR));
     }
 }
