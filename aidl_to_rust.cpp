@@ -48,6 +48,13 @@ std::string ConstantValueDecoratorInternal(
     if (type.IsDynamicArray()) {
       value = "vec!" + value;
     }
+    if (type.IsFixedSizeArray() && values.empty()) {
+      auto dimensions = type.GetFixedSizeArrayDimensions();
+      value = "Default::default()";
+      for (auto it = rbegin(dimensions), end = rend(dimensions); it != end; it++) {
+        value = "[" + Join(std::vector<std::string>(*it, value), ", ") + "]";
+      }
+    }
     if (!type.IsMutated() && type.IsNullable()) {
       value = "Some(" + value + ")";
     }
@@ -164,17 +171,6 @@ std::string ConstantValueDecoratorRef(
     const AidlTypeSpecifier& type,
     const std::variant<std::string, std::vector<std::string>>& raw_value) {
   return ConstantValueDecoratorInternal(type, raw_value, true);
-}
-
-// Returns default value for array.
-std::string ArrayDefaultValue(const AidlTypeSpecifier& type) {
-  AIDL_FATAL_IF(!type.IsFixedSizeArray(), type) << "not a fixed-size array";
-  auto dimensions = type.GetFixedSizeArrayDimensions();
-  std::string value = "Default::default()";
-  for (auto it = rbegin(dimensions), end = rend(dimensions); it != end; it++) {
-    value = "[" + Join(std::vector<std::string>(*it, value), ", ") + "]";
-  }
-  return value;
 }
 
 // Returns true if @nullable T[] should be mapped Option<Vec<Option<T>>
