@@ -69,7 +69,8 @@ const map<string, string> kContentsDescribers {
   }
   return _mask;
 })"},
-  {"Array", R"(if (_v instanceof Object[]) {
+  {"Array", R"(Class<?> _clazz = _v.getClass();
+if (_clazz.isArray() && _clazz.getComponentType() == Object.class) {
   int _mask = 0;
   for (Object o : (Object[]) _v) {
     _mask |= describeContents(o);
