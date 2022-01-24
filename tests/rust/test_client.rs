@@ -37,7 +37,7 @@ use aidl_test_interface::aidl::android::aidl::tests::{
     ByteEnum::ByteEnum, IntEnum::IntEnum, LongEnum::LongEnum, RecursiveList::RecursiveList,
     StructuredParcelable, Union,
 };
-use aidl_test_interface::binder::{self, BinderFeatures, Interface};
+use aidl_test_interface::binder::{self, BinderFeatures, IBinder, Interface};
 use aidl_test_nonvintf_parcelable::aidl::android::aidl::tests::nonvintf::{
     NonVintfExtendableParcelable::NonVintfExtendableParcelable,
     NonVintfParcelable::NonVintfParcelable,
@@ -1208,4 +1208,10 @@ fn test_fixed_size_array_over_binder() {
     );
 
     test_repeat_fixed_size_array!(service, Repeat2dParcelables, [[p1, p2, p3], [p1, p2, p3]]);
+}
+
+#[test]
+fn test_ping() {
+    let test_service = get_test_service();
+    assert_eq!(test_service.as_binder().ping_binder(), Ok(()));
 }
