@@ -1046,24 +1046,28 @@ void GenerateWriteToParcel(CodeWriter& out, const AidlUnionDecl& decl,
 void GenerateParcelFields(CodeWriter& out, const AidlStructuredParcelable& decl,
                           const AidlTypenames& typenames) {
   for (const auto& variable : decl.GetFields()) {
-    std::string cppType = CppNameOf(variable->GetType(), typenames);
-    out << cppType;
+    const auto& type = variable->GetType();
+    std::string cpp_type = CppNameOf(type, typenames);
+    out << cpp_type;
     GenerateDeprecated(out, *variable);
     out << " " << variable->GetName();
     if (variable->GetDefaultValue()) {
       out << " = " << variable->ValueString(ConstantValueDecorator);
-    } else if (variable->GetType().GetName() == "ParcelableHolder") {
-      if (decl.IsVintfStability()) {
-        out << " { ::android::Parcelable::Stability::STABILITY_VINTF }";
-      } else {
-        out << " { ::android::Parcelable::Stability::STABILITY_LOCAL }";
-      }
-    } else if (auto type = variable->GetType().GetDefinedType(); type) {
-      if (auto enum_type = type->AsEnumDeclaration(); enum_type) {
-        if (!variable->GetType().IsArray()) {
-          // if an enum doesn't have explicit default value, do zero-initialization
-          out << " = " << cppType << "(0)";
+    } else {
+      // Some types needs to be explicitly initialized even when no default value is set.
+      // - ParcelableHolder should be initialized with stability
+      // - enum should be zero initialized, otherwise the value will be indeterminate
+      // - fixed-size arrays should be initialized, otherwise the value will be indeterminate
+      if (type.GetName() == "ParcelableHolder") {
+        if (decl.IsVintfStability()) {
+          out << " { ::android::Parcelable::Stability::STABILITY_VINTF }";
+        } else {
+          out << " { ::android::Parcelable::Stability::STABILITY_LOCAL }";
         }
+      } else if (typenames.GetEnumDeclaration(type) && !type.IsArray()) {
+        out << " = " << cpp_type << "(0)";
+      } else if (type.IsFixedSizeArray() && !type.IsNullable()) {
+        out << " = {{}}";
       }
     }
     out << ";\n";
