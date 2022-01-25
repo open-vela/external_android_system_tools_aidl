@@ -18,16 +18,20 @@ package android.aidl.tests;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import android.aidl.tests.BadParcelable;
 import android.aidl.tests.ByteEnum;
 import android.aidl.tests.GenericStructuredParcelable;
 import android.aidl.tests.INamedCallback;
 import android.aidl.tests.ITestService;
+import android.aidl.tests.ITestService.CompilerChecks;
 import android.aidl.tests.IntEnum;
 import android.aidl.tests.LongEnum;
 import android.aidl.tests.SimpleParcelable;
@@ -37,9 +41,11 @@ import android.aidl.versioned.tests.IFooInterface;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.BadParcelableException;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
+import android.os.Parcelable;
 import android.os.PersistableBundle;
 import android.os.RemoteException;
 import android.os.ServiceManager;
@@ -283,6 +289,38 @@ public class TestServiceClient {
     }
 
     @Test
+    public void testBinderArrayExchange() throws RemoteException {
+      String[] names = {"Fizz", "Buzz"};
+      INamedCallback[] got = service.GetInterfaceArray(names);
+      assertThat(got[0].GetName(), is(names[0]));
+      assertThat(got[1].GetName(), is(names[1]));
+
+      assertThat(service.VerifyNamesWithInterfaceArray(got, names), is(true));
+    }
+
+    @Test
+    public void testNullableBinderArrayExchange() throws RemoteException {
+      String[] names = {"Fizz", null, "Buzz"};
+      INamedCallback[] got = service.GetNullableInterfaceArray(names);
+      assertThat(got[0].GetName(), is(names[0]));
+      assertNull(got[1]);
+      assertThat(got[2].GetName(), is(names[2]));
+
+      assertThat(service.VerifyNamesWithNullableInterfaceArray(got, names), is(true));
+    }
+
+    @Test
+    public void testInterfaceListExchange() throws RemoteException {
+      String[] names = {"Fizz", null, "Buzz"};
+      List<INamedCallback> got = service.GetInterfaceList(names);
+      assertThat(got.get(0).GetName(), is(names[0]));
+      assertNull(got.get(1));
+      assertThat(got.get(2).GetName(), is(names[2]));
+
+      assertThat(service.VerifyNamesWithInterfaceList(got, names), is(true));
+    }
+
+    @Test
     public void testListReversal() throws RemoteException {
         List<String> input = Arrays.asList("Walk", "into", "Córdoba");
         List<String> echoed = new ArrayList<String>();
@@ -311,6 +349,19 @@ public class TestServiceClient {
       assertThat(out_param.b, is(input.b));
       assertThat(returned.a, is(input.a));
       assertThat(returned.b, is(input.b));
+    }
+
+    @Test
+    public void testBadParcelable() throws RemoteException {
+      assumeTrue(cpp_java_tests != null);
+      BadParcelable bad = new BadParcelable(/*bad=*/true, "foo", 42);
+      Throwable error =
+          assertThrows(BadParcelableException.class, () -> cpp_java_tests.RepeatBadParcelable(bad));
+      assertTrue(error.getMessage().contains("Parcel data not fully consumed"));
+
+      BadParcelable notBad = new BadParcelable(/*bad=*/false, "foo", 42);
+      BadParcelable output = cpp_java_tests.RepeatBadParcelable(notBad);
+      assertThat(notBad, is(output));
     }
 
     @Test
@@ -437,6 +488,21 @@ public class TestServiceClient {
         assertThat(reversed[2].getDouble(testDoubleKey), is(input[0].getDouble(testDoubleKey)));
     }
 
+    private void writeToFd(FileDescriptor fd, byte[] testData) throws IOException {
+      FileOutputStream fdStream = new FileOutputStream(fd);
+      fdStream.write(testData);
+      fdStream.close();
+    }
+
+    private void verifyFileContents(String file, byte[] testData) throws IOException {
+      FileInputStream fis = new FileInputStream(file);
+      byte[] readData = new byte[testData.length];
+
+      assertThat(fis.read(readData), is(readData.length));
+      assertThat(readData, is(testData));
+      assertThat(fis.read(), is(-1));
+    }
+
     @Test
     public void testFileDescriptorPassing() throws RemoteException, IOException {
         assumeTrue(cpp_java_tests != null);
@@ -448,18 +514,43 @@ public class TestServiceClient {
         FileDescriptor journeyed = cpp_java_tests.RepeatFileDescriptor(descriptor);
         fos.close();
 
-        FileOutputStream journeyedStream = new FileOutputStream(journeyed);
-
         String testData = "FrazzleSnazzleFlimFlamFlibbityGumboChops";
-        byte[] output = testData.getBytes();
-        journeyedStream.write(output);
-        journeyedStream.close();
+        writeToFd(journeyed, testData.getBytes());
+        verifyFileContents(file, testData.getBytes());
+    }
 
-        FileInputStream fis = new FileInputStream(file);
-        byte[] input = new byte[output.length];
+    @Test
+    public void testFileDescriptorArrayPassing() throws RemoteException, IOException {
+      assumeTrue(cpp_java_tests != null);
 
-        assertThat(fis.read(input), is(input.length));
-        assertThat(input, is(output));
+      final int kTestSize = 2;
+
+      String fileBase = "/data/local/tmp/aidl-test-file_";
+      String[] files = new String[kTestSize]; // any size to test
+      FileOutputStream[] fos = new FileOutputStream[kTestSize];
+      FileDescriptor[] descriptors = new FileDescriptor[kTestSize];
+      for (int i = 0; i < kTestSize; i++) {
+        files[i] = fileBase + i;
+        fos[i] = new FileOutputStream(files[i], false /*append*/);
+        descriptors[i] = fos[i].getFD();
+      }
+
+      FileDescriptor[] repeated = new FileDescriptor[kTestSize];
+      FileDescriptor[] reversed = cpp_java_tests.ReverseFileDescriptorArray(descriptors, repeated);
+
+      for (int i = 0; i < kTestSize; i++) {
+        fos[i].close();
+      }
+
+      for (int i = 0; i < kTestSize; i++) {
+        String testData = "Something " + i;
+
+        writeToFd(reversed[kTestSize - 1 - i], testData.getBytes());
+        verifyFileContents(files[i], testData.getBytes());
+
+        writeToFd(repeated[i], testData.getBytes());
+        verifyFileContents(files[i], (testData + testData).getBytes());
+      }
     }
 
     @Test
@@ -512,7 +603,7 @@ public class TestServiceClient {
 
     @Test
     public void testReverseUtf8StringArray() throws RemoteException {
-        String[] input = (String[])utf8_queries.toArray();
+        String[] input = utf8_queries.toArray(new String[0]);
         String echoed[] = new String[input.length];
 
         String[] reversed = service.ReverseUtf8CppString(input, echoed);
@@ -535,7 +626,7 @@ public class TestServiceClient {
                 null,
                 // Java doesn't handle unicode code points above U+FFFF well.
                 new String(Character.toChars(0x1F701)) + "\u03A9");
-        String[] input = (String[])utf8_queries_and_nulls.toArray();
+        String[] input = utf8_queries_and_nulls.toArray(new String[0]);
         String echoed[] = new String[input.length];
 
         String[] reversed = service.ReverseNullableUtf8CppString(input, echoed);
@@ -566,7 +657,7 @@ public class TestServiceClient {
     }
 
     @Test
-    public void testStructurecParcelableEquality() {
+    public void testStructuredParcelableEquality() {
         StructuredParcelable p = new StructuredParcelable();
         p.shouldContainThreeFs = new int[] {1, 2, 3};
         p.shouldBeJerry = "Jerry";
@@ -588,7 +679,7 @@ public class TestServiceClient {
     }
 
     @Test
-    public void testStrucuturedParcelable() throws RemoteException {
+    public void testStructuredParcelable() throws RemoteException {
         final int kDesiredFValue = 17;
 
         StructuredParcelable p = new StructuredParcelable();
@@ -598,6 +689,7 @@ public class TestServiceClient {
         p.shouldContainTwoByteFoos = new byte[2];
         p.shouldContainTwoIntFoos = new int[2];
         p.shouldContainTwoLongFoos = new long[2];
+        p.empty = new StructuredParcelable.Empty();
 
         // Check the default values
         assertThat(p.stringDefaultsToFoo, is("foo"));
@@ -628,6 +720,9 @@ public class TestServiceClient {
         assertThat(p.int32_max, is(Integer.MAX_VALUE));
         assertThat(p.int64_max, is(Long.MAX_VALUE));
         assertThat(p.hexInt32_neg_1, is(-1));
+        for (int ndx = 0; ndx < p.int8_1.length; ndx++) {
+          assertThat(p.int8_1[ndx], is((byte) 1));
+        }
         for (int ndx = 0; ndx < p.int32_1.length; ndx++) {
             assertThat(p.int32_1[ndx], is(1));
         }
@@ -687,6 +782,8 @@ public class TestServiceClient {
             + "int64_max: 9223372036854775807, "
             + "hexInt32_neg_1: -1, "
             + "ibinder: null, "
+            + "empty: android.aidl.tests.StructuredParcelable.Empty{}, "
+            + "int8_1: [1, 1, 1, 1, 1], "
             + "int32_1: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, "
             + "1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, "
             + "1, 1, 1, 1], "
@@ -833,5 +930,36 @@ public class TestServiceClient {
       assertNotNull(reversed);
       assertThat(repeated.getNs(), is(new int[] {1, 2, 3}));
       assertThat(reversed.getNs(), is(new int[] {3, 2, 1}));
+    }
+
+    @Test
+    public void testReverseRecursiveList() throws RemoteException {
+      RecursiveList head = null;
+      for (int i = 0; i < 10; i++) {
+        RecursiveList node = new RecursiveList();
+        node.value = i;
+        node.next = head;
+        head = node;
+      }
+      // head: [9, 8, .. , 0]
+      RecursiveList reversed = service.ReverseList(head);
+      // reversed should be [0, 1, .. 9]
+      for (int i = 0; i < 10; i++) {
+        assertThat(reversed.value, is(i));
+        reversed = reversed.next;
+      }
+      assertNull(reversed);
+    }
+
+    @Test
+    public void testDescribeContents() throws Exception {
+      CompilerChecks cc = new CompilerChecks();
+      cc.pfd_array = new ParcelFileDescriptor[] {null, null, null};
+      assertThat(cc.describeContents(), is(0));
+
+      String file = "/data/local/tmp/aidl-test-file";
+      cc.pfd_array[1] = ParcelFileDescriptor.open(
+          new File(file), ParcelFileDescriptor.MODE_CREATE | ParcelFileDescriptor.MODE_WRITE_ONLY);
+      assertThat(cc.describeContents(), is(Parcelable.CONTENTS_FILE_DESCRIPTOR));
     }
 }

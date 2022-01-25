@@ -1,17 +1,17 @@
 #pragma once
-#include <android/binder_interface_utils.h>
-#include <android/binder_parcelable_utils.h>
-#include <android/binder_to_string.h>
 
 #include <cassert>
-#include <type_traits>
-#include <utility>
-#include <variant>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
+#include <type_traits>
+#include <utility>
+#include <variant>
 #include <vector>
+#include <android/binder_interface_utils.h>
+#include <android/binder_parcelable_utils.h>
+#include <android/binder_to_string.h>
 #ifdef BINDER_STABILITY_SUPPORT
 #include <android/binder_stability.h>
 #endif  // BINDER_STABILITY_SUPPORT
@@ -38,10 +38,6 @@ public:
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, Union>;
 
   Union() : _value(std::in_place_index<num>, int32_t(43)) { }
-  Union(const Union&) = default;
-  Union(Union&&) = default;
-  Union& operator=(const Union&) = default;
-  Union& operator=(Union&&) = default;
 
   template <typename _Tp, typename = std::enable_if_t<_not_self<_Tp>>>
   // NOLINTNEXTLINE(google-explicit-constructor)
