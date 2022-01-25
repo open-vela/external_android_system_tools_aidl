@@ -375,6 +375,8 @@ type aidlInterfaceProperties struct {
 			// Whether to compile against platform APIs instead of
 			// an SDK.
 			Platform_apis *bool
+			// Lint properties for generated java module
+			java.LintProperties
 		}
 		// Backend of the compiler generating code for C++ clients using
 		// libbinder (unstable C++ interface)
