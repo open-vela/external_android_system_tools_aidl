@@ -251,7 +251,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 			Srcs:            []string{":" + javaSourceGen},
 			Apex_available:  i.properties.Backend.Java.Apex_available,
 			Min_sdk_version: i.minSdkVersion(langJava),
-		}},
+		}, &i.properties.Backend.Java.LintProperties},
 	})
 
 	return javaModuleGen
