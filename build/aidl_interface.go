@@ -356,6 +356,8 @@ type aidlInterfaceProperties struct {
 			// Whether RPC features are enabled (requires API level 32)
 			// TODO(b/175819535): enable this automatically?
 			Gen_rpc *bool
+			// Lint properties for generated java module
+			java.LintProperties
 		}
 		// Backend of the compiler generating code for C++ clients using
 		// libbinder (unstable C++ interface)
