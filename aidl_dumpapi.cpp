@@ -56,9 +56,6 @@ void DumpVisitor::DumpMembers(const AidlDefinedType& dt) {
   for (const auto& constdecl : dt.GetConstantDeclarations()) {
     constdecl->DispatchVisit(*this);
   }
-  for (const auto& nested : dt.GetNestedTypes()) {
-    nested->DispatchVisit(*this);
-  }
 }
 
 // Dumps comment only if its has meaningful tags.
@@ -140,6 +137,13 @@ void DumpVisitor::Visit(const AidlConstantDeclaration& c) {
   out << " " << c.GetName() << " = ";
   DumpConstantValue(c.GetType(), c.GetValue());
   out << ";\n";
+}
+
+void DumpVisitor::Visit(const AidlEnumerator& e) {
+  out << e.GetName() << " = ";
+
+  e.GetValue()->DispatchVisit(*this);
+  out << ",\n";
 }
 
 void DumpVisitor::Visit(const AidlTypeSpecifier& t) {
