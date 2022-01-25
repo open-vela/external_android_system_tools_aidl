@@ -1,6 +1,6 @@
 package android.aidl.versioned.tests;
 
-@JavaSuppressLint({"NewApi"})
+@JavaSuppressLint(value={"NewApi"})
 parcelable Foo {
     // V1 is empty
     // V2

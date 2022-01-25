@@ -6,21 +6,18 @@
 #include <string>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
+
 enum class __attribute__((deprecated("test"))) DeprecatedEnum : int32_t {
   A = 0,
   B = 1,
   C = 2,
 };
-}  // namespace tests
-}  // namespace aidl
-}  // namespace android
-namespace android {
-namespace aidl {
-namespace tests {
-[[nodiscard]] static inline std::string toString(DeprecatedEnum val) __attribute__((deprecated("test")));
-[[nodiscard]] static inline std::string toString(DeprecatedEnum val) {
+
+[[nodiscard]] __attribute__((deprecated("test"))) static inline std::string toString(DeprecatedEnum val) {
   switch(val) {
   case DeprecatedEnum::A:
     return "A";
@@ -32,11 +29,16 @@ namespace tests {
     return std::to_string(static_cast<int32_t>(val));
   }
 }
+
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android
 namespace android {
+
 namespace internal {
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc++17-extensions"
 template <>
@@ -46,5 +48,7 @@ constexpr inline std::array<::android::aidl::tests::DeprecatedEnum, 3> __attribu
   ::android::aidl::tests::DeprecatedEnum::C,
 };
 #pragma clang diagnostic pop
+
 }  // namespace internal
+
 }  // namespace android
