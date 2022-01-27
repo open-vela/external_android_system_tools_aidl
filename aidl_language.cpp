@@ -410,6 +410,19 @@ static const AidlAnnotation* GetAnnotation(
   return nullptr;
 }
 
+static const AidlAnnotation* GetScopedAnnotation(const AidlDefinedType& defined_type,
+                                                 AidlAnnotation::Type type) {
+  const AidlAnnotation* annotation = GetAnnotation(defined_type.GetAnnotations(), type);
+  if (annotation) {
+    return annotation;
+  }
+  const AidlDefinedType* enclosing_type = defined_type.GetParentType();
+  if (enclosing_type) {
+    return GetScopedAnnotation(*enclosing_type, type);
+  }
+  return nullptr;
+}
+
 AidlAnnotatable::AidlAnnotatable(const AidlLocation& location, const Comments& comments)
     : AidlCommentable(location, comments) {}
 
@@ -434,7 +447,9 @@ bool AidlAnnotatable::IsSensitiveData() const {
 }
 
 bool AidlAnnotatable::IsVintfStability() const {
-  return GetAnnotation(annotations_, AidlAnnotation::Type::VINTF_STABILITY);
+  auto defined_type = AidlCast<AidlDefinedType>(*this);
+  AIDL_FATAL_IF(!defined_type, *this) << "@VintfStability is not attached to a type";
+  return GetScopedAnnotation(*defined_type, AidlAnnotation::Type::VINTF_STABILITY);
 }
 
 bool AidlAnnotatable::IsJavaOnlyImmutable() const {
