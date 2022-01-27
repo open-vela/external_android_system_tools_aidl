@@ -462,6 +462,28 @@ TEST_P(AidlTest, ParsesStabilityAnnotations) {
   ASSERT_TRUE(interface->IsVintfStability());
 }
 
+TEST_P(AidlTest, TypesShouldHaveVintfStabilityWhenCompilingWithTheVintfFlag) {
+  CaptureStderr();
+  string code =
+      "@VintfStability\n"
+      "parcelable Foo {\n"
+      "  interface INested {}"
+      "}";
+  EXPECT_NE(nullptr, Parse("Foo.aidl", code, typenames_, GetLanguage(), nullptr,
+                           {"--structured", "--stability", "vintf"}));
+  EXPECT_EQ(GetCapturedStderr(), "");
+  auto nested = typenames_.TryGetDefinedType("Foo.INested");
+  ASSERT_NE(nullptr, nested);
+  ASSERT_TRUE(nested->IsVintfStability());
+}
+
+TEST_P(AidlTest, VintfStabilityAppliesToNestedTypesAsWell) {
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("Foo.aidl", "parcelable Foo {}", typenames_, GetLanguage(), nullptr,
+                           {"--structured", "--stability", "vintf"}));
+  EXPECT_THAT(GetCapturedStderr(), HasSubstr("Foo does not have VINTF level stability"));
+}
+
 TEST_F(AidlTest, ParsesJavaOnlyStableParcelable) {
   Options java_options = Options::From("aidl -o out --structured a/Foo.aidl");
   Options cpp_options = Options::From("aidl --lang=cpp -o out -h out/include a/Foo.aidl");
