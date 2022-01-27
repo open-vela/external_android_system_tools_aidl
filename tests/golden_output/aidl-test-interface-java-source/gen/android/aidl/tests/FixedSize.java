@@ -47,7 +47,7 @@ public class FixedSize implements android.os.Parcelable
   {
     public boolean booleanValue = false;
     public byte byteValue = 0;
-    public char charValue;
+    public char charValue = '\0';
     public int intValue = 0;
     public long longValue = 0L;
     public float floatValue = 0.000000f;
