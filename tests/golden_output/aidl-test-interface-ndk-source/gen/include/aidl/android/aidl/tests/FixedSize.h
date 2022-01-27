@@ -151,7 +151,7 @@ public:
 
     bool booleanValue __attribute__((aligned (1))) = false;
     int8_t byteValue __attribute__((aligned (1))) = 0;
-    char16_t charValue __attribute__((aligned (2)));
+    char16_t charValue __attribute__((aligned (2))) = '\0';
     int32_t intValue __attribute__((aligned (4))) = 0;
     int64_t longValue __attribute__((aligned (8))) = 0L;
     float floatValue __attribute__((aligned (4))) = 0.000000f;
