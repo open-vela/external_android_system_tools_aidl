@@ -361,6 +361,10 @@ AidlConstantValue* AidlConstantValue::Boolean(const AidlLocation& location, bool
 
 AidlConstantValue* AidlConstantValue::Character(const AidlLocation& location, char value) {
   const std::string explicit_value = string("'") + value + "'";
+  if (!isValidLiteralChar(value)) {
+    AIDL_ERROR(location) << "Invalid character literal " << value;
+    return new AidlConstantValue(location, Type::ERROR, explicit_value);
+  }
   return new AidlConstantValue(location, Type::CHARACTER, explicit_value);
 }
 
