@@ -115,7 +115,7 @@ interface ITestService {
     LongEnum[] ReverseLongEnum(in LongEnum[] input, out LongEnum[] repeated);
 
     // Test that clients can send and receive Binders.
-    INamedCallback GetOtherTestService(String name);
+    @PropagateAllowBlocking INamedCallback GetOtherTestService(String name);
     boolean VerifyName(INamedCallback service, String name);
     INamedCallback[] GetInterfaceArray(in String[] names);
     boolean VerifyNamesWithInterfaceArray(in INamedCallback[] services, in String[] names);

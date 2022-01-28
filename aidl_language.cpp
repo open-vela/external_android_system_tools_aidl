@@ -201,6 +201,10 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
        "RequiresNoPermission",
        CONTEXT_TYPE_INTERFACE | CONTEXT_METHOD,
        {}},
+      {AidlAnnotation::Type::PROPAGATE_ALLOW_BLOCKING,
+       "PropagateAllowBlocking",
+       CONTEXT_METHOD,
+       {}},
   };
   return kSchemas;
 }
@@ -502,6 +506,10 @@ bool AidlAnnotatable::IsPermissionManual() const {
 
 bool AidlAnnotatable::IsPermissionNone() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::PERMISSION_NONE);
+}
+
+bool AidlAnnotatable::IsPropagateAllowBlocking() const {
+  return GetAnnotation(annotations_, AidlAnnotation::Type::PROPAGATE_ALLOW_BLOCKING);
 }
 
 bool AidlAnnotatable::IsStableApiParcelable(Options::Language lang) const {
