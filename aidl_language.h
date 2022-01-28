@@ -242,7 +242,8 @@ class AidlAnnotation : public AidlNode {
     SUPPRESS_WARNINGS,
     PERMISSION_ENFORCE,
     PERMISSION_NONE,
-    PERMISSION_MANUAL
+    PERMISSION_MANUAL,
+    PROPAGATE_ALLOW_BLOCKING,
   };
 
   using TargetContext = uint16_t;
@@ -364,6 +365,7 @@ class AidlAnnotatable : public AidlCommentable {
   std::unique_ptr<android::aidl::perm::Expression> EnforceExpression() const;
   bool IsPermissionManual() const;
   bool IsPermissionNone() const;
+  bool IsPropagateAllowBlocking() const;
 
   // ToString is for dumping AIDL.
   // Returns string representation of annotations.

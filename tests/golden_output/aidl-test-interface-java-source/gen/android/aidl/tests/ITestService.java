@@ -1819,6 +1819,7 @@ public interface ITestService extends android.os.IInterface
           _data.writeInterfaceToken(DESCRIPTOR);
           _data.writeString(name);
           boolean _status = mRemote.transact(Stub.TRANSACTION_GetOtherTestService, _data, _reply, android.os.IBinder.FLAG_CLEAR_BUF);
+          _reply.setPropagateAllowBlocking();
           if (!_status) {
             if (getDefaultImpl() != null) {
               return getDefaultImpl().GetOtherTestService(name);
