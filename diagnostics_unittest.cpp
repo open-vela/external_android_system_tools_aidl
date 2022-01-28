@@ -218,12 +218,12 @@ TEST_F(DiagnosticsTest, AllowImportingSelf) {
                "interface IFoo{}"}});
 }
 
-TEST_F(DiagnosticsTest, AllowRedundantImports) {
-  expect_diagnostics = {};
+TEST_F(DiagnosticsTest, RedundantImports) {
+  expect_diagnostics = {DiagnosticID::unique_import};
   ParseFiles({{"p/IFoo.aidl",
                "package p;\n"
                "import q.IBar;\n"
-               "import q.IBar;\n"  // ugly, but okay
+               "import q.IBar;\n"
                "interface IFoo{}"},
               {"q/IBar.aidl", "package q; interface IBar{}"}});
 }
