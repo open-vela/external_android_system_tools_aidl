@@ -242,6 +242,12 @@ bool handleLogical(const AidlConstantValue& context, bool lval, const string& op
   return false;
 }
 
+static bool isValidLiteralChar(char c) {
+  return !(c <= 0x1f ||  // control characters are < 0x20
+           c >= 0x7f ||  // DEL is 0x7f
+           c == '\\');   // Disallow backslashes for future proofing.
+}
+
 bool ParseFloating(std::string_view sv, double* parsed) {
   // float literal should be parsed successfully.
   android::base::ConsumeSuffix(&sv, "f");
@@ -471,6 +477,14 @@ AidlConstantValue* AidlConstantValue::Array(
 }
 
 AidlConstantValue* AidlConstantValue::String(const AidlLocation& location, const string& value) {
+  for (size_t i = 0; i < value.length(); ++i) {
+    if (!isValidLiteralChar(value[i])) {
+      AIDL_ERROR(location) << "Found invalid character at index " << i << " in string constant '"
+                           << value << "'";
+      return new AidlConstantValue(location, Type::ERROR, value);
+    }
+  }
+
   return new AidlConstantValue(location, Type::STRING, value);
 }
 
