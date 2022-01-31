@@ -85,7 +85,6 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		GenTrace:        genTrace,
 		Unstable:        i.properties.Unstable,
 		NotFrozen:       notFrozen,
-		Visibility:      srcsVisibility(mctx, lang),
 		Flags:           i.flagsForAidlGenRule(version),
 	})
 
@@ -231,7 +230,6 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		GenTrace:        proptools.Bool(i.properties.Gen_trace),
 		Unstable:        i.properties.Unstable,
 		NotFrozen:       notFrozen,
-		Visibility:      srcsVisibility(mctx, langJava),
 		Flags:           i.flagsForAidlGenRule(version),
 	})
 
@@ -281,7 +279,6 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		Version:         i.versionForAidlGenRule(version),
 		Unstable:        i.properties.Unstable,
 		NotFrozen:       notFrozen,
-		Visibility:      srcsVisibility(mctx, langRust),
 		Flags:           i.flagsForAidlGenRule(version),
 	})
 
