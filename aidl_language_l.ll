@@ -58,7 +58,7 @@ floatvalue  [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?f?
 <LONG_COMMENT>\n+     { extra_text += yytext; yylloc->lines(yyleng); }
 <LONG_COMMENT>[^*\n]+ { extra_text += yytext; }
 
-\"[^\"]*\"            { yylval->token = new AidlToken(yytext, comments);
+\"([^\"]|\\.)*\"      { yylval->token = new AidlToken(yytext, comments);
                         return yy::parser::token::C_STR; }
 
 \/\/.*                { extra_text += yytext; extra_text += "\n";
