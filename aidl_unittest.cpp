@@ -1271,6 +1271,23 @@ TEST_P(AidlTest, FailOnDuplicateConstantNames) {
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
+TEST_P(AidlTest, InvalidConstString) {
+  AidlError error;
+  const string expected_stderr =
+      "ERROR: p/IFoo.aidl:3.47-60: Found invalid character '\\' at index 4 in string constant "
+      "'\"test\\\"test\"'\n";
+  CaptureStderr();
+  EXPECT_EQ(nullptr, Parse("p/IFoo.aidl",
+                           R"(package p;
+                      interface IFoo {
+                        const String someVar = "test\"test";
+                      }
+                   )",
+                           typenames_, GetLanguage(), &error));
+  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  EXPECT_EQ(AidlError::BAD_TYPE, error);
+}
+
 TEST_P(AidlTest, RejectUnstructuredParcelablesInNDKandRust) {
   io_delegate_.SetFileContents("o/Foo.aidl", "package o; parcelable Foo cpp_header \"cpp/Foo.h\";");
   const auto options =

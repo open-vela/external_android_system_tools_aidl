@@ -477,10 +477,13 @@ AidlConstantValue* AidlConstantValue::Array(
 }
 
 AidlConstantValue* AidlConstantValue::String(const AidlLocation& location, const string& value) {
+  AIDL_FATAL_IF(value.size() == 0, "If this is unquoted, we need to update the index log");
+  AIDL_FATAL_IF(value[0] != '\"', "If this is unquoted, we need to update the index log");
+
   for (size_t i = 0; i < value.length(); ++i) {
     if (!isValidLiteralChar(value[i])) {
-      AIDL_ERROR(location) << "Found invalid character at index " << i << " in string constant '"
-                           << value << "'";
+      AIDL_ERROR(location) << "Found invalid character '" << value[i] << "' at index " << i - 1
+                           << " in string constant '" << value << "'";
       return new AidlConstantValue(location, Type::ERROR, value);
     }
   }
