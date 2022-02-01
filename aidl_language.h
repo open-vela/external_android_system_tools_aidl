@@ -640,7 +640,7 @@ class AidlConstantValue : public AidlNode {
     } else if constexpr (is_one_of<T, int8_t, int32_t, int64_t>::value) {
       AIDL_FATAL_IF(final_type_ < Type::INT8 && final_type_ > Type::INT64, this);
       return static_cast<T>(final_value_);
-    } else if constexpr (std::is_same<T, char16_t>::value) {
+    } else if constexpr (std::is_same<T, char>::value) {
       AIDL_FATAL_IF(final_type_ != Type::CHARACTER, this);
       return final_string_value_.at(1);  // unquote '
     } else if constexpr (std::is_same<T, bool>::value) {
@@ -665,9 +665,9 @@ class AidlConstantValue : public AidlNode {
   static AidlConstantValue* Default(const AidlTypeSpecifier& specifier);
 
   static AidlConstantValue* Boolean(const AidlLocation& location, bool value);
-  static AidlConstantValue* Character(const AidlLocation& location, const std::string& value);
+  static AidlConstantValue* Character(const AidlLocation& location, char value);
   // example: 123, -5498, maybe any size
-  static AidlConstantValue* Integral(const AidlLocation& location, const std::string& value);
+  static AidlConstantValue* Integral(const AidlLocation& location, const string& value);
   static AidlConstantValue* Floating(const AidlLocation& location, const std::string& value);
   static AidlConstantValue* Array(const AidlLocation& location,
                                   std::unique_ptr<vector<unique_ptr<AidlConstantValue>>> values);
@@ -1202,7 +1202,7 @@ inline std::string SimpleName(const std::string& qualified_name) {
 class AidlDocument : public AidlCommentable, public AidlScope {
  public:
   AidlDocument(const AidlLocation& location, const Comments& comments,
-               std::vector<std::string> imports,
+               std::set<std::string> imports,
                std::vector<std::unique_ptr<AidlDefinedType>> defined_types, bool is_preprocessed);
   ~AidlDocument() = default;
 
@@ -1213,7 +1213,7 @@ class AidlDocument : public AidlCommentable, public AidlScope {
   AidlDocument& operator=(AidlDocument&&) = delete;
 
   std::string ResolveName(const std::string& name) const override;
-  const std::vector<std::string>& Imports() const { return imports_; }
+  const std::set<std::string>& Imports() const { return imports_; }
   const std::vector<std::unique_ptr<AidlDefinedType>>& DefinedTypes() const {
     return defined_types_;
   }
@@ -1227,7 +1227,7 @@ class AidlDocument : public AidlCommentable, public AidlScope {
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 
  private:
-  const std::vector<std::string> imports_;
+  const std::set<std::string> imports_;
   const std::vector<std::unique_ptr<AidlDefinedType>> defined_types_;
   bool is_preprocessed_;
 };

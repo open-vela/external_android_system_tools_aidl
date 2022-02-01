@@ -1738,7 +1738,7 @@ std::string AidlInterface::GetDescriptor() const {
 }
 
 AidlDocument::AidlDocument(const AidlLocation& location, const Comments& comments,
-                           std::vector<string> imports,
+                           std::set<string> imports,
                            std::vector<std::unique_ptr<AidlDefinedType>> defined_types,
                            bool is_preprocessed)
     : AidlCommentable(location, comments),
