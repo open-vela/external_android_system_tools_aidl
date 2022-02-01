@@ -187,10 +187,9 @@ document
     } else if (!$2->empty()) {
       comments = $2->front()->GetComments();
     }
-    // dedup imports
-    std::set<std::string> imports;
+    std::vector<std::string> imports;
     for (const auto& import : *$2) {
-      imports.insert(import->GetText());
+      imports.push_back(import->GetText());
     }
     ps->MakeDocument(loc(@1), comments, std::move(imports), std::move(*$3));
     delete $1;
