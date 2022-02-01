@@ -16,6 +16,15 @@ protected:
   ::ndk::SpAIBinder createBinder() override;
 private:
 };
+class __attribute__((deprecated("test"))) IDeprecatedDelegator : public BnDeprecated {
+public:
+  explicit IDeprecatedDelegator(const std::shared_ptr<IDeprecated> &impl) : _impl(impl) {}
+
+protected:
+private:
+  std::shared_ptr<IDeprecated> _impl;
+};
+
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android
