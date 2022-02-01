@@ -109,7 +109,6 @@ parcelable FixedSizeArrayExample {
 
     @Backing(type="long") enum LongEnum { A }
 
-    @JavaDerive(equals=true)
     @RustDerive(Clone=true, Copy=true, PartialEq=true)
     parcelable IntParcelable {
         int value;
