@@ -426,6 +426,7 @@ cc_test {
         "libbinder_ndk",
     ],
     srcs: [
+        "tests/aidl_test_client_ndk_delegate.cpp",
         "tests/aidl_test_client_ndk_loggable_interface.cpp",
         "tests/aidl_test_client_ndk_nested.cpp",
         "tests/aidl_test_client_ndk_nullables.cpp",
@@ -446,7 +447,7 @@ aidl_interface {
             enabled: true,
         },
         java: {
-            enabled: false,
+            enabled: true,
         },
         ndk: {
             enabled: true,
@@ -473,6 +474,7 @@ java_defaults {
         "aidl_test_nonvintf_parcelable-V1-java",
         "aidl_test_unstable_parcelable-java",
         "aidl_test_vintf_parcelable-V1-java",
+        "aidl-test-fixedsizearray-java",
         // TODO: remove once Android migrates to JUnit 4.12,
         // which provides assertThrows
         "testng",
@@ -630,6 +632,7 @@ genrule {
         ":aidl_test_loggable_interface-ndk-source",
         ":aidl-test-interface-platform-java-source",
         ":aidl-test-fixedsizearray-cpp-source",
+        ":aidl-test-fixedsizearray-java-source",
         ":aidl-test-fixedsizearray-ndk-source",
         ":aidl-test-fixedsizearray-rust-source",
         "tests/golden_output/**/*",

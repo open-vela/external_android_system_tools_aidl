@@ -574,8 +574,8 @@ static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& metho
         // "out" parameter should be instantiated before calling the real impl.
         string java_type = InstantiableJavaSignatureOf(arg->GetType());
 
-        if (arg->GetType().IsArray()) {
-          // array should be created with a passed length
+        if (arg->GetType().IsDynamicArray()) {
+          // dynamic array should be created with a passed length.
           string var_length = v->name + "_length";
           (*writer) << "int " << var_length << " = data.readInt();\n";
           (*writer) << "if (" << var_length << " < 0) {\n";
@@ -583,6 +583,13 @@ static void GenerateStubCode(const AidlInterface& iface, const AidlMethod& metho
           (*writer) << "} else {\n";
           (*writer) << "  " << v->name << " = new " << java_type << "[" << var_length << "];\n";
           (*writer) << "}\n";
+        } else if (arg->GetType().IsFixedSizeArray()) {
+          // fixed-size array can be created with a known size
+          string dimensions;
+          for (auto dim : arg->GetType().GetFixedSizeArrayDimensions()) {
+            dimensions += "[" + std::to_string(dim) + "]";
+          }
+          (*writer) << v->name << " = new " << java_type << dimensions << ";\n";
         } else {
           // otherwise, create a new instance with a default constructor
           (*writer) << v->name << " = new " << java_type << "();\n";
@@ -759,7 +766,7 @@ static std::shared_ptr<Method> GenerateProxyMethod(const AidlInterface& iface,
   for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
     auto v = std::make_shared<Variable>(JavaSignatureOf(arg->GetType()), arg->GetName());
     AidlArgument::Direction dir = arg->GetDirection();
-    if (dir == AidlArgument::OUT_DIR && arg->GetType().IsArray()) {
+    if (dir == AidlArgument::OUT_DIR && arg->GetType().IsDynamicArray()) {
       auto checklen = std::make_shared<IfStatement>();
       checklen->expression = std::make_shared<Comparison>(v, "==", NULL_VALUE);
       checklen->statements->Add(std::make_shared<MethodCall>(
