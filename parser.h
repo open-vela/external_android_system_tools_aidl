@@ -92,7 +92,7 @@ class Parser {
   const std::string& Package() const { return package_; }
 
   void MakeDocument(const AidlLocation& location, const Comments& comments,
-                    std::set<std::string> imports,
+                    std::vector<std::string> imports,
                     std::vector<std::unique_ptr<AidlDefinedType>> defined_types);
 
  private:
