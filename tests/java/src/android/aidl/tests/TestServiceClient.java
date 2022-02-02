@@ -18,6 +18,7 @@ package android.aidl.tests;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -26,6 +27,8 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import android.aidl.fixedsizearray.FixedSizeArrayExample.IRepeatFixedSizeArray;
+import android.aidl.fixedsizearray.FixedSizeArrayExample.IntParcelable;
 import android.aidl.tests.BadParcelable;
 import android.aidl.tests.ByteEnum;
 import android.aidl.tests.GenericStructuredParcelable;
@@ -56,6 +59,7 @@ import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -961,5 +965,41 @@ public class TestServiceClient {
       cc.pfd_array[1] = ParcelFileDescriptor.open(
           new File(file), ParcelFileDescriptor.MODE_CREATE | ParcelFileDescriptor.MODE_WRITE_ONLY);
       assertThat(cc.describeContents(), is(Parcelable.CONTENTS_FILE_DESCRIPTOR));
+    }
+
+    @Test
+    public void testFixedSizeArrayOverBinder() throws Exception {
+      IBinder binder = ServiceManager.waitForService(IRepeatFixedSizeArray.DESCRIPTOR);
+      assertNotNull(binder);
+      IRepeatFixedSizeArray service = IRepeatFixedSizeArray.Stub.asInterface(binder);
+      assertNotNull(service);
+
+      {
+        byte[] input = new byte[] {1, 2, 3};
+        byte[] repeated = new byte[3];
+        byte[] output = service.RepeatBytes(input, repeated);
+        assertArrayEquals(input, repeated);
+        assertArrayEquals(input, output);
+      }
+      {
+        int[] input = new int[] {1, 2, 3};
+        int[] repeated = new int[3];
+        int[] output = service.RepeatInts(input, repeated);
+        assertArrayEquals(input, repeated);
+        assertArrayEquals(input, output);
+      }
+      {
+        IntParcelable p1 = new IntParcelable();
+        p1.value = 1;
+        IntParcelable p2 = new IntParcelable();
+        p2.value = 1;
+        IntParcelable p3 = new IntParcelable();
+        p3.value = 1;
+        IntParcelable[][] input = new IntParcelable[][] {{p1, p2, p3}, {p1, p2, p3}};
+        IntParcelable[][] repeated = new IntParcelable[2][3];
+        IntParcelable[][] output = service.Repeat2dParcelables(input, repeated);
+        assertArrayEquals(input, repeated);
+        assertArrayEquals(input, output);
+      }
     }
 }
