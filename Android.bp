@@ -686,7 +686,7 @@ aidl_interface {
         },
         java: {
             platform_apis: true,
-            gen_rpc: true,
+            require_rpc: true,
         },
         rust: {
             enabled: true,

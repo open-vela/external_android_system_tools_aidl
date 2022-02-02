@@ -94,7 +94,7 @@ public interface IProtected extends android.os.IInterface
       }
       @Override public void ProtectedWithSourceAttribution(android.content.AttributionSource source) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain();
+        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
         android.os.Parcel _reply = android.os.Parcel.obtain();
         try {
           _data.writeInterfaceToken(DESCRIPTOR);
