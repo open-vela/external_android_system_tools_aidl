@@ -147,13 +147,18 @@ string JavaSignatureOfInternal(
     ret += "<" + Join(arg_names, ",") + ">";
   }
   if (aidl.IsArray() && !omit_array) {
-    ret += "[]";
+    if (aidl.IsFixedSizeArray()) {
+      ret += Join(std::vector<std::string>(aidl.GetFixedSizeArrayDimensions().size(), "[]"), "");
+    } else {
+      ret += "[]";
+    }
   }
   return ret;
 }
 
-// Returns the name of the backing type for the specified type. Note: this
-// returns type names as used in AIDL, not a Java signature.
+// Returns the name of the backing type for the specified type.
+// Note: Do not use the result in the generated code! It's supposed to be used as a key.
+// This returns type names as used in AIDL, not a Java signature.
 // For enums, this is the enum's backing type.
 // For all other types, this is the type itself.
 string AidlBackingTypeName(const AidlTypeSpecifier& type) {
@@ -166,7 +171,13 @@ string AidlBackingTypeName(const AidlTypeSpecifier& type) {
     type_name = type.GetName();
   }
   if (type.IsArray()) {
-    type_name += "[]";
+    if (type.IsFixedSizeArray()) {
+      for (const auto& dim : type.GetFixedSizeArrayDimensions()) {
+        type_name += "[" + std::to_string(dim) + "]";
+      }
+    } else {
+      type_name += "[]";
+    }
   }
   return type_name;
 }
@@ -466,6 +477,12 @@ void WriteToParcelFor(const CodeGeneratorContext& c) {
   const auto found = method_map.find(type_name);
   if (found != method_map.end()) {
     found->second(c);
+  } else if (c.type.IsFixedSizeArray()) {
+    std::vector<std::string> args = {c.var, GetFlagFor(c)};
+    for (auto dim : c.type.GetFixedSizeArrayDimensions()) {
+      args.push_back(std::to_string(dim));
+    }
+    c.writer << c.parcel << ".writeFixedArray(" << Join(args, ", ") << ");\n";
   } else {
     const AidlDefinedType* t = c.typenames.TryGetDefinedType(c.type.GetName());
     AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName();
@@ -687,6 +704,17 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c) {
   const auto found = method_map.find(AidlBackingTypeName(c.type));
   if (found != method_map.end()) {
     found->second(c);
+  } else if (c.type.IsFixedSizeArray()) {
+    std::vector<std::string> args = {JavaSignatureOf(c.type) + ".class"};
+    if (c.typenames.IsParcelable(c.type.GetName())) {
+      args.push_back(JavaNameOf(c.type) + ".CREATOR");
+    } else if (c.typenames.GetInterface(c.type)) {
+      args.push_back(c.type.GetName() + ".Stub::asInterface");
+    }
+    for (auto dim : c.type.GetFixedSizeArrayDimensions()) {
+      args.push_back(std::to_string(dim));
+    }
+    c.writer << c.var << " = " << c.parcel << ".createFixedArray(" << Join(args, ", ") << ");\n";
   } else {
     const AidlDefinedType* t = c.typenames.TryGetDefinedType(c.type.GetName());
     AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName();
@@ -833,6 +861,14 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
   const auto& found = method_map.find(AidlBackingTypeName(c.type));
   if (found != method_map.end()) {
     found->second(c);
+  } else if (c.type.IsFixedSizeArray()) {
+    std::vector<std::string> args = {c.var};
+    if (c.typenames.IsParcelable(c.type.GetName())) {
+      args.push_back(c.type.GetName() + ".CREATOR");
+    } else if (c.typenames.GetInterface(c.type)) {
+      args.push_back(c.type.GetName() + ".Stub::asInterface");
+    }
+    c.writer << c.parcel << ".readFixedArray(" << Join(args, ", ") << ");\n";
   } else {
     const AidlDefinedType* t = c.typenames.TryGetDefinedType(c.type.GetName());
     AIDL_FATAL_IF(t == nullptr, c.type) << "Unknown type: " << c.type.GetName();
