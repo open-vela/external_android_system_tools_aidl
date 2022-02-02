@@ -666,6 +666,14 @@ bool AidlConstantValue::CheckValid() const {
   return true;
 }
 
+bool AidlConstantValue::Evaluate() const {
+  if (CheckValid()) {
+    return evaluate();
+  } else {
+    return false;
+  }
+}
+
 bool AidlConstantValue::evaluate() const {
   if (is_evaluated_) {
     return is_valid_;
