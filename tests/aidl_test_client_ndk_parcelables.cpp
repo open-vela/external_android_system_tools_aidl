@@ -172,12 +172,6 @@ std::array<std::array<T, 3>, 2> Make2dArray(std::initializer_list<T> values) {
 }
 
 TEST_F(AidlTest, FixedSizeArrayOverBinder) {
-  auto test_service = getService<ITestService>();
-  BackendType backend;
-  auto status = test_service->getBackendType(&backend);
-  EXPECT_TRUE(status.isOk());
-  if (backend == BackendType::JAVA) GTEST_SKIP();
-
   auto service = getService<IRepeatFixedSizeArray>();
 
   CheckRepeat(service, &IRepeatFixedSizeArray::RepeatBytes, (std::array<uint8_t, 3>{1, 2, 3}));
