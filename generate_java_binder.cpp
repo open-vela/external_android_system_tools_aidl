@@ -797,6 +797,13 @@ static std::shared_ptr<Method> GenerateProxyMethod(const AidlInterface& iface,
   auto _status = std::make_shared<Variable>("boolean", "_status");
   tryStatement->statements->Add(std::make_shared<VariableDeclaration>(_status, call));
 
+  // TODO(b/151102494): annotation is applied on the return type
+  // TODO: Make it an error if min-sdk is below T (API 33?)
+  if (method.GetType().IsPropagateAllowBlocking()) {
+    tryStatement->statements->Add(
+        std::make_shared<LiteralStatement>("_reply.setPropagateAllowBlocking();\n"));
+  }
+
   // If the transaction returns false, which means UNKNOWN_TRANSACTION, fall back to the local
   // method in the default impl, if set before. Otherwise, throw a RuntimeException if the interface
   // is versioned. We can't throw the exception for unversioned interface because that would be an
