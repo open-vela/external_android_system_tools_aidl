@@ -16,6 +16,8 @@
 
 package android.aidl.service;
 
+import android.aidl.fixedsizearray.FixedSizeArrayExample.IRepeatFixedSizeArray;
+import android.aidl.fixedsizearray.FixedSizeArrayExample.IntParcelable;
 import android.aidl.tests.BackendType;
 import android.aidl.tests.BadParcelable;
 import android.aidl.tests.ByteEnum;
@@ -65,6 +67,9 @@ public class TestServiceServer extends ITestService.Stub {
 
     NestedService nested = new NestedService();
     ServiceManager.addService(INestedService.class.getName(), nested);
+
+    FixedSizeArrayService fixedSize = new FixedSizeArrayService();
+    ServiceManager.addService(IRepeatFixedSizeArray.DESCRIPTOR, fixedSize);
 
     Binder.joinThreadPool();
   }
@@ -663,6 +668,76 @@ public class TestServiceServer extends ITestService.Stub {
         reversed[i] = input[input.length - i - 1];
       }
       return reversed;
+    }
+  }
+
+  public static class FixedSizeArrayService extends IRepeatFixedSizeArray.Stub {
+    @Override
+    public byte[] RepeatBytes(byte[] input, byte[] repeated) throws RemoteException {
+      for (int i = 0; i < input.length; i++) {
+        repeated[i] = input[i];
+      }
+      return input;
+    }
+    @Override
+    public int[] RepeatInts(int[] input, int[] repeated) throws RemoteException {
+      for (int i = 0; i < input.length; i++) {
+        repeated[i] = input[i];
+      }
+      return input;
+    }
+    @Override
+    public IBinder[] RepeatBinders(IBinder[] input, IBinder[] repeated) throws RemoteException {
+      for (int i = 0; i < input.length; i++) {
+        repeated[i] = input[i];
+      }
+      return input;
+    }
+    @Override
+    public IntParcelable[] RepeatParcelables(IntParcelable[] input, IntParcelable[] repeated)
+        throws RemoteException {
+      for (int i = 0; i < input.length; i++) {
+        repeated[i] = input[i];
+      }
+      return input;
+    }
+    @Override
+    public byte[][] Repeat2dBytes(byte[][] input, byte[][] repeated) throws RemoteException {
+      for (int i = 0; i < input.length; i++) {
+        for (int j = 0; j < input[i].length; j++) {
+          repeated[i][j] = input[i][j];
+        }
+      }
+      return input;
+    }
+    @Override
+    public int[][] Repeat2dInts(int[][] input, int[][] repeated) throws RemoteException {
+      for (int i = 0; i < input.length; i++) {
+        for (int j = 0; j < input[i].length; j++) {
+          repeated[i][j] = input[i][j];
+        }
+      }
+      return input;
+    }
+    @Override
+    public IBinder[][] Repeat2dBinders(IBinder[][] input, IBinder[][] repeated)
+        throws RemoteException {
+      for (int i = 0; i < input.length; i++) {
+        for (int j = 0; j < input[i].length; j++) {
+          repeated[i][j] = input[i][j];
+        }
+      }
+      return input;
+    }
+    @Override
+    public IntParcelable[][] Repeat2dParcelables(
+        IntParcelable[][] input, IntParcelable[][] repeated) throws RemoteException {
+      for (int i = 0; i < input.length; i++) {
+        for (int j = 0; j < input[i].length; j++) {
+          repeated[i][j] = input[i][j];
+        }
+      }
+      return input;
     }
   }
 
