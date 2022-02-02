@@ -679,6 +679,7 @@ class AidlConstantValue : public AidlNode {
   Type GetType() const { return final_type_; }
   const std::string& Literal() const { return value_; }
 
+  bool Evaluate() const;
   virtual bool CheckValid() const;
 
   // Raw value of type (currently valid in C++ and Java). Empty string on error.
