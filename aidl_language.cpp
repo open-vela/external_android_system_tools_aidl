@@ -158,7 +158,6 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
        CONTEXT_TYPE_STRUCTURED_PARCELABLE | CONTEXT_TYPE_UNION,
        {{"toString", kBooleanType}, {"equals", kBooleanType}}},
       {AidlAnnotation::Type::JAVA_DEFAULT, "JavaDefault", CONTEXT_TYPE_INTERFACE, {}},
-      {AidlAnnotation::Type::JAVA_DELEGATOR, "JavaDelegator", CONTEXT_TYPE_INTERFACE, {}},
       {AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE,
        "JavaOnlyImmutable",
        CONTEXT_TYPE_STRUCTURED_PARCELABLE | CONTEXT_TYPE_UNION |
@@ -534,10 +533,6 @@ bool AidlAnnotatable::IsJavaDefault() const {
   return GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_DEFAULT);
 }
 
-bool AidlAnnotatable::IsJavaDelegator() const {
-  return GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_DELEGATOR);
-}
-
 std::string AidlAnnotatable::GetDescriptor() const {
   auto annotation = GetAnnotation(annotations_, AidlAnnotation::Type::DESCRIPTOR);
   if (annotation != nullptr) {
@@ -814,7 +809,7 @@ bool AidlTypeSpecifier::CheckValid(const AidlTypenames& typenames) const {
 
   if (IsFixedSizeArray()) {
     for (const auto& dim : std::get<FixedSizeArray>(GetArray()).dimensions) {
-      if (!dim->CheckValid()) {
+      if (!dim->Evaluate()) {
         return false;
       }
       if (dim->GetType() > AidlConstantValue::Type::INT32) {
