@@ -10,8 +10,8 @@ public interface IFooInterface extends android.os.IInterface
    * getInterfaceVersion} returns as that is the version of the interface
    * that the remote object is implementing.
    */
-  public static final int VERSION = 2;
-  public static final String HASH = "da8c4bc94ca7feff0e0a65563a466787698b5891";
+  public static final int VERSION = 1;
+  public static final String HASH = "9e7be1859820c59d9d55dd133e71a3687b5d2e5b";
   /** Default implementation for IFooInterface. */
   public static class Default implements android.aidl.versioned.tests.IFooInterface
   {
@@ -29,9 +29,6 @@ public interface IFooInterface extends android.os.IInterface
     @Override public int returnsLengthOfFooArray(android.aidl.versioned.tests.Foo[] foos) throws android.os.RemoteException
     {
       return 0;
-    }
-    @Override public void newApi() throws android.os.RemoteException
-    {
     }
     @Override
     public int getInterfaceVersion() {
@@ -143,12 +140,6 @@ public interface IFooInterface extends android.os.IInterface
           int _result = this.returnsLengthOfFooArray(_arg0);
           reply.writeNoException();
           reply.writeInt(_result);
-          break;
-        }
-        case TRANSACTION_newApi:
-        {
-          this.newApi();
-          reply.writeNoException();
           break;
         }
         default:
@@ -263,23 +254,6 @@ public interface IFooInterface extends android.os.IInterface
         }
         return _result;
       }
-      @Override public void newApi() throws android.os.RemoteException
-      {
-        android.os.Parcel _data = android.os.Parcel.obtain();
-        android.os.Parcel _reply = android.os.Parcel.obtain();
-        try {
-          _data.writeInterfaceToken(DESCRIPTOR);
-          boolean _status = mRemote.transact(Stub.TRANSACTION_newApi, _data, _reply, 0);
-          if (!_status) {
-            throw new android.os.RemoteException("Method newApi is unimplemented.");
-          }
-          _reply.readException();
-        }
-        finally {
-          _reply.recycle();
-          _data.recycle();
-        }
-      }
       @Override
       public int getInterfaceVersion() throws android.os.RemoteException {
         if (mCachedVersion == -1) {
@@ -319,7 +293,6 @@ public interface IFooInterface extends android.os.IInterface
     static final int TRANSACTION_acceptUnionAndReturnString = (android.os.IBinder.FIRST_CALL_TRANSACTION + 1);
     static final int TRANSACTION_ignoreParcelablesAndRepeatInt = (android.os.IBinder.FIRST_CALL_TRANSACTION + 2);
     static final int TRANSACTION_returnsLengthOfFooArray = (android.os.IBinder.FIRST_CALL_TRANSACTION + 3);
-    static final int TRANSACTION_newApi = (android.os.IBinder.FIRST_CALL_TRANSACTION + 4);
     static final int TRANSACTION_getInterfaceVersion = (android.os.IBinder.FIRST_CALL_TRANSACTION + 16777214);
     static final int TRANSACTION_getInterfaceHash = (android.os.IBinder.FIRST_CALL_TRANSACTION + 16777213);
   }
@@ -328,7 +301,6 @@ public interface IFooInterface extends android.os.IInterface
   public java.lang.String acceptUnionAndReturnString(android.aidl.versioned.tests.BazUnion u) throws android.os.RemoteException;
   public int ignoreParcelablesAndRepeatInt(android.aidl.versioned.tests.Foo inFoo, android.aidl.versioned.tests.Foo inoutFoo, android.aidl.versioned.tests.Foo outFoo, int value) throws android.os.RemoteException;
   public int returnsLengthOfFooArray(android.aidl.versioned.tests.Foo[] foos) throws android.os.RemoteException;
-  public void newApi() throws android.os.RemoteException;
   public int getInterfaceVersion() throws android.os.RemoteException;
   public String getInterfaceHash() throws android.os.RemoteException;
 }
