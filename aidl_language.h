@@ -234,6 +234,7 @@ class AidlAnnotation : public AidlNode {
     JAVA_PASSTHROUGH,
     JAVA_DERIVE,
     JAVA_DEFAULT,
+    JAVA_DELEGATOR,
     JAVA_ONLY_IMMUTABLE,
     JAVA_SUPPRESS_LINT,
     FIXED_SIZE,
@@ -356,6 +357,7 @@ class AidlAnnotatable : public AidlCommentable {
   bool IsHide() const;
   bool JavaDerive(const std::string& method) const;
   bool IsJavaDefault() const;
+  bool IsJavaDelegator() const;
   std::string GetDescriptor() const;
 
   const AidlAnnotation* UnsupportedAppUsage() const;
