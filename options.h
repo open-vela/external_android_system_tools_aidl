@@ -42,6 +42,7 @@ constexpr uint32_t SDK_VERSION_current = 10000;
 constexpr uint32_t SDK_VERSION_Tiramisu = SDK_VERSION_current;
 
 constexpr uint32_t JAVA_PARCEL_HAS_BINDER_VERSION = SDK_VERSION_Tiramisu;
+constexpr uint32_t JAVA_PROPAGATE_VERSION = SDK_VERSION_Tiramisu;
 
 // A simple wrapper around ostringstream. This is just to make Options class
 // copiable by the implicit copy constructor. If ostingstream is not wrapped,
