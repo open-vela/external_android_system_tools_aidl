@@ -242,7 +242,8 @@ class AidlAnnotation : public AidlNode {
     SUPPRESS_WARNINGS,
     PERMISSION_ENFORCE,
     PERMISSION_NONE,
-    PERMISSION_MANUAL
+    PERMISSION_MANUAL,
+    PROPAGATE_ALLOW_BLOCKING,
   };
 
   using TargetContext = uint16_t;
@@ -364,6 +365,7 @@ class AidlAnnotatable : public AidlCommentable {
   std::unique_ptr<android::aidl::perm::Expression> EnforceExpression() const;
   bool IsPermissionManual() const;
   bool IsPermissionNone() const;
+  bool IsPropagateAllowBlocking() const;
 
   // ToString is for dumping AIDL.
   // Returns string representation of annotations.
@@ -1202,7 +1204,7 @@ inline std::string SimpleName(const std::string& qualified_name) {
 class AidlDocument : public AidlCommentable, public AidlScope {
  public:
   AidlDocument(const AidlLocation& location, const Comments& comments,
-               std::set<std::string> imports,
+               std::vector<std::string> imports,
                std::vector<std::unique_ptr<AidlDefinedType>> defined_types, bool is_preprocessed);
   ~AidlDocument() = default;
 
@@ -1213,7 +1215,7 @@ class AidlDocument : public AidlCommentable, public AidlScope {
   AidlDocument& operator=(AidlDocument&&) = delete;
 
   std::string ResolveName(const std::string& name) const override;
-  const std::set<std::string>& Imports() const { return imports_; }
+  const std::vector<std::string>& Imports() const { return imports_; }
   const std::vector<std::unique_ptr<AidlDefinedType>>& DefinedTypes() const {
     return defined_types_;
   }
@@ -1227,7 +1229,7 @@ class AidlDocument : public AidlCommentable, public AidlScope {
   void DispatchVisit(AidlVisitor& v) const override { v.Visit(*this); }
 
  private:
-  const std::set<std::string> imports_;
+  const std::vector<std::string> imports_;
   const std::vector<std::unique_ptr<AidlDefinedType>> defined_types_;
   bool is_preprocessed_;
 };

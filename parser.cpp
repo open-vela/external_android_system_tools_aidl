@@ -310,7 +310,7 @@ Parser::~Parser() {
 }
 
 void Parser::MakeDocument(const AidlLocation& location, const Comments& comments,
-                          std::set<std::string> imports,
+                          std::vector<std::string> imports,
                           std::vector<std::unique_ptr<AidlDefinedType>> defined_types) {
   AIDL_FATAL_IF(document_.get(), location);
   document_ = std::make_unique<AidlDocument>(location, comments, std::move(imports),
