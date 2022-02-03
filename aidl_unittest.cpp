@@ -1174,9 +1174,7 @@ TEST_P(AidlTest, ParseCompoundParcelableFromPreprocess) {
   preprocessed_files_.push_back("preprocessed");
   auto parse_result = Parse("p/IFoo.aidl", "package p; interface IFoo { void f(in Inner c); }",
                             typenames_, GetLanguage());
-  // TODO(wiley): This should actually return nullptr because we require
-  //              the outer class name.  However, for legacy reasons,
-  //              this behavior must be maintained.  b/17415692
+  // Require legacy behavior - inner class name can be used without outer class name.
   EXPECT_NE(nullptr, parse_result);
 }
 
@@ -1338,7 +1336,7 @@ TEST_F(AidlTest, AidlConstantValue_EvaluatedValue) {
   using Ptr = unique_ptr<AidlConstantValue>;
   const AidlLocation& loc = AIDL_LOCATION_HERE;
 
-  EXPECT_EQ('c', Ptr(AidlConstantValue::Character(loc, "'c'"))->EvaluatedValue<char16_t>());
+  EXPECT_EQ('c', Ptr(AidlConstantValue::Character(loc, 'c'))->EvaluatedValue<char>());
   EXPECT_EQ("abc", Ptr(AidlConstantValue::String(loc, "\"abc\""))->EvaluatedValue<string>());
   EXPECT_FLOAT_EQ(1.0f, Ptr(AidlConstantValue::Floating(loc, "1.0f"))->EvaluatedValue<float>());
   EXPECT_EQ(true, Ptr(AidlConstantValue::Boolean(loc, true))->EvaluatedValue<bool>());
@@ -1354,14 +1352,6 @@ TEST_F(AidlTest, AidlConstantValue_EvaluatedValue) {
   EXPECT_EQ(
       expected,
       Ptr(AidlConstantValue::Array(loc, std::move(values)))->EvaluatedValue<vector<string>>());
-}
-
-TEST_F(AidlTest, AidlConstantCharacterDefault) {
-  auto char_type = typenames_.MakeResolvedType(AIDL_LOCATION_HERE, "char", false);
-  auto default_value = unique_ptr<AidlConstantValue>(AidlConstantValue::Default(*char_type));
-  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, cpp::ConstantValueDecorator));
-  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, ndk::ConstantValueDecorator));
-  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, java::ConstantValueDecorator));
 }
 
 TEST_P(AidlTest, FailOnManyDefinedTypes) {
@@ -4477,6 +4467,26 @@ TEST_F(AidlTest, NestedTypeArgs) {
 
 TEST_F(AidlTest, AcceptMultiDimensionalFixedSizeArray) {
   io_delegate_.SetFileContents("a/Bar.aidl", "package a; parcelable Bar { String[2][3] a; }");
+
+  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=ndk");
+  CaptureStderr();
+  EXPECT_TRUE(compile_aidl(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+}
+
+TEST_F(AidlTest, AcceptBinarySizeArray) {
+  io_delegate_.SetFileContents(
+      "a/Bar.aidl", "package a; parcelable Bar { const int CONST = 3; String[CONST + 1] a; }");
+
+  Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=ndk");
+  CaptureStderr();
+  EXPECT_TRUE(compile_aidl(options, io_delegate_));
+  EXPECT_EQ("", GetCapturedStderr());
+}
+
+TEST_F(AidlTest, AcceptRefSizeArray) {
+  io_delegate_.SetFileContents(
+      "a/Bar.aidl", "package a; parcelable Bar { const int CONST = 3; String[CONST] a; }");
 
   Options options = Options::From("aidl a/Bar.aidl -I . -o out --lang=ndk");
   CaptureStderr();
