@@ -364,6 +364,19 @@ AidlConstantValue* AidlConstantValue::Boolean(const AidlLocation& location, bool
 
 AidlConstantValue* AidlConstantValue::Character(const AidlLocation& location,
                                                 const std::string& value) {
+  static const char* kZeroString = "'\\0'";
+
+  // We should have better supports for escapes in the future, but for now
+  // allow only what is needed for defaults.
+  if (value != kZeroString) {
+    AIDL_FATAL_IF(value.size() != 3 || value[0] != '\'' || value[2] != '\'', location) << value;
+
+    if (!isValidLiteralChar(value[1])) {
+      AIDL_ERROR(location) << "Invalid character literal " << value[1];
+      return new AidlConstantValue(location, Type::ERROR, value);
+    }
+  }
+
   return new AidlConstantValue(location, Type::CHARACTER, value);
 }
 
