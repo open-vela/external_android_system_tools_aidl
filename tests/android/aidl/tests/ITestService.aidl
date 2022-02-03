@@ -33,7 +33,6 @@ import android.aidl.tests.extension.ExtendableParcelable;
 @SuppressWarnings(value={"inout-parameter", "mixed-oneway", "out-array"})
 @SensitiveData
 @JavaDefault
-@JavaDelegator
 interface ITestService {
     // Test that constants are accessible
 
