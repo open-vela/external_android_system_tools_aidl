@@ -79,6 +79,7 @@ static vector<string> get_strict_annotations(const AidlAnnotatable& node) {
       // @JavaDerive doesn't affect read/write
       AidlAnnotation::Type::JAVA_DERIVE,
       AidlAnnotation::Type::JAVA_DEFAULT,
+      AidlAnnotation::Type::JAVA_DELEGATOR,
       AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE,
       AidlAnnotation::Type::JAVA_SUPPRESS_LINT,
       // @Backing for a enum type is checked by the enum checker
