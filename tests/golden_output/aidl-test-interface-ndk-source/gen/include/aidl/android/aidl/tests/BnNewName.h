@@ -16,18 +16,6 @@ protected:
   ::ndk::SpAIBinder createBinder() override;
 private:
 };
-class INewNameDelegator : public BnNewName {
-public:
-  explicit INewNameDelegator(const std::shared_ptr<INewName> &impl) : _impl(impl) {}
-
-  ::ndk::ScopedAStatus RealName(std::string* _aidl_return) override {
-    return _impl->RealName(_aidl_return);
-  }
-protected:
-private:
-  std::shared_ptr<INewName> _impl;
-};
-
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android
