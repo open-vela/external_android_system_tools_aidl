@@ -150,7 +150,7 @@ public interface ILoggableInterface extends android.os.IInterface
       }
       @Override public java.lang.String[] LogThis(boolean boolValue, boolean[] boolArray, byte byteValue, byte[] byteArray, char charValue, char[] charArray, int intValue, int[] intArray, long longValue, long[] longArray, float floatValue, float[] floatArray, double doubleValue, double[] doubleArray, java.lang.String stringValue, java.lang.String[] stringArray, java.util.List<java.lang.String> listValue, android.aidl.loggable.Data dataValue, android.os.IBinder binderValue, android.os.ParcelFileDescriptor pfdValue, android.os.ParcelFileDescriptor[] pfdArray) throws android.os.RemoteException
       {
-        android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
+        android.os.Parcel _data = android.os.Parcel.obtain();
         android.os.Parcel _reply = android.os.Parcel.obtain();
         java.lang.String[] _result;
         try {
@@ -301,7 +301,7 @@ public interface ILoggableInterface extends android.os.IInterface
         }
         @Override public void Log(int value) throws android.os.RemoteException
         {
-          android.os.Parcel _data = android.os.Parcel.obtain(asBinder());
+          android.os.Parcel _data = android.os.Parcel.obtain();
           android.os.Parcel _reply = android.os.Parcel.obtain();
           try {
             android.os.Trace.traceBegin(android.os.Trace.TRACE_TAG_AIDL, "AIDL::java::ISub::Log::client");
