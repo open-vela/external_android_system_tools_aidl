@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include <aidl/android/aidl/versioned/tests/BnFooInterface.h>
 #include <aidl/android/aidl/versioned/tests/IFooInterface.h>
+
 #include <android/binder_auto_utils.h>
 #include <android/binder_manager.h>
 #include <gmock/gmock.h>
@@ -24,7 +24,6 @@
 using aidl::android::aidl::versioned::tests::BazUnion;
 using aidl::android::aidl::versioned::tests::Foo;
 using aidl::android::aidl::versioned::tests::IFooInterface;
-using aidl::android::aidl::versioned::tests::IFooInterfaceDelegator;
 using std::optional;
 using std::pair;
 using std::shared_ptr;
@@ -73,18 +72,4 @@ TEST_F(VersionedInterfaceTest, readDataCorrectlyAfterParcelableWithNewField) {
   EXPECT_EQ(43, ret);
   EXPECT_EQ(0, inoutFoo.intDefault42);
   EXPECT_EQ(0, outFoo.intDefault42);
-}
-
-TEST_F(VersionedInterfaceTest, newerDelegatorReturnsImplVersion) {
-  auto delegator = ndk::SharedRefBase::make<IFooInterfaceDelegator>(versioned);
-  int32_t version = 0;
-  EXPECT_TRUE(delegator->getInterfaceVersion(&version).isOk());
-  EXPECT_EQ(1, version);
-}
-
-TEST_F(VersionedInterfaceTest, newerDelegatorReturnsImplHash) {
-  auto delegator = ndk::SharedRefBase::make<IFooInterfaceDelegator>(versioned);
-  std::string hash;
-  EXPECT_TRUE(delegator->getInterfaceHash(&hash).isOk());
-  EXPECT_EQ("9e7be1859820c59d9d55dd133e71a3687b5d2e5b", hash);
 }
