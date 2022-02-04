@@ -350,7 +350,7 @@ type aidlInterfaceProperties struct {
 			Platform_apis *bool
 			// Whether RPC features are enabled (requires API level 32)
 			// TODO(b/175819535): enable this automatically?
-			Gen_rpc *bool
+			Require_rpc *bool
 			// Lint properties for generated java module
 			java.LintProperties
 		}

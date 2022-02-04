@@ -258,6 +258,8 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
   argc = argv.size();
 
   bool lang_option_found = false;
+  bool require_rpc = false;
+
   optind = 0;
   while (true) {
     static struct option long_options[] = {
@@ -393,7 +395,7 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         }
         break;
       case 'r':
-        gen_rpc_ = true;
+        require_rpc = true;
         break;
       case 't':
         gen_traces_ = true;
@@ -603,12 +605,9 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
     return;
   }
 
-  uint32_t rpc_version = MinSdkVersionFromString("Tiramisu").value();
-  // note: we would like to always generate (Java) code to support RPC out of
-  // the box, but doing so causes an unclear error for people trying to use RPC
-  // - now we require them to add the gen_rpc build rule and get this clear message.
-  if (gen_rpc_ && min_sdk_version_ < rpc_version) {
-    error_message_ << "RPC code requires minimum SDK version of at least " << rpc_version << endl;
+  if (require_rpc && min_sdk_version_ < JAVA_PARCEL_HAS_BINDER_VERSION) {
+    error_message_ << "RPC code requires minimum SDK version of at least "
+                   << JAVA_PARCEL_HAS_BINDER_VERSION << endl;
     return;
   }
 
