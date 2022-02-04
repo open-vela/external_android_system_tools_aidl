@@ -980,62 +980,6 @@ void GenerateClientHeader(CodeWriter& out, const AidlTypenames& types,
   LeaveNdkNamespace(out, defined_type);
 }
 
-void GenerateDelegatorClassDecl(CodeWriter& out, const AidlTypenames& types,
-                                const AidlInterface& defined_type, const Options& options) {
-  const std::string clazz = ClassName(defined_type, ClassNames::DELEGATOR_IMPL);
-  const std::string iface = ClassName(defined_type, ClassNames::INTERFACE);
-  const std::string bn_name = ClassName(defined_type, ClassNames::SERVER);
-  const std::string kDelegateImplVarName = "_impl";
-  const std::string kStatusType = "::ndk::ScopedAStatus";
-
-  out << "class";
-  cpp::GenerateDeprecated(out, defined_type);
-  out << " " << clazz << " : public " << bn_name << " {\n";
-  out << "public:\n";
-  out.Indent();
-  out << "explicit " << clazz << "(const std::shared_ptr<" << iface << "> &impl)"
-      << " : " << kDelegateImplVarName << "(impl) {}\n\n";
-  for (const auto& method : defined_type.GetMethods()) {
-    if (method->IsUserDefined()) {
-      out << kStatusType << " " << method->GetName() << "("
-          << NdkArgList(types, *method, FormatArgForDecl) << ") override";
-      cpp::GenerateDeprecated(out, *method);
-      out << " {\n"
-          << "  return " << kDelegateImplVarName << "->" << method->GetName() << "("
-          << NdkArgList(types, *method, FormatArgNameOnly) << ");\n";
-      out << "}\n";
-    } else {
-      if (method->GetName() == kGetInterfaceVersion && options.Version() > 0) {
-        out << kStatusType << " " << kGetInterfaceVersion << "(int32_t *aidl_return) override {\n"
-            << "  int32_t _delegator_ver  = " << iface << "::" << kVersion << ";\n"
-            << "  int32_t _impl_ver = 0;\n"
-            << "  " << kStatusType << " _ret = " << kDelegateImplVarName << "->"
-            << kGetInterfaceVersion << "(&_impl_ver);\n"
-            << "  if (!_ret.isOk()) return _ret;\n"
-            << "  *aidl_return = _delegator_ver < _impl_ver ? _delegator_ver : _impl_ver;\n"
-            << "  return _ret;\n"
-            << "}\n";
-      } else if (method->GetName() == kGetInterfaceHash && !options.Hash().empty()) {
-        out << kStatusType << " " << kGetInterfaceHash << "(std::string *aidl_return) override {\n"
-            << "  return " << kDelegateImplVarName << "->" << kGetInterfaceHash
-            << "(aidl_return);\n"
-            << "}\n";
-      } else {
-        AIDL_FATAL(defined_type) << "Meta method '" << method->GetName() << "' is unimplemented.";
-      }
-    }
-  }
-  out.Dedent();
-  out << "protected:\n";
-  out.Indent();
-  out.Dedent();
-  out << "private:\n";
-  out.Indent();
-  out << "std::shared_ptr<" << iface << "> " << kDelegateImplVarName << ";\n";
-  out.Dedent();
-  out << "};\n\n";
-}
-
 void GenerateServerClassDecl(CodeWriter& out, const AidlTypenames& types,
                              const AidlInterface& defined_type, const Options& options) {
   const std::string clazz = ClassName(defined_type, ClassNames::SERVER);
@@ -1055,9 +999,9 @@ void GenerateServerClassDecl(CodeWriter& out, const AidlTypenames& types,
       continue;
     }
     if (method->GetName() == kGetInterfaceVersion && options.Version() > 0) {
-      out << NdkMethodDecl(types, *method) << ";\n";
+      out << NdkMethodDecl(types, *method) << " final;\n";
     } else if (method->GetName() == kGetInterfaceHash && !options.Hash().empty()) {
-      out << NdkMethodDecl(types, *method) << ";\n";
+      out << NdkMethodDecl(types, *method) << " final;\n";
     } else {
       AIDL_FATAL(defined_type) << "Meta method '" << method->GetName() << "' is unimplemented.";
     }
@@ -1087,7 +1031,6 @@ void GenerateServerHeader(CodeWriter& out, const AidlTypenames& types,
   out << "\n";
   EnterNdkNamespace(out, defined_type);
   GenerateServerClassDecl(out, types, defined_type, options);
-  GenerateDelegatorClassDecl(out, types, defined_type, options);
   LeaveNdkNamespace(out, defined_type);
 }
 
