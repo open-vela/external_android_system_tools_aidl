@@ -16,18 +16,6 @@ protected:
   ::ndk::SpAIBinder createBinder() override;
 private:
 };
-class INamedCallbackDelegator : public BnNamedCallback {
-public:
-  explicit INamedCallbackDelegator(const std::shared_ptr<INamedCallback> &impl) : _impl(impl) {}
-
-  ::ndk::ScopedAStatus GetName(std::string* _aidl_return) override {
-    return _impl->GetName(_aidl_return);
-  }
-protected:
-private:
-  std::shared_ptr<INamedCallback> _impl;
-};
-
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android
