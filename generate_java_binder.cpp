@@ -715,7 +715,7 @@ static std::shared_ptr<Method> GenerateProxyMethod(const AidlInterface& iface,
 
   // the parcels
   auto _data = std::make_shared<Variable>("android.os.Parcel", "_data");
-  if (options.GenRpc()) {
+  if (options.GetMinSdkVersion() >= JAVA_PARCEL_HAS_BINDER_VERSION) {
     proxy->statements->Add(std::make_shared<LiteralStatement>(
         "android.os.Parcel _data = android.os.Parcel.obtain(asBinder());\n"));
   } else {
@@ -995,13 +995,14 @@ static void GenerateMethods(const AidlInterface& iface, const AidlMethod& method
            << "public int " << kGetInterfaceVersion << "()"
            << " throws "
            << "android.os.RemoteException {\n"
-           << "  if (mCachedVersion == -1) {\n"
-           << "    android.os.Parcel data = android.os.Parcel.obtain();\n"
-           << "    android.os.Parcel reply = android.os.Parcel.obtain();\n";
-      if (options.GenRpc()) {
-        code << "    data.markForBinder(asBinder());\n";
+           << "  if (mCachedVersion == -1) {\n";
+      if (options.GetMinSdkVersion() >= JAVA_PARCEL_HAS_BINDER_VERSION) {
+        code << "    android.os.Parcel data = android.os.Parcel.obtain(asBinder());\n";
+      } else {
+        code << "    android.os.Parcel data = android.os.Parcel.obtain();\n";
       }
-      code << "    try {\n"
+      code << "    android.os.Parcel reply = android.os.Parcel.obtain();\n"
+           << "    try {\n"
            << "      data.writeInterfaceToken(DESCRIPTOR);\n"
            << "      boolean _status = mRemote.transact(Stub." << transactCodeName << ", "
            << "data, reply, 0);\n";
@@ -1029,12 +1030,13 @@ static void GenerateMethods(const AidlInterface& iface, const AidlMethod& method
            << "public synchronized String " << kGetInterfaceHash << "()"
            << " throws "
            << "android.os.RemoteException {\n"
-           << "  if (\"-1\".equals(mCachedHash)) {\n"
-           << "    android.os.Parcel data = android.os.Parcel.obtain();\n"
-           << "    android.os.Parcel reply = android.os.Parcel.obtain();\n";
-      if (options.GenRpc()) {
-        code << "    data.markForBinder(asBinder());\n";
+           << "  if (\"-1\".equals(mCachedHash)) {\n";
+      if (options.GetMinSdkVersion() >= JAVA_PARCEL_HAS_BINDER_VERSION) {
+        code << "    android.os.Parcel data = android.os.Parcel.obtain(asBinder());\n";
+      } else {
+        code << "    android.os.Parcel data = android.os.Parcel.obtain();\n";
       }
+      code << "    android.os.Parcel reply = android.os.Parcel.obtain();\n";
       code << "    try {\n"
            << "      data.writeInterfaceToken(DESCRIPTOR);\n"
            << "      boolean _status = mRemote.transact(Stub." << transactCodeName << ", "
@@ -1212,6 +1214,84 @@ static shared_ptr<Class> GenerateDefaultImplClass(const AidlInterface& iface,
   return default_class;
 }
 
+static shared_ptr<ClassElement> GenerateDelegatorMethod(const AidlMethod& method) {
+  auto delegator_method = std::make_shared<Method>();
+  delegator_method->comment = GenerateComments(method);
+  delegator_method->modifiers = PUBLIC | OVERRIDE;
+  delegator_method->returnType = JavaSignatureOf(method.GetType());
+  delegator_method->name = method.GetName();
+  delegator_method->statements = std::make_shared<StatementBlock>();
+  std::vector<std::string> argNames;
+  for (const auto& arg : method.GetArguments()) {
+    delegator_method->parameters.push_back(
+        std::make_shared<Variable>(JavaSignatureOf(arg->GetType()), arg->GetName()));
+    argNames.push_back(arg->GetName());
+  }
+  delegator_method->exceptions.push_back("android.os.RemoteException");
+
+  std::string return_str;
+  if (method.GetType().GetName() != "void") {
+    return_str = "return ";
+  }
+  delegator_method->statements->Add(
+      std::make_shared<LiteralStatement>(return_str + "mImpl." + method.GetName() + "(" +
+                                         android::base::Join(argNames, ",") + ");\n"));
+  return delegator_method;
+}
+
+static shared_ptr<Class> GenerateDelegatorClass(const AidlInterface& iface,
+                                                const Options& options) {
+  auto delegator_class = std::make_shared<Class>();
+  delegator_class->comment = "/** Delegator implementation for " + iface.GetName() + ". */";
+  delegator_class->modifiers = PUBLIC | STATIC;
+  delegator_class->what = Class::CLASS;
+  delegator_class->type = iface.GetCanonicalName() + ".Delegator";
+  delegator_class->extends = iface.GetCanonicalName() + ".Stub";
+
+  // constructor
+  delegator_class->elements.emplace_back(
+      std::make_shared<LiteralClassElement>("public Delegator(" + iface.GetCanonicalName() +
+                                            " impl) {\n"
+                                            "  this.mImpl = impl;\n"
+                                            "}\n"));
+  // meta methods
+  if (!options.Hash().empty()) {
+    delegator_class->elements.emplace_back(
+        std::make_shared<LiteralClassElement>("@Override\n"
+                                              "public String " +
+                                              kGetInterfaceHash +
+                                              "() throws android.os.RemoteException {\n"
+                                              "  return mImpl." +
+                                              kGetInterfaceHash +
+                                              "();\n"
+                                              "}\n"));
+  }
+  if (options.Version() > 0) {
+    delegator_class->elements.emplace_back(
+        std::make_shared<LiteralClassElement>("@Override\n"
+                                              "public int " +
+                                              kGetInterfaceVersion +
+                                              "() throws android.os.RemoteException {\n"
+                                              "  int implVer = mImpl." +
+                                              kGetInterfaceVersion +
+                                              "();\n"
+                                              "  return VERSION < implVer ? VERSION : implVer;\n"
+                                              "}\n"));
+  }
+
+  // user defined methods
+  for (const auto& m : iface.GetMethods()) {
+    if (m->IsUserDefined()) {
+      delegator_class->elements.emplace_back(GenerateDelegatorMethod(*m));
+    }
+  }
+
+  delegator_class->elements.emplace_back(
+      std::make_shared<LiteralClassElement>(iface.GetCanonicalName() + " mImpl;\n"));
+
+  return delegator_class;
+}
+
 static shared_ptr<ClassElement> GenerateMaxTransactionId(int max_transaction_id) {
   auto getMaxTransactionId = std::make_shared<Method>();
   getMaxTransactionId->comment = "/** @hide */";
@@ -1256,6 +1336,12 @@ std::unique_ptr<Class> GenerateInterfaceClass(const AidlInterface* iface,
   // the default impl class
   auto default_impl = GenerateDefaultImplClass(*iface, options);
   interface->elements.emplace_back(default_impl);
+
+  // the delegator class
+  if (iface->IsJavaDelegator()) {
+    auto delegator = GenerateDelegatorClass(*iface, options);
+    interface->elements.emplace_back(delegator);
+  }
 
   // the stub inner class
   auto stub = std::make_shared<StubClass>(iface, options);
