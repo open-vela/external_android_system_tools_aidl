@@ -1336,7 +1336,7 @@ TEST_F(AidlTest, AidlConstantValue_EvaluatedValue) {
   using Ptr = unique_ptr<AidlConstantValue>;
   const AidlLocation& loc = AIDL_LOCATION_HERE;
 
-  EXPECT_EQ('c', Ptr(AidlConstantValue::Character(loc, 'c'))->EvaluatedValue<char>());
+  EXPECT_EQ('c', Ptr(AidlConstantValue::Character(loc, "'c'"))->EvaluatedValue<char16_t>());
   EXPECT_EQ("abc", Ptr(AidlConstantValue::String(loc, "\"abc\""))->EvaluatedValue<string>());
   EXPECT_FLOAT_EQ(1.0f, Ptr(AidlConstantValue::Floating(loc, "1.0f"))->EvaluatedValue<float>());
   EXPECT_EQ(true, Ptr(AidlConstantValue::Boolean(loc, true))->EvaluatedValue<bool>());
@@ -1352,6 +1352,14 @@ TEST_F(AidlTest, AidlConstantValue_EvaluatedValue) {
   EXPECT_EQ(
       expected,
       Ptr(AidlConstantValue::Array(loc, std::move(values)))->EvaluatedValue<vector<string>>());
+}
+
+TEST_F(AidlTest, AidlConstantCharacterDefault) {
+  auto char_type = typenames_.MakeResolvedType(AIDL_LOCATION_HERE, "char", false);
+  auto default_value = unique_ptr<AidlConstantValue>(AidlConstantValue::Default(*char_type));
+  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, cpp::ConstantValueDecorator));
+  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, ndk::ConstantValueDecorator));
+  EXPECT_EQ("'\\0'", default_value->ValueString(*char_type, java::ConstantValueDecorator));
 }
 
 TEST_P(AidlTest, FailOnManyDefinedTypes) {
@@ -5140,6 +5148,24 @@ TEST_F(AidlTest, InterfaceVectorIsAvailableAfterTiramisu) {
   auto captured_stderr = GetCapturedStderr();
   EXPECT_THAT(captured_stderr, HasSubstr("Array of interfaces is available since"));
   EXPECT_THAT(captured_stderr, HasSubstr("List of interfaces is available since"));
+
+  CaptureStderr();
+  EXPECT_TRUE(
+      compile_aidl(Options::From("aidl --lang=java --min_sdk_version Tiramisu -o out p/IFoo.aidl"),
+                   io_delegate_));
+  EXPECT_EQ(GetCapturedStderr(), "");
+}
+
+TEST_F(AidlTest, PropagateBeforeTiramisu) {
+  io_delegate_.SetFileContents("p/IFoo.aidl",
+                               "interface IFoo{\n"
+                               "  @PropagateAllowBlocking IBinder foo();\n"
+                               "}");
+  CaptureStderr();
+  EXPECT_FALSE(compile_aidl(
+      Options::From("aidl --lang=java --min_sdk_version 30 -o out p/IFoo.aidl"), io_delegate_));
+  auto captured_stderr = GetCapturedStderr();
+  EXPECT_THAT(captured_stderr, HasSubstr("@PropagateAllowBlocking requires"));
 
   CaptureStderr();
   EXPECT_TRUE(
