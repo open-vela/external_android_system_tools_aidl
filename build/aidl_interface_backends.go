@@ -226,7 +226,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		Lang:            langJava,
 		BaseName:        i.ModuleBase.Name(),
 		Version:         i.versionForAidlGenRule(version),
-		GenRpc:          proptools.Bool(i.properties.Backend.Java.Gen_rpc),
+		RequireRpc:      proptools.Bool(i.properties.Backend.Java.Require_rpc),
 		GenTrace:        proptools.Bool(i.properties.Gen_trace),
 		Unstable:        i.properties.Unstable,
 		NotFrozen:       notFrozen,

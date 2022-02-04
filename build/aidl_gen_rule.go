@@ -73,7 +73,7 @@ type aidlGenProperties struct {
 	BaseName        string
 	GenLog          bool
 	Version         string
-	GenRpc          bool
+	RequireRpc      bool
 	GenTrace        bool
 	Unstable        *bool
 	NotFrozen       bool
@@ -185,7 +185,7 @@ func (g *aidlGenRule) generateBuildActionsForSingleAidl(ctx android.ModuleContex
 		}
 		optionalFlags = append(optionalFlags, "--hash "+hash)
 	}
-	if g.properties.GenRpc {
+	if g.properties.RequireRpc {
 		optionalFlags = append(optionalFlags, "--rpc")
 	}
 	if g.properties.GenTrace {
