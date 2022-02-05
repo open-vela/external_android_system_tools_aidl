@@ -290,6 +290,300 @@ public interface ITestService extends android.os.IInterface
       return null;
     }
   }
+  /** Delegator implementation for ITestService. */
+  public static class Delegator extends android.aidl.tests.ITestService.Stub
+  {
+    public Delegator(android.aidl.tests.ITestService impl) {
+      this.mImpl = impl;
+    }
+    // This is to emulate a method that is added after the service is implemented.
+    // So the client cannot assume that a call to this method will be successful
+    // or not. However, inside the test environment, we can't build client and
+    // the server with different version of this AIDL file. So, we let the server
+    // actually implement this and intercept the dispatch to the method
+    // inside onTransact().
+    // WARNING: Must be first method.
+    // This requires hard coding the transaction number. As long as this method is
+    // the first in this interface, it can keep the
+    // "::android::IBinder::FIRST_CALL_TRANSACTION + 0" value and allow
+    // methods to be added and removed.
+    @Override public int UnimplementedMethod(int arg) throws android.os.RemoteException
+    {
+      return mImpl.UnimplementedMethod(arg);
+    }
+    /**
+     * @deprecated to make sure we have something in system/tools/aidl which does a compile check
+     *     of deprecated and make sure this is reflected in goldens
+     */
+    @Override public void Deprecated() throws android.os.RemoteException
+    {
+      mImpl.Deprecated();
+    }
+    @Override public void TestOneway() throws android.os.RemoteException
+    {
+      mImpl.TestOneway();
+    }
+    // Test that primitives work as parameters and return types.
+    @Override public boolean RepeatBoolean(boolean token) throws android.os.RemoteException
+    {
+      return mImpl.RepeatBoolean(token);
+    }
+    @Override public byte RepeatByte(byte token) throws android.os.RemoteException
+    {
+      return mImpl.RepeatByte(token);
+    }
+    @Override public char RepeatChar(char token) throws android.os.RemoteException
+    {
+      return mImpl.RepeatChar(token);
+    }
+    @Override public int RepeatInt(int token) throws android.os.RemoteException
+    {
+      return mImpl.RepeatInt(token);
+    }
+    @Override public long RepeatLong(long token) throws android.os.RemoteException
+    {
+      return mImpl.RepeatLong(token);
+    }
+    @Override public float RepeatFloat(float token) throws android.os.RemoteException
+    {
+      return mImpl.RepeatFloat(token);
+    }
+    @Override public double RepeatDouble(double token) throws android.os.RemoteException
+    {
+      return mImpl.RepeatDouble(token);
+    }
+    @Override public java.lang.String RepeatString(java.lang.String token) throws android.os.RemoteException
+    {
+      return mImpl.RepeatString(token);
+    }
+    @Override public byte RepeatByteEnum(byte token) throws android.os.RemoteException
+    {
+      return mImpl.RepeatByteEnum(token);
+    }
+    @Override public int RepeatIntEnum(int token) throws android.os.RemoteException
+    {
+      return mImpl.RepeatIntEnum(token);
+    }
+    @Override public long RepeatLongEnum(long token) throws android.os.RemoteException
+    {
+      return mImpl.RepeatLongEnum(token);
+    }
+    // Test that arrays work as parameters and return types.
+    @Override public boolean[] ReverseBoolean(boolean[] input, boolean[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseBoolean(input,repeated);
+    }
+    @Override public byte[] ReverseByte(byte[] input, byte[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseByte(input,repeated);
+    }
+    @Override public char[] ReverseChar(char[] input, char[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseChar(input,repeated);
+    }
+    @Override public int[] ReverseInt(int[] input, int[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseInt(input,repeated);
+    }
+    @Override public long[] ReverseLong(long[] input, long[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseLong(input,repeated);
+    }
+    @Override public float[] ReverseFloat(float[] input, float[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseFloat(input,repeated);
+    }
+    @Override public double[] ReverseDouble(double[] input, double[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseDouble(input,repeated);
+    }
+    @Override public java.lang.String[] ReverseString(java.lang.String[] input, java.lang.String[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseString(input,repeated);
+    }
+    @Override public byte[] ReverseByteEnum(byte[] input, byte[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseByteEnum(input,repeated);
+    }
+    @Override public int[] ReverseIntEnum(int[] input, int[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseIntEnum(input,repeated);
+    }
+    @Override public long[] ReverseLongEnum(long[] input, long[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseLongEnum(input,repeated);
+    }
+    // Test that clients can send and receive Binders.
+    @Override public android.aidl.tests.INamedCallback GetOtherTestService(java.lang.String name) throws android.os.RemoteException
+    {
+      return mImpl.GetOtherTestService(name);
+    }
+    @Override public boolean VerifyName(android.aidl.tests.INamedCallback service, java.lang.String name) throws android.os.RemoteException
+    {
+      return mImpl.VerifyName(service,name);
+    }
+    @Override public android.aidl.tests.INamedCallback[] GetInterfaceArray(java.lang.String[] names) throws android.os.RemoteException
+    {
+      return mImpl.GetInterfaceArray(names);
+    }
+    @Override public boolean VerifyNamesWithInterfaceArray(android.aidl.tests.INamedCallback[] services, java.lang.String[] names) throws android.os.RemoteException
+    {
+      return mImpl.VerifyNamesWithInterfaceArray(services,names);
+    }
+    @Override public android.aidl.tests.INamedCallback[] GetNullableInterfaceArray(java.lang.String[] names) throws android.os.RemoteException
+    {
+      return mImpl.GetNullableInterfaceArray(names);
+    }
+    @Override public boolean VerifyNamesWithNullableInterfaceArray(android.aidl.tests.INamedCallback[] services, java.lang.String[] names) throws android.os.RemoteException
+    {
+      return mImpl.VerifyNamesWithNullableInterfaceArray(services,names);
+    }
+    @Override public java.util.List<android.aidl.tests.INamedCallback> GetInterfaceList(java.lang.String[] names) throws android.os.RemoteException
+    {
+      return mImpl.GetInterfaceList(names);
+    }
+    @Override public boolean VerifyNamesWithInterfaceList(java.util.List<android.aidl.tests.INamedCallback> services, java.lang.String[] names) throws android.os.RemoteException
+    {
+      return mImpl.VerifyNamesWithInterfaceList(services,names);
+    }
+    // Test that List<T> types work correctly.
+    @Override public java.util.List<java.lang.String> ReverseStringList(java.util.List<java.lang.String> input, java.util.List<java.lang.String> repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseStringList(input,repeated);
+    }
+    @Override public android.os.ParcelFileDescriptor RepeatParcelFileDescriptor(android.os.ParcelFileDescriptor read) throws android.os.RemoteException
+    {
+      return mImpl.RepeatParcelFileDescriptor(read);
+    }
+    @Override public android.os.ParcelFileDescriptor[] ReverseParcelFileDescriptorArray(android.os.ParcelFileDescriptor[] input, android.os.ParcelFileDescriptor[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseParcelFileDescriptorArray(input,repeated);
+    }
+    // Test that service specific exceptions work correctly.
+    @Override public void ThrowServiceException(int code) throws android.os.RemoteException
+    {
+      mImpl.ThrowServiceException(code);
+    }
+    // Test nullability
+    @Override public int[] RepeatNullableIntArray(int[] input) throws android.os.RemoteException
+    {
+      return mImpl.RepeatNullableIntArray(input);
+    }
+    @Override public byte[] RepeatNullableByteEnumArray(byte[] input) throws android.os.RemoteException
+    {
+      return mImpl.RepeatNullableByteEnumArray(input);
+    }
+    @Override public int[] RepeatNullableIntEnumArray(int[] input) throws android.os.RemoteException
+    {
+      return mImpl.RepeatNullableIntEnumArray(input);
+    }
+    @Override public long[] RepeatNullableLongEnumArray(long[] input) throws android.os.RemoteException
+    {
+      return mImpl.RepeatNullableLongEnumArray(input);
+    }
+    @Override public java.lang.String RepeatNullableString(java.lang.String input) throws android.os.RemoteException
+    {
+      return mImpl.RepeatNullableString(input);
+    }
+    @Override public java.util.List<java.lang.String> RepeatNullableStringList(java.util.List<java.lang.String> input) throws android.os.RemoteException
+    {
+      return mImpl.RepeatNullableStringList(input);
+    }
+    @Override public android.aidl.tests.ITestService.Empty RepeatNullableParcelable(android.aidl.tests.ITestService.Empty input) throws android.os.RemoteException
+    {
+      return mImpl.RepeatNullableParcelable(input);
+    }
+    @Override public android.aidl.tests.ITestService.Empty[] RepeatNullableParcelableArray(android.aidl.tests.ITestService.Empty[] input) throws android.os.RemoteException
+    {
+      return mImpl.RepeatNullableParcelableArray(input);
+    }
+    @Override public java.util.List<android.aidl.tests.ITestService.Empty> RepeatNullableParcelableList(java.util.List<android.aidl.tests.ITestService.Empty> input) throws android.os.RemoteException
+    {
+      return mImpl.RepeatNullableParcelableList(input);
+    }
+    @Override public void TakesAnIBinder(android.os.IBinder input) throws android.os.RemoteException
+    {
+      mImpl.TakesAnIBinder(input);
+    }
+    @Override public void TakesANullableIBinder(android.os.IBinder input) throws android.os.RemoteException
+    {
+      mImpl.TakesANullableIBinder(input);
+    }
+    @Override public void TakesAnIBinderList(java.util.List<android.os.IBinder> input) throws android.os.RemoteException
+    {
+      mImpl.TakesAnIBinderList(input);
+    }
+    @Override public void TakesANullableIBinderList(java.util.List<android.os.IBinder> input) throws android.os.RemoteException
+    {
+      mImpl.TakesANullableIBinderList(input);
+    }
+    // Test utf8 decoding from utf16 wire format
+    @Override public java.lang.String RepeatUtf8CppString(java.lang.String token) throws android.os.RemoteException
+    {
+      return mImpl.RepeatUtf8CppString(token);
+    }
+    @Override public java.lang.String RepeatNullableUtf8CppString(java.lang.String token) throws android.os.RemoteException
+    {
+      return mImpl.RepeatNullableUtf8CppString(token);
+    }
+    @Override public java.lang.String[] ReverseUtf8CppString(java.lang.String[] input, java.lang.String[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseUtf8CppString(input,repeated);
+    }
+    @Override public java.lang.String[] ReverseNullableUtf8CppString(java.lang.String[] input, java.lang.String[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseNullableUtf8CppString(input,repeated);
+    }
+    @Override public java.util.List<java.lang.String> ReverseUtf8CppStringList(java.util.List<java.lang.String> input, java.util.List<java.lang.String> repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseUtf8CppStringList(input,repeated);
+    }
+    /** comment before annotation */
+    @Override public android.aidl.tests.INamedCallback GetCallback(boolean return_null) throws android.os.RemoteException
+    {
+      return mImpl.GetCallback(return_null);
+    }
+    // Since this paracelable has clearly defined default values, it would be
+    // inefficient to use an IPC to fill it out in practice.
+    @Override public void FillOutStructuredParcelable(android.aidl.tests.StructuredParcelable parcel) throws android.os.RemoteException
+    {
+      mImpl.FillOutStructuredParcelable(parcel);
+    }
+    @Override public void RepeatExtendableParcelable(android.aidl.tests.extension.ExtendableParcelable ep, android.aidl.tests.extension.ExtendableParcelable ep2) throws android.os.RemoteException
+    {
+      mImpl.RepeatExtendableParcelable(ep,ep2);
+    }
+    @Override public android.aidl.tests.RecursiveList ReverseList(android.aidl.tests.RecursiveList list) throws android.os.RemoteException
+    {
+      return mImpl.ReverseList(list);
+    }
+    @Override public android.os.IBinder[] ReverseIBinderArray(android.os.IBinder[] input, android.os.IBinder[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseIBinderArray(input,repeated);
+    }
+    @Override public android.os.IBinder[] ReverseNullableIBinderArray(android.os.IBinder[] input, android.os.IBinder[] repeated) throws android.os.RemoteException
+    {
+      return mImpl.ReverseNullableIBinderArray(input,repeated);
+    }
+    @Override public android.aidl.tests.IOldName GetOldNameInterface() throws android.os.RemoteException
+    {
+      return mImpl.GetOldNameInterface();
+    }
+    @Override public android.aidl.tests.INewName GetNewNameInterface() throws android.os.RemoteException
+    {
+      return mImpl.GetNewNameInterface();
+    }
+    // Retrieve the ICppJavaTests if the server supports it
+    @Override public android.os.IBinder GetCppJavaTests() throws android.os.RemoteException
+    {
+      return mImpl.GetCppJavaTests();
+    }
+    @Override public byte getBackendType() throws android.os.RemoteException
+    {
+      return mImpl.getBackendType();
+    }
+    android.aidl.tests.ITestService mImpl;
+  }
   /** Local-side IPC implementation stub class. */
   public static abstract class Stub extends android.os.Binder implements android.aidl.tests.ITestService
   {

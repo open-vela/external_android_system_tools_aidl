@@ -609,7 +609,7 @@ void GenerateServerOnTransact(CodeWriter& out, const AidlInterface& interface,
 
   // If we saw a null reference, we can map that to an appropriate exception.
   out.Write("if (%s == ::android::UNEXPECTED_NULL) {\n", kAndroidStatusVarName);
-  out.Write("  %s = %s::fromExceptionCode(%s::EX_NULL_POINTER).writeToParcel(%s);\n",
+  out.Write("  %s = %s::fromExceptionCode(%s::EX_NULL_POINTER).writeOverParcel(%s);\n",
             kAndroidStatusVarName, kBinderStatusLiteral, kBinderStatusLiteral, kReplyVarName);
   out.Write("}\n");
 

@@ -426,7 +426,6 @@ cc_test {
         "libbinder_ndk",
     ],
     srcs: [
-        "tests/aidl_test_client_ndk_delegate.cpp",
         "tests/aidl_test_client_ndk_loggable_interface.cpp",
         "tests/aidl_test_client_ndk_nested.cpp",
         "tests/aidl_test_client_ndk_nullables.cpp",
@@ -506,7 +505,7 @@ java_test {
     defaults: ["aidl_test_java_defaults"],
     static_libs: [
         // client uses the new version
-        "aidl-test-versioned-interface-V2-java",
+        "aidl-test-versioned-interface-V3-java",
     ],
     // tests are included in defaults
     srcs: [
@@ -515,6 +514,7 @@ java_test {
         "tests/java/src/android/aidl/tests/JavaOnlyImmutableAnnotationTests.java",
         "tests/java/src/android/aidl/tests/AidlJavaTests.java",
         "tests/java/src/android/aidl/tests/BuiltInTests.java",
+        "tests/java/src/android/aidl/tests/DelegatorTests.java",
         "tests/java/src/android/aidl/tests/GenericTests.java",
         "tests/java/src/android/aidl/tests/NestedTypesTests.java",
         "tests/java/src/android/aidl/tests/TestVersionedInterface.java",
