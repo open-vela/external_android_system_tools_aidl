@@ -798,7 +798,6 @@ static std::shared_ptr<Method> GenerateProxyMethod(const AidlInterface& iface,
   tryStatement->statements->Add(std::make_shared<VariableDeclaration>(_status, call));
 
   // TODO(b/151102494): annotation is applied on the return type
-  // TODO: Make it an error if min-sdk is below T (API 33?)
   if (method.GetType().IsPropagateAllowBlocking()) {
     tryStatement->statements->Add(
         std::make_shared<LiteralStatement>("_reply.setPropagateAllowBlocking();\n"));
