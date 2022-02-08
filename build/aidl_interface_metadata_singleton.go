@@ -99,7 +99,7 @@ func (m *aidlInterfacesMetadataSingleton) GenerateAndroidBuildActions(ctx androi
 			info := moduleInfos[t.ModuleBase.Name()]
 			info.Stability = proptools.StringDefault(t.properties.Stability, "")
 			info.ComputedTypes = t.computedTypes
-			info.Versions = t.properties.Versions
+			info.Versions = t.getVersions()
 			moduleInfos[t.ModuleBase.Name()] = info
 		case *aidlGenRule:
 			info := moduleInfos[t.properties.BaseName]
