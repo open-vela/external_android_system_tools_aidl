@@ -460,7 +460,7 @@ func addApiModule(mctx android.LoadHookContext, i *aidlInterface) string {
 		AidlRoot:  aidlRoot,
 		Stability: i.properties.Stability,
 		Imports:   i.properties.Imports,
-		Versions:  i.properties.Versions,
+		Versions:  i.getVersions(),
 		Dumpapi:   i.properties.Dumpapi,
 	})
 	return apiModule

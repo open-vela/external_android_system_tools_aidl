@@ -75,7 +75,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 	}, &aidlGenProperties{
 		Srcs:            srcs,
 		AidlRoot:        aidlRoot,
-		Imports:         i.properties.Imports,
+		Imports:         i.getImportsForVersion(version),
 		Stability:       i.properties.Stability,
 		Min_sdk_version: i.minSdkVersion(lang),
 		Lang:            lang,
@@ -156,7 +156,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		Lang:              lang,
 		AidlInterfaceName: i.ModuleBase.Name(),
 		Version:           version,
-		Imports:           i.properties.Imports,
+		Imports:           i.getImportsForVersion(version),
 		ModuleProperties: []interface{}{
 			&ccProperties{
 				Name:                      proptools.StringPtr(cppModuleGen),
@@ -219,7 +219,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 	}, &aidlGenProperties{
 		Srcs:            srcs,
 		AidlRoot:        aidlRoot,
-		Imports:         i.properties.Imports,
+		Imports:         i.getImportsForVersion(version),
 		Stability:       i.properties.Stability,
 		Min_sdk_version: minSdkVersion,
 		Platform_apis:   proptools.Bool(i.properties.Backend.Java.Platform_apis),
@@ -239,7 +239,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		Lang:              langJava,
 		AidlInterfaceName: i.ModuleBase.Name(),
 		Version:           version,
-		Imports:           i.properties.Imports,
+		Imports:           i.getImportsForVersion(version),
 		ModuleProperties: []interface{}{&javaProperties{
 			Name:            proptools.StringPtr(javaModuleGen),
 			Installable:     proptools.BoolPtr(true),
@@ -271,7 +271,7 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 	}, &aidlGenProperties{
 		Srcs:            srcs,
 		AidlRoot:        aidlRoot,
-		Imports:         i.properties.Imports,
+		Imports:         i.getImportsForVersion(version),
 		Stability:       i.properties.Stability,
 		Min_sdk_version: i.minSdkVersion(langRust),
 		Lang:            langRust,
@@ -299,7 +299,7 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		Source_stem: proptools.StringPtr(versionedRustName),
 	}, &aidlRustSourceProviderProperties{
 		SourceGen:         rustSourceGen,
-		Imports:           i.properties.Imports,
+		Imports:           i.getImportsForVersion(version),
 		Version:           version,
 		AidlInterfaceName: i.ModuleBase.Name(),
 	})
