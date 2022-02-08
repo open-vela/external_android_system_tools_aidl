@@ -1650,3 +1650,66 @@ func TestUnstableChecksForAidlInterfacesInDifferentNamespaces(t *testing.T) {
 	testAidl(t, ``, files, setTestFreezeEnv())
 	testAidl(t, ``, files)
 }
+
+func TestVersionsWithInfoAndVersions(t *testing.T) {
+	conflictingFields := `
+	aidl_interface {
+		name: "foo",
+		versions: [
+			"1",
+		],
+		versions_with_info: [
+			{
+				version: "1",
+			}
+		],
+	}
+	`
+	files := withFiles(map[string][]byte{
+		"aidl_api/foo/1/foo.1.aidl": nil,
+		"aidl_api/foo/1/.hash":      nil,
+	})
+
+	expectedError := `Use versions_with_info instead of versions.`
+	testAidlError(t, expectedError, conflictingFields, files)
+}
+
+func TestVersionsWithInfo(t *testing.T) {
+	ctx, _ := testAidl(t, ``, withFiles(map[string][]byte{
+		"common/Android.bp": []byte(`
+		  aidl_interface {
+				name: "common",
+				srcs: ["ICommon.aidl"],
+				versions: ["1", "2"],
+			}
+		`),
+		"common/aidl_api/common/1/ICommon.aidl": nil,
+		"common/aidl_api/common/1/.hash":        nil,
+		"common/aidl_api/common/2/ICommon.aidl": nil,
+		"common/aidl_api/common/2/.hash":        nil,
+		"foo/Android.bp": []byte(`
+			aidl_interface {
+				name: "foo",
+				srcs: ["IFoo.aidl"],
+				imports: ["common"],
+				versions_with_info: [
+					{version: "1", imports: ["common-V1"]},
+					{version: "2", imports: ["common-V2"]},
+				]
+			}
+		`),
+		"foo/aidl_api/foo/1/IFoo.aidl": nil,
+		"foo/aidl_api/foo/1/.hash":     nil,
+		"foo/aidl_api/foo/2/IFoo.aidl": nil,
+		"foo/aidl_api/foo/2/.hash":     nil,
+	}))
+
+	fooV1Java := FindModule(ctx, "foo-V1-java", "android_common", "foo").(*java.Library)
+	android.AssertStringListContains(t, "a/foo-v1 deps", fooV1Java.CompilerDeps(), "common-V1-java")
+
+	fooV2Java := FindModule(ctx, "foo-V2-java", "android_common", "foo").(*java.Library)
+	android.AssertStringListContains(t, "a/foo-v2 deps", fooV2Java.CompilerDeps(), "common-V2-java")
+
+	fooV3Java := FindModule(ctx, "foo-V3-java", "android_common", "foo").(*java.Library)
+	android.AssertStringListContains(t, "a/foo-v3 deps", fooV3Java.CompilerDeps(), "common-V3-java")
+}
