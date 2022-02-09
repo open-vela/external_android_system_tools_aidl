@@ -124,7 +124,13 @@ aidl_interface {
         },
     },
     gen_trace: true,
-    versions: ["1"],
+    versions_with_info: [
+        {
+            version: "1",
+            imports: ["test-piece-1-V3"],
+        },
+    ],
+
 }
 
 aidl_interface {
@@ -217,7 +223,7 @@ aidl_interface {
 aidl_interface {
     name: "tests_transitive_parcel.a",
     flags: ["-Werror"],
-    srcs: [ "tests_transitive_parcel/a/*.aidl" ],
+    srcs: ["tests_transitive_parcel/a/*.aidl"],
     imports: [
         "tests_transitive_parcel.b",
         "tests_transitive_parcel.c",
@@ -233,8 +239,8 @@ aidl_interface {
 aidl_interface {
     name: "tests_transitive_parcel.b",
     flags: ["-Werror"],
-    srcs: [ "tests_transitive_parcel/b/*.aidl" ],
-    imports: [ "tests_transitive_parcel.c" ],
+    srcs: ["tests_transitive_parcel/b/*.aidl"],
+    imports: ["tests_transitive_parcel.c"],
     unstable: true,
     backend: {
         rust: {
@@ -246,7 +252,7 @@ aidl_interface {
 aidl_interface {
     name: "tests_transitive_parcel.c",
     flags: ["-Werror"],
-    srcs: [ "tests_transitive_parcel/c/*.aidl" ],
+    srcs: ["tests_transitive_parcel/c/*.aidl"],
     unstable: true,
     backend: {
         rust: {
