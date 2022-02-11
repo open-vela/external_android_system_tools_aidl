@@ -258,3 +258,26 @@ TEST_F(DiagnosticsTest, UntypedCollectionInTypeArg) {
   ParseFiles({{"IFoo.aidl", "interface IFoo { void foo(in Bar<Map> m); }"},
               {"Bar.aidl", "parcelable Bar<T> {}"}});
 }
+
+TEST_F(DiagnosticsTest, PermissionMissing) {
+  expect_diagnostic = DiagnosticID::missing_permission_annotation;
+  ParseFiles({{"IFoo.aidl", "interface IFoo { void food(); }"}});
+}
+
+TEST_F(DiagnosticsTest, PermissionMethod) {
+  enable_diagnostic = DiagnosticID::missing_permission_annotation;
+  expect_diagnostic = {};
+  ParseFiles({{"IFoo.aidl", "interface IFoo { @EnforcePermission(\"INTERNET\") void food(); }"}});
+}
+
+TEST_F(DiagnosticsTest, PermissionMethodMissing) {
+  expect_diagnostic = DiagnosticID::missing_permission_annotation;
+  ParseFiles({{"IFoo.aidl",
+               "interface IFoo { @EnforcePermission(\"INTERNET\") void food(); void foo2(); }"}});
+}
+
+TEST_F(DiagnosticsTest, PermissionInterface) {
+  enable_diagnostic = DiagnosticID::missing_permission_annotation;
+  expect_diagnostic = {};
+  ParseFiles({{"IFoo.aidl", "@EnforcePermission(\"INTERNET\") interface IFoo { void food(); }"}});
+}
