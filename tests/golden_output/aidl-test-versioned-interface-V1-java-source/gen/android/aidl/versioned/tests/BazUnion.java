@@ -5,7 +5,6 @@ package android.aidl.versioned.tests;
 public final class BazUnion implements android.os.Parcelable {
   // tags for union fields
   public final static int intNum = 0;  // int intNum;
-  public final static int longNum = 1;  // long longNum;
 
   private int _tag;
   private Object _value;
@@ -44,21 +43,6 @@ public final class BazUnion implements android.os.Parcelable {
     _set(intNum, _value);
   }
 
-  // long longNum;
-
-  public static BazUnion longNum(long _value) {
-    return new BazUnion(longNum, _value);
-  }
-
-  public long getLongNum() {
-    _assertTag(longNum);
-    return (long) _value;
-  }
-
-  public void setLongNum(long _value) {
-    _set(longNum, _value);
-  }
-
   public static final android.os.Parcelable.Creator<BazUnion> CREATOR = new android.os.Parcelable.Creator<BazUnion>() {
     @Override
     public BazUnion createFromParcel(android.os.Parcel _aidl_source) {
@@ -77,9 +61,6 @@ public final class BazUnion implements android.os.Parcelable {
     case intNum:
       _aidl_parcel.writeInt(getIntNum());
       break;
-    case longNum:
-      _aidl_parcel.writeLong(getLongNum());
-      break;
     }
   }
 
@@ -90,11 +71,6 @@ public final class BazUnion implements android.os.Parcelable {
     case intNum: {
       int _aidl_value;
       _aidl_value = _aidl_parcel.readInt();
-      _set(_aidl_tag, _aidl_value);
-      return; }
-    case longNum: {
-      long _aidl_value;
-      _aidl_value = _aidl_parcel.readLong();
       _set(_aidl_tag, _aidl_value);
       return; }
     }
@@ -118,7 +94,6 @@ public final class BazUnion implements android.os.Parcelable {
   private String _tagString(int _tag) {
     switch (_tag) {
     case intNum: return "intNum";
-    case longNum: return "longNum";
     }
     throw new IllegalStateException("unknown field: " + _tag);
   }
