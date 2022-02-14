@@ -16,7 +16,6 @@
 
 package android.aidl.fixedsizearray;
 
-@JavaDerive(toString=true)
 @RustDerive(PartialEq=true)
 parcelable FixedSizeArrayExample {
     // to see if NxM array works
