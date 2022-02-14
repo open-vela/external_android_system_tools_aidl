@@ -894,11 +894,7 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
 
 void ToStringFor(const CodeGeneratorContext& c) {
   if (c.type.IsArray()) {
-    if (c.type.IsDynamicArray() || c.type.GetFixedSizeArrayDimensions().size() == 1) {
-      c.writer << "java.util.Arrays.toString(" << c.var << ")";
-    } else {
-      c.writer << "java.util.Arrays.deepToString(" << c.var << ")";
-    }
+    c.writer << "java.util.Arrays.toString(" << c.var << ")";
     return;
   }
 
