@@ -268,6 +268,66 @@ public class FixedSizeArrayExample implements android.os.Parcelable
     }
   }
   @Override
+  public String toString() {
+    java.util.StringJoiner _aidl_sj = new java.util.StringJoiner(", ", "{", "}");
+    _aidl_sj.add("int2x3: " + (java.util.Arrays.deepToString(int2x3)));
+    _aidl_sj.add("boolArray: " + (java.util.Arrays.toString(boolArray)));
+    _aidl_sj.add("byteArray: " + (java.util.Arrays.toString(byteArray)));
+    _aidl_sj.add("charArray: " + (java.util.Arrays.toString(charArray)));
+    _aidl_sj.add("intArray: " + (java.util.Arrays.toString(intArray)));
+    _aidl_sj.add("longArray: " + (java.util.Arrays.toString(longArray)));
+    _aidl_sj.add("floatArray: " + (java.util.Arrays.toString(floatArray)));
+    _aidl_sj.add("doubleArray: " + (java.util.Arrays.toString(doubleArray)));
+    _aidl_sj.add("stringArray: " + (java.util.Arrays.toString(stringArray)));
+    _aidl_sj.add("byteEnumArray: " + (java.util.Arrays.toString(byteEnumArray)));
+    _aidl_sj.add("intEnumArray: " + (java.util.Arrays.toString(intEnumArray)));
+    _aidl_sj.add("longEnumArray: " + (java.util.Arrays.toString(longEnumArray)));
+    _aidl_sj.add("parcelableArray: " + (java.util.Arrays.toString(parcelableArray)));
+    _aidl_sj.add("boolMatrix: " + (java.util.Arrays.deepToString(boolMatrix)));
+    _aidl_sj.add("byteMatrix: " + (java.util.Arrays.deepToString(byteMatrix)));
+    _aidl_sj.add("charMatrix: " + (java.util.Arrays.deepToString(charMatrix)));
+    _aidl_sj.add("intMatrix: " + (java.util.Arrays.deepToString(intMatrix)));
+    _aidl_sj.add("longMatrix: " + (java.util.Arrays.deepToString(longMatrix)));
+    _aidl_sj.add("floatMatrix: " + (java.util.Arrays.deepToString(floatMatrix)));
+    _aidl_sj.add("doubleMatrix: " + (java.util.Arrays.deepToString(doubleMatrix)));
+    _aidl_sj.add("stringMatrix: " + (java.util.Arrays.deepToString(stringMatrix)));
+    _aidl_sj.add("byteEnumMatrix: " + (java.util.Arrays.deepToString(byteEnumMatrix)));
+    _aidl_sj.add("intEnumMatrix: " + (java.util.Arrays.deepToString(intEnumMatrix)));
+    _aidl_sj.add("longEnumMatrix: " + (java.util.Arrays.deepToString(longEnumMatrix)));
+    _aidl_sj.add("parcelableMatrix: " + (java.util.Arrays.deepToString(parcelableMatrix)));
+    _aidl_sj.add("boolNullableArray: " + (java.util.Arrays.toString(boolNullableArray)));
+    _aidl_sj.add("byteNullableArray: " + (java.util.Arrays.toString(byteNullableArray)));
+    _aidl_sj.add("charNullableArray: " + (java.util.Arrays.toString(charNullableArray)));
+    _aidl_sj.add("intNullableArray: " + (java.util.Arrays.toString(intNullableArray)));
+    _aidl_sj.add("longNullableArray: " + (java.util.Arrays.toString(longNullableArray)));
+    _aidl_sj.add("floatNullableArray: " + (java.util.Arrays.toString(floatNullableArray)));
+    _aidl_sj.add("doubleNullableArray: " + (java.util.Arrays.toString(doubleNullableArray)));
+    _aidl_sj.add("stringNullableArray: " + (java.util.Arrays.toString(stringNullableArray)));
+    _aidl_sj.add("byteEnumNullableArray: " + (java.util.Arrays.toString(byteEnumNullableArray)));
+    _aidl_sj.add("intEnumNullableArray: " + (java.util.Arrays.toString(intEnumNullableArray)));
+    _aidl_sj.add("longEnumNullableArray: " + (java.util.Arrays.toString(longEnumNullableArray)));
+    _aidl_sj.add("binderNullableArray: " + (java.util.Arrays.toString(binderNullableArray)));
+    _aidl_sj.add("pfdNullableArray: " + (java.util.Arrays.toString(pfdNullableArray)));
+    _aidl_sj.add("parcelableNullableArray: " + (java.util.Arrays.toString(parcelableNullableArray)));
+    _aidl_sj.add("interfaceNullableArray: " + (java.util.Arrays.toString(interfaceNullableArray)));
+    _aidl_sj.add("boolNullableMatrix: " + (java.util.Arrays.deepToString(boolNullableMatrix)));
+    _aidl_sj.add("byteNullableMatrix: " + (java.util.Arrays.deepToString(byteNullableMatrix)));
+    _aidl_sj.add("charNullableMatrix: " + (java.util.Arrays.deepToString(charNullableMatrix)));
+    _aidl_sj.add("intNullableMatrix: " + (java.util.Arrays.deepToString(intNullableMatrix)));
+    _aidl_sj.add("longNullableMatrix: " + (java.util.Arrays.deepToString(longNullableMatrix)));
+    _aidl_sj.add("floatNullableMatrix: " + (java.util.Arrays.deepToString(floatNullableMatrix)));
+    _aidl_sj.add("doubleNullableMatrix: " + (java.util.Arrays.deepToString(doubleNullableMatrix)));
+    _aidl_sj.add("stringNullableMatrix: " + (java.util.Arrays.deepToString(stringNullableMatrix)));
+    _aidl_sj.add("byteEnumNullableMatrix: " + (java.util.Arrays.deepToString(byteEnumNullableMatrix)));
+    _aidl_sj.add("intEnumNullableMatrix: " + (java.util.Arrays.deepToString(intEnumNullableMatrix)));
+    _aidl_sj.add("longEnumNullableMatrix: " + (java.util.Arrays.deepToString(longEnumNullableMatrix)));
+    _aidl_sj.add("binderNullableMatrix: " + (java.util.Arrays.deepToString(binderNullableMatrix)));
+    _aidl_sj.add("pfdNullableMatrix: " + (java.util.Arrays.deepToString(pfdNullableMatrix)));
+    _aidl_sj.add("parcelableNullableMatrix: " + (java.util.Arrays.deepToString(parcelableNullableMatrix)));
+    _aidl_sj.add("interfaceNullableMatrix: " + (java.util.Arrays.deepToString(interfaceNullableMatrix)));
+    return "android.aidl.fixedsizearray.FixedSizeArrayExample" + _aidl_sj.toString()  ;
+  }
+  @Override
   public int describeContents() {
     int _mask = 0;
     _mask |= describeContents(parcelableArray);
