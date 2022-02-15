@@ -340,6 +340,9 @@ aidl_interface {
         "2",
     ],
     backend: {
+        java: {
+            gen_rpc: true,
+        },
         rust: {
             enabled: true,
         },
