@@ -1286,6 +1286,18 @@ TEST_P(AidlTest, InvalidConstString) {
   EXPECT_EQ(AidlError::BAD_TYPE, error);
 }
 
+TEST_F(AidlTest, InvalidCharLiteral) {
+  auto filename = "Foo.aidl";
+  char code[] = "parcelable Foo { char a = '\0'; char b = '\t'; }";
+  io_delegate_.SetFileContents(filename,
+                               string{code, sizeof(code) - 1});  // -1 to drop nil at the end
+  CaptureStderr();
+  EXPECT_TRUE(Parser::Parse(filename, io_delegate_, typenames_, /*is_preprocessed=*/false));
+  auto err = GetCapturedStderr();
+  EXPECT_THAT(err, HasSubstr("Invalid character literal \\0"));
+  EXPECT_THAT(err, HasSubstr("Invalid character literal \\t"));
+}
+
 TEST_P(AidlTest, RejectUnstructuredParcelablesInNDKandRust) {
   io_delegate_.SetFileContents("o/Foo.aidl", "package o; parcelable Foo cpp_header \"cpp/Foo.h\";");
   const auto options =

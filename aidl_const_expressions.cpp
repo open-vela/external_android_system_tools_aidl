@@ -248,6 +248,49 @@ static bool isValidLiteralChar(char c) {
            c == '\\');   // Disallow backslashes for future proofing.
 }
 
+static std::string PrintCharLiteral(char c) {
+  std::ostringstream os;
+  switch (c) {
+    case '\0':
+      os << "\\0";
+      break;
+    case '\'':
+      os << "\\'";
+      break;
+    case '\\':
+      os << "\\\\";
+      break;
+    case '\a':
+      os << "\\a";
+      break;
+    case '\b':
+      os << "\\b";
+      break;
+    case '\f':
+      os << "\\f";
+      break;
+    case '\n':
+      os << "\\n";
+      break;
+    case '\r':
+      os << "\\r";
+      break;
+    case '\t':
+      os << "\\t";
+      break;
+    case '\v':
+      os << "\\v";
+      break;
+    default:
+      if (std::isprint(static_cast<unsigned char>(c))) {
+        os << c;
+      } else {
+        os << "\\x" << std::hex << std::uppercase << static_cast<int>(c);
+      }
+  }
+  return os.str();
+}
+
 bool ParseFloating(std::string_view sv, double* parsed) {
   // float literal should be parsed successfully.
   android::base::ConsumeSuffix(&sv, "f");
@@ -372,7 +415,7 @@ AidlConstantValue* AidlConstantValue::Character(const AidlLocation& location,
     AIDL_FATAL_IF(value.size() != 3 || value[0] != '\'' || value[2] != '\'', location) << value;
 
     if (!isValidLiteralChar(value[1])) {
-      AIDL_ERROR(location) << "Invalid character literal " << value[1];
+      AIDL_ERROR(location) << "Invalid character literal " << PrintCharLiteral(value[1]);
       return new AidlConstantValue(location, Type::ERROR, value);
     }
   }
