@@ -125,13 +125,7 @@ aidl_interface {
         },
     },
     gen_trace: true,
-    versions_with_info: [
-        {
-            version: "1",
-            imports: ["test-piece-1-V3"],
-        },
-    ],
-
+    versions: ["1"],
 }
 
 aidl_interface {
