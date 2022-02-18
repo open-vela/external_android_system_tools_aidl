@@ -799,8 +799,14 @@ static std::shared_ptr<Method> GenerateProxyMethod(const AidlInterface& iface,
 
   // TODO(b/151102494): annotation is applied on the return type
   if (method.GetType().IsPropagateAllowBlocking()) {
-    tryStatement->statements->Add(
-        std::make_shared<LiteralStatement>("_reply.setPropagateAllowBlocking();\n"));
+    if (options.GetMinSdkVersion() < JAVA_PROPAGATE_VERSION) {
+      tryStatement->statements->Add(std::make_shared<LiteralStatement>(
+          "if (android.os.Build.VERSION.SDK_INT >= " + std::to_string(JAVA_PROPAGATE_VERSION) +
+          ") { _reply.setPropagateAllowBlocking(); }\n"));
+    } else {
+      tryStatement->statements->Add(
+          std::make_shared<LiteralStatement>("_reply.setPropagateAllowBlocking();\n"));
+    }
   }
 
   // If the transaction returns false, which means UNKNOWN_TRANSACTION, fall back to the local
