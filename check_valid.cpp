@@ -80,16 +80,6 @@ bool CheckValid(const AidlDocument& doc, const Options& options) {
     return true;
   });
 
-  v.Check([&](const AidlTypeSpecifier& type) {
-    // TODO(b/151102494): annotation is applied on the return type
-    if (type.IsPropagateAllowBlocking() && options.GetMinSdkVersion() < JAVA_PROPAGATE_VERSION) {
-      AIDL_ERROR(type) << "@PropagateAllowBlocking requires " << JAVA_PROPAGATE_VERSION
-                       << ". Current min_sdk_version is " << min_sdk_version << ".";
-      return false;
-    }
-    return true;
-  });
-
   VisitTopDown(v, doc);
   return v.success;
 }
