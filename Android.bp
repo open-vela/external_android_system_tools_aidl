@@ -152,6 +152,11 @@ cc_test {
         "-g",
     ],
 
+    tidy_timeout_srcs: [
+        "aidl_unittest.cpp",
+        "options_unittest.cpp",
+    ],
+
     srcs: [
         "aidl_unittest.cpp",
         "ast_java_unittest.cpp",
@@ -394,6 +399,10 @@ cc_test {
         "aidl-test-versioned-interface-V2-cpp",
         "aidl_test_loggable_interface-cpp",
         "aidl-test-fixedsizearray-cpp",
+    ],
+    tidy_timeout_srcs: [
+        "tests/aidl_test_client_parcelables.cpp",
+        "tests/aidl_test_client_primitives.cpp",
     ],
     srcs: [
         "tests/aidl_test_client.cpp",
