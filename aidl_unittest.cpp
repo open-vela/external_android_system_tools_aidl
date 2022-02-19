@@ -5168,24 +5168,6 @@ TEST_F(AidlTest, InterfaceVectorIsAvailableAfterTiramisu) {
   EXPECT_EQ(GetCapturedStderr(), "");
 }
 
-TEST_F(AidlTest, PropagateBeforeTiramisu) {
-  io_delegate_.SetFileContents("p/IFoo.aidl",
-                               "interface IFoo{\n"
-                               "  @PropagateAllowBlocking IBinder foo();\n"
-                               "}");
-  CaptureStderr();
-  EXPECT_FALSE(compile_aidl(
-      Options::From("aidl --lang=java --min_sdk_version 30 -o out p/IFoo.aidl"), io_delegate_));
-  auto captured_stderr = GetCapturedStderr();
-  EXPECT_THAT(captured_stderr, HasSubstr("@PropagateAllowBlocking requires"));
-
-  CaptureStderr();
-  EXPECT_TRUE(
-      compile_aidl(Options::From("aidl --lang=java --min_sdk_version Tiramisu -o out p/IFoo.aidl"),
-                   io_delegate_));
-  EXPECT_EQ(GetCapturedStderr(), "");
-}
-
 TEST_F(AidlTest, RustNameOf_PfdFixedArray) {
   auto pfd = typenames_.MakeResolvedType(AIDL_LOCATION_HERE, "ParcelFileDescriptor", false);
   ASSERT_TRUE(pfd->MakeArray(FixedSizeArray{
