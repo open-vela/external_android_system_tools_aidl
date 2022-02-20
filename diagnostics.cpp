@@ -296,27 +296,6 @@ struct DiagnoseUntypedCollection : DiagnosticsVisitor {
   }
 };
 
-struct DiagnosePermissionAnnotations : DiagnosticsVisitor {
-  DiagnosePermissionAnnotations(DiagnosticsContext& diag) : DiagnosticsVisitor(diag) {}
-  void Visit(const AidlInterface& i) override {
-    if (i.EnforceExpression() || i.IsPermissionManual() || i.IsPermissionNone()) {
-      return;
-    }
-    for (const auto& m : i.GetMethods()) {
-      if (m->GetType().EnforceExpression() || m->GetType().IsPermissionManual() ||
-          m->GetType().IsPermissionNone()) {
-        continue;
-      }
-      diag.Report(m->GetLocation(), DiagnosticID::missing_permission_annotation)
-          << m->GetName()
-          << " is not annotated for permissions. Declare which permissions are required "
-             "using @EnforcePermission. If permissions are manually verified within the "
-             "implementation, use @PermissionManuallyEnforced. If no permissions are "
-             "required, use @RequiresNoPermission.";
-    }
-  }
-};
-
 bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnosticsContext diag(mapping);
 
@@ -330,7 +309,6 @@ bool Diagnose(const AidlDocument& doc, const DiagnosticMapping& mapping) {
   DiagnoseOutNullable{diag}.Check(doc);
   DiagnoseImports{diag}.Check(doc);
   DiagnoseUntypedCollection{diag}.Check(doc);
-  DiagnosePermissionAnnotations{diag}.Check(doc);
 
   return diag.ErrorCount() == 0;
 }
