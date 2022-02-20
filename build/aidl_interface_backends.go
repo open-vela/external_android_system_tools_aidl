@@ -350,7 +350,7 @@ func (i *aidlInterface) flagsForAidlGenRule(version string) (flags []string) {
 	flags = append(flags, i.properties.Flags...)
 	// For ToT, turn on "-Weverything" (enable all warnings)
 	if version == i.nextVersion() {
-		flags = append(flags, "-Weverything")
+		flags = append(flags, "-Weverything -Wno-missing-permission-annotation")
 	}
 	return
 }
