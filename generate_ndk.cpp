@@ -604,6 +604,11 @@ static void GenerateServerCaseDefinition(CodeWriter& out, const AidlTypenames& t
 
   out << "case " << MethodId(method) << ": {\n";
   out.Indent();
+
+  if (defined_type.EnforceExpression() || method.GetType().EnforceExpression()) {
+    out.Write("#error Permission checks not implemented for the ndk backend\n");
+  }
+
   for (const auto& arg : method.GetArguments()) {
     out << NdkNameOf(types, arg->GetType(), StorageMode::STACK) << " " << cpp::BuildVarName(*arg)
         << ";\n";

@@ -308,8 +308,6 @@ filegroup {
         "tests/android/aidl/tests/UnionWithFd.aidl",
         "tests/android/aidl/tests/extension/*.aidl",
         "tests/android/aidl/tests/nested/*.aidl",
-        "tests/android/aidl/tests/permission/IProtected.aidl",
-        "tests/android/aidl/tests/permission/IProtectedInterface.aidl",
         "tests/android/aidl/tests/unions/*.aidl",
     ],
     path: "tests",
@@ -326,8 +324,10 @@ filegroup {
 }
 
 filegroup {
-    name: "libaidl-integration-platform-test-files",
+    name: "libaidl-integration-permission-test-files",
     srcs: [
+        "tests/android/aidl/tests/permission/IProtected.aidl",
+        "tests/android/aidl/tests/permission/IProtectedInterface.aidl",
         "tests/android/aidl/tests/permission/platform/*.aidl",
     ],
     path: "tests",
@@ -645,7 +645,7 @@ genrule {
         ":aidl_test_loggable_interface-cpp-source",
         ":aidl_test_loggable_interface-java-source",
         ":aidl_test_loggable_interface-ndk-source",
-        ":aidl-test-interface-platform-java-source",
+        ":aidl-test-interface-permission-java-source",
         ":aidl-test-fixedsizearray-cpp-source",
         ":aidl-test-fixedsizearray-java-source",
         ":aidl-test-fixedsizearray-ndk-source",
@@ -713,10 +713,10 @@ aidl_interface {
 }
 
 aidl_interface {
-    name: "aidl-test-interface-platform",
+    name: "aidl-test-interface-permission",
     unstable: true,
     flags: ["-Werror"],
-    srcs: [":libaidl-integration-platform-test-files"],
+    srcs: [":libaidl-integration-permission-test-files"],
     include_dirs: [
         "frameworks/base/core/java",
     ],
