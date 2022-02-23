@@ -5050,7 +5050,7 @@ interface IFoo {}
 TEST_P(AidlTest, WarningInterfaceName) {
   io_delegate_.SetFileContents("p/Foo.aidl", "interface Foo {}");
   auto options = Options::From("aidl --lang " + to_string(GetLanguage()) +
-                               " -Weverything -o out -h out p/Foo.aidl");
+                               " -Winterface-name -o out -h out p/Foo.aidl");
   CaptureStderr();
   EXPECT_TRUE(compile_aidl(options, io_delegate_));
   EXPECT_EQ("WARNING: p/Foo.aidl:1.1-10: Interface names should start with I. [-Winterface-name]\n",
@@ -5060,7 +5060,7 @@ TEST_P(AidlTest, WarningInterfaceName) {
 TEST_P(AidlTest, ErrorInterfaceName) {
   io_delegate_.SetFileContents("p/Foo.aidl", "interface Foo {}");
   auto options = Options::From("aidl --lang " + to_string(GetLanguage()) +
-                               " -Weverything -Werror -o out -h out p/Foo.aidl");
+                               " -Winterface-name -Werror -o out -h out p/Foo.aidl");
   CaptureStderr();
   EXPECT_FALSE(compile_aidl(options, io_delegate_));
   EXPECT_EQ("ERROR: p/Foo.aidl:1.1-10: Interface names should start with I. [-Winterface-name]\n",
