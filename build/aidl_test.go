@@ -60,6 +60,12 @@ func setTestFreezeEnv() android.FixturePreparer {
 	})
 }
 
+func setTransitiveFreezeEnv() android.FixturePreparer {
+	return android.FixtureMergeEnv(map[string]string{
+		"AIDL_TRANSITIVE_FREEZE": "true",
+	})
+}
+
 func _testAidl(t *testing.T, bp string, customizers ...android.FixturePreparer) android.FixturePreparer {
 	t.Helper()
 
@@ -1712,4 +1718,59 @@ func TestVersionsWithInfo(t *testing.T) {
 
 	fooV3Java := FindModule(ctx, "foo-V3-java", "android_common", "foo").(*java.Library)
 	android.AssertStringListContains(t, "a/foo-v3 deps", fooV3Java.CompilerDeps(), "common-V3-java")
+}
+
+func TestFreezeApiDeps(t *testing.T) {
+	for _, transitive := range []bool{true, false} {
+		for _, testcase := range []struct {
+			string
+			bool
+		}{{"common", true}, {"common-V3", true}, {"common-V2", false}} {
+			im := testcase.string
+			customizers := []android.FixturePreparer{
+				withFiles(map[string][]byte{
+					"common/Android.bp": []byte(`
+				  aidl_interface {
+						name: "common",
+						srcs: ["ICommon.aidl"],
+						versions: ["1", "2"],
+					}
+				`),
+					"common/aidl_api/common/1/ICommon.aidl": nil,
+					"common/aidl_api/common/1/.hash":        nil,
+					"common/aidl_api/common/2/ICommon.aidl": nil,
+					"common/aidl_api/common/2/.hash":        nil,
+					"foo/Android.bp": []byte(fmt.Sprintf(`
+					aidl_interface {
+						name: "foo",
+						srcs: ["IFoo.aidl"],
+						imports: ["%s"],
+						versions_with_info: [
+							{version: "1", imports: ["common-V1"]},
+							{version: "2", imports: ["common-V2"]},
+						]
+					}
+				`, im)),
+					"foo/aidl_api/foo/1/IFoo.aidl": nil,
+					"foo/aidl_api/foo/1/.hash":     nil,
+					"foo/aidl_api/foo/2/IFoo.aidl": nil,
+					"foo/aidl_api/foo/2/.hash":     nil,
+				}),
+			}
+			if transitive {
+				customizers = append(customizers, setTransitiveFreezeEnv())
+			}
+
+			ctx, _ := testAidl(t, ``, customizers...)
+			shouldHaveDep := transitive && testcase.bool
+			fooFreezeApiRule := ctx.ModuleForTests("foo-api", "").Output("updateapi_3.timestamp")
+			commonFreezeApiOutput := ctx.ModuleForTests("common-api", "").Output("updateapi_3.timestamp").Output.String()
+			testMethod := android.AssertStringListDoesNotContain
+			if shouldHaveDep {
+				testMethod = android.AssertStringListContains
+			}
+			testMethod(t, "Only if AIDL_TRANSITIVE_FREEZE is set and an aidl_interface depends on an another aidl_interface's ToT version, an imported aidl_interface should be frozen as well.",
+				fooFreezeApiRule.Implicits.Strings(), commonFreezeApiOutput)
+		}
+	}
 }
