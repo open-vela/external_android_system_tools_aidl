@@ -303,6 +303,7 @@ struct DiagnosePermissionAnnotations : DiagnosticsVisitor {
       return;
     }
     for (const auto& m : i.GetMethods()) {
+      if (!m->IsUserDefined()) continue;
       if (m->GetType().EnforceExpression() || m->GetType().IsPermissionManual() ||
           m->GetType().IsPermissionNone()) {
         continue;
