@@ -127,4 +127,8 @@ public final class Union implements android.os.Parcelable {
     this._tag = _tag;
     this._value = _value;
   }
+  public static @interface Tag {
+    public static final int num = 0;
+    public static final int str = 1;
+  }
 }

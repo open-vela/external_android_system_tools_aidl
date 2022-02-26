@@ -742,6 +742,15 @@ class NativeService : public BnTestService {
     return Status::ok();
   }
 
+  Status GetUnionTags(const std::vector<Union>& input,
+                      std::vector<Union::Tag>* _aidl_return) override {
+    std::vector<Union::Tag> tags;
+    std::transform(input.begin(), input.end(), std::back_inserter(tags),
+                   std::mem_fn(&Union::getTag));
+    *_aidl_return = std::move(tags);
+    return Status::ok();
+  }
+
   Status GetCppJavaTests(sp<IBinder>* ret) {
     *ret = new CppJavaTests;
     return Status::ok();
