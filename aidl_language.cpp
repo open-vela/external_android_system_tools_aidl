@@ -1068,20 +1068,19 @@ string AidlConstantDeclaration::Signature() const {
 AidlMethod::AidlMethod(const AidlLocation& location, bool oneway, AidlTypeSpecifier* type,
                        const std::string& name, std::vector<std::unique_ptr<AidlArgument>>* args,
                        const Comments& comments)
-    : AidlMethod(location, oneway, type, name, args, comments, 0, true) {
+    : AidlMethod(location, oneway, type, name, args, comments, 0) {
   has_id_ = false;
 }
 
 AidlMethod::AidlMethod(const AidlLocation& location, bool oneway, AidlTypeSpecifier* type,
                        const std::string& name, std::vector<std::unique_ptr<AidlArgument>>* args,
-                       const Comments& comments, int id, bool is_user_defined)
+                       const Comments& comments, int id)
     : AidlMember(location, comments),
       oneway_(oneway),
       type_(type),
       name_(name),
       arguments_(std::move(*args)),
-      id_(id),
-      is_user_defined_(is_user_defined) {
+      id_(id) {
   has_id_ = true;
   delete args;
   for (const unique_ptr<AidlArgument>& a : arguments_) {

@@ -32,6 +32,9 @@ namespace android {
 namespace aidl {
 
 void DumpVisitor::DumpType(const AidlDefinedType& dt, const string& type) {
+  if (!dt.IsUserDefined()) {
+    return;
+  }
   DumpComments(dt);
   DumpAnnotations(dt);
   out << type << " " << dt.GetName();
@@ -47,7 +50,6 @@ void DumpVisitor::DumpType(const AidlDefinedType& dt, const string& type) {
 
 void DumpVisitor::DumpMembers(const AidlDefinedType& dt) {
   for (const auto& method : dt.GetMethods()) {
-    if (!method->IsUserDefined()) continue;
     method->DispatchVisit(*this);
   }
   for (const auto& field : dt.GetFields()) {
@@ -95,16 +97,23 @@ void DumpVisitor::DumpConstantValue(const AidlTypeSpecifier& type, const AidlCon
 void DumpVisitor::Visit(const AidlInterface& t) {
   DumpType(t, "interface");
 }
+
 void DumpVisitor::Visit(const AidlParcelable& t) {
   DumpType(t, "parcelable");
 }
+
 void DumpVisitor::Visit(const AidlStructuredParcelable& t) {
   DumpType(t, "parcelable");
 }
+
 void DumpVisitor::Visit(const AidlUnionDecl& t) {
   DumpType(t, "union");
 }
+
 void DumpVisitor::Visit(const AidlEnumDeclaration& t) {
+  if (!t.IsUserDefined()) {
+    return;
+  }
   DumpComments(t);
   DumpAnnotations(t);
   out << "enum " << t.GetName() << " {\n";
@@ -119,10 +128,17 @@ void DumpVisitor::Visit(const AidlEnumDeclaration& t) {
 }
 
 void DumpVisitor::Visit(const AidlMethod& m) {
+  if (!m.IsUserDefined()) {
+    return;
+  }
   DumpComments(m);
   out << m.ToString() << ";\n";
 }
+
 void DumpVisitor::Visit(const AidlVariableDeclaration& v) {
+  if (!v.IsUserDefined()) {
+    return;
+  }
   DumpComments(v);
   Visit(v.GetType());
   if (v.IsDefaultUserSpecified()) {
@@ -133,7 +149,11 @@ void DumpVisitor::Visit(const AidlVariableDeclaration& v) {
     out << " " << v.GetName() << ";\n";
   }
 }
+
 void DumpVisitor::Visit(const AidlConstantDeclaration& c) {
+  if (!c.IsUserDefined()) {
+    return;
+  }
   DumpComments(c);
   out << "const ";
   Visit(c.GetType());
