@@ -165,6 +165,7 @@ class AidlNode {
   static void ClearUnvisitedNodes();
   static const std::vector<AidlLocation>& GetLocationsOfUnvisitedNodes();
   void MarkVisited() const;
+  bool IsUserDefined() const { return !GetLocation().IsInternal(); }
 
  private:
   std::string PrintLine() const;
@@ -854,8 +855,7 @@ class AidlMethod : public AidlMember {
   AidlMethod(const AidlLocation& location, bool oneway, AidlTypeSpecifier* type, const string& name,
              vector<unique_ptr<AidlArgument>>* args, const Comments& comments);
   AidlMethod(const AidlLocation& location, bool oneway, AidlTypeSpecifier* type, const string& name,
-             vector<unique_ptr<AidlArgument>>* args, const Comments& comments, int id,
-             bool is_user_defined = true);
+             vector<unique_ptr<AidlArgument>>* args, const Comments& comments, int id);
   virtual ~AidlMethod() = default;
 
   // non-copyable, non-movable
@@ -876,8 +876,6 @@ class AidlMethod : public AidlMember {
   bool HasId() const { return has_id_; }
   int GetId() const { return id_; }
   void SetId(unsigned id) { id_ = id; }
-
-  bool IsUserDefined() const { return is_user_defined_; }
 
   const std::vector<std::unique_ptr<AidlArgument>>& GetArguments() const {
     return arguments_;
@@ -920,7 +918,6 @@ class AidlMethod : public AidlMember {
   std::vector<const AidlArgument*> out_arguments_;
   bool has_id_;
   int id_;
-  bool is_user_defined_ = true;
 };
 
 // AidlDefinedType represents either an interface, parcelable, or enum that is
