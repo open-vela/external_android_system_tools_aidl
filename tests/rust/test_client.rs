@@ -822,6 +822,15 @@ fn test_reverse_recursive_list() {
 }
 
 #[test]
+fn test_get_union_tags() {
+    let service = get_test_service();
+    let result = service.GetUnionTags(&[]);
+    assert_eq!(result, Ok(vec![]));
+    let result = service.GetUnionTags(&[Union::Union::N(0), Union::Union::Ns(vec![])]);
+    assert_eq!(result, Ok(vec![Union::Tag::Tag::n, Union::Tag::Tag::ns]));
+}
+
+#[test]
 fn test_unions() {
     assert_eq!(Union::Union::default(), Union::Union::Ns(vec![]));
     assert_eq!(EnumUnion::default(), EnumUnion::IntEnum(IntEnum::FOO));

@@ -441,6 +441,21 @@ impl ITestService::ITestService for TestService {
         Ok(INewName::BnNewName::new_binder(NewName, BinderFeatures::default()))
     }
 
+    fn GetUnionTags(&self, input: &[Union::Union]) -> binder::Result<Vec<Union::Tag::Tag>> {
+        Ok(input
+            .iter()
+            .map(|u| match u {
+                Union::Union::Ns(_) => Union::Tag::Tag::ns,
+                Union::Union::N(_) => Union::Tag::Tag::n,
+                Union::Union::M(_) => Union::Tag::Tag::m,
+                Union::Union::S(_) => Union::Tag::Tag::s,
+                Union::Union::Ibinder(_) => Union::Tag::Tag::ibinder,
+                Union::Union::Ss(_) => Union::Tag::Tag::ss,
+                Union::Union::Be(_) => Union::Tag::Tag::be,
+            })
+            .collect::<Vec<_>>())
+    }
+
     fn GetCppJavaTests(&self) -> binder::Result<Option<SpIBinder>> {
         Ok(None)
     }

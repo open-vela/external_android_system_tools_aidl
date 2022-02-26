@@ -216,9 +216,26 @@ pub mod FixedUnion {
   impl binder::binder_impl::ParcelableMetadata for FixedUnion {
     fn get_descriptor() -> &'static str { "android.aidl.tests.FixedSize.FixedUnion" }
   }
+  pub mod Tag {
+    #![allow(non_upper_case_globals)]
+    use binder::declare_binder_enum;
+    declare_binder_enum! {
+      Tag : [i8; 8] {
+        booleanValue = 0,
+        byteValue = 1,
+        charValue = 2,
+        intValue = 3,
+        longValue = 4,
+        floatValue = 5,
+        doubleValue = 6,
+        enumValue = 7,
+      }
+    }
+  }
 }
 pub(crate) mod mangled {
  pub use super::FixedSize as _7_android_4_aidl_5_tests_9_FixedSize;
  pub use super::FixedParcelable::FixedParcelable as _7_android_4_aidl_5_tests_9_FixedSize_15_FixedParcelable;
  pub use super::FixedUnion::FixedUnion as _7_android_4_aidl_5_tests_9_FixedSize_10_FixedUnion;
+ pub use super::FixedUnion::Tag::Tag as _7_android_4_aidl_5_tests_9_FixedSize_10_FixedUnion_3_Tag;
 }
