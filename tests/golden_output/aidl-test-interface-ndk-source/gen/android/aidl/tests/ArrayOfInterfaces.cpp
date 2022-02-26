@@ -415,7 +415,7 @@ binder_status_t ArrayOfInterfaces::MyUnion::readFromParcel(const AParcel* _parce
   binder_status_t _aidl_ret_status;
   int32_t _aidl_tag;
   if ((_aidl_ret_status = ::ndk::AParcel_readData(_parcel, &_aidl_tag)) != STATUS_OK) return _aidl_ret_status;
-  switch (_aidl_tag) {
+  switch (static_cast<Tag>(_aidl_tag)) {
   case iface: {
     std::shared_ptr<::aidl::android::aidl::tests::ArrayOfInterfaces::IEmptyInterface> _aidl_value;
     if ((_aidl_ret_status = ::ndk::AParcel_readData(_parcel, &_aidl_value)) != STATUS_OK) return _aidl_ret_status;
@@ -460,7 +460,7 @@ binder_status_t ArrayOfInterfaces::MyUnion::readFromParcel(const AParcel* _parce
   return STATUS_BAD_VALUE;
 }
 binder_status_t ArrayOfInterfaces::MyUnion::writeToParcel(AParcel* _parcel) const {
-  binder_status_t _aidl_ret_status = ::ndk::AParcel_writeData(_parcel, getTag());
+  binder_status_t _aidl_ret_status = ::ndk::AParcel_writeData(_parcel, static_cast<int32_t>(getTag()));
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
   switch (getTag()) {
   case iface: return ::ndk::AParcel_writeData(_parcel, get<iface>());
