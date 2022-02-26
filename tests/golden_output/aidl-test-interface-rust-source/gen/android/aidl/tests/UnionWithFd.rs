@@ -48,6 +48,17 @@ binder::impl_deserialize_for_parcelable!(UnionWithFd);
 impl binder::binder_impl::ParcelableMetadata for UnionWithFd {
   fn get_descriptor() -> &'static str { "android.aidl.tests.UnionWithFd" }
 }
+pub mod Tag {
+  #![allow(non_upper_case_globals)]
+  use binder::declare_binder_enum;
+  declare_binder_enum! {
+    Tag : [i32; 2] {
+      num = 0,
+      pfd = 1,
+    }
+  }
+}
 pub(crate) mod mangled {
  pub use super::UnionWithFd as _7_android_4_aidl_5_tests_11_UnionWithFd;
+ pub use super::Tag::Tag as _7_android_4_aidl_5_tests_11_UnionWithFd_3_Tag;
 }

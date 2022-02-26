@@ -37,6 +37,16 @@ binder::impl_deserialize_for_parcelable!(BazUnion);
 impl binder::binder_impl::ParcelableMetadata for BazUnion {
   fn get_descriptor() -> &'static str { "android.aidl.versioned.tests.BazUnion" }
 }
+pub mod Tag {
+  #![allow(non_upper_case_globals)]
+  use binder::declare_binder_enum;
+  declare_binder_enum! {
+    Tag : [i32; 1] {
+      intNum = 0,
+    }
+  }
+}
 pub(crate) mod mangled {
  pub use super::BazUnion as _7_android_4_aidl_9_versioned_5_tests_8_BazUnion;
+ pub use super::Tag::Tag as _7_android_4_aidl_9_versioned_5_tests_8_BazUnion_3_Tag;
 }

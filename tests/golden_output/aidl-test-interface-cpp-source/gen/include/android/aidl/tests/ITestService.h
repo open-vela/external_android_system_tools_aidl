@@ -10,6 +10,7 @@
 #include <android/aidl/tests/LongEnum.h>
 #include <android/aidl/tests/RecursiveList.h>
 #include <android/aidl/tests/StructuredParcelable.h>
+#include <android/aidl/tests/Union.h>
 #include <android/aidl/tests/extension/ExtendableParcelable.h>
 #include <android/binder_to_string.h>
 #include <binder/IBinder.h>
@@ -272,6 +273,7 @@ public:
   virtual ::android::binder::Status ReverseNullableIBinderArray(const ::std::optional<::std::vector<::android::sp<::android::IBinder>>>& input, ::std::optional<::std::vector<::android::sp<::android::IBinder>>>* repeated, ::std::optional<::std::vector<::android::sp<::android::IBinder>>>* _aidl_return) = 0;
   virtual ::android::binder::Status GetOldNameInterface(::android::sp<::android::aidl::tests::IOldName>* _aidl_return) = 0;
   virtual ::android::binder::Status GetNewNameInterface(::android::sp<::android::aidl::tests::INewName>* _aidl_return) = 0;
+  virtual ::android::binder::Status GetUnionTags(const ::std::vector<::android::aidl::tests::Union>& input, ::std::vector<::android::aidl::tests::Union::Tag>* _aidl_return) = 0;
   virtual ::android::binder::Status GetCppJavaTests(::android::sp<::android::IBinder>* _aidl_return) = 0;
   virtual ::android::binder::Status getBackendType(::android::aidl::tests::BackendType* _aidl_return) = 0;
 };  // class ITestService
@@ -468,6 +470,9 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status GetNewNameInterface(::android::sp<::android::aidl::tests::INewName>* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status GetUnionTags(const ::std::vector<::android::aidl::tests::Union>& /*input*/, ::std::vector<::android::aidl::tests::Union::Tag>* /*_aidl_return*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status GetCppJavaTests(::android::sp<::android::IBinder>* /*_aidl_return*/) override {
