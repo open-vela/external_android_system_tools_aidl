@@ -387,10 +387,14 @@ void GenerateClientMethod(CodeWriter& out, const AidlInterface& iface, const Aid
   out << "}\n";
 }
 
-void GenerateServerTransaction(CodeWriter& out, const AidlMethod& method,
-                               const AidlTypenames& typenames) {
+void GenerateServerTransaction(CodeWriter& out, const AidlInterface& interface,
+                               const AidlMethod& method, const AidlTypenames& typenames) {
   out << "transactions::" << method.GetName() << " => {\n";
   out.Indent();
+
+  if (interface.EnforceExpression() || method.GetType().EnforceExpression()) {
+    out << "compile_error!(\"Permission checks not support for the Rust backend\");\n";
+  }
 
   string args;
   for (const auto& arg : method.GetArguments()) {
@@ -498,7 +502,7 @@ void GenerateServerItems(CodeWriter& out, const AidlInterface* iface,
   out << "match _aidl_code {\n";
   out.Indent();
   for (const auto& method : iface->GetMethods()) {
-    GenerateServerTransaction(out, *method, typenames);
+    GenerateServerTransaction(out, *iface, *method, typenames);
   }
   out << "_ => Err(binder::StatusCode::UNKNOWN_TRANSACTION)\n";
   out.Dedent();

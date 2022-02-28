@@ -469,6 +469,10 @@ void GenerateServerTransaction(CodeWriter& out, const AidlInterface& interface,
               kTraceVarName, interface.GetName().c_str(), method.GetName().c_str());
   }
 
+  if (interface.EnforceExpression() || method.GetType().EnforceExpression()) {
+    out.Write("#error Permission checks not implemented for the cpp backend\n");
+  }
+
   // Deserialize each "in" parameter to the transaction.
   for (const auto& a: method.GetArguments()) {
     // Deserialization looks roughly like:
