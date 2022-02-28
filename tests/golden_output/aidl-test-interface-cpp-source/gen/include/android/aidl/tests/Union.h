@@ -36,7 +36,7 @@ public:
   template<typename _Tp>
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, Union>;
 
-  Union() : _value(std::in_place_index<ns>, ::std::vector<int32_t>({})) { }
+  Union() : _value(std::in_place_index<static_cast<size_t>(ns)>, ::std::vector<int32_t>({})) { }
 
   template <typename _Tp, typename = std::enable_if_t<_not_self<_Tp>>>
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -49,12 +49,12 @@ public:
 
   template <Tag _tag, typename... _Tp>
   static Union make(_Tp&&... _args) {
-    return Union(std::in_place_index<_tag>, std::forward<_Tp>(_args)...);
+    return Union(std::in_place_index<static_cast<size_t>(_tag)>, std::forward<_Tp>(_args)...);
   }
 
   template <Tag _tag, typename _Tp, typename... _Up>
   static Union make(std::initializer_list<_Tp> _il, _Up&&... _args) {
-    return Union(std::in_place_index<_tag>, std::move(_il), std::forward<_Up>(_args)...);
+    return Union(std::in_place_index<static_cast<size_t>(_tag)>, std::move(_il), std::forward<_Up>(_args)...);
   }
 
   Tag getTag() const {
@@ -64,18 +64,18 @@ public:
   template <Tag _tag>
   const auto& get() const {
     if (getTag() != _tag) { __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "bad access: a wrong tag"); }
-    return std::get<_tag>(_value);
+    return std::get<static_cast<size_t>(_tag)>(_value);
   }
 
   template <Tag _tag>
   auto& get() {
     if (getTag() != _tag) { __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "bad access: a wrong tag"); }
-    return std::get<_tag>(_value);
+    return std::get<static_cast<size_t>(_tag)>(_value);
   }
 
   template <Tag _tag, typename... _Tp>
   void set(_Tp&&... _args) {
-    _value.emplace<_tag>(std::forward<_Tp>(_args)...);
+    _value.emplace<static_cast<size_t>(_tag)>(std::forward<_Tp>(_args)...);
   }
 
   inline bool operator!=(const Union& rhs) const {
