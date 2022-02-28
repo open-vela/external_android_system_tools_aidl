@@ -211,7 +211,8 @@ TEST_F(AidlTest, UnionUsage) {
 
   // Use std::in_place_index<tag> to avoid "move"
   // Note that make<tag>(...) involves "move" of the content value
-  EXPECT_EQ(Union::make<Union::ns>(3, 0), Union(std::in_place_index<Union::ns>, 3, 0));
+  EXPECT_EQ(Union::make<Union::ns>(3, 0),
+            Union(std::in_place_index<static_cast<size_t>(Union::ns)>, 3, 0));
 
   Union one_two = one_two_three;
   // get<tag> can be used to modify the content

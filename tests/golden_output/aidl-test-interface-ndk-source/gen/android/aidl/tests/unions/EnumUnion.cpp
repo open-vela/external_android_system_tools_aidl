@@ -13,7 +13,7 @@ binder_status_t EnumUnion::readFromParcel(const AParcel* _parcel) {
   binder_status_t _aidl_ret_status;
   int32_t _aidl_tag;
   if ((_aidl_ret_status = ::ndk::AParcel_readData(_parcel, &_aidl_tag)) != STATUS_OK) return _aidl_ret_status;
-  switch (_aidl_tag) {
+  switch (static_cast<Tag>(_aidl_tag)) {
   case intEnum: {
     ::aidl::android::aidl::tests::IntEnum _aidl_value;
     if ((_aidl_ret_status = ::ndk::AParcel_readData(_parcel, &_aidl_value)) != STATUS_OK) return _aidl_ret_status;
@@ -38,7 +38,7 @@ binder_status_t EnumUnion::readFromParcel(const AParcel* _parcel) {
   return STATUS_BAD_VALUE;
 }
 binder_status_t EnumUnion::writeToParcel(AParcel* _parcel) const {
-  binder_status_t _aidl_ret_status = ::ndk::AParcel_writeData(_parcel, getTag());
+  binder_status_t _aidl_ret_status = ::ndk::AParcel_writeData(_parcel, static_cast<int32_t>(getTag()));
   if (_aidl_ret_status != STATUS_OK) return _aidl_ret_status;
   switch (getTag()) {
   case intEnum: return ::ndk::AParcel_writeData(_parcel, get<intEnum>());
