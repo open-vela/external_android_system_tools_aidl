@@ -7,7 +7,7 @@ namespace loggable {
   ::android::status_t _aidl_ret_status;
   int32_t _aidl_tag;
   if ((_aidl_ret_status = _aidl_parcel->readInt32(&_aidl_tag)) != ::android::OK) return _aidl_ret_status;
-  switch (_aidl_tag) {
+  switch (static_cast<Tag>(_aidl_tag)) {
   case num: {
     int32_t _aidl_value;
     if ((_aidl_ret_status = _aidl_parcel->readInt32(&_aidl_value)) != ::android::OK) return _aidl_ret_status;
@@ -32,7 +32,7 @@ namespace loggable {
   return ::android::BAD_VALUE;
 }
 ::android::status_t Union::writeToParcel(::android::Parcel* _aidl_parcel) const {
-  ::android::status_t _aidl_ret_status = _aidl_parcel->writeInt32(getTag());
+  ::android::status_t _aidl_ret_status = _aidl_parcel->writeInt32(static_cast<int32_t>(getTag()));
   if (_aidl_ret_status != ::android::OK) return _aidl_ret_status;
   switch (getTag()) {
   case num: return _aidl_parcel->writeInt32(get<num>());
