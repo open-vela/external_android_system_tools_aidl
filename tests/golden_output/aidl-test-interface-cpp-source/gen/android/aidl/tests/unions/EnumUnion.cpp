@@ -8,7 +8,7 @@ namespace unions {
   ::android::status_t _aidl_ret_status;
   int32_t _aidl_tag;
   if ((_aidl_ret_status = _aidl_parcel->readInt32(&_aidl_tag)) != ::android::OK) return _aidl_ret_status;
-  switch (_aidl_tag) {
+  switch (static_cast<Tag>(_aidl_tag)) {
   case intEnum: {
     ::android::aidl::tests::IntEnum _aidl_value;
     if ((_aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&_aidl_value))) != ::android::OK) return _aidl_ret_status;
@@ -33,7 +33,7 @@ namespace unions {
   return ::android::BAD_VALUE;
 }
 ::android::status_t EnumUnion::writeToParcel(::android::Parcel* _aidl_parcel) const {
-  ::android::status_t _aidl_ret_status = _aidl_parcel->writeInt32(getTag());
+  ::android::status_t _aidl_ret_status = _aidl_parcel->writeInt32(static_cast<int32_t>(getTag()));
   if (_aidl_ret_status != ::android::OK) return _aidl_ret_status;
   switch (getTag()) {
   case intEnum: return _aidl_parcel->writeInt32(static_cast<int32_t>(get<intEnum>()));
