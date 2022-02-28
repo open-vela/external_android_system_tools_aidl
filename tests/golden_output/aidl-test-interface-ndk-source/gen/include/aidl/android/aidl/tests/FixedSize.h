@@ -49,7 +49,7 @@ public:
     };
 
     template <Tag _Tag>
-    using _at = typename std::tuple_element<_Tag, std::tuple<bool, int8_t, char16_t, int32_t, int64_t, float, double, ::aidl::android::aidl::tests::LongEnum>>::type;
+    using _at = typename std::tuple_element<static_cast<size_t>(_Tag), std::tuple<bool, int8_t, char16_t, int32_t, int64_t, float, double, ::aidl::android::aidl::tests::LongEnum>>::type;
     template <Tag _Tag, typename _Type>
     static FixedUnion make(_Type&& _arg) {
       FixedUnion _inst;
@@ -87,7 +87,7 @@ public:
       } else {
         return (_lhs.getTag() == _Tag)
           ? _cmp_value(_lhs.get<_Tag>(), _rhs.get<_Tag>())
-          : _cmp_value_at<(Tag)(_Tag-1)>(_lhs, _rhs);
+          : _cmp_value_at<static_cast<Tag>(static_cast<size_t>(_Tag)-1)>(_lhs, _rhs);
       }
     }
     template <typename _Type>
