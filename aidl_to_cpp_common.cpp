@@ -314,7 +314,7 @@ static int _cmp_value_at(const {name}& _lhs, const {name}& _rhs) {{
   }} else {{
     return (_lhs.getTag() == _Tag)
       ? _cmp_value(_lhs.get<_Tag>(), _rhs.get<_Tag>())
-      : _cmp_value_at<(Tag)(_Tag-1)>(_lhs, _rhs);
+      : _cmp_value_at<static_cast<Tag>(static_cast<size_t>(_Tag)-1)>(_lhs, _rhs);
   }}
 }}
 template <typename _Type>
@@ -540,7 +540,7 @@ void UnionWriter::PublicFields(CodeWriter& out) const {
     auto typelist = Join(field_types, ", ");
     auto tmpl = R"--(
 template <Tag _Tag>
-using _at = typename std::tuple_element<_Tag, std::tuple<{typelist}>>::type;
+using _at = typename std::tuple_element<static_cast<size_t>(_Tag), std::tuple<{typelist}>>::type;
 template <Tag _Tag, typename _Type>
 static {name} make(_Type&& _arg) {{
   {name} _inst;
@@ -578,7 +578,7 @@ void set(_Type&& _arg) {{
 template<typename _Tp>
 static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, {name}>;
 
-{name}() : _value(std::in_place_index<{default_name}>, {default_value}) {{ }}
+{name}() : _value(std::in_place_index<static_cast<size_t>({default_name})>, {default_value}) {{ }}
 
 template <typename _Tp, typename = std::enable_if_t<_not_self<_Tp>>>
 // NOLINTNEXTLINE(google-explicit-constructor)
@@ -591,12 +591,12 @@ constexpr explicit {name}(std::in_place_index_t<_Np>, _Tp&&... _args)
 
 template <Tag _tag, typename... _Tp>
 static {name} make(_Tp&&... _args) {{
-  return {name}(std::in_place_index<_tag>, std::forward<_Tp>(_args)...);
+  return {name}(std::in_place_index<static_cast<size_t>(_tag)>, std::forward<_Tp>(_args)...);
 }}
 
 template <Tag _tag, typename _Tp, typename... _Up>
 static {name} make(std::initializer_list<_Tp> _il, _Up&&... _args) {{
-  return {name}(std::in_place_index<_tag>, std::move(_il), std::forward<_Up>(_args)...);
+  return {name}(std::in_place_index<static_cast<size_t>(_tag)>, std::move(_il), std::forward<_Up>(_args)...);
 }}
 
 Tag getTag() const {{
@@ -606,18 +606,18 @@ Tag getTag() const {{
 template <Tag _tag>
 const auto& get() const {{
   if (getTag() != _tag) {{ __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "bad access: a wrong tag"); }}
-  return std::get<_tag>(_value);
+  return std::get<static_cast<size_t>(_tag)>(_value);
 }}
 
 template <Tag _tag>
 auto& get() {{
   if (getTag() != _tag) {{ __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "bad access: a wrong tag"); }}
-  return std::get<_tag>(_value);
+  return std::get<static_cast<size_t>(_tag)>(_value);
 }}
 
 template <Tag _tag, typename... _Tp>
 void set(_Tp&&... _args) {{
-  _value.emplace<_tag>(std::forward<_Tp>(_args)...);
+  _value.emplace<static_cast<size_t>(_tag)>(std::forward<_Tp>(_args)...);
 }}
 
 )--";
@@ -644,7 +644,7 @@ void UnionWriter::ReadFromParcel(CodeWriter& out, const ParcelWriterContext& ctx
 
   out << fmt::format("{} {};\n", ctx.status_type, status);
   read_var(tag, *tag_type);
-  out << fmt::format("switch ({}) {{\n", tag);
+  out << fmt::format("switch (static_cast<Tag>({})) {{\n", tag);
   for (const auto& variable : decl.GetFields()) {
     out << fmt::format("case {}: {{\n", variable->GetName());
     out.Indent();
@@ -680,7 +680,7 @@ void UnionWriter::WriteToParcel(CodeWriter& out, const ParcelWriterContext& ctx)
   const string status = "_aidl_ret_status";
 
   out << fmt::format("{} {} = ", ctx.status_type, status);
-  ctx.write_func(out, "getTag()", *tag_type);
+  ctx.write_func(out, "static_cast<int32_t>(getTag())", *tag_type);
   out << ";\n";
   out << fmt::format("if ({} != {}) return {};\n", status, ctx.status_ok, status);
   out << "switch (getTag()) {\n";
