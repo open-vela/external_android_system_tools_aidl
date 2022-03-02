@@ -887,7 +887,7 @@ fn test_versioned_unknown_union_field_triggers_error() {
             .expect("did not get binder service");
 
     let ret = service.acceptUnionAndReturnString(&BazUnion::LongNum(42));
-    assert!(!ret.is_ok());
+    assert!(ret.is_err());
 
     let main_service = get_test_service();
     let backend = main_service.getBackendType().expect("error getting backend type");
