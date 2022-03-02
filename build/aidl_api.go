@@ -148,6 +148,16 @@ func (m *aidlApi) createApiDumpFromSource(ctx android.ModuleContext) apiDump {
 	})
 	return apiDump{version, apiDir, apiFiles.Paths(), android.OptionalPathForPath(hashFile)}
 }
+
+func wrapWithDiffCheckIfElse(m *aidlApi, rb *android.RuleBuilder, writer func(*android.RuleBuilderCommand), elseBlock func(*android.RuleBuilderCommand)) {
+	rbc := rb.Command()
+	rbc.Text("if [ \"$(cat ").Input(m.hasDevelopment).Text(")\" = \"1\" ]; then")
+	writer(rbc)
+	rbc.Text("; else")
+	elseBlock(rbc)
+	rbc.Text("; fi")
+}
+
 func wrapWithDiffCheckIf(m *aidlApi, rb *android.RuleBuilder, writer func(*android.RuleBuilderCommand), needToWrap bool) {
 	rbc := rb.Command()
 	if needToWrap {
@@ -160,7 +170,7 @@ func wrapWithDiffCheckIf(m *aidlApi, rb *android.RuleBuilder, writer func(*andro
 }
 
 // Migrate `versions` into `version_with_info`, and then append a version if it isn't nil
-func (m *aidlApi) migrateAndAppendVersion(ctx android.ModuleContext, rb *android.RuleBuilder, version *string) {
+func (m *aidlApi) migrateAndAppendVersion(ctx android.ModuleContext, rb *android.RuleBuilder, version *string, transitive bool) {
 	isFreezingApi := version != nil
 
 	// Remove `versions` property which is deprecated.
@@ -190,30 +200,72 @@ func (m *aidlApi) migrateAndAppendVersion(ctx android.ModuleContext, rb *android
 		versions = append(versions, *version)
 	}
 	for _, v := range versions {
-		import_ifaces := make(map[string]*aidlInterface)
+		importIfaces := make(map[string]*aidlInterface)
 		ctx.VisitDirectDeps(func(dep android.Module) {
 			if _, ok := ctx.OtherModuleDependencyTag(dep).(importInterfaceDepTag); ok {
 				other := dep.(*aidlInterface)
-				import_ifaces[other.BaseModuleName()] = other
+				importIfaces[other.BaseModuleName()] = other
 			}
 		})
 		imports := make([]string, 0, len(iface.getImportsForVersion(v)))
-		for _, im := range iface.getImportsForVersion(v) {
-			if hasVersionSuffix(im) {
-				imports = append(imports, im)
-			} else {
-				imports = append(imports, im+"-V"+import_ifaces[im].latestVersion())
-			}
-		}
-		data := fmt.Sprintf(`{version: "%s", imports: %v}`, v, wrap(`"`, imports, `"`))
+		needTransitiveFreeze := isFreezingApi && v == *version && transitive
 
-		// Also modify Android.bp file to add the new version to the 'versions_with_info' property.
-		wrapWithDiffCheckIf(m, rb, func(rbc *android.RuleBuilderCommand) {
-			rbc.BuiltTool("bpmodify").
-				Text("-w -m " + m.properties.BaseName).
-				Text("-parameter versions_with_info -add-literal '" + data + "' ").
-				Text(android.PathForModuleSrc(ctx, "Android.bp").String())
-		}, isFreezingApi)
+		if needTransitiveFreeze {
+			importApis := make(map[string]*aidlApi)
+			ctx.WalkDeps(func(child android.Module, parent android.Module) bool {
+				if api, ok := child.(*aidlApi); ok {
+					moduleName := strings.TrimSuffix(api.Name(), aidlApiSuffix)
+					if _, ok := importIfaces[moduleName]; ok {
+						importApis[moduleName] = api
+						return false
+					}
+				}
+				return true
+			})
+			wrapWithDiffCheckIf(m, rb, func(rbc *android.RuleBuilderCommand) {
+				rbc.BuiltTool("bpmodify").
+					Text("-w -m " + m.properties.BaseName).
+					Text("-parameter versions_with_info -add-literal '").
+					Text(fmt.Sprintf(`{version: "%s", imports: [`, v))
+
+				for _, im := range iface.getImportsForVersion(v) {
+					moduleName, version := parseModuleWithVersion(im)
+
+					// Invoke an imported interface's freeze-api only if it depends on ToT version explicitly or implicitly.
+					if version == importIfaces[moduleName].nextVersion() || !hasVersionSuffix(im) {
+						rb.Command().Text(fmt.Sprintf(`echo "Call %s-freeze-api because %s depends on %s."`, moduleName, m.properties.BaseName, moduleName))
+						rbc.Implicit(importApis[moduleName].freezeApiTimestamp)
+					}
+					if hasVersionSuffix(im) {
+						rbc.Text(fmt.Sprintf(`"%s",`, im))
+					} else {
+						rbc.Text("\"" + im + "-V'" + `$(if [ "$(cat `).
+							Input(importApis[im].hasDevelopment).
+							Text(`)" = "1" ]; then echo "` + importIfaces[im].nextVersion() +
+								`"; else echo "` + importIfaces[im].latestVersion() + `"; fi)'"`)
+					}
+				}
+				rbc.Text("]}' ").
+					Text(android.PathForModuleSrc(ctx, "Android.bp").String())
+			}, isFreezingApi)
+		} else {
+			for _, im := range iface.getImportsForVersion(v) {
+				if hasVersionSuffix(im) {
+					imports = append(imports, im)
+				} else {
+					imports = append(imports, im+"-V"+importIfaces[im].latestVersion())
+				}
+			}
+			data := fmt.Sprintf(`{version: "%s", imports: %v}`, v, wrap(`"`, imports, `"`))
+
+			// Also modify Android.bp file to add the new version to the 'versions_with_info' property.
+			wrapWithDiffCheckIf(m, rb, func(rbc *android.RuleBuilderCommand) {
+				rbc.BuiltTool("bpmodify").
+					Text("-w -m " + m.properties.BaseName).
+					Text("-parameter versions_with_info -add-literal '" + data + "' ").
+					Text(android.PathForModuleSrc(ctx, "Android.bp").String())
+			}, isFreezingApi)
+		}
 	}
 }
 
@@ -222,7 +274,7 @@ func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, 
 	moduleDir := android.PathForModuleSrc(ctx).String()
 	targetDir := filepath.Join(moduleDir, m.apiDir(), version)
 	rb := android.NewRuleBuilder(pctx, ctx)
-
+	transitive := ctx.Config().IsEnvTrue("AIDL_TRANSITIVE_FREEZE")
 	var actionWord string
 	if creatingNewVersion {
 		actionWord = "Making"
@@ -235,8 +287,12 @@ func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, 
 			rbc.Text("mkdir -p " + targetDir + " && ").
 				Text("cp -rf " + dump.dir.String() + "/. " + targetDir).Implicits(dump.files)
 		}, true /* needToWrap */)
-
-		m.migrateAndAppendVersion(ctx, rb, &version)
+		wrapWithDiffCheckIfElse(m, rb, func(rbc *android.RuleBuilderCommand) {
+			rbc.Text(fmt.Sprintf(`echo "There is change between ToT version and the latest stable version. Freezing %s-V%s."`, m.properties.BaseName, version))
+		}, func(rbc *android.RuleBuilderCommand) {
+			rbc.Text(fmt.Sprintf(`echo "There is no change from the latest stable version of %s. Nothing happened."`, m.properties.BaseName))
+		})
+		m.migrateAndAppendVersion(ctx, rb, &version, transitive)
 	} else {
 		actionWord = "Updating"
 		// We are updating the current version. Don't copy .hash to the current dump
@@ -244,7 +300,7 @@ func (m *aidlApi) makeApiDumpAsVersion(ctx android.ModuleContext, dump apiDump, 
 		rb.Command().Text("rm -rf " + targetDir + "/*")
 		rb.Command().Text("cp -rf " + dump.dir.String() + "/* " + targetDir).Implicits(dump.files)
 
-		m.migrateAndAppendVersion(ctx, rb, nil)
+		m.migrateAndAppendVersion(ctx, rb, nil, false)
 	}
 
 	timestampFile := android.PathForModuleOut(ctx, "updateapi_"+version+".timestamp")
