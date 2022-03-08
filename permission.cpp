@@ -28,7 +28,7 @@ namespace perm {
 
 std::string AsJavaAnnotation(const Expression& expr) {
   if (const auto& s = std::get_if<std::string>(&expr); s) {
-    return JavaAnnotation(*s);
+    return JavaFullName(*s);
   }
   if (const auto& all = std::get_if<AllOf>(&expr); all) {
     return all->JavaAnnotation();
@@ -39,8 +39,11 @@ std::string AsJavaAnnotation(const Expression& expr) {
   return "";
 }
 
-std::string JavaAnnotation(const std::string& permission) {
-  return "android.Manifest.permission." + permission;
+std::string JavaFullName(const std::string& permission) {
+  if (permission.find('.') == std::string::npos) {
+    return "android.Manifest.permission." + permission;
+  }
+  return permission;
 }
 
 }  // namespace perm
