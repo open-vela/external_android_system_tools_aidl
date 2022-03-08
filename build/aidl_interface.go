@@ -380,6 +380,11 @@ type aidlInterfaceProperties struct {
 		Ndk struct {
 			CommonNativeBackendProperties
 
+			// Set to the version of the sdk to compile against, for the NDK
+			// variant.
+			// Default: current
+			Sdk_version *string
+
 			// If set to false, the ndk backend is exclusive to platform and is not
 			// available to applications. Default is true (i.e. available to both
 			// applications and platform).
