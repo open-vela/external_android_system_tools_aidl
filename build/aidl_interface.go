@@ -640,6 +640,12 @@ func (i *aidlInterface) checkVersions(mctx android.LoadHookContext) {
 		i.properties.VersionsInternal = make([]string, len(i.properties.Versions_with_info))
 		for idx, value := range i.properties.Versions_with_info {
 			i.properties.VersionsInternal[idx] = value.Version
+			for _, im := range value.Imports {
+				if !hasVersionSuffix(im) {
+					mctx.ModuleErrorf("imports in versions_with_info must specify its version, but %s. Add a version suffix(such as %s-V1).", im, im)
+					return
+				}
+			}
 		}
 	}
 
