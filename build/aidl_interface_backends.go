@@ -122,7 +122,11 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		targetProp.Product = nonAppProps
 		hostSupported = i.properties.Host_supported
 		if lang == langNdk && i.shouldGenerateAppNdkBackend() {
-			sdkVersion = proptools.StringPtr("current")
+			sdkVersion = i.properties.Backend.Ndk.Sdk_version
+			if sdkVersion == nil {
+				sdkVersion = proptools.StringPtr("current")
+			}
+
 			// Don't worry! This maps to libc++.so for the platform variant.
 			stl = proptools.StringPtr("c++_shared")
 		}
