@@ -104,6 +104,7 @@ aidl_interface {
         "1",
         "2",
         "3",
+        "4",
     ],
 }
 
@@ -192,6 +193,7 @@ aidl_interface {
     versions: [
         "1",
         "2",
+        "3",
     ],
 }
 
