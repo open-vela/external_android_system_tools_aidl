@@ -466,13 +466,12 @@ struct PermissionVisitor {
         break;
       }
     }
-    auto permissionName = android::aidl::perm::JavaFullName(permission);
-    auto checkPermission =
-        std::make_shared<MethodCall>(THIS_VALUE, "permissionCheckerWrapper",
-                                     std::vector<std::shared_ptr<Expression>>{
-                                         std::make_shared<LiteralExpression>(permissionName),
-                                         std::make_shared<MethodCall>(THIS_VALUE, "getCallingPid"),
-                                         std::make_shared<LiteralExpression>(attributionSource)});
+    auto checkPermission = std::make_shared<MethodCall>(
+        THIS_VALUE, "permissionCheckerWrapper",
+        std::vector<std::shared_ptr<Expression>>{
+            std::make_shared<LiteralExpression>("android.Manifest.permission." + permission),
+            std::make_shared<MethodCall>(THIS_VALUE, "getCallingPid"),
+            std::make_shared<LiteralExpression>(attributionSource)});
     return checkPermission;
   }
 
