@@ -76,7 +76,6 @@ static vector<string> get_strict_annotations(const AidlAnnotatable& node) {
   // - a new implementation might start accepting null values (add @nullable)
   static const set<AidlAnnotation::Type> kIgnoreAnnotations{
       AidlAnnotation::Type::NULLABLE,
-      AidlAnnotation::Type::HIDE,
       // @JavaDerive doesn't affect read/write
       AidlAnnotation::Type::JAVA_DERIVE,
       AidlAnnotation::Type::JAVA_DEFAULT,

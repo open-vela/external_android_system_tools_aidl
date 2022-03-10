@@ -49,7 +49,6 @@
 " @SystemApi "
 " @JavaPassthrough "
 " @JavaOnlyStableParcelable "
-" @Hide "
 " @Backing "
 " @FixedSize "
 " @Descriptor "
