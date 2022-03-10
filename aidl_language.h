@@ -225,7 +225,6 @@ class AidlAnnotation : public AidlNode {
  public:
   enum class Type {
     BACKING = 1,
-    HIDE,
     JAVA_STABLE_PARCELABLE,
     UNSUPPORTED_APP_USAGE,
     VINTF_STABILITY,
@@ -355,7 +354,6 @@ class AidlAnnotatable : public AidlCommentable {
   bool IsJavaOnlyImmutable() const;
   bool IsFixedSize() const;
   bool IsStableApiParcelable(Options::Language lang) const;
-  bool IsHide() const;
   bool JavaDerive(const std::string& method) const;
   bool IsJavaDefault() const;
   bool IsJavaDelegator() const;

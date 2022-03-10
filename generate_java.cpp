@@ -904,9 +904,6 @@ std::string GenerateJavaUnsupportedAppUsageParameters(const AidlAnnotation& a) {
 
 std::vector<std::string> GenerateJavaAnnotations(const AidlAnnotatable& a) {
   std::vector<std::string> result;
-  if (a.IsHide()) {
-    result.emplace_back("@android.annotation.Hide");
-  }
 
   const AidlAnnotation* unsupported_app_usage = a.UnsupportedAppUsage();
   if (unsupported_app_usage != nullptr) {
