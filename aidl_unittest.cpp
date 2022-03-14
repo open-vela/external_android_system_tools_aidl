@@ -322,16 +322,6 @@ TEST_P(AidlTest, RejectsDuplicatedFieldNames) {
   EXPECT_EQ(expected_stderr, GetCapturedStderr());
 }
 
-TEST_P(AidlTest, RejectsRepeatedAnnotations) {
-  const string method = R"(@Hide @Hide parcelable Foo {})";
-  const string expected_stderr =
-      "ERROR: Foo.aidl:1.23-27: 'Hide' is repeated, but not allowed. Previous location: "
-      "Foo.aidl:1.1-6\n";
-  CaptureStderr();
-  EXPECT_EQ(nullptr, Parse("Foo.aidl", method, typenames_, GetLanguage()));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
-}
-
 TEST_P(AidlTest, AcceptsEmptyParcelable) {
   CaptureStderr();
   EXPECT_NE(nullptr, Parse("Foo.aidl", "parcelable Foo {}", typenames_, GetLanguage()));
@@ -681,7 +671,8 @@ TEST_P(AidlTest, AcceptsAnnotatedOnewayMethod) {
 
 TEST_P(AidlTest, AnnotationsInMultiplePlaces) {
   const string oneway_method =
-      "package a; interface IFoo { @UnsupportedAppUsage oneway @Hide void f(int a); }";
+      "package a; interface IFoo { @UnsupportedAppUsage oneway @PropagateAllowBlocking void f(int "
+      "a); }";
   const AidlDefinedType* defined = Parse("a/IFoo.aidl", oneway_method, typenames_, GetLanguage());
   ASSERT_NE(nullptr, defined);
   const AidlInterface* iface = defined->AsInterface();
@@ -694,7 +685,7 @@ TEST_P(AidlTest, AnnotationsInMultiplePlaces) {
 
   // TODO(b/151102494): these annotations should be on the method
   ASSERT_NE(nullptr, ret_type.UnsupportedAppUsage());
-  ASSERT_TRUE(ret_type.IsHide());
+  ASSERT_TRUE(ret_type.IsPropagateAllowBlocking());
 }
 
 TEST_P(AidlTest, AnnotationValueAttribute) {
@@ -5115,17 +5106,6 @@ TEST_F(AidlTest, FormatCommentsForJava) {
   for (const auto& [input, formatted] : testcases) {
     EXPECT_EQ(formatted, FormatCommentsForJava(input));
   }
-}
-
-TEST_F(AidlTest, HideIsNotForArgs) {
-  io_delegate_.SetFileContents("IFoo.aidl",
-                               "interface IFoo {\n"
-                               "  void foo(in @Hide int x);\n"
-                               "}");
-  auto options = Options::From("aidl --lang=java IFoo.aidl");
-  CaptureStderr();
-  EXPECT_FALSE(compile_aidl(options, io_delegate_));
-  EXPECT_THAT(GetCapturedStderr(), HasSubstr("@Hide is not available"));
 }
 
 TEST_F(AidlTest, SuppressWarningsIsNotForArgs) {
