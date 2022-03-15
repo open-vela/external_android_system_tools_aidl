@@ -89,14 +89,14 @@ class OverflowGuard {
       mOverflowed = true;
       return 0;
     }
-    return mValue / o;
+    return static_cast<T>(mValue / o);
   }
   T operator%(T o) {
     if (o == 0 || (isMin() && o == -1)) {
       mOverflowed = true;
       return 0;
     }
-    return mValue % o;
+    return static_cast<T>(mValue % o);
   }
   T operator|(T o) { return mValue | o; }
   T operator^(T o) { return mValue ^ o; }
@@ -112,14 +112,14 @@ class OverflowGuard {
       mOverflowed = true;
       return 0;
     }
-    return mValue >> o;
+    return static_cast<T>(mValue >> o);
   }
   T operator<<(T o) {
     if (o < 0 || mValue < 0 || o > CLZ(mValue) || o >= static_cast<T>(sizeof(T) * 8)) {
       mOverflowed = true;
       return 0;
     }
-    return mValue << o;
+    return static_cast<T>(mValue << o);
   }
   T operator||(T o) { return mValue || o; }
   T operator&&(T o) { return mValue && o; }
