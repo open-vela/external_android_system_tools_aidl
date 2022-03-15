@@ -3,13 +3,10 @@
 #include <android/aidl/tests/FixedSize.h>
 #include <android/aidl/tests/LongEnum.h>
 #include <android/binder_to_string.h>
-#include <array>
-#include <binder/Enums.h>
 #include <binder/Parcel.h>
 #include <binder/Status.h>
 #include <cassert>
 #include <cstdint>
-#include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -27,25 +24,16 @@ class FixedSize : public ::android::Parcelable {
 public:
   class FixedUnion : public ::android::Parcelable {
   public:
-    enum class Tag : int8_t {
-      booleanValue = 0,
-      byteValue = 1,
-      charValue = 2,
-      intValue = 3,
-      longValue = 4,
-      floatValue = 5,
-      doubleValue = 6,
-      enumValue = 7,
+    enum Tag : uint8_t {
+      booleanValue = 0,  // boolean booleanValue;
+      byteValue,  // byte byteValue;
+      charValue,  // char charValue;
+      intValue,  // int intValue;
+      longValue,  // long longValue;
+      floatValue,  // float floatValue;
+      doubleValue,  // double doubleValue;
+      enumValue,  // android.aidl.tests.LongEnum enumValue;
     };
-    // Expose tag symbols for legacy code
-    static const inline Tag booleanValue = Tag::booleanValue;
-    static const inline Tag byteValue = Tag::byteValue;
-    static const inline Tag charValue = Tag::charValue;
-    static const inline Tag intValue = Tag::intValue;
-    static const inline Tag longValue = Tag::longValue;
-    static const inline Tag floatValue = Tag::floatValue;
-    static const inline Tag doubleValue = Tag::doubleValue;
-    static const inline Tag enumValue = Tag::enumValue;
 
     template <Tag _Tag>
     using _at = typename std::tuple_element<static_cast<size_t>(_Tag), std::tuple<bool, int8_t, char16_t, int32_t, int64_t, float, double, ::android::aidl::tests::LongEnum>>::type;
@@ -131,7 +119,7 @@ public:
       return os.str();
     }
   private:
-    Tag _tag = booleanValue;
+    Tag _tag __attribute__((aligned (1))) = booleanValue;
     union _value_t {
       _value_t() {}
       ~_value_t() {}
@@ -231,50 +219,4 @@ public:
 };  // class FixedSize
 }  // namespace tests
 }  // namespace aidl
-}  // namespace android
-namespace android {
-namespace aidl {
-namespace tests {
-[[nodiscard]] static inline std::string toString(FixedSize::FixedUnion::Tag val) {
-  switch(val) {
-  case FixedSize::FixedUnion::Tag::booleanValue:
-    return "booleanValue";
-  case FixedSize::FixedUnion::Tag::byteValue:
-    return "byteValue";
-  case FixedSize::FixedUnion::Tag::charValue:
-    return "charValue";
-  case FixedSize::FixedUnion::Tag::intValue:
-    return "intValue";
-  case FixedSize::FixedUnion::Tag::longValue:
-    return "longValue";
-  case FixedSize::FixedUnion::Tag::floatValue:
-    return "floatValue";
-  case FixedSize::FixedUnion::Tag::doubleValue:
-    return "doubleValue";
-  case FixedSize::FixedUnion::Tag::enumValue:
-    return "enumValue";
-  default:
-    return std::to_string(static_cast<int8_t>(val));
-  }
-}
-}  // namespace tests
-}  // namespace aidl
-}  // namespace android
-namespace android {
-namespace internal {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc++17-extensions"
-template <>
-constexpr inline std::array<::android::aidl::tests::FixedSize::FixedUnion::Tag, 8> enum_values<::android::aidl::tests::FixedSize::FixedUnion::Tag> = {
-  ::android::aidl::tests::FixedSize::FixedUnion::Tag::booleanValue,
-  ::android::aidl::tests::FixedSize::FixedUnion::Tag::byteValue,
-  ::android::aidl::tests::FixedSize::FixedUnion::Tag::charValue,
-  ::android::aidl::tests::FixedSize::FixedUnion::Tag::intValue,
-  ::android::aidl::tests::FixedSize::FixedUnion::Tag::longValue,
-  ::android::aidl::tests::FixedSize::FixedUnion::Tag::floatValue,
-  ::android::aidl::tests::FixedSize::FixedUnion::Tag::doubleValue,
-  ::android::aidl::tests::FixedSize::FixedUnion::Tag::enumValue,
-};
-#pragma clang diagnostic pop
-}  // namespace internal
 }  // namespace android

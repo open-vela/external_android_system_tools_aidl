@@ -2,16 +2,12 @@
 
 #include <android/aidl/tests/ArrayOfInterfaces.h>
 #include <android/binder_to_string.h>
-#include <array>
-#include <binder/Enums.h>
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
 #include <binder/Parcel.h>
 #include <binder/Status.h>
 #include <cassert>
-#include <cstdint>
 #include <optional>
-#include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -140,17 +136,12 @@ public:
   };  // class MyParcelable
   class MyUnion : public ::android::Parcelable {
   public:
-    enum class Tag : int32_t {
-      iface = 0,
-      nullable_iface = 1,
-      iface_array = 2,
-      nullable_iface_array = 3,
+    enum Tag : int32_t {
+      iface = 0,  // android.aidl.tests.ArrayOfInterfaces.IEmptyInterface iface;
+      nullable_iface,  // android.aidl.tests.ArrayOfInterfaces.IEmptyInterface nullable_iface;
+      iface_array,  // android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] iface_array;
+      nullable_iface_array,  // android.aidl.tests.ArrayOfInterfaces.IEmptyInterface[] nullable_iface_array;
     };
-    // Expose tag symbols for legacy code
-    static const inline Tag iface = Tag::iface;
-    static const inline Tag nullable_iface = Tag::nullable_iface;
-    static const inline Tag iface_array = Tag::iface_array;
-    static const inline Tag nullable_iface_array = Tag::nullable_iface_array;
 
     template<typename _Tp>
     static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, MyUnion>;
@@ -271,38 +262,4 @@ public:
 };  // class ArrayOfInterfaces
 }  // namespace tests
 }  // namespace aidl
-}  // namespace android
-namespace android {
-namespace aidl {
-namespace tests {
-[[nodiscard]] static inline std::string toString(ArrayOfInterfaces::MyUnion::Tag val) {
-  switch(val) {
-  case ArrayOfInterfaces::MyUnion::Tag::iface:
-    return "iface";
-  case ArrayOfInterfaces::MyUnion::Tag::nullable_iface:
-    return "nullable_iface";
-  case ArrayOfInterfaces::MyUnion::Tag::iface_array:
-    return "iface_array";
-  case ArrayOfInterfaces::MyUnion::Tag::nullable_iface_array:
-    return "nullable_iface_array";
-  default:
-    return std::to_string(static_cast<int32_t>(val));
-  }
-}
-}  // namespace tests
-}  // namespace aidl
-}  // namespace android
-namespace android {
-namespace internal {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc++17-extensions"
-template <>
-constexpr inline std::array<::android::aidl::tests::ArrayOfInterfaces::MyUnion::Tag, 4> enum_values<::android::aidl::tests::ArrayOfInterfaces::MyUnion::Tag> = {
-  ::android::aidl::tests::ArrayOfInterfaces::MyUnion::Tag::iface,
-  ::android::aidl::tests::ArrayOfInterfaces::MyUnion::Tag::nullable_iface,
-  ::android::aidl::tests::ArrayOfInterfaces::MyUnion::Tag::iface_array,
-  ::android::aidl::tests::ArrayOfInterfaces::MyUnion::Tag::nullable_iface_array,
-};
-#pragma clang diagnostic pop
-}  // namespace internal
 }  // namespace android

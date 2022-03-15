@@ -75,7 +75,6 @@ public:
   ::android::binder::Status ReverseNullableIBinderArray(const ::std::optional<::std::vector<::android::sp<::android::IBinder>>>& input, ::std::optional<::std::vector<::android::sp<::android::IBinder>>>* repeated, ::std::optional<::std::vector<::android::sp<::android::IBinder>>>* _aidl_return) override;
   ::android::binder::Status GetOldNameInterface(::android::sp<::android::aidl::tests::IOldName>* _aidl_return) override;
   ::android::binder::Status GetNewNameInterface(::android::sp<::android::aidl::tests::INewName>* _aidl_return) override;
-  ::android::binder::Status GetUnionTags(const ::std::vector<::android::aidl::tests::Union>& input, ::std::vector<::android::aidl::tests::Union::Tag>* _aidl_return) override;
   ::android::binder::Status GetCppJavaTests(::android::sp<::android::IBinder>* _aidl_return) override;
   ::android::binder::Status getBackendType(::android::aidl::tests::BackendType* _aidl_return) override;
 };  // class BpTestService
