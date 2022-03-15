@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cassert>
 #include <cstdint>
 #include <memory>
@@ -9,6 +10,7 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <android/binder_enums.h>
 #include <android/binder_interface_utils.h>
 #include <android/binder_parcelable_utils.h>
 #include <android/binder_to_string.h>
@@ -29,10 +31,14 @@ public:
   typedef std::false_type fixed_size;
   static const char* descriptor;
 
-  enum Tag : int32_t {
-    num = 0,  // int num;
-    pfd,  // ParcelFileDescriptor pfd;
+  enum class Tag : int32_t {
+    num = 0,
+    pfd = 1,
   };
+
+  // Expose tag symbols for legacy code
+  static const inline Tag num = Tag::num;
+  static const inline Tag pfd = Tag::pfd;
 
   template<typename _Tp>
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, UnionWithFd>;
@@ -119,3 +125,33 @@ private:
 }  // namespace aidl
 }  // namespace android
 }  // namespace aidl
+namespace aidl {
+namespace android {
+namespace aidl {
+namespace tests {
+[[nodiscard]] static inline std::string toString(UnionWithFd::Tag val) {
+  switch(val) {
+  case UnionWithFd::Tag::num:
+    return "num";
+  case UnionWithFd::Tag::pfd:
+    return "pfd";
+  default:
+    return std::to_string(static_cast<int32_t>(val));
+  }
+}
+}  // namespace tests
+}  // namespace aidl
+}  // namespace android
+}  // namespace aidl
+namespace ndk {
+namespace internal {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc++17-extensions"
+template <>
+constexpr inline std::array<aidl::android::aidl::tests::UnionWithFd::Tag, 2> enum_values<aidl::android::aidl::tests::UnionWithFd::Tag> = {
+  aidl::android::aidl::tests::UnionWithFd::Tag::num,
+  aidl::android::aidl::tests::UnionWithFd::Tag::pfd,
+};
+#pragma clang diagnostic pop
+}  // namespace internal
+}  // namespace ndk
