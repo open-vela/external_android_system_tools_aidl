@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <cassert>
 #include <cstdint>
 #include <memory>
@@ -10,7 +9,6 @@
 #include <utility>
 #include <variant>
 #include <vector>
-#include <android/binder_enums.h>
 #include <android/binder_interface_utils.h>
 #include <android/binder_parcelable_utils.h>
 #include <android/binder_to_string.h>
@@ -32,24 +30,15 @@ public:
   typedef std::false_type fixed_size;
   static const char* descriptor;
 
-  enum class Tag : int32_t {
-    ns = 0,
-    n = 1,
-    m = 2,
-    s = 3,
-    ibinder = 4,
-    ss = 5,
-    be = 6,
+  enum Tag : int32_t {
+    ns = 0,  // int[] ns;
+    n,  // int n;
+    m,  // int m;
+    s,  // String s;
+    ibinder,  // IBinder ibinder;
+    ss,  // List<String> ss;
+    be,  // android.aidl.tests.ByteEnum be;
   };
-
-  // Expose tag symbols for legacy code
-  static const inline Tag ns = Tag::ns;
-  static const inline Tag n = Tag::n;
-  static const inline Tag m = Tag::m;
-  static const inline Tag s = Tag::s;
-  static const inline Tag ibinder = Tag::ibinder;
-  static const inline Tag ss = Tag::ss;
-  static const inline Tag be = Tag::be;
 
   template<typename _Tp>
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, Union>;
@@ -142,48 +131,3 @@ private:
 }  // namespace aidl
 }  // namespace android
 }  // namespace aidl
-namespace aidl {
-namespace android {
-namespace aidl {
-namespace tests {
-[[nodiscard]] static inline std::string toString(Union::Tag val) {
-  switch(val) {
-  case Union::Tag::ns:
-    return "ns";
-  case Union::Tag::n:
-    return "n";
-  case Union::Tag::m:
-    return "m";
-  case Union::Tag::s:
-    return "s";
-  case Union::Tag::ibinder:
-    return "ibinder";
-  case Union::Tag::ss:
-    return "ss";
-  case Union::Tag::be:
-    return "be";
-  default:
-    return std::to_string(static_cast<int32_t>(val));
-  }
-}
-}  // namespace tests
-}  // namespace aidl
-}  // namespace android
-}  // namespace aidl
-namespace ndk {
-namespace internal {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc++17-extensions"
-template <>
-constexpr inline std::array<aidl::android::aidl::tests::Union::Tag, 7> enum_values<aidl::android::aidl::tests::Union::Tag> = {
-  aidl::android::aidl::tests::Union::Tag::ns,
-  aidl::android::aidl::tests::Union::Tag::n,
-  aidl::android::aidl::tests::Union::Tag::m,
-  aidl::android::aidl::tests::Union::Tag::s,
-  aidl::android::aidl::tests::Union::Tag::ibinder,
-  aidl::android::aidl::tests::Union::Tag::ss,
-  aidl::android::aidl::tests::Union::Tag::be,
-};
-#pragma clang diagnostic pop
-}  // namespace internal
-}  // namespace ndk

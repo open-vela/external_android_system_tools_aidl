@@ -592,15 +592,6 @@ public class TestServiceServer extends ITestService.Stub {
     return new MyNewName();
   }
 
-  @Override
-  public int[] GetUnionTags(Union[] input) throws RemoteException {
-    int[] tags = new int[input.length];
-    for (int i = 0; i < input.length; i++) {
-      tags[i] = input[i].getTag();
-    }
-    return tags;
-  }
-
   class MyCppJavaTests extends ICppJavaTests.Stub {
     @Override
     public BadParcelable RepeatBadParcelable(BadParcelable input) throws RemoteException {
