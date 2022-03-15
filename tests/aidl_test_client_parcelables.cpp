@@ -575,21 +575,6 @@ TEST_F(AidlTest, ReverseRecursiveList) {
   EXPECT_EQ(nullptr, cur);
 }
 
-TEST_F(AidlTest, GetUnionTags) {
-  std::vector<Union> unions;
-  std::vector<Union::Tag> tags;
-  // test empty
-  auto status = service->GetUnionTags(unions, &tags);
-  ASSERT_TRUE(status.isOk()) << status.toString8();
-  EXPECT_EQ(tags, (std::vector<Union::Tag>{}));
-  // test non-empty
-  unions.push_back(Union::make<Union::n>());
-  unions.push_back(Union::make<Union::ns>());
-  status = service->GetUnionTags(unions, &tags);
-  ASSERT_TRUE(status.isOk()) << status.toString8();
-  EXPECT_EQ(tags, (std::vector<Union::Tag>{Union::n, Union::ns}));
-}
-
 TEST_F(AidlTest, FixedSizeArray) {
   android::Parcel parcel;
 

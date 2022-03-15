@@ -151,8 +151,4 @@ public final class EnumUnion implements android.os.Parcelable {
     this._tag = _tag;
     this._value = _value;
   }
-  public static @interface Tag {
-    public static final int intEnum = 0;
-    public static final int longEnum = 1;
-  }
 }

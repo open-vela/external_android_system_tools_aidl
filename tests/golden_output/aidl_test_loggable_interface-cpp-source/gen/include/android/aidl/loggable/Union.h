@@ -1,8 +1,6 @@
 #pragma once
 
 #include <android/binder_to_string.h>
-#include <array>
-#include <binder/Enums.h>
 #include <binder/Parcel.h>
 #include <binder/Status.h>
 #include <cassert>
@@ -22,13 +20,10 @@ namespace aidl {
 namespace loggable {
 class Union : public ::android::Parcelable {
 public:
-  enum class Tag : int32_t {
-    num = 0,
-    str = 1,
+  enum Tag : int32_t {
+    num = 0,  // int num;
+    str,  // String str;
   };
-  // Expose tag symbols for legacy code
-  static const inline Tag num = Tag::num;
-  static const inline Tag str = Tag::str;
 
   template<typename _Tp>
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, Union>;
@@ -115,32 +110,4 @@ private:
 };  // class Union
 }  // namespace loggable
 }  // namespace aidl
-}  // namespace android
-namespace android {
-namespace aidl {
-namespace loggable {
-[[nodiscard]] static inline std::string toString(Union::Tag val) {
-  switch(val) {
-  case Union::Tag::num:
-    return "num";
-  case Union::Tag::str:
-    return "str";
-  default:
-    return std::to_string(static_cast<int32_t>(val));
-  }
-}
-}  // namespace loggable
-}  // namespace aidl
-}  // namespace android
-namespace android {
-namespace internal {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc++17-extensions"
-template <>
-constexpr inline std::array<::android::aidl::loggable::Union::Tag, 2> enum_values<::android::aidl::loggable::Union::Tag> = {
-  ::android::aidl::loggable::Union::Tag::num,
-  ::android::aidl::loggable::Union::Tag::str,
-};
-#pragma clang diagnostic pop
-}  // namespace internal
 }  // namespace android

@@ -47,17 +47,6 @@ binder::impl_deserialize_for_parcelable!(EnumUnion);
 impl binder::binder_impl::ParcelableMetadata for EnumUnion {
   fn get_descriptor() -> &'static str { "android.aidl.tests.unions.EnumUnion" }
 }
-pub mod Tag {
-  #![allow(non_upper_case_globals)]
-  use binder::declare_binder_enum;
-  declare_binder_enum! {
-    Tag : [i32; 2] {
-      intEnum = 0,
-      longEnum = 1,
-    }
-  }
-}
 pub(crate) mod mangled {
  pub use super::EnumUnion as _7_android_4_aidl_5_tests_6_unions_9_EnumUnion;
- pub use super::Tag::Tag as _7_android_4_aidl_5_tests_6_unions_9_EnumUnion_3_Tag;
 }

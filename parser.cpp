@@ -28,29 +28,6 @@ int yyparse(Parser*);
 YY_BUFFER_STATE yy_scan_buffer(char*, size_t, void*);
 void yy_delete_buffer(YY_BUFFER_STATE, void*);
 
-// For each union, generate nested "Tag" enum type so that "Tag" can be used as a valid type.
-//    union Foo { int a; int b; } => union Foo { ... enum Tag { a, b }}
-struct UnionTagGenerater : AidlVisitor {
-  void Visit(const AidlUnionDecl& decl) override {
-    std::vector<std::unique_ptr<AidlEnumerator>> enumerators;
-    for (const auto& field : decl.GetFields()) {
-      enumerators.push_back(std::make_unique<AidlEnumerator>(AIDL_LOCATION_HERE, field->GetName(),
-                                                             nullptr, field->GetComments()));
-    }
-    auto tag_enum = std::make_unique<AidlEnumDeclaration>(AIDL_LOCATION_HERE, "Tag", &enumerators,
-                                                          decl.GetPackage(), Comments{});
-    // Tag for @FixedSize union is limited to "byte" type so that it can be passed via FMQ with
-    // with lower overhead.
-    std::shared_ptr<AidlConstantValue> backing_type{
-        AidlConstantValue::String(AIDL_LOCATION_HERE, decl.IsFixedSize() ? "\"byte\"" : "\"int\"")};
-    std::vector<std::unique_ptr<AidlAnnotation>> annotations;
-    annotations.push_back(
-        AidlAnnotation::Parse(AIDL_LOCATION_HERE, "Backing", {{"type", backing_type}}, Comments{}));
-    tag_enum->Annotate(std::move(annotations));
-    const_cast<AidlUnionDecl&>(decl).AddType(std::move(tag_enum));
-  }
-};
-
 const AidlDocument* Parser::Parse(const std::string& filename,
                                   const android::aidl::IoDelegate& io_delegate,
                                   AidlTypenames& typenames, bool is_preprocessed) {
@@ -77,10 +54,6 @@ const AidlDocument* Parser::Parse(const std::string& filename,
   if (yy::parser(&parser).parse() != 0 || parser.HasError()) {
     return nullptr;
   }
-
-  // Preprocess parsed document before adding to typenames.
-  UnionTagGenerater v;
-  VisitTopDown(v, *parser.document_);
 
   // transfer ownership to AidlTypenames and return the raw pointer
   const AidlDocument* result = parser.document_.get();
