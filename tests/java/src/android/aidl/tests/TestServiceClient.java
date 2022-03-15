@@ -956,13 +956,6 @@ public class TestServiceClient {
     }
 
     @Test
-    public void testGetUnionTags() throws RemoteException {
-      assertArrayEquals(new int[] {}, service.GetUnionTags(new Union[] {}));
-      assertArrayEquals(new int[] {Union.n, Union.ns},
-          service.GetUnionTags(new Union[] {Union.n(0), Union.ns(new int[] {})}));
-    }
-
-    @Test
     public void testDescribeContents() throws Exception {
       CompilerChecks cc = new CompilerChecks();
       cc.pfd_array = new ParcelFileDescriptor[] {null, null, null};

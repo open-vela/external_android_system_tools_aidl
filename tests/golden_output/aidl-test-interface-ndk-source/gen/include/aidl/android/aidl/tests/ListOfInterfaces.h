@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <cassert>
 #include <cstdint>
 #include <memory>
@@ -10,7 +9,6 @@
 #include <utility>
 #include <variant>
 #include <vector>
-#include <android/binder_enums.h>
 #include <android/binder_ibinder.h>
 #include <android/binder_interface_utils.h>
 #include <android/binder_parcelable_utils.h>
@@ -154,18 +152,12 @@ public:
     typedef std::false_type fixed_size;
     static const char* descriptor;
 
-    enum class Tag : int32_t {
-      iface = 0,
-      nullable_iface = 1,
-      iface_list = 2,
-      nullable_iface_list = 3,
+    enum Tag : int32_t {
+      iface = 0,  // android.aidl.tests.ListOfInterfaces.IEmptyInterface iface;
+      nullable_iface,  // android.aidl.tests.ListOfInterfaces.IEmptyInterface nullable_iface;
+      iface_list,  // List<android.aidl.tests.ListOfInterfaces.IEmptyInterface> iface_list;
+      nullable_iface_list,  // List<android.aidl.tests.ListOfInterfaces.IEmptyInterface> nullable_iface_list;
     };
-
-    // Expose tag symbols for legacy code
-    static const inline Tag iface = Tag::iface;
-    static const inline Tag nullable_iface = Tag::nullable_iface;
-    static const inline Tag iface_list = Tag::iface_list;
-    static const inline Tag nullable_iface_list = Tag::nullable_iface_list;
 
     template<typename _Tp>
     static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, MyUnion>;
@@ -285,39 +277,3 @@ public:
 }  // namespace aidl
 }  // namespace android
 }  // namespace aidl
-namespace aidl {
-namespace android {
-namespace aidl {
-namespace tests {
-[[nodiscard]] static inline std::string toString(ListOfInterfaces::MyUnion::Tag val) {
-  switch(val) {
-  case ListOfInterfaces::MyUnion::Tag::iface:
-    return "iface";
-  case ListOfInterfaces::MyUnion::Tag::nullable_iface:
-    return "nullable_iface";
-  case ListOfInterfaces::MyUnion::Tag::iface_list:
-    return "iface_list";
-  case ListOfInterfaces::MyUnion::Tag::nullable_iface_list:
-    return "nullable_iface_list";
-  default:
-    return std::to_string(static_cast<int32_t>(val));
-  }
-}
-}  // namespace tests
-}  // namespace aidl
-}  // namespace android
-}  // namespace aidl
-namespace ndk {
-namespace internal {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc++17-extensions"
-template <>
-constexpr inline std::array<aidl::android::aidl::tests::ListOfInterfaces::MyUnion::Tag, 4> enum_values<aidl::android::aidl::tests::ListOfInterfaces::MyUnion::Tag> = {
-  aidl::android::aidl::tests::ListOfInterfaces::MyUnion::Tag::iface,
-  aidl::android::aidl::tests::ListOfInterfaces::MyUnion::Tag::nullable_iface,
-  aidl::android::aidl::tests::ListOfInterfaces::MyUnion::Tag::iface_list,
-  aidl::android::aidl::tests::ListOfInterfaces::MyUnion::Tag::nullable_iface_list,
-};
-#pragma clang diagnostic pop
-}  // namespace internal
-}  // namespace ndk

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <cassert>
 #include <cstdint>
 #include <memory>
@@ -10,7 +9,6 @@
 #include <utility>
 #include <variant>
 #include <vector>
-#include <android/binder_enums.h>
 #include <android/binder_interface_utils.h>
 #include <android/binder_parcelable_utils.h>
 #include <android/binder_to_string.h>
@@ -34,14 +32,10 @@ public:
   typedef std::false_type fixed_size;
   static const char* descriptor;
 
-  enum class Tag : int32_t {
-    intEnum = 0,
-    longEnum = 1,
+  enum Tag : int32_t {
+    intEnum = 0,  // android.aidl.tests.IntEnum intEnum;
+    longEnum,  // android.aidl.tests.LongEnum longEnum;
   };
-
-  // Expose tag symbols for legacy code
-  static const inline Tag intEnum = Tag::intEnum;
-  static const inline Tag longEnum = Tag::longEnum;
 
   template<typename _Tp>
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, EnumUnion>;
@@ -129,35 +123,3 @@ private:
 }  // namespace aidl
 }  // namespace android
 }  // namespace aidl
-namespace aidl {
-namespace android {
-namespace aidl {
-namespace tests {
-namespace unions {
-[[nodiscard]] static inline std::string toString(EnumUnion::Tag val) {
-  switch(val) {
-  case EnumUnion::Tag::intEnum:
-    return "intEnum";
-  case EnumUnion::Tag::longEnum:
-    return "longEnum";
-  default:
-    return std::to_string(static_cast<int32_t>(val));
-  }
-}
-}  // namespace unions
-}  // namespace tests
-}  // namespace aidl
-}  // namespace android
-}  // namespace aidl
-namespace ndk {
-namespace internal {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc++17-extensions"
-template <>
-constexpr inline std::array<aidl::android::aidl::tests::unions::EnumUnion::Tag, 2> enum_values<aidl::android::aidl::tests::unions::EnumUnion::Tag> = {
-  aidl::android::aidl::tests::unions::EnumUnion::Tag::intEnum,
-  aidl::android::aidl::tests::unions::EnumUnion::Tag::longEnum,
-};
-#pragma clang diagnostic pop
-}  // namespace internal
-}  // namespace ndk

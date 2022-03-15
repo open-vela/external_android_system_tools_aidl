@@ -78,7 +78,6 @@ pub trait ITestService: binder::Interface + Send {
   fn ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::Result<Option<Vec<Option<binder::SpIBinder>>>>;
   fn GetOldNameInterface(&self) -> binder::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>>;
   fn GetNewNameInterface(&self) -> binder::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>>;
-  fn GetUnionTags(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_5_Union]) -> binder::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_5_Union_3_Tag>>;
   fn GetCppJavaTests(&self) -> binder::Result<Option<binder::SpIBinder>>;
   fn getBackendType(&self) -> binder::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType>;
   fn getDefaultImpl() -> ITestServiceDefaultRef where Self: Sized {
@@ -154,7 +153,6 @@ pub trait ITestServiceAsync<P>: binder::Interface + Send {
   fn ReverseNullableIBinderArray<'a>(&'a self, _arg_input: Option<&'a [Option<binder::SpIBinder>]>, _arg_repeated: &'a mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::BoxFuture<'a, binder::Result<Option<Vec<Option<binder::SpIBinder>>>>>;
   fn GetOldNameInterface<'a>(&'a self) -> binder::BoxFuture<'a, binder::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>>>;
   fn GetNewNameInterface<'a>(&'a self) -> binder::BoxFuture<'a, binder::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>>>;
-  fn GetUnionTags<'a>(&'a self, _arg_input: &'a [crate::mangled::_7_android_4_aidl_5_tests_5_Union]) -> binder::BoxFuture<'a, binder::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_5_Union_3_Tag>>>;
   fn GetCppJavaTests<'a>(&'a self) -> binder::BoxFuture<'a, binder::Result<Option<binder::SpIBinder>>>;
   fn getBackendType<'a>(&'a self) -> binder::BoxFuture<'a, binder::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType>>;
 }
@@ -225,7 +223,6 @@ pub trait ITestServiceAsyncServer: binder::Interface + Send {
   async fn ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::Result<Option<Vec<Option<binder::SpIBinder>>>>;
   async fn GetOldNameInterface(&self) -> binder::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>>;
   async fn GetNewNameInterface(&self) -> binder::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>>;
-  async fn GetUnionTags(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_5_Union]) -> binder::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_5_Union_3_Tag>>;
   async fn GetCppJavaTests(&self) -> binder::Result<Option<binder::SpIBinder>>;
   async fn getBackendType(&self) -> binder::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType>;
 }
@@ -438,9 +435,6 @@ impl BnTestService {
       fn GetNewNameInterface(&self) -> binder::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> {
         self._rt.block_on(self._inner.GetNewNameInterface())
       }
-      fn GetUnionTags(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_5_Union]) -> binder::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_5_Union_3_Tag>> {
-        self._rt.block_on(self._inner.GetUnionTags(_arg_input))
-      }
       fn GetCppJavaTests(&self) -> binder::Result<Option<binder::SpIBinder>> {
         self._rt.block_on(self._inner.GetCppJavaTests())
       }
@@ -642,9 +636,6 @@ pub trait ITestServiceDefault: Send + Sync {
   fn GetNewNameInterface(&self) -> binder::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
-  fn GetUnionTags(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_5_Union]) -> binder::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_5_Union_3_Tag>> {
-    Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
-  }
   fn GetCppJavaTests(&self) -> binder::Result<Option<binder::SpIBinder>> {
     Err(binder::StatusCode::UNKNOWN_TRANSACTION.into())
   }
@@ -716,9 +707,8 @@ pub mod transactions {
   pub const ReverseNullableIBinderArray: binder::binder_impl::TransactionCode = binder::binder_impl::FIRST_CALL_TRANSACTION + 60;
   pub const GetOldNameInterface: binder::binder_impl::TransactionCode = binder::binder_impl::FIRST_CALL_TRANSACTION + 61;
   pub const GetNewNameInterface: binder::binder_impl::TransactionCode = binder::binder_impl::FIRST_CALL_TRANSACTION + 62;
-  pub const GetUnionTags: binder::binder_impl::TransactionCode = binder::binder_impl::FIRST_CALL_TRANSACTION + 63;
-  pub const GetCppJavaTests: binder::binder_impl::TransactionCode = binder::binder_impl::FIRST_CALL_TRANSACTION + 64;
-  pub const getBackendType: binder::binder_impl::TransactionCode = binder::binder_impl::FIRST_CALL_TRANSACTION + 65;
+  pub const GetCppJavaTests: binder::binder_impl::TransactionCode = binder::binder_impl::FIRST_CALL_TRANSACTION + 63;
+  pub const getBackendType: binder::binder_impl::TransactionCode = binder::binder_impl::FIRST_CALL_TRANSACTION + 64;
 }
 pub type ITestServiceDefaultRef = Option<std::sync::Arc<dyn ITestServiceDefault>>;
 use lazy_static::lazy_static;
@@ -1959,24 +1949,6 @@ impl BpTestService {
     let _aidl_return: binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName> = _aidl_reply.read()?;
     Ok(_aidl_return)
   }
-  fn build_parcel_GetUnionTags(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_5_Union]) -> binder::Result<binder::binder_impl::Parcel> {
-    let mut aidl_data = self.binder.prepare_transact()?;
-    aidl_data.mark_sensitive();
-    aidl_data.write(_arg_input)?;
-    Ok(aidl_data)
-  }
-  fn read_response_GetUnionTags(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_5_Union], _aidl_reply: std::result::Result<binder::binder_impl::Parcel, binder::StatusCode>) -> binder::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_5_Union_3_Tag>> {
-    if let Err(binder::StatusCode::UNKNOWN_TRANSACTION) = _aidl_reply {
-      if let Some(_aidl_default_impl) = <Self as ITestService>::getDefaultImpl() {
-        return _aidl_default_impl.GetUnionTags(_arg_input);
-      }
-    }
-    let _aidl_reply = _aidl_reply?;
-    let _aidl_status: binder::Status = _aidl_reply.read()?;
-    if !_aidl_status.is_ok() { return Err(_aidl_status); }
-    let _aidl_return: Vec<crate::mangled::_7_android_4_aidl_5_tests_5_Union_3_Tag> = _aidl_reply.read()?;
-    Ok(_aidl_return)
-  }
   fn build_parcel_GetCppJavaTests(&self) -> binder::Result<binder::binder_impl::Parcel> {
     let mut aidl_data = self.binder.prepare_transact()?;
     aidl_data.mark_sensitive();
@@ -2327,11 +2299,6 @@ impl ITestService for BpTestService {
     let _aidl_data = self.build_parcel_GetNewNameInterface()?;
     let _aidl_reply = self.binder.submit_transact(transactions::GetNewNameInterface, _aidl_data, binder::binder_impl::FLAG_CLEAR_BUF | binder::binder_impl::FLAG_PRIVATE_LOCAL);
     self.read_response_GetNewNameInterface(_aidl_reply)
-  }
-  fn GetUnionTags(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_5_Union]) -> binder::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_5_Union_3_Tag>> {
-    let _aidl_data = self.build_parcel_GetUnionTags(_arg_input)?;
-    let _aidl_reply = self.binder.submit_transact(transactions::GetUnionTags, _aidl_data, binder::binder_impl::FLAG_CLEAR_BUF | binder::binder_impl::FLAG_PRIVATE_LOCAL);
-    self.read_response_GetUnionTags(_arg_input, _aidl_reply)
   }
   fn GetCppJavaTests(&self) -> binder::Result<Option<binder::SpIBinder>> {
     let _aidl_data = self.build_parcel_GetCppJavaTests()?;
@@ -3159,19 +3126,6 @@ impl<P: binder::BinderAsyncPool> ITestServiceAsync<P> for BpTestService {
       }
     )
   }
-  fn GetUnionTags<'a>(&'a self, _arg_input: &'a [crate::mangled::_7_android_4_aidl_5_tests_5_Union]) -> binder::BoxFuture<'a, binder::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_5_Union_3_Tag>>> {
-    let _aidl_data = match self.build_parcel_GetUnionTags(_arg_input) {
-      Ok(_aidl_data) => _aidl_data,
-      Err(err) => return Box::pin(std::future::ready(Err(err))),
-    };
-    let binder = self.binder.clone();
-    P::spawn(
-      move || binder.submit_transact(transactions::GetUnionTags, _aidl_data, binder::binder_impl::FLAG_CLEAR_BUF | binder::binder_impl::FLAG_PRIVATE_LOCAL),
-      move |_aidl_reply| async move {
-        self.read_response_GetUnionTags(_arg_input, _aidl_reply)
-      }
-    )
-  }
   fn GetCppJavaTests<'a>(&'a self) -> binder::BoxFuture<'a, binder::Result<Option<binder::SpIBinder>>> {
     let _aidl_data = match self.build_parcel_GetCppJavaTests() {
       Ok(_aidl_data) => _aidl_data,
@@ -3263,7 +3217,6 @@ impl ITestService for binder::binder_impl::Binder<BnTestService> {
   fn ReverseNullableIBinderArray(&self, _arg_input: Option<&[Option<binder::SpIBinder>]>, _arg_repeated: &mut Option<Vec<Option<binder::SpIBinder>>>) -> binder::Result<Option<Vec<Option<binder::SpIBinder>>>> { self.0.ReverseNullableIBinderArray(_arg_input, _arg_repeated) }
   fn GetOldNameInterface(&self) -> binder::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_IOldName>> { self.0.GetOldNameInterface() }
   fn GetNewNameInterface(&self) -> binder::Result<binder::Strong<dyn crate::mangled::_7_android_4_aidl_5_tests_8_INewName>> { self.0.GetNewNameInterface() }
-  fn GetUnionTags(&self, _arg_input: &[crate::mangled::_7_android_4_aidl_5_tests_5_Union]) -> binder::Result<Vec<crate::mangled::_7_android_4_aidl_5_tests_5_Union_3_Tag>> { self.0.GetUnionTags(_arg_input) }
   fn GetCppJavaTests(&self) -> binder::Result<Option<binder::SpIBinder>> { self.0.GetCppJavaTests() }
   fn getBackendType(&self) -> binder::Result<crate::mangled::_7_android_4_aidl_5_tests_11_BackendType> { self.0.getBackendType() }
 }
@@ -4057,18 +4010,6 @@ fn on_transact(_aidl_service: &dyn ITestService, _aidl_code: binder::binder_impl
     }
     transactions::GetNewNameInterface => {
       let _aidl_return = _aidl_service.GetNewNameInterface();
-      match &_aidl_return {
-        Ok(_aidl_return) => {
-          _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;
-          _aidl_reply.write(_aidl_return)?;
-        }
-        Err(_aidl_status) => _aidl_reply.write(_aidl_status)?
-      }
-      Ok(())
-    }
-    transactions::GetUnionTags => {
-      let _arg_input: Vec<crate::mangled::_7_android_4_aidl_5_tests_5_Union> = _aidl_data.read()?;
-      let _aidl_return = _aidl_service.GetUnionTags(&_arg_input);
       match &_aidl_return {
         Ok(_aidl_return) => {
           _aidl_reply.write(&binder::Status::from(binder::StatusCode::OK))?;

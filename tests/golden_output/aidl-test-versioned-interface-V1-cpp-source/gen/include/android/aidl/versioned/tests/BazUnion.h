@@ -1,13 +1,10 @@
 #pragma once
 
 #include <android/binder_to_string.h>
-#include <array>
-#include <binder/Enums.h>
 #include <binder/Parcel.h>
 #include <binder/Status.h>
 #include <cassert>
 #include <cstdint>
-#include <string>
 #include <type_traits>
 #include <utility>
 #include <utils/String16.h>
@@ -23,11 +20,9 @@ namespace versioned {
 namespace tests {
 class BazUnion : public ::android::Parcelable {
 public:
-  enum class Tag : int32_t {
-    intNum = 0,
+  enum Tag : int32_t {
+    intNum = 0,  // int intNum;
   };
-  // Expose tag symbols for legacy code
-  static const inline Tag intNum = Tag::intNum;
 
   template<typename _Tp>
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, BazUnion>;
@@ -114,31 +109,4 @@ private:
 }  // namespace tests
 }  // namespace versioned
 }  // namespace aidl
-}  // namespace android
-namespace android {
-namespace aidl {
-namespace versioned {
-namespace tests {
-[[nodiscard]] static inline std::string toString(BazUnion::Tag val) {
-  switch(val) {
-  case BazUnion::Tag::intNum:
-    return "intNum";
-  default:
-    return std::to_string(static_cast<int32_t>(val));
-  }
-}
-}  // namespace tests
-}  // namespace versioned
-}  // namespace aidl
-}  // namespace android
-namespace android {
-namespace internal {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc++17-extensions"
-template <>
-constexpr inline std::array<::android::aidl::versioned::tests::BazUnion::Tag, 1> enum_values<::android::aidl::versioned::tests::BazUnion::Tag> = {
-  ::android::aidl::versioned::tests::BazUnion::Tag::intNum,
-};
-#pragma clang diagnostic pop
-}  // namespace internal
 }  // namespace android

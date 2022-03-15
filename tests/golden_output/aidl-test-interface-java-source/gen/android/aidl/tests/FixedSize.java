@@ -404,15 +404,5 @@ public class FixedSize implements android.os.Parcelable
       this._tag = _tag;
       this._value = _value;
     }
-    public static @interface Tag {
-      public static final byte booleanValue = 0;
-      public static final byte byteValue = 1;
-      public static final byte charValue = 2;
-      public static final byte intValue = 3;
-      public static final byte longValue = 4;
-      public static final byte floatValue = 5;
-      public static final byte doubleValue = 6;
-      public static final byte enumValue = 7;
-    }
   }
 }

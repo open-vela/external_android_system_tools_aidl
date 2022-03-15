@@ -481,7 +481,7 @@ void UnionWriter::PrivateFields(CodeWriter& out) const {
     const auto& default_value = name_of(first_field->GetType(), typenames) + "(" +
                                 first_field->ValueString(decorator) + ")";
 
-    out << "Tag _tag = " << default_name << ";\n";
+    out << "Tag _tag __attribute__((aligned (1))) = " << default_name << ";\n";
     out << "union _value_t {\n";
     out.Indent();
     out << "_value_t() {}\n";
@@ -512,12 +512,23 @@ void UnionWriter::PrivateFields(CodeWriter& out) const {
 }
 
 void UnionWriter::PublicFields(CodeWriter& out) const {
-  out << "// Expose tag symbols for legacy code\n";
-  for (const auto& f : decl.GetFields()) {
-    out << "static const inline Tag";
-    GenerateDeprecated(out, *f);
-    out << " " << f->GetName() << " = Tag::" << f->GetName() << ";\n";
+  std::string tag_type = "int32_t";
+  if (decl.IsFixedSize()) {
+    // For @FixedSize union, we use a smaller type for a tag to minimize the size overhead.
+    AIDL_FATAL_IF(decl.GetFields().size() > std::numeric_limits<uint8_t>::max(), decl)
+        << "Too many fields for @FixedSize";
+    tag_type = "uint8_t";
   }
+  out << "enum Tag : " << tag_type << " {\n";
+  bool is_first = true;
+  for (const auto& f : decl.GetFields()) {
+    out << "  " << f->GetName();
+    GenerateDeprecated(out, *f);
+    if (is_first) out << " = 0";
+    out << ",  // " << f->Signature() << ";\n";
+    is_first = false;
+  }
+  out << "};\n";
 
   const auto& name = decl.GetName();
 

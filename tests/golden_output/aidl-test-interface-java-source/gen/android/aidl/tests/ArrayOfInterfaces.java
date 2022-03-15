@@ -565,11 +565,5 @@ public class ArrayOfInterfaces implements android.os.Parcelable
       this._tag = _tag;
       this._value = _value;
     }
-    public static @interface Tag {
-      public static final int iface = 0;
-      public static final int nullable_iface = 1;
-      public static final int iface_array = 2;
-      public static final int nullable_iface_array = 3;
-    }
   }
 }
