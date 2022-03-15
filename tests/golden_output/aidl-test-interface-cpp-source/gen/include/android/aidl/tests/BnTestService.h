@@ -71,9 +71,8 @@ public:
   static constexpr uint32_t TRANSACTION_ReverseNullableIBinderArray = ::android::IBinder::FIRST_CALL_TRANSACTION + 60;
   static constexpr uint32_t TRANSACTION_GetOldNameInterface = ::android::IBinder::FIRST_CALL_TRANSACTION + 61;
   static constexpr uint32_t TRANSACTION_GetNewNameInterface = ::android::IBinder::FIRST_CALL_TRANSACTION + 62;
-  static constexpr uint32_t TRANSACTION_GetUnionTags = ::android::IBinder::FIRST_CALL_TRANSACTION + 63;
-  static constexpr uint32_t TRANSACTION_GetCppJavaTests = ::android::IBinder::FIRST_CALL_TRANSACTION + 64;
-  static constexpr uint32_t TRANSACTION_getBackendType = ::android::IBinder::FIRST_CALL_TRANSACTION + 65;
+  static constexpr uint32_t TRANSACTION_GetCppJavaTests = ::android::IBinder::FIRST_CALL_TRANSACTION + 63;
+  static constexpr uint32_t TRANSACTION_getBackendType = ::android::IBinder::FIRST_CALL_TRANSACTION + 64;
   explicit BnTestService();
   ::android::status_t onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) override;
 };  // class BnTestService
@@ -270,9 +269,6 @@ public:
   }
   ::android::binder::Status GetNewNameInterface(::android::sp<::android::aidl::tests::INewName>* _aidl_return) override {
     return _aidl_delegate->GetNewNameInterface(_aidl_return);
-  }
-  ::android::binder::Status GetUnionTags(const ::std::vector<::android::aidl::tests::Union>& input, ::std::vector<::android::aidl::tests::Union::Tag>* _aidl_return) override {
-    return _aidl_delegate->GetUnionTags(input, _aidl_return);
   }
   ::android::binder::Status GetCppJavaTests(::android::sp<::android::IBinder>* _aidl_return) override {
     return _aidl_delegate->GetCppJavaTests(_aidl_return);
