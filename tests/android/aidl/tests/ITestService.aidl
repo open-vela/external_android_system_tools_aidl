@@ -25,7 +25,6 @@ import android.aidl.tests.IntEnum;
 import android.aidl.tests.LongEnum;
 import android.aidl.tests.RecursiveList;
 import android.aidl.tests.StructuredParcelable;
-import android.aidl.tests.Union;
 import android.aidl.tests.extension.ExtendableParcelable;
 
 /**
@@ -259,8 +258,6 @@ interface ITestService {
 
     IOldName GetOldNameInterface();
     INewName GetNewNameInterface();
-
-    Union.Tag[] GetUnionTags(in Union[] input);
 
     // Retrieve the ICppJavaTests if the server supports it
     @nullable IBinder GetCppJavaTests();
