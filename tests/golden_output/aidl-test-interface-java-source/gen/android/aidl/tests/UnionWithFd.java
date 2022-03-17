@@ -137,4 +137,8 @@ public final class UnionWithFd implements android.os.Parcelable {
     this._tag = _tag;
     this._value = _value;
   }
+  public static @interface Tag {
+    public static final int num = 0;
+    public static final int pfd = 1;
+  }
 }

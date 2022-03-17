@@ -1,11 +1,14 @@
 #pragma once
 
 #include <android/binder_to_string.h>
+#include <array>
+#include <binder/Enums.h>
 #include <binder/Parcel.h>
 #include <binder/ParcelFileDescriptor.h>
 #include <binder/Status.h>
 #include <cassert>
 #include <cstdint>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <utils/String16.h>
@@ -20,10 +23,13 @@ namespace aidl {
 namespace tests {
 class UnionWithFd : public ::android::Parcelable {
 public:
-  enum Tag : int32_t {
-    num = 0,  // int num;
-    pfd,  // ParcelFileDescriptor pfd;
+  enum class Tag : int32_t {
+    num = 0,
+    pfd = 1,
   };
+  // Expose tag symbols for legacy code
+  static const inline Tag num = Tag::num;
+  static const inline Tag pfd = Tag::pfd;
 
   template<typename _Tp>
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, UnionWithFd>;
@@ -110,4 +116,32 @@ private:
 };  // class UnionWithFd
 }  // namespace tests
 }  // namespace aidl
+}  // namespace android
+namespace android {
+namespace aidl {
+namespace tests {
+[[nodiscard]] static inline std::string toString(UnionWithFd::Tag val) {
+  switch(val) {
+  case UnionWithFd::Tag::num:
+    return "num";
+  case UnionWithFd::Tag::pfd:
+    return "pfd";
+  default:
+    return std::to_string(static_cast<int32_t>(val));
+  }
+}
+}  // namespace tests
+}  // namespace aidl
+}  // namespace android
+namespace android {
+namespace internal {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc++17-extensions"
+template <>
+constexpr inline std::array<::android::aidl::tests::UnionWithFd::Tag, 2> enum_values<::android::aidl::tests::UnionWithFd::Tag> = {
+  ::android::aidl::tests::UnionWithFd::Tag::num,
+  ::android::aidl::tests::UnionWithFd::Tag::pfd,
+};
+#pragma clang diagnostic pop
+}  // namespace internal
 }  // namespace android

@@ -384,6 +384,18 @@ pub mod MyUnion {
   impl binder::binder_impl::ParcelableMetadata for MyUnion {
     fn get_descriptor() -> &'static str { "android.aidl.tests.ArrayOfInterfaces.MyUnion" }
   }
+  pub mod Tag {
+    #![allow(non_upper_case_globals)]
+    use binder::declare_binder_enum;
+    declare_binder_enum! {
+      Tag : [i32; 4] {
+        iface = 0,
+        nullable_iface = 1,
+        iface_array = 2,
+        nullable_iface_array = 3,
+      }
+    }
+  }
 }
 pub(crate) mod mangled {
  pub use super::ArrayOfInterfaces as _7_android_4_aidl_5_tests_17_ArrayOfInterfaces;
@@ -391,4 +403,5 @@ pub(crate) mod mangled {
  pub use super::IMyInterface::IMyInterface as _7_android_4_aidl_5_tests_17_ArrayOfInterfaces_12_IMyInterface;
  pub use super::MyParcelable::MyParcelable as _7_android_4_aidl_5_tests_17_ArrayOfInterfaces_12_MyParcelable;
  pub use super::MyUnion::MyUnion as _7_android_4_aidl_5_tests_17_ArrayOfInterfaces_7_MyUnion;
+ pub use super::MyUnion::Tag::Tag as _7_android_4_aidl_5_tests_17_ArrayOfInterfaces_7_MyUnion_3_Tag;
 }

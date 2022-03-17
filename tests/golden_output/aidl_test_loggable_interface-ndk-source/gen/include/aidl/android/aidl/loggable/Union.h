@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cassert>
 #include <cstdint>
 #include <memory>
@@ -9,6 +10,7 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <android/binder_enums.h>
 #include <android/binder_interface_utils.h>
 #include <android/binder_parcelable_utils.h>
 #include <android/binder_to_string.h>
@@ -29,10 +31,14 @@ public:
   typedef std::false_type fixed_size;
   static const char* descriptor;
 
-  enum Tag : int32_t {
-    num = 0,  // int num;
-    str,  // String str;
+  enum class Tag : int32_t {
+    num = 0,
+    str = 1,
   };
+
+  // Expose tag symbols for legacy code
+  static const inline Tag num = Tag::num;
+  static const inline Tag str = Tag::str;
 
   template<typename _Tp>
   static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, Union>;
@@ -119,3 +125,33 @@ private:
 }  // namespace aidl
 }  // namespace android
 }  // namespace aidl
+namespace aidl {
+namespace android {
+namespace aidl {
+namespace loggable {
+[[nodiscard]] static inline std::string toString(Union::Tag val) {
+  switch(val) {
+  case Union::Tag::num:
+    return "num";
+  case Union::Tag::str:
+    return "str";
+  default:
+    return std::to_string(static_cast<int32_t>(val));
+  }
+}
+}  // namespace loggable
+}  // namespace aidl
+}  // namespace android
+}  // namespace aidl
+namespace ndk {
+namespace internal {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc++17-extensions"
+template <>
+constexpr inline std::array<aidl::android::aidl::loggable::Union::Tag, 2> enum_values<aidl::android::aidl::loggable::Union::Tag> = {
+  aidl::android::aidl::loggable::Union::Tag::num,
+  aidl::android::aidl::loggable::Union::Tag::str,
+};
+#pragma clang diagnostic pop
+}  // namespace internal
+}  // namespace ndk
