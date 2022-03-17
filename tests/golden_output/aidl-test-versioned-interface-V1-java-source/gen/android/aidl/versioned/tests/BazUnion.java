@@ -102,4 +102,7 @@ public final class BazUnion implements android.os.Parcelable {
     this._tag = _tag;
     this._value = _value;
   }
+  public static @interface Tag {
+    public static final int intNum = 0;
+  }
 }
