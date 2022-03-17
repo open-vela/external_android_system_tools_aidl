@@ -20,6 +20,7 @@
 #include <aidl/android/aidl/tests/LongEnum.h>
 #include <aidl/android/aidl/tests/RecursiveList.h>
 #include <aidl/android/aidl/tests/StructuredParcelable.h>
+#include <aidl/android/aidl/tests/Union.h>
 #include <aidl/android/aidl/tests/extension/ExtendableParcelable.h>
 #ifdef BINDER_STABILITY_SUPPORT
 #include <android/binder_stability.h>
@@ -280,8 +281,9 @@ public:
   static constexpr uint32_t TRANSACTION_ReverseNullableIBinderArray = FIRST_CALL_TRANSACTION + 60;
   static constexpr uint32_t TRANSACTION_GetOldNameInterface = FIRST_CALL_TRANSACTION + 61;
   static constexpr uint32_t TRANSACTION_GetNewNameInterface = FIRST_CALL_TRANSACTION + 62;
-  static constexpr uint32_t TRANSACTION_GetCppJavaTests = FIRST_CALL_TRANSACTION + 63;
-  static constexpr uint32_t TRANSACTION_getBackendType = FIRST_CALL_TRANSACTION + 64;
+  static constexpr uint32_t TRANSACTION_GetUnionTags = FIRST_CALL_TRANSACTION + 63;
+  static constexpr uint32_t TRANSACTION_GetCppJavaTests = FIRST_CALL_TRANSACTION + 64;
+  static constexpr uint32_t TRANSACTION_getBackendType = FIRST_CALL_TRANSACTION + 65;
 
   static std::shared_ptr<ITestService> fromBinder(const ::ndk::SpAIBinder& binder);
   static binder_status_t writeToParcel(AParcel* parcel, const std::shared_ptr<ITestService>& instance);
@@ -351,6 +353,7 @@ public:
   virtual ::ndk::ScopedAStatus ReverseNullableIBinderArray(const std::optional<std::vector<::ndk::SpAIBinder>>& in_input, std::optional<std::vector<::ndk::SpAIBinder>>* out_repeated, std::optional<std::vector<::ndk::SpAIBinder>>* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus GetOldNameInterface(std::shared_ptr<::aidl::android::aidl::tests::IOldName>* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus GetNewNameInterface(std::shared_ptr<::aidl::android::aidl::tests::INewName>* _aidl_return) = 0;
+  virtual ::ndk::ScopedAStatus GetUnionTags(const std::vector<::aidl::android::aidl::tests::Union>& in_input, std::vector<::aidl::android::aidl::tests::Union::Tag>* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus GetCppJavaTests(::ndk::SpAIBinder* _aidl_return) = 0;
   virtual ::ndk::ScopedAStatus getBackendType(::aidl::android::aidl::tests::BackendType* _aidl_return) = 0;
 private:
@@ -421,6 +424,7 @@ public:
   ::ndk::ScopedAStatus ReverseNullableIBinderArray(const std::optional<std::vector<::ndk::SpAIBinder>>& in_input, std::optional<std::vector<::ndk::SpAIBinder>>* out_repeated, std::optional<std::vector<::ndk::SpAIBinder>>* _aidl_return) override;
   ::ndk::ScopedAStatus GetOldNameInterface(std::shared_ptr<::aidl::android::aidl::tests::IOldName>* _aidl_return) override;
   ::ndk::ScopedAStatus GetNewNameInterface(std::shared_ptr<::aidl::android::aidl::tests::INewName>* _aidl_return) override;
+  ::ndk::ScopedAStatus GetUnionTags(const std::vector<::aidl::android::aidl::tests::Union>& in_input, std::vector<::aidl::android::aidl::tests::Union::Tag>* _aidl_return) override;
   ::ndk::ScopedAStatus GetCppJavaTests(::ndk::SpAIBinder* _aidl_return) override;
   ::ndk::ScopedAStatus getBackendType(::aidl::android::aidl::tests::BackendType* _aidl_return) override;
   ::ndk::SpAIBinder asBinder() override;
