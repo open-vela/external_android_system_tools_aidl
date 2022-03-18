@@ -1146,6 +1146,19 @@ TEST_P(AidlTest, SupportDeprecated) {
                       {Options::Language::NDK, {"out/aidl/Foo.h", "__attribute__((deprecated"}},
                       {Options::Language::RUST, {"out/Foo.rs", "#[deprecated"}},
                   });
+
+  CheckDeprecated("Foo.aidl",
+                  "enum Foo {\n"
+                  " /** @deprecated */\n"
+                  " FOO,\n"
+                  " BAR,\n"
+                  "}",
+                  {
+                      {Options::Language::JAVA, {"out/Foo.java", "@Deprecated"}},
+                      {Options::Language::CPP, {"out/Foo.h", "__attribute__((deprecated"}},
+                      {Options::Language::NDK, {"out/aidl/Foo.h", "__attribute__((deprecated"}},
+                      {Options::Language::RUST, {"out/Foo.rs", "#[deprecated"}},
+                  });
 }
 
 TEST_P(AidlTest, RequireOuterClass) {

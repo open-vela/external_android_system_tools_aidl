@@ -119,6 +119,7 @@ void DumpVisitor::Visit(const AidlEnumDeclaration& t) {
   out << "enum " << t.GetName() << " {\n";
   out.Indent();
   for (const auto& e : t.GetEnumerators()) {
+    DumpComments(*e);
     out << e->GetName() << " = ";
     DumpConstantValue(t.GetBackingType(), *e->GetValue());
     out << ",\n";

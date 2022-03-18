@@ -19,6 +19,7 @@ enum class IntEnum : int32_t {
   FOO = 1000,
   BAR = 2000,
   BAZ = 2001,
+  QUX __attribute__((deprecated("do not use this"))) = 2002,
 };
 
 }  // namespace tests
@@ -29,6 +30,8 @@ namespace aidl {
 namespace android {
 namespace aidl {
 namespace tests {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 [[nodiscard]] static inline std::string toString(IntEnum val) {
   switch(val) {
   case IntEnum::FOO:
@@ -37,10 +40,13 @@ namespace tests {
     return "BAR";
   case IntEnum::BAZ:
     return "BAZ";
+  case IntEnum::QUX:
+    return "QUX";
   default:
     return std::to_string(static_cast<int32_t>(val));
   }
 }
+#pragma clang diagnostic pop
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android
@@ -49,11 +55,13 @@ namespace ndk {
 namespace internal {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc++17-extensions"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 template <>
-constexpr inline std::array<aidl::android::aidl::tests::IntEnum, 3> enum_values<aidl::android::aidl::tests::IntEnum> = {
+constexpr inline std::array<aidl::android::aidl::tests::IntEnum, 4> enum_values<aidl::android::aidl::tests::IntEnum> = {
   aidl::android::aidl::tests::IntEnum::FOO,
   aidl::android::aidl::tests::IntEnum::BAR,
   aidl::android::aidl::tests::IntEnum::BAZ,
+  aidl::android::aidl::tests::IntEnum::QUX,
 };
 #pragma clang diagnostic pop
 }  // namespace internal

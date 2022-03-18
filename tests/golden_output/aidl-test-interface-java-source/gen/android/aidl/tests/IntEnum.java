@@ -6,4 +6,7 @@ public @interface IntEnum {
   public static final int FOO = 1000;
   public static final int BAR = 2000;
   public static final int BAZ = 2001;
+  /** @deprecated do not use this */
+  @Deprecated
+  public static final int QUX = 2002;
 }

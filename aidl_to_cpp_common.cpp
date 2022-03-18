@@ -219,11 +219,24 @@ void GenerateEnumClassDecl(CodeWriter& out, const AidlEnumDeclaration& enum_decl
   out << " " << enum_decl.GetName() << " : " << backing_type << " {\n";
   out.Indent();
   for (const auto& enumerator : enum_decl.GetEnumerators()) {
-    out << enumerator->GetName() << " = "
-        << enumerator->ValueString(enum_decl.GetBackingType(), decorator) << ",\n";
+    out << enumerator->GetName();
+    GenerateDeprecated(out, *enumerator);
+    out << " = " << enumerator->ValueString(enum_decl.GetBackingType(), decorator) << ",\n";
   }
   out.Dedent();
   out << "};\n";
+}
+
+static bool IsEnumDeprecated(const AidlEnumDeclaration& enum_decl) {
+  if (enum_decl.IsDeprecated()) {
+    return true;
+  }
+  for (const auto& e : enum_decl.GetEnumerators()) {
+    if (e->IsDeprecated()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // enum_values template value is defined in its own namespace (android::internal or ndk::internal),
@@ -237,9 +250,11 @@ std::string GenerateEnumValues(const AidlEnumDeclaration& enum_decl,
   std::ostringstream code;
   code << "#pragma clang diagnostic push\n";
   code << "#pragma clang diagnostic ignored \"-Wc++17-extensions\"\n";
+  if (IsEnumDeprecated(enum_decl)) {
+    code << "#pragma clang diagnostic ignored \"-Wdeprecated-declarations\"\n";
+  }
   code << "template <>\n";
   code << "constexpr inline std::array<" << fq_name << ", " << size << ">";
-  GenerateDeprecated(code, enum_decl);
   code << " enum_values<" << fq_name << "> = {\n";
   for (const auto& enumerator : enum_decl.GetEnumerators()) {
     code << "  " << fq_name << "::" << enumerator->GetName() << ",\n";
@@ -255,14 +270,12 @@ std::string GenerateEnumToString(const AidlEnumDeclaration& enum_decl,
                                  const std::string& backing_type) {
   const auto q_name = GetQualifiedName(enum_decl);
   std::ostringstream code;
-  const std::string signature =
-      "[[nodiscard]] static inline std::string toString(" + q_name + " val)";
-  if (enum_decl.IsDeprecated()) {
-    code << signature;
-    GenerateDeprecated(code, enum_decl);
-    code << ";\n";
+  bool is_enum_deprecated = IsEnumDeprecated(enum_decl);
+  if (is_enum_deprecated) {
+    code << "#pragma clang diagnostic push\n";
+    code << "#pragma clang diagnostic ignored \"-Wdeprecated-declarations\"\n";
   }
-  code << signature << " {\n";
+  code << "[[nodiscard]] static inline std::string toString(" + q_name + " val) {\n";
   code << "  switch(val) {\n";
   std::set<std::string> unique_cases;
   for (const auto& enumerator : enum_decl.GetEnumerators()) {
@@ -281,6 +294,9 @@ std::string GenerateEnumToString(const AidlEnumDeclaration& enum_decl,
   code << "    return std::to_string(static_cast<" << backing_type << ">(val));\n";
   code << "  }\n";
   code << "}\n";
+  if (is_enum_deprecated) {
+    code << "#pragma clang diagnostic pop\n";
+  }
   return code.str();
 }
 
