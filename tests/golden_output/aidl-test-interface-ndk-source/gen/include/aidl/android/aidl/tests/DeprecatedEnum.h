@@ -29,7 +29,8 @@ namespace aidl {
 namespace android {
 namespace aidl {
 namespace tests {
-[[nodiscard]] static inline std::string toString(DeprecatedEnum val) __attribute__((deprecated("test")));
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 [[nodiscard]] static inline std::string toString(DeprecatedEnum val) {
   switch(val) {
   case DeprecatedEnum::A:
@@ -42,6 +43,7 @@ namespace tests {
     return std::to_string(static_cast<int32_t>(val));
   }
 }
+#pragma clang diagnostic pop
 }  // namespace tests
 }  // namespace aidl
 }  // namespace android
@@ -50,8 +52,9 @@ namespace ndk {
 namespace internal {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc++17-extensions"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 template <>
-constexpr inline std::array<aidl::android::aidl::tests::DeprecatedEnum, 3> __attribute__((deprecated("test"))) enum_values<aidl::android::aidl::tests::DeprecatedEnum> = {
+constexpr inline std::array<aidl::android::aidl::tests::DeprecatedEnum, 3> enum_values<aidl::android::aidl::tests::DeprecatedEnum> = {
   aidl::android::aidl::tests::DeprecatedEnum::A,
   aidl::android::aidl::tests::DeprecatedEnum::B,
   aidl::android::aidl::tests::DeprecatedEnum::C,

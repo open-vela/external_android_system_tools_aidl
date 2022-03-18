@@ -942,6 +942,11 @@ struct JavaAnnotationsVisitor : AidlVisitor {
   void Visit(const AidlStructuredParcelable& t) override { ForDefinedType(t); }
   void Visit(const AidlUnionDecl& t) override { ForDefinedType(t); }
   void Visit(const AidlEnumDeclaration& t) override { ForDefinedType(t); }
+  void Visit(const AidlEnumerator& e) override {
+    if (e.IsDeprecated()) {
+      result.push_back("@Deprecated");
+    }
+  }
   void Visit(const AidlMethod& m) override { ForMember(m); }
   void Visit(const AidlConstantDeclaration& c) override { ForMember(c); }
   void Visit(const AidlVariableDeclaration& v) override { ForMember(v); }

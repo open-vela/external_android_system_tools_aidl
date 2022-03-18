@@ -1108,6 +1108,7 @@ void GenerateRustEnumDeclaration(CodeWriter* code_writer, const AidlEnumDeclarat
   code_writer->Indent();
   for (const auto& enumerator : enum_decl->GetEnumerators()) {
     auto value = enumerator->GetValue()->ValueString(aidl_backing_type, ConstantValueDecorator);
+    GenerateDeprecated(*code_writer, *enumerator);
     *code_writer << enumerator->GetName() << " = " << value << ",\n";
   }
   code_writer->Dedent();
