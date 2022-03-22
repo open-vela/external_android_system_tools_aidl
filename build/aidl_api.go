@@ -242,7 +242,7 @@ func (m *aidlApi) migrateAndAppendVersion(ctx android.ModuleContext, rb *android
 						rbc.Text("\"" + im + "-V'" + `$(if [ "$(cat `).
 							Input(importApis[im].hasDevelopment).
 							Text(`)" = "1" ]; then echo "` + importIfaces[im].nextVersion() +
-								`"; else echo "` + importIfaces[im].latestVersion() + `"; fi)'"`)
+								`"; else echo "` + importIfaces[im].latestVersion() + `"; fi)'", `)
 					}
 				}
 				rbc.Text("]}' ").
@@ -256,7 +256,8 @@ func (m *aidlApi) migrateAndAppendVersion(ctx android.ModuleContext, rb *android
 					imports = append(imports, im+"-V"+importIfaces[im].latestVersion())
 				}
 			}
-			data := fmt.Sprintf(`{version: "%s", imports: %v}`, v, wrap(`"`, imports, `"`))
+			importsStr := strings.Join(wrap(`"`, imports, `"`), ", ")
+			data := fmt.Sprintf(`{version: "%s", imports: [%s]}`, v, importsStr)
 
 			// Also modify Android.bp file to add the new version to the 'versions_with_info' property.
 			wrapWithDiffCheckIf(m, rb, func(rbc *android.RuleBuilderCommand) {
