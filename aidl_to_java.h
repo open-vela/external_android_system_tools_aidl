@@ -47,6 +47,10 @@ std::string ConstantValueDecorator(
 // This includes generic type parameters with array modifiers.
 string JavaSignatureOf(const AidlTypeSpecifier& aidl);
 
+// Returns the Java boxing type of the AIDL type spec.
+// aidl type should be a primitive type.
+string JavaBoxingTypeOf(const AidlTypeSpecifier& aidl);
+
 // Returns the instantiable Jva type signature of the AIDL type spec
 // This includes generic type parameters, but excludes array modifiers.
 string InstantiableJavaSignatureOf(const AidlTypeSpecifier& aidl);
