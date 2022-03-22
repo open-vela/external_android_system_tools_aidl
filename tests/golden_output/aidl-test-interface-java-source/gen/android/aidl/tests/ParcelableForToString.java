@@ -150,8 +150,8 @@ public class ParcelableForToString implements android.os.Parcelable
     _aidl_sj.add("stringList: " + (java.util.Objects.toString(stringList)));
     _aidl_sj.add("parcelableValue: " + (java.util.Objects.toString(parcelableValue)));
     _aidl_sj.add("parcelableArray: " + (java.util.Arrays.toString(parcelableArray)));
-    _aidl_sj.add("enumValue: " + (enumValue));
-    _aidl_sj.add("enumArray: " + (java.util.Arrays.toString(enumArray)));
+    _aidl_sj.add("enumValue: " + (android.aidl.tests.IntEnum.$.toString(enumValue)));
+    _aidl_sj.add("enumArray: " + (android.aidl.tests.IntEnum.$.arrayToString(enumArray)));
     _aidl_sj.add("nullArray: " + (java.util.Arrays.toString(nullArray)));
     _aidl_sj.add("nullList: " + (java.util.Objects.toString(nullList)));
     _aidl_sj.add("parcelableGeneric: " + (java.util.Objects.toString(parcelableGeneric)));
