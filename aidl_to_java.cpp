@@ -135,14 +135,14 @@ const string& JavaNameOf(const AidlTypeSpecifier& aidl, bool instantiable = fals
 }
 
 namespace {
-string JavaSignatureOfInternal(
-    const AidlTypeSpecifier& aidl, bool instantiable, bool omit_array,
-    bool boxing = false /* boxing can be true only if it is a type parameter */) {
+string JavaSignatureOfInternal(const AidlTypeSpecifier& aidl, bool instantiable, bool omit_array,
+                               bool boxing) {
   string ret = JavaNameOf(aidl, instantiable, boxing && !aidl.IsArray());
   if (aidl.IsGeneric()) {
     vector<string> arg_names;
     for (const auto& ta : aidl.GetTypeParameters()) {
-      arg_names.emplace_back(JavaSignatureOfInternal(*ta, false, false, true /* boxing */));
+      arg_names.emplace_back(JavaSignatureOfInternal(*ta, /*instantiable=*/false,
+                                                     /*omit_array=*/false, /*boxing=*/true));
     }
     ret += "<" + Join(arg_names, ",") + ">";
   }
@@ -185,11 +185,20 @@ string AidlBackingTypeName(const AidlTypeSpecifier& type) {
 }  // namespace
 
 string JavaSignatureOf(const AidlTypeSpecifier& aidl) {
-  return JavaSignatureOfInternal(aidl, false, false);
+  return JavaSignatureOfInternal(aidl, /*instantiable=*/false, /*omit_array=*/false,
+                                 /*boxing=*/false);
 }
 
+// Used for "new" expression. Ignore arrays because "new" expression handles it.
 string InstantiableJavaSignatureOf(const AidlTypeSpecifier& aidl) {
-  return JavaSignatureOfInternal(aidl, true, true);
+  return JavaSignatureOfInternal(aidl, /*instantiable=*/true, /*omit_array=*/true,
+                                 /*boxing=*/false);
+}
+
+string JavaBoxingTypeOf(const AidlTypeSpecifier& aidl) {
+  AIDL_FATAL_IF(!AidlTypenames::IsPrimitiveTypename(aidl.GetName()), aidl);
+  return JavaSignatureOfInternal(aidl, /*instantiable=*/false, /*omit_array=*/false,
+                                 /*boxing=*/true);
 }
 
 string DefaultJavaValueOf(const AidlTypeSpecifier& aidl) {
@@ -893,6 +902,17 @@ bool ReadFromParcelFor(const CodeGeneratorContext& c) {
 }
 
 void ToStringFor(const CodeGeneratorContext& c) {
+  // Use derived toString() for enum type annotated with @JavaDerive(toString=true)
+  if (auto t = c.type.GetDefinedType();
+      t != nullptr && t->AsEnumDeclaration() && t->JavaDerive("toString")) {
+    if (c.type.IsArray()) {
+      c.writer << c.type.GetName() << ".$.arrayToString(" << c.var << ")";
+    } else {
+      c.writer << c.type.GetName() << ".$.toString(" << c.var << ")";
+    }
+    return;
+  }
+
   if (c.type.IsArray()) {
     if (c.type.IsDynamicArray() || c.type.GetFixedSizeArrayDimensions().size() == 1) {
       c.writer << "java.util.Arrays.toString(" << c.var << ")";

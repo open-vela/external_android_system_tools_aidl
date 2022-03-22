@@ -154,7 +154,7 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
        /* repeatable= */ true},
       {AidlAnnotation::Type::JAVA_DERIVE,
        "JavaDerive",
-       CONTEXT_TYPE_STRUCTURED_PARCELABLE | CONTEXT_TYPE_UNION,
+       CONTEXT_TYPE_STRUCTURED_PARCELABLE | CONTEXT_TYPE_UNION | CONTEXT_TYPE_ENUM,
        {{"toString", kBooleanType}, {"equals", kBooleanType}}},
       {AidlAnnotation::Type::JAVA_DEFAULT, "JavaDefault", CONTEXT_TYPE_INTERFACE, {}},
       {AidlAnnotation::Type::JAVA_DELEGATOR, "JavaDelegator", CONTEXT_TYPE_INTERFACE, {}},
