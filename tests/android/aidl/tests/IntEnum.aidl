@@ -16,6 +16,7 @@
 
 package android.aidl.tests;
 
+@JavaDerive(toString=true)
 @Backing(type="int")
 enum IntEnum {
     FOO = 1000,
