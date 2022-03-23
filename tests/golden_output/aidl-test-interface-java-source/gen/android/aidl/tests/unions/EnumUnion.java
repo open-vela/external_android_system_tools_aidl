@@ -112,7 +112,7 @@ public final class EnumUnion implements android.os.Parcelable {
   @Override
   public String toString() {
     switch (_tag) {
-    case intEnum: return "android.aidl.tests.unions.EnumUnion.intEnum(" + (getIntEnum()) + ")";
+    case intEnum: return "android.aidl.tests.unions.EnumUnion.intEnum(" + (android.aidl.tests.IntEnum.$.toString(getIntEnum())) + ")";
     case longEnum: return "android.aidl.tests.unions.EnumUnion.longEnum(" + (getLongEnum()) + ")";
     }
     throw new IllegalStateException("unknown field: " + _tag);

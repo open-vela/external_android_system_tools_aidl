@@ -757,10 +757,10 @@ public class TestServiceClient {
             + "f: 17, "
             + "shouldBeJerry: Jerry, "
             + "shouldBeByteBar: 2, "
-            + "shouldBeIntBar: 2000, "
+            + "shouldBeIntBar: BAR, "
             + "shouldBeLongBar: 200000000000, "
             + "shouldContainTwoByteFoos: [1, 1], "
-            + "shouldContainTwoIntFoos: [1000, 1000], "
+            + "shouldContainTwoIntFoos: [FOO, FOO], "
             + "shouldContainTwoLongFoos: [100000000000, 100000000000], "
             + "stringDefaultsToFoo: foo, "
             + "byteDefaultsToFour: 4, "
@@ -809,7 +809,7 @@ public class TestServiceClient {
             + "shouldSetBit0AndBit2: 5, "
             + "u: android.aidl.tests.Union.ns([1, 2, 3]), "
             + "shouldBeConstS1: android.aidl.tests.Union.s(a string constant in union), "
-            + "defaultWithFoo: 1000"
+            + "defaultWithFoo: FOO"
             + "}";
         assertThat(p.toString(), is(expected));
     }
@@ -888,8 +888,8 @@ public class TestServiceClient {
             + "parcelableArray: ["
             + "android.aidl.tests.OtherParcelableForToString{field: other}, "
             + "android.aidl.tests.OtherParcelableForToString{field: other}], "
-            + "enumValue: 1000, "
-            + "enumArray: [1000, 2000], "
+            + "enumValue: FOO, "
+            + "enumArray: [FOO, BAR], "
             + "nullArray: null, "
             + "nullList: null, "
             + "parcelableGeneric: android.aidl.tests.GenericStructuredParcelable{a: 1, b: 2}, "
@@ -897,6 +897,21 @@ public class TestServiceClient {
             + "}";
 
         assertThat(p.toString(), is(expected));
+    }
+
+    @Test
+    public void testEnumToString() {
+      assertThat(IntEnum.$.toString(IntEnum.FOO), is("FOO"));
+      assertThat(IntEnum.$.toString(0), is("0"));
+      assertThat(IntEnum.$.arrayToString(null), is("null"));
+      assertThat(IntEnum.$.arrayToString(new int[] {}), is("[]"));
+      assertThat(IntEnum.$.arrayToString(new int[] {IntEnum.FOO, IntEnum.BAR}), is("[FOO, BAR]"));
+      assertThat(IntEnum.$.arrayToString(new int[] {IntEnum.FOO, 0}), is("[FOO, 0]"));
+      assertThat(IntEnum.$.arrayToString(new int[][] {{IntEnum.FOO, IntEnum.BAR}, {IntEnum.BAZ}}),
+          is("[[FOO, BAR], [BAZ]]"));
+      assertThrows(IllegalArgumentException.class, () -> IntEnum.$.arrayToString(IntEnum.FOO));
+      assertThrows(
+          IllegalArgumentException.class, () -> IntEnum.$.arrayToString(new long[] {LongEnum.FOO}));
     }
 
     @Test
