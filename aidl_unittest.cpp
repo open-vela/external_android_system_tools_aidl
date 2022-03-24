@@ -1392,9 +1392,12 @@ TEST_P(AidlTest, FailOnManyDefinedTypes) {
 TEST_P(AidlTest, FailOnNoDefinedTypes) {
   AidlError error;
   const string expected_stderr = "ERROR: p/IFoo.aidl:1.11-11: syntax error, unexpected $end\n";
+  const string expected_stderr_newbison =
+      "ERROR: p/IFoo.aidl:1.11-11: syntax error, unexpected end of file\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("p/IFoo.aidl", R"(package p;)", typenames_, GetLanguage(), &error));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  EXPECT_THAT(GetCapturedStderr(),
+              testing::AnyOf(testing::Eq(expected_stderr), testing::Eq(expected_stderr_newbison)));
   EXPECT_EQ(AidlError::PARSE_ERROR, error);
 }
 
@@ -2605,9 +2608,12 @@ TEST_F(AidlTest, FailOnMultipleTypesInSingleFile) {
 TEST_P(AidlTest, FailParseOnEmptyFile) {
   const string contents = "";
   const string expected_stderr = "ERROR: a/IFoo.aidl:1.1-1: syntax error, unexpected $end\n";
+  const string expected_stderr_newbison =
+      "ERROR: a/IFoo.aidl:1.1-1: syntax error, unexpected end of file\n";
   CaptureStderr();
   EXPECT_EQ(nullptr, Parse("a/IFoo.aidl", contents, typenames_, GetLanguage()));
-  EXPECT_EQ(expected_stderr, GetCapturedStderr());
+  EXPECT_THAT(GetCapturedStderr(),
+              testing::AnyOf(testing::Eq(expected_stderr), testing::Eq(expected_stderr_newbison)));
 }
 
 TEST_F(AidlTest, MultipleInputFiles) {
