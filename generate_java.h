@@ -27,20 +27,24 @@ namespace android {
 namespace aidl {
 namespace java {
 
-bool generate_java(const std::string& filename, const AidlDefinedType* iface,
-                   const AidlTypenames& typenames, const IoDelegate& io_delegate,
+void GenerateJava(const std::string& filename, const Options& options,
+                  const AidlTypenames& typenames, const AidlDefinedType& defined_type,
+                  const IoDelegate& io_delegate);
+
+void GenerateClass(CodeWriter& out, const AidlDefinedType& defined_type, const AidlTypenames& types,
                    const Options& options);
 
-std::unique_ptr<android::aidl::java::Class> generate_binder_interface_class(
-    const AidlInterface* iface, const AidlTypenames& typenames, const Options& options);
+std::unique_ptr<android::aidl::java::Class> GenerateInterfaceClass(const AidlInterface* iface,
+                                                                   const AidlTypenames& typenames,
+                                                                   const Options& options);
 
-std::unique_ptr<android::aidl::java::Class> generate_parcel_class(
-    const AidlStructuredParcelable* parcel, const AidlTypenames& typenames);
+void GenerateConstantDeclarations(CodeWriter& out, const AidlDefinedType& type);
 
-void generate_enum(const CodeWriterPtr& code_writer, const AidlEnumDeclaration* enum_decl,
-                   const AidlTypenames& typenames);
+std::string GenerateComments(const AidlCommentable& node);
 
-std::vector<std::string> generate_java_annotations(const AidlAnnotatable& a);
+std::string GenerateAnnotations(const AidlNode& node);
+
+std::vector<std::string> JavaAnnotationsFor(const AidlNode& a);
 
 }  // namespace java
 }  // namespace aidl

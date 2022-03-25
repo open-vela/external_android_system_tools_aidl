@@ -14,36 +14,22 @@
  * limitations under the License.
  */
 
-#include "aidl_test_client_service_exceptions.h"
+#include "aidl_test_client.h"
+#include "gmock/gmock.h"
 
-#include <iostream>
-
-#include "binder/Status.h"
-
-using android::binder::Status;
-using std::cout;
-using std::endl;
-
-namespace android {
-namespace aidl {
-namespace tests {
-namespace client {
-
-bool ConfirmServiceSpecificExceptions(const sp<ITestService>& s) {
-  cout << "Confirming application exceptions work" << endl;
-
-  for (int32_t i = -1; i < 2; ++i) {
-    Status status = s->ThrowServiceException(i);
-    if (status.exceptionCode() != Status::EX_SERVICE_SPECIFIC ||
-        status.serviceSpecificErrorCode() != i) {
-      return false;
-    }
-  }
-
-  return true;
+TEST_F(AidlTest, onewayNoError) {
+  // oneway servers try to return an error
+  auto status = service->TestOneway();
+  EXPECT_TRUE(status.isOk()) << status;
 }
 
-}  // namespace client
-}  // namespace tests
-}  // namespace aidl
-}  // namespace android
+TEST_F(AidlTest, serviceSpecificException) {
+  using testing::Eq;
+
+  for (int32_t i = -1; i < 2; ++i) {
+    auto status = service->ThrowServiceException(i);
+    EXPECT_THAT(status.exceptionCode(), Eq(android::binder::Status::EX_SERVICE_SPECIFIC))
+        << status << " for " << i;
+    EXPECT_THAT(status.serviceSpecificErrorCode(), Eq(i)) << status << " for " << i;
+  }
+}
