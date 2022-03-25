@@ -20,6 +20,7 @@
 #include "ast_java.h"
 #include "io_delegate.h"
 #include "options.h"
+#include "type_java.h"
 
 #include <string>
 
@@ -27,25 +28,19 @@ namespace android {
 namespace aidl {
 namespace java {
 
-void GenerateJava(const std::string& filename, const Options& options,
-                  const AidlTypenames& typenames, const AidlDefinedType& defined_type,
-                  const IoDelegate& io_delegate);
-
-void GenerateClass(CodeWriter& out, const AidlDefinedType& defined_type, const AidlTypenames& types,
+bool generate_java(const std::string& filename, const AidlDefinedType* iface,
+                   java::JavaTypeNamespace* types, const IoDelegate& io_delegate,
                    const Options& options);
 
-std::unique_ptr<android::aidl::java::Class> GenerateInterfaceClass(const AidlInterface* iface,
-                                                                   const AidlTypenames& typenames,
-                                                                   const Options& options);
+android::aidl::java::Class* generate_binder_interface_class(const AidlInterface* iface,
+                                                            java::JavaTypeNamespace* types,
+                                                            const Options& options);
 
-void GenerateConstantDeclarations(CodeWriter& out, const AidlDefinedType& type);
+android::aidl::java::Class* generate_parcel_class(const AidlStructuredParcelable* parcel,
+                                                  AidlTypenames& typenames);
 
-std::string GenerateComments(const AidlCommentable& node);
-
-std::string GenerateAnnotations(const AidlNode& node);
-
-std::vector<std::string> JavaAnnotationsFor(const AidlNode& a);
+std::vector<std::string> generate_java_annotations(const AidlAnnotatable& a);
 
 }  // namespace java
-}  // namespace aidl
 }  // namespace android
+}  // namespace aidl

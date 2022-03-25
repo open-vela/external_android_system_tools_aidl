@@ -15,28 +15,45 @@
  */
 
 #include "aidl.h"
+#include "aidl_apicheck.h"
 #include "io_delegate.h"
 #include "logging.h"
 #include "options.h"
 
 #include <iostream>
+#include <memory>
 
 using android::aidl::Options;
 
-#ifdef AIDL_CPP_BUILD
-constexpr Options::Language kDefaultLang = Options::Language::CPP;
-#else
-constexpr Options::Language kDefaultLang = Options::Language::JAVA;
-#endif
+// aidl is leaky. Turn off LeakSanitizer by default. b/37749857
+extern "C" const char* __asan_default_options() {
+  return "detect_leaks=0";
+}
 
 int main(int argc, char* argv[]) {
-  Options options(argc, argv, kDefaultLang);
-
-  // Only minimal functionality should go here, so that as much of possible of
-  // the aidl compiler is mocked with the single function `aidl_entry`
+  android::base::InitLogging(argv);
+  LOG(DEBUG) << "aidl starting";
+  Options options(argc, argv, Options::Language::JAVA);
+  if (!options.Ok()) {
+    std::cerr << options.GetErrorMessage();
+    std::cerr << options.GetUsage();
+    return 1;
+  }
 
   android::aidl::IoDelegate io_delegate;
-  int ret = aidl_entry(options, io_delegate);
-
-  return ret;
+  switch (options.GetTask()) {
+    case Options::Task::COMPILE:
+      return android::aidl::compile_aidl(options, io_delegate);
+    case Options::Task::PREPROCESS:
+      return android::aidl::preprocess_aidl(options, io_delegate) ? 0 : 1;
+    case Options::Task::DUMP_API:
+      return android::aidl::dump_api(options, io_delegate) ? 0 : 1;
+    case Options::Task::CHECK_API:
+      return android::aidl::check_api(options, io_delegate) ? 0 : 1;
+    case Options::Task::DUMP_MAPPINGS:
+      return android::aidl::dump_mappings(options, io_delegate) ? 0 : 1;
+    default:
+      LOG(FATAL) << "aidl: internal error" << std::endl;
+      return 1;
+  }
 }

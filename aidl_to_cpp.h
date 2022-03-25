@@ -23,9 +23,7 @@ namespace cpp {
 
 // This header provides functions that translate AIDL things to cpp things.
 
-std::string ConstantValueDecorator(
-    const AidlTypeSpecifier& type,
-    const std::variant<std::string, std::vector<std::string>>& raw_value);
+std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value);
 
 struct CodeGeneratorContext {
   CodeWriter& writer;
@@ -34,36 +32,10 @@ struct CodeGeneratorContext {
   const AidlTypeSpecifier& type;  // an argument or return type to generate code for
   const string name;              // name of the variable for the argument or the return value
   const bool isPointer;           // whether the variable 'name' is a pointer or not
+  const string log;               // name of the variable of type Json::Value to write the log into
 };
 
-std::string GetTransactionIdFor(const std::string& clazz, const AidlMethod& method);
-
-std::string CppNameOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames);
-
-bool IsNonCopyableType(const AidlTypeSpecifier& type, const AidlTypenames& typenames);
-
-// Returns the name of the Parcel method suitable for reading data of the
-// given type.
-std::string ParcelReadMethodOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames);
-
-// Returns the potentially-cast representation of the provided variable name,
-// suitable for being passed to a method from ParcelReadMethodOf.
-std::string ParcelReadCastOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
-                             const std::string& variable_name);
-
-// Returns the name of the Parcel method suitable for writing data of the
-// given type.
-std::string ParcelWriteMethodOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames);
-
-// Returns the potentially-cast representation of the provided variable name,
-// suitable for being passed to a method from ParcelWriteMethodOf.
-std::string ParcelWriteCastOf(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
-                              const std::string& variable_name);
-
-void AddHeaders(const AidlTypeSpecifier& type, const AidlTypenames& typenames,
-                std::set<std::string>* headers);
-
-std::string CppHeaderForType(const AidlDefinedType& defined_type);
+std::string GetTransactionIdFor(const AidlMethod& method);
 }  // namespace cpp
 }  // namespace aidl
 }  // namespace android

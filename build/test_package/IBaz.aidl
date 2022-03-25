@@ -18,7 +18,6 @@ package test_package;
 
 import some_package.IBar;
 
-@SuppressWarnings(value={"mixed-oneway", "inout-parameter", "out-array"})
 interface IBaz {
     oneway void CanYouDealWithThisBar(in IBar bar);
     void MethodAddedInVersion2();
@@ -27,7 +26,9 @@ interface IBaz {
     void writePFD(in ParcelFileDescriptor fd);
     void readWritePFD(inout ParcelFileDescriptor fd);
 
-    ParcelFileDescriptor[] readPFDArray();
-    void writePFDArray(in ParcelFileDescriptor[] fds);
-    void readWritePFDArray(inout ParcelFileDescriptor[] fds);
+    // TODO(b/112664205) uncomment these when we have the support for array type in
+    // the ndk backend
+    //ParcelFileDescriptor[] readPFDArray();
+    //void writePFDArray(in ParcelFileDescriptor[] fds);
+    //void readWritePFDArray(inout ParcelFileDescriptor[] fds);
 }

@@ -39,21 +39,15 @@ using std::vector;
 
 // This header provides functions that translate AIDL things to Java things.
 
-std::string ConstantValueDecorator(
-    const AidlTypeSpecifier& type,
-    const std::variant<std::string, std::vector<std::string>>& raw_value);
+std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value);
+
+// Returns the corresponding Java type name for an AIDL type spec
+// This excludes generic type parameters and array modifiers.
+const string& JavaNameOf(const AidlTypeSpecifier& aidl);
 
 // Returns the Java type signature of the AIDL type spec
-// This includes generic type parameters with array modifiers.
+// This includes generic type parameters and array modifiers.
 string JavaSignatureOf(const AidlTypeSpecifier& aidl);
-
-// Returns the Java boxing type of the AIDL type spec.
-// aidl type should be a primitive type.
-string JavaBoxingTypeOf(const AidlTypeSpecifier& aidl);
-
-// Returns the instantiable Jva type signature of the AIDL type spec
-// This includes generic type parameters, but excludes array modifiers.
-string InstantiableJavaSignatureOf(const AidlTypeSpecifier& aidl);
 
 // Returns the default Java value of the AIDL type spec
 string DefaultJavaValueOf(const AidlTypeSpecifier& aidl);
@@ -66,7 +60,7 @@ struct CodeGeneratorContext {
   const AidlTypeSpecifier& type;
   const string parcel;
   const string var;
-  const uint32_t min_sdk_version;
+
   // Set to true when the marshalled data will be returned to the client
   // This is given as a hint to the Parcelable that is being marshalled
   // so that the Parcelable can release its resource after the marshalling
@@ -95,7 +89,7 @@ struct CodeGeneratorContext {
 };
 
 // Writes code fragment that writes a variable to the parcel.
-void WriteToParcelFor(const CodeGeneratorContext& c);
+bool WriteToParcelFor(const CodeGeneratorContext& c);
 
 // Writes code fragment that reads data from the parcel into a variable. When
 // the variable type is array or List, the array or List is created.
@@ -104,14 +98,6 @@ bool CreateFromParcelFor(const CodeGeneratorContext& c);
 // Writes code fragment that reads data from the parcel into an existing
 // array or a List.
 bool ReadFromParcelFor(const CodeGeneratorContext& c);
-
-// Writes an expression that returns the string representation of a field
-// in a parcelable
-void ToStringFor(const CodeGeneratorContext& c);
-
-// Generates create/read/write helper functions which are missing in Parcel.
-void GenerateParcelHelpers(CodeWriter& out, const AidlDefinedType& defined_type,
-                           const Options& options);
 
 }  // namespace java
 }  // namespace aidl
