@@ -16,13 +16,13 @@
 
 #pragma once
 
-#include <stdio.h>
-
-#include <functional>
 #include <memory>
 #include <ostream>
 #include <string>
-#include <utility>
+
+#include <stdio.h>
+
+#include <android-base/macros.h>
 
 namespace android {
 namespace aidl {
@@ -41,7 +41,7 @@ class CodeWriter {
   static CodeWriterPtr ForString(std::string* buf);
   // Write a formatted string to this writer in the usual printf sense.
   // Returns false on error.
-  virtual bool Write(const char* format, ...) __attribute__((format(printf, 2, 3)));
+  virtual bool Write(const char* format, ...);
   void Indent();
   void Dedent();
   virtual bool Close();
@@ -58,8 +58,6 @@ class CodeWriter {
   int indent_level_ {0};
   bool start_of_line_ {true};
 };
-
-std::string QuotedEscape(const std::string& str);
 
 }  // namespace aidl
 }  // namespace android

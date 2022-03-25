@@ -15,7 +15,7 @@
  */
 
 #include "generate_aidl_mappings.h"
-#include "aidl_to_java.h"
+#include "type_java.h"
 
 #include <sstream>
 
@@ -24,7 +24,7 @@ namespace aidl {
 namespace mappings {
 
 std::string dump_location(const AidlNode& method) {
-  return method.PrintLine();
+  return method.PrintLocation();
 }
 
 SignatureMap generate_mappings(const AidlDefinedType* defined_type) {
@@ -39,10 +39,10 @@ SignatureMap generate_mappings(const AidlDefinedType* defined_type) {
       signature << interface->GetCanonicalName() << "|";
       signature << method->GetName() << "|";
       for (const auto& arg : method->GetArguments()) {
-        signature << java::JavaSignatureOf(arg->GetType()) << ",";
+        signature << arg->GetType().ToString() << ",";
       }
       signature << "|";
-      signature << java::JavaSignatureOf(method->GetType());
+      signature << method->GetType().GetLanguageType<java::Type>()->JavaType();
       mappings[signature.str()] = dump_location(*method);
     }
   }
