@@ -31,7 +31,9 @@ enum class StorageMode {
 std::string NdkHeaderFile(const AidlDefinedType& defined_type, cpp::ClassNames name,
                           bool use_os_sep = true);
 
-std::string ConstantValueDecorator(const AidlTypeSpecifier& type, const std::string& raw_value);
+std::string ConstantValueDecorator(
+    const AidlTypeSpecifier& type,
+    const std::variant<std::string, std::vector<std::string>>& raw_value);
 
 // Returns ::aidl::some_package::some_sub_package::foo::IFoo/BpFoo/BnFoo
 std::string NdkFullClassName(const AidlDefinedType& type, cpp::ClassNames name);
