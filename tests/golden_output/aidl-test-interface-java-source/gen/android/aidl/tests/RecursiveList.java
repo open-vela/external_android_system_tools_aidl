@@ -23,7 +23,7 @@ public class RecursiveList implements android.os.Parcelable
     int _aidl_start_pos = _aidl_parcel.dataPosition();
     _aidl_parcel.writeInt(0);
     _aidl_parcel.writeInt(value);
-    _aidl_parcel.writeTypedObject(next, 0);
+    _aidl_parcel.writeTypedObject(next, _aidl_flag);
     int _aidl_end_pos = _aidl_parcel.dataPosition();
     _aidl_parcel.setDataPosition(_aidl_start_pos);
     _aidl_parcel.writeInt(_aidl_end_pos - _aidl_start_pos);

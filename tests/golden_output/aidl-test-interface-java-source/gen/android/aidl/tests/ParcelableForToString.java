@@ -58,14 +58,14 @@ public class ParcelableForToString implements android.os.Parcelable
     _aidl_parcel.writeString(stringValue);
     _aidl_parcel.writeStringArray(stringArray);
     _aidl_parcel.writeStringList(stringList);
-    _aidl_parcel.writeTypedObject(parcelableValue, 0);
-    _aidl_parcel.writeTypedArray(parcelableArray, 0);
+    _aidl_parcel.writeTypedObject(parcelableValue, _aidl_flag);
+    _aidl_parcel.writeTypedArray(parcelableArray, _aidl_flag);
     _aidl_parcel.writeInt(enumValue);
     _aidl_parcel.writeIntArray(enumArray);
     _aidl_parcel.writeStringArray(nullArray);
     _aidl_parcel.writeStringList(nullList);
-    _aidl_parcel.writeTypedObject(parcelableGeneric, 0);
-    _aidl_parcel.writeTypedObject(unionValue, 0);
+    _aidl_parcel.writeTypedObject(parcelableGeneric, _aidl_flag);
+    _aidl_parcel.writeTypedObject(unionValue, _aidl_flag);
     int _aidl_end_pos = _aidl_parcel.dataPosition();
     _aidl_parcel.setDataPosition(_aidl_start_pos);
     _aidl_parcel.writeInt(_aidl_end_pos - _aidl_start_pos);
