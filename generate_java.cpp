@@ -436,7 +436,7 @@ std::unique_ptr<android::aidl::java::Class> GenerateParcelableClass(
         .parcel = parcel_variable->name,
         .var = field->GetName(),
         .min_sdk_version = options.GetMinSdkVersion(),
-        .is_return_value = false,
+        .write_to_parcel_flag = "_aidl_flag",
     };
     WriteToParcelFor(context);
     writer->Close();
@@ -797,7 +797,7 @@ void GenerateUnionClass(CodeWriter& out, const AidlUnionDecl* decl, const AidlTy
         .parcel = parcel,
         .var = name,
         .min_sdk_version = options.GetMinSdkVersion(),
-        .is_return_value = false,
+        .write_to_parcel_flag = "_aidl_flag",
     };
     WriteToParcelFor(context);
     writer->Close();
