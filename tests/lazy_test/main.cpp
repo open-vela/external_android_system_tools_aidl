@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <sys/eventfd.h>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -22,11 +21,9 @@
 #include <string>
 #include <thread>
 
-#include <sys/epoll.h>
 #include <unistd.h>
 
 #include <ILazyTestService.h>
-#include <ILazyTestServiceCb.h>
 #include <binder/IPCThreadState.h>
 #include <binder/IServiceManager.h>
 #include <gtest/gtest.h>
@@ -38,12 +35,10 @@ using ::android::IPCThreadState;
 using ::android::IServiceManager;
 using ::android::sp;
 using ::android::String16;
-using ::android::base::unique_fd;
-using ::android::os::ParcelFileDescriptor;
 
 std::vector<String16> gServiceNames;
+bool gUsingTestService = true;
 static constexpr size_t SHUTDOWN_WAIT_TIME = 10;
-static constexpr size_t CALLBACK_SHUTDOWN_WAIT_TIME = 5;
 
 sp<IBinder> waitForService(const String16& name) {
   sp<IServiceManager> manager;
@@ -164,25 +159,23 @@ TEST_F(AidlLazyTest, GetConcurrentWithWaitAfter) {
 
 class AidlLazyRegistrarTest : public ::testing::Test {
  protected:
-  const String16 serviceName = String16("aidl_lazy_test_1");
-  void SetUp() override {
-    if (std::find(gServiceNames.begin(), gServiceNames.end(), serviceName) == gServiceNames.end()) {
-      GTEST_SKIP() << "Persistence test requires special instance: " << serviceName;
-    }
-  }
+  String16 serviceName = String16("aidl_lazy_test_1");
 };
 
-template <typename T>
-sp<T> waitForLazyTestService(String16 name) {
-  sp<T> service = android::waitForService<T>(name);
+sp<ILazyTestService> waitForLazyTestService(String16 name) {
+  sp<ILazyTestService> service = android::waitForService<ILazyTestService>(name);
   EXPECT_NE(service, nullptr);
   return service;
 }
 
 TEST_F(AidlLazyRegistrarTest, ForcedPersistenceTest) {
+  if (!gUsingTestService) {
+    GTEST_SKIP();
+  }
+
   sp<ILazyTestService> service;
   for (int i = 0; i < 2; i++) {
-    service = waitForLazyTestService<ILazyTestService>(serviceName);
+    service = waitForLazyTestService(serviceName);
     EXPECT_TRUE(service->forcePersist(i == 0).isOk());
     service = nullptr;
 
@@ -199,54 +192,6 @@ TEST_F(AidlLazyRegistrarTest, ForcedPersistenceTest) {
   }
 }
 
-TEST_F(AidlLazyRegistrarTest, ActiveServicesCountCallbackTest) {
-  const String16 cbServiceName = String16("aidl_lazy_cb_test");
-
-  int efd = eventfd(0, 0);
-  ASSERT_GE(efd, 0) << "Failed to create eventfd";
-
-  unique_fd uniqueEventFd(efd);
-  ParcelFileDescriptor parcelEventFd(std::move(uniqueEventFd));
-
-  sp<ILazyTestServiceCb> service;
-  service = waitForLazyTestService<ILazyTestServiceCb>(cbServiceName);
-  ASSERT_TRUE(service->setEventFd(parcelEventFd).isOk());
-  service = nullptr;
-
-  IPCThreadState::self()->flushCommands();
-
-  std::cout << "Waiting " << SHUTDOWN_WAIT_TIME << " seconds for callback completion "
-            << "notification." << std::endl;
-
-  int epollFd = epoll_create1(EPOLL_CLOEXEC);
-  ASSERT_GE(epollFd, 0) << "Failed to create epoll";
-  unique_fd epollUniqueFd(epollFd);
-
-  const int EPOLL_MAX_EVENTS = 1;
-  struct epoll_event event, events[EPOLL_MAX_EVENTS];
-
-  event.events = EPOLLIN;
-  event.data.fd = efd;
-  int rc = epoll_ctl(epollFd, EPOLL_CTL_ADD, efd, &event);
-  ASSERT_GE(rc, 0) << "Failed to add fd to epoll";
-
-  rc = TEMP_FAILURE_RETRY(epoll_wait(epollFd, events, EPOLL_MAX_EVENTS, SHUTDOWN_WAIT_TIME * 1000));
-  ASSERT_NE(rc, 0) << "Service shutdown timeout";
-  ASSERT_GT(rc, 0) << "Error waiting for service shutdown notification";
-
-  eventfd_t counter;
-  rc = TEMP_FAILURE_RETRY(eventfd_read(parcelEventFd.get(), &counter));
-  ASSERT_GE(rc, 0) << "Failed to get callback completion notification from service";
-  ASSERT_EQ(counter, 1);
-
-  std::cout << "Waiting " << CALLBACK_SHUTDOWN_WAIT_TIME << " seconds before checking whether the "
-            << "service is still running." << std::endl;
-
-  sleep(CALLBACK_SHUTDOWN_WAIT_TIME);
-
-  ASSERT_FALSE(isServiceRunning(serviceName)) << "Service failed to shut down.";
-}
-
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
 
@@ -260,6 +205,7 @@ int main(int argc, char** argv) {
     for (int i = 1; i < argc; i++) {
       gServiceNames.push_back(String16(argv[i]));
     }
+    gUsingTestService = false;
   }
 
   android::ProcessState::self()->startThreadPool();
