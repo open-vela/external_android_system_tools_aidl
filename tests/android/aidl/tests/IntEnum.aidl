@@ -16,12 +16,9 @@
 
 package android.aidl.tests;
 
-@JavaDerive(toString=true)
 @Backing(type="int")
 enum IntEnum {
     FOO = 1000,
     BAR = 2000,
     BAZ,
-    /** @deprecated do not use this */
-    QUX,
 }

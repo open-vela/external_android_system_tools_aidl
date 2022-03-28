@@ -17,7 +17,6 @@
 // later when a module using the interface is updated, e.g., Mainline modules.
 
 package android.aidl.versioned.tests;
-@JavaSuppressLint(value={"NewApi"})
 parcelable Foo {
-    int intDefault42 = 42;
+  int intDefault42 = 42;
 }
