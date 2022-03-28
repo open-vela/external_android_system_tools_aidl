@@ -87,7 +87,8 @@ class ClassDecl : public Declaration {
 
 class Enum : public Declaration {
  public:
-  Enum(const std::string& name, const std::string& base_type, bool is_class);
+  Enum(const std::string& name, const std::string& base_type);
+  explicit Enum(const std::string& name);
   virtual ~Enum() = default;
 
   bool HasValues() const { return !fields_.empty(); }
@@ -104,7 +105,6 @@ class Enum : public Declaration {
 
   std::string enum_name_;
   std::string underlying_type_;
-  bool is_class_;
   std::vector<EnumField> fields_;
 
   DISALLOW_COPY_AND_ASSIGN(Enum);
@@ -227,9 +227,6 @@ class ConstructorImpl : public Declaration {
                   ArgList&& arg_list,
                   const std::vector<std::string>& initializer_list);
   virtual ~ConstructorImpl() = default;
-
-  // ConstructorImpl retains ownership of the statement block.
-  StatementBlock* GetStatementBlock();
 
   void Write(CodeWriter* to) const override;
 

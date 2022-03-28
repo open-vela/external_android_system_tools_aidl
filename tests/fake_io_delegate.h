@@ -60,7 +60,6 @@ class FakeIoDelegate : public IoDelegate {
   // Returns true iff we've previously written to |path|.
   // When we return true, we'll set *contents to the written string.
   bool GetWrittenContents(const std::string& path, std::string* content);
-  std::vector<std::string> ListOutputFiles();
 
   bool PathWasRemoved(const std::string& path);
 
@@ -83,7 +82,7 @@ class FakeIoDelegate : public IoDelegate {
 };  // class FakeIoDelegate
 
 }  // namespace test
-}  // namespace aidl
 }  // namespace android
+}  // namespace aidl
 
 #endif // AIDL_TESTS_FAKE_IO_DELEGATE_H_

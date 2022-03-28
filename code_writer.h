@@ -41,7 +41,7 @@ class CodeWriter {
   static CodeWriterPtr ForString(std::string* buf);
   // Write a formatted string to this writer in the usual printf sense.
   // Returns false on error.
-  virtual bool Write(const char* format, ...) __attribute__((format(printf, 2, 3)));
+  virtual bool Write(const char* format, ...);
   void Indent();
   void Dedent();
   virtual bool Close();

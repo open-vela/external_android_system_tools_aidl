@@ -24,43 +24,41 @@
 #include "aidl_to_cpp_common.h"
 #include "ast_cpp.h"
 #include "options.h"
+#include "type_cpp.h"
 
 namespace android {
 namespace aidl {
 namespace cpp {
 
-bool GenerateCpp(const string& output_file, const Options& options, const AidlTypenames& typenames,
+bool GenerateCpp(const string& output_file, const Options& options, const cpp::TypeNamespace& types,
                  const AidlDefinedType& parsed_doc, const IoDelegate& io_delegate);
 
 namespace internals {
-std::unique_ptr<Document> BuildClientSource(const AidlTypenames& typenames,
+std::unique_ptr<Document> BuildClientSource(const TypeNamespace& types,
                                             const AidlInterface& parsed_doc,
                                             const Options& options);
-std::unique_ptr<Document> BuildServerSource(const AidlTypenames& typenames,
+std::unique_ptr<Document> BuildServerSource(const TypeNamespace& types,
                                             const AidlInterface& parsed_doc,
                                             const Options& options);
-std::unique_ptr<Document> BuildInterfaceSource(const AidlTypenames& typenames,
+std::unique_ptr<Document> BuildInterfaceSource(const TypeNamespace& types,
                                                const AidlInterface& parsed_doc,
                                                const Options& options);
-std::unique_ptr<Document> BuildClientHeader(const AidlTypenames& typenames,
+std::unique_ptr<Document> BuildClientHeader(const TypeNamespace& types,
                                             const AidlInterface& parsed_doc,
                                             const Options& options);
-std::unique_ptr<Document> BuildServerHeader(const AidlTypenames& typenames,
+std::unique_ptr<Document> BuildServerHeader(const TypeNamespace& types,
                                             const AidlInterface& parsed_doc,
                                             const Options& options);
-std::unique_ptr<Document> BuildInterfaceHeader(const AidlTypenames& typenames,
+std::unique_ptr<Document> BuildInterfaceHeader(const TypeNamespace& types,
                                                const AidlInterface& parsed_doc,
                                                const Options& options);
 
-std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
+std::unique_ptr<Document> BuildParcelHeader(const TypeNamespace& types,
                                             const AidlStructuredParcelable& parsed_doc,
                                             const Options& options);
-std::unique_ptr<Document> BuildParcelSource(const AidlTypenames& typenames,
+std::unique_ptr<Document> BuildParcelSource(const TypeNamespace& types,
                                             const AidlStructuredParcelable& parsed_doc,
                                             const Options& options);
-
-std::unique_ptr<Document> BuildEnumHeader(const AidlTypenames& typenames,
-                                          const AidlEnumDeclaration& parsed_doc);
 }
 }  // namespace cpp
 }  // namespace aidl

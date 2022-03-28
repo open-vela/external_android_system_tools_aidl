@@ -20,6 +20,7 @@
 
 #include "ast_java.h"
 #include "code_writer.h"
+#include "type_java.h"
 
 using std::string;
 
@@ -38,12 +39,16 @@ final class TestClass extends SuperClass
 }  // namespace
 
 TEST(AstJavaTests, GeneratesClass) {
+  JavaTypeNamespace types;
+  types.Init();
+  Type class_type(&types, "TestClass", ValidatableType::KIND_GENERATED, false);
+  Type extend_type(&types, "SuperClass", ValidatableType::KIND_BUILT_IN, false);
   Class a_class;
   a_class.comment = "// class comment";
   a_class.modifiers = FINAL;
   a_class.what = Class::CLASS;
-  a_class.type = "TestClass";
-  a_class.extends = "SuperClass";
+  a_class.type = class_type.JavaType();
+  a_class.extends = extend_type.JavaType();
 
   string actual_output;
   a_class.Write(CodeWriter::ForString(&actual_output).get());
