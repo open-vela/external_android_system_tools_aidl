@@ -67,11 +67,11 @@ struct CodeGeneratorContext {
   const string parcel;
   const string var;
   const uint32_t min_sdk_version;
-  // Set to true when the marshalled data will be returned to the client
+  // Set PARCELABLE_WRITE_RETURN_VALUE when the marshalled data will be returned to the client.
   // This is given as a hint to the Parcelable that is being marshalled
   // so that the Parcelable can release its resource after the marshalling
   // is done.
-  const bool is_return_value;
+  const string write_to_parcel_flag;
 
   // Most of the variables created by AIDL compiler are typed, i.e., the code
   // knows exactly what type of object is in the parcel -- because the parcel
@@ -89,9 +89,6 @@ struct CodeGeneratorContext {
   // We emit the code at most once per an AIDL method, otherwise we are wasting
   // time doing the same thing multiple time.
   bool* const is_classloader_created;
-
-  // for error message printing
-  const string filename;
 };
 
 // Writes code fragment that writes a variable to the parcel.

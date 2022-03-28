@@ -112,7 +112,7 @@ public class StructuredParcelable implements android.os.Parcelable
     _aidl_parcel.writeLong(int64_max);
     _aidl_parcel.writeInt(hexInt32_neg_1);
     _aidl_parcel.writeStrongBinder(ibinder);
-    _aidl_parcel.writeTypedObject(empty, 0);
+    _aidl_parcel.writeTypedObject(empty, _aidl_flag);
     _aidl_parcel.writeByteArray(int8_1);
     _aidl_parcel.writeIntArray(int32_1);
     _aidl_parcel.writeLongArray(int64_1);
@@ -131,8 +131,8 @@ public class StructuredParcelable implements android.os.Parcelable
     _aidl_parcel.writeString(addString1);
     _aidl_parcel.writeString(addString2);
     _aidl_parcel.writeInt(shouldSetBit0AndBit2);
-    _aidl_parcel.writeTypedObject(u, 0);
-    _aidl_parcel.writeTypedObject(shouldBeConstS1, 0);
+    _aidl_parcel.writeTypedObject(u, _aidl_flag);
+    _aidl_parcel.writeTypedObject(shouldBeConstS1, _aidl_flag);
     _aidl_parcel.writeInt(defaultWithFoo);
     int _aidl_end_pos = _aidl_parcel.dataPosition();
     _aidl_parcel.setDataPosition(_aidl_start_pos);
