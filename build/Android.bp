@@ -27,7 +27,6 @@ bootstrap_go_package {
     deps: [
         "blueprint",
         "soong",
-        "soong-apex",
         "soong-android",
         "soong-cc",
         "soong-genrule",
@@ -63,8 +62,11 @@ aidl_interfaces_metadata {
 // be moved back to LoadHook, and then default can be applied as well.
 cc_defaults {
     name: "aidl-cpp-module-defaults",
-    // TODO(b/31559095): remove when host bionic is available
-    defaults: ["libbinder_ndk_host_user"],
+    target: {
+        darwin: {
+            enabled: false,
+        },
+    },
 }
 
 java_defaults {
@@ -102,7 +104,45 @@ aidl_interface {
         "1",
         "2",
         "3",
+        "4",
     ],
+}
+
+aidl_interface {
+    name: "test-piece-ndk-sdk-29",
+    local_include_dir: "tests_1",
+    flags: ["-Werror"],
+    srcs: [
+        "tests_1/some_package/IFoo.aidl",
+        "tests_1/some_package/Thing.aidl",
+        "tests_1/some_package/sub_package/*.aidl", // testing glob w/o filegroup
+    ],
+    unstable: true,
+    backend: { ndk: { sdk_version: "29", }, },
+}
+aidl_interface {
+    name: "test-piece-ndk-sdk-30",
+    local_include_dir: "tests_1",
+    flags: ["-Werror"],
+    srcs: [
+        "tests_1/some_package/IFoo.aidl",
+        "tests_1/some_package/Thing.aidl",
+        "tests_1/some_package/sub_package/*.aidl", // testing glob w/o filegroup
+    ],
+    unstable: true,
+    backend: { ndk: { sdk_version: "30", }, },
+}
+aidl_interface {
+    name: "test-piece-ndk-sdk-31",
+    local_include_dir: "tests_1",
+    flags: ["-Werror"],
+    srcs: [
+        "tests_1/some_package/IFoo.aidl",
+        "tests_1/some_package/Thing.aidl",
+        "tests_1/some_package/sub_package/*.aidl", // testing glob w/o filegroup
+    ],
+    unstable: true,
+    backend: { ndk: { sdk_version: "31", }, },
 }
 
 aidl_interface {
@@ -114,7 +154,7 @@ aidl_interface {
         "tests_1/some_package/IBar.aidl",
     ],
     imports: [
-        "test-piece-1",
+        "test-piece-1-V3",
     ],
     backend: {
         java: {
@@ -122,7 +162,13 @@ aidl_interface {
         },
     },
     gen_trace: true,
-    versions: ["1"],
+    versions_with_info: [
+        {
+            version: "1",
+            imports: ["test-piece-1-V3"],
+        },
+    ],
+
 }
 
 aidl_interface {
@@ -133,7 +179,7 @@ aidl_interface {
         "tests_1/other_package/IBaz.aidl",
     ],
     imports: [
-        "test-piece-2",
+        "test-piece-2-V1",
     ],
     backend: {
         java: {
@@ -152,7 +198,7 @@ aidl_interface {
         "tests_2/another_package/IFaz.aidl",
     ],
     imports: [
-        "test-piece-1",
+        "test-piece-1-V3",
     ],
     backend: {
         java: {
@@ -173,7 +219,7 @@ aidl_interface {
         "test_package/IBaz.aidl",
     ],
     imports: [
-        "test-piece-2",
+        "test-piece-2-V1",
     ],
     backend: {
         java: {
@@ -184,6 +230,7 @@ aidl_interface {
     versions: [
         "1",
         "2",
+        "3",
     ],
 }
 
@@ -198,13 +245,24 @@ aidl_interface {
     ],
 }
 
+aidl_interface {
+    name: "test-piece-6",
+    unstable: true,
+    local_include_dir: "tests_6",
+    flags: ["-Werror"],
+    srcs: [
+        "tests_6/test6/Bar.aidl",
+        "tests_6/test6/Foo.aidl",
+    ],
+}
+
 // These test that a parcel imported from A->B->C will have the required dependencies to link in
 // all backends (C++ backends need to link direclty against the constructor of the parcelable
 // in order to work)
 aidl_interface {
     name: "tests_transitive_parcel.a",
     flags: ["-Werror"],
-    srcs: [ "tests_transitive_parcel/a/*.aidl" ],
+    srcs: ["tests_transitive_parcel/a/*.aidl"],
     imports: [
         "tests_transitive_parcel.b",
         "tests_transitive_parcel.c",
@@ -220,8 +278,8 @@ aidl_interface {
 aidl_interface {
     name: "tests_transitive_parcel.b",
     flags: ["-Werror"],
-    srcs: [ "tests_transitive_parcel/b/*.aidl" ],
-    imports: [ "tests_transitive_parcel.c" ],
+    srcs: ["tests_transitive_parcel/b/*.aidl"],
+    imports: ["tests_transitive_parcel.c"],
     unstable: true,
     backend: {
         rust: {
@@ -233,11 +291,17 @@ aidl_interface {
 aidl_interface {
     name: "tests_transitive_parcel.c",
     flags: ["-Werror"],
-    srcs: [ "tests_transitive_parcel/c/*.aidl" ],
+    srcs: ["tests_transitive_parcel/c/*.aidl"],
     unstable: true,
     backend: {
         rust: {
             enabled: true,
         },
     },
+}
+
+sh_binary {
+    name: "aidl_hash_gen",
+    src: "hash_gen.sh",
+    host_supported: true,
 }
