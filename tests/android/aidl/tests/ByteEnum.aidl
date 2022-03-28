@@ -21,8 +21,9 @@ package android.aidl.tests;
  */
 @Backing(type="byte")
 enum ByteEnum {
-    // Comment about FOO.
-    FOO = 1,
-    BAR = 2,
-    BAZ,
+  // Comment about FOO.
+  FOO = 1,
+  BAR = 2,
+  BAZ,
 }
+
