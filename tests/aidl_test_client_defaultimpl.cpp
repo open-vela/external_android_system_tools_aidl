@@ -13,40 +13,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "aidl_test_client.h"
-#include "gmock/gmock.h"
 
-using android::binder::Status;
+#include "aidl_test_client_defaultimpl.h"
 
-using android::aidl::tests::ITestService;
-using android::aidl::tests::ITestServiceDefault;
+#include <iostream>
 
-using testing::Eq;
+namespace android {
+namespace aidl {
+namespace tests {
+namespace client {
 
-static constexpr int32_t kExpectedArgValue = 100;
-static constexpr int32_t kExpectedReturnValue = 200;
+static const int32_t kExpectedArgValue = 100;
+static const int32_t kExpectedReturnValue = 200;
 
-static int numCalled = 0;
-static int32_t gotArgument = 0;
+bool ConfirmDefaultImpl(const sp<ITestService>& s) {
+  class Def : public android::aidl::tests::ITestServiceDefault {
+    android::binder::Status UnimplementedMethod(int32_t arg, int32_t* _aidl_return) override {
+      if (arg != kExpectedArgValue) {
+        std::cerr << "Argument to UnimplementedMethod is expected to be " << kExpectedArgValue
+                  << ", "
+                  << "but got " << arg << std::endl;
+        return android::binder::Status::fromStatusT(android::FAILED_TRANSACTION);
+      }
+      *_aidl_return = kExpectedReturnValue;
+      return android::binder::Status::ok();
+    }
+  };
 
-struct Def : public ITestServiceDefault {
-  Status UnimplementedMethod(int32_t arg, int32_t* _aidl_return) override {
-    numCalled++;
-    gotArgument = arg;
-    *_aidl_return = kExpectedReturnValue;
-    return android::binder::Status::ok();
+  bool success = android::aidl::tests::ITestService::setDefaultImpl(std::make_unique<Def>());
+  if (!success) {
+    std::cerr << "Failed to set default impl for ITestService" << std::endl;
+    return false;
   }
-};
 
-TEST_F(AidlTest, defaultImpl) {
-  std::unique_ptr<ITestService> defImpl = std::make_unique<Def>();
-  auto ret = ITestService::setDefaultImpl(std::move(defImpl));
-  ASSERT_TRUE(ret);
+  int32_t ret;
+  android::binder::Status status = s->UnimplementedMethod(kExpectedArgValue, &ret);
+  if (!status.isOk()) {
+    std::cerr << "Call to UnimplementedMethod() has failed. status=" << status.toString8()
+              << std::endl;
+    return false;
+  }
 
-  int32_t returned_value;
-  auto status = service->UnimplementedMethod(kExpectedArgValue, &returned_value);
-  ASSERT_TRUE(status.isOk()) << status;
-  ASSERT_THAT(numCalled, Eq(1));
-  ASSERT_THAT(gotArgument, Eq(kExpectedArgValue));
-  ASSERT_THAT(returned_value, Eq(kExpectedReturnValue));
+  if (ret != kExpectedReturnValue) {
+    std::cerr << "Return value from UnimplementedMethod is expected to be " << kExpectedReturnValue
+              << ", "
+              << "but got " << ret << std::endl;
+    return false;
+  }
+
+  return true;
 }
+
+}  // namespace client
+}  // namespace tests
+}  // namespace aidl
+}  // namespace android
