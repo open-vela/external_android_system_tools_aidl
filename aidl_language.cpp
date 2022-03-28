@@ -128,16 +128,11 @@ const std::vector<AidlAnnotation::Schema>& AidlAnnotation::AllSchemas() {
        "JavaDerive",
        CONTEXT_TYPE_STRUCTURED_PARCELABLE | CONTEXT_TYPE_UNION,
        {{"toString", kBooleanType}, {"equals", kBooleanType}}},
-      {AidlAnnotation::Type::JAVA_DEFAULT, "JavaDefault", CONTEXT_TYPE_INTERFACE, {}},
       {AidlAnnotation::Type::JAVA_ONLY_IMMUTABLE,
        "JavaOnlyImmutable",
        CONTEXT_TYPE_STRUCTURED_PARCELABLE | CONTEXT_TYPE_UNION |
            CONTEXT_TYPE_UNSTRUCTURED_PARCELABLE,
        {}},
-      {AidlAnnotation::Type::JAVA_SUPPRESS_LINT,
-       "JavaSuppressLint",
-       CONTEXT_ALL,
-       {{"value", kStringArrayType, /* required= */ true}}},
       {AidlAnnotation::Type::FIXED_SIZE, "FixedSize", CONTEXT_TYPE_STRUCTURED_PARCELABLE, {}},
       {AidlAnnotation::Type::DESCRIPTOR,
        "Descriptor",
@@ -406,10 +401,6 @@ bool AidlAnnotatable::JavaDerive(const std::string& method) const {
     return annotation->ParamValue<bool>(method).value_or(false);
   }
   return false;
-}
-
-bool AidlAnnotatable::IsJavaDefault() const {
-  return GetAnnotation(annotations_, AidlAnnotation::Type::JAVA_DEFAULT);
 }
 
 std::string AidlAnnotatable::GetDescriptor() const {
