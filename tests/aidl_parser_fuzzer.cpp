@@ -18,7 +18,6 @@
 #include "fake_io_delegate.h"
 #include "options.h"
 
-#include <fuzzer/FuzzedDataProvider.h>
 #include <iostream>
 
 #ifdef FUZZ_LOG
@@ -29,31 +28,9 @@ constexpr bool kFuzzLog = false;
 
 using android::aidl::test::FakeIoDelegate;
 
-void fuzz(const FakeIoDelegate& io, const std::vector<std::string>& args) {
-  if (kFuzzLog) {
-    std::cout << "cmd: ";
-    for (const std::string& arg : args) {
-      std::cout << arg << " ";
-    }
-    std::cout << std::endl;
-
-    for (const auto& [f, input] : io.InputFiles()) {
-      std::cout << "INPUT " << f << ": " << input << std::endl;
-    }
-  }
-
-  int ret = android::aidl::aidl_entry(Options::From(args), io);
-  if (ret != 0) return;
-
-  if (kFuzzLog) {
-    for (const auto& [f, output] : io.OutputFiles()) {
-      std::cout << "OUTPUT " << f << ": " << std::endl;
-      std::cout << output << std::endl;
-    }
-  }
-}
-
-void fuzzLang(const std::string& langOpt, const std::string& content) {
+void fuzz(const std::string& langOpt, const std::string& content) {
+  // TODO: fuzz multiple files
+  // TODO: fuzz arguments
   FakeIoDelegate io;
   io.SetFileContents("a/path/Foo.aidl", content);
 
@@ -63,25 +40,41 @@ void fuzzLang(const std::string& langOpt, const std::string& content) {
   args.emplace_back("-b");
   args.emplace_back("-I .");
   args.emplace_back("-o out");
-  // corresponding package also in aidl_parser_fuzzer.dict
+  // corresponding items also in aidl_parser_fuzzer.dict
   args.emplace_back("a/path/Foo.aidl");
 
-  fuzz(io, args);
+  if (kFuzzLog) {
+    std::cout << "lang: " << langOpt << " content: " << content << std::endl;
+  }
+
+  int ret = android::aidl::compile_aidl(Options::From(args), io);
+  if (ret != 0) return;
+
+  if (kFuzzLog) {
+    for (const std::string& f : io.ListOutputFiles()) {
+      std::string output;
+      if (io.GetWrittenContents(f, &output)) {
+        std::cout << "OUTPUT " << f << ": " << std::endl;
+        std::cout << output << std::endl;
+      }
+    }
+  }
 }
 
-void fuzzCheckApi(const std::string& a, const std::string& b) {
-  FakeIoDelegate io;
-  io.SetFileContents("a/path/Foo.aidl", a);
-  io.SetFileContents("b/path/Foo.aidl", b);
+void fuzz(uint8_t options, const std::string& content) {
+  // keeping a byte of options we can use for various flags in the future (do
+  // not remove or add unless absolutely necessary in order to preserve the
+  // corpus).
+  (void)options;
 
-  std::vector<std::string> args;
-  args.emplace_back("aidl");
-  args.emplace_back("--checkapi");
-  // corresponding package also in aidl_parser_fuzzer.dict
-  args.emplace_back("a/path/");
-  args.emplace_back("b/path/");
-
-  fuzz(io, args);
+  // Process for each backend.
+  //
+  // This is unfortunate because we are parsing multiple times, but we want to
+  // check generation of content for each backend. If output fails in one
+  // backend, it's likely to fail in another.
+  fuzz("ndk", content);
+  fuzz("cpp", content);
+  fuzz("java", content);
 }
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
@@ -93,21 +86,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   // of the language w/o hitting a stack overflow.
   if (size > 2000) return 0;
 
-  FuzzedDataProvider provider = FuzzedDataProvider(data, size);
+  uint8_t options = *data;
+  data++;
+  size--;
 
-  if (provider.ConsumeBool()) {
-    std::string content = provider.ConsumeRemainingBytesAsString();
-
-    fuzzLang("ndk", content);
-    fuzzLang("cpp", content);
-    fuzzLang("java", content);
-    fuzzLang("rust", content);
-  } else {
-    std::string contentA = provider.ConsumeRandomLengthString();
-    std::string contentB = provider.ConsumeRemainingBytesAsString();
-
-    fuzzCheckApi(contentA, contentB);
-  }
+  std::string content(reinterpret_cast<const char*>(data), size);
+  fuzz(options, content);
 
   return 0;
 }

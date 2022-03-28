@@ -16,7 +16,6 @@
 
 #include "import_resolver.h"
 #include "aidl_language.h"
-#include "logging.h"
 
 #include <algorithm>
 
@@ -79,7 +78,8 @@ string ImportResolver::FindImportFile(const string& canonical_name) const {
   } else if (num_found == 1) {
     return found_paths.front();
   } else {
-    AIDL_ERROR(input_file_name_) << "Duplicate files found for " << canonical_name << " from:\n"
+    AIDL_ERROR(input_file_name_) << "Duplicate files found for " << canonical_name
+                                 << " from:" << std::endl
                                  << android::base::Join(found_paths, "\n");
     return "";
   }
