@@ -19,5 +19,5 @@
 package android.aidl.versioned.tests;
 @JavaSuppressLint(value={"NewApi"})
 parcelable Foo {
-    int intDefault42 = 42;
+  int intDefault42 = 42;
 }

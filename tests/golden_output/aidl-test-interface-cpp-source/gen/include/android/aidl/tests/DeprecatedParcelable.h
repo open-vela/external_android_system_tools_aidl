@@ -7,8 +7,11 @@
 #include <utils/String16.h>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
+
 class __attribute__((deprecated("test"))) DeprecatedParcelable : public ::android::Parcelable {
 public:
   inline bool operator!=(const DeprecatedParcelable&) const {
@@ -43,6 +46,9 @@ public:
     return os.str();
   }
 };  // class DeprecatedParcelable
+
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android

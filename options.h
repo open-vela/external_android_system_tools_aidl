@@ -19,8 +19,6 @@
 #include <string>
 #include <vector>
 
-#include <android-base/result.h>
-
 #include "diagnostics.h"
 
 namespace android {
@@ -29,19 +27,6 @@ namespace aidl {
 using std::set;
 using std::string;
 using std::vector;
-
-// The oldest SDK version that is supported for each backend. For non-Java backends, these are the
-// platform SDK version where the support for the backend was added. For Java backend, this is 1.
-// TODO(b/205065703) switch back to DEFAULT_SDK_VERSION_JAVA = 23
-constexpr uint32_t DEFAULT_SDK_VERSION_JAVA = 1;
-constexpr uint32_t DEFAULT_SDK_VERSION_CPP = 23;
-constexpr uint32_t DEFAULT_SDK_VERSION_NDK = 29;
-constexpr uint32_t DEFAULT_SDK_VERSION_RUST = 31;
-
-constexpr uint32_t SDK_VERSION_current = 10000;
-constexpr uint32_t SDK_VERSION_Tiramisu = SDK_VERSION_current;
-
-constexpr uint32_t JAVA_PROPAGATE_VERSION = SDK_VERSION_Tiramisu;
 
 // A simple wrapper around ostringstream. This is just to make Options class
 // copiable by the implicit copy constructor. If ostingstream is not wrapped,
@@ -92,7 +77,7 @@ class Options final {
  public:
   enum class Language { UNSPECIFIED, JAVA, CPP, NDK, RUST };
 
-  enum class Task { HELP, COMPILE, PREPROCESS, DUMP_API, CHECK_API, DUMP_MAPPINGS };
+  enum class Task { UNSPECIFIED, COMPILE, PREPROCESS, DUMP_API, CHECK_API, DUMP_MAPPINGS };
 
   enum class CheckApiLevel { COMPATIBLE, EQUAL };
 
@@ -100,12 +85,6 @@ class Options final {
   bool StabilityFromString(const std::string& stability, Stability* out_stability);
 
   Options(int argc, const char* const argv[], Language default_lang = Language::UNSPECIFIED);
-
-  Options PlusImportDir(const std::string& import_dir) const {
-    Options copy(*this);
-    copy.import_dirs_.insert(import_dir);
-    return copy;
-  }
 
   static Options From(const string& cmdline);
 
@@ -118,8 +97,6 @@ class Options final {
 
   Stability GetStability() const { return stability_; }
 
-  uint32_t GetMinSdkVersion() const { return min_sdk_version_; }
-
   Language TargetLanguage() const { return language_; }
   bool IsCppOutput() const { return language_ == Language::CPP || language_ == Language::NDK; }
 
@@ -129,6 +106,8 @@ class Options final {
 
   const set<string>& ImportDirs() const { return import_dirs_; }
 
+  const set<string>& ImportFiles() const { return import_files_; }
+
   const vector<string>& PreprocessedFiles() const { return preprocessed_files_; }
 
   string DependencyFile() const {
@@ -136,8 +115,6 @@ class Options final {
   }
 
   bool AutoDepFile() const { return auto_dep_file_; }
-
-  bool GenRpc() const { return gen_rpc_; }
 
   bool GenTraces() const { return gen_traces_; }
 
@@ -194,15 +171,14 @@ class Options final {
   Task task_ = Task::COMPILE;
   CheckApiLevel check_api_level_ = CheckApiLevel::COMPATIBLE;
   set<string> import_dirs_;
+  set<string> import_files_;
   vector<string> preprocessed_files_;
   string dependency_file_;
-  bool gen_rpc_ = false;
   bool gen_traces_ = false;
   bool gen_transaction_names_ = false;
   bool dependency_file_ninja_ = false;
   bool structured_ = false;
   Stability stability_ = Stability::UNSPECIFIED;
-  uint32_t min_sdk_version_ = 0;  // invalid version
   string output_dir_;
   string output_header_dir_;
   bool fail_on_parcelable_ = false;
@@ -218,7 +194,6 @@ class Options final {
 };
 
 std::string to_string(Options::Language language);
-android::base::Result<uint32_t> MinSdkVersionFromString(const std::string& str);
 
 }  // namespace aidl
 }  // namespace android
