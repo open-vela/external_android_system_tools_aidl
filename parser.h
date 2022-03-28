@@ -54,8 +54,7 @@ class AidlToken {
   android::aidl::Comments comments_;
 };
 
-using TypeResolver = std::function<bool(const AidlDefinedType*, AidlTypeSpecifier*)>;
-bool ResolveReferences(const AidlDocument& document, TypeResolver& resolver);
+using TypeResolver = std::function<bool(const AidlDocument*, AidlTypeSpecifier*)>;
 
 class Parser {
  public:
@@ -66,9 +65,9 @@ class Parser {
   ~Parser();
 
   // Parse contents of file |filename|. Should only be called once.
-  static const AidlDocument* Parse(const std::string& filename,
-                                   const android::aidl::IoDelegate& io_delegate,
-                                   AidlTypenames& typenames, bool is_preprocessed = false);
+  static std::unique_ptr<Parser> Parse(const std::string& filename,
+                                       const android::aidl::IoDelegate& io_delegate,
+                                       AidlTypenames& typenames);
 
   void AddError() { error_++; }
   bool HasError() const { return error_ != 0; }
@@ -85,25 +84,43 @@ class Parser {
   void SetTypeParameters(AidlTypeSpecifier* type,
                          std::vector<std::unique_ptr<AidlTypeSpecifier>>* type_args);
 
-  // fully-qualified type names are allowed only in preprocessed files
-  void CheckValidTypeName(const AidlToken& token, const AidlLocation& loc);
-
-  void SetPackage(const std::string& package);
+  void SetPackage(const std::string& package) { package_ = package; }
   const std::string& Package() const { return package_; }
 
-  void MakeDocument(const AidlLocation& location, const Comments& comments,
-                    std::vector<std::string> imports,
-                    std::vector<std::unique_ptr<AidlDefinedType>> defined_types);
+  void DeferResolution(AidlTypeSpecifier* typespec) {
+    unresolved_typespecs_.emplace_back(typespec);
+  }
+
+  const vector<AidlTypeSpecifier*>& GetUnresolvedTypespecs() const { return unresolved_typespecs_; }
+
+  bool Resolve(TypeResolver& type_resolver);
+  void SetDocument(std::unique_ptr<AidlDocument>&& document) {
+    // The parsed document is owned by typenames_. This parser object only has
+    // a reference to it.
+    document_ = document.get();
+    if (!typenames_.AddDocument(std::move(document))) {
+      document_ = nullptr;
+      AddError();
+    }
+  }
+
+  const AidlDocument& ParsedDocument() const {
+    AIDL_FATAL_IF(HasError(), FileName());
+    return *document_;
+  }
 
  private:
-  explicit Parser(const std::string& filename, std::string& raw_buffer, bool is_preprocessed);
+  explicit Parser(const std::string& filename, std::string& raw_buffer,
+                  android::aidl::AidlTypenames& typenames);
 
   std::string filename_;
-  bool is_preprocessed_;
   std::string package_;
+  AidlTypenames& typenames_;
+
   void* scanner_ = nullptr;
   YY_BUFFER_STATE buffer_;
   int error_ = 0;
 
-  std::unique_ptr<AidlDocument> document_;
+  vector<AidlTypeSpecifier*> unresolved_typespecs_;
+  const AidlDocument* document_;
 };

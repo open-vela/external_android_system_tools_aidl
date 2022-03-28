@@ -2,6 +2,7 @@
  * This file is auto-generated.  DO NOT MODIFY.
  */
 package android.aidl.loggable;
+
 public final class Union implements android.os.Parcelable {
   // tags for union fields
   public final static int num = 0;  // int num;
@@ -126,9 +127,5 @@ public final class Union implements android.os.Parcelable {
   private void _set(int _tag, Object _value) {
     this._tag = _tag;
     this._value = _value;
-  }
-  public static @interface Tag {
-    public static final int num = 0;
-    public static final int str = 1;
   }
 }
