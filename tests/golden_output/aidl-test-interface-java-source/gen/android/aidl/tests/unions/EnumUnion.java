@@ -2,7 +2,6 @@
  * This file is auto-generated.  DO NOT MODIFY.
  */
 package android.aidl.tests.unions;
-
 public final class EnumUnion implements android.os.Parcelable {
   // tags for union fields
   public final static int intEnum = 0;  // android.aidl.tests.IntEnum intEnum;
@@ -113,7 +112,7 @@ public final class EnumUnion implements android.os.Parcelable {
   @Override
   public String toString() {
     switch (_tag) {
-    case intEnum: return "android.aidl.tests.unions.EnumUnion.intEnum(" + (getIntEnum()) + ")";
+    case intEnum: return "android.aidl.tests.unions.EnumUnion.intEnum(" + (android.aidl.tests.IntEnum.$.toString(getIntEnum())) + ")";
     case longEnum: return "android.aidl.tests.unions.EnumUnion.longEnum(" + (getLongEnum()) + ")";
     }
     throw new IllegalStateException("unknown field: " + _tag);
@@ -151,5 +150,9 @@ public final class EnumUnion implements android.os.Parcelable {
   private void _set(int _tag, Object _value) {
     this._tag = _tag;
     this._value = _value;
+  }
+  public static @interface Tag {
+    public static final int intEnum = 0;
+    public static final int longEnum = 1;
   }
 }
