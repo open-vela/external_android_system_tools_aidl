@@ -26,7 +26,13 @@ public class Data implements android.os.Parcelable
     _aidl_parcel.writeInt(0);
     _aidl_parcel.writeInt(num);
     _aidl_parcel.writeString(str);
-    _aidl_parcel.writeTypedObject(nestedUnion, _aidl_flag);
+    if ((nestedUnion!=null)) {
+      _aidl_parcel.writeInt(1);
+      nestedUnion.writeToParcel(_aidl_parcel, 0);
+    }
+    else {
+      _aidl_parcel.writeInt(0);
+    }
     _aidl_parcel.writeByte(nestedEnum);
     int _aidl_end_pos = _aidl_parcel.dataPosition();
     _aidl_parcel.setDataPosition(_aidl_start_pos);
@@ -38,13 +44,18 @@ public class Data implements android.os.Parcelable
     int _aidl_start_pos = _aidl_parcel.dataPosition();
     int _aidl_parcelable_size = _aidl_parcel.readInt();
     try {
-      if (_aidl_parcelable_size < 4) throw new android.os.BadParcelableException("Parcelable too small");;
+      if (_aidl_parcelable_size < 0) return;
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       num = _aidl_parcel.readInt();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       str = _aidl_parcel.readString();
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
-      nestedUnion = _aidl_parcel.readTypedObject(android.aidl.loggable.Union.CREATOR);
+      if ((0!=_aidl_parcel.readInt())) {
+        nestedUnion = android.aidl.loggable.Union.CREATOR.createFromParcel(_aidl_parcel);
+      }
+      else {
+        nestedUnion = null;
+      }
       if (_aidl_parcel.dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) return;
       nestedEnum = _aidl_parcel.readByte();
     } finally {

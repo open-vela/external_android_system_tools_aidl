@@ -7,11 +7,13 @@
 #include <utils/String16.h>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
+
 class OtherParcelableForToString : public ::android::Parcelable {
 public:
-  ::android::String16 field;
   inline bool operator!=(const OtherParcelableForToString& rhs) const {
     return std::tie(field) != std::tie(rhs.field);
   }
@@ -31,6 +33,7 @@ public:
     return std::tie(field) >= std::tie(rhs.field);
   }
 
+  ::android::String16 field;
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
   static const ::android::String16& getParcelableDescriptor() {
@@ -45,6 +48,9 @@ public:
     return os.str();
   }
 };  // class OtherParcelableForToString
+
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android

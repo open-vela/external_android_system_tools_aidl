@@ -1,11 +1,18 @@
 #include <android/aidl/tests/IDeprecated.h>
 #include <android/aidl/tests/BpDeprecated.h>
+
 namespace android {
+
 namespace aidl {
+
 namespace tests {
+
 DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(Deprecated, "android.aidl.tests.IDeprecated")
+
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android
 #include <android/aidl/tests/BpDeprecated.h>
 #include <android/aidl/tests/BnDeprecated.h>
@@ -13,7 +20,9 @@ DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(Deprecated, "android.aidl.tests.
 #include <android-base/macros.h>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
 
 BpDeprecated::BpDeprecated(const ::android::sp<::android::IBinder>& _aidl_impl)
@@ -21,14 +30,18 @@ BpDeprecated::BpDeprecated(const ::android::sp<::android::IBinder>& _aidl_impl)
 }
 
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android
 #include <android/aidl/tests/BnDeprecated.h>
 #include <binder/Parcel.h>
 #include <binder/Stability.h>
 
 namespace android {
+
 namespace aidl {
+
 namespace tests {
 
 BnDeprecated::BnDeprecated()
@@ -49,7 +62,7 @@ BnDeprecated::BnDeprecated()
   break;
   }
   if (_aidl_ret_status == ::android::UNEXPECTED_NULL) {
-    _aidl_ret_status = ::android::binder::Status::fromExceptionCode(::android::binder::Status::EX_NULL_POINTER).writeOverParcel(_aidl_reply);
+    _aidl_ret_status = ::android::binder::Status::fromExceptionCode(::android::binder::Status::EX_NULL_POINTER).writeToParcel(_aidl_reply);
   }
   return _aidl_ret_status;
 }
@@ -57,5 +70,7 @@ BnDeprecated::BnDeprecated()
 #pragma clang diagnostic pop
 
 }  // namespace tests
+
 }  // namespace aidl
+
 }  // namespace android
