@@ -81,19 +81,6 @@ static bool IsValidName(const string& name) {
   return true;
 }
 
-bool AidlTypenames::IsIgnorableImport(const string& import) const {
-  static set<string> ignore_import = {
-      "android.os.IInterface",   "android.os.IBinder", "android.os.Parcelable", "android.os.Parcel",
-      "android.content.Context", "java.lang.String",   "java.lang.CharSequence"};
-  // these known built-in types don't need to be imported
-  const bool in_ignore_import = ignore_import.find(import) != ignore_import.end();
-  // an already defined type doesn't need to be imported again unless it is from
-  // the preprocessed file
-  auto ret = TryGetDefinedTypeImpl(import);
-  const bool defined_type_not_from_preprocessed = ret.type != nullptr && !ret.from_preprocessed;
-  return in_ignore_import || defined_type_not_from_preprocessed;
-}
-
 bool AidlTypenames::AddDefinedType(unique_ptr<AidlDefinedType> type) {
   const string name = type->GetCanonicalName();
   if (defined_types_.find(name) != defined_types_.end()) {
@@ -128,37 +115,32 @@ bool AidlTypenames::IsPrimitiveTypename(const string& type_name) {
 }
 
 const AidlDefinedType* AidlTypenames::TryGetDefinedType(const string& type_name) const {
-  return TryGetDefinedTypeImpl(type_name).type;
-}
-
-AidlTypenames::DefinedImplResult AidlTypenames::TryGetDefinedTypeImpl(
-    const string& type_name) const {
   // Do the exact match first.
   auto found_def = defined_types_.find(type_name);
   if (found_def != defined_types_.end()) {
-    return DefinedImplResult(found_def->second.get(), false);
+    return found_def->second.get();
   }
 
   auto found_prep = preprocessed_types_.find(type_name);
   if (found_prep != preprocessed_types_.end()) {
-    return DefinedImplResult(found_prep->second.get(), true);
+    return found_prep->second.get();
   }
 
   // Then match with the class name. Defined types has higher priority than
   // types from the preprocessed file.
   for (auto it = defined_types_.begin(); it != defined_types_.end(); it++) {
     if (it->second->GetName() == type_name) {
-      return DefinedImplResult(it->second.get(), false);
+      return it->second.get();
     }
   }
 
   for (auto it = preprocessed_types_.begin(); it != preprocessed_types_.end(); it++) {
     if (it->second->GetName() == type_name) {
-      return DefinedImplResult(it->second.get(), true);
+      return it->second.get();
     }
   }
 
-  return DefinedImplResult(nullptr, false);
+  return nullptr;
 }
 
 pair<string, bool> AidlTypenames::ResolveTypename(const string& type_name) const {
@@ -180,31 +162,13 @@ pair<string, bool> AidlTypenames::ResolveTypename(const string& type_name) const
 // Only T[], List, Map, ParcelFileDescriptor and Parcelable can be an out parameter.
 bool AidlTypenames::CanBeOutParameter(const AidlTypeSpecifier& type) const {
   const string& name = type.GetName();
-  if (IsBuiltinTypename(name) || GetEnumDeclaration(type)) {
+  if (IsBuiltinTypename(name)) {
     return type.IsArray() || type.GetName() == "List" || type.GetName() == "Map" ||
            type.GetName() == "ParcelFileDescriptor";
   }
   const AidlDefinedType* t = TryGetDefinedType(type.GetName());
   CHECK(t != nullptr) << "Unrecognized type: '" << type.GetName() << "'";
   return t->AsParcelable() != nullptr;
-}
-
-const AidlEnumDeclaration* AidlTypenames::GetEnumDeclaration(const AidlTypeSpecifier& type) const {
-  if (auto defined_type = TryGetDefinedType(type.GetName()); defined_type != nullptr) {
-    if (auto enum_decl = defined_type->AsEnumDeclaration(); enum_decl != nullptr) {
-      return enum_decl;
-    }
-  }
-  return nullptr;
-}
-
-const AidlInterface* AidlTypenames::GetInterface(const AidlTypeSpecifier& type) const {
-  if (auto defined_type = TryGetDefinedType(type.GetName()); defined_type != nullptr) {
-    if (auto intf = defined_type->AsInterface(); intf != nullptr) {
-      return intf;
-    }
-  }
-  return nullptr;
 }
 
 void AidlTypenames::IterateTypes(const std::function<void(const AidlDefinedType&)>& body) const {

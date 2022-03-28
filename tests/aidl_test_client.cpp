@@ -90,11 +90,7 @@ int main(int /* argc */, char * argv []) {
 
   if (!client_tests::ConfirmPersistableBundles(service)) return 1;
 
-  if (!client_tests::ConfirmIntfConstantExpressions(service)) return 1;
-
   if (!client_tests::ConfirmStructuredParcelables(service)) return 1;
-
-  if (!client_tests::ConfirmStructuredParcelablesEquality(service)) return 1;
 
   if (!client_tests::ConfirmFileDescriptors(service)) return 1;
 

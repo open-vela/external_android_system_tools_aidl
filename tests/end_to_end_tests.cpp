@@ -170,7 +170,7 @@ TEST_F(EndToEndTest, IExampleInterface_Outlining) {
   CheckFileContents(options.DependencyFile(), kExpectedJavaDepsOutput);
 }
 
-TEST_F(EndToEndTest, IExampleInterface_WithVersionAndHash) {
+TEST_F(EndToEndTest, IExampleInterface_WithVersion) {
   using namespace ::android::aidl::test_data::example_interface;
 
   vector<string> args = {
@@ -179,7 +179,6 @@ TEST_F(EndToEndTest, IExampleInterface_WithVersionAndHash) {
     "-I .",
     "-d an/arbitrary/path/to/dep.P",
     "--version=10",
-    "--hash=abcdefg",
     CanonicalNameToPath(kCanonicalName, ".aidl"),
     kJavaOutputPath};
   Options options = Options::From(args);
@@ -194,7 +193,7 @@ TEST_F(EndToEndTest, IExampleInterface_WithVersionAndHash) {
 
   // Check that we parse correctly.
   EXPECT_EQ(android::aidl::compile_aidl(options, io_delegate_), 0);
-  CheckFileContents(kJavaOutputPath, kExpectedJavaOutputWithVersionAndHash);
+  CheckFileContents(kJavaOutputPath, kExpectedJavaOutputWithVersion);
   CheckFileContents(options.DependencyFile(), kExpectedJavaDepsOutput);
 }
 
@@ -224,7 +223,7 @@ TEST_F(EndToEndTest, IPingResponderCpp) {
   CheckFileContents(options.DependencyFile(), kExpectedCppDepsOutput);
 }
 
-TEST_F(EndToEndTest, IPingResponderCpp_WithVersionAndHash) {
+TEST_F(EndToEndTest, IPingResponderCpp_WithVersion) {
   using namespace ::android::aidl::test_data::ping_responder;
 
   vector<string> args = {
@@ -232,7 +231,6 @@ TEST_F(EndToEndTest, IPingResponderCpp_WithVersionAndHash) {
     "-d deps.P",
     "-I .",
     "--version=10",
-    "--hash=abcdefg",
     CanonicalNameToPath(kCanonicalName, ".aidl"),
     kGenHeaderDir,
     kCppOutputPath};
@@ -244,10 +242,10 @@ TEST_F(EndToEndTest, IPingResponderCpp_WithVersionAndHash) {
 
   // Check that we parse and generate code correctly.
   EXPECT_EQ(android::aidl::compile_aidl(options, io_delegate_), 0);
-  CheckFileContents(kCppOutputPath, kExpectedCppOutputWithVersionAndHash);
-  CheckFileContents(kGenInterfaceHeaderPath, kExpectedIHeaderOutputWithVersionAndHash);
-  CheckFileContents(kGenClientHeaderPath, kExpectedBpHeaderOutputWithVersionAndHash);
-  CheckFileContents(kGenServerHeaderPath, kExpectedBnHeaderOutputWithVersionAndHash);
+  CheckFileContents(kCppOutputPath, kExpectedCppOutputWithVersion);
+  CheckFileContents(kGenInterfaceHeaderPath, kExpectedIHeaderOutputWithVersion);
+  CheckFileContents(kGenClientHeaderPath, kExpectedBpHeaderOutputWithVersion);
+  CheckFileContents(kGenServerHeaderPath, kExpectedBnHeaderOutputWithVersion);
   CheckFileContents(options.DependencyFile(), kExpectedCppDepsOutput);
 }
 
@@ -288,13 +286,12 @@ TEST_F(EndToEndTest, StringConstantsInJava) {
   CheckFileContents(kJavaOutputPath, kExpectedJavaOutput);
 }
 
-TEST_F(EndToEndTest, StringConstantsInCpp_WithVersionAndHash) {
+TEST_F(EndToEndTest, StringConstantsInCpp_WithVersion) {
   using namespace ::android::aidl::test_data::string_constants;
 
   vector<string> args = {
     "aidl-cpp",
     "--version=10",
-    "--hash=abcdefg",
     CanonicalNameToPath(kCanonicalName, ".aidl"),
     kGenHeaderDir,
     kCppOutputPath};
@@ -305,18 +302,17 @@ TEST_F(EndToEndTest, StringConstantsInCpp_WithVersionAndHash) {
 
   // Check that we parse and generate code correctly.
   EXPECT_EQ(android::aidl::compile_aidl(options, io_delegate_), 0);
-  CheckFileContents(kCppOutputPath, kExpectedCppOutputWithVersionAndHash);
-  CheckFileContents(kGenInterfaceHeaderPath, kExpectedIHeaderOutputWithVersionAndHash);
+  CheckFileContents(kCppOutputPath, kExpectedCppOutputWithVersion);
+  CheckFileContents(kGenInterfaceHeaderPath, kExpectedIHeaderOutputWithVersion);
 }
 
-TEST_F(EndToEndTest, StringConstantsInJava_WithVersionAndHash) {
+TEST_F(EndToEndTest, StringConstantsInJava_WithVersion) {
   using namespace ::android::aidl::test_data::string_constants;
 
   vector<string> args = {
     "aidl",
     "-b",
     "--version=10",
-    "--hash=abcdefg",
     CanonicalNameToPath(kCanonicalName, ".aidl"),
     kJavaOutputPath};
   Options options = Options::From(args);
@@ -326,8 +322,8 @@ TEST_F(EndToEndTest, StringConstantsInJava_WithVersionAndHash) {
 
   // Check that we parse correctly.
   EXPECT_EQ(android::aidl::compile_aidl(options, io_delegate_), 0);
-  CheckFileContents(kJavaOutputPath, kExpectedJavaOutputWithVersionAndHash);
+  CheckFileContents(kJavaOutputPath, kExpectedJavaOutputWithVersion);
 }
 
-}  // namespace aidl
 }  // namespace android
+}  // namespace aidl

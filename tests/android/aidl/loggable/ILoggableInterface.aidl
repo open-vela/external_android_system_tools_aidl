@@ -10,6 +10,7 @@ interface ILoggableInterface {
                    double doubleValue, inout double[] doubleArray,
                    String stringValue, inout String[] stringArray,
                    inout List<String> listValue,
+                   inout Map mapValue,
                    IBinder binderValue,
                    inout ParcelFileDescriptor pfdValue, inout ParcelFileDescriptor[] pfdArray);
 }

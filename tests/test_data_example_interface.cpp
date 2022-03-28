@@ -44,7 +44,7 @@ import android.test.CompoundParcelable;
 import android.bar.IAuxInterface;
 import android.test.IAuxInterface2;
 
-@Hide
+@SystemApi
 @UnsupportedAppUsage
 interface IExampleInterface {
     const int EXAMPLE_CONSTANT = 3;
@@ -53,8 +53,8 @@ interface IExampleInterface {
     String getAddress();
 
     /* Test long comment */
-    @Hide
     @UnsupportedAppUsage
+    @SystemApi
     ExampleParcelable[] getParcelables();
 
     // Test short comment
@@ -105,15 +105,15 @@ interface IExampleInterface {
 const char kExpectedJavaDepsOutput[] =
     R"(some/path/to/output.java : \
   android/test/IExampleInterface.aidl \
+  ./android/bar/IAuxInterface.aidl \
   ./android/foo/ExampleParcelable.aidl \
   ./android/test/CompoundParcelable.aidl \
-  ./android/bar/IAuxInterface.aidl \
   ./android/test/IAuxInterface2.aidl
 
 android/test/IExampleInterface.aidl :
+./android/bar/IAuxInterface.aidl :
 ./android/foo/ExampleParcelable.aidl :
 ./android/test/CompoundParcelable.aidl :
-./android/bar/IAuxInterface.aidl :
 ./android/test/IAuxInterface2.aidl :
 )";
 
@@ -122,8 +122,8 @@ const char kExpectedJavaOutput[] =
  * This file is auto-generated.  DO NOT MODIFY.
  */
 package android.test;
-@android.annotation.Hide
-@android.compat.annotation.UnsupportedAppUsage(overrideSourcePosition="android/test/IExampleInterface.aidl:10:1:10:21")
+@android.annotation.UnsupportedAppUsage
+@android.annotation.SystemApi
 public interface IExampleInterface extends android.os.IInterface
 {
   /** Default implementation for IExampleInterface. */
@@ -549,13 +549,7 @@ public interface IExampleInterface extends android.os.IInterface
     static final int TRANSACTION_takesAnInterface = (android.os.IBinder.FIRST_CALL_TRANSACTION + 7);
     static final int TRANSACTION_takesAParcelable = (android.os.IBinder.FIRST_CALL_TRANSACTION + 8);
     public static boolean setDefaultImpl(android.test.IExampleInterface impl) {
-      // Only one user of this interface can use this function
-      // at a time. This is a heuristic to detect if two different
-      // users in the same process use this function.
-      if (Stub.Proxy.sDefaultImpl != null) {
-        throw new IllegalStateException("setDefaultImpl() called twice");
-      }
-      if (impl != null) {
+      if (Stub.Proxy.sDefaultImpl == null && impl != null) {
         Stub.Proxy.sDefaultImpl = impl;
         return true;
       }
@@ -570,8 +564,8 @@ public interface IExampleInterface extends android.os.IInterface
   public int getState() throws android.os.RemoteException;
   public java.lang.String getAddress() throws android.os.RemoteException;
   /* Test long comment */
-  @android.annotation.Hide
-  @android.compat.annotation.UnsupportedAppUsage(overrideSourcePosition="android/test/IExampleInterface.aidl:19:1:19:25")
+  @android.annotation.UnsupportedAppUsage
+  @android.annotation.SystemApi
   public android.foo.ExampleParcelable[] getParcelables() throws android.os.RemoteException;
   // Test short comment
 
@@ -590,8 +584,8 @@ const char kExpectedJavaOutputWithTransactionNames[] =
  * This file is auto-generated.  DO NOT MODIFY.
  */
 package android.test;
-@android.annotation.Hide
-@android.compat.annotation.UnsupportedAppUsage(overrideSourcePosition="android/test/IExampleInterface.aidl:10:1:10:21")
+@android.annotation.UnsupportedAppUsage
+@android.annotation.SystemApi
 public interface IExampleInterface extends android.os.IInterface
 {
   /** Default implementation for IExampleInterface. */
@@ -1069,13 +1063,7 @@ public interface IExampleInterface extends android.os.IInterface
     static final int TRANSACTION_takesAnInterface = (android.os.IBinder.FIRST_CALL_TRANSACTION + 7);
     static final int TRANSACTION_takesAParcelable = (android.os.IBinder.FIRST_CALL_TRANSACTION + 8);
     public static boolean setDefaultImpl(android.test.IExampleInterface impl) {
-      // Only one user of this interface can use this function
-      // at a time. This is a heuristic to detect if two different
-      // users in the same process use this function.
-      if (Stub.Proxy.sDefaultImpl != null) {
-        throw new IllegalStateException("setDefaultImpl() called twice");
-      }
-      if (impl != null) {
+      if (Stub.Proxy.sDefaultImpl == null && impl != null) {
         Stub.Proxy.sDefaultImpl = impl;
         return true;
       }
@@ -1090,8 +1078,8 @@ public interface IExampleInterface extends android.os.IInterface
   public int getState() throws android.os.RemoteException;
   public java.lang.String getAddress() throws android.os.RemoteException;
   /* Test long comment */
-  @android.annotation.Hide
-  @android.compat.annotation.UnsupportedAppUsage(overrideSourcePosition="android/test/IExampleInterface.aidl:19:1:19:25")
+  @android.annotation.UnsupportedAppUsage
+  @android.annotation.SystemApi
   public android.foo.ExampleParcelable[] getParcelables() throws android.os.RemoteException;
   // Test short comment
 
@@ -1110,8 +1098,8 @@ const char kExpectedJavaOutputWithTrace[] =
  * This file is auto-generated.  DO NOT MODIFY.
  */
 package android.test;
-@android.annotation.Hide
-@android.compat.annotation.UnsupportedAppUsage(overrideSourcePosition="android/test/IExampleInterface.aidl:10:1:10:21")
+@android.annotation.UnsupportedAppUsage
+@android.annotation.SystemApi
 public interface IExampleInterface extends android.os.IInterface
 {
   /** Default implementation for IExampleInterface. */
@@ -1617,13 +1605,7 @@ public interface IExampleInterface extends android.os.IInterface
     static final int TRANSACTION_takesAnInterface = (android.os.IBinder.FIRST_CALL_TRANSACTION + 7);
     static final int TRANSACTION_takesAParcelable = (android.os.IBinder.FIRST_CALL_TRANSACTION + 8);
     public static boolean setDefaultImpl(android.test.IExampleInterface impl) {
-      // Only one user of this interface can use this function
-      // at a time. This is a heuristic to detect if two different
-      // users in the same process use this function.
-      if (Stub.Proxy.sDefaultImpl != null) {
-        throw new IllegalStateException("setDefaultImpl() called twice");
-      }
-      if (impl != null) {
+      if (Stub.Proxy.sDefaultImpl == null && impl != null) {
         Stub.Proxy.sDefaultImpl = impl;
         return true;
       }
@@ -1638,8 +1620,8 @@ public interface IExampleInterface extends android.os.IInterface
   public int getState() throws android.os.RemoteException;
   public java.lang.String getAddress() throws android.os.RemoteException;
   /* Test long comment */
-  @android.annotation.Hide
-  @android.compat.annotation.UnsupportedAppUsage(overrideSourcePosition="android/test/IExampleInterface.aidl:19:1:19:25")
+  @android.annotation.UnsupportedAppUsage
+  @android.annotation.SystemApi
   public android.foo.ExampleParcelable[] getParcelables() throws android.os.RemoteException;
   // Test short comment
 
@@ -2113,13 +2095,7 @@ public interface IExampleInterface extends android.os.IInterface
       return true;
     }
     public static boolean setDefaultImpl(android.test.IExampleInterface impl) {
-      // Only one user of this interface can use this function
-      // at a time. This is a heuristic to detect if two different
-      // users in the same process use this function.
-      if (Stub.Proxy.sDefaultImpl != null) {
-        throw new IllegalStateException("setDefaultImpl() called twice");
-      }
-      if (impl != null) {
+      if (Stub.Proxy.sDefaultImpl == null && impl != null) {
         Stub.Proxy.sDefaultImpl = impl;
         return true;
       }
@@ -2147,7 +2123,7 @@ public interface IExampleInterface extends android.os.IInterface
 }
 )";
 
-const char kExpectedJavaOutputWithVersionAndHash[] =
+const char kExpectedJavaOutputWithVersion[] =
     R"(/*
  * This file is auto-generated.  DO NOT MODIFY.
  */
@@ -2161,7 +2137,6 @@ public interface IExampleInterface extends android.os.IInterface
    * that the remote object is implementing.
    */
   public static final int VERSION = 10;
-  public static final String HASH = "abcdefg";
   /** Default implementation for IExampleInterface. */
   public static class Default implements android.test.IExampleInterface
   {
@@ -2207,11 +2182,7 @@ public interface IExampleInterface extends android.os.IInterface
     }
     @Override
     public int getInterfaceVersion() {
-      return 0;
-    }
-    @Override
-    public String getInterfaceHash() {
-      return "";
+      return -1;
     }
     @Override
     public android.os.IBinder asBinder() {
@@ -2311,13 +2282,6 @@ public interface IExampleInterface extends android.os.IInterface
           reply.writeInt(getInterfaceVersion());
           return true;
         }
-        case TRANSACTION_getInterfaceHash:
-        {
-          data.enforceInterface(descriptor);
-          reply.writeNoException();
-          reply.writeString(getInterfaceHash());
-          return true;
-        }
         default:
         {
           return super.onTransact(code, data, reply, flags);
@@ -2332,7 +2296,6 @@ public interface IExampleInterface extends android.os.IInterface
         mRemote = remote;
       }
       private int mCachedVersion = -1;
-      private String mCachedHash = "-1";
       @Override public android.os.IBinder asBinder()
       {
         return mRemote;
@@ -2554,12 +2517,7 @@ public interface IExampleInterface extends android.os.IInterface
           android.os.Parcel reply = android.os.Parcel.obtain();
           try {
             data.writeInterfaceToken(DESCRIPTOR);
-            boolean _status = mRemote.transact(Stub.TRANSACTION_getInterfaceVersion, data, reply, 0);
-            if (!_status) {
-              if (getDefaultImpl() != null) {
-                return getDefaultImpl().getInterfaceVersion();
-              }
-            }
+            mRemote.transact(Stub.TRANSACTION_getInterfaceVersion, data, reply, 0);
             reply.readException();
             mCachedVersion = reply.readInt();
           } finally {
@@ -2568,28 +2526,6 @@ public interface IExampleInterface extends android.os.IInterface
           }
         }
         return mCachedVersion;
-      }
-      @Override
-      public synchronized String getInterfaceHash() throws android.os.RemoteException {
-        if ("-1".equals(mCachedHash)) {
-          android.os.Parcel data = android.os.Parcel.obtain();
-          android.os.Parcel reply = android.os.Parcel.obtain();
-          try {
-            data.writeInterfaceToken(DESCRIPTOR);
-            boolean _status = mRemote.transact(Stub.TRANSACTION_getInterfaceHash, data, reply, 0);
-            if (!_status) {
-              if (getDefaultImpl() != null) {
-                return getDefaultImpl().getInterfaceHash();
-              }
-            }
-            reply.readException();
-            mCachedHash = reply.readString();
-          } finally {
-            reply.recycle();
-            data.recycle();
-          }
-        }
-        return mCachedHash;
       }
       public static android.test.IExampleInterface sDefaultImpl;
     }
@@ -2683,15 +2619,8 @@ public interface IExampleInterface extends android.os.IInterface
       return true;
     }
     static final int TRANSACTION_getInterfaceVersion = (android.os.IBinder.FIRST_CALL_TRANSACTION + 16777214);
-    static final int TRANSACTION_getInterfaceHash = (android.os.IBinder.FIRST_CALL_TRANSACTION + 16777213);
     public static boolean setDefaultImpl(android.test.IExampleInterface impl) {
-      // Only one user of this interface can use this function
-      // at a time. This is a heuristic to detect if two different
-      // users in the same process use this function.
-      if (Stub.Proxy.sDefaultImpl != null) {
-        throw new IllegalStateException("setDefaultImpl() called twice");
-      }
-      if (impl != null) {
+      if (Stub.Proxy.sDefaultImpl == null && impl != null) {
         Stub.Proxy.sDefaultImpl = impl;
         return true;
       }
@@ -2717,7 +2646,6 @@ public interface IExampleInterface extends android.os.IInterface
   public int takesAnInterface(android.test.IAuxInterface2 arg) throws android.os.RemoteException;
   public int takesAParcelable(android.test.CompoundParcelable.Subclass1 arg, android.test.CompoundParcelable.Subclass2 arg2) throws android.os.RemoteException;
   public int getInterfaceVersion() throws android.os.RemoteException;
-  public String getInterfaceHash() throws android.os.RemoteException;
 }
 )";
 
