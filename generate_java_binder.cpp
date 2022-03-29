@@ -392,7 +392,8 @@ static void GenerateWriteToParcel(std::shared_ptr<StatementBlock> addTo,
       .parcel = parcel,
       .var = var,
       .min_sdk_version = min_sdk_version,
-      .is_return_value = is_return_value,
+      .write_to_parcel_flag =
+          is_return_value ? "android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE" : "0",
   };
   WriteToParcelFor(context);
   writer->Close();
