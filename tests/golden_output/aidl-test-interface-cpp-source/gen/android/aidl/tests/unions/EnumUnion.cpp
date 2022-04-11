@@ -29,6 +29,19 @@ namespace unions {
       set<longEnum>(std::move(_aidl_value));
     }
     return ::android::OK; }
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  case deprecatedField: {
+    int32_t _aidl_value;
+    if ((_aidl_ret_status = _aidl_parcel->readInt32(&_aidl_value)) != ::android::OK) return _aidl_ret_status;
+    if constexpr (std::is_trivially_copyable_v<int32_t>) {
+      set<deprecatedField>(_aidl_value);
+    } else {
+      // NOLINTNEXTLINE(performance-move-const-arg)
+      set<deprecatedField>(std::move(_aidl_value));
+    }
+    return ::android::OK; }
+  #pragma clang diagnostic pop
   }
   return ::android::BAD_VALUE;
 }
@@ -38,6 +51,10 @@ namespace unions {
   switch (getTag()) {
   case intEnum: return _aidl_parcel->writeInt32(static_cast<int32_t>(get<intEnum>()));
   case longEnum: return _aidl_parcel->writeInt64(static_cast<int64_t>(get<longEnum>()));
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  case deprecatedField: return _aidl_parcel->writeInt32(get<deprecatedField>());
+  #pragma clang diagnostic pop
   }
   __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "can't reach here");
 }
