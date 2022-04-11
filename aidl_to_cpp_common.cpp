@@ -425,9 +425,16 @@ void GenerateToString(CodeWriter& out, const AidlUnionDecl& parcelable) {
   out << "os << \"" + parcelable.GetName() + "{\";\n";
   out << "switch (getTag()) {\n";
   for (const auto& f : parcelable.GetFields()) {
+    if (f->IsDeprecated()) {
+      out << "#pragma clang diagnostic push\n";
+      out << "#pragma clang diagnostic ignored \"-Wdeprecated-declarations\"\n";
+    }
     const string tag = f->GetName();
     out << "case " << tag << ": os << \"" << tag << ": \" << "
         << "::android::internal::ToString(get<" + tag + ">()); break;\n";
+    if (f->IsDeprecated()) {
+      out << "#pragma clang diagnostic pop\n";
+    }
   }
   out << "}\n";
   out << "os << \"}\";\n";
@@ -651,6 +658,10 @@ void UnionWriter::ReadFromParcel(CodeWriter& out, const ParcelWriterContext& ctx
   read_var(tag, *tag_type);
   out << fmt::format("switch (static_cast<Tag>({})) {{\n", tag);
   for (const auto& variable : decl.GetFields()) {
+    if (variable->IsDeprecated()) {
+      out << "#pragma clang diagnostic push\n";
+      out << "#pragma clang diagnostic ignored \"-Wdeprecated-declarations\"\n";
+    }
     out << fmt::format("case {}: {{\n", variable->GetName());
     out.Indent();
     const auto& type = variable->GetType();
@@ -670,6 +681,9 @@ void UnionWriter::ReadFromParcel(CodeWriter& out, const ParcelWriterContext& ctx
     out << "}\n";
     out << fmt::format("return {}; }}\n", ctx.status_ok);
     out.Dedent();
+    if (variable->IsDeprecated()) {
+      out << "#pragma clang diagnostic pop\n";
+    }
   }
   out << "}\n";
   out << fmt::format("return {};\n", ctx.status_bad);
@@ -690,9 +704,16 @@ void UnionWriter::WriteToParcel(CodeWriter& out, const ParcelWriterContext& ctx)
   out << fmt::format("if ({} != {}) return {};\n", status, ctx.status_ok, status);
   out << "switch (getTag()) {\n";
   for (const auto& variable : decl.GetFields()) {
+    if (variable->IsDeprecated()) {
+      out << "#pragma clang diagnostic push\n";
+      out << "#pragma clang diagnostic ignored \"-Wdeprecated-declarations\"\n";
+    }
     out << fmt::format("case {}: return ", variable->GetName());
     ctx.write_func(out, "get<" + variable->GetName() + ">()", variable->GetType());
     out << ";\n";
+    if (variable->IsDeprecated()) {
+      out << "#pragma clang diagnostic pop\n";
+    }
   }
   out << "}\n";
   out << "__assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, \"can't reach here\");\n";
