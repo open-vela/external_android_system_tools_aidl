@@ -6,6 +6,7 @@ public final class EnumUnion implements android.os.Parcelable {
   // tags for union fields
   public final static int intEnum = 0;  // android.aidl.tests.IntEnum intEnum;
   public final static int longEnum = 1;  // android.aidl.tests.LongEnum longEnum;
+  public final static int deprecatedField = 2;  // int deprecatedField;
 
   private int _tag;
   private Object _value;
@@ -59,6 +60,23 @@ public final class EnumUnion implements android.os.Parcelable {
     _set(longEnum, _value);
   }
 
+  // int deprecatedField;
+
+  /** @deprecated do not use this */
+  @Deprecated
+  public static EnumUnion deprecatedField(int _value) {
+    return new EnumUnion(deprecatedField, _value);
+  }
+
+  public int getDeprecatedField() {
+    _assertTag(deprecatedField);
+    return (int) _value;
+  }
+
+  public void setDeprecatedField(int _value) {
+    _set(deprecatedField, _value);
+  }
+
   public static final android.os.Parcelable.Creator<EnumUnion> CREATOR = new android.os.Parcelable.Creator<EnumUnion>() {
     @Override
     public EnumUnion createFromParcel(android.os.Parcel _aidl_source) {
@@ -80,6 +98,9 @@ public final class EnumUnion implements android.os.Parcelable {
     case longEnum:
       _aidl_parcel.writeLong(getLongEnum());
       break;
+    case deprecatedField:
+      _aidl_parcel.writeInt(getDeprecatedField());
+      break;
     }
   }
 
@@ -95,6 +116,11 @@ public final class EnumUnion implements android.os.Parcelable {
     case longEnum: {
       long _aidl_value;
       _aidl_value = _aidl_parcel.readLong();
+      _set(_aidl_tag, _aidl_value);
+      return; }
+    case deprecatedField: {
+      int _aidl_value;
+      _aidl_value = _aidl_parcel.readInt();
       _set(_aidl_tag, _aidl_value);
       return; }
     }
@@ -114,6 +140,7 @@ public final class EnumUnion implements android.os.Parcelable {
     switch (_tag) {
     case intEnum: return "android.aidl.tests.unions.EnumUnion.intEnum(" + (android.aidl.tests.IntEnum.$.toString(getIntEnum())) + ")";
     case longEnum: return "android.aidl.tests.unions.EnumUnion.longEnum(" + (getLongEnum()) + ")";
+    case deprecatedField: return "android.aidl.tests.unions.EnumUnion.deprecatedField(" + (getDeprecatedField()) + ")";
     }
     throw new IllegalStateException("unknown field: " + _tag);
   }
@@ -143,6 +170,7 @@ public final class EnumUnion implements android.os.Parcelable {
     switch (_tag) {
     case intEnum: return "intEnum";
     case longEnum: return "longEnum";
+    case deprecatedField: return "deprecatedField";
     }
     throw new IllegalStateException("unknown field: " + _tag);
   }
@@ -154,5 +182,8 @@ public final class EnumUnion implements android.os.Parcelable {
   public static @interface Tag {
     public static final int intEnum = 0;
     public static final int longEnum = 1;
+    /** @deprecated do not use this */
+    @Deprecated
+    public static final int deprecatedField = 2;
   }
 }
