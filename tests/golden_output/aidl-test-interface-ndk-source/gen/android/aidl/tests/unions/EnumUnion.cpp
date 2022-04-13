@@ -34,6 +34,19 @@ binder_status_t EnumUnion::readFromParcel(const AParcel* _parcel) {
       set<longEnum>(std::move(_aidl_value));
     }
     return STATUS_OK; }
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  case deprecatedField: {
+    int32_t _aidl_value;
+    if ((_aidl_ret_status = ::ndk::AParcel_readData(_parcel, &_aidl_value)) != STATUS_OK) return _aidl_ret_status;
+    if constexpr (std::is_trivially_copyable_v<int32_t>) {
+      set<deprecatedField>(_aidl_value);
+    } else {
+      // NOLINTNEXTLINE(performance-move-const-arg)
+      set<deprecatedField>(std::move(_aidl_value));
+    }
+    return STATUS_OK; }
+  #pragma clang diagnostic pop
   }
   return STATUS_BAD_VALUE;
 }
@@ -43,6 +56,10 @@ binder_status_t EnumUnion::writeToParcel(AParcel* _parcel) const {
   switch (getTag()) {
   case intEnum: return ::ndk::AParcel_writeData(_parcel, get<intEnum>());
   case longEnum: return ::ndk::AParcel_writeData(_parcel, get<longEnum>());
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  case deprecatedField: return ::ndk::AParcel_writeData(_parcel, get<deprecatedField>());
+  #pragma clang diagnostic pop
   }
   __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "can't reach here");
 }
