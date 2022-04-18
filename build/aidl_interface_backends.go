@@ -81,7 +81,7 @@ func addCppLibrary(mctx android.LoadHookContext, i *aidlInterface, version strin
 		Lang:            lang,
 		BaseName:        i.ModuleBase.Name(),
 		GenLog:          genLog,
-		Version:         i.versionForAidlGenRule(version),
+		Version:         i.versionForInitVersionCompat(version),
 		GenTrace:        genTrace,
 		Unstable:        i.properties.Unstable,
 		NotFrozen:       notFrozen,
@@ -229,7 +229,7 @@ func addJavaLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		Platform_apis:   proptools.Bool(i.properties.Backend.Java.Platform_apis),
 		Lang:            langJava,
 		BaseName:        i.ModuleBase.Name(),
-		Version:         i.versionForAidlGenRule(version),
+		Version:         version,
 		GenRpc:          proptools.Bool(i.properties.Backend.Java.Gen_rpc),
 		GenTrace:        proptools.Bool(i.properties.Gen_trace),
 		Unstable:        i.properties.Unstable,
@@ -280,7 +280,7 @@ func addRustLibrary(mctx android.LoadHookContext, i *aidlInterface, version stri
 		Min_sdk_version: i.minSdkVersion(langRust),
 		Lang:            langRust,
 		BaseName:        i.ModuleBase.Name(),
-		Version:         i.versionForAidlGenRule(version),
+		Version:         i.versionForInitVersionCompat(version),
 		Unstable:        i.properties.Unstable,
 		NotFrozen:       notFrozen,
 		Flags:           i.flagsForAidlGenRule(version),
@@ -343,7 +343,10 @@ func (i *aidlInterface) srcsForVersion(mctx android.EarlyModuleContext, version 
 	}
 }
 
-func (i *aidlInterface) versionForAidlGenRule(version string) string {
+// For certain backend, avoid a difference between the initial version of a versioned
+// interface and an unversioned interface. This ensures that prebuilts can't prevent
+// an interface from switching from unversioned to versioned.
+func (i *aidlInterface) versionForInitVersionCompat(version string) string {
 	if !i.hasVersion() {
 		return ""
 	}
