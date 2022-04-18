@@ -288,7 +288,7 @@ void GenerateHeaderIncludes(CodeWriter& out, const AidlTypenames& types,
         includes.insert("chrono");
         includes.insert("sstream");
       }
-      // For nested interfacees client/server classes are defined in the same header.
+      // For nested interfaces client/server classes are defined in the same header.
       // So we need includes for client/server class as well.
       if (interface.GetParentType()) {
         includes.insert("android/binder_ibinder.h");
@@ -985,6 +985,59 @@ void GenerateClientHeader(CodeWriter& out, const AidlTypenames& types,
   LeaveNdkNamespace(out, defined_type);
 }
 
+void GenerateDelegatorClassDecl(CodeWriter& out, const AidlTypenames& types,
+                                const AidlInterface& defined_type, const Options& options) {
+  const std::string clazz = ClassName(defined_type, ClassNames::DELEGATOR_IMPL);
+  const std::string iface = ClassName(defined_type, ClassNames::INTERFACE);
+  const std::string bn_name = ClassName(defined_type, ClassNames::SERVER);
+  const std::string kDelegateImplVarName = "_impl";
+  const std::string kStatusType = "::ndk::ScopedAStatus";
+
+  out << "class";
+  cpp::GenerateDeprecated(out, defined_type);
+  out << " " << clazz << " : public " << bn_name << " {\n";
+  out << "public:\n";
+  out.Indent();
+  out << "explicit " << clazz << "(const std::shared_ptr<" << iface << "> &impl)"
+      << " : " << kDelegateImplVarName << "(impl) {\n";
+  if (options.Version() > 0) {
+    // TODO(b/222347502) If we need to support mismatched versions of delegator and
+    // impl, this check will be removed. The NDK backend can't override the
+    // getInterface* meta methods because they are marked "final". Removing
+    // "final" changes the ABI and breaks prebuilts.
+    out << "   int32_t _impl_ver = 0;\n";
+    out << "   if (!impl->" << kGetInterfaceVersion << "(&_impl_ver).isOk()) {;\n";
+    out << "      __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, \"Delegator failed to get "
+           "version of the implementation.\");\n";
+    out << "   }\n";
+    out << "   if (_impl_ver != " << iface << "::" << kVersion << ") {\n";
+    out << "      __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, \"Mismatched versions of "
+           "delegator and implementation is not allowed.\");\n";
+    out << "   }\n";
+  }
+  out << "}\n\n";
+  for (const auto& method : defined_type.GetMethods()) {
+    if (method->IsUserDefined()) {
+      out << kStatusType << " " << method->GetName() << "("
+          << NdkArgList(types, *method, FormatArgForDecl) << ") override";
+      cpp::GenerateDeprecated(out, *method);
+      out << " {\n"
+          << "  return " << kDelegateImplVarName << "->" << method->GetName() << "("
+          << NdkArgList(types, *method, FormatArgNameOnly) << ");\n";
+      out << "}\n";
+    }
+  }
+  out.Dedent();
+  out << "protected:\n";
+  out.Indent();
+  out.Dedent();
+  out << "private:\n";
+  out.Indent();
+  out << "std::shared_ptr<" << iface << "> " << kDelegateImplVarName << ";\n";
+  out.Dedent();
+  out << "};\n\n";
+}
+
 void GenerateServerClassDecl(CodeWriter& out, const AidlTypenames& types,
                              const AidlInterface& defined_type, const Options& options) {
   const std::string clazz = ClassName(defined_type, ClassNames::SERVER);
@@ -1033,9 +1086,18 @@ void GenerateServerHeader(CodeWriter& out, const AidlTypenames& types,
       << "\"\n";
   out << "\n";
   out << "#include <android/binder_ibinder.h>\n";
+  // Needed for *Delegator classes while delegator version is required to be
+  // the same as the implementation version
+  // TODO(b/222347502) If we ever need to support mismatched versions of delegator and
+  // impl, this include can be removed.
+  out << "#include <cassert>\n\n";
+  // TODO(b/31559095) bionic on host should define __assert2
+  out << "#ifndef __BIONIC__\n#ifndef __assert2\n#define __assert2(a,b,c,d) "
+         "((void)0)\n#endif\n#endif\n";
   out << "\n";
   EnterNdkNamespace(out, defined_type);
   GenerateServerClassDecl(out, types, defined_type, options);
+  GenerateDelegatorClassDecl(out, types, defined_type, options);
   LeaveNdkNamespace(out, defined_type);
 }
 
