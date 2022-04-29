@@ -39,7 +39,7 @@ constexpr uint32_t DEFAULT_SDK_VERSION_NDK = 29;
 constexpr uint32_t DEFAULT_SDK_VERSION_RUST = 31;
 
 constexpr uint32_t SDK_VERSION_current = 10000;
-constexpr uint32_t SDK_VERSION_Tiramisu = SDK_VERSION_current;
+constexpr uint32_t SDK_VERSION_Tiramisu = 33;
 
 constexpr uint32_t JAVA_PROPAGATE_VERSION = SDK_VERSION_Tiramisu;
 
