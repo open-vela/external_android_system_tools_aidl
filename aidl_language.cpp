@@ -250,7 +250,7 @@ AidlAnnotation::AidlAnnotation(const AidlLocation& location, const Schema& schem
     : AidlNode(location, comments), schema_(schema), parameters_(std::move(parameters)) {}
 
 struct ConstReferenceFinder : AidlVisitor {
-  const AidlConstantReference* found;
+  const AidlConstantReference* found = nullptr;
   void Visit(const AidlConstantReference& ref) override {
     if (!found) found = &ref;
   }
