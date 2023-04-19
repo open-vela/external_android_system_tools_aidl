@@ -295,12 +295,7 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
     }
     switch (c) {
       case 'l':
-        if (language_ == Options::Language::CPP) {
-          // aidl-cpp can't set language. aidl-cpp exists only for backwards
-          // compatibility.
-          error_message_ << "aidl-cpp does not support --lang." << endl;
-          return;
-        } else {
+        {
           lang_option_found = true;
           string lang = Trim(optarg);
           if (lang == "java") {
