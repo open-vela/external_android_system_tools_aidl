@@ -28,7 +28,8 @@ namespace ndk {
 
 void GenerateNdk(const string& output_file, const Options& options, const AidlTypenames& types,
                  const AidlDefinedType& defined_type, const IoDelegate& io_delegate);
-
+void DeleteNdk(const string& output_file, const Options& options,
+                 const AidlDefinedType& defined_type);
 }  // namespace ndk
 }  // namespace aidl
 }  // namespace android

@@ -31,6 +31,8 @@ void GenerateJava(const std::string& filename, const Options& options,
                   const AidlTypenames& typenames, const AidlDefinedType& defined_type,
                   const IoDelegate& io_delegate);
 
+void DeleteJava(const std::string& filename);
+
 void GenerateClass(CodeWriter& out, const AidlDefinedType& defined_type, const AidlTypenames& types,
                    const Options& options);
 
