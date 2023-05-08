@@ -116,6 +116,14 @@ void GenerateNdk(const string& output_file, const Options& options, const AidlTy
   gen(output_file, &GenerateSource);
 }
 
+void DeleteNdk(const string& output_file, const Options& options,
+                 const AidlDefinedType& defined_type) {
+  remove((options.OutputHeaderDir() + NdkHeaderFile(defined_type, ClassNames::RAW)).c_str());
+  remove((options.OutputHeaderDir() + NdkHeaderFile(defined_type, ClassNames::CLIENT)).c_str());
+  remove((options.OutputHeaderDir() + NdkHeaderFile(defined_type, ClassNames::SERVER)).c_str());
+  remove(output_file.c_str());
+}
+
 namespace internals {
 
 void EnterNdkNamespace(CodeWriter& out, const AidlDefinedType& defined_type) {

@@ -1159,6 +1159,10 @@ void GenerateRust(const string& filename, const Options& options, const AidlType
   AIDL_FATAL_IF(!code_writer->Close(), defined_type) << "I/O Error!";
 }
 
+void DeleteRust(const string& filename) {
+  remove(filename.c_str());
+}
+
 }  // namespace rust
 }  // namespace aidl
 }  // namespace android
