@@ -1442,6 +1442,14 @@ bool GenerateCpp(const string& output_file, const Options& options, const AidlTy
          gen(output_file, &GenerateSource);
 }
 
+void DeleteCpp(const string& output_file, const Options& options,
+                 const AidlDefinedType& defined_type) {
+  remove((options.OutputHeaderDir() + HeaderFile(defined_type, ClassNames::RAW)).c_str());
+  remove((options.OutputHeaderDir() + HeaderFile(defined_type, ClassNames::CLIENT)).c_str());
+  remove((options.OutputHeaderDir() + HeaderFile(defined_type, ClassNames::SERVER)).c_str());
+  remove(output_file.c_str());
+}
+
 }  // namespace cpp
 }  // namespace aidl
 }  // namespace android

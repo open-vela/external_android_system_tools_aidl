@@ -30,6 +30,8 @@ namespace cpp {
 
 bool GenerateCpp(const string& output_file, const Options& options, const AidlTypenames& typenames,
                  const AidlDefinedType& parsed_doc, const IoDelegate& io_delegate);
+void DeleteCpp(const string& output_file, const Options& options,
+                 const AidlDefinedType& defined_type);
 
 }  // namespace cpp
 }  // namespace aidl

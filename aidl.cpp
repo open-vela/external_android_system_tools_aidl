@@ -770,6 +770,60 @@ bool dump_mappings(const Options& options, const IoDelegate& io_delegate) {
   return true;
 }
 
+bool delete_files(const Options& options, const IoDelegate& io_delegate) {
+  const Options::Language lang = options.TargetLanguage();
+  for (const string& input_file : options.InputFiles()) {
+    AidlTypenames typenames;
+
+    vector<string> imported_files;
+
+    AidlError aidl_err = internals::load_and_validate_aidl(input_file, options, io_delegate,
+                                                           &typenames, &imported_files);
+    if (aidl_err != AidlError::OK) {
+      return false;
+    }
+
+    for (const auto& defined_type : typenames.MainDocument().DefinedTypes()) {
+      AIDL_FATAL_IF(defined_type == nullptr, input_file);
+
+      string output_file_name = options.OutputFile();
+      // if needed, generate the output file name from the base folder
+      if (output_file_name.empty() && !options.OutputDir().empty()) {
+        output_file_name = GetOutputFilePath(options, *defined_type);
+        if (output_file_name.empty()) {
+          return false;
+        }
+      }
+
+      bool success = false;
+      if (lang == Options::Language::CPP) {
+        cpp::DeleteCpp(output_file_name, options, *defined_type);
+        success = true;
+      } else if (lang == Options::Language::NDK) {
+        ndk::DeleteNdk(output_file_name, options, *defined_type);
+        success = true;
+      } else if (lang == Options::Language::JAVA) {
+        if (defined_type->AsUnstructuredParcelable() != nullptr) {
+          // Legacy behavior. For parcelable declarations in Java, don't generate output file.
+          success = true;
+        } else {
+          java::DeleteJava(output_file_name);
+          success = true;
+        }
+      } else if (lang == Options::Language::RUST) {
+        rust::DeleteRust(output_file_name);
+        success = true;
+      } else {
+        AIDL_FATAL(input_file) << "Should not reach here.";
+      }
+      if (!success) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 int aidl_entry(const Options& options, const IoDelegate& io_delegate) {
   AidlErrorLog::clearError();
   AidlNode::ClearUnvisitedNodes();
@@ -794,6 +848,9 @@ int aidl_entry(const Options& options, const IoDelegate& io_delegate) {
         break;
       case Options::Task::DUMP_MAPPINGS:
         success = android::aidl::dump_mappings(options, io_delegate);
+        break;
+       case Options::Task::DELETE:
+        success = android::aidl::delete_files(options, io_delegate);
         break;
       default:
         AIDL_FATAL(AIDL_LOCATION_HERE)

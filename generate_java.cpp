@@ -1048,6 +1048,10 @@ void GenerateJava(const std::string& filename, const Options& options, const Aid
   AIDL_FATAL_IF(!code_writer->Close(), defined_type) << "I/O Error!";
 }
 
+void DeleteJava(const std::string& filename) {
+  remove(filename.c_str());
+}
+
 }  // namespace java
 }  // namespace aidl
 }  // namespace android

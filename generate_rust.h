@@ -28,7 +28,7 @@ namespace rust {
 
 void GenerateRust(const string& filename, const Options& options, const AidlTypenames& types,
                   const AidlDefinedType& defined_type, const IoDelegate& io_delegate);
-
+void DeleteRust(const string& filename);
 }  // namespace rust
 }  // namespace aidl
 }  // namespace android
