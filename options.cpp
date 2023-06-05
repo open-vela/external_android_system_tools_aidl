@@ -109,6 +109,8 @@ string Options::GetUsage() const {
        << "          name based on the input file." << endl
        << "  -b" << endl
        << "          Trigger fail when trying to compile a parcelable." << endl
+       << "  --ndk=ctype" << endl
+       << "          (for Ndk) whether to generate C Type Ndk files for AIDL file(s)." << endl
        << "  --ninja" << endl
        << "          Generate dependency file in a format ninja understands." << endl
        << "  --rpc" << endl
@@ -288,6 +290,7 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
         {"hash", required_argument, 0, 'H'},
         {"help", no_argument, 0, 'e'},
         {"delete", no_argument, 0, 'D'},
+        {"ndk", required_argument, 0, 'N'},
         {0, 0, 0, 0},
     };
     const int c = getopt_long(argc, const_cast<char* const*>(argv.data()),
@@ -297,8 +300,7 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
       break;
     }
     switch (c) {
-      case 'l':
-        {
+      case 'l': {
           lang_option_found = true;
           string lang = Trim(optarg);
           if (lang == "java") {
@@ -317,8 +319,8 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
             error_message_ << "Unsupported language: '" << lang << "'" << endl;
             return;
           }
-        }
         break;
+      }
       case 's':
         task_ = Options::Task::PREPROCESS;
         break;
@@ -435,6 +437,16 @@ Options::Options(int argc, const char* const raw_argv[], Options::Language defau
       case 'D':
         task_ = Task::DELETE;
         break;
+      case 'N': {
+        const string ndk_mod = Trim(optarg);
+        if (ndk_mod == "ctype") {
+          ndk_ctype_= true;
+        } else {
+          error_message_ << "--ndk option only can be set to ctype" << endl;
+          return;
+        }
+        break;
+      }
       default:
         error_message_ << GetUsage();
         CHECK(!Ok());

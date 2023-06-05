@@ -40,7 +40,7 @@ std::string NdkFullClassName(const AidlDefinedType& type, cpp::ClassNames name);
 
 // Returns the corresponding Ndk type name for an AIDL type spec including
 // array modifiers.
-std::string NdkNameOf(const AidlTypenames& types, const AidlTypeSpecifier& aidl, StorageMode mode);
+std::string NdkNameOf(const AidlTypenames& types, const AidlTypeSpecifier& aidl, StorageMode mode, bool ndk_ctype);
 
 struct CodeGeneratorContext {
   CodeWriter& writer;
@@ -59,7 +59,7 @@ void ReadFromParcelFor(const CodeGeneratorContext& c);
 std::string NdkArgList(
     const AidlTypenames& types, const AidlMethod& method,
     std::function<std::string(const std::string& type, const std::string& name, bool isOut)>
-        formatter);
+        formatter, bool ndk_ctype);
 
 inline std::string FormatArgForDecl(const std::string& type, const std::string& name,
                                     bool /*isOut*/) {
@@ -82,9 +82,27 @@ inline std::string FormatArgNameOnly(const std::string& /*type*/, const std::str
   return name;
 }
 
+inline std::string FormatArgForStlCall(const std::string &type,
+                                       const std::string &name, bool isOut) {
+  std::string reference_prefix = isOut ? "&" : "";
+  std::string stlname = name;
+  if (!isOut) {
+    if (type == "const std::string&") { // TODO add vector, array cases
+      stlname += ".c_str()";
+    } else if (type == "const std::optional<std::string>&") {
+      stlname += "_c";
+    }
+  } else {
+    if (type == "std::string*" || type == "std::optional<std::string>*") { // TODO add vector, array cases
+      stlname = "_aidl_return_c";
+    }
+  }
+  return reference_prefix + stlname;
+}
+
 // -> 'status (class::)name(type name, ...)' for a method
 std::string NdkMethodDecl(const AidlTypenames& types, const AidlMethod& method,
-                          const std::string& clazz = "");
+                          bool ndk_ctype, const std::string& clazz = "");
 
 }  // namespace ndk
 }  // namespace aidl
