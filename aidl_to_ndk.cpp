@@ -70,12 +70,30 @@ static map<std::string, TypeInfo> kNdkTypeInfoMap = {
     {"ParcelableHolder", {"::ndk::AParcelableHolder"}},
 };
 
-static TypeInfo GetBaseTypeInfo(const AidlTypenames& types, const AidlTypeSpecifier& aidl) {
+// map from AIDL built-in type name to the corresponding C Type Ndk info
+static map<std::string, TypeInfo> kCTypeNdkTypeInfoMap = {
+    {"void", {"void", true}},
+    {"boolean", {"bool", true}},
+    {"byte", {"int8_t", true}},
+    {"char", {"char16_t", true}},
+    {"int", {"int32_t", true}},
+    {"long", {"int64_t", true}},
+    {"float", {"float", true}},
+    {"double", {"double", true}},
+    {"String", {"char*", true}},
+    // TODO(b/136048684) {"Map", ""},
+    {"IBinder", {"::ndk::SpAIBinder"}},
+    {"ParcelFileDescriptor", {"::ndk::ScopedFileDescriptor"}},
+    {"ParcelableHolder", {"::ndk::AParcelableHolder"}},
+};
+
+static TypeInfo GetBaseTypeInfo(const AidlTypenames& types, const AidlTypeSpecifier& aidl, bool ndk_ctype) {
   auto& aidl_name = aidl.GetName();
 
   if (AidlTypenames::IsBuiltinTypename(aidl_name)) {
-    auto it = kNdkTypeInfoMap.find(aidl_name);
-    AIDL_FATAL_IF(it == kNdkTypeInfoMap.end(), aidl_name);
+    const auto kTypeInfoMap = ndk_ctype ? kCTypeNdkTypeInfoMap : kNdkTypeInfoMap;
+    auto it = kTypeInfoMap.find(aidl_name);
+    AIDL_FATAL_IF(it == kTypeInfoMap.end(), aidl_name);
     return it->second;
   }
   const AidlDefinedType* type = types.TryGetDefinedType(aidl_name);
@@ -90,7 +108,7 @@ static TypeInfo GetBaseTypeInfo(const AidlTypenames& types, const AidlTypeSpecif
     if (aidl.IsGeneric()) {
       std::vector<std::string> type_params;
       for (const auto& parameter : aidl.GetTypeParameters()) {
-        type_params.push_back(NdkNameOf(types, *parameter, StorageMode::STACK));
+        type_params.push_back(NdkNameOf(types, *parameter, StorageMode::STACK, ndk_ctype));
       }
       clazz += base::StringPrintf("<%s>", base::Join(type_params, ", ").c_str());
     }
@@ -104,10 +122,13 @@ static TypeInfo GetBaseTypeInfo(const AidlTypenames& types, const AidlTypeSpecif
   }
 }
 
-static TypeInfo WrapNullableType(TypeInfo info, bool is_heap) {
+static TypeInfo WrapNullableType(TypeInfo info, bool is_heap, bool ndk_ctype) {
   if (is_heap) {
     info.cpp_name = "std::unique_ptr<" + info.cpp_name + ">";
   } else {
+    if (ndk_ctype && info.cpp_name == "char*") {
+      return info;
+    }
     info.cpp_name = "std::optional<" + info.cpp_name + ">";
   }
   info.value_is_cheap = false;
@@ -146,7 +167,7 @@ static bool ShouldWrapNullable(const AidlTypenames& types, const std::string& ai
   return true;
 }
 
-static TypeInfo GetTypeInfo(const AidlTypenames& types, const AidlTypeSpecifier& aidl) {
+static TypeInfo GetTypeInfo(const AidlTypenames& types, const AidlTypeSpecifier& aidl, bool ndk_ctype) {
   AIDL_FATAL_IF(!aidl.IsResolved(), aidl) << aidl.ToString();
   // Keep original @nullable to handle the case of List<T>. "@nullable" is attached to "List" not
   // "T"
@@ -171,16 +192,16 @@ static TypeInfo GetTypeInfo(const AidlTypenames& types, const AidlTypeSpecifier&
     array = &aidl.GetArray();
   }
 
-  TypeInfo info = GetBaseTypeInfo(types, *element_type);
+  TypeInfo info = GetBaseTypeInfo(types, *element_type, ndk_ctype);
 
   if (is_nullable && ShouldWrapNullable(types, element_type->GetName())) {
-    info = WrapNullableType(info, aidl.IsHeapNullable());
+    info = WrapNullableType(info, aidl.IsHeapNullable(), ndk_ctype);
   }
   if (array) {
     info = WrapArrayType(info, array);
     if (is_nullable) {
       AIDL_FATAL_IF(aidl.IsHeapNullable(), aidl) << "Array/List can't be @nullable(heap=true)";
-      info = WrapNullableType(info, /*is_heap=*/false);
+      info = WrapNullableType(info, /*is_heap=*/false, ndk_ctype);
     }
   }
   return info;
@@ -195,14 +216,17 @@ std::string NdkFullClassName(const AidlDefinedType& type, cpp::ClassNames name) 
   return Join(pieces, "::");
 }
 
-std::string NdkNameOf(const AidlTypenames& types, const AidlTypeSpecifier& aidl, StorageMode mode) {
-  TypeInfo aspect = GetTypeInfo(types, aidl);
+std::string NdkNameOf(const AidlTypenames& types, const AidlTypeSpecifier& aidl, StorageMode mode, bool ndk_ctype) {
+  TypeInfo aspect = GetTypeInfo(types, aidl, ndk_ctype);
 
   switch (mode) {
     case StorageMode::STACK:
       return aspect.cpp_name;
     case StorageMode::ARGUMENT:
       if (aspect.value_is_cheap) {
+        if (ndk_ctype && aspect.cpp_name == "char*") {
+          return "const " + aspect.cpp_name;
+        }
         return aspect.cpp_name;
       } else {
         return "const " + aspect.cpp_name + "&";
@@ -233,17 +257,17 @@ void ReadFromParcelFor(const CodeGeneratorContext& c) {
 std::string NdkArgList(
     const AidlTypenames& types, const AidlMethod& method,
     std::function<std::string(const std::string& type, const std::string& name, bool isOut)>
-        formatter) {
+        formatter, bool ndk_ctype) {
   std::vector<std::string> method_arguments;
   for (const auto& a : method.GetArguments()) {
     StorageMode mode = a->IsOut() ? StorageMode::OUT_ARGUMENT : StorageMode::ARGUMENT;
-    std::string type = NdkNameOf(types, a->GetType(), mode);
+    std::string type = NdkNameOf(types, a->GetType(), mode, ndk_ctype);
     std::string name = cpp::BuildVarName(*a);
     method_arguments.emplace_back(formatter(type, name, a->IsOut()));
   }
 
   if (method.GetType().GetName() != "void") {
-    std::string type = NdkNameOf(types, method.GetType(), StorageMode::OUT_ARGUMENT);
+    std::string type = NdkNameOf(types, method.GetType(), StorageMode::OUT_ARGUMENT, ndk_ctype);
     std::string name = "_aidl_return";
     method_arguments.emplace_back(formatter(type, name, true));
   }
@@ -252,10 +276,10 @@ std::string NdkArgList(
 }
 
 std::string NdkMethodDecl(const AidlTypenames& types, const AidlMethod& method,
-                          const std::string& clazz) {
+                          bool ndk_ctype, const std::string& clazz) {
   std::string class_prefix = clazz.empty() ? "" : (clazz + "::");
   return "::ndk::ScopedAStatus " + class_prefix + method.GetName() + "(" +
-         NdkArgList(types, method, FormatArgForDecl) + ")";
+         NdkArgList(types, method, FormatArgForDecl, ndk_ctype) + ")";
 }
 
 }  // namespace ndk

@@ -170,6 +170,8 @@ class Options final {
 
   bool DumpNoLicense() const { return dump_no_license_; }
 
+  bool NdkCtype() const { return ndk_ctype_; }
+
   bool Ok() const { return error_message_.stream_.str().empty(); }
 
   string GetErrorMessage() const { return error_message_.stream_.str(); }
@@ -215,6 +217,7 @@ class Options final {
   bool dump_no_license_ = false;
   ErrorMessage error_message_;
   WarningOptions warning_options_;
+  bool ndk_ctype_= false;
 };
 
 std::string to_string(Options::Language language);
