@@ -538,19 +538,26 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
 
   for (const auto& arg : method.GetArguments()) {
     const std::string var_name = cpp::BuildVarName(*arg);
+    const std::string prefix =
+        ((arg->IsOut() &&
+          (!arg->GetType().IsFixedSizeArray() || arg->GetType().IsNullable()))
+             ? "*"
+             : "");
+    const std::string length_var =
+        IsCtypeArray(arg->GetType(), ndk_ctype)
+            ? (arg->GetType().IsFixedSizeArray()
+                   ? ", " + GetFixedSizeArrayLength(types, arg->GetType())
+                   : ", " + prefix + var_name + "_length")
+            : "";
 
     if (arg->IsIn()) {
       out << "_aidl_ret_status = ";
-      const std::string prefix = (arg->IsOut() ? "*" : "");
-      WriteToParcelFor({out, types, arg->GetType(), "_aidl_in.get()", prefix + var_name});
+      WriteToParcelFor({out, types, arg->GetType(), "_aidl_in.get()", prefix + var_name + length_var});
       out << ";\n";
-      StatusCheckGoto(out);
-    } else if (arg->IsOut() && arg->GetType().IsDynamicArray()) {
-      out << "_aidl_ret_status = ::ndk::AParcel_writeVectorSize(_aidl_in.get(), *" << var_name
-          << ");\n";
       StatusCheckGoto(out);
     }
   }
+
   out << "_aidl_ret_status = AIBinder_transact(\n";
   out.Indent();
   out << "asBinder().get(),\n";
@@ -591,8 +598,14 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
   }
 
   if (method.GetType().GetName() != "void") {
+    const std::string length_var =
+        IsCtypeArray(method.GetType(), ndk_ctype)
+            ? ", " + (method.GetType().IsFixedSizeArray()
+                          ? GetFixedSizeArrayLength(types, method.GetType())
+                          : "_aidl_return_length")
+            : "";
     out << "_aidl_ret_status = ";
-    ReadFromParcelFor({out, types, method.GetType(), "_aidl_out.get()", "_aidl_return"});
+    ReadFromParcelFor({out, types, method.GetType(), "_aidl_out.get()", "_aidl_return" + length_var});
     out << ";\n";
     StatusCheckGoto(out);
     if (method.GetName() == kGetInterfaceHash && !options.Hash().empty()) {
@@ -602,14 +615,68 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
     }
   }
   for (const AidlArgument* arg : method.GetOutArguments()) {
+    const std::string var_name = cpp::BuildVarName(*arg);
+    const std::string length_var =
+        IsCtypeArray(arg->GetType(), ndk_ctype)
+            ? ", " + (arg->GetType().IsFixedSizeArray()
+                          ? GetFixedSizeArrayLength(types, arg->GetType())
+                          : var_name + "_length")
+            : "";
     out << "_aidl_ret_status = ";
-    ReadFromParcelFor({out, types, arg->GetType(), "_aidl_out.get()", cpp::BuildVarName(*arg)});
+    ReadFromParcelFor({out, types, arg->GetType(), "_aidl_out.get()", var_name + length_var});
     out << ";\n";
     StatusCheckGoto(out);
   }
 
   out << "_aidl_error:\n";
   out << "_aidl_status.set(AStatus_fromStatus(_aidl_ret_status));\n";
+  if (ndk_ctype) {
+    out << "if (_aidl_ret_status != STATUS_OK) {\n";
+    out.Indent();
+    for (const AidlArgument *arg : method.GetOutArguments()) {
+      const std::string var_name = cpp::BuildVarName(*arg);
+      const std::string type_name =
+          NdkNameOf(types, arg->GetType(), StorageMode::STACK, ndk_ctype);
+      const std::string length_var =
+          arg->GetType().IsFixedSizeArray()
+              ? GetFixedSizeArrayLength(types, arg->GetType())
+              : "*" + var_name + "_length";
+      if (type_name == "char**") {
+        out << "for (int i = 0; i < " << length_var << "; i++) {\n";
+        out.Indent();
+        out << "free(" << var_name << "[i]);\n";
+        out.Dedent();
+        out << "}\n";
+      }
+      if (arg->GetType().IsDynamicArray() ||
+          arg->GetType().GetName() == "List" ||
+          (!IsCtypeArray(arg->GetType(), true) &&
+           arg->GetType().GetName() == "String")) {
+        out << "free(" << var_name << ");\n";
+      }
+    }
+    const std::string ret_length_var =
+        method.GetType().IsFixedSizeArray()
+            ? GetFixedSizeArrayLength(types, method.GetType())
+            : "*_aidl_return_length";
+    const std::string type_name =
+        NdkNameOf(types, method.GetType(), StorageMode::STACK, true);
+    if (type_name == "char**") {
+      out << "for (int i = 0; i < " << ret_length_var << "; i++) {\n";
+      out.Indent();
+      out << "free(_aidl_return[i]);\n";
+      out.Dedent();
+      out << "}\n";
+    }
+    if (method.GetType().IsDynamicArray() ||
+        method.GetType().GetName() == "List" ||
+        (!IsCtypeArray(method.GetType(), true) &&
+         method.GetType().GetName() == "String")) {
+      out << "free(_aidl_return);\n";
+    }
+    out.Dedent();
+    out << "}\n";
+  }
   out << "_aidl_status_return:\n";
   if (options.GenLog()) {
     out << cpp::GenLogAfterExecute(q_name, defined_type, method, "_aidl_status", "_aidl_return",
@@ -619,13 +686,6 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
   out << "return _aidl_status;\n";
   out.Dedent();
   out << "}\n";
-}
-
-static bool checkTypeSpecifier(const AidlTypeSpecifier& aidl) {
-  if (aidl.GetName() != "String") { // TODO add more cases for vector, array
-    return false;
-  }
-  return true;
 }
 
 static void GenerateServerCaseDefinition(CodeWriter& out, const AidlTypenames& types,
@@ -642,18 +702,48 @@ static void GenerateServerCaseDefinition(CodeWriter& out, const AidlTypenames& t
   }
 
   for (const auto& arg : method.GetArguments()) {
-    out << NdkNameOf(types, arg->GetType(), StorageMode::STACK, ndk_ctype) << " " << cpp::BuildVarName(*arg);
-    if (ndk_ctype && checkTypeSpecifier(arg->GetType())) {
-      out << " = nullptr";
+    const std::string var_name = cpp::BuildVarName(*arg);
+    const std::string type_name =
+        NdkNameOf(types, arg->GetType(), StorageMode::STACK, ndk_ctype);
+    if (ndk_ctype) {
+      if (arg->GetType().IsFixedSizeArray()) {
+        out << type_name.substr(0, type_name.length() - 1) << " " << var_name
+            << "[" << GetFixedSizeArrayLength(types, arg->GetType()) << "];\n";
+        if (arg->GetType().IsNullable()) {
+          out << type_name << " " << var_name << "_p = " << var_name << ";\n";
+        }
+      } else if (arg->GetType().IsDynamicArray() ||
+                 arg->GetType().GetName() == "List" ||
+                 arg->GetType().GetName() == "String") {
+        out << type_name << " " << var_name << " = nullptr;\n";
+        if (IsCtypeArray(arg->GetType(), ndk_ctype)) {
+          out << "int32_t " << var_name << "_length;\n";
+        }
+      }
+    } else {
+      out << type_name << " " << var_name << ";\n";
     }
-    out << ";\n";
   }
   if (method.GetType().GetName() != "void") {
-    out << NdkNameOf(types, method.GetType(), StorageMode::STACK, ndk_ctype) << " _aidl_return";
-    if (ndk_ctype && checkTypeSpecifier(method.GetType())) {
-      out << " = nullptr";
+    const std::string type_name = NdkNameOf(types, method.GetType(), StorageMode::STACK, ndk_ctype);
+    if (ndk_ctype) {
+      if (method.GetType().IsFixedSizeArray()) {
+        out << type_name.substr(0, type_name.length() - 1) << " _aidl_return["
+            << GetFixedSizeArrayLength(types, method.GetType()) << "];\n";
+        if (method.GetType().IsNullable()) {
+          out << type_name << " _aidl_return_p = _aidl_return;\n";
+        }
+      } else if (method.GetType().IsDynamicArray() ||
+                 method.GetType().GetName() == "List" ||
+                 method.GetType().GetName() == "String") {
+        out << type_name << " _aidl_return = nullptr;\n";
+        if (IsCtypeArray(method.GetType(), ndk_ctype)) {
+          out << "int32_t _aidl_return_length;\n";
+        }
+      }
+    } else {
+      out << type_name << " _aidl_return;\n";
     }
-    out << ";\n";
   }
   out << "\n";
   if (options.GenTraces()) {
@@ -663,23 +753,36 @@ static void GenerateServerCaseDefinition(CodeWriter& out, const AidlTypenames& t
   }
 
   for (const auto& arg : method.GetArguments()) {
-    const std::string var_name = cpp::BuildVarName(*arg);
+    const std::string var_name =
+        cpp::BuildVarName(*arg) +
+        ((arg->GetType().IsFixedSizeArray() && arg->GetType().IsNullable())
+             ? "_p"
+             : "");
+    const std::string length_var =
+        IsCtypeArray(arg->GetType(), ndk_ctype)
+            ? (", " + (arg->GetType().IsFixedSizeArray()
+                           ? GetFixedSizeArrayLength(types, arg->GetType())
+                           : "&" + var_name + "_length"))
+            : "";
 
     if (arg->IsIn()) {
+      const std::string reference_prefix =
+          (arg->GetType().IsFixedSizeArray() && !arg->GetType().IsNullable())
+              ? ""
+              : "&";
       out << "_aidl_ret_status = ";
-      ReadFromParcelFor({out, types, arg->GetType(), "_aidl_in", "&" + var_name});
+      ReadFromParcelFor({out, types, arg->GetType(), "_aidl_in",
+                         reference_prefix + var_name + length_var});
       out << ";\n";
-      StatusCheckBreak(out);
-    } else if (arg->IsOut() && arg->GetType().IsDynamicArray()) {
-      out << "_aidl_ret_status = ::ndk::AParcel_resizeVector(_aidl_in, &" << var_name << ");\n";
       StatusCheckBreak(out);
     }
   }
+
   if (options.GenLog()) {
     out << cpp::GenLogBeforeExecute(q_name, method, true /* isServer */, true /* isNdk */);
   }
   out << "::ndk::ScopedAStatus _aidl_status = _aidl_impl->" << method.GetName() << "("
-      << NdkArgList(types, method, FormatArgForCall, ndk_ctype) << ");\n";
+      << NdkArgList(types, method, FormatArgForCtypeCall, ndk_ctype, true) << ");\n";
 
   if (options.GenLog()) {
     out << cpp::GenLogAfterExecute(q_name, defined_type, method, "_aidl_status", "_aidl_return",
@@ -696,24 +799,120 @@ static void GenerateServerCaseDefinition(CodeWriter& out, const AidlTypenames& t
     out << "if (!AStatus_isOk(_aidl_status.get())) break;\n\n";
 
     if (method.GetType().GetName() != "void") {
+      std::string var_name = "_aidl_return";
+      if (method.GetType().IsFixedSizeArray()) {
+        if (method.GetType().IsNullable()) {
+          var_name += "_p";
+        } else {
+          var_name = "&" + var_name + "[0]";
+        }
+      }
+      const std::string length_var =
+          IsCtypeArray(method.GetType(), ndk_ctype)
+              ? (method.GetType().IsFixedSizeArray()
+                     ? ", " + GetFixedSizeArrayLength(types, method.GetType())
+                     : ", _aidl_return_length")
+              : "";
       out << "_aidl_ret_status = ";
-      WriteToParcelFor({out, types, method.GetType(), "_aidl_out", "_aidl_return"});
+      WriteToParcelFor(
+          {out, types, method.GetType(), "_aidl_out", var_name + length_var});
       out << ";\n";
       StatusCheckBreak(out);
     }
     for (const AidlArgument* arg : method.GetOutArguments()) {
+      std::string var_name = cpp::BuildVarName(*arg);
+      if (arg->GetType().IsFixedSizeArray()) {
+        if (arg->GetType().IsNullable()) {
+          var_name += "_p";
+        } else {
+          var_name = "&" + var_name + "[0]";
+        }
+      }
+      const std::string length_var =
+          IsCtypeArray(arg->GetType(), ndk_ctype)
+              ? (arg->GetType().IsFixedSizeArray()
+                     ? ", " + GetFixedSizeArrayLength(types, arg->GetType())
+                     : ", " + var_name + "_length")
+              : "";
       out << "_aidl_ret_status = ";
-      WriteToParcelFor({out, types, arg->GetType(), "_aidl_out", cpp::BuildVarName(*arg)});
+      WriteToParcelFor({out, types, arg->GetType(), "_aidl_out", var_name + length_var});
       out << ";\n";
       StatusCheckBreak(out);
     }
-    for (const auto& arg : method.GetArguments()) {
-      if (ndk_ctype && checkTypeSpecifier(arg->GetType())) {
-        out << "free(" << cpp::BuildVarName(*arg) << ");\n";
+    if (ndk_ctype) {
+      for (const auto& arg : method.GetArguments()) {
+        const std::string var_name =
+            cpp::BuildVarName(*arg) +
+            ((arg->GetType().IsFixedSizeArray() && arg->GetType().IsNullable())
+                 ? "_p"
+                 : "");
+        const std::string type_name =
+            NdkNameOf(types, arg->GetType(), StorageMode::STACK, ndk_ctype);
+        if (IsCtypeArray(arg->GetType(), ndk_ctype) ||
+            arg->GetType().GetName() == "String") {
+          if (type_name == "char**") {
+            if (!arg->GetType().IsFixedSizeArray() ||
+                arg->GetType().IsNullable()) {
+              out << "if (" << var_name << ") {\n";
+              out.Indent();
+            }
+            out << "for (int i = 0; i < "
+                << (arg->GetType().IsFixedSizeArray()
+                        ? GetFixedSizeArrayLength(types, arg->GetType())
+                        : var_name + "_length")
+                << "; i++) {\n";
+            out.Indent();
+            out << "free(" << var_name << "[i]);\n";
+            out.Dedent();
+            out << "}\n";
+            if (!arg->GetType().IsFixedSizeArray() ||
+                arg->GetType().IsNullable()) {
+              out.Dedent();
+              out << "}\n";
+            }
+          }
+          if (!arg->GetType().IsFixedSizeArray()) {
+            out << "free(" << var_name << ");\n";
+          } else if (arg->GetType().GetName() == "List" && type_name != "char**") {
+            out << "delete[] " << var_name << ";\n";
+          }
+        }
       }
-    }
-    if (ndk_ctype && checkTypeSpecifier(method.GetType())) {
-      out << "free(_aidl_return);\n";
+      if (IsCtypeArray(method.GetType(), ndk_ctype) || method.GetType().GetName() == "String") {
+        const std::string var_name = (method.GetType().IsFixedSizeArray() &&
+                                      method.GetType().IsNullable())
+                                         ? "_aidl_return_p"
+                                         : "_aidl_return";
+        const std::string type_name =
+            NdkNameOf(types, method.GetType(), StorageMode::STACK, ndk_ctype);
+        if (type_name == "char**") {
+          if (!method.GetType().IsFixedSizeArray() ||
+              method.GetType().IsNullable()) {
+            out << "if (" << var_name << ") {\n";
+            out.Indent();
+          }
+          out << "for (int i = 0; i < "
+              << (method.GetType().IsFixedSizeArray()
+                      ? GetFixedSizeArrayLength(types, method.GetType())
+                      : var_name + "_length")
+              << "; i++) {\n";
+          out.Indent();
+          out << "free(" << var_name << "[i]);\n";
+          out.Dedent();
+          out << "}\n";
+          if (!method.GetType().IsFixedSizeArray() ||
+              method.GetType().IsNullable()) {
+            out.Dedent();
+            out << "}\n";
+          }
+        }
+        if (!method.GetType().IsFixedSizeArray()) {
+          out << "free(" << var_name << ");\n";
+        } else if (method.GetType().GetName() == "List" &&
+                   type_name != "char**") {
+          out << "delete[] " << var_name << ";\n";
+        }
+      }
     }
   }
   out << "break;\n";
@@ -733,70 +932,74 @@ static string GlobalClassVarName(const AidlInterface& interface) {
   return "_g_aidl_" + name + "_clazz";
 }
 
-static bool HasStlMethod(const AidlMethod &method) {
+static bool HasStlMethod(const AidlMethod& method) {
   const std::string method_name = method.GetType().GetName();
-  if (method_name == "String") {
+  if (method_name == "String" || method.GetType().IsArray() ||
+      method_name == "List") {
     return true;
   }
   return false;
 }
 
-static bool HasStlArg(const AidlMethod &method) {
+static bool HasStlArg(const AidlMethod& method) {
   for (const auto &a : method.GetArguments()) {
     const std::string type_name = a->GetType().GetName();
-    if (type_name == "String") {
+    if (type_name == "String" || a->GetType().IsArray() ||
+        type_name == "List") {
       return true;
     }
   }
   return false;
 }
 
-static bool HasStl(const AidlMethod &method) {
+static bool HasStl(const AidlMethod& method) {
   return HasStlMethod(method) || HasStlArg(method);
 }
 
-static string GetNullableDataMethod(const std::string &type) {
-  if (type == "char*") {
-    return "->c_str()";
-  }
-  return "";
-}
-
-static void GenerateInterfaceStlDefinition(CodeWriter &out,
-                                           const AidlTypenames &types,
-                                           const AidlMethod &method) {
+static void GenerateInterfaceStlDefinition(CodeWriter& out,
+                                           const AidlTypenames& types,
+                                           const AidlMethod& method) {
   bool has_stl_method = HasStlMethod(method);
   for (const auto &a : method.GetArguments()) {
-    if (a->GetType().IsNullable()) {
-      const std::string name = cpp::BuildVarName(*a);
-      const std::string type =
-          NdkNameOf(types, a->GetType(), StorageMode::STACK, true);
-      out << "const " << type << " " << name << "_c = " << name << " ? "
-          << name + GetNullableDataMethod(type) << " : nullptr;\n";
+    const std::string name = cpp::BuildVarName(*a);
+    const std::string type =
+        NdkNameOf(types, a->GetType(), StorageMode::STACK, true);
+    const std::string name_c = name + "_c";
+
+    if (a->GetType().GetName() == "String") {
+      out << "const " << type << " " << name_c << " = " << name;
+      if (a->GetType().IsNullable()) {
+        out << " ? " << name << "->c_str() : nullptr;\n";
+      } else {
+        out << ".c_str();\n";
+      }
     }
   }
-  if (method.GetType().GetName() != "void" && has_stl_method) {
+
+  if (has_stl_method) {
     out << NdkNameOf(types, method.GetType(), StorageMode::STACK, true)
         << " _aidl_return_c = nullptr;\n";
   }
 
   out << "::ndk::ScopedAStatus _aidl_status = " << method.GetName() << "("
-      << NdkArgList(types, method, FormatArgForStlCall, false) << ");\n";
+      << NdkArgList(types, method, FormatArgForStlCall, true) << ");\n";
 
-  if (method.GetType().GetName() != "void" && has_stl_method) {
-    if (method.GetType().IsNullable()) {
-      out << "if (_aidl_return_c && AStatus_isOk(_aidl_status.get())) {\n";
-      out.Indent();
-      out << "**_aidl_return = _aidl_return_c;\n";
-      out.Dedent();
-      out << "}\n";
-    } else {
-      out << "if (AStatus_isOk(_aidl_status.get())) {\n";
-      out.Indent();
-      out << "*_aidl_return = _aidl_return_c;\n";
-      out.Dedent();
-      out << "}\n";
+  if (has_stl_method) {
+    out << "if (AStatus_isOk(_aidl_status.get())) {\n";
+    out.Indent();
+    if (method.GetType().GetName() == "String") {
+      if (method.GetType().IsNullable()) {
+        out << "if (_aidl_return_c) {\n";
+        out.Indent();
+        out << "**_aidl_return = _aidl_return_c;\n";
+        out.Dedent();
+        out << "}\n";
+      } else {
+        out << "*_aidl_return = _aidl_return_c;\n";
+      }
     }
+    out.Dedent();
+    out << "}\n";
     out << "free(_aidl_return_c);\n";
   }
 
@@ -1281,6 +1484,9 @@ void GenerateInterfaceClassDecl(CodeWriter& out, const AidlTypenames& types,
   if (ndk_ctype && !has_stl.empty()) {
     out << "#ifdef BINDER_STL_SUPPORT\n";
     for (const auto &method : defined_type.GetMethods()) {
+      if (IsCtypeArray(method->GetType(), true)) {
+        break;
+      }
       if (has_stl.find(method->GetId()) == has_stl.end()) {
         continue;
       }
