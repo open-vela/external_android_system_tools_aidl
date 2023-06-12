@@ -122,11 +122,21 @@ static TypeInfo GetBaseTypeInfo(const AidlTypenames& types, const AidlTypeSpecif
   }
 }
 
+static bool IsPointerTypeName(const std::string& cpp_name) {
+  if (cpp_name == "bool*" || cpp_name == "uint8_t*" ||
+      cpp_name == "char16_t*" || cpp_name == "int32_t*" ||
+      cpp_name == "int64_t*" || cpp_name == "float*" || cpp_name == "double*" ||
+      cpp_name == "char*" || cpp_name == "char**") {
+    return true;
+  }
+  return false;
+}
+
 static TypeInfo WrapNullableType(TypeInfo info, bool is_heap, bool ndk_ctype) {
   if (is_heap) {
     info.cpp_name = "std::unique_ptr<" + info.cpp_name + ">";
   } else {
-    if (ndk_ctype && info.cpp_name == "char*") {
+    if (ndk_ctype && IsPointerTypeName(info.cpp_name)) {
       return info;
     }
     info.cpp_name = "std::optional<" + info.cpp_name + ">";
@@ -135,11 +145,16 @@ static TypeInfo WrapNullableType(TypeInfo info, bool is_heap, bool ndk_ctype) {
   return info;
 }
 
-static TypeInfo WrapArrayType(TypeInfo info, const ArrayType* array) {
+static TypeInfo WrapArrayType(TypeInfo info, const ArrayType* array, bool ndk_ctype) {
   AIDL_FATAL_IF(!array, AIDL_LOCATION_HERE) << "not an array";
   // When "byte"(AIDL) is used in an array, use "uint8_t" because it's more C++ idiomatic.
   if (info.cpp_name == "int8_t") {
     info.cpp_name = "uint8_t";
+  }
+  if (ndk_ctype) {
+    info.cpp_name = info.cpp_name + "*";
+    info.value_is_cheap = true;
+    return info;
   }
   if (std::get_if<DynamicArray>(array)) {
     info.cpp_name = "std::vector<" + info.cpp_name + ">";
@@ -198,7 +213,7 @@ static TypeInfo GetTypeInfo(const AidlTypenames& types, const AidlTypeSpecifier&
     info = WrapNullableType(info, aidl.IsHeapNullable(), ndk_ctype);
   }
   if (array) {
-    info = WrapArrayType(info, array);
+    info = WrapArrayType(info, array, ndk_ctype);
     if (is_nullable) {
       AIDL_FATAL_IF(aidl.IsHeapNullable(), aidl) << "Array/List can't be @nullable(heap=true)";
       info = WrapNullableType(info, /*is_heap=*/false, ndk_ctype);
@@ -224,7 +239,7 @@ std::string NdkNameOf(const AidlTypenames& types, const AidlTypeSpecifier& aidl,
       return aspect.cpp_name;
     case StorageMode::ARGUMENT:
       if (aspect.value_is_cheap) {
-        if (ndk_ctype && aspect.cpp_name == "char*") {
+        if (ndk_ctype && IsPointerTypeName(aspect.cpp_name)) {
           return "const " + aspect.cpp_name;
         }
         return aspect.cpp_name;
@@ -232,6 +247,9 @@ std::string NdkNameOf(const AidlTypenames& types, const AidlTypeSpecifier& aidl,
         return "const " + aspect.cpp_name + "&";
       }
     case StorageMode::OUT_ARGUMENT:
+      if (ndk_ctype && aidl.IsFixedSizeArray() && !aidl.IsNullable()) {
+        return aspect.cpp_name;
+      }
       return aspect.cpp_name + "*";
     default:
       AIDL_FATAL(aidl.GetName()) << "Unrecognized mode type: " << static_cast<int>(mode);
@@ -257,19 +275,48 @@ void ReadFromParcelFor(const CodeGeneratorContext& c) {
 std::string NdkArgList(
     const AidlTypenames& types, const AidlMethod& method,
     std::function<std::string(const std::string& type, const std::string& name, bool isOut)>
-        formatter, bool ndk_ctype) {
+        formatter, bool ndk_ctype, bool isServerCaseDefinition) {
   std::vector<std::string> method_arguments;
   for (const auto& a : method.GetArguments()) {
     StorageMode mode = a->IsOut() ? StorageMode::OUT_ARGUMENT : StorageMode::ARGUMENT;
     std::string type = NdkNameOf(types, a->GetType(), mode, ndk_ctype);
     std::string name = cpp::BuildVarName(*a);
-    method_arguments.emplace_back(formatter(type, name, a->IsOut()));
+    bool is_out = a->IsOut();
+    if (isServerCaseDefinition && a->GetType().IsFixedSizeArray()) {
+      if (a->GetType().IsNullable()) {
+        name = name + "_p";
+      } else {
+        is_out = false;
+      }
+    }
+    method_arguments.emplace_back(formatter(type, name, is_out));
+    if (IsCtypeArray(a->GetType(), ndk_ctype) &&
+        !a->GetType().IsFixedSizeArray()) {
+      const std::string length_type =
+          mode == StorageMode::OUT_ARGUMENT ? "int32_t*" : "const int32_t";
+      method_arguments.emplace_back(
+          formatter(length_type, name + "_length", is_out));
+    }
   }
 
   if (method.GetType().GetName() != "void") {
     std::string type = NdkNameOf(types, method.GetType(), StorageMode::OUT_ARGUMENT, ndk_ctype);
     std::string name = "_aidl_return";
-    method_arguments.emplace_back(formatter(type, name, true));
+    bool is_out = true;
+    if (isServerCaseDefinition && method.GetType().IsFixedSizeArray()) {
+      if (method.GetType().IsNullable()) {
+        name = name + "_p";
+      } else {
+        is_out = false;
+      }
+    }
+    method_arguments.emplace_back(formatter(type, name, is_out));
+    if (IsCtypeArray(method.GetType(), ndk_ctype) &&
+        !method.GetType().IsFixedSizeArray()) {
+      const std::string length_type = "int32_t*";
+      method_arguments.emplace_back(
+          formatter(length_type, name + "_length", is_out));
+    }
   }
 
   return Join(method_arguments, ", ");
@@ -280,6 +327,39 @@ std::string NdkMethodDecl(const AidlTypenames& types, const AidlMethod& method,
   std::string class_prefix = clazz.empty() ? "" : (clazz + "::");
   return "::ndk::ScopedAStatus " + class_prefix + method.GetName() + "(" +
          NdkArgList(types, method, FormatArgForDecl, ndk_ctype) + ")";
+}
+
+bool IsCtypeArray(const AidlTypeSpecifier& aidl, bool ndk_ctype) {
+  if (!ndk_ctype) {
+    return false;
+  }
+  if (aidl.IsDynamicArray() || aidl.GetName() == "List" ||
+      aidl.IsFixedSizeArray()) {
+    return true;
+  }
+  return false;
+}
+
+std::string GetFixedSizeArrayLength(const AidlTypenames& types,
+                                    const AidlTypeSpecifier& aidl) {
+  AIDL_FATAL_IF(!aidl.IsResolved(), aidl) << aidl.ToString();
+  if (!aidl.IsFixedSizeArray()) {
+    return "";
+  }
+
+  TypeInfo info = GetBaseTypeInfo(types, aidl, true);
+
+  const ArrayType *array = &aidl.GetArray();
+  std::string array_length;
+  if (array) {
+    const auto &dimensions = std::get<FixedSizeArray>(*array).dimensions;
+    for (auto it = rbegin(dimensions), end = rend(dimensions); it != end;
+         it++) {
+      array_length = (*it)->ValueString(kIntType, ConstantValueDecorator);
+    }
+  }
+
+  return array_length;
 }
 
 }  // namespace ndk
