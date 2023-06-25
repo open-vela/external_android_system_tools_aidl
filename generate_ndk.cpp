@@ -1269,18 +1269,21 @@ void GenerateInterfaceClassDecl(CodeWriter& out, const AidlTypenames& types,
   out << "\n";
   out << "static const std::shared_ptr<" << clazz << ">& getDefaultImpl();";
   out << "\n";
-  bool has_stl = false;
+  std::set<int> has_stl;
   for (const auto& method : defined_type.GetMethods()) {
     if (HasStl(*method)) {
-      has_stl = true;
+      has_stl.insert(method->GetId());
     }
     out << "virtual " << NdkMethodDecl(types, *method, ndk_ctype);
     cpp::GenerateDeprecated(out, *method);
     out << " = 0;\n";
   }
-  if (ndk_ctype && has_stl) {
+  if (ndk_ctype && !has_stl.empty()) {
     out << "#ifdef BINDER_STL_SUPPORT\n";
     for (const auto &method : defined_type.GetMethods()) {
+      if (has_stl.find(method->GetId()) == has_stl.end()) {
+        continue;
+      }
       out << NdkMethodDecl(types, *method, false);
       cpp::GenerateDeprecated(out, *method);
       out << " {\n";
