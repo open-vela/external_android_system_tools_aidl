@@ -16,6 +16,9 @@
 
 .PRECIOUS: %.cpp
 
+SYSTEM = $(shell uname | tr '[:upper:]' '[:lower:]')
+SYS_ARCH = $(shell uname -m)
+
 ROOTDIR = $(CURDIR)/../../../../..
 
 LIBCUTILSDIR = $(ROOTDIR)/external/android/system/core/libcutils
@@ -30,6 +33,7 @@ LIBGTESTDIR = $(ROOTDIR)/external/googletest/googletest
 # bison=3.5.1
 # clang=10.0.0-4ubuntu1
 # flex=2.6.4
+# You can use these tools on macOS too.
 BISON = bison
 CC = clang++
 FLEX = flex
@@ -50,7 +54,7 @@ CXXFLAGS += -I$(LIBGTESTDIR)/googletest/include
 CXXFLAGS += -I$(LIBLOGDIR)/include
 CXXFLAGS += -I$(LIBCUTILSDIR)/include
 
-PROGNAME = $(ROOTDIR)/prebuilts/tools/aidl/aidl
+PROGNAME = $(ROOTDIR)/prebuilts/tools/aidl/$(SYSTEM)/$(SYS_ARCH)/aidl
 
 # main
 CXXSRCS += main.cpp
