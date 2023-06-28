@@ -17,7 +17,7 @@
 .PRECIOUS: %.cpp
 
 SYSTEM = $(shell uname | tr '[:upper:]' '[:lower:]')
-SYS_ARCH = $(shell uname -m)
+SYS_ARCH = $(shell uname -m | sed 's/arm64/aarch64/')
 
 ROOTDIR = $(CURDIR)/../../../../..
 
@@ -36,6 +36,9 @@ LIBGTESTDIR = $(ROOTDIR)/external/googletest/googletest
 # You can use these tools on macOS too.
 BISON = bison
 CC = clang++
+ifeq ($(SYSTEM), darwin)
+CC += -arch $(shell uname -m)
+endif
 FLEX = flex
 
 CXXFLAGS += -stdlib=libc++
