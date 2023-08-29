@@ -719,6 +719,8 @@ static void GenerateServerCaseDefinition(CodeWriter& out, const AidlTypenames& t
         if (IsCtypeArray(arg->GetType(), ndk_ctype)) {
           out << "int32_t " << var_name << "_length;\n";
         }
+      } else {
+        out << type_name << " " << var_name << ";\n";
       }
     } else {
       out << type_name << " " << var_name << ";\n";
@@ -740,6 +742,8 @@ static void GenerateServerCaseDefinition(CodeWriter& out, const AidlTypenames& t
         if (IsCtypeArray(method.GetType(), ndk_ctype)) {
           out << "int32_t _aidl_return_length;\n";
         }
+      } else {
+        out << type_name << " _aidl_return;\n";
       }
     } else {
       out << type_name << " _aidl_return;\n";
