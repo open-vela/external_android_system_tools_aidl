@@ -1476,22 +1476,31 @@ void GenerateInterfaceClassDecl(CodeWriter& out, const AidlTypenames& types,
   out << "\n";
   out << "static const std::shared_ptr<" << clazz << ">& getDefaultImpl();";
   out << "\n";
-  std::set<int> has_stl;
+  std::set<int> has_stl_set;
+  bool has_array = false;
   for (const auto& method : defined_type.GetMethods()) {
     if (HasStl(*method)) {
-      has_stl.insert(method->GetId());
+      if (IsCtypeArray(method->GetType(), true)) {
+        has_array = true;
+      }
+      for (const auto &a : method->GetArguments()) {
+        if (IsCtypeArray(a->GetType(), true)) {
+          has_array = true;
+        }
+      }
+      has_stl_set.insert(method->GetId());
     }
     out << "virtual " << NdkMethodDecl(types, *method, ndk_ctype);
     cpp::GenerateDeprecated(out, *method);
     out << " = 0;\n";
   }
-  if (ndk_ctype && !has_stl.empty()) {
+  if (ndk_ctype && !has_stl_set.empty()) {
     out << "#ifdef BINDER_STL_SUPPORT\n";
     for (const auto &method : defined_type.GetMethods()) {
-      if (IsCtypeArray(method->GetType(), true)) {
+      if (has_array) {
         break;
       }
-      if (has_stl.find(method->GetId()) == has_stl.end()) {
+      if (has_stl_set.find(method->GetId()) == has_stl_set.end()) {
         continue;
       }
       out << NdkMethodDecl(types, *method, false);

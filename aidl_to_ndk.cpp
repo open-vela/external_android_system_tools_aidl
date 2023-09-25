@@ -333,8 +333,7 @@ bool IsCtypeArray(const AidlTypeSpecifier& aidl, bool ndk_ctype) {
   if (!ndk_ctype) {
     return false;
   }
-  if (aidl.IsDynamicArray() || aidl.GetName() == "List" ||
-      aidl.IsFixedSizeArray()) {
+  if (aidl.IsArray() || aidl.GetName() == "List") {
     return true;
   }
   return false;
