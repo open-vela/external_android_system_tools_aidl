@@ -351,9 +351,11 @@ void GenerateHeaderIncludes(CodeWriter& out, const AidlTypenames& types,
 
   if (options.NdkCtype()) {
     out << "#if __has_include(<string>) && __has_include(<vector>) && "
-           "__has_include(<memory>) && __has_include(<optional>)\n";
+           "__has_include(<array>) && __has_include(<memory>) && "
+           "__has_include(<optional>)\n";
     out << "#include <string>\n";
     out << "#include <vector>\n";
+    out << "#include <array>\n";
     out << "#include <memory>\n";
     out << "#include <optional>\n";
     out << "#define BINDER_STL_SUPPORT\n";
@@ -960,51 +962,304 @@ static bool HasStl(const AidlMethod& method) {
   return HasStlMethod(method) || HasStlArg(method);
 }
 
+enum UseType {
+  NULLABLE_TYPE,
+  ARRAY_TYPE,
+  BASE_TYPE
+};
+
+static string UseMethod(const AidlTypeSpecifier& type, bool is_out,
+                        const std::string& name, const std::string& type_name,
+                        UseType use_type) {
+  int level = type.IsNullable() + (is_out && use_type != NULLABLE_TYPE);
+
+  if (type_name == "char**" && use_type == BASE_TYPE) {
+    if (type.IsNullable()) {
+      return (is_out ? "(**" : "(*") + name + ")[i]->";
+    } else {
+      return (is_out ? "(*" + name + ")" : name) + "[i].";
+    }
+  }
+
+  if (level == 2) {
+    return "(*" + name + ")->";
+  } else if (level == 1) {
+    return name + "->";
+  }
+
+  return name + ".";
+}
+
+static void InitArgData(CodeWriter& out, const AidlArgument& arg, const AidlTypenames& types) {
+  const std::string name = cpp::BuildVarName(arg);
+  const std::string type_name =
+      NdkNameOf(types, arg.GetType(), StorageMode::STACK, true);
+  const std::string name_c = name + "_c";
+  const std::string name_length_c = name + "_length_c";
+  const std::string use_method =
+      UseMethod(arg.GetType(), arg.IsOut(), name, type_name, ARRAY_TYPE);
+  const std::string use_method_i =
+      UseMethod(arg.GetType(), arg.IsOut(), name, type_name, BASE_TYPE);
+
+  if (arg.GetType().IsArray() || arg.GetType().GetName() == "List") {
+    if (arg.GetType().IsFixedSizeArray()) {
+      const std::string fixed_size =
+          GetFixedSizeArrayLength(types, arg.GetType());
+      out << type_name.substr(0, type_name.length() - 1) << " " << name_c << "["
+          << fixed_size << "];\n";
+      if (arg.GetType().IsNullable()) {
+        if (arg.IsIn()) {
+          out << type_name << " " << name << "_p_c = nullptr;\n";
+        } else {
+          out << type_name << " " << name << "_p_c = " << name_c << ";\n";
+          return;
+        }
+        out << "if (" << name << ") {\n";
+        out.Indent();
+        out << name << "_p_c = " << name_c << ";\n";
+      }
+      if (!arg.IsIn()) {
+        return;
+      }
+      if (type_name == "char**") {
+        out << "for (int i = 0; i < " << fixed_size << "; i++) {\n";
+        out.Indent();
+        out << "int32_t size = " << use_method_i << "size() + 1;\n";
+        out << name << "_c[i] = (char*)malloc(size);\n";
+        out << "memcpy(" << name << "_c[i], " << use_method_i
+            << "c_str(), size);\n";
+        out.Dedent();
+        out << "}\n";
+      } else {
+        out << "std::copy(" << use_method << "begin(), " << use_method
+            << "end(), " << name_c << ");\n";
+      }
+      if (arg.GetType().IsNullable()) {
+        out.Dedent();
+        out << "}\n";
+      }
+    } else {
+      out << "int32_t " << name_length_c;
+      if (arg.IsIn()) {
+        out << " = " << use_method << "size();\n";
+        if (!arg.IsOut() && arg.GetType().GetName() != "boolean" &&
+            type_name != "char**") {
+          out << "const ";
+        }
+        out << type_name << " " << name_c << " = nullptr;\n";
+      } else {
+        out << " = 0;\n";
+        out << type_name << " " << name_c << " = nullptr;\n";
+        return;
+      }
+      out << "if (" << name_length_c << ") {\n";
+      out.Indent();
+      if (arg.GetType().GetName() == "boolean") {
+        out << name_c << " = (bool*)malloc(" << name_length_c
+            << " * sizeof(bool));\n";
+        out << "std::copy(" << use_method << "begin(), " << use_method
+            << "end(), " << name_c << ");\n";
+      } else if (type_name == "char**") {
+        out << name_c << " = (char**)malloc(" << name_length_c
+            << " * sizeof(char*));\n";
+        out << "for (int i = 0; i < " << name_length_c << "; i++) {\n";
+        out.Indent();
+        out << "int32_t size = " << use_method_i << "size() + 1;\n";
+        out << name_c << "[i] = (char*)malloc(size);\n";
+        out << "memcpy(" << name_c << "[i], " << use_method_i
+            << "c_str(), size);\n";
+        out.Dedent();
+        out << "}\n";
+      } else {
+        out << name << "_c = " << use_method << "data();\n";
+      }
+      out.Dedent();
+      out << "}\n";
+    }
+    return;
+  }
+
+  if (arg.GetType().GetName() == "String") {
+    out << "const " << type_name << " " << name_c << " = " << name;
+    if (arg.GetType().IsNullable()) {
+      out << " ? " << name << "->c_str() : nullptr;\n";
+    } else {
+      out << ".c_str();\n";
+    }
+  }
+}
+
+static void DestroyOutArgData(CodeWriter& out, const AidlTypeSpecifier& type, const AidlTypenames& types, const std::string& name) {
+  const std::string type_name =
+      NdkNameOf(types, type, StorageMode::STACK, true);
+  const std::string use_method =
+      UseMethod(type, true, name, type_name, ARRAY_TYPE);
+  const std::string name_c = name + "_c";
+  if (type.IsFixedSizeArray()) {
+    const std::string fixed_size = GetFixedSizeArrayLength(types, type);
+    if (type.IsNullable()) {
+      out << "if (" << name << "_p_c) {\n";
+      out.Indent();
+      out << UseMethod(type, true, name, type_name, NULLABLE_TYPE)
+          << "emplace();\n";
+      out << "std::copy(" << name_c << ", " << name_c << " + " << fixed_size
+          << ", " << use_method << "begin());\n";
+      out.Dedent();
+      out << "}\n";
+    } else {
+      out << "std::copy(" << name_c << ", " << name_c << " + " << fixed_size
+          << ", " << use_method << "begin());\n";
+    }
+    return;
+  }
+
+  if (type.IsDynamicArray() || type.GetName() == "List") {
+    const std::string name_length_c = name + "_length_c";
+    if (type.IsNullable()) {
+      out << "if (" << name_c << ") {\n";
+      out.Indent();
+      out << UseMethod(type, true, name, type_name, NULLABLE_TYPE) << "emplace("
+          << name_c << ", " << name_c << " + " << name_length_c << ");\n";
+      out.Dedent();
+      out << "}\n";
+    } else {
+      out << use_method << "assign(" << name_c << ", " << name_c << " + "
+          << name_length_c << ");\n";
+    }
+    return;
+  }
+
+  if (type.GetName() == "String") {
+    if (type.IsNullable()) {
+      out << "if (" << name_c << ") {\n";
+      out.Indent();
+      out << "**" << name << " = " << name_c << ";\n";
+      out.Dedent();
+      out << "}\n";
+    } else {
+      out << "*" << name << " = " << name_c << ";\n";
+    }
+  }
+}
+
 static void GenerateInterfaceStlDefinition(CodeWriter& out,
                                            const AidlTypenames& types,
                                            const AidlMethod& method) {
   bool has_stl_method = HasStlMethod(method);
+  bool has_stl_out = false;
   for (const auto &a : method.GetArguments()) {
-    const std::string name = cpp::BuildVarName(*a);
-    const std::string type =
-        NdkNameOf(types, a->GetType(), StorageMode::STACK, true);
-    const std::string name_c = name + "_c";
-
-    if (a->GetType().GetName() == "String") {
-      out << "const " << type << " " << name_c << " = " << name;
-      if (a->GetType().IsNullable()) {
-        out << " ? " << name << "->c_str() : nullptr;\n";
-      } else {
-        out << ".c_str();\n";
+    if (a->GetType().IsArray() || a->GetType().GetName() == "List" ||
+        a->GetType().GetName() == "String") {
+      InitArgData(out, *a, types);
+      if (a->IsOut()) {
+        has_stl_out = true;
       }
     }
   }
 
   if (has_stl_method) {
-    out << NdkNameOf(types, method.GetType(), StorageMode::STACK, true)
-        << " _aidl_return_c = nullptr;\n";
+    const std::string type_name =
+        NdkNameOf(types, method.GetType(), StorageMode::STACK, true);
+    if (method.GetType().IsFixedSizeArray()) {
+      out << type_name.substr(0, type_name.length() - 1) << " _aidl_return_c["
+          << GetFixedSizeArrayLength(types, method.GetType()) << "];\n";
+      if (method.GetType().IsNullable()) {
+        out << type_name << " _aidl_return_p_c = _aidl_return_c;\n";
+      }
+    } else {
+      if (method.GetType().IsDynamicArray() ||
+          method.GetType().GetName() == "List") {
+        out << "int32_t _aidl_return_length_c = 0;\n";
+      }
+      out << type_name << " _aidl_return_c = nullptr;\n";
+    }
   }
 
   out << "::ndk::ScopedAStatus _aidl_status = " << method.GetName() << "("
-      << NdkArgList(types, method, FormatArgForStlCall, true) << ");\n";
+      << NdkArgList(types, method, FormatArgForStlCall, true, true) << ");\n";
 
-  if (has_stl_method) {
+  if (has_stl_out || has_stl_method) {
     out << "if (AStatus_isOk(_aidl_status.get())) {\n";
     out.Indent();
-    if (method.GetType().GetName() == "String") {
-      if (method.GetType().IsNullable()) {
-        out << "if (_aidl_return_c) {\n";
-        out.Indent();
-        out << "**_aidl_return = _aidl_return_c;\n";
-        out.Dedent();
-        out << "}\n";
-      } else {
-        out << "*_aidl_return = _aidl_return_c;\n";
+    if (has_stl_out) {
+      for (const auto &a : method.GetOutArguments()) {
+        const std::string name = cpp::BuildVarName(*a);
+        const std::string type =
+            NdkNameOf(types, a->GetType(), StorageMode::STACK, true);
+        const std::string stl_type =
+            NdkNameOf(types, a->GetType(), StorageMode::STACK, false);
+        DestroyOutArgData(out, a->GetType(), types, name);
       }
+    }
+    if (has_stl_method) {
+      DestroyOutArgData(out, method.GetType(), types, "_aidl_return");
     }
     out.Dedent();
     out << "}\n";
-    out << "free(_aidl_return_c);\n";
+
+    for (const auto &a : method.GetArguments()) {
+      const std::string name = cpp::BuildVarName(*a);
+      const std::string type =
+          NdkNameOf(types, a->GetType(), StorageMode::STACK, true);
+      const std::string length_name =
+          a->GetType().IsFixedSizeArray()
+              ? GetFixedSizeArrayLength(types, a->GetType())
+              : name + "_length_c";
+      if (!IsCtypeArray(a->GetType(), true)) {
+        continue;
+      }
+      if (a->GetType().IsFixedSizeArray() &&
+          a->GetType().GetName() != "String") {
+        continue;
+      }
+      if (a->GetType().GetName() == "boolean" || type == "char**" ||
+          a->IsOut()) {
+        if (type == "char**") {
+          if (a->GetType().IsFixedSizeArray() && a->GetType().IsNullable()) {
+            out << "if (" << name << "_p_c) {\n";
+            out.Indent();
+          }
+          out << "for (int i = 0; i < " << length_name << "; i++) {\n";
+          out.Indent();
+          out << "free(" << name << "_c[i]);\n";
+          out.Dedent();
+          out << "}\n";
+          if (a->GetType().IsFixedSizeArray() && a->GetType().IsNullable()) {
+            out.Dedent();
+            out << "}\n";
+          }
+        }
+        if (!a->GetType().IsFixedSizeArray()) {
+          out << "free(" << name << "_c);\n";
+        }
+      }
+    }
+    if (IsCtypeArray(method.GetType(), true) &&
+        NdkNameOf(types, method.GetType(), StorageMode::STACK, true) ==
+            "char**") {
+      const std::string length_name =
+          method.GetType().IsFixedSizeArray()
+              ? GetFixedSizeArrayLength(types, method.GetType())
+              : "_aidl_return_length_c";
+      if (method.GetType().IsFixedSizeArray() &&
+          method.GetType().IsNullable()) {
+        out << "if (_aidl_return_p_c) {\n";
+        out.Indent();
+      }
+      out << "for (int i = 0; i < " << length_name << "; i++) {\n";
+      out.Indent();
+      out << "free(_aidl_return_c[i]);\n";
+      out.Dedent();
+      out << "}\n";
+      if (method.GetType().IsFixedSizeArray() &&
+          method.GetType().IsNullable()) {
+        out.Dedent();
+        out << "}\n";
+      }
+    }
+    if (!method.GetType().IsFixedSizeArray()) {
+      out << "free(_aidl_return_c);\n";
+    }
   }
 
   out << "return _aidl_status;\n";
@@ -1477,17 +1732,8 @@ void GenerateInterfaceClassDecl(CodeWriter& out, const AidlTypenames& types,
   out << "static const std::shared_ptr<" << clazz << ">& getDefaultImpl();";
   out << "\n";
   std::set<int> has_stl_set;
-  bool has_array = false;
   for (const auto& method : defined_type.GetMethods()) {
     if (HasStl(*method)) {
-      if (IsCtypeArray(method->GetType(), true)) {
-        has_array = true;
-      }
-      for (const auto &a : method->GetArguments()) {
-        if (IsCtypeArray(a->GetType(), true)) {
-          has_array = true;
-        }
-      }
       has_stl_set.insert(method->GetId());
     }
     out << "virtual " << NdkMethodDecl(types, *method, ndk_ctype);
@@ -1497,9 +1743,6 @@ void GenerateInterfaceClassDecl(CodeWriter& out, const AidlTypenames& types,
   if (ndk_ctype && !has_stl_set.empty()) {
     out << "#ifdef BINDER_STL_SUPPORT\n";
     for (const auto &method : defined_type.GetMethods()) {
-      if (has_array) {
-        break;
-      }
       if (has_stl_set.find(method->GetId()) == has_stl_set.end()) {
         continue;
       }
