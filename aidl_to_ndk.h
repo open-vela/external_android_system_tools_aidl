@@ -60,7 +60,7 @@ void ReadFromParcelFor(const CodeGeneratorContext& c);
 std::string NdkArgList(
     const AidlTypenames& types, const AidlMethod& method,
     std::function<std::string(const std::string& type, const std::string& name, bool isOut)>
-        formatter, bool ndk_ctype, bool isServerCaseDefinition = false);
+        formatter, bool ndk_ctype, bool isDefinition = false);
 
 inline std::string FormatArgForDecl(const std::string& type, const std::string& name,
                                     bool /*isOut*/) {

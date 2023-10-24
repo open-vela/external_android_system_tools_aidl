@@ -275,14 +275,14 @@ void ReadFromParcelFor(const CodeGeneratorContext& c) {
 std::string NdkArgList(
     const AidlTypenames& types, const AidlMethod& method,
     std::function<std::string(const std::string& type, const std::string& name, bool isOut)>
-        formatter, bool ndk_ctype, bool isServerCaseDefinition) {
+        formatter, bool ndk_ctype, bool isDefinition) {
   std::vector<std::string> method_arguments;
   for (const auto& a : method.GetArguments()) {
     StorageMode mode = a->IsOut() ? StorageMode::OUT_ARGUMENT : StorageMode::ARGUMENT;
     std::string type = NdkNameOf(types, a->GetType(), mode, ndk_ctype);
     std::string name = cpp::BuildVarName(*a);
     bool is_out = a->IsOut();
-    if (isServerCaseDefinition && a->GetType().IsFixedSizeArray()) {
+    if (isDefinition && a->GetType().IsFixedSizeArray()) {
       if (a->GetType().IsNullable()) {
         name = name + "_p";
       } else {
@@ -303,7 +303,7 @@ std::string NdkArgList(
     std::string type = NdkNameOf(types, method.GetType(), StorageMode::OUT_ARGUMENT, ndk_ctype);
     std::string name = "_aidl_return";
     bool is_out = true;
-    if (isServerCaseDefinition && method.GetType().IsFixedSizeArray()) {
+    if (isDefinition && method.GetType().IsFixedSizeArray()) {
       if (method.GetType().IsNullable()) {
         name = name + "_p";
       } else {
