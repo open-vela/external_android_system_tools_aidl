@@ -620,12 +620,37 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
     const std::string var_name = cpp::BuildVarName(*arg);
     const std::string length_var =
         IsCtypeArray(arg->GetType(), ndk_ctype)
-            ? ", " + (arg->GetType().IsFixedSizeArray()
-                          ? GetFixedSizeArrayLength(types, arg->GetType())
-                          : var_name + "_length")
+            ? (arg->GetType().IsFixedSizeArray()
+                   ? GetFixedSizeArrayLength(types, arg->GetType())
+                   : var_name + "_length")
             : "";
+    const std::string type_name =
+        NdkNameOf(types, arg->GetType(), StorageMode::STACK, ndk_ctype);
+    if (IsCtypeArray(arg->GetType(), ndk_ctype) && type_name == "char**" &&
+        arg->IsIn()) {
+      if (arg->GetType().IsFixedSizeArray()) {
+        out << "for (int i = 0; i < " << length_var << "; i++) {\n";
+        out.Indent();
+        if (arg->GetType().IsNullable()) {
+          out << "free((*" << var_name << ")[i]);\n";
+        } else {
+          out << "free(" << var_name << "[i]);\n";
+        }
+        out.Dedent();
+        out << "}\n";
+      } else if (arg->GetType().IsDynamicArray() ||
+                 arg->GetType().GetName() == "List") {
+        out << "for (int i = 0; i < *" << length_var << "; i++) {\n";
+        out.Indent();
+        out << "free((*" << var_name << ")[i]);\n";
+        out.Dedent();
+        out << "}\n";
+        out << "free(*" << var_name << ");\n";
+      }
+    }
     out << "_aidl_ret_status = ";
-    ReadFromParcelFor({out, types, arg->GetType(), "_aidl_out.get()", var_name + length_var});
+    ReadFromParcelFor({out, types, arg->GetType(), "_aidl_out.get()",
+                       var_name + ", " + length_var});
     out << ";\n";
     StatusCheckGoto(out);
   }
@@ -646,7 +671,11 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
       if (type_name == "char**") {
         out << "for (int i = 0; i < " << length_var << "; i++) {\n";
         out.Indent();
-        out << "free(" << var_name << "[i]);\n";
+        if (arg->GetType().IsNullable()) {
+          out << "free((*" << var_name << ")[i]);\n";
+        } else {
+          out << "free(" << var_name << "[i]);\n";
+        }
         out.Dedent();
         out << "}\n";
       }
@@ -654,7 +683,11 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
           arg->GetType().GetName() == "List" ||
           (!IsCtypeArray(arg->GetType(), true) &&
            arg->GetType().GetName() == "String")) {
-        out << "free(" << var_name << ");\n";
+        if (arg->GetType().IsNullable()) {
+          out << "free(*" << var_name << ");\n";
+        } else {
+          out << "free(" << var_name << ");\n";
+        }
       }
     }
     const std::string ret_length_var =
@@ -666,7 +699,11 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
     if (type_name == "char**") {
       out << "for (int i = 0; i < " << ret_length_var << "; i++) {\n";
       out.Indent();
-      out << "free(_aidl_return[i]);\n";
+      if (method.GetType().IsNullable()) {
+        out << "free((*_aidl_return)[i]);\n";
+      } else {
+        out << "free(_aidl_return[i]);\n";
+      }
       out.Dedent();
       out << "}\n";
     }
@@ -674,7 +711,11 @@ static void GenerateClientMethodDefinition(CodeWriter& out, const AidlTypenames&
         method.GetType().GetName() == "List" ||
         (!IsCtypeArray(method.GetType(), true) &&
          method.GetType().GetName() == "String")) {
-      out << "free(_aidl_return);\n";
+      if (method.GetType().IsNullable()) {
+        out << "free(*_aidl_return);\n";
+      } else {
+        out << "free(_aidl_return);\n";
+      }
     }
     out.Dedent();
     out << "}\n";
